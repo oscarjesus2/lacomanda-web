@@ -1,0 +1,47 @@
+<mat-toolbar color="primary">{{data.NombreCorto}}</mat-toolbar>
+<mat-dialog-content>
+
+  <mat-form-field class="example-full-width" appearance="fill">
+    <mat-label>Observaciones</mat-label>
+    <!-- <input matInput   [(ngModel)]="data.Observaciones"> -->
+     <textarea matInput [(ngModel)]="data.Observaciones"></textarea>
+</mat-form-field> 
+
+<mat-tab-group mat-align-tabs="start">
+  <mat-tab label="COMIDAS">
+    <mat-card-content>                        
+      <div fxflexfill class="main-group" style="overflow: auto;height: 225px;">
+          <div fxflexfill fxlayoutgap="5px grid" class="group-product">
+              <ng-template ngFor let-item [ngForOf]="ListaObservacionComida">
+                <mat-card fxflex="25" class="item-observacion" (click)="agregarobservacion(item)" style="background-color: #e6f6e4"> 
+                    <div fxLayout="row" fxLayoutAlign="space-evenly center" >
+                        <div>{{ item.Descripcion }} </div>
+                    </div>
+                    
+                </mat-card>  
+              </ng-template>                                                    
+          </div>                              
+      </div>
+    </mat-card-content>
+  </mat-tab>
+  <mat-tab label="BEBIDAS">
+    <mat-card-content>                        
+      <div fxflexfill class="main-group" style="overflow: auto;height: 225px;">
+          <div fxflexfill fxlayoutgap="5px grid" class="group-product">
+              <ng-template ngFor let-item [ngForOf]="ListaObservacionBebida">
+                <mat-card fxflex="25" class="item-observacion" (click)="agregarobservacion(item)" style="background-color: #e6f6e4"> 
+                    <div fxLayout="row" fxLayoutAlign="space-evenly center" >
+                        <div>{{ item.Descripcion }} </div>
+                    </div>
+                </mat-card>  
+              </ng-template>                                                    
+          </div>                              
+      </div>
+    </mat-card-content>
+  </mat-tab>
+</mat-tab-group>
+
+<mat-dialog-actions>
+  <button mat-raised-button color="primary" (click)="onAgregarClick()" [mat-dialog-close]="data" cdkFocusInitial>Agregar</button>
+  <button mat-raised-button color="primary" (click)="onNoClick()">Cancelar</button>
+</mat-dialog-actions>

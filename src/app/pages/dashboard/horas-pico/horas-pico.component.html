@@ -1,0 +1,9 @@
+<div class="report">
+    <h2>Horas Pico</h2>
+    <select (change)="onReportTypeChange($event)">
+      <option value="1">Tarde</option>
+      <option value="2">Noche</option>
+    </select>
+    <div  class="horaPico">Hora Pico : {{horaPico}}</div> 
+    <div #chart class="chart" id="chart-ventas-diarias"></div>
+  </div>

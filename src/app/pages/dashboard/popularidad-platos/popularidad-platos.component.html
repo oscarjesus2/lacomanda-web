@@ -1,0 +1,12 @@
+ <div class="report">
+    <h2>Popularidad de Platos</h2>
+    <select (change)="onReportTypeChange($event)">
+      <option value="1">Top 1</option>
+      <option value="2">Top 2</option>
+      <option value="3">Top 3</option>
+      <option value="4">Top 4</option>
+    </select>
+    <div #chart class="chart" id="chart-ventas-diarias"></div>
+  </div>
+
+  

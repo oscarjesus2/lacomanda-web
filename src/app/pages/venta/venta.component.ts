@@ -1,0 +1,753 @@
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { Breakpoints, BreakpointObserver } from '@angular/cdk/layout';
+import { map } from 'rxjs/operators';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
+
+
+import { MatDialog } from '@angular/material/dialog';
+import { MatMenuTrigger } from '@angular/material/menu';
+import { NgxSpinnerService } from 'ngx-spinner';
+import Swal from 'sweetalert2';
+
+//Components
+import { DialogDeleteProductComponent } from '../../components/dialog-delete-product/dialog-product-delete.component';
+import { DialogComprobanteComponent } from '../../components/dialog-comprobante/dialog-comprobante.component';
+import { DialogVerPedidoComponent } from '../../components/dialog-ver-pedido/dialog-ver-pedido.component';
+import { DialogObservacionComponent } from '../../components/dialog-observacion/dialog-observacion.component';
+
+import { DialogMozoComponent } from '../../components/dialog-mozo/dialog-mozo.component';
+import { DialogEnviarPedidoComponent } from '../../components/dialog-grabar-pedido/dialog-grabar-pedido.component';
+
+
+//Models
+import { PedidoDelete } from '../../models/pedido.delete.models';
+import { Product } from '../../models/product.models';
+import { Ambiente } from '../../models/ambiente.models';
+import { Mesas } from '../../models/mesas.models';
+import { ProductGrid } from '../../models/product.grid.models';
+import { Empleado } from '../../models/empleado.models';
+import { PedidoDet } from '../../models/pedidodet.models';
+import { Observacion } from '../../models/observacion.models';
+import { PedidoCab } from '../../models/pedido.models';
+import { Familia } from '../../models/familia.models';
+import { SubFamilia } from '../../models/subfamilia.models';
+import { User } from '../../models/user.models';
+
+// Servicios
+import { StorageService } from '../../services/storage.services';
+import { ProductService } from '../../services/product.services';
+import { MesasService } from '../../services/mesas.services';
+import { ResponseService } from '../../models/response.services';
+import { FamiliaService } from '../../services/familia.services';
+import { AmbienteService } from '../../services/ambiente.services';
+import { ObservacionService } from '../../services/observacion.services';
+import { PedidoService } from '../../services/pedido.services';
+import { TurnoService } from '../../services/turno.services';
+import { EmpleadoService } from '../../services/mozo.services';
+import { Turno } from 'src/app/models/turno.models';
+import { Router } from '@angular/router';
+import { LoginService } from 'src/app/services/auth/login.service';
+
+
+@Component({
+  selector: 'app-venta',
+  templateUrl: './venta.component.html',
+  styleUrls: ['./venta.component.css']
+})
+
+export class VentaComponent implements OnInit {
+
+  isEdited: boolean;
+  elementArr: any = [].fill(0);
+  public TurnoAbierto: boolean;
+  public user: User;
+  public displayedColumns: string[] = ['NombreProducto', 'Precio', 'Cantidad', 'actions'];
+  public ListaProductosdisplayedColumns: string[] = ['icoObs', 'nombrecorto', 'precio', 'add', 'cantidad', 'remove', 'actions'];
+  public DEFAULT_ID = 0;
+  public listProducts: Product[];
+  public listProducts_x_SubFamilia: Product[];
+  public listAmbiente: Ambiente[];
+  public listFamilia: Familia[];
+  public listSubFamilia: SubFamilia[];
+  public listSubFamilia_x_Familia: SubFamilia[];
+  public selectedValue: string;
+  public DisplayValueAmbiente: string;
+  public selectedValueDos: string;
+  public ListaMesasTotal: Mesas[];
+  public ListaMesas_x_Ambiente: Mesas[];
+  public ListaEmpleados: Empleado[];
+  public ListaObservacion: Observacion[];
+  public oTurno: Turno;
+  public StyleCustom: string = "height: calc(792px)";
+  public IdSubFamila: string;
+  public pedidoId: number = 0;
+
+  public horaPedido: string = "";
+  public userLoged: any = { id: "", username: "" };
+
+  public listProductGrid: PedidoDet[] = [];
+  public GridListaPedidoDetProducto = new MatTableDataSource<PedidoDet>();
+  // public ListaPedidoDetProducto: PedidoDet[] = [];
+
+  public MostrarOcultarPanelProducto: Boolean;
+  public MostrarOcultarPanelMesa: Boolean;
+  public MostrarOcultarPanelPedido: Boolean;
+  public mozoSelected: Empleado;
+  public mesaSelected: Mesas;
+  public NroPaxSelected: string = "";
+
+  public RehacerPantallaRefresh: string = "";
+
+
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+
+  ngAfterViewInit() {
+
+    this.GridListaPedidoDetProducto.paginator = this.paginator;
+  }
+
+  constructor(
+    private loginService: LoginService,
+    private router: Router,
+    private storageService: StorageService,
+    private productService: ProductService,
+    private TurnoService: TurnoService,
+    private ambienteService: AmbienteService,
+    private mesasService: MesasService,
+    private MozoService: EmpleadoService,
+    private ObservacionService: ObservacionService,
+    private pedidoService: PedidoService,
+    private dialogProductoCantidad: MatDialog,
+    private dialogMesa: MatDialog,
+    private dialogDeleteProduct: MatDialog,
+    private dialogComprobante: MatDialog,
+    private dialogEmisionComprobante: MatDialog,
+    private spinnerService: NgxSpinnerService,
+    private familiaService: FamiliaService) {
+
+
+    this.MostrarOcultarPanelMesa = true;
+    this.MostrarOcultarPanelProducto = false;
+    this.mozoSelected = new Empleado;
+    this.mesaSelected = new Mesas;
+    this.MostrarOcultarPanelPedido = false;
+    this.RehacerPantallaRefresh = 'Refresh';
+
+
+  }
+
+
+
+  async ngOnInit() {
+
+    this.spinnerService.show();
+
+    try {
+
+      if (this.storageService.isAuthenticated()) {
+        this.loginService.UsuarioShare.emit(this.storageService.getCurrentSession().user.Usuario);
+      }
+      await this.TurnoService.ObtenerTurno('001').subscribe(data => {
+
+        if (data == null) {
+          this.loginService.userLoginOn.emit(true);
+          this.loginService.idturnoShare.emit(0);
+          this.loginService.nroturnoShare.emit(0);
+          this.loginService.turnoOpenShare.emit(false);
+        } else {
+          this.loginService.userLoginOn.emit(true);
+          this.loginService.idturnoShare.emit(data.IdTurno);
+          this.loginService.nroturnoShare.emit(data.NroTurno);
+          this.loginService.turnoOpenShare.emit(true);
+        }
+
+
+      });
+
+
+      // 1. Se carga servicio para obtener productos
+      this.listProducts = await this.productService.getAllProducts().toPromise();
+      // 2. Se carga servicio para obtener mesas
+      this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+      // 3. Se carga servicio para obtener Mozos
+      this.ListaEmpleados = await this.MozoService.getAllEmpleados().toPromise();
+      // 4. Se carga servicio para obtener ambientes
+      this.listAmbiente = await this.ambienteService.getAllAmbiente().toPromise();
+      // 5. Se carga combo familia
+      this.listFamilia = await this.familiaService.getFamilia().toPromise();
+      // 6. Se carga la sub familia
+      this.listSubFamilia = await this.familiaService.getSubFamilia().toPromise();
+      // 7. Se carga servicio observacion
+      this.ListaObservacion = await this.ObservacionService.getAllObservacion().toPromise();
+
+      this.mozoSelected.IdEmpleado = this.storageService.getCurrentSession().user.IdEmpleado;
+
+      let result: Ambiente;
+      result = this.listAmbiente.find(item => item.Estado == 1);
+      this.MostrarMesas_x_Ambiente(result);
+      
+      this.userLoged = {
+        id: this.storageService.getCurrentSession().user.IdEmpleado,
+        username: this.storageService.getCurrentSession().user.Usuario
+      };
+
+      this.MostrarOcultarPanelMesa = true;
+      this.spinnerService.hide();
+    } catch (_) {
+      this.spinnerService.hide();
+      this.salir();
+    }
+  }
+
+  public salir(): void {
+    this.storageService.logout();
+  }
+
+  async MostrarMesas_x_Ambiente(ambiente: Ambiente) {
+    this.spinnerService.show();
+    this.ListaMesas_x_Ambiente = this.ListaMesasTotal.filter(x => x.IdAmbiente === ambiente.IdAmbiente);
+    this.DisplayValueAmbiente = ambiente.Descripcion;
+    this.spinnerService.hide();
+  }
+
+
+  async ListarSubFamilia_x_Familia(oFamilia: Familia) {
+    this.spinnerService.show();
+    this.listProducts_x_SubFamilia = [];
+    this.listSubFamilia_x_Familia = this.listSubFamilia.filter(x => x.IdFamilia === oFamilia.IdFamilia);
+    let oSubFamilia = this.listSubFamilia_x_Familia.find((item) => (item.IdFamilia === oFamilia.IdFamilia));
+    this.ListarProductos_x_SubFamilia(oSubFamilia);
+    this.spinnerService.hide();
+  }
+
+  async ListarProductos_x_SubFamilia(oSubFamilia: SubFamilia) {
+    this.spinnerService.show();
+
+    this.IdSubFamila = oSubFamilia.IdSubFamilia;
+    this.listProducts_x_SubFamilia = this.listProducts.filter(x => x.IdSubFamilia === oSubFamilia.IdSubFamilia);
+    //this.GridListaPedidoDetProducto.data = this.ListaPedidoDetProducto.filter(x=> x.IdSubFamilia===subFamiliaId);
+    this.spinnerService.hide();
+  }
+
+
+  async openDialogMesa(mesa: Mesas) {
+    this.spinnerService.show();
+
+    this.limpiarPedido();
+    if (mesa.Ocupado == 0) {
+      this.mesaSelected = mesa;
+      this.MostrarOcultarPanelProducto = true;
+      this.MostrarOcultarPanelMesa = false;
+      this.mozoSelected.IdEmpleado = this.storageService.getCurrentSession().user.IdEmpleado;
+      console.log(this.storageService.getCurrentSession().user.IdEmpleado);
+ 
+
+    } else {
+      var listData: any[] = await this.mesasService.findMesaById(mesa.IdMesa).toPromise();
+      if (listData.length > 0) {
+        this.rellenarHeaderPedido(listData);
+        this.listProductGrid = this.getPedidoDetByResponse(listData);
+        this.GridListaPedidoDetProducto.data = this.listProductGrid;
+        this.mesaSelected = mesa;
+        this.MostrarOcultarPanelProducto = true;
+        this.MostrarOcultarPanelMesa = false;
+ 
+
+      } else {
+
+        Swal.fire(
+          'Ups.!',
+          'No existe el pedido en la mesa.',
+          'warning'
+        );
+        this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+      }
+    }
+    this.RehacerPantallaRefresh = 'RehacerPantalla';
+    this.spinnerService.hide();
+  }
+
+
+
+  async openDialogVerPedido(IdMesa: string) {
+    try {
+      this.spinnerService.show();
+
+      var listData: any[] = await this.mesasService.findMesaById(IdMesa).toPromise();
+
+      if (listData.length > 0) {
+        // this.rellenarHeaderPedido(listData);
+
+        const dialogEnviarPedidoRef = this.dialogMesa.open(DialogVerPedidoComponent, {
+          disableClose: true,
+          hasBackdrop: true,
+          width: '400px',
+          data: { oPedidoMesa: listData, IdMesa: IdMesa, Mesa: this.mesaSelected.Descripcion + ' ' + this.mesaSelected.Numero }
+        });
+
+        dialogEnviarPedidoRef.afterClosed().subscribe(data => {
+
+          if (data.Resultado) {
+            this.RehacerPantalla();
+          }
+        });
+
+      } else {
+
+        Swal.fire(
+          'Ups.!',
+          'No existe el pedido en la mesa.',
+          'warning'
+        );
+        this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+      }
+
+
+    } catch (e) {
+      Swal.fire(
+        'Algo anda mal',
+        e.error,
+        'error'
+      )
+      console.log(e);
+    } finally {
+      this.spinnerService.hide();
+
+    }
+
+  }
+
+  async openEmitirComprobante() {
+    try {
+     
+
+ 
+  
+
+    } catch (e) {
+      Swal.fire(
+        'Algo anda mal',
+        e.error,
+        'error'
+      )
+      console.log(e);
+    } finally {
+      this.spinnerService.hide();
+
+    }
+
+  }
+  async openDialoObservaciones(oPedidoDet: PedidoDet) {
+    try {
+      if (oPedidoDet.Cantidad == 0) {
+        Swal.fire(
+          'Ups.!',
+          'Agregue primero la cantidad.',
+          'warning'
+        );
+      } else {
+        this.spinnerService.show();
+
+
+        const dialogEnviarPedidoRef = this.dialogMesa.open(DialogObservacionComponent, {
+          hasBackdrop: true,
+          width: '400px',
+          data: { ListaObservacion: this.ListaObservacion, Observaciones: oPedidoDet.Observacion, NombreCorto: oPedidoDet.NombreCorto }
+        });
+
+        dialogEnviarPedidoRef.afterClosed().subscribe(Resultado => {
+          oPedidoDet.Observacion = Resultado.Observaciones;
+        })
+
+
+      }
+    } catch (e) {
+      Swal.fire(
+        'Algo anda mal',
+        e.error,
+        'error'
+      )
+      console.log(e);
+    } finally {
+      this.spinnerService.hide();
+
+    }
+
+  }
+
+
+
+  async aumentarProductGrid(oPedidoDet: PedidoDet) {
+
+
+    oPedidoDet.Cantidad += 1;
+
+  }
+
+  async restarProductGrid(oPedidoDet: PedidoDet) {
+
+
+    if (oPedidoDet.Cantidad > 1) {
+      oPedidoDet.Cantidad -= 1;
+    }
+
+  }
+  async deleteProductGrid(oPedidoDet: PedidoDet) {
+
+    var dataSet: any = {
+      nombreProducto: oPedidoDet.NombreCorto,
+      motivoAnulacion: '',
+      confirmacion: false
+    };
+
+    if (oPedidoDet.Item > 0) {
+
+      const dialogDeleetProductRef = this.dialogDeleteProduct.open(DialogDeleteProductComponent, {
+        width: '350px',
+        data: dataSet,
+        hasBackdrop: true
+      });
+
+      var resultDialog: any = await dialogDeleetProductRef.afterClosed().toPromise();
+
+      if (resultDialog.confirmacion) {
+
+        var pedidoDelete: PedidoDelete = new PedidoDelete(
+          this.storageService.getCurrentSession().user.IdUsuario,
+          resultDialog.motivoAnulacion,
+          oPedidoDet.IdPedido,
+          oPedidoDet.IdProducto,
+          oPedidoDet.Item);
+
+        this.spinnerService.show();
+        var responseService: ResponseService = await this.pedidoService.deletePedido(pedidoDelete).toPromise();
+        var cofigoOk: number = 200;
+
+        if (responseService.Codigo == cofigoOk) {
+          var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(oPedidoDet);
+          this.listProductGrid.splice(removeIndex, 1);
+          this.GridListaPedidoDetProducto.data = this.listProductGrid;
+          if (this.listProductGrid.length == 0) {
+            this.limpiarPedido();
+            this.MostrarOcultarPanelMesa = true;
+            this.MostrarOcultarPanelProducto = false;
+            this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+          }
+        }
+        this.spinnerService.hide();
+      }
+    } else {
+      // var removeIndex = this.listProductGrid.map(function (item) { return item.IdProducto; }).indexOf(oPedidoDet.IdProducto);
+      var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(oPedidoDet);
+      this.listProductGrid.splice(removeIndex, 1);
+      this.GridListaPedidoDetProducto.data = this.listProductGrid;
+    }
+
+  }
+
+  public AgregarProducto(product: Product): void {
+    this.listProductGrid.push(new PedidoDet(
+      this.DEFAULT_ID,
+      this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
+      product.IdProducto,
+      product.NombreCorto,
+      product.Precio,
+      1,
+      1 * product.Precio,
+      '',
+      '')
+    );
+    this.GridListaPedidoDetProducto.data = this.listProductGrid;
+  }
+
+  public openDialogObservacion(product: Product): void {
+    var cant: number;
+    var Obs: string;
+    const dialogProductRef = this.dialogProductoCantidad.open(DialogObservacionComponent, {
+      hasBackdrop: true,
+      width: '250px',
+      data: { ListaObservacion: this.ListaObservacion, Observaciones: product.Observacion, NombreCorto: product.NombreCorto }
+    });
+
+    dialogProductRef.afterClosed().subscribe(result => {
+      if (result.cantidad) {
+        if (result.cantidad > 0) {
+          cant = result.cantidad;
+          Obs = result.observacion;
+          this.listProductGrid.push(new PedidoDet(
+            this.DEFAULT_ID,
+            this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
+            product.IdProducto,
+            product.NombreCorto,
+            product.Precio,
+            cant,
+            cant * product.Precio,
+            Obs,
+            this.storageService.getCurrentIP())
+          );
+          this.GridListaPedidoDetProducto.data = this.listProductGrid;
+        } else {
+          Swal.fire(
+            'Ups.!',
+            'Ingrese una cantidad.',
+            'warning'
+          )
+        }
+      }
+    });
+  }
+
+  async processPedido() {
+    try {
+      this.spinnerService.show();
+
+  
+      if (this.listProductGrid.length > 0) {
+
+        var listPedidoDetails: PedidoDet[] = [];
+
+        this.listProductGrid.forEach(productGrid => {
+          let pedidoDetail: PedidoDet = new PedidoDet(
+            productGrid.Item,
+            productGrid.IdPedido = productGrid.IdPedido,
+            productGrid.IdProducto,
+            '',
+            productGrid.Precio,
+            productGrid.Cantidad,
+            productGrid.Precio*productGrid.Cantidad,
+            productGrid.Observacion,
+            this.storageService.getCurrentIP()
+          );
+          
+          listPedidoDetails.push(pedidoDetail);
+        });
+
+        var pedido: PedidoCab = new PedidoCab(
+          this.mozoSelected.IdEmpleado,
+          this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
+          this.getTotalByListProductGrid(),
+          this.getTotalByListProductGrid(),
+          this.storageService.getCurrentSession().user.IdUsuario,
+          this.storageService.getCurrentSession().user.IdUsuario,
+          this.mesaSelected.IdMesa, this.mesaSelected.Mesa, this.NroPaxSelected,
+          listPedidoDetails
+        );
+
+        var responseRegisterPedido: any = await this.pedidoService.registerPedido(pedido).toPromise();
+
+        if (responseRegisterPedido) {
+       
+          this.limpiarPedido();
+
+       
+          this.mesasService.getAllMesas().subscribe(data => {
+            this.ListaMesasTotal = data;
+            let result: Ambiente;
+            result = this.listAmbiente.find(item => item.Estado == 1);
+            this.MostrarMesas_x_Ambiente(result);
+          });
+
+          this.MostrarOcultarPanelMesa = true;
+          this.MostrarOcultarPanelProducto = false;
+          
+          Swal.fire(
+            'Good job!',
+            'Se registro el pedido correctamente.',
+            'success'
+          )
+        }
+      } else {
+        Swal.fire('Oops...', 'No ha ingresado ningun producto.', 'error')
+      }
+    } catch (error) {
+    console.log(error);
+    
+      Swal.fire(
+        'Algo anda mal',
+        error.error,
+        'error'
+      )
+      
+   
+    } finally {
+      this.spinnerService.hide();
+    }
+
+
+  }
+
+  async processComprobante() {
+    if (this.pedidoId > 0) {
+      var allSaved: Boolean = true;
+      for (var i = 0; i < this.listProductGrid.length; i++) {
+        if (this.listProductGrid[i].Item == 0) {
+          allSaved = false;
+          break;
+        }
+      }
+      if (allSaved) {
+
+        var dataSet: any = {
+          idPedido: this.pedidoId,
+          userRegister: this.storageService.getCurrentSession().user.IdUsuario,
+          productGrid: this.listProductGrid
+        };
+
+        const dialogProcessComprobante = this.dialogComprobante.open(DialogComprobanteComponent, {
+          width: '400px',
+          data: dataSet,
+          hasBackdrop: true
+        });
+
+        var resultDialog: any = await dialogProcessComprobante.afterClosed().toPromise();
+        this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+        this.limpiarPedido();
+        this.MostrarOcultarPanelMesa = true;
+        this.MostrarOcultarPanelProducto = false;
+      } else {
+        alert('No guardo todos los productos de la grilla.')
+      }
+    } else {
+      alert('Debe tener todo el pedido guardado.')
+    }
+  }
+
+  public async RehacerPantalla() {
+    try {
+      this.spinnerService.show();
+  
+      this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+      this.limpiarPedido();
+      this.MostrarOcultarPanelMesa = true;
+      this.MostrarOcultarPanelProducto = false;
+      this.RehacerPantallaRefresh = 'Refresh';
+    } catch (_) {
+
+      Swal.fire(
+        'Good job!',
+        'Error interno, actualice.',
+        'error'
+      )
+    } finally {
+      this.spinnerService.hide();
+    }
+
+  }
+
+  private getMozoByMozoId(idMozo: string): Empleado {
+    let result: Empleado;
+    this.ListaEmpleados.forEach(Mozo => {
+      if (idMozo === Mozo.IdEmpleado) {
+        result = Mozo;
+      }
+    });
+
+    return result;
+  }
+
+  private getTotalByListProductGrid(): number {
+
+    var cantidad: number = 0;
+
+    this.listProductGrid.forEach(productGrid => {
+      cantidad = cantidad + productGrid.Subtotal;
+    });
+
+    return cantidad;
+  }
+
+  private limpiarPedido(): void {
+    this.listProductGrid = [];
+    this.GridListaPedidoDetProducto.data = this.listProductGrid;
+    this.GridListaPedidoDetProducto.data = [];
+    this.mozoSelected = new Empleado;
+    this.mesaSelected = new Mesas;
+    this.pedidoId = 0;
+    this.horaPedido = '';
+  }
+
+  private getProductGridByResponse(listData: any[]): ProductGrid[] {
+
+    var productGrid: ProductGrid;
+    var result: ProductGrid[] = [];
+    listData.forEach(data => {
+      productGrid = new ProductGrid(
+        data.Item, data.IdPedido, data.IdProducto, data.NombreCorto, data.Precio, data.Cantidad, data.Cantidad * data.Precio, data.observacion
+      );
+      result.push(productGrid);
+    });
+
+    return result;
+  }
+
+  private getPedidoDetByResponse(listData: any[]): PedidoDet[] {
+
+    var oPedidoDet: PedidoDet;
+    var result: PedidoDet[] = [];
+    listData.forEach(data => {
+      oPedidoDet = new PedidoDet(
+        data.Item, 
+        data.IdPedido, 
+        data.IdProducto, 
+        data.NombreCorto, 
+        data.Precio, 
+        data.Cantidad, 
+        data.Cantidad * data.Precio, 
+        data.observacion,
+        data.Ip
+      );
+      result.push(oPedidoDet);
+    });
+
+    return result;
+  }
+
+  private rellenarHeaderPedido(listData: any[]): void {
+    var firstItem = listData[0];
+    this.mozoSelected = this.getMozoByMozoId(firstItem.IdEmpleado);
+    this.pedidoId = firstItem.IdPedido;
+    this.horaPedido = firstItem.HoraPedido;
+  }
+  private Refresh(): void {
+    this.productService.getAllProducts().subscribe(data => {
+      this.listProducts = data;
+    });
+
+    this.mesasService.getAllMesas().subscribe(data => {
+      this.ListaMesasTotal = data;
+      let result: Ambiente;
+      result = this.listAmbiente.find(item => item.Estado == 1);
+      this.MostrarMesas_x_Ambiente(result);
+    });
+  }
+
+
+
+
+  private RehacerRefresh(): void {
+
+    try {
+      this.spinnerService.show();
+
+      if (this.RehacerPantallaRefresh === 'Refresh') {
+        this.Refresh();
+      }
+      if (this.RehacerPantallaRefresh === 'RehacerPantalla') {
+        this.RehacerPantalla();
+      }
+    } catch (error) {
+
+    } finally {
+      this.spinnerService.hide();
+    }
+
+
+
+
+  }
+
+
+
+}
+

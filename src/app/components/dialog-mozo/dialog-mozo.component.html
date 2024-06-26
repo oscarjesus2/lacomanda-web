@@ -1,0 +1,17 @@
+<mat-toolbar color="primary">DATOS DE MESA</mat-toolbar>
+<mat-dialog-content>
+
+  <mat-form-field appearance="fill">
+    <mat-label>N° Mesa</mat-label>
+    <input matInput id="NumMesa" name="NumMesa"    [(ngModel)]="data.NumMesa">
+</mat-form-field> 
+
+<mat-form-field hintLabel="Only numbers" appearance="fill">
+  <mat-label>N° Pax</mat-label>
+  <input matInput #input maxlength="2" id="NroPersonas" (focus)="onsetFocus('NroPersonas')" name="NroPersonas" [(ngModel)]="NroPersonas">
+</mat-form-field>  
+<br>
+<mat-dialog-actions>
+  <button mat-raised-button color="primary" (click)="onAgregarClick()" [mat-dialog-close]="data" cdkFocusInitial>Agregar</button>
+  <button mat-raised-button color="primary" (click)="onNoClick()">Cancelar</button>
+</mat-dialog-actions>

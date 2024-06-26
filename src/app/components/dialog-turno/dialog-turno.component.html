@@ -1,0 +1,70 @@
+<div class="center-content">
+
+    <form class="example-form" [formGroup]="myForm" novalidate>
+              
+        
+        <h2 *ngIf="TurnoAbierto"> TURNO APERTURADO {{NroTurnoAbierto}}</h2>
+        <h2 *ngIf="!TurnoAbierto">APERTURAR TURNO</h2>
+        <table class="example-full-width" cellspacing="1">
+            <tr>
+
+                <td><mat-form-field class="example-full-width">
+                        <mat-label>Caja</mat-label>
+                        <mat-select matInput [formControl]="myForm.get('caja')">
+                            <mat-option *ngFor="let item of listCaja" [value]="item.IdCaja" (click)="ValidarTurnoAbierto(item)">
+                                {{item.Descripcion}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="myForm.get('caja').hasError('required')">
+                            Caja es requerida
+                        </mat-error>
+                    </mat-form-field>
+                </td>
+                <td>
+                    <mat-form-field class="example-full-width">
+                        <mat-label>Tipo de Cambio</mat-label>
+                        <input matInput [formControl]="myForm.get('tipocambio')">
+                        <mat-error *ngIf="myForm.get('tipocambio').hasError('required')">
+                            Tipo de Cambio es requerido
+                        </mat-error>
+                        <mat-error *ngIf="myForm.get('tipocambio').hasError('pattern')">
+                            Por favor, ingrese un Tipo de Cambio valido.
+                        </mat-error>
+                        <mat-error *ngIf="myForm.get('tipocambio').hasError('maxlength')">
+                            Maximo 5 caracteres
+                        </mat-error>
+                    </mat-form-field>
+
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <mat-form-field class="example-full-width">
+                        <mat-label>Fecha</mat-label>
+                        <input matInput [matDatepicker]="picker1" [formControl]="myForm.get('fecha')" readonly>
+                        <mat-hint>DD/MM/YYYY HH:MM:SS</mat-hint>
+                        <mat-datepicker-toggle matIconSuffix [for]="picker1"></mat-datepicker-toggle>
+                        <mat-datepicker #picker1></mat-datepicker>
+                    </mat-form-field>
+                </td>
+                <td></td>
+            </tr>
+        </table>
+
+   
+        <div class="example-button-row">
+            <button [disabled]="myForm.invalid" mat-fab extended color="accent" (click)="saveData()">
+                <mat-icon>lock_open</mat-icon>
+                Aperturar
+            </button>
+            <button mat-fab extended color="accent" (click)="salir()">
+                <mat-icon>exit_to_app</mat-icon>
+                Salir
+            </button>
+
+        </div>
+        <br>
+ 
+    </form>
+   
+</div>

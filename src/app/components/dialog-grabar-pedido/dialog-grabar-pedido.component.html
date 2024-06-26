@@ -1,0 +1,45 @@
+<!-- Cargar el script conector -->
+<script src="../../../../../ConectorPlugin.js"></script>
+<!-- Cargar el script del ejemplo -->
+<!--<script src="./script.js"></script>-->
+
+<mat-toolbar color="primary">RESUMEN PEDIDO - {{data.oPedido.Mesa}} </mat-toolbar>
+<mat-dialog-content>
+
+<div class="mat-elevation-z8" >
+  <table mat-table [dataSource]="GridListaPedidoDetProducto">
+
+      <ng-container matColumnDef="nombrecorto">
+          <th mat-header-cell *matHeaderCellDef> Producto </th>
+          <td mat-cell *matCellDef="let product"> {{product.NombreCorto}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="cantidad">
+          <th mat-header-cell *matHeaderCellDef> Qty </th>
+          <td mat-cell *matCellDef="let product"> {{product.Cantidad}} </td>
+      </ng-container>
+      
+
+      <ng-container matColumnDef="observacion">
+        <th mat-header-cell *matHeaderCellDef> Observacion </th>
+        <td mat-cell *matCellDef="let product"> {{product.Observacion}} </td>
+    </ng-container>
+    
+    <ng-container matColumnDef="delete" stickyEnd>
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let element" (click)="DeleteProductoClick(element)">
+          <mat-icon>delete</mat-icon>
+      </td>
+    </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="ListaProductosdisplayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: ListaProductosdisplayedColumns;"></tr>
+  </table>
+  <!-- <mat-paginator [pageSizeOptions]="[10]" showFirstLastButtons></mat-paginator> -->
+</div>   
+<mat-dialog-actions>
+  <button mat-raised-button color="primary" (click)="onEnviarPedidoClick()">Enviar Pedido</button>
+  <button mat-raised-button color="primary" [mat-dialog-close]="data" cdkFocusInitia>Mas productos</button> 
+  <button mat-raised-button color="primary" [mat-dialog-close]="data" (click)="onCancelarPedidoClick()">Cancelar</button> 
+  
+</mat-dialog-actions>

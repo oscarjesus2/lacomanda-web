@@ -1,0 +1,76 @@
+<div flex *ngIf="muestraFormulario">
+    <h1 mat-dialog-title>Generar Comprobante</h1>
+    <div mat-dialog-content>        
+            <mat-form-field appearance="fill">
+                <mat-label>--tipo comprobante--</mat-label>
+                <mat-select [(ngModel)]="documentTypeValue" name="documentTypeValue" id="documentTypeValue">
+                    <mat-option *ngFor="let document of listDocumentType" [value]="document.value">
+                        {{document.name}}
+                    </mat-option>
+                </mat-select>  
+            </mat-form-field> 
+            <mat-form-field>
+                <mat-label>Razon Social</mat-label>
+                <input matInput id="razonSocial" name="razonSocial" [(ngModel)]="razonSocial">
+            </mat-form-field>   
+            <mat-form-field>
+                <mat-label>Nro Documento</mat-label>
+                <input matInput id="nroDocumento" name="nroDocumento" [(ngModel)]="nroDocumento" type="number">
+            </mat-form-field>     
+            <mat-form-field>
+                <mat-label>Direccion</mat-label>
+                <input matInput id="direccion" name="direccion" [(ngModel)]="direccion">
+            </mat-form-field>                                     
+    </div>
+    <div mat-dialog-actions>
+        <button mat-raised-button color="primary"  (click)="generarComprobante(true)">Generar</button>
+        <button mat-raised-button color="primary" (click)="generarComprobante(false)">Cancelar</button>
+    </div>
+</div>
+
+
+<div flex *ngIf="muestraMensaje">
+    <h1 mat-dialog-title>Resultado</h1>
+    <div mat-dialog-content>        
+        <mat-label>{{messageSucces}}</mat-label>         
+    </div>
+    <div mat-dialog-actions>
+        <button mat-raised-button color="primary" (click)="generarComprobante(false)">Cerrar</button>
+    </div>
+</div>
+
+
+<div flex *ngIf="muestraBoleta">
+    <div class="container">       
+        <div id="pdfTable" #pdfTable>
+            <center>
+                <h3>FACTURA DE VENTA</h3>
+                <h3>{{nroFactura}}</h3>
+
+                <h3>PEDIDO: {{pedidoId}}</h3>
+                <h3>USUARIO: {{usuario}}</h3>
+                <h3>FECHA: {{fecha}}</h3>
+                        
+                <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>CANTIDAD</th>
+                        <th>PRODUCTO</th>
+                        <th>PRECIO</th>
+                        <th>SUBTOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let product of data.productGrid">
+                        <td>{{product.cantidad}}</td>
+                        <td>{{product.name}}</td>
+                        <td>{{product.price}}</td>
+                        <td>{{product.total}}</td>
+                    </tr>                   
+                </tbody>
+                </table>
+            </center>    
+        </div>      
+        <button class="btn btn-primary" (click)="downloadAsPDF()">Descargar</button>
+    </div>
+</div>

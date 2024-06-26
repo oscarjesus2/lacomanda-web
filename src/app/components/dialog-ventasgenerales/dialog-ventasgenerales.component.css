@@ -1,0 +1,112 @@
+/* dialog-ventasgenerales.component.css */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.ventas-generales-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Ocupa toda la altura de la ventana */
+  box-sizing: border-box; /* Incluye el padding en el cálculo del tamaño */
+}
+
+h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filters input[type="text"],
+.filters select {
+  padding: 5px;
+  margin-right: 10px;
+}
+
+.btn-actualizar {
+  padding: 5px;
+}
+
+.table-buttons-container {
+  display: flex;
+  flex-direction: row;
+  height: 100%; /* Ocupa toda la altura disponible */
+  overflow: hidden; /* Evita que el contenido se desborde */
+}
+
+.ventas-table-container {
+  flex-grow: 1;
+  overflow-y: auto; /* Maneja el desbordamiento vertical */
+  margin-right: 20px; /* Espacio entre la tabla y los botones */
+}
+
+.ventas-table {
+  width: 100%;
+  /* border-collapse: collapse; */
+} 
+
+ .ventas-table th,
+.ventas-table td {
+  /* border: 1px solid #dddd; */
+  padding: 8px;
+  text-align: left;
+} 
+
+/* Estilo para la fila al pasar el cursor */
+ 
+.buttons {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0; /* Evita que los botones se reduzcan */
+}
+
+.buttons button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  width: 200px;
+  text-align: left;
+}
+
+.btn-salir {
+  background-color: #f0f0f0;
+}
+
+.btn-emitir-comprobante,
+.btn-nota-credito,
+.btn-modificar-doc,
+.btn-modificacion-pagos,
+.btn-pdf-xml,
+.btn-reimprimir-doc,
+.btn-anular {
+  background-color: #fff;
+  border: 1px solid #ddd;
+}
+
+.btn-anular {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+}
+.selected {
+  background-color: #f1f1f1; /* Cambia esto al color que desees */
+}
+.row-is-clicked {
+  font-weight: bold;
+}
+.mat-mdc-row .mat-mdc-cell {
+  border-bottom: 1px solid transparent;
+  border-top: 1px solid transparent;
+  cursor: pointer;
+}
+
+.mat-mdc-row:hover .mat-mdc-cell {
+  border-color: currentColor;
+}

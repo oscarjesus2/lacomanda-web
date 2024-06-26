@@ -1,0 +1,122 @@
+.invoice-form {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+    background-color: #e0e0e0;
+    border-radius: 8px;
+  }
+
+  .close-button {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    z-index: 1000;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .close-button mat-icon {
+    font-size: 24px;
+    color: #757575;  /* Color gris medio */
+  }
+  
+  .close-button:hover mat-icon {
+    color: #212121;  /* Color más oscuro al pasar el mouse */
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+  
+  .inline-form {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .flex-item {
+    flex: 1;
+  }
+  
+  .table-container {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .table-wrapper {
+    flex: 1;
+    overflow: auto;
+    max-height: 200px;
+  }
+  
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: flex-start;
+  }
+  
+  .totals {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #ffffff;
+    border: 1px solid #d0d0d0;
+  }
+  
+  table {
+    width: 100%;
+    background-color: #ffffff;
+    margin-top: 10px;
+  }
+  
+  mat-form-field {
+    width: 100%;
+  }
+  
+  .mat-raised-button {
+    margin-right: 10px;
+  }
+  
+  .mat-header-cell, .mat-cell {
+    text-align: center;
+  }
+  
+  button.mat-raised-button {
+    margin-top: 10px;
+  }
+  
+  .mat-header-cell {
+    background-color: #f0f0f0;
+  }
+  
+  .mat-row:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .mat-row:nth-child(odd) {
+    background-color: #ffffff;
+  }
+  
+  .search-button {
+    background-color: #ffeb3b;
+    color: black;
+  }
+  
+  .search-button mat-icon {
+    margin-right: 5px;
+  }
+  
+  .mat-select, .mat-input-element, .mat-textarea-element {
+    padding: 10px;
+  }
+  
+  .mat-raised-button {
+    min-width: 100px;
+    padding: 5px 15px;
+    font-size: 10px;
+  }
+  

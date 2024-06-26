@@ -1,0 +1,58 @@
+<div class="ventas-generales-container">
+  <h1>Listado de Ventas Generales</h1>
+  <div class="filters">
+    <label>
+      <input type="checkbox" [(ngModel)]="listarTodosLosTurnos"> Listar ventas de todos los turnos/cajas
+    </label>
+    <select [(ngModel)]="campoSeleccionado" (change)="aplicarFiltro()">
+      <option value="Caja">Caja</option>
+      <option value="TipoDocumento">Tipo de Documento</option>
+      <option value="Documento">Documento</option>
+      <option value="Cliente">Cliente</option>
+      <option value="FechaVenta">Fecha</option>
+      <option value="Moneda">Moneda</option>
+      <option value="Dscto">Dscto</option>
+      <option value="Inafecto">Inafecto</option>
+      <option value="ValorVenta">ValorVenta</option>
+      <option value="IGV">IGV</option>
+      <option value="Servicio">Servicio</option>
+      <option value="ICBPER">ICBPER</option>
+      <option value="Total">Total</option>
+      <option value="EstadoDescripcion">EstadoDescripción</option>
+      <option value="EstadoPago">EstadoPago</option>
+    </select>
+    <input type="text" placeholder="Buscar" [(ngModel)]="textoFiltro" (input)="aplicarFiltro()">
+    <button class="btn-actualizar" (click)="actualizarLista()">Actualizar Lista</button>
+  </div>
+
+  <div class="table-buttons-container">
+    <div class="ventas-table-container">
+      <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 ventas-table">
+        <!-- Define tus columnas matColumnDef aquí -->
+        <ng-container *ngFor="let column of displayedColumns" [matColumnDef]="column">
+          <th mat-header-cell *matHeaderCellDef>{{ column }}</th>
+          <td mat-cell *matCellDef="let row">{{ row[column] }}</td>
+        </ng-container>
+      
+        <!-- Definición de las filas y selección -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            [class.selected]="row === ventaSeleccionada" 
+            (click)="seleccionarVenta(row)">
+        </tr>
+      </table>
+      
+    </div>
+
+    <div class="buttons">
+      <button class="btn-salir" (click)="onNoClick()">Salir</button>
+      <button class="btn-emitir-comprobante" (click)="OpenDialogVentasGeneralesTurno()">Emisión de Comprobante</button>
+      <button class="btn-nota-credito">Emisión de Nota de Crédito</button>
+      <button class="btn-modificar-doc">Modificar Documento</button>
+      <button class="btn-modificacion-pagos">Modificación de Pagos</button>
+      <button class="btn-pdf-xml">Obtener PDF y XML</button>
+      <button class="btn-reimprimir-doc">Reimprimir Documento</button>
+      <button class="btn-anular">Anular</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+<!-- 
+<p  *ngIf="!userLoginOn">Usuario no autenticado!</p>
+<div *ngIf="userLoginOn">
+    <p>token : {{userData?.token}}</p>
+    <p>IdEmpleado : {{userData?.IdEmpleado}}</p>
+    <p>IdUsuario : {{userData?.IdUsuario}}</p>
+    <p>IdNivel : {{userData?.IdNivel}}</p>
+    <p>Usuario : {{userData?.Usuario}}</p>
+</div> -->
+<div class="container">
+    <h1 class="page-title">Página de Administración</h1>
+    <div class="menu-columns">
+      <div class="menu-column">
+        <app-menu-ventas></app-menu-ventas>
+      </div>
+      <div class="menu-column">
+        <app-menu-almacen></app-menu-almacen>
+      </div>
+    </div>
+  </div>
+  

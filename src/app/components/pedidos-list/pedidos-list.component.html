@@ -1,0 +1,36 @@
+<mat-toolbar color="primary">LISTA DE PEDIDOS</mat-toolbar>                    
+  <table mat-table [dataSource]="dataSourceDialogData">
+
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef> Id </th>
+      <td mat-cell *matCellDef="let data"> {{data.id}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="numeroPedido">
+      <th mat-header-cell *matHeaderCellDef> Numero Pedido </th>
+      <td mat-cell *matCellDef="let data"> {{data.numeroPedido}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="cliente">
+      <th mat-header-cell *matHeaderCellDef> Cliente </th>
+      <td mat-cell *matCellDef="let data"> {{data.cliente}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef> Seleccionar </th>
+      <td mat-cell *matCellDef="let data">
+        <button mat-icon-button color="primary" [mat-dialog-close]="data" cdkFocusInitial>                          
+           <mat-icon>playlist_add</mat-icon>
+        </button>
+    </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+
+<div mat-dialog-actions>
+  <button mat-raised-button color="primary" mat-dialog-close>Cerrar</button>
+</div>
