@@ -1,0 +1,12 @@
+<div class="report">
+    <h2>Transacciones Diarias/Semanales/Mensuales</h2>
+    <select (change)="onReportTypeChange($event)">
+      <option value="diarias">Diarias</option>
+      <option value="semanales">Semanales</option>
+      <option value="mensuales">Mensuales</option>
+    </select>
+    <div  class="totalVenta">Total Transacciones : {{totalTransaccion}}</div> 
+    <div #chart class="chart" id="chart-ventas-diarias"></div>
+  <div id="tooltip" class="tooltip"></div>
+  </div>
+  

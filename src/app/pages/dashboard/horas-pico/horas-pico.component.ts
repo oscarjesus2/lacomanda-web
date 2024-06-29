@@ -41,9 +41,11 @@ export class HorasPicoComponent implements OnInit , OnChanges{
   ngOnChanges(changes: SimpleChanges): void {
     // Detectar cambios en las fechas y actualizar el gráfico
     if (changes.fechaInicial || changes.fechaFinal) {
+      if (this.fechaInicial && this.fechaFinal) {
       var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
       var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
       this.getVentasHoraPico(1, fechaInicial, fechaFinal); // Inicializar con datos Tarde
+      }
     }
   }
 

@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { ventasInterface } from 'src/app/interfaces/ventas.interface';
 import { CajaService } from 'src/app/services/caja.services';
 import { Caja } from 'src/app/models/caja.models';
+import { DialogEmitirVentaComponent } from '../dialog-emitir-venta/dialog-emitir-venta.component';
 import { DialogEmitirComprobanteComponent } from '../dialog-emitir-comprobante/dialog-emitir-comprobante.component';
 
 @Component({
@@ -41,34 +42,29 @@ export class DialogVentasgeneralesComponent implements OnInit {
   }
 
   loadVentas() {
-    this.spinnerService.show();
-    var incluyeGeneral: number;
-    incluyeGeneral=0;
-    this.cajaService.getAllCaja(incluyeGeneral).subscribe(
-      cajas => {
-        this.listCaja = cajas;
-        const caja001 = this.listCaja.find(x => x.IdCaja === '001');
+    try {
+      this.spinnerService.show();
 
-        if (this.listarTodosLosTurnos) {
-          this.getListadoVentas(0);
-        } else {
-          if (caja001 && caja001.TurnoAbierto) {
-            this.getListadoVentas(caja001.TurnoAbierto.IdTurno);
-          } else {
-            this.handleNoTurnoAbiertoError();
-          }
-        }
-      },
-      error => {
-        console.error('Error al obtener cajas:', error);
-        Swal.fire('Algo anda mal', 'Error al obtener cajas', 'error');
-        this.spinnerService.hide();
+      if (this.listarTodosLosTurnos) 
+      {
+        this.getListadoVentas(0);
+      } else {
+        this.getListadoVentas(1);
       }
-    );
+    } catch (error) {
+      console.error('Error al cargar ventas:', error);
+      Swal.fire('Algo anda mal', 'Error al cargar ventas', 'error');
+      this.spinnerService.hide(); // Oculta el spinner en caso de error
+    }
   }
 
-  getListadoVentas(idTurno: number) {
-    this.ventaService.getListadoVentas(idTurno).subscribe(
+  handleNoTurnoAbiertoError() {
+    this.spinnerService.hide();
+    Swal.fire('Error', 'No se encontró la caja 001 o no tiene turno abierto', 'error');
+  }
+  
+  getListadoVentas(soloTurnoAbierto: number) {
+    this.ventaService.getListadoVentas(soloTurnoAbierto).subscribe(
       data => {
         console.log('Datos recibidos:', data); // Agrega esto para verificar la estructura de los datos
         this.ventas = data;
@@ -94,12 +90,9 @@ export class DialogVentasgeneralesComponent implements OnInit {
     }
   }
 
-  handleNoTurnoAbiertoError() {
-    this.spinnerService.hide();
-    Swal.fire('Error', 'No se encontró la caja 001 o no tiene turno abierto', 'error');
-  }
 
   actualizarLista(): void {
+    this.spinnerService.show(); 
     this.loadVentas();
   }
 
@@ -117,11 +110,13 @@ export class DialogVentasgeneralesComponent implements OnInit {
   }
 
 
-  OpenDialogVentasGeneralesTurno(): void {
+  OpenDialogEmitirVenta(): void {
   
     const dialogTurno = this.dialog.open(DialogEmitirComprobanteComponent, {
       disableClose: true,
-      hasBackdrop: true
+      hasBackdrop: true,
+            width: '100%',
+      height: '100%'
       // data: { oPedidoMesa: listData, IdMesa: IdMesa, Mesa: this.mesaSelected.Descripcion + ' ' + this.mesaSelected.Numero}
     });
   }

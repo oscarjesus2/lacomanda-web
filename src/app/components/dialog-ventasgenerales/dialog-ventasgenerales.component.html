@@ -1,4 +1,8 @@
 <div class="ventas-generales-container">
+  <button mat-icon-button class="close-button" (click)="onNoClick()">
+    <mat-icon>close</mat-icon>
+  </button>
+  <br>
   <h1>Listado de Ventas Generales</h1>
   <div class="filters">
     <label>
@@ -46,7 +50,7 @@
 
     <div class="buttons">
       <button class="btn-salir" (click)="onNoClick()">Salir</button>
-      <button class="btn-emitir-comprobante" (click)="OpenDialogVentasGeneralesTurno()">Emisión de Comprobante</button>
+      <button class="btn-emitir-comprobante" (click)="OpenDialogEmitirVenta()">Emisión de Comprobante</button>
       <button class="btn-nota-credito">Emisión de Nota de Crédito</button>
       <button class="btn-modificar-doc">Modificar Documento</button>
       <button class="btn-modificacion-pagos">Modificación de Pagos</button>

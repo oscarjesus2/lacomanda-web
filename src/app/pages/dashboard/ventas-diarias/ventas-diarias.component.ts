@@ -19,6 +19,7 @@ export class VentasDiariasComponent implements OnInit, OnChanges  {
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
   totalVenta: number;
+  reportType: string ;
   private data: ventadiariasemanalmensual[];
   private svg;
   private width: number;
@@ -40,11 +41,11 @@ export class VentasDiariasComponent implements OnInit, OnChanges  {
       this.radius = Math.min(this.width, this.height) / 2;
   
       this.initSvg();
-      var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
-      var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
-  
-      this.getVentaDiariasSemanalMensual(1, fechaInicial, fechaFinal); // Inicializar con datos diarios
-   
+      if (this.fechaInicial && this.fechaFinal) {
+        const fechaInicialStr = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US');
+        const fechaFinalStr = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US');
+        this.getVentaDiariasSemanalMensual(1, fechaInicialStr, fechaFinalStr); // Initialize with daily data
+      }
     } catch (error) {
       this.storageService.logout();
     }
@@ -53,10 +54,18 @@ export class VentasDiariasComponent implements OnInit, OnChanges  {
   ngOnChanges(changes: SimpleChanges): void {
     // Detectar cambios en las fechas y actualizar el gráfico
     if (changes.fechaInicial || changes.fechaFinal) {
-      var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
-      var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
-  
-      this.getVentaDiariasSemanalMensual(1, fechaInicial, fechaFinal); // Inicializar con datos diarios
+      if (this.fechaInicial && this.fechaFinal) {
+        var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
+        var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
+    
+        if (this.reportType === 'diarias') {
+          this.getVentaDiariasSemanalMensual(1, fechaInicial, fechaFinal);
+        } else if (this.reportType === 'semanales') {
+          this.getVentaDiariasSemanalMensual(2, fechaInicial, fechaFinal);
+        } else if (this.reportType === 'mensuales') {
+          this.getVentaDiariasSemanalMensual(3, fechaInicial, fechaFinal);
+        }
+      }
     }
   }
   private initSvg() {
@@ -92,17 +101,20 @@ export class VentasDiariasComponent implements OnInit, OnChanges  {
   }
 
   onReportTypeChange(event: any): void {
-    const reportType = event.target.value;
-    var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
-    var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
-    
-    if (reportType === 'diarias') {
-      this.getVentaDiariasSemanalMensual(1, fechaInicial, fechaFinal);
-    } else if (reportType === 'semanales') {
-      this.getVentaDiariasSemanalMensual(2, fechaInicial, fechaFinal);
-    } else if (reportType === 'mensuales') {
-      this.getVentaDiariasSemanalMensual(3, fechaInicial, fechaFinal);
+    this.reportType = event.target.value;
+
+    if (this.fechaInicial && this.fechaFinal) {
+      var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
+      var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
+      if (this.reportType === 'diarias') {
+        this.getVentaDiariasSemanalMensual(1, fechaInicial, fechaFinal);
+      } else if (this.reportType === 'semanales') {
+        this.getVentaDiariasSemanalMensual(2, fechaInicial, fechaFinal);
+      } else if (this.reportType === 'mensuales') {
+        this.getVentaDiariasSemanalMensual(3, fechaInicial, fechaFinal);
+      }
     }
+
   }
 
   private updateChart() {

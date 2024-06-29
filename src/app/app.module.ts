@@ -70,6 +70,8 @@ import { DialogMCantComponent } from './components/dialog-mcant/dialog-mcant.com
 
 
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { TransaccionesDiariasComponent } from './pages/dashboard/transacciones-diarias/transacciones-diarias.component';
+import { DialogEmitirVentaComponent } from './components/dialog-emitir-venta/dialog-emitir-venta.component';
 
 
 @NgModule({
@@ -99,6 +101,8 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
     DialogVentasgeneralesComponent,
     DialogEmitirComprobanteComponent,
     DialogMCantComponent,
+    TransaccionesDiariasComponent,
+    DialogEmitirVentaComponent,
 
   ],
   imports: [

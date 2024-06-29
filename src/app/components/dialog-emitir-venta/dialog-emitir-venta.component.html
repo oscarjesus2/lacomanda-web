@@ -1,0 +1,151 @@
+<div class="invoice-form">
+    <button mat-icon-button class="close-button" (click)="salir()">
+      <mat-icon>close</mat-icon>
+    </button>
+    <br>
+    <form #form="ngForm">
+      <div class="inline-form">
+        <mat-form-field appearance="outline" class="flex-item">
+          <mat-label>Caja</mat-label>
+          <mat-select [(ngModel)]="cajaSeleccionada" name="caja" [disabled]="!CajaEnabled" required #caja="ngModel">
+            <mat-option *ngFor="let item of listCaja" [value]="item.IdCaja" (click)="ValidarCaja(item)">
+              {{item.Descripcion}}
+            </mat-option>
+          </mat-select> 
+          <mat-error *ngIf="caja.invalid && (caja.dirty || caja.touched)">
+            El campo es requerido.
+          </mat-error>
+        </mat-form-field>
+  
+        <mat-form-field appearance="outline" class="flex-item">
+          <mat-label>Fecha Documento</mat-label>
+          <input matInput [matDatepicker]="picker" [(ngModel)]="fechaDocumento" name="fechaDocumento" required #fechaDoc="ngModel">
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-error *ngIf="fechaDoc.invalid && (fechaDoc.dirty || fechaDoc.touched)">
+            El campo es requerido.
+          </mat-error>
+        </mat-form-field>
+  
+        <mat-form-field appearance="outline" class="flex-item">
+          <mat-label>Moneda</mat-label>
+          <mat-select [(ngModel)]="monedaSeleccionada" name="moneda" [disabled]="!MonedaEnabled">
+            <mat-option value="SOLES">SOLES</mat-option>
+            <mat-option value="DOLARES">DOLARES</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+  
+      <div class="inline-form" *ngIf="visibleInfoTurno">
+        <mat-form-field appearance="outline" class="flex-item">
+          <mat-label>Turno</mat-label>
+          <input matInput type="text" [(ngModel)]="nroTurnoAbierto" name="turno" readonly>
+        </mat-form-field>
+    
+        <mat-form-field appearance="outline" class="flex-item">
+          <mat-label>Fecha Turno</mat-label>
+          <input matInput type="text" [(ngModel)]="fechaTurnoAbierto" name="fechaTurno" readonly>
+        </mat-form-field>
+      </div>
+  
+      <div class="inline-form">
+        <mat-form-field appearance="outline" class="flex-item">
+          <mat-label>Venta</mat-label>
+          <input matInput type="text" [(ngModel)]="tipoCambioVenta" name="venta" #venta="ngModel" required pattern="^[0-9]+(\.[0-9]*)?$" />
+          <mat-error *ngIf="venta.invalid && (venta.dirty || venta.touched)">
+            Debe ingresar solo valores numéricos.
+            <!-- <div *ngIf="venta.errors?.required">El campo es requerido.</div>
+            <div *ngIf="venta.errors?.pattern">Debe ingresar solo valores numéricos.</div> -->
+          </mat-error>
+        </mat-form-field>
+    
+        <mat-form-field appearance="outline" class="flex-item">
+          <mat-label>Compra</mat-label>
+          <input matInput type="text" [(ngModel)]="tipoCambioCompra" name="compra" #compra="ngModel" required pattern="^[0-9]+(\.[0-9]*)?$" />
+  
+          <mat-error *ngIf="compra.invalid && (compra.dirty || compra.touched)">
+            Debe ingresar solo valores numéricos
+            <!-- <div *ngIf="compra.errors?.required">El campo es requerido.</div>
+            <div *ngIf="compra.errors?.pattern">Debe ingresar solo valores numéricos.</div> -->
+          </mat-error>
+        </mat-form-field>
+      </div>
+  
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Observación</mat-label>
+        <input matInput type="text" name="observacion">
+      </mat-form-field>
+    </form>
+  
+    <mat-form-field appearance="fill">
+      <mat-label>Buscar Producto</mat-label>
+      <input type="text" matInput [formControl]="productCtrl" [matAutocomplete]="auto">
+      <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onProductoSelected($event)" [displayWith]="displayProductName">
+        <mat-option *ngFor="let product of filteredProducts | async" [value]="product">
+          {{ product.NombreCorto }}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+  
+    <div class="table-container"> 
+      <div class="table-wrapper">
+        <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+          <!-- Product Column -->
+          <ng-container matColumnDef="Producto">
+            <th mat-header-cell *matHeaderCellDef> PRODUCTO </th>
+            <td mat-cell *matCellDef="let element"> {{element.Producto}} </td>
+          </ng-container>
+  
+          <!-- Quantity Column -->
+          <ng-container matColumnDef="Qty">
+            <th mat-header-cell *matHeaderCellDef> CANT </th>
+            <td mat-cell *matCellDef="let element"> {{element.Qty}} </td>
+          </ng-container>
+  
+          <!-- Price Column -->
+          <ng-container matColumnDef="Precio">
+            <th mat-header-cell *matHeaderCellDef> PRECIO </th>
+            <td mat-cell *matCellDef="let element"> {{element.Precio}} </td>
+          </ng-container>
+  
+          <!-- Total Column -->
+          <ng-container matColumnDef="Total">
+            <th mat-header-cell *matHeaderCellDef> TOTAL </th>
+            <td mat-cell *matCellDef="let element"> {{element.Total}} </td>
+          </ng-container>
+  
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let product">
+              <button mat-icon-button color="primary" matTooltip="Aumentar Cantidad" (click)="aumentarProductGrid(product)">
+                <mat-icon>add</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" matTooltip="Restar Cantidad" (click)="restarProductGrid(product)">
+                <mat-icon>remove</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+  
+          <!-- Header and Row Declarations -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+  
+      <div class="actions">
+        <button class="button_azul">DESCUENTO</button>
+        <button class="button_azul">BOLETA</button>
+        <button class="button_azul" (click)="OpenDialogEmitirComprobante()">FACTURA</button>
+      </div>
+    </div>
+  
+    <div class="totals">
+      <div>IMPORTE: {{sumaImporte}}</div>
+      <div>DSCTO: {{sumaDscto}}</div>
+      <div>TOTAL: {{sumatotal}}</div>
+      <div>ICBPER: {{sumaImpuestoBolsa}}</div>
+      <div>GRAN TOTAL: {{sumaGranTotal}}</div>
+    </div>
+  </div>
+  

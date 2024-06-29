@@ -6,28 +6,33 @@ import { VentaService } from '../../../services/venta.services';
 import { ventadiariasemanalmensual } from 'src/app/models/ventadiariasemanalmensual.models';
 import { formatDate } from '@angular/common';
 import { StorageService } from 'src/app/services/storage.services';
+
 @Component({
-  selector: 'app-canal-venta',
-  templateUrl: './canal-venta.component.html',
-  styleUrls: ['./canal-venta.component.css']
+  selector: 'app-transacciones-diarias',
+  templateUrl: './transacciones-diarias.component.html',
+  styleUrls: ['./transacciones-diarias.component.css']
 })
-export class CanalVentaComponent implements OnInit, OnChanges  {
+export class TransaccionesDiariasComponent implements OnInit, OnChanges  {
   @ViewChild('chart', { static: true }) 
+  
   private chartContainer: ElementRef;
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
-  totalVentaMesa: number;
-  totalVentaLlevar: number;
-  totalVentaDelivery: number;
+  totalTransaccion: number;
+  reportType: string;
   private data: ventadiariasemanalmensual[];
   private svg;
   private width: number;
   private height: number;
   private radius: number;
+
   private color;
   private tooltip;
 
-  constructor(private spinnerService: NgxSpinnerService, private ventaService: VentaService,   private storageService: StorageService,) { }
+  constructor(
+    private spinnerService: NgxSpinnerService, 
+    private ventaService: VentaService,
+    private storageService: StorageService,) { }
 
   ngOnInit(): void {
     try {
@@ -36,10 +41,16 @@ export class CanalVentaComponent implements OnInit, OnChanges  {
       this.radius = Math.min(this.width, this.height) / 2;
   
       this.initSvg();
-      var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
-      var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
-      this.getVentasPorCanal(fechaInicial, fechaFinal); // Inicializar con datos diarios
-      
+      if (this.fechaInicial && this.fechaFinal) {
+        const fechaInicialStr = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US');
+        const fechaFinalStr = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US');
+        this.getVentaDiariasSemanalMensual(1, fechaInicialStr, fechaFinalStr); // Initialize with daily data
+      } else {
+        console.warn('Initial or final date is missing.');
+        // Handle missing dates, maybe set default values or notify the user
+      }
+            
+   
     } catch (error) {
       this.storageService.logout();
     }
@@ -49,10 +60,16 @@ export class CanalVentaComponent implements OnInit, OnChanges  {
     // Detectar cambios en las fechas y actualizar el gráfico
     if (changes.fechaInicial || changes.fechaFinal) {
       if (this.fechaInicial && this.fechaFinal) {
-      var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
-      var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
-  
-      this.getVentasPorCanal(fechaInicial, fechaFinal); // Inicializar con datos diarios
+        var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
+        var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
+    
+        if (this.reportType === 'diarias') {
+          this.getVentaDiariasSemanalMensual(1, fechaInicial, fechaFinal);
+        } else if (this.reportType === 'semanales') {
+          this.getVentaDiariasSemanalMensual(2, fechaInicial, fechaFinal);
+        } else if (this.reportType === 'mensuales') {
+          this.getVentaDiariasSemanalMensual(3, fechaInicial, fechaFinal);
+        }
       }
     }
   }
@@ -81,20 +98,29 @@ export class CanalVentaComponent implements OnInit, OnChanges  {
       .style('opacity', 0);
   }
 
-  async getVentasPorCanal(fechaInicial: string, fechaFinal: string) {
-      const data = await this.ventaService.getVentasPorCanal(fechaInicial, fechaFinal).toPromise();
+  async getVentaDiariasSemanalMensual(tipo: number, fechaInicial: string, fechaFinal: string) {
+      const data = await this.ventaService.getVentaDiariasSemanalMensual(tipo, fechaInicial, fechaFinal).toPromise();
       this.data = data;
-  
-      this.totalVentaMesa = this.data.reduce((acc, venta) => {return venta.Agrupado==='Para Mesa'? acc + venta.Total: acc}, 0);
-      this.totalVentaLlevar = this.data.reduce((acc, venta) => {return venta.Agrupado==='Para Llevar'? acc + venta.Total: acc}, 0);
-      this.totalVentaDelivery = this.data.reduce((acc, venta) => {return venta.Agrupado==='Delivery'? acc + venta.Total: acc}, 0);
-
+      this.totalTransaccion = this.data.reduce((acc, venta) => acc + venta.Transacciones, 0);
       this.updateChart();
   }
 
+  onReportTypeChange(event: any): void {
+    this.reportType = event.target.value;
+    var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
+    var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
+    
+    if (this.reportType === 'diarias') {
+      this.getVentaDiariasSemanalMensual(1, fechaInicial, fechaFinal);
+    } else if (this.reportType === 'semanales') {
+      this.getVentaDiariasSemanalMensual(2, fechaInicial, fechaFinal);
+    } else if (this.reportType === 'mensuales') {
+      this.getVentaDiariasSemanalMensual(3, fechaInicial, fechaFinal);
+    }
+  }
 
   private updateChart() {
-    const pie = d3.pie<ventadiariasemanalmensual>().value((d: ventadiariasemanalmensual) => d.Total);
+    const pie = d3.pie<ventadiariasemanalmensual>().value((d: ventadiariasemanalmensual) => d.Transacciones);
     const arc = d3.arc<ventadiariasemanalmensual>()
       .outerRadius(this.radius - 10)
       .innerRadius(0);
@@ -117,7 +143,7 @@ export class CanalVentaComponent implements OnInit, OnChanges  {
         this.tooltip.transition()
           .duration(200)
           .style('opacity', .9);
-        this.tooltip.html(`${d.data.Agrupado} - Total Venta S/.  ${d.data.Total}`)
+        this.tooltip.html(`${d.data.Agrupado} - Total Transacciones ${d.data.Transacciones}`)
           .style('left', (event.pageX + 5) + 'px')
           .style('top', (event.pageY - 28) + 'px');
       })

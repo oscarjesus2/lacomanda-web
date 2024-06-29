@@ -21,7 +21,7 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges {
   private width: number;
   private height: number;
   private tooltip: any;
-
+  reportType: number=1;
   constructor(private spinnerService: NgxSpinnerService, private ventaService: VentaService, private storageService: StorageService) { }
 
   ngOnInit(): void {
@@ -53,9 +53,12 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     // Detectar cambios en las fechas y actualizar el gráfico
     if (changes.fechaInicial || changes.fechaFinal) {
+      if (this.fechaInicial && this.fechaFinal) {
+        
       var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
       var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
-      this.getProductosMasVendidos(1, fechaInicial, fechaFinal); // Inicializar con datos Top 1
+      this.getProductosMasVendidos(this.reportType, fechaInicial, fechaFinal); // Inicializar con datos Top 1
+      }
     }
   }
 
@@ -72,10 +75,10 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges {
   }
 
   onReportTypeChange(event: any): void {
-    const reportType = +event.target.value;
+     this.reportType = +event.target.value;
     var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
     var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
-    this.getProductosMasVendidos(reportType, fechaInicial, fechaFinal);
+    this.getProductosMasVendidos(this.reportType, fechaInicial, fechaFinal);
   }
 
   private createSvg(): void {

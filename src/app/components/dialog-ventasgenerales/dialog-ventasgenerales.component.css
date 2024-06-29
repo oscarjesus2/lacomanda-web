@@ -1,83 +1,121 @@
 /* dialog-ventasgenerales.component.css */
 
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+  
+.close-button {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  z-index: 1000;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.close-button mat-icon {
+  font-size: 24px;
+  color: #757575;  /* Color gris medio */
+}
+
+.close-button:hover mat-icon {
+  color: #212121;  /* Color más oscuro al pasar el mouse */
 }
 
 .ventas-generales-container {
-  padding: 20px;
+  padding: 30px;
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Ocupa toda la altura de la ventana */
-  box-sizing: border-box; /* Incluye el padding en el cálculo del tamaño */
-}
-
-h1 {
-  font-size: 24px;
-  margin-bottom: 20px;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden; 
 }
 
 .filters {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
 }
 
 .filters input[type="text"],
 .filters select {
-  padding: 5px;
-  margin-right: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
 .btn-actualizar {
-  padding: 5px;
+  padding: 10px 15px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-actualizar:hover {
+  background-color: #45a049;
 }
 
 .table-buttons-container {
+  flex: 1; /* Hace que este contenedor ocupe todo el espacio restante */
   display: flex;
-  flex-direction: row;
-  height: 100%; /* Ocupa toda la altura disponible */
-  overflow: hidden; /* Evita que el contenido se desborde */
+  overflow: hidden;
 }
 
 .ventas-table-container {
-  flex-grow: 1;
-  overflow-y: auto; /* Maneja el desbordamiento vertical */
-  margin-right: 20px; /* Espacio entre la tabla y los botones */
+  flex: 1;
+  overflow-y: auto; /* Permite el scroll vertical en la tabla */
+  margin-right: 20px;
 }
 
 .ventas-table {
   width: 100%;
-  /* border-collapse: collapse; */
-} 
+  border-collapse: separate;
+  border-spacing: 0;
+}
 
- .ventas-table th,
+.ventas-table th,
 .ventas-table td {
-  /* border: 1px solid #dddd; */
-  padding: 8px;
+								
+  padding: 12px;
   text-align: left;
-} 
+  border-bottom: 1px solid #eee;
+}
 
-/* Estilo para la fila al pasar el cursor */
- 
+.ventas-table th {
+  background-color: #f8f8f8;
+  font-weight: bold;
+  color: #333;
+}
+
 .buttons {
   display: flex;
   flex-direction: column;
-  flex-shrink: 0; /* Evita que los botones se reduzcan */
+  overflow-y: auto;
 }
 
 .buttons button {
   margin-top: 10px;
-  padding: 10px 20px;
-  width: 200px;
+  padding: 12px 20px;
+  width: 220px;
   text-align: left;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s, box-shadow 0.3s;
+  font-size: 14px;
+}
+
+.buttons button:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-salir {
-  background-color: #f0f0f0;
+  background-color: #f44336;
+  color: white;
 }
 
 .btn-emitir-comprobante,
@@ -85,28 +123,31 @@ h1 {
 .btn-modificar-doc,
 .btn-modificacion-pagos,
 .btn-pdf-xml,
-.btn-reimprimir-doc,
-.btn-anular {
-  background-color: #fff;
-  border: 1px solid #ddd;
+.btn-reimprimir-doc {
+			 
+  background-color: #2196F3;
+  color: white;
 }
 
 .btn-anular {
-  background-color: #f8d7da;
-  border-color: #f5c6cb;
+  background-color: #FF9800;
+  color: white;
 }
+
 .selected {
-  background-color: #f1f1f1; /* Cambia esto al color que desees */
-}
-.row-is-clicked {
-  font-weight: bold;
-}
-.mat-mdc-row .mat-mdc-cell {
-  border-bottom: 1px solid transparent;
-  border-top: 1px solid transparent;
-  cursor: pointer;
+  background-color: #e3f2fd;
 }
 
 .mat-mdc-row:hover .mat-mdc-cell {
-  border-color: currentColor;
+  background-color: #f5f5f5;
 }
+
+.mat-mdc-row .mat-mdc-cell {
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.3s;
+				  
+}
+
+
+							 
+ 

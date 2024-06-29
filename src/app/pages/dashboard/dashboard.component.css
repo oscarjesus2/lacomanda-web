@@ -1,10 +1,4 @@
-body {
-  font-family: 'Arial', sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f4f4f4;
-}
-
+ 
 .container {
   display: flex;
   flex-direction: column;
@@ -17,7 +11,9 @@ header {
   padding: 1rem 2rem;
   text-align: center;
 }
-
+header h1 {
+  color: white;
+}
 header label {
   display: block;
   margin: 10px 0 5px;

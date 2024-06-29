@@ -35,22 +35,24 @@ export class DashboardComponent implements OnInit {
   }
 
   updateDateLimits() {
-    // Update max fecha final
-    const maxFinalDate = new Date(this.fechaInicial);
-    maxFinalDate.setMonth(maxFinalDate.getMonth() + 6);
-    this.maxFechaInicial = this.formatDate(maxFinalDate);
+    if (this.fechaInicial && this.fechaFinal) {
+      // Update max fecha final
+      const maxFinalDate = new Date(this.fechaInicial);
+      maxFinalDate.setMonth(maxFinalDate.getMonth() + 6);
+      this.maxFechaInicial = this.formatDate(maxFinalDate);
 
-    // Update min fecha inicial
-    const minInitialDate = new Date(this.fechaFinal);
-    minInitialDate.setMonth(minInitialDate.getMonth() - 6);
-    this.minFechaFinal = this.formatDate(minInitialDate);
+      // Update min fecha inicial
+      const minInitialDate = new Date(this.fechaFinal);
+      minInitialDate.setMonth(minInitialDate.getMonth() - 6);
+      this.minFechaFinal = this.formatDate(minInitialDate);
 
-    // Also set max fecha inicial to today
-    this.maxFechaInicial = this.formatDate(new Date());
+      // Also set max fecha inicial to today
+      this.maxFechaInicial = this.formatDate(new Date());
 
-    // Set min and max for fecha final
-    this.minFechaInicial = this.formatDate(new Date(this.fechaFinal));
-    this.maxFechaFinal = this.formatDate(maxFinalDate);
+      // Set min and max for fecha final
+      this.minFechaInicial = this.formatDate(new Date(this.fechaFinal));
+      this.maxFechaFinal = this.formatDate(maxFinalDate);
+    }
   }
 
   formatDate(date: Date): string {
@@ -58,27 +60,31 @@ export class DashboardComponent implements OnInit {
   }
 
   onFechaInicialChange() {
-    const maxDate = new Date(this.fechaInicial);
-    maxDate.setMonth(maxDate.getMonth() + 6);
-    if (new Date(this.fechaFinal) > maxDate) {
-      this.fechaFinal = this.formatDate(maxDate);
+    if (this.fechaInicial && this.fechaFinal) {
+      const maxDate = new Date(this.fechaInicial);
+      maxDate.setMonth(maxDate.getMonth() + 6);
+      if (new Date(this.fechaFinal) > maxDate) {
+        this.fechaFinal = this.formatDate(maxDate);
+      }
+      if (this.fechaFinal < this.fechaInicial) {
+        this.fechaFinal = this.fechaInicial;
+      }
+      this.updateDateLimits();
     }
-    if (this.fechaFinal < this.fechaInicial) {
-      this.fechaFinal = this.fechaInicial;
-    }
-    this.updateDateLimits();
   }
 
   onFechaFinalChange() {
-    const minDate = new Date(this.fechaFinal);
-    minDate.setMonth(minDate.getMonth() - 6);
-    if (new Date(this.fechaInicial) < minDate) {
-      this.fechaInicial = this.formatDate(minDate);
+    if (this.fechaInicial && this.fechaFinal) {
+      const minDate = new Date(this.fechaFinal);
+      minDate.setMonth(minDate.getMonth() - 6);
+      if (new Date(this.fechaInicial) < minDate) {
+        this.fechaInicial = this.formatDate(minDate);
+      }
+      if (this.fechaInicial > this.fechaFinal) {
+        this.fechaInicial = this.fechaFinal;
+      }
+      this.updateDateLimits();
     }
-    if (this.fechaInicial > this.fechaFinal) {
-      this.fechaInicial = this.fechaFinal;
-    }
-    this.updateDateLimits();
   }
 
   async ngOnInit() {
