@@ -27,7 +27,7 @@ import { MatDialogModule, MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/d
 import { MatChipsModule } from '@angular/material/chips';
 
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
+import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -72,7 +72,19 @@ import { DialogMCantComponent } from './components/dialog-mcant/dialog-mcant.com
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { TransaccionesDiariasComponent } from './pages/dashboard/transacciones-diarias/transacciones-diarias.component';
 import { DialogEmitirVentaComponent } from './components/dialog-emitir-venta/dialog-emitir-venta.component';
+import { MomentDateAdapter } from '@angular/material-moment-adapter';
 
+export const MY_DATE_FORMATS = {
+  parse: {
+    dateInput: 'DD/MM/YYYY',
+  },
+  display: {
+    dateInput: 'DD/MM/YYYY',
+    monthYearLabel: 'MMMM YYYY',
+    dateA11yLabel: 'LL',
+    monthYearA11yLabel: 'MMMM YYYY'
+  },
+};
 
 @NgModule({
   declarations: [
@@ -148,9 +160,9 @@ import { DialogEmitirVentaComponent } from './components/dialog-emitir-venta/dia
     NO_ERRORS_SCHEMA],
   providers: [
     JobBackendProvider,
-    { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: false } },
-    { provide: LOCALE_ID, useValue: 'es-ES' }, // Cambia a tu locale adecuado
-    { provide: MAT_DATE_LOCALE, useValue: 'es-ES' }, // Cambia a tu locale adecuado
+    { provide: MAT_DATE_LOCALE, useValue: 'es-ES' },
+    { provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE] },
+    { provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS },
     DatePipe,
   ],
   bootstrap: [AppComponent]

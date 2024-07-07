@@ -128,6 +128,9 @@ export class DialogEmitirVentaComponent implements OnInit {
         this.visibleInfoTurno = true;
         this.monedaSeleccionada = 'SOLES';
         this.MonedaEnabled = false;
+
+        this.CompraEnabled = false;
+        this.VentaEnabled = false;
       } else {
         Swal.fire({
           title: 'Validación',
@@ -140,6 +143,11 @@ export class DialogEmitirVentaComponent implements OnInit {
         this.MonedaEnabled = true;
       }
     } else {
+      this.tipoCambioCompra = "0";
+      this.tipoCambioVenta = "0";
+
+      this.CompraEnabled = true;
+      this.VentaEnabled = true;
       this.visibleInfoTurno = false;
       this.MonedaEnabled = true;
     }
@@ -150,35 +158,47 @@ export class DialogEmitirVentaComponent implements OnInit {
   }
 
   AgregarItemGrid(product: Product): void {
-    let sTitulo = '';
-    let dPrecio = product.Precio;
     let bSinPrecio = product.SinPrecio;
-
+  
     if (bSinPrecio === 1) {
-      sTitulo = product.MonedaVenta === 'SOL' ? 'Precio del Producto-SOLES' : 'Precio del Producto-DOLARES';
-      const dialogRef = this.dialog.open(DialogMCantComponent, {
-        data: {
-          title: sTitulo,
-          quantity: '',
-          hideNumber: false,
-          decimalActive: true,
-          minAmount: 10
+      this.abrirDialogoCantidad(product).then(result => {
+        if (result) {
+          this.actualizarPrecioProducto(product, result);
+          this.agregarNuevaFila(product);
         }
       });
-
-      dialogRef.afterClosed().subscribe(result => {
-        if (result && result.value) {
-          if (product.MonedaVenta === 'SOL' && this.monedaSeleccionada === 'DOLARES') {
-            product.Precio = Math.round((result.value / parseFloat(this.tipoCambioCompra)) * 100) / 100;
-          } else if (product.MonedaVenta === 'DOL' && this.monedaSeleccionada === 'SOLES') {
-            product.Precio = Math.round((result.value * parseFloat(this.tipoCambioVenta)) * 100) / 100;
-          } else {
-            product.Precio = result.value;
-          }
-        }
-      });
+    } else {
+      this.agregarNuevaFila(product);
     }
+  }
 
+  abrirDialogoCantidad(product: Product): Promise<any> {
+    let sTitulo = product.MonedaVenta === 'SOL' ? 'Precio del Producto-SOLES' : 'Precio del Producto-DOLARES';
+    const dialogRef = this.dialog.open(DialogMCantComponent, {
+      data: {
+        title: sTitulo,
+        quantity: '',
+        hideNumber: false,
+        decimalActive: true,
+        minAmount: 10
+      }
+    });
+  
+    return dialogRef.afterClosed().toPromise();
+  }
+
+  actualizarPrecioProducto(product: Product, result: any): void {
+    if (product.MonedaVenta === 'SOL' && this.monedaSeleccionada === 'DOLARES') {
+      product.Precio = Math.round((result.value / parseFloat(this.tipoCambioCompra)) * 100) / 100;
+    } else if (product.MonedaVenta === 'DOL' && this.monedaSeleccionada === 'SOLES') {
+      product.Precio = Math.round((result.value * parseFloat(this.tipoCambioVenta)) * 100) / 100;
+    } else {
+      product.Precio = result.value;
+    }
+  }
+
+  agregarNuevaFila(product: Product): void {
+    let dPrecio = product.Precio;
     const newRow: ProductElement = {
       IdProducto: product.IdProducto,
       Producto: product.NombreCorto,
@@ -189,9 +209,10 @@ export class DialogEmitirVentaComponent implements OnInit {
       MontoDscto: 0,
       ImpuestoBolsa: product.ImpuestoBolsa
     };
-
+  
     this.dataSource.data.push(newRow);
     this.dataSource.data = [...this.dataSource.data];
+    this.productCtrl.setValue('');
     this.ValidarTipoCambios();
   }
 

@@ -8,7 +8,6 @@ import { ventasInterface } from 'src/app/interfaces/ventas.interface';
 import { CajaService } from 'src/app/services/caja.services';
 import { Caja } from 'src/app/models/caja.models';
 import { DialogEmitirVentaComponent } from '../dialog-emitir-venta/dialog-emitir-venta.component';
-import { DialogEmitirComprobanteComponent } from '../dialog-emitir-comprobante/dialog-emitir-comprobante.component';
 
 @Component({
   selector: 'app-dialog-ventasgenerales',
@@ -112,12 +111,15 @@ export class DialogVentasgeneralesComponent implements OnInit {
 
   OpenDialogEmitirVenta(): void {
   
-    const dialogTurno = this.dialog.open(DialogEmitirComprobanteComponent, {
+    const dialogEmitirVentaComponent = this.dialog.open(DialogEmitirVentaComponent, {
       disableClose: true,
       hasBackdrop: true,
-            width: '100%',
-      height: '100%'
-      // data: { oPedidoMesa: listData, IdMesa: IdMesa, Mesa: this.mesaSelected.Descripcion + ' ' + this.mesaSelected.Numero}
+      width: '900px', // Establece el ancho del diálogo
+      height: '610px', // Establece la altura del diálogo
+      // minWidth: '300px', // Establece el ancho mínimo del diálogo
+      // minHeight: '300px', // Establece la altura mínima del diálogo
+      // maxWidth: '80vw', // Establece el ancho máximo del diálogo en porcentaje de la ventana
+      // maxHeight: '80vh' // Establece la altura máxima del diálogo en porcentaje de la ventana
     });
   }
   

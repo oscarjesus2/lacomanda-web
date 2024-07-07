@@ -1,56 +1,32 @@
 <div class="container">
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+  <br>
   <mat-card>
     <mat-card-title>Factura</mat-card-title>
     <mat-card-content>
-      <mat-grid-list cols="2" rowHeight="auto">
-        <mat-grid-tile colspan="2">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Tipo de Factura</mat-label>
-            <mat-select>
-              <mat-option value="factura-electronica">Factura Electrónica</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </mat-grid-tile>
-
-        <mat-grid-tile>
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Serie</mat-label>
-            <input matInput placeholder="F002">
-          </mat-form-field>
-        </mat-grid-tile>
-
-        <mat-grid-tile>
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Número</mat-label>
-            <input matInput placeholder="00000003">
-          </mat-form-field>
-        </mat-grid-tile>
-
-        <mat-grid-tile colspan="2">
-          <mat-form-field appearance="outline" class="full-width">
+      <mat-grid-list cols="3" rowHeight="60px" gutterSize="12px">
+        <mat-grid-tile colspan="3">
+          <mat-form-field appearance="outline">
             <mat-label>RUC</mat-label>
             <input matInput placeholder="123...">
             <button mat-icon-button matSuffix>
               <mat-icon>search</mat-icon>
             </button>
           </mat-form-field>
-        </mat-grid-tile>
-
-        <mat-grid-tile colspan="2">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Cliente</mat-label>
             <input matInput>
           </mat-form-field>
         </mat-grid-tile>
-
-        <mat-grid-tile colspan="2">
+        <mat-grid-tile colspan="3">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Dirección</mat-label>
             <input matInput>
           </mat-form-field>
         </mat-grid-tile>
-
-        <mat-grid-tile colspan="2">
+        <mat-grid-tile colspan="3">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Correo</mat-label>
             <input matInput>
@@ -61,80 +37,112 @@
   </mat-card>
 
   <mat-card>
-    <mat-checkbox>Venta al Crédito</mat-checkbox>
-    
-    <mat-card-subtitle>Efectivo</mat-card-subtitle>
-    <div class="cash-buttons">
-      <button mat-raised-button color="primary">S/. 20</button>
-      <button mat-raised-button color="primary">S/. 50</button>
-      <button mat-raised-button color="primary">S/. 100</button>
-      <button mat-raised-button color="primary">S/. 200</button>
-      <button mat-raised-button color="accent">Soles Exacto</button>
+    <div class="d-flex align-items-center mb-3">
+      <mat-checkbox class="mr-3">Venta al Crédito</mat-checkbox>
     </div>
-
-    <mat-card-subtitle>Pagos con Tarjeta</mat-card-subtitle>
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Tipos de Tarjetas</mat-label>
-      <mat-select>
-        <mat-option value="visa">Visa</mat-option>
-        <!-- Agregar más opciones de tarjetas si es necesario -->
-      </mat-select>
-    </mat-form-field>
-
-    <mat-table [dataSource]="dataSource" class="mat-elevation-z8">
-      <!-- Tarjeta Column -->
+    <mat-card-subtitle class="mb-3">Efectivo</mat-card-subtitle>
+    <div class="d-flex align-items-center mb-3">
+      <div class="cash-buttons">
+        <button mat-raised-button color="accent" class="mr-3">S/. 20</button>
+        <button mat-raised-button color="accent" class="mr-3">S/. 50</button>
+        <button mat-raised-button color="accent" class="mr-3">S/. 100</button>
+        <button mat-raised-button color="accent" class="mr-3">S/. 200</button>
+        <button mat-raised-button color="primary" class="mr-3">Soles Exacto</button>
+      </div>
+      <div class="d-flex flex-column mr-3">
+        <button mat-raised-button color="accent" class="mb-3">Soles</button>
+        <button mat-raised-button color="accent">Dólares</button>
+      </div>
+      <div class="d-flex flex-column mr-3">
+        <mat-form-field appearance="fill">
+          <input matInput placeholder="SOLES">
+        </mat-form-field>
+        <mat-form-field appearance="fill">
+          <input matInput placeholder="DOLARES">
+        </mat-form-field>
+      </div>
+    </div>
+    <mat-card-subtitle class="mb-3">Pagos con Tarjeta</mat-card-subtitle>  
+    <mat-table [dataSource]="dataSource" class="mat-elevation-z8 mb-3">
       <ng-container matColumnDef="tarjeta">
         <mat-header-cell *matHeaderCellDef> Tarjeta </mat-header-cell>
         <mat-cell *matCellDef="let element"> {{element.tarjeta}} </mat-cell>
+        <mat-footer-cell *matFooterCellDef>
+          <mat-form-field>
+            <mat-select placeholder="Tarjeta" [(ngModel)]="nuevoRegistro.tarjeta">
+              <mat-option *ngFor="let tarjeta of tarjetas" [value]="tarjeta">{{ tarjeta }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </mat-footer-cell>
       </ng-container>
-
-      <!-- AP Column -->
+    
       <ng-container matColumnDef="ap">
         <mat-header-cell *matHeaderCellDef> AP </mat-header-cell>
         <mat-cell *matCellDef="let element"> {{element.ap}} </mat-cell>
+        <mat-footer-cell *matFooterCellDef>
+          <mat-form-field>
+            <input matInput placeholder="AP" [(ngModel)]="nuevoRegistro.ap">
+          </mat-form-field>
+        </mat-footer-cell>
       </ng-container>
-
-      <!-- Monto Column -->
+    
       <ng-container matColumnDef="monto">
         <mat-header-cell *matHeaderCellDef> Monto </mat-header-cell>
         <mat-cell *matCellDef="let element"> {{element.monto}} </mat-cell>
+        <mat-footer-cell *matFooterCellDef>
+          <mat-form-field>
+            <input matInput placeholder="Monto" type="number" [(ngModel)]="nuevoRegistro.monto">
+          </mat-form-field>
+        </mat-footer-cell>
       </ng-container>
-
-      <!-- Propina Column -->
+    
       <ng-container matColumnDef="propina">
         <mat-header-cell *matHeaderCellDef> Propina </mat-header-cell>
         <mat-cell *matCellDef="let element"> {{element.propina}} </mat-cell>
+        <mat-footer-cell *matFooterCellDef>
+          <mat-form-field>
+            <input matInput placeholder="Propina" type="number" [(ngModel)]="nuevoRegistro.propina">
+          </mat-form-field>
+        </mat-footer-cell>
       </ng-container>
-
+    
+      <ng-container matColumnDef="acciones">
+        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          <button mat-button color="warn" (click)="eliminarRegistro(element)">Eliminar</button>
+        </mat-cell>
+        <mat-footer-cell *matFooterCellDef>
+          <button mat-raised-button color="primary" (click)="agregarRegistro()">Agregar</button>
+        </mat-footer-cell>
+      </ng-container>
+    
       <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      <mat-footer-row *matFooterRowDef="displayedColumns"></mat-footer-row>
     </mat-table>
-
-    <div class="results">
-      <mat-form-field appearance="outline" class="full-width">
+    
+    <div class="results-row d-flex justify-content-between">
+      <mat-form-field appearance="outline" class="flex-grow-1 mr-3">
         <mat-label>Monto a Pagar</mat-label>
         <input matInput value="33333">
       </mat-form-field>
-      
-      <mat-form-field appearance="outline" class="full-width">
+      <mat-form-field appearance="outline" class="flex-grow-1 mr-3">
         <mat-label>Propinas</mat-label>
         <input matInput value="0.00">
       </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
+      <mat-form-field appearance="outline" class="flex-grow-1 mr-3">
         <mat-label>Total Pago</mat-label>
         <input matInput value="0.00">
       </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
+      <mat-form-field appearance="outline" class="flex-grow-1">
         <mat-label>Vuelto</mat-label>
         <input matInput value="0.00">
       </mat-form-field>
     </div>
-
-    <div class="button-group">
-      <button mat-raised-button color="primary">Cobrar</button>
+    <div class="button-group d-flex justify-content-end mt-3">
+      <button mat-raised-button color="primary" class="mr-3">Cobrar</button>
       <button mat-raised-button color="warn">Salir</button>
     </div>
   </mat-card>
 </div>
+

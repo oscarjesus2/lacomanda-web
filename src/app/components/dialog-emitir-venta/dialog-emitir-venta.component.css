@@ -1,3 +1,7 @@
+.product-column {
+  min-width: 400px; /* Ajusta este valor según sea necesario */
+}
+ 
 .invoice-form {
     position: relative;
     display: flex;
@@ -48,7 +52,8 @@
   .table-wrapper {
     flex: 1;
     overflow: auto;
-    max-height: 200px;
+    min-height: 220px;
+    max-height: 220px;
   }
   
   .actions {
@@ -67,11 +72,6 @@
     border: 1px solid #d0d0d0;
   }
   
-  table {
-    width: 100%;
-    background-color: #ffffff;
-    margin-top: 10px;
-  }
   
   mat-form-field {
     width: 100%;
@@ -81,9 +81,7 @@
     margin-right: 10px;
   }
   
-  .mat-header-cell, .mat-cell {
-    text-align: center;
-  }
+
   
   button.mat-raised-button {
     margin-top: 10px;

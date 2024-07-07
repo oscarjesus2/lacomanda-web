@@ -32,7 +32,8 @@ export class LoginComponent implements OnInit {
   ];
   sucursalDefault: SucursalDefault[] = [
     { value: '20605616659', sucursal: 'Naruto Sucre' },
-    { value: '20605104771', sucursal: 'Naruto San Borja' }
+    { value: '20605104771', sucursal: 'Naruto San Borja' },
+    { value: '20604977585', sucursal: 'Job Business Solutions' }
   ];
   loginForm: FormGroup;
   loginError: string="";

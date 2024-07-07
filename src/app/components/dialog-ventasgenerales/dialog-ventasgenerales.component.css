@@ -1,4 +1,4 @@
-/* dialog-ventasgenerales.component.css */
+dialog-ventasgenerales.component.css
 
   
 .close-button {
@@ -150,4 +150,21 @@
 
 
 							 
- 
+.close-button {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  z-index: 1000;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.close-button mat-icon {
+  font-size: 24px;
+  color: #757575;  /* Color gris medio */
+}
+
+.close-button:hover mat-icon {
+  color: #212121;  /* Color más oscuro al pasar el mouse */
+}
