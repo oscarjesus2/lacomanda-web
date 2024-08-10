@@ -10,27 +10,22 @@ export class PedidoDet {
     public Observacion: string;
     public IdSubFamilia:string;
     public Ip: string;
+    NroCuenta: number;
+    Enviado: boolean;
+    IdDescuento: string;
+  MontoDescuento: number;
+  NroCupon: string;
+  NumEnvios: number;
+  MotivoReimpresion: string;
+  NumReimpresion: number;
+  UsuReimpresion: number;
+  FecReimpresion?: Date;
+  Estado: number;
+  nombreCuenta: string;
+  Division: number;
+  Impuesto1: number;
  
-
-    constructor(Item: number, 
-                IdPedido: number, 
-                IdProducto: number, 
-                NombreCorto: string, 
-                Precio: number, 
-                Cantidad: number, 
-                Subtotal: number, 
-                Observacion: string, 
-                Ip:string) {
-
-        this.Item = Item;
-        this.IdPedido = IdPedido;
-        this.IdProducto = IdProducto;
-        this.NombreCorto= NombreCorto;
-        this.Precio = Precio;
-        this.Cantidad = Cantidad;
-        this.Subtotal = Subtotal;
-        this.Observacion=Observacion;
-        this.Ip=Ip;
- 
+    constructor(init?: Partial<PedidoDet>) {
+        Object.assign(this, init);
     }
 }

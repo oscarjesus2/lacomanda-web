@@ -2,10 +2,10 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { StorageService } from 'src/app/services/storage.services';
+import { StorageService } from 'src/app/services/storage.service';
 import { LoginService } from './services/auth/login.service';
 import { MatDialog } from '@angular/material/dialog';
-import { TurnoService } from '../app/services/turno.services';
+import { TurnoService } from './services/turno.service';
 import { IdleService } from './services/idle.service';
 import { DataService } from '../app/services/data.service';
 

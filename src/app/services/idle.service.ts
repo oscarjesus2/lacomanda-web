@@ -2,14 +2,14 @@
 import { Injectable, NgZone } from '@angular/core';
 import { Router } from '@angular/router';
 import {jwtDecode}  from 'jwt-decode';
-import { StorageService } from './storage.services';
+import { StorageService } from './storage.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class IdleService {
   private timeoutId: any;
-  private readonly timeout: number = 1 * 60 * 1000; // 15 minutos
+  private readonly timeout: number = 5 * 60 * 1000; // 15 minutos
 
   constructor(private ngZone: NgZone, private router: Router, private storageService:StorageService) {
     this.startWatching();

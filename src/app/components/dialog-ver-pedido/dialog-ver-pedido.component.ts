@@ -1,13 +1,13 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { StorageService } from '../../services/storage.services';
+import { StorageService } from '../../services/storage.service';
 import { MatTableDataSource } from '@angular/material/table';
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { PedidoCab } from '../../models/pedido.models';
 import { PedidoDet } from '../../models/pedidodet.models';
-import { MesasService } from '../../services/mesas.services';
-import { PedidoService } from '../../services/pedido.services';
+import { MesasService } from '../../services/mesas.service';
+import { PedidoService } from '../../services/pedido.service';
 import { ProductGrid } from '../../models/product.grid.models';
 
 @Component({
@@ -38,7 +38,10 @@ export class DialogVerPedidoComponent {
             var ListaPedidoDet: PedidoDet[] = [];
             this.data.oPedidoMesa.forEach(data => {
               oPedidoDet = new PedidoDet(
-                data.Item, data.IdPedido, data.IdProducto, data.NombreCorto, data.Precio, data.Cantidad, data.Cantidad * data.Precio, data.observacion, ''
+                {
+                    Item: data.Item, IdPedido : data.IdPedido, IdProducto: data.IdProducto, NombreCorto: data.NombreCorto, Precio: data.Precio, Cantidad: data.Cantidad, 
+                    Subtotal : data.Cantidad * data.Precio, Observacion:  data.observacion, Ip : ''
+                }
               );
               ListaPedidoDet.push(oPedidoDet);
             });

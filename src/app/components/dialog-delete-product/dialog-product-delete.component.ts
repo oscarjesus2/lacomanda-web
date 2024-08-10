@@ -1,9 +1,9 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { LoginService as AuthServiceService } from '../../services/auth/login.service';
-import { StorageService } from '../../services/storage.services';
+import { StorageService } from '../../services/storage.service';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { User } from '../../models/user.models';
+import { Usuario } from '../../models/user.models';
 import Swal from 'sweetalert2/dist/sweetalert2';
 
 @Component({
@@ -21,7 +21,7 @@ export class DialogDeleteProductComponent {
         public dialogRef: MatDialogRef<DialogDeleteProductComponent>,
         @Inject(MAT_DIALOG_DATA) public data: DialogData, public authService: AuthServiceService,
         public storageService: StorageService, private spinnerService: NgxSpinnerService) {
-        if (this.storageService.getCurrentSession().user.IdNivel == '001') {
+        if (this.storageService.getCurrentSession().User.IdNivel == '001') {
             data.motivoAnulacion = 'Anulacion directa por el Administrador';
         }
     }
@@ -29,7 +29,7 @@ export class DialogDeleteProductComponent {
     public acepta(value: Boolean): void {
         var admin: string = '001';
         if (value) {
-            if (this.storageService.getCurrentSession().user.IdNivel === admin) {
+            if (this.storageService.getCurrentSession().User.IdNivel === admin) {
                 this.data.confirmacion = true;
                 this.dialogRef.close(this.data);
             } else {
@@ -51,7 +51,7 @@ export class DialogDeleteProductComponent {
             let username: string = '001';
             let clave = this.clave;
 
-            var user: User = await this.authService.simpleLogin(username, clave).toPromise();
+            var user: Usuario = await this.authService.simpleLogin(username, clave).toPromise();
             if (user == null) {
                 Swal.fire('Oops...', 'Contraseña incorrecta.', 'error')
                 //alert('contraseña incorrecta');

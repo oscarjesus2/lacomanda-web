@@ -2,10 +2,10 @@ import { Component, OnInit, ElementRef, ViewChild, Input, SimpleChanges, OnChang
 import { NgxSpinnerService } from 'ngx-spinner';
 import * as d3 from 'd3';
 import Swal from 'sweetalert2';
-import { VentaService } from 'src/app/services/venta.services';
+import { VentaService } from 'src/app/services/venta.service';
 import { ventadiariasemanalmensual } from 'src/app/models/ventadiariasemanalmensual.models';
 import { formatDate } from '@angular/common';
-import { StorageService } from 'src/app/services/storage.services';
+import { StorageService } from 'src/app/services/storage.service';
 
 @Component({
   selector: 'app-horas-pico',

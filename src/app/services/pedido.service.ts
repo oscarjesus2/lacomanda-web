@@ -12,14 +12,18 @@ import { environment } from 'src/environments/environment';
 })
 export class PedidoService {
 
-    private basePathRegisterPedido = environment.apiUrl + '/pedidos/grabarpedido';
-    private basePathDeletePedido = environment.apiUrl +  '/pedidos/pedidodet';
-    private basePathGragaDocumentoVenta = environment.apiUrl +  '/ventas/grabardocumentoventa';
-    private basePathConsultarMesa = environment.apiUrl +  '/ventas/ConsultarMesa';
+    
+    private basePath = environment.apiUrl + '/pedido';
+    private basePathDeletePedido = environment.apiUrl +  '/pedido/pedidodet';
+    private basePathConsultarMesa = environment.apiUrl +  '/venta/ConsultarMesa';
     constructor(private http: HttpClient) { }
 
     ImprimirPedido(pedido: PedidoCab): Observable<any[]> {
-        return this.http.post<any[]>(this.basePathRegisterPedido, pedido);
+        return this.http.post<any[]>(this.basePath + '/grabarpedido', pedido);
+    }
+
+    totalapagar_x_detallepedido(idPedidoCobrar: number, nroCuentaCobrar: number): Observable<any[]> {
+        return this.http.get<any[]>(this.basePath + '/totalapagar_x_detallepedido/' +  idPedidoCobrar + '/' + nroCuentaCobrar);
     }
 
     findMesaById(idMesa: string): Observable<any[]> {
@@ -27,15 +31,10 @@ export class PedidoService {
     }
     
     registerPedido(pedido: PedidoCab): Observable<any[]> {
-        return this.http.post<any[]>(this.basePathRegisterPedido, pedido);
+        return this.http.post<any[]>(this.basePath + '/grabarpedido', pedido);
     }
 
     deletePedido(pedido: PedidoDelete): Observable<ResponseService> {
         return this.http.post<ResponseService>(this.basePathDeletePedido, pedido);
     }
-
-    guardarDocumentoVenta(venta: Venta): Observable<any> {
-        return this.http.post<any>(this.basePathGragaDocumentoVenta, venta);
-    }
-
 }

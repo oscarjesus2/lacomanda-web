@@ -5,9 +5,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { Router } from '@angular/router';
 import { LoginService } from 'src/app/services/auth/login.service';
-import { StorageService } from 'src/app/services/storage.services';
+import { StorageService } from 'src/app/services/storage.service';
 import { DataService } from 'src/app/services/data.service';
-import { TurnoService } from 'src/app/services/turno.services';
+import { TurnoService } from 'src/app/services/turno.service';
  
 
 @Component({

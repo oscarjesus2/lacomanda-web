@@ -16,5 +16,8 @@ export class CajaService {
     getAllCaja(incluyeGeneral: number): Observable<Caja[]> {
         return this.http.get<[Caja]>(this.basePath + 'listar/' + incluyeGeneral);
     }
+    getCaja(idCaja: string): Observable<Caja> {
+        return this.http.get<Caja>(this.basePath + idCaja);
+    }
 
 }

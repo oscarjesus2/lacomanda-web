@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { User } from 'src/app/models/user.models';
+import { Usuario } from 'src/app/models/user.models';
 import { LoginService } from 'src/app/services/auth/login.service';
 import Swal from 'sweetalert2';
-import { TurnoService } from '../../services/turno.services';
+import { TurnoService } from '../../services/turno.service';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { StorageService } from 'src/app/services/storage.services';
+import { StorageService } from 'src/app/services/storage.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,7 +19,7 @@ export class DashboardComponent implements OnInit {
   maxFechaFinal: string;
   minFechaInicial: string;
   userLoginOn: boolean = false;
-  userData?: User;
+  userData?: Usuario;
 
   constructor(
     private loginService: LoginService,
@@ -92,7 +92,7 @@ export class DashboardComponent implements OnInit {
       this.spinnerService.show();
 
       if (this.storageService.isAuthenticated()) {
-        const user = this.storageService.getCurrentSession().user.Usuario;
+        const user = this.storageService.getCurrentSession().User.Username;
         this.loginService.UsuarioShare.emit(user);
       }
       this.turnoService.ObtenerTurno('001').subscribe(data => {
@@ -103,7 +103,6 @@ export class DashboardComponent implements OnInit {
           this.loginService.nroturnoShare.emit(0);
           this.loginService.turnoOpenShare.emit(false);
         } else {
-          console.error('error aqui 3');
           this.loginService.userLoginOn.emit(true);  
           this.loginService.idturnoShare.emit(data.IdTurno);
           this.loginService.nroturnoShare.emit(data.NroTurno);

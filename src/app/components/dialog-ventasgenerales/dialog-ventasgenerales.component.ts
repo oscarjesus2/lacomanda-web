@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
-import { VentaService } from '../../services/venta.services';
+import { VentaService } from '../../services/venta.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import Swal from 'sweetalert2';
 import { ventasInterface } from 'src/app/interfaces/ventas.interface';
-import { CajaService } from 'src/app/services/caja.services';
+import { CajaService } from 'src/app/services/caja.service';
 import { Caja } from 'src/app/models/caja.models';
 import { DialogEmitirVentaComponent } from '../dialog-emitir-venta/dialog-emitir-venta.component';
 

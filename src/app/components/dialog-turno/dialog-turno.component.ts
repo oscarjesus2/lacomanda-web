@@ -4,12 +4,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { Caja } from 'src/app/models/caja.models';
-import { CajaService } from '../../services/caja.services';
-import { StorageService } from 'src/app/services/storage.services';
+import { CajaService } from '../../services/caja.service';
+import { StorageService } from 'src/app/services/storage.service';
 import { DatePipe } from '@angular/common';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Turno } from 'src/app/models/turno.models';
-import { TurnoService } from '../../services/turno.services';
+import { TurnoService } from '../../services/turno.service';
 import * as moment from 'moment'
 import Swal from 'sweetalert2';
 
@@ -118,12 +118,19 @@ export class DialogTurnoComponent implements OnInit {
         var Estado: number = 1;
         var TipoCambio: number = this.myForm.value.tipocambio;
         var TipoCambioVenta: number = this.myForm.value.tipocambio;
-        var UsuReg: number = this.storageService.getCurrentSession().user.IdUsuario;
+        var UsuReg: number = this.storageService.getCurrentSession().User.IdUsuario;
         var TurnoRestaurante: number = 1;
 
-        var oTurno: Turno = new Turno(
-          IdCaja, FechaTrabajo, FechaInicio, Estado, TipoCambio, TipoCambioVenta, UsuReg, TurnoRestaurante
-        );
+        var oTurno: Turno = new Turno();
+        oTurno.IdCaja = IdCaja;
+        oTurno.FechaTrabajo = FechaTrabajo; 
+        oTurno.FechaInicio= FechaInicio; 
+        oTurno.Estado= Estado; 
+        oTurno.TipoCambio= TipoCambio; 
+        oTurno.TipoCambioVenta= TipoCambioVenta; 
+        oTurno.UsuReg =UsuReg;
+        oTurno.TurnoRestaurante= TurnoRestaurante;
+
         // console.log(oTurno);
         
         var responseAbrirTurno: any = await this.TurnoService.AbrirTurno(oTurno).toPromise();

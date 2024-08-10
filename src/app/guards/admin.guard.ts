@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { StorageService } from '../services/storage.services';
+import { StorageService } from '../services/storage.service';
 import {jwtDecode } from 'jwt-decode';
 
 @Injectable({

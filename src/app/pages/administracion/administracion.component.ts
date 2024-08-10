@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { User } from 'src/app/models/user.models';
+import { Usuario } from 'src/app/models/user.models';
 @Component({
   selector: 'app-dashboard',
   templateUrl: './administracion.component.html',
@@ -7,7 +7,7 @@ import { User } from 'src/app/models/user.models';
 })
 export class AdministracionComponent   {
   userLoginOn:boolean=false;
-  userData?: User;
+  userData?: Usuario;
 constructor(){}
 
 } 

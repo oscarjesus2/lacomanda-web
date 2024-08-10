@@ -1,6 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { StorageService } from '../../services/storage.services';
+import { StorageService } from '../../services/storage.service';
 import { Observacion } from '../../models/observacion.models';
 
 

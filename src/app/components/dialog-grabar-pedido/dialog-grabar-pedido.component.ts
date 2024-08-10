@@ -1,12 +1,12 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { StorageService } from '../../services/storage.services';
+import { StorageService } from '../../services/storage.service';
 import { MatTableDataSource } from '@angular/material/table';
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { PedidoCab } from '../../models/pedido.models';
 import { PedidoDet } from '../../models/pedidodet.models';
-import { PedidoService } from '../../services/pedido.services';
+import { PedidoService } from '../../services/pedido.service';
 @Component({
     selector: 'app-dialog-grabar-pedido',
     templateUrl: './dialog-grabar-pedido.component.html',

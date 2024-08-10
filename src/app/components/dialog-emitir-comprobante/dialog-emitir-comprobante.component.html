@@ -3,146 +3,193 @@
     <mat-icon>close</mat-icon>
   </button>
   <br>
-  <mat-card>
-    <mat-card-title>Factura</mat-card-title>
-    <mat-card-content>
-      <mat-grid-list cols="3" rowHeight="60px" gutterSize="12px">
-        <mat-grid-tile colspan="3">
-          <mat-form-field appearance="outline">
-            <mat-label>RUC</mat-label>
-            <input matInput placeholder="123...">
-            <button mat-icon-button matSuffix>
-              <mat-icon>search</mat-icon>
-            </button>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Cliente</mat-label>
-            <input matInput>
-          </mat-form-field>
-        </mat-grid-tile>
-        <mat-grid-tile colspan="3">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Dirección</mat-label>
-            <input matInput>
-          </mat-form-field>
-        </mat-grid-tile>
-        <mat-grid-tile colspan="3">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Correo</mat-label>
-            <input matInput>
-          </mat-form-field>
-        </mat-grid-tile>
-      </mat-grid-list>
-    </mat-card-content>
-  </mat-card>
+  <form [formGroup]="form">
+    <div>
+      <div class="form-row">
 
-  <mat-card>
-    <div class="d-flex align-items-center mb-3">
-      <mat-checkbox class="mr-3">Venta al Crédito</mat-checkbox>
-    </div>
-    <mat-card-subtitle class="mb-3">Efectivo</mat-card-subtitle>
-    <div class="d-flex align-items-center mb-3">
-      <div class="cash-buttons">
-        <button mat-raised-button color="accent" class="mr-3">S/. 20</button>
-        <button mat-raised-button color="accent" class="mr-3">S/. 50</button>
-        <button mat-raised-button color="accent" class="mr-3">S/. 100</button>
-        <button mat-raised-button color="accent" class="mr-3">S/. 200</button>
-        <button mat-raised-button color="primary" class="mr-3">Soles Exacto</button>
-      </div>
-      <div class="d-flex flex-column mr-3">
-        <button mat-raised-button color="accent" class="mb-3">Soles</button>
-        <button mat-raised-button color="accent">Dólares</button>
-      </div>
-      <div class="d-flex flex-column mr-3">
-        <mat-form-field appearance="fill">
-          <input matInput placeholder="SOLES">
+        <mat-form-field appearance="outline" class="h1-field">
+          <mat-label>Tipo Documento</mat-label>
+          <mat-select formControlName="idTipoDoc" name="tipoDocumento" (selectionChange)="onTipoDocumentoChange()"  required>
+            <mat-option *ngFor="let item of listTipoDocumento" [value]="item.IdTipoDoc">
+              {{item.Descripcion}}
+            </mat-option>
+          </mat-select>
         </mat-form-field>
-        <mat-form-field appearance="fill">
-          <input matInput placeholder="DOLARES">
+
+        <mat-form-field appearance="outline" class="serie-field">
+          <mat-label>Serie</mat-label>
+          <input matInput formControlName="serie" name="serie" [readonly]="!SerieEnabled">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="numero-field">
+          <mat-label>Numero</mat-label>
+          <input matInput formControlName="lblcorrelativo" name="lblcorrelativo" [readonly]="!CorrelativoEnabled">
         </mat-form-field>
       </div>
-    </div>
-    <mat-card-subtitle class="mb-3">Pagos con Tarjeta</mat-card-subtitle>  
-    <mat-table [dataSource]="dataSource" class="mat-elevation-z8 mb-3">
-      <ng-container matColumnDef="tarjeta">
-        <mat-header-cell *matHeaderCellDef> Tarjeta </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.tarjeta}} </mat-cell>
-        <mat-footer-cell *matFooterCellDef>
-          <mat-form-field>
-            <mat-select placeholder="Tarjeta" [(ngModel)]="nuevoRegistro.tarjeta">
-              <mat-option *ngFor="let tarjeta of tarjetas" [value]="tarjeta">{{ tarjeta }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </mat-footer-cell>
-      </ng-container>
-    
-      <ng-container matColumnDef="ap">
-        <mat-header-cell *matHeaderCellDef> AP </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.ap}} </mat-cell>
-        <mat-footer-cell *matFooterCellDef>
-          <mat-form-field>
-            <input matInput placeholder="AP" [(ngModel)]="nuevoRegistro.ap">
-          </mat-form-field>
-        </mat-footer-cell>
-      </ng-container>
-    
-      <ng-container matColumnDef="monto">
-        <mat-header-cell *matHeaderCellDef> Monto </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.monto}} </mat-cell>
-        <mat-footer-cell *matFooterCellDef>
-          <mat-form-field>
-            <input matInput placeholder="Monto" type="number" [(ngModel)]="nuevoRegistro.monto">
-          </mat-form-field>
-        </mat-footer-cell>
-      </ng-container>
-    
-      <ng-container matColumnDef="propina">
-        <mat-header-cell *matHeaderCellDef> Propina </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.propina}} </mat-cell>
-        <mat-footer-cell *matFooterCellDef>
-          <mat-form-field>
-            <input matInput placeholder="Propina" type="number" [(ngModel)]="nuevoRegistro.propina">
-          </mat-form-field>
-        </mat-footer-cell>
-      </ng-container>
-    
-      <ng-container matColumnDef="acciones">
-        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
-        <mat-cell *matCellDef="let element">
-          <button mat-button color="warn" (click)="eliminarRegistro(element)">Eliminar</button>
-        </mat-cell>
-        <mat-footer-cell *matFooterCellDef>
-          <button mat-raised-button color="primary" (click)="agregarRegistro()">Agregar</button>
-        </mat-footer-cell>
-      </ng-container>
-    
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-      <mat-footer-row *matFooterRowDef="displayedColumns"></mat-footer-row>
-    </mat-table>
-    
-    <div class="results-row d-flex justify-content-between">
-      <mat-form-field appearance="outline" class="flex-grow-1 mr-3">
-        <mat-label>Monto a Pagar</mat-label>
-        <input matInput value="33333">
+
+      <div formGroupName="cliente">
+      <div class="form-row">
+         <mat-form-field appearance="outline" class="flex-item">
+          <mat-label>Tipo Documento Cliente</mat-label>
+          <mat-select formControlName="tipoIdentidad" name="tipoDocumentoCliente" (selectionChange)="tipoDocumentoClienteChange()" required>
+            <mat-option *ngFor="let item of listTipoDocumentoCliente" [value]="item.IdTipoIdentidad">
+              {{item.Descripcion}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline" class="ruc-field">
+          <mat-label>{{etiquetaCliente}}</mat-label>
+          <input matInput placeholder="123..." formControlName="ruc" required>
+          <mat-error *ngIf="form.get('cliente.ruc').hasError('length')">Debe tener {{rucLength}} caracteres.</mat-error>
+          <mat-error *ngIf="form.get('cliente.ruc').hasError('required')">El campo es requerido.</mat-error>
+          <mat-error *ngIf="form.get('cliente.ruc').hasError('pattern')">Debe ser un número.</mat-error>
+          <mat-error *ngIf="form.get('cliente.ruc').hasError('invalidRUC')">RUC inválido.</mat-error>
+          <button mat-icon-button matSuffix (click)="buscarCliente()">
+            <mat-icon>search</mat-icon>
+          </button>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Cliente</mat-label>
+        <input matInput formControlName="razonSocial" required>
+        <mat-error *ngIf="form.get('cliente.razonSocial').hasError('invalidRazonSocial')">
+          La razón social debe ser "Cliente Varios" cuando el RUC es 00000001.
+        </mat-error>
       </mat-form-field>
-      <mat-form-field appearance="outline" class="flex-grow-1 mr-3">
-        <mat-label>Propinas</mat-label>
-        <input matInput value="0.00">
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Dirección</mat-label>
+        <input matInput formControlName="direccion">
       </mat-form-field>
-      <mat-form-field appearance="outline" class="flex-grow-1 mr-3">
-        <mat-label>Total Pago</mat-label>
-        <input matInput value="0.00">
-      </mat-form-field>
-      <mat-form-field appearance="outline" class="flex-grow-1">
-        <mat-label>Vuelto</mat-label>
-        <input matInput value="0.00">
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Correo</mat-label>
+        <input matInput formControlName="correo" placeholder="pat@example.com" [formControl]="emailPattern"
+          required />
+        <mat-error *ngIf="emailPattern">{{errorMessage()}}</mat-error>
       </mat-form-field>
     </div>
-    <div class="button-group d-flex justify-content-end mt-3">
-      <button mat-raised-button color="primary" class="mr-3">Cobrar</button>
-      <button mat-raised-button color="warn">Salir</button>
     </div>
-  </mat-card>
+  </form>
+
+
+
+  <div class="d-flex align-items-center mb-3 cash-row">
+    <div class="cash-buttons">
+      <button class="button_azul" style="width: 80px;">Soles Exacto</button>
+      <button class="button_azul" style="width: 50px;" (click)="SolesPredefinido(20)">S/. 20</button>
+      <button class="button_azul" style="width: 50px;" (click)="SolesPredefinido(50)">S/. 50</button>
+      <button class="button_azul" style="width: 50px;" (click)="SolesPredefinido(100)">S/. 100</button>
+      <button class="button_azul" style="width: 50px;" (click)="SolesPredefinido(200)">S/. 200</button>
+    </div>
+    <div class="d-flex flex-column mr-3 align-buttons">
+      <button class="button_azul" style="width: 100px;" (click)="obtenerSoles()">Soles</button>
+      <button class="button_azul" style="width: 100px;" (click)="obtenerDolares()">Dolares</button>
+    </div>
+    <div class="d-flex flex-column mr-3 align-labels">
+      <div class="GrupoLabel">
+        <div> {{solesValue}}</div>
+      </div>
+      <div class="GrupoLabel">
+        <div>{{dolaresValue}}</div>
+      </div>
+    </div>
+    <div class="d-flex flex-column mr-3 align-labels">
+      <div class="GrupoLabel">
+        <div>{{lblcal}}</div>
+      </div>
+      <div class="GrupoLabel">
+        <div>{{lblcambio}}</div>
+      </div>
+    </div>
+  </div>
+
+  <mat-table [dataSource]="dataSource" class="mat-elevation-z8 mb-3">
+    <ng-container matColumnDef="tarjeta">
+      <mat-header-cell *matHeaderCellDef> Tarjeta </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.Tarjeta.Descripcion}} </mat-cell>
+      <mat-footer-cell *matFooterCellDef>
+        <mat-form-field style="min-width: 200px;">
+          <mat-select placeholder="Tarjeta" [(ngModel)]="nuevoRegistro.Tarjeta">
+            <mat-option *ngFor="let value of listTarjeta" [value]="value">{{ value.Descripcion }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-footer-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="autorizacion">
+      <mat-header-cell *matHeaderCellDef> AP </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.Autorizacion}} </mat-cell>
+      <mat-footer-cell *matFooterCellDef>
+        <mat-form-field>
+          <input matInput placeholder="AP" [(ngModel)]="nuevoRegistro.Autorizacion">
+        </mat-form-field>
+      </mat-footer-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="montoPagado">
+      <mat-header-cell *matHeaderCellDef> Monto </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.MontoPagado}} </mat-cell>
+      <mat-footer-cell *matFooterCellDef>
+        <mat-form-field>
+          <input matInput placeholder="Monto" type="number" [(ngModel)]="nuevoRegistro.MontoPagado">
+        </mat-form-field>
+      </mat-footer-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="propina">
+      <mat-header-cell *matHeaderCellDef> Propina </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.Propina}} </mat-cell>
+      <mat-footer-cell *matFooterCellDef>
+        <mat-form-field>
+          <input matInput placeholder="Propina" type="number" [(ngModel)]="nuevoRegistro.Propina">
+        </mat-form-field>
+      </mat-footer-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="acciones">
+      <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+      <mat-cell *matCellDef="let element">
+        <button mat-icon-button color="warn" matTooltip="Eliminar" (click)="eliminarRegistro(element)">
+          <mat-icon>remove</mat-icon>
+        </button>
+      </mat-cell>
+      <mat-footer-cell *matFooterCellDef>
+        <button mat-icon-button color="primary" matTooltip="Agregar" (click)="agregarRegistro(element)">
+          <mat-icon>add</mat-icon>
+        </button>
+      </mat-footer-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    <mat-footer-row *matFooterRowDef="displayedColumns"></mat-footer-row>
+  </mat-table>
+
+  <div class="results-row d-flex justify-content-between">
+    <mat-form-field appearance="outline" class="flex-grow-1 mr-3">
+      <mat-label>Monto a Pagar</mat-label>
+      <input matInput type="text" [(ngModel)]="lblmonto" readonly>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="flex-grow-1 mr-3">
+      <mat-label>Tarjeta</mat-label>
+      <input matInput type="text" [(ngModel)]="lblmontotarjeta" readonly>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="flex-grow-1 mr-3">
+      <mat-label>Total Pago</mat-label>
+      <input matInput type="text" [(ngModel)]="lbltotal" readonly>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="flex-grow-1">
+      <mat-label>{{Label14}}</mat-label>
+      <input matInput type="text" [(ngModel)]="lblvuelto" readonly>
+    </mat-form-field>
+    <div class="example-button-container">
+      <a mat-fab extended (click)="cmdCobrarClick()">
+        <mat-icon>payment</mat-icon>
+        Cobrar
+      </a>
+    </div>
+  </div>
 </div>
-

@@ -12,7 +12,6 @@ import Swal from 'sweetalert2';
 
 //Components
 import { DialogDeleteProductComponent } from '../../components/dialog-delete-product/dialog-product-delete.component';
-import { DialogComprobanteComponent } from '../../components/dialog-comprobante/dialog-comprobante.component';
 import { DialogVerPedidoComponent } from '../../components/dialog-ver-pedido/dialog-ver-pedido.component';
 import { DialogObservacionComponent } from '../../components/dialog-observacion/dialog-observacion.component';
 
@@ -32,22 +31,23 @@ import { Observacion } from '../../models/observacion.models';
 import { PedidoCab } from '../../models/pedido.models';
 import { Familia } from '../../models/familia.models';
 import { SubFamilia } from '../../models/subfamilia.models';
-import { User } from '../../models/user.models';
+import { Usuario } from '../../models/user.models';
 
 // Servicios
-import { StorageService } from '../../services/storage.services';
-import { ProductService } from '../../services/product.services';
-import { MesasService } from '../../services/mesas.services';
+import { StorageService } from '../../services/storage.service';
+import { ProductService } from '../../services/product.service';
+import { MesasService } from '../../services/mesas.service';
 import { ResponseService } from '../../models/response.services';
-import { FamiliaService } from '../../services/familia.services';
+import { FamiliaService } from '../../services/familia.service';
 import { AmbienteService } from '../../services/ambiente.services';
-import { ObservacionService } from '../../services/observacion.services';
-import { PedidoService } from '../../services/pedido.services';
-import { TurnoService } from '../../services/turno.services';
-import { EmpleadoService } from '../../services/mozo.services';
+import { ObservacionService } from '../../services/observacion.service';
+import { PedidoService } from '../../services/pedido.service';
+import { TurnoService } from '../../services/turno.service';
+import { EmpleadoService } from '../../services/mozo.service';
 import { Turno } from 'src/app/models/turno.models';
 import { Router } from '@angular/router';
 import { LoginService } from 'src/app/services/auth/login.service';
+import { DialogEmitirComprobanteComponent } from 'src/app/components/dialog-emitir-comprobante/dialog-emitir-comprobante.component';
 
 
 @Component({
@@ -61,7 +61,7 @@ export class VentaComponent implements OnInit {
   isEdited: boolean;
   elementArr: any = [].fill(0);
   public TurnoAbierto: boolean;
-  public user: User;
+  public user: Usuario;
   public displayedColumns: string[] = ['NombreProducto', 'Precio', 'Cantidad', 'actions'];
   public ListaProductosdisplayedColumns: string[] = ['icoObs', 'nombrecorto', 'precio', 'add', 'cantidad', 'remove', 'actions'];
   public DEFAULT_ID = 0;
@@ -146,7 +146,7 @@ export class VentaComponent implements OnInit {
     try {
 
       if (this.storageService.isAuthenticated()) {
-        this.loginService.UsuarioShare.emit(this.storageService.getCurrentSession().user.Usuario);
+        this.loginService.UsuarioShare.emit(this.storageService.getCurrentSession().User.Username);
       }
       await this.TurnoService.ObtenerTurno('001').subscribe(data => {
 
@@ -181,15 +181,15 @@ export class VentaComponent implements OnInit {
       // 7. Se carga servicio observacion
       this.ListaObservacion = await this.ObservacionService.getAllObservacion().toPromise();
 
-      this.mozoSelected.IdEmpleado = this.storageService.getCurrentSession().user.IdEmpleado;
+      this.mozoSelected.IdEmpleado = this.storageService.getCurrentSession().User.IdEmpleado;
 
       let result: Ambiente;
       result = this.listAmbiente.find(item => item.Estado == 1);
       this.MostrarMesas_x_Ambiente(result);
       
       this.userLoged = {
-        id: this.storageService.getCurrentSession().user.IdEmpleado,
-        username: this.storageService.getCurrentSession().user.Usuario
+        id: this.storageService.getCurrentSession().User.IdEmpleado,
+        username: this.storageService.getCurrentSession().User.Username
       };
 
       this.MostrarOcultarPanelMesa = true;
@@ -239,8 +239,8 @@ export class VentaComponent implements OnInit {
       this.mesaSelected = mesa;
       this.MostrarOcultarPanelProducto = true;
       this.MostrarOcultarPanelMesa = false;
-      this.mozoSelected.IdEmpleado = this.storageService.getCurrentSession().user.IdEmpleado;
-      console.log(this.storageService.getCurrentSession().user.IdEmpleado);
+      this.mozoSelected.IdEmpleado = this.storageService.getCurrentSession().User.IdEmpleado;
+      console.log(this.storageService.getCurrentSession().User.IdEmpleado);
  
 
     } else {
@@ -414,7 +414,7 @@ export class VentaComponent implements OnInit {
       if (resultDialog.confirmacion) {
 
         var pedidoDelete: PedidoDelete = new PedidoDelete(
-          this.storageService.getCurrentSession().user.IdUsuario,
+          this.storageService.getCurrentSession().User.IdUsuario,
           resultDialog.motivoAnulacion,
           oPedidoDet.IdPedido,
           oPedidoDet.IdProducto,
@@ -445,18 +445,19 @@ export class VentaComponent implements OnInit {
     }
 
   }
-
+ 
   public AgregarProducto(product: Product): void {
-    this.listProductGrid.push(new PedidoDet(
-      this.DEFAULT_ID,
-      this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
-      product.IdProducto,
-      product.NombreCorto,
-      product.Precio,
-      1,
-      1 * product.Precio,
-      '',
-      '')
+    this.listProductGrid.push(new PedidoDet({
+      Item: this.DEFAULT_ID,
+      IdPedido: this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
+      IdProducto: product.IdProducto,
+      NombreCorto:product.NombreCorto,
+      Precio: product.Precio,
+      Cantidad: 1,
+      Subtotal: 1 * product.Precio,
+      Observacion: '',
+      Ip: ''}
+    )
     );
     this.GridListaPedidoDetProducto.data = this.listProductGrid;
   }
@@ -476,15 +477,17 @@ export class VentaComponent implements OnInit {
           cant = result.cantidad;
           Obs = result.observacion;
           this.listProductGrid.push(new PedidoDet(
-            this.DEFAULT_ID,
-            this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
-            product.IdProducto,
-            product.NombreCorto,
-            product.Precio,
-            cant,
-            cant * product.Precio,
-            Obs,
-            this.storageService.getCurrentIP())
+            {
+            Item : this.DEFAULT_ID,
+            IdPedido:this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
+            IdProducto: product.IdProducto,
+            NombreCorto: product.NombreCorto,
+            Precio:product.Precio,
+            Cantidad: cant,
+            Subtotal: cant * product.Precio,
+            Observacion: Obs,
+            Ip:this.storageService.getCurrentIP()
+          })
           );
           this.GridListaPedidoDetProducto.data = this.listProductGrid;
         } else {
@@ -509,29 +512,33 @@ export class VentaComponent implements OnInit {
 
         this.listProductGrid.forEach(productGrid => {
           let pedidoDetail: PedidoDet = new PedidoDet(
-            productGrid.Item,
-            productGrid.IdPedido = productGrid.IdPedido,
-            productGrid.IdProducto,
-            '',
-            productGrid.Precio,
-            productGrid.Cantidad,
-            productGrid.Precio*productGrid.Cantidad,
-            productGrid.Observacion,
-            this.storageService.getCurrentIP()
+            {
+            Item: productGrid.Item,
+            IdPedido : productGrid.IdPedido = productGrid.IdPedido,
+            IdProducto: productGrid.IdProducto,
+            NombreCorto: '',
+            Precio: productGrid.Precio,
+            Cantidad: productGrid.Cantidad,
+            Subtotal : productGrid.Precio*productGrid.Cantidad,
+            Observacion : productGrid.Observacion,
+            Ip: this.storageService.getCurrentIP()
+          }
           );
           
           listPedidoDetails.push(pedidoDetail);
         });
 
         var pedido: PedidoCab = new PedidoCab(
-          this.mozoSelected.IdEmpleado,
-          this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
-          this.getTotalByListProductGrid(),
-          this.getTotalByListProductGrid(),
-          this.storageService.getCurrentSession().user.IdUsuario,
-          this.storageService.getCurrentSession().user.IdUsuario,
-          this.mesaSelected.IdMesa, this.mesaSelected.Mesa, this.NroPaxSelected,
-          listPedidoDetails
+          {
+            IdEmpleado: this.mozoSelected.IdEmpleado,
+            IdPedido: this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
+            Total: this.getTotalByListProductGrid(),
+            Importe: this.getTotalByListProductGrid(),
+            UsuReg: this.storageService.getCurrentSession().User.IdUsuario,
+            UsuMod: this.storageService.getCurrentSession().User.IdUsuario,
+            IdMesa: this.mesaSelected.IdMesa, Mesa: this.mesaSelected.Mesa, NroPax: this.NroPaxSelected,
+            ListaPedidoDet: listPedidoDetails
+        }
         );
 
         var responseRegisterPedido: any = await this.pedidoService.registerPedido(pedido).toPromise();
@@ -590,11 +597,11 @@ export class VentaComponent implements OnInit {
 
         var dataSet: any = {
           idPedido: this.pedidoId,
-          userRegister: this.storageService.getCurrentSession().user.IdUsuario,
+          userRegister: this.storageService.getCurrentSession().User.IdUsuario,
           productGrid: this.listProductGrid
         };
 
-        const dialogProcessComprobante = this.dialogComprobante.open(DialogComprobanteComponent, {
+        const dialogProcessComprobante = this.dialogComprobante.open(DialogEmitirComprobanteComponent, {
           width: '400px',
           data: dataSet,
           hasBackdrop: true
@@ -687,15 +694,17 @@ export class VentaComponent implements OnInit {
     var result: PedidoDet[] = [];
     listData.forEach(data => {
       oPedidoDet = new PedidoDet(
-        data.Item, 
-        data.IdPedido, 
-        data.IdProducto, 
-        data.NombreCorto, 
-        data.Precio, 
-        data.Cantidad, 
-        data.Cantidad * data.Precio, 
-        data.observacion,
-        data.Ip
+        {
+       Item: data.Item, 
+        IdPedido: data.IdPedido, 
+        IdProducto: data.IdProducto, 
+        NombreCorto: data.NombreCorto, 
+        Precio : data.Precio, 
+        Cantidad: data.Cantidad, 
+        Subtotal: data.Cantidad * data.Precio, 
+        Observacion: data.observacion,
+        Ip: data.Ip
+      }
       );
       result.push(oPedidoDet);
     });

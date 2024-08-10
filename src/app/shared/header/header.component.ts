@@ -5,8 +5,8 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { DialogTurnoComponent } from 'src/app/components/dialog-turno/dialog-turno.component';
 import { Turno } from 'src/app/models/turno.models';
 import { LoginService } from 'src/app/services/auth/login.service';
-import { StorageService } from 'src/app/services/storage.services';
-import { TurnoService } from 'src/app/services/turno.services';
+import { StorageService } from 'src/app/services/storage.service';
+import { TurnoService } from 'src/app/services/turno.service';
 import { DataService } from 'src/app/services/data.service';
 
 @Component({

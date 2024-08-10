@@ -1,8 +1,8 @@
 import { EventEmitter, Injectable, Output } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http'
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http'
 import { LoginRequest } from './loginRequest';
 import { BehaviorSubject, Observable, catchError, throwError, tap } from 'rxjs';
-import { User } from 'src/app/models/user.models';
+import { Usuario } from 'src/app/models/user.models';
 import { Turno } from 'src/app/models/turno.models';
 import { environment } from 'src/environments/environment';
 
@@ -16,22 +16,24 @@ export class LoginService {
  turnoOpenShare: EventEmitter<boolean>= new EventEmitter<boolean>();
  UsuarioShare: EventEmitter<string>= new EventEmitter<string>();
  
-  private basePath = environment.apiUrl + '/login/authenticate';
+  private basePath = environment.apiUrl + '/Auth/login';
   constructor(private http: HttpClient) {}
     
-  login(loginObj:LoginRequest): Observable<User>{
-    console.log(this.basePath);
-    return this.http.post<User>(this.basePath, loginObj).pipe(
-      tap((userData: User) =>{
-        // this.currentUserData.next(userData);
-        // this.currentUserLoginOn.next(true);
+  login(usuario:LoginRequest, tenantID: string): Observable<Usuario>{
+    // Configura los encabezados
+    const headers = new HttpHeaders({
+      'Tenant-ID': tenantID  
+    });
+
+    return this.http.post<Usuario>(this.basePath, usuario, { headers }).pipe(
+      tap((userData: Usuario) =>{
       }),
       catchError(this.handleError)
     );
   }
 
-  simpleLogin(username: string, password: string): Observable<User> {
-    return this.http.get<User>(this.basePath + username + '/' + password);
+  simpleLogin(username: string, password: string): Observable<Usuario> {
+    return this.http.get<Usuario>(this.basePath + username + '/' + password);
   }
   
   private handleError(error: HttpErrorResponse) {

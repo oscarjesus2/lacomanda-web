@@ -1,5 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import Swal from 'sweetalert2';
 @Component({
   selector: 'app-dialog-mcant',
   templateUrl: './dialog-mcant.component.html',
@@ -35,18 +36,33 @@ export class DialogMCantComponent {
 
   accept(): void {
     if (this.inputValue === '' || isNaN(Number(this.inputValue))) {
-      alert('Ingresar solo valores numéricos.');
+      Swal.fire({
+        title: 'Validación',
+        text: 'Ingresar solo valores numéricos.',
+        icon: 'warning',
+        confirmButtonText: 'OK'
+      });
       return;
     }
 
     const inputValue = parseFloat(this.inputValue);
     if (inputValue <= 0) {
-      alert('Ingrese una cantidad mayor a 0');
+      Swal.fire({
+        title: 'Validación',
+        text: 'Ingrese una cantidad mayor a 0',
+        icon: 'warning',
+        confirmButtonText: 'OK'
+      });
       return;
     }
 
     if (this.minAmount !== 0 && inputValue < this.minAmount) {
-      alert(`Minimo debe ingresar ${this.minAmount}.`);
+      Swal.fire({
+        title: 'Validación',
+        text: `Minimo debe ingresar ${this.minAmount}.`,
+        icon: 'warning',
+        confirmButtonText: 'OK'
+      });
       return;
     }
 

@@ -20,4 +20,7 @@ export class Product {
     public Stock: number;
     public MonedaVenta: string;
     public ImpuestoBolsa: number;
+    Tipo: number;
+    ExclusivoParaAnfitriona: boolean;
+    PermitirParaTragoCortesia: boolean;
 }

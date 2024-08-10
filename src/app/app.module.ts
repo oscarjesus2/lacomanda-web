@@ -41,7 +41,6 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { DialogMozoComponent } from './components/dialog-mozo/dialog-mozo.component';
 import { DialogDeleteProductComponent } from './components/dialog-delete-product/dialog-product-delete.component';
-import { DialogComprobanteComponent } from './components/dialog-comprobante/dialog-comprobante.component';
 import { PedidosListComponent } from './components/pedidos-list/pedidos-list.component';
 import { DialogEnviarPedidoComponent } from './components/dialog-grabar-pedido/dialog-grabar-pedido.component';
 import { DialogVerPedidoComponent } from './components/dialog-ver-pedido/dialog-ver-pedido.component';
@@ -73,6 +72,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { TransaccionesDiariasComponent } from './pages/dashboard/transacciones-diarias/transacciones-diarias.component';
 import { DialogEmitirVentaComponent } from './components/dialog-emitir-venta/dialog-emitir-venta.component';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
+import { PruebaComponent } from './components/prueba/prueba.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -94,7 +94,6 @@ export const MY_DATE_FORMATS = {
 
     DialogMozoComponent,
     DialogDeleteProductComponent,
-    DialogComprobanteComponent,
     PedidosListComponent,
     DialogEnviarPedidoComponent,
     DialogVerPedidoComponent,
@@ -115,6 +114,7 @@ export const MY_DATE_FORMATS = {
     DialogMCantComponent,
     TransaccionesDiariasComponent,
     DialogEmitirVentaComponent,
+    PruebaComponent,
 
   ],
   imports: [

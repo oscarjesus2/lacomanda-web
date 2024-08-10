@@ -1,4 +1,19 @@
-@import '~@angular/material/prebuilt-themes/indigo-pink.css';
+.custom-select-panel .mat-select-panel {
+  width: 500px !important; /* Ajusta el ancho según tus necesidades */
+}
+
+.custom-select-panel .mat-option {
+  width: 500px !important; /* Ajusta el ancho según tus necesidades */
+}
+
+.example-button-container {
+  display: flex;
+  justify-content: center;
+  width: 120px;
+}
+.cash-card {
+  max-width: 700px;
+}
 
 .container {
   display: flex;
@@ -10,11 +25,37 @@
 .full-width {
   width: 100%;
 }
+.h1-field {
+  flex: 1 1 30%;
+}
+.numero-field {
+  flex: 1 1 10%;
+}
+.serie-field {
+  flex: 1 1 5%;
+}
+.ruc-field {
+  flex: 1 1 30%;
+}
+
+.cliente-field {
+  flex: 1 1 70%;
+}
+
+.GrupoLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #ffffff;
+  border: 1px solid #d0d0d0;
+}
 
 .cash-buttons {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+  padding: auto;
 }
 
 .results-row {
@@ -80,4 +121,26 @@
 
 .close-button:hover mat-icon {
   color: #212121;  /* Color más oscuro al pasar el mouse */
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 0px;
+}
+
+.cash-row {
+  gap: 1.5rem; /* Add some space between sections */
+}
+
+.align-buttons {
+  margin-left: auto; /* Align the buttons to the right */
+}
+
+.align-labels .GrupoLabel {
+  background-color: #f0f0f0; /* Slightly different background for labels */
+  border: none;
+  padding: 5px;
+  text-align: center;
+  margin-bottom: 5px;
 }

@@ -1,18 +1,19 @@
 import { Turno } from "./turno.models";
-import { User } from "./user.models";
+import { Usuario } from "./user.models";
 
 export class Session {
 
-    public token: string;
-    public user: User;
+    public Token: string;
+    public User: Usuario;
     public Ip: string;
-    public sucursal: string;
+    public TenantID: string;
     public nombresucursal: string;
-    constructor(token: string, user: User, Ip: string, sucursal: string, nombresucursal :string ) {
-        this.token = token;
-        this.user = user;
+    public boletaRapida: boolean = false;
+    constructor(token: string, user: Usuario, Ip: string, tenantID: string, nombresucursal :string ) {
+        this.Token = token;
+        this.User = user;
         this.Ip=Ip;
-        this.sucursal=sucursal;
+        this.TenantID=tenantID;
         this.nombresucursal=nombresucursal;
     }
 }

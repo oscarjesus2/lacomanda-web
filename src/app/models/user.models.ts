@@ -1,15 +1,15 @@
 import { Turno } from "./turno.models";
 
-export class User {    
+export class Usuario {    
 
   public Activo: boolean;
-  public Clave: string;
+  public Password: string;
   public IdEmpleado: string;
   public IdNivel: string;
   public IdUsuario: number;
   public Nivel: string;
-  public Usuario: string;
-  public token:string;
-  public turno: Turno;
+  public Username: string;
+  public Token:string;
+  public Turno: Turno;
 }
 

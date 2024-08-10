@@ -2,7 +2,7 @@ import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import {MatDialogModule} from '@angular/material/dialog';
 import { Empleado } from '../../models/empleado.models';
-import { StorageService } from '../../services/storage.services';
+import { StorageService } from '../../services/storage.service';
  
 @Component({
     selector: 'app-dialog-mozo',
@@ -30,7 +30,7 @@ export class DialogMozoComponent {
     
 
     onAgregarClick(): void {
-        this.data.IdEmpleado=this.storageService.getCurrentSession().user.IdEmpleado;
+        this.data.IdEmpleado=this.storageService.getCurrentSession().User.IdEmpleado;
         this.data.NroPersonas= this.NroPersonas;
     }
     onItemClick(item:any) {

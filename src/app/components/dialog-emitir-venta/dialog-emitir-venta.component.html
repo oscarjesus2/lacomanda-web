@@ -39,7 +39,7 @@
     <div class="inline-form" *ngIf="visibleInfoTurno">
       <mat-form-field appearance="outline" class="flex-item">
         <mat-label>Turno</mat-label>
-        <input matInput type="text" [(ngModel)]="nroTurnoAbierto" name="turno" readonly>
+        <input matInput type="text" [(ngModel)]="turnoAbierto.NroTurno" name="turno" readonly>
       </mat-form-field>
   
       <mat-form-field appearance="outline" class="flex-item">
@@ -69,7 +69,7 @@
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Observación</mat-label>
-      <input matInput type="text" name="observacion">
+      <input matInput type="text" [(ngModel)]="observacionValue"  name="observacion">
     </mat-form-field>
   </form>
 
@@ -139,15 +139,15 @@
 
     <div class="actions">
       <button class="button_azul">DESCUENTO</button>
-      <button class="button_azul">BOLETA</button>
-      <button class="button_azul" (click)="OpenDialogEmitirComprobante()">FACTURA</button>
+      <button class="button_azul" (click)="OpenDialogEmitirComprobante(TipoDocumento.BolentaVenta)">BOLETA</button>
+      <button class="button_azul" (click)="OpenDialogEmitirComprobante(TipoDocumento.FacturaVenta)">FACTURA</button>
     </div>
   </div>
 
   <div class="totals">
     <div>IMPORTE: {{sumaImporte}}</div>
     <div>DSCTO: {{sumaDscto}}</div>
-    <div>TOTAL: {{sumatotal}}</div>
+    <div>TOTAL: {{sumaTotal}}</div>
     <div>ICBPER: {{sumaImpuestoBolsa}}</div>
     <div>GRAN TOTAL: {{sumaGranTotal}}</div>
   </div>

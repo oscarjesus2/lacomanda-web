@@ -3,15 +3,24 @@ import { Cliente } from "./cliente.models";
 
 export class Venta {
 
-    public IdTipoDocumento: string;
-    public IdPedido: number;
-    public UsuRegistra: number;
-    public oCliente:  Cliente;
-    constructor(IdTipoDocumento: string, IdPedido: number, UsuRegistra: number, Cliente:  Cliente) {
-        this.IdTipoDocumento = IdTipoDocumento;
-        this.IdPedido = IdPedido;
-        this.UsuRegistra = UsuRegistra;
-        this.oCliente=Cliente;
+    IdVenta: number;
+    IdTipoDocumento: string;
+    NumDocumento: number;
+    Serie: string;
+    IdPedido: number;
+    NroCuenta: number;
+    IdCaja: string;
+    Impuesto1: number;
+    Total: number;
+    Importe: number;
+    Dscto: number;
+    UsuRegistra: number;
+    IdTurno: number; 
+    oCliente:  Cliente;
+    Propina: number;
+    ByteTicket: Uint8Array;
+    constructor(init?: Partial<Venta>) {
+        Object.assign(this, init);
     }
 
 }

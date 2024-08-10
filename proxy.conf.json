@@ -1,6 +1,6 @@
 {
   "/api/*": {
-    "target": "http://localhost/Jbs_Services",
+    "target": "http://localhost/WebApi",
     "secure": false,
     "changeOrigin": true
   }

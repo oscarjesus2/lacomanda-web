@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Session } from '../models/session.models';
-import { User } from '../models/user.models';
+import { Usuario } from '../models/user.models';
 import { LoginService } from './auth/login.service';
 import { Turno } from '../models/turno.models';
 
@@ -43,18 +43,23 @@ export class StorageService {
     var session: Session = this.getCurrentSession();
     return (session && session.Ip) ? session.Ip : null;
   }
-  getCurrentUser(): User {
+  getCurrentUser(): Usuario {
     var session: Session = this.getCurrentSession();
-    return (session && session.user) ? session.user : null;
+    return (session && session.User) ? session.User : null;
   };
   getCurrentNombreSucursal(): string {
     var session: Session = this.getCurrentSession();
     return (session && session.nombresucursal) ? session.nombresucursal : null;
   };
 
+  getBoletaRapida(): boolean {
+    var session: Session = this.getCurrentSession();
+    return (session && session.boletaRapida) ? session.boletaRapida : null;
+  };
+
   getCurrentToken(): string {
     var session = this.getCurrentSession();
-    return (session && session.token) ? session.token : null;
+    return (session && session.Token) ? session.Token : null;
   };
 
 
