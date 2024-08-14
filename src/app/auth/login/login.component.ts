@@ -7,6 +7,7 @@ import { StorageService } from 'src/app/services/storage.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { NotificationService } from 'src/app/services/notification.service';
 import { Session } from 'src/app/models/session.models';
+import { TenantService } from 'src/app/services/tenant.service';
 
 @Component({
   selector: 'app-login',
@@ -19,18 +20,13 @@ export class LoginComponent implements OnInit {
   public loginValid = true;
   public idNivel = '001';
   public password = '';
-  public tenantID: TenantDefault;
-  
+
   nivelUsuario: UsersDefault[] = [
     { value: '001', nombreNivel: 'Administrador' },
     { value: '002', nombreNivel: 'Cajero' },
     { value: '003', nombreNivel: 'Mozo' }
   ];
-  tenantDefault: TenantDefault[] = [
-    { value: '20605616659', sucursal: 'Naruto Sucre' },
-    { value: '20605104771', sucursal: 'Naruto San Borja' },
-    { value: '20604977585', sucursal: 'Job Business Solutions' }
-  ];
+  tenantDefault: TenantDefault[] = [];
   loginForm: FormGroup;
   loginError: string = "";
   CurrentIP: string;
@@ -41,10 +37,12 @@ export class LoginComponent implements OnInit {
     private router: Router, 
     private loginService: LoginService,
     private storageService: StorageService,
+    private tenantService: TenantService,
     private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
+    this.loadTenants();
     this.initForm();
     const currentSession = this.storageService.getCurrentSession();
     if (currentSession) {
@@ -59,7 +57,7 @@ export class LoginComponent implements OnInit {
 
   async initForm() {
     this.loginForm = this.fb.group({
-      tenantID: [null, Validators.required],
+      tenant: [null, Validators.required],
       idNivel: ['', Validators.required],
       password: ['', Validators.required],
     });
@@ -67,6 +65,14 @@ export class LoginComponent implements OnInit {
     this.CurrentIP = await internalIpV4();
   }
 
+  private async loadTenants(): Promise<void> {
+    try {
+      this.tenantDefault = await this.tenantService.getTenant().toPromise();
+    } catch (error) {
+      this.notificationService.showError('Error al cargar las sucursales disponibles.');
+    }
+  }
+  
   login() {
     if (this.loginForm.invalid) {
       this.notificationService.showWarning('Por favor complete todos los campos.');
@@ -79,14 +85,14 @@ export class LoginComponent implements OnInit {
     const formValues = this.loginForm.value;
     const idNivel = formValues.idNivel;
     const password = formValues.password;
-    const tenantID = formValues.tenantID; // Accede a tenantID a través de formValues
-
-    this.loginService.login({ IdNivel: idNivel, Password: password }, tenantID.value).subscribe({
+    const tenant = formValues.tenant; 
+    
+    this.loginService.login({ IdNivel: idNivel, Password: password }, tenant.TenantId).subscribe({
       next: (userData) => {
         console.log('Login correcto');
         this.loginService.UsuarioShare.emit(userData.Username);
 
-        const session: Session = new Session(userData.Token, userData, this.CurrentIP, tenantID.value, tenantID.sucursal);
+        const session: Session = new Session(userData.Token, userData, this.CurrentIP, tenant.TenantId, tenant.Sucursal);
         this.storageService.setCurrentSession(session);
         
         this.notificationService.showSuccess('Inicio de sesión exitoso.');
@@ -110,6 +116,6 @@ interface UsersDefault {
 }
 
 interface TenantDefault {
-  value: string;
-  sucursal: string;
+  TenantId: string;
+  Sucursal: string;
 }

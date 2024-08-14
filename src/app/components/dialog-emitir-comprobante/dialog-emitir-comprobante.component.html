@@ -31,7 +31,7 @@
       <div class="form-row">
          <mat-form-field appearance="outline" class="flex-item">
           <mat-label>Tipo Documento Cliente</mat-label>
-          <mat-select formControlName="tipoIdentidad" name="tipoDocumentoCliente" (selectionChange)="tipoDocumentoClienteChange()" required>
+          <mat-select formControlName="tipoIdentidad" name="tipoDocumentoCliente" (selectionChange)="tipoDocumentoClienteChange()">
             <mat-option *ngFor="let item of listTipoDocumentoCliente" [value]="item.IdTipoIdentidad">
               {{item.Descripcion}}
             </mat-option>
@@ -40,7 +40,7 @@
         
         <mat-form-field appearance="outline" class="ruc-field">
           <mat-label>{{etiquetaCliente}}</mat-label>
-          <input matInput placeholder="123..." formControlName="ruc" required>
+          <input matInput placeholder="123..." formControlName="ruc">
           <mat-error *ngIf="form.get('cliente.ruc').hasError('length')">Debe tener {{rucLength}} caracteres.</mat-error>
           <mat-error *ngIf="form.get('cliente.ruc').hasError('required')">El campo es requerido.</mat-error>
           <mat-error *ngIf="form.get('cliente.ruc').hasError('pattern')">Debe ser un número.</mat-error>
@@ -54,6 +54,7 @@
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Cliente</mat-label>
         <input matInput formControlName="razonSocial" required>
+        <mat-error *ngIf="form.get('cliente.razonSocial').hasError('required')">El campo es requerido.</mat-error>
         <mat-error *ngIf="form.get('cliente.razonSocial').hasError('invalidRazonSocial')">
           La razón social debe ser "Cliente Varios" cuando el RUC es 00000001.
         </mat-error>
@@ -66,9 +67,8 @@
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Correo</mat-label>
-        <input matInput formControlName="correo" placeholder="pat@example.com" [formControl]="emailPattern"
-          required />
-        <mat-error *ngIf="emailPattern">{{errorMessage()}}</mat-error>
+        <input matInput formControlName="correo" placeholder="pat@example.com"/>
+        <mat-error *ngIf="form.get('cliente.correo').hasError('pattern')">El formato del correo es incorrecto.</mat-error>
       </mat-form-field>
     </div>
     </div>
@@ -112,8 +112,8 @@
       <mat-cell *matCellDef="let element"> {{element.Tarjeta.Descripcion}} </mat-cell>
       <mat-footer-cell *matFooterCellDef>
         <mat-form-field style="min-width: 200px;">
-          <mat-select placeholder="Tarjeta" [(ngModel)]="nuevoRegistro.Tarjeta">
-            <mat-option *ngFor="let value of listTarjeta" [value]="value">{{ value.Descripcion }}</mat-option>
+          <mat-select placeholder="Tarjeta" [(ngModel)]="nuevoRegistro.IdTarjeta">
+            <mat-option *ngFor="let value of listTarjeta" [value]="value.IdTarjeta">{{ value.Descripcion }}</mat-option>
           </mat-select>
         </mat-form-field>
       </mat-footer-cell>

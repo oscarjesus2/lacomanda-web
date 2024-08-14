@@ -24,6 +24,7 @@ export class PedidoDet {
   nombreCuenta: string;
   Division: number;
   Impuesto1: number;
+  IdEmpleado: string;
  
     constructor(init?: Partial<PedidoDet>) {
         Object.assign(this, init);

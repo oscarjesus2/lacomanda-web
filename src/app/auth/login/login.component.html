@@ -7,9 +7,9 @@
       </mat-error>
 
       <mat-form-field>
-        <mat-select placeholder="Sucursal" formControlName="tenantID" required>
+        <mat-select placeholder="Sucursal" formControlName="tenant" required>
           <mat-option *ngFor="let tenant of tenantDefault" [value]="tenant">
-            {{tenant.sucursal}}
+            {{tenant.Sucursal}}
           </mat-option>
         </mat-select>
         <mat-error>

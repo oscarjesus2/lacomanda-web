@@ -6,7 +6,7 @@ export class Pago {
     UsuReg: number;
     IdTurno: number;
     Autorizacion: string;
-    Tarjeta: Tarjeta;
+    IdTarjeta: string;
     Vuelto: number;
     Propina: number;
     MontoVenta: number;

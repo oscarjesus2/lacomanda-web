@@ -19,7 +19,7 @@ export class VentasDiariasComponent implements OnInit, OnChanges  {
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
   totalVenta: number;
-  reportType: string ;
+  reportType: string = 'diarias';
   private data: ventadiariasemanalmensual[];
   private svg;
   private width: number;

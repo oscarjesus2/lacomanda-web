@@ -10,11 +10,10 @@ import { NotificationService } from '../services/notification.service';
     providedIn: 'root'
 })
 export class ApiRequestInterceptor implements HttpInterceptor {
-    notificationService: any;
-
     constructor(
         private storageService: StorageService,
-        private router: Router
+        private router: Router,
+        private notificationService: NotificationService 
     ) { }
 
     intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {

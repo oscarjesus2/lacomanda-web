@@ -433,6 +433,7 @@ export class DialogEmitirVentaComponent implements OnInit {
       pedidoDet.NumEnvios = 0;
       pedidoDet.Observacion = "";
       pedidoDet.Ip = this.storageService.getCurrentIP()
+      pedidoDet.IdEmpleado = this.storageService.getCurrentUser().IdEmpleado;
       pedidoDet.MotivoReimpresion = "";
       pedidoDet.NumReimpresion = null;
       pedidoDet.UsuReimpresion = null;

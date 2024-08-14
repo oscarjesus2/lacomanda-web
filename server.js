@@ -3,8 +3,15 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const { print, getPrinters } = require('pdf-to-printer');
+const cors = require('cors'); // Importar el paquete cors
 
 const app = express();
+
+// Usar el middleware cors para permitir solicitudes desde el frontend
+app.use(cors({
+  origin: 'http://localhost:4200', // Reemplaza con el origen de tu aplicación Angular
+}));
+
 app.use(bodyParser.json({ limit: '50mb' }));
 
 app.post('/print', async (req, res) => {
