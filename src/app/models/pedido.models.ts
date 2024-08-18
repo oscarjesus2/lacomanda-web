@@ -29,7 +29,7 @@ export class PedidoCab {
     Observacion: string;
     Dscto: number;
     public Mesa: string;
-    public NroPax: string;
+    public NroPax: number;
     public ListaPedidoDet: PedidoDet[];
     
     constructor(init?: Partial<PedidoCab>) {

@@ -7,6 +7,7 @@
   <div class="filters">
     <label>
       <input type="checkbox" [(ngModel)]="listarTodosLosTurnos"> Listar ventas de todos los turnos/cajas
+      <input type="checkbox" [(ngModel)]="listarDI">*
     </label>
     <select [(ngModel)]="campoSeleccionado" (change)="aplicarFiltro()">
       <option value="Caja">Caja</option>
@@ -45,11 +46,11 @@
             (click)="seleccionarVenta(row)">
         </tr>
       </table>
+      <mat-paginator [length]="ventas.length" [pageSize]="10" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
       
     </div>
 
     <div class="buttons">
-      <button class="btn-salir" (click)="onNoClick()">Salir</button>
       <button class="btn-emitir-comprobante" (click)="OpenDialogEmitirVenta()">Emisión de Comprobante</button>
       <button class="btn-nota-credito">Emisión de Nota de Crédito</button>
       <button class="btn-modificar-doc">Modificar Documento</button>

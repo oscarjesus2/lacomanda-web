@@ -73,6 +73,7 @@ import { TransaccionesDiariasComponent } from './pages/dashboard/transacciones-d
 import { DialogEmitirVentaComponent } from './components/dialog-emitir-venta/dialog-emitir-venta.component';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
 import { PruebaComponent } from './components/prueba/prueba.component';
+import { DialogReportecontableComponent } from './components/dialog-reportecontable/dialog-reportecontable.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -115,6 +116,7 @@ export const MY_DATE_FORMATS = {
     TransaccionesDiariasComponent,
     DialogEmitirVentaComponent,
     PruebaComponent,
+    DialogReportecontableComponent,
 
   ],
   imports: [

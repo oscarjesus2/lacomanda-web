@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, HostListener  } from '@angular/core';
 import { Breakpoints, BreakpointObserver } from '@angular/cdk/layout';
 import { map } from 'rxjs/operators';
 import { MatTableDataSource } from '@angular/material/table';
@@ -49,7 +49,6 @@ import { Router } from '@angular/router';
 import { LoginService } from 'src/app/services/auth/login.service';
 import { DialogEmitirComprobanteComponent } from 'src/app/components/dialog-emitir-comprobante/dialog-emitir-comprobante.component';
 
-
 @Component({
   selector: 'app-venta',
   templateUrl: './venta.component.html',
@@ -79,7 +78,7 @@ export class VentaComponent implements OnInit {
   public ListaEmpleados: Empleado[];
   public ListaObservacion: Observacion[];
   public oTurno: Turno;
-  public StyleCustom: string = "height: calc(792px)";
+  public StyleCustom: string = "height: 90%";
   public IdSubFamila: string;
   public pedidoId: number = 0;
 
@@ -95,7 +94,7 @@ export class VentaComponent implements OnInit {
   public MostrarOcultarPanelPedido: Boolean;
   public mozoSelected: Empleado;
   public mesaSelected: Mesas;
-  public NroPaxSelected: string = "";
+  public NroPaxSelected: string = "0";
 
   public RehacerPantallaRefresh: string = "";
 
@@ -137,10 +136,23 @@ export class VentaComponent implements OnInit {
 
   }
 
+  enterFullScreen() {
+    const elem = document.documentElement;
+  
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else {
+      console.warn("Pantalla completa no es soportada por este navegador.");
+    }
+  }
 
+  @HostListener('document:fullscreenchange', ['$event'])
+  onFullScreenChange(event: Event) {
+    console.log('Fullscreen status changed');
+  }
 
   async ngOnInit() {
-
+    this.enterFullScreen();
     this.spinnerService.show();
 
     try {
@@ -207,6 +219,7 @@ export class VentaComponent implements OnInit {
   async MostrarMesas_x_Ambiente(ambiente: Ambiente) {
     this.spinnerService.show();
     this.ListaMesas_x_Ambiente = this.ListaMesasTotal.filter(x => x.IdAmbiente === ambiente.IdAmbiente);
+    console.log(this.ListaMesas_x_Ambiente);
     this.DisplayValueAmbiente = ambiente.Descripcion;
     this.spinnerService.hide();
   }
@@ -223,7 +236,7 @@ export class VentaComponent implements OnInit {
 
   async ListarProductos_x_SubFamilia(oSubFamilia: SubFamilia) {
     this.spinnerService.show();
-
+    console.log(this.listProducts);
     this.IdSubFamila = oSubFamilia.IdSubFamilia;
     this.listProducts_x_SubFamilia = this.listProducts.filter(x => x.IdSubFamilia === oSubFamilia.IdSubFamilia);
     //this.GridListaPedidoDetProducto.data = this.ListaPedidoDetProducto.filter(x=> x.IdSubFamilia===subFamiliaId);
@@ -502,9 +515,7 @@ export class VentaComponent implements OnInit {
   }
 
   async processPedido() {
-    try {
       this.spinnerService.show();
-
   
       if (this.listProductGrid.length > 0) {
 
@@ -536,7 +547,7 @@ export class VentaComponent implements OnInit {
             Importe: this.getTotalByListProductGrid(),
             UsuReg: this.storageService.getCurrentSession().User.IdUsuario,
             UsuMod: this.storageService.getCurrentSession().User.IdUsuario,
-            IdMesa: this.mesaSelected.IdMesa, Mesa: this.mesaSelected.Mesa, NroPax: this.NroPaxSelected,
+            IdMesa: this.mesaSelected.IdMesa, Mesa: this.mesaSelected.Mesa, NroPax: parseInt(this.NroPaxSelected),
             ListaPedidoDet: listPedidoDetails
         }
         );
@@ -567,20 +578,6 @@ export class VentaComponent implements OnInit {
       } else {
         Swal.fire('Oops...', 'No ha ingresado ningun producto.', 'error')
       }
-    } catch (error) {
-    console.log(error);
-    
-      Swal.fire(
-        'Algo anda mal',
-        error.error,
-        'error'
-      )
-      
-   
-    } finally {
-      this.spinnerService.hide();
-    }
-
 
   }
 
@@ -734,7 +731,7 @@ export class VentaComponent implements OnInit {
 
 
 
-  private RehacerRefresh(): void {
+  RehacerRefresh(): void {
 
     try {
       this.spinnerService.show();

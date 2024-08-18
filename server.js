@@ -9,8 +9,9 @@ const app = express();
 
 // Usar el middleware cors para permitir solicitudes desde el frontend
 app.use(cors({
-  origin: 'http://localhost:4200', // Reemplaza con el origen de tu aplicación Angular
+  origin: ['http://localhost:4200', 'https://main.jobbusiness.pe'], // Reemplaza con el origen de tu aplicación Angular
 }));
+
 
 app.use(bodyParser.json({ limit: '50mb' }));
 

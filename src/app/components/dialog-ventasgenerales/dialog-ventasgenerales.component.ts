@@ -1,13 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { VentaService } from '../../services/venta.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import Swal from 'sweetalert2';
-import { ventasInterface } from 'src/app/interfaces/ventas.interface';
+import { VentasInterface } from 'src/app/interfaces/ventas.interface';
 import { CajaService } from 'src/app/services/caja.service';
 import { Caja } from 'src/app/models/caja.models';
 import { DialogEmitirVentaComponent } from '../dialog-emitir-venta/dialog-emitir-venta.component';
+import { MatPaginator } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-dialog-ventasgenerales',
@@ -15,16 +16,18 @@ import { DialogEmitirVentaComponent } from '../dialog-emitir-venta/dialog-emitir
   styleUrls: ['./dialog-ventasgenerales.component.css']
 })
 export class DialogVentasgeneralesComponent implements OnInit {
+  @ViewChild(MatPaginator) paginator: MatPaginator;
   listCaja: Caja[];
-  ventas: ventasInterface[] = [];
-  dataSource = new MatTableDataSource<ventasInterface>([]);
+  ventas: VentasInterface[] = [];
+  dataSource = new MatTableDataSource<VentasInterface>([]);
   displayedColumns: string[] = [
     'Caja', 'TipoDocumento', 'Documento', 'Cliente', 'FechaVenta',
     'Moneda', 'Dscto', 'Inafecto', 'ValorVenta', 'IGV', 'Servicio',
     'ICBPER', 'Total', 'EstadoDescripcion', 'EstadoPago'
   ];
-  ventaSeleccionada: ventasInterface | null = null;
+  ventaSeleccionada: VentasInterface | null = null;
   listarTodosLosTurnos: boolean = false;
+  listarDI: boolean = false;
   textoFiltro: string = '';
   campoSeleccionado: string = 'TipoDocumento';
 
@@ -40,21 +43,13 @@ export class DialogVentasgeneralesComponent implements OnInit {
     this.loadVentas();
   }
 
+  ngAfterViewInit() {
+    this.dataSource.paginator = this.paginator;
+  }
   loadVentas() {
-    try {
-      this.spinnerService.show();
-
-      if (this.listarTodosLosTurnos) 
-      {
-        this.getListadoVentas(0);
-      } else {
-        this.getListadoVentas(1);
-      }
-    } catch (error) {
-      console.error('Error al cargar ventas:', error);
-      Swal.fire('Algo anda mal', 'Error al cargar ventas', 'error');
-      this.spinnerService.hide(); // Oculta el spinner en caso de error
-    }
+    const turno = this.listarTodosLosTurnos ? 0 : 1;
+    const di = this.listarDI ? 1 : 0;
+    this.getListadoVentas(turno, di);
   }
 
   handleNoTurnoAbiertoError() {
@@ -62,12 +57,13 @@ export class DialogVentasgeneralesComponent implements OnInit {
     Swal.fire('Error', 'No se encontró la caja 001 o no tiene turno abierto', 'error');
   }
   
-  getListadoVentas(soloTurnoAbierto: number) {
-    this.ventaService.getListadoVentas(soloTurnoAbierto).subscribe(
+  getListadoVentas(soloTurnoAbierto: number, incluirDI: number) {
+    this.ventaService.getListadoVentas(soloTurnoAbierto, incluirDI).subscribe(
       data => {
         console.log('Datos recibidos:', data); // Agrega esto para verificar la estructura de los datos
         this.ventas = data;
         this.dataSource.data = data;
+        this.dataSource.paginator = this.paginator; 
         this.aplicarFiltro();
         this.spinnerService.hide();
       },
@@ -82,10 +78,12 @@ export class DialogVentasgeneralesComponent implements OnInit {
   aplicarFiltro() {
     if (!this.textoFiltro || !this.campoSeleccionado) {
       this.dataSource.data = this.ventas;
+      this.dataSource.paginator = this.paginator; 
     } else {
       this.dataSource.data = this.ventas.filter(venta =>
         venta[this.campoSeleccionado].toString().toLowerCase().includes(this.textoFiltro.toLowerCase())
       );
+      this.dataSource.paginator = this.paginator; 
     }
   }
 
@@ -95,7 +93,7 @@ export class DialogVentasgeneralesComponent implements OnInit {
     this.loadVentas();
   }
 
-  seleccionarVenta(row: ventasInterface): void {
+  seleccionarVenta(row: VentasInterface): void {
     this.ventaSeleccionada = row;
     console.log('Fila seleccionada: ', row);
   }
@@ -104,7 +102,7 @@ export class DialogVentasgeneralesComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  isRowSelected(row: ventasInterface): boolean {
+  isRowSelected(row: VentasInterface): boolean {
     return this.ventaSeleccionada === row;
   }
 

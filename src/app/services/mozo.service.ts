@@ -9,7 +9,7 @@ import { environment } from 'src/environments/environment';  // Importa el entor
 })
 export class EmpleadoService {
 
-    private basePath =  environment.apiUrl + '/empleados/listar';
+    private basePath =  environment.apiUrl + '/empleado/listar';
 
     constructor(private http: HttpClient) { }
 

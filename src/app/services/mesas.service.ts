@@ -9,8 +9,8 @@ import { environment } from 'src/environments/environment';  // Importa el entor
 })
 export class MesasService {
 
-    private basePathMesas = environment.apiUrl + '/mesas';
-    private basePathConsultarMesa = environment.apiUrl + '/pedidos/listarpedido_x_mesa/';
+    private basePathMesas = environment.apiUrl + '/mesa';
+    private basePathConsultarMesa = environment.apiUrl + '/pedido/listarpedido_x_mesa/';
   
     constructor(private http: HttpClient) { }
 
@@ -22,6 +22,6 @@ export class MesasService {
         return this.http.get<any[]>(this.basePathConsultarMesa + idMesa);
     }
     ImprimirPrecuenta(idMesa: string): Observable<any[]> {
-        return this.http.get<any[]>('/api/pedidos/imprimirprecuenta/' + idMesa);
+        return this.http.get<any[]>('/api/pedido/imprimirprecuenta/' + idMesa);
     }
 }
