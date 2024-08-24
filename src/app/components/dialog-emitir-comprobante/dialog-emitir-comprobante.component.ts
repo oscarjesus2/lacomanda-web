@@ -16,7 +16,6 @@ import { Venta } from 'src/app/models/venta.models';
 import { CajaService } from 'src/app/services/caja.service';
 import { ClienteService } from 'src/app/services/cliente.service';
 import { PedidoService } from 'src/app/services/pedido.service';
-import { PdfService } from 'src/app/services/pdf.service';
 import { StorageService } from 'src/app/services/storage.service';
 import { TarjetaService } from 'src/app/services/tarjeta.service';
 import { TipoDocClienteService } from 'src/app/services/tipodoccliente.service';
@@ -96,7 +95,6 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     private tipoDocumentoService: TipoDocumentoService,
     private tarjetaService: TarjetaService,
     public dialog: MatDialog,
-    private pdfService: PdfService,
     private fb: FormBuilder,
   ) {
     this.dataSource = new MatTableDataSource([]);
@@ -729,9 +727,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   imprimirTicket(byteTicket: any) {
     const printerName = 'FACTURA'; // Nombre de la impresora opcional
-
-    this.pdfService.imprimirTicket(byteTicket, printerName);
-  }
+  } 
 
   descargarTicketPDF(ByteTicket: any, nombreArchivo: string) {
     const byteCharacters = atob(ByteTicket);

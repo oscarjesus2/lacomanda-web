@@ -8,6 +8,7 @@ import { LoginService } from 'src/app/services/auth/login.service';
 import { StorageService } from 'src/app/services/storage.service';
 import { DataService } from 'src/app/services/data.service';
 import { TurnoService } from 'src/app/services/turno.service';
+import { DialogReportecontableComponent } from 'src/app/components/dialog-reportecontable/dialog-reportecontable.component';
  
 
 @Component({
@@ -74,9 +75,10 @@ export class MenuVentasComponent implements OnInit {
     else if (item.title === 'Listado de Ventas') 
     {
       this.OpenDialogVentasGeneralesTurno();
-    } {
-      // Navegar a la ruta especificada (opcional)
-      console.log('Navegar a:', item.route);
+    }
+    else if (item.title === 'Contable') 
+    {
+      this.OpenDialogReportecontableComponent();
     }
   }
 
@@ -85,12 +87,23 @@ export class MenuVentasComponent implements OnInit {
     const dialogTurno = this.dialog.open(DialogVentasgeneralesComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '100%',
-      height: '100%'
+      width: '100vw',  // Cambiado a 100vw para ocupar todo el espacio
+      height: '100vh', // Cambiado a 100vh para ocupar todo el espacio
+      maxWidth: '100vw',
+      maxHeight: '100vh'
       // data: { oPedidoMesa: listData, IdMesa: IdMesa, Mesa: this.mesaSelected.Descripcion + ' ' + this.mesaSelected.Numero}
     });
   }
 
+  OpenDialogReportecontableComponent(): void {
+  
+    const dialog = this.dialog.open(DialogReportecontableComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: '600px', // Establece el ancho del diálogo
+      height: '410px', // Establece la altura del diálogo
+    });
+  }
   OpenDialogTurno(): void {
 
     const dialogTurno = this.dialog.open(DialogTurnoComponent, {

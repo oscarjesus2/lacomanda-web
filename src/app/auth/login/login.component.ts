@@ -66,11 +66,9 @@ export class LoginComponent implements OnInit {
   }
 
   private async loadTenants(): Promise<void> {
-    try {
+      this.spinnerService.show();
       this.tenantDefault = await this.tenantService.getTenant().toPromise();
-    } catch (error) {
-      this.notificationService.showError('Error al cargar las sucursales disponibles.');
-    }
+      this.spinnerService.hide();
   }
   
   login() {

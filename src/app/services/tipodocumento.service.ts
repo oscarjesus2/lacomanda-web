@@ -15,5 +15,21 @@ export class TipoDocumentoService {
 
   getTipoDocumento(): Observable<TipoDocumento[]> {
     return this.http.get<[TipoDocumento]>(this.basePath + 'listar');
-}
+  }
+
+  getSeriesVentas(): Observable<TipoDocumento[]> {
+    return this.http.get<[TipoDocumento]>(this.basePath + 'SeriesVentas');
+  }
+
+  getTipoDocumentoVentas(): Observable<TipoDocumento[]> {
+    return this.http.get<[TipoDocumento]>(this.basePath + 'Ventas');
+  }
+
+  getSeriesCompras(): Observable<TipoDocumento[]> {
+    return this.http.get<[TipoDocumento]>(this.basePath + 'SeriesCompras');
+  }
+
+  getTipoDocumentoCompras(): Observable<TipoDocumento[]> {
+    return this.http.get<[TipoDocumento]>(this.basePath + 'Compras');
+  }
 }
