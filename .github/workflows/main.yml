@@ -54,7 +54,7 @@ jobs:
         lftp -e "
         set ssl:verify-certificate no;
         open -u loarisco,sistema1234$$ jobbusiness.pe;
-        mirror -R . /naruto.jobbusiness.pe;  # Ajusta esta ruta si es necesario
+        mirror -R . naruto.jobbusiness.pe;  # Ajusta esta ruta si es necesario
         bye
         "
 
@@ -63,6 +63,6 @@ jobs:
         lftp -e "
         set ssl:verify-certificate no;
         open -u loarisco,sistema1234$$ jobbusiness.pe;
-        mirror -R . /main.jobbusiness.pe;  # Ajusta esta ruta si es necesario
+        mirror -R . main.jobbusiness.pe;  # Ajusta esta ruta si es necesario
         bye
         "
