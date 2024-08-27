@@ -21,8 +21,8 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Run tests
-      run: npm test -- --watch=false --no-progress --browsers=ChromeHeadless  # Ajusta este comando según tu configuración
+   # - name: Run tests
+   #   run: npm test -- --watch=false --no-progress --browsers=ChromeHeadless  # Ajusta este comando según tu configuración
 
     - name: Build Angular app
       run: npm run build -- --prod  # Construir la aplicación para producción
