@@ -31,7 +31,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: frontend-artifact
-        path: ./dist/jbs-rest  # Cambia 'jbs-rest' si tu build genera archivos en otro lugar
+        path: .  # Cambia 'jbs-rest' si tu build genera archivos en otro lugar
 
   deploy:
     runs-on: ubuntu-latest
