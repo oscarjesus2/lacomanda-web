@@ -53,7 +53,7 @@ jobs:
       run: |
         lftp -e "
         open -u loarisco,sistema1234$$ jobbusiness.pe;
-        mirror -R ./dist/jbs-rest /naruto.jobbusiness.pe;  # Ajusta esta ruta si es necesario
+        mirror -R . /naruto.jobbusiness.pe;  # Ajusta esta ruta si es necesario
         bye
         "
 
@@ -61,6 +61,6 @@ jobs:
       run: |
         lftp -e "
         open -u loarisco,sistema1234$$ jobbusiness.pe;
-        mirror -R ./dist/jbs-rest /main.jobbusiness.pe;  # Ajusta esta ruta si es necesario
+        mirror -R . /main.jobbusiness.pe;  # Ajusta esta ruta si es necesario
         bye
         "
