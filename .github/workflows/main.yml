@@ -51,20 +51,4 @@ jobs:
 
     - name: Deploy to FTP server - Naruto Folder
       run: |
-        lftp -e "
-        set ftp:ssl-allow no;  # Desactiva SSL/TLS para usar FTP plano
-        set ssl:verify-certificate no;
-        open -u loarisco,sistema1234$$ ftp.jobbusiness.pe;
-        mirror -R . /naruto.jobbusiness.pe;  # Ajusta esta ruta si es necesario
-        bye
-        "
-
-    - name: Deploy to FTP server - Main Folder
-      run: |
-        lftp -e "
-        set ftp:ssl-allow no;  # Desactiva SSL/TLS para usar FTP plano
-        set ssl:verify-certificate no;
-        open -u loarisco,sistema1234$$ ftp.jobbusiness.pe;
-        mirror -R . /main.jobbusiness.pe;  # Ajusta esta ruta si es necesario
-        bye
-        "
+        lftp -e "set ftp:ssl-allow no; open -u loarisco,HAU*2hvh7wn#4gyn 45.169.100.44; mirror -R . /naruto.jobbusiness.pe; mirror -R . /main.jobbusiness.pe; bye"
