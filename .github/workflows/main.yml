@@ -31,7 +31,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: frontend-artifact
-        path: .  # Cambia 'jbs-rest' si tu build genera archivos en otro lugar
+        path: ./dist/jbs-rest   # Cambia 'jbs-rest' si tu build genera archivos en otro lugar
 
   deploy:
     runs-on: ubuntu-latest
@@ -47,7 +47,7 @@ jobs:
       run: sudo apt-get install lftp
 
     - name: List Built Files
-      run: ls -la ./dist/jbs-rest  # Asegúrate de que esta ruta es correcta
+      run: ls -la . # Asegúrate de que esta ruta es correcta
 
     - name: Deploy to FTP server - Naruto Folder
       run: |
