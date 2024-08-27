@@ -52,6 +52,7 @@ jobs:
     - name: Deploy to FTP server - Naruto Folder
       run: |
         lftp -e "
+        set ssl:verify-certificate no;
         open -u loarisco,sistema1234$$ jobbusiness.pe;
         mirror -R . /naruto.jobbusiness.pe;  # Ajusta esta ruta si es necesario
         bye
@@ -60,6 +61,7 @@ jobs:
     - name: Deploy to FTP server - Main Folder
       run: |
         lftp -e "
+        set ssl:verify-certificate no;
         open -u loarisco,sistema1234$$ jobbusiness.pe;
         mirror -R . /main.jobbusiness.pe;  # Ajusta esta ruta si es necesario
         bye
