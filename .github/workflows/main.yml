@@ -54,7 +54,7 @@ jobs:
         lftp -e "
         set ftp:ssl-allow no;  # Desactiva SSL/TLS para usar FTP plano
         set ssl:verify-certificate no;
-        open -u loarisco,sistema1234$$ jobbusiness.pe;
+        open -u loarisco,sistema1234$$ ftp.jobbusiness.pe;
         mirror -R . /naruto.jobbusiness.pe;  # Ajusta esta ruta si es necesario
         bye
         "
@@ -64,7 +64,7 @@ jobs:
         lftp -e "
         set ftp:ssl-allow no;  # Desactiva SSL/TLS para usar FTP plano
         set ssl:verify-certificate no;
-        open -u loarisco,sistema1234$$ jobbusiness.pe;
+        open -u loarisco,sistema1234$$ ftp.jobbusiness.pe;
         mirror -R . /main.jobbusiness.pe;  # Ajusta esta ruta si es necesario
         bye
         "
