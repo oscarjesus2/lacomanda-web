@@ -7,8 +7,8 @@ export class Cliente {
     public Ruc: string;
     public Referencia: string;
     public Correo: string;
-    public TipoIdentidad: TipoDocCliente;
-    public Estado: string;
+    public TipoDocCliente: TipoDocCliente;
+    public Telefono: string;
 
     constructor(init?: Partial<Cliente>) {
         Object.assign(this, init);

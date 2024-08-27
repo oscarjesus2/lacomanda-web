@@ -9,6 +9,7 @@ import { StorageService } from 'src/app/services/storage.service';
 import { DataService } from 'src/app/services/data.service';
 import { TurnoService } from 'src/app/services/turno.service';
 import { DialogReportecontableComponent } from 'src/app/components/dialog-reportecontable/dialog-reportecontable.component';
+import { ClienteMantenimientoComponent } from 'src/app/components/mantenimiento/cliente-mantenimiento/cliente-mantenimiento.component';
  
 
 @Component({
@@ -68,6 +69,11 @@ export class MenuVentasComponent implements OnInit {
   ) { }
 
   openDialog(item: any): void {
+
+    if (item.title === 'Clientes') 
+      {
+        this.OpenClienteMantenimientoComponent();
+      } 
     if (item.title === 'Abrir Turno') 
     {
       this.OpenDialogTurno();
@@ -104,6 +110,17 @@ export class MenuVentasComponent implements OnInit {
       height: '410px', // Establece la altura del diálogo
     });
   }
+
+  OpenClienteMantenimientoComponent(): void {
+  
+    const dialog = this.dialog.open(ClienteMantenimientoComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: '800px', // Establece el ancho del diálogo
+      height: '800px', // Establece la altura del diálogo
+    });
+  }
+
   OpenDialogTurno(): void {
 
     const dialogTurno = this.dialog.open(DialogTurnoComponent, {

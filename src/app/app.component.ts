@@ -8,6 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { TurnoService } from './services/turno.service';
 import { IdleService } from './services/idle.service';
 import { DataService } from '../app/services/data.service';
+import { QzTrayService } from './services/qz-tray.service';
 
 @Component({
   selector: 'app-root',
@@ -18,6 +19,7 @@ export class AppComponent implements OnInit, OnDestroy {
   title = 'Jbs_Resta';
 
   constructor(
+    private qzTrayService: QzTrayService, 
     private spinnerService: NgxSpinnerService,
     private router: Router,
     private loginService: LoginService,
@@ -32,13 +34,13 @@ export class AppComponent implements OnInit, OnDestroy {
     this.storageService.logout();
   }
 
-  ngOnInit(): void {
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: NavigationEnd) => {
-      const newTitle = this.getTitle(event.urlAfterRedirects);
-      this.dataService.updateVariable_TituloHeader(newTitle);
-    });
+  async ngOnInit(): Promise<void> {    
+     this.router.events.pipe(
+       filter(event => event instanceof NavigationEnd)
+     ).subscribe((event: NavigationEnd) => {
+       const newTitle = this.getTitle(event.urlAfterRedirects);
+       this.dataService.updateVariable_TituloHeader(newTitle);
+     });
   }
 
   getTitle(url: string): string {

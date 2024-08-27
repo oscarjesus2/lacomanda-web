@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 import { StorageService } from '../services/storage.service';
 import { NotificationService } from '../services/notification.service';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { ValidationErrorService } from '../services/validation-error.service'; // Importa tu servicio de validaciones
+import { ValidationErrorService } from '../services/validation-error.service';
 import Swal from 'sweetalert2';
 
 @Injectable({
@@ -23,11 +23,6 @@ export class ApiRequestInterceptor implements HttpInterceptor {
 
     intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
-            // Excluir la URL de impresión del interceptor
-        if (request.url.startsWith('https://services.jobbusiness.pe/print')) {
-            return next.handle(request); // Deja pasar la solicitud sin modificar
-        }
-        
         if (request.url.includes('/api/Auth/login')) {
             this.storageService.removeCurrentSession();
         } else {
@@ -47,13 +42,19 @@ export class ApiRequestInterceptor implements HttpInterceptor {
                 let errorMessage = 'An unexpected error occurred';
                 if (error.status === 401 || error.status === 403) {
                     this.handleUnauthorizedError();
-                } else if (error.status === 400 && error.error && error.error.errors) {
-                    // Manejo de errores de validación
-                    this.handleValidationErrors(error.error.errors);
-                }else {
+                } else if (error.status === 400 && error.error) {
+                    // Manejo de errores de validación con el nuevo formato
+                    if (error.error.errorCode === "VALIDATION_FAILED") {
+                        this.handleValidationErrors(error.error.data);
+                    } else {
+                        errorMessage = this.getErrorMessage(error);
+                    }
+                } else if (error.status >= 200 && error.status < 300) {
+                    return next.handle(request);
+                } else {
                     // Manejo estandarizado de otros errores
                     errorMessage = this.getErrorMessage(error);
-                    this.notificationService.showError(errorMessage); // Muestra la notificación de error
+                    this.notificationService.showError(errorMessage);
                     console.error(errorMessage);
                 }
                 this.spinnerService.hide();
@@ -74,14 +75,11 @@ export class ApiRequestInterceptor implements HttpInterceptor {
         
         for (const key in errors) {
             if (errors.hasOwnProperty(key)) {
-                // Extraer el campo y simplificar el mensaje
                 const field = this.getFriendlyFieldName(key);
-                const messages = errors[key].map(msg => msg.replace(`The ${key} field`, field));
+                const messages = errors[key].map((msg: string) => msg.replace(`The ${key} field`, field));
                 validationMessages.push(...messages);
             }
         }
-        
-        // Mostrar errores en un formato de lista
         
         Swal.fire({
             icon: 'error',
@@ -91,7 +89,6 @@ export class ApiRequestInterceptor implements HttpInterceptor {
         });
     }
     
-    // Este método puede ayudar a mapear nombres de campos técnicos a nombres más amigables
     private getFriendlyFieldName(fieldName: string): string {
         const fieldMap = {
             'IdCaja': 'ID de la Caja',
@@ -104,13 +101,16 @@ export class ApiRequestInterceptor implements HttpInterceptor {
             'ListaPedidoDet[0].NroCupon': 'Número de Cupón',
             'ListaPedidoDet[0].NombreCuenta': 'Nombre de la Cuenta',
             'ListaPedidoDet[0].MotivoReimpresion': 'Motivo de Reimpresión'
-            // Añadir más campos según sea necesario
         };
     
         return fieldMap[fieldName] || fieldName;
     }
 
     private getErrorMessage(error: HttpErrorResponse): string {
+        if (error.error && error.error.message) {
+            return error.error.message; // Obtener el mensaje directamente desde el ApiResponse
+        }
+        
         switch (error.status) {
             case 404:
                 return `Not Found: ${error.message}`;

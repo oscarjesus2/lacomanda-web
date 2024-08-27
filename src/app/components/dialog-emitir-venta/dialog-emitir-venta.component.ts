@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, NgForm } from '@angular/forms';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
@@ -19,7 +19,6 @@ import { PedidoCab } from 'src/app/models/pedido.models';
 import { PedidoDet } from 'src/app/models/pedidodet.models';
 import { StorageService } from 'src/app/services/storage.service';
 import { Turno } from 'src/app/models/turno.models';
-import { PruebaComponent } from '../prueba/prueba.component';
 
 export interface ProductElement {
   IdProducto: number;
@@ -43,6 +42,7 @@ export interface ProductElement {
   styleUrls: ['./dialog-emitir-venta.component.css']
 })
 export class DialogEmitirVentaComponent implements OnInit {
+  @ViewChild('form') form: NgForm;
   TipoDocumento = EnumTipoDocumento; 
   productCtrl = new FormControl();
   filteredProducts: Observable<Product[]>;
@@ -180,10 +180,12 @@ export class DialogEmitirVentaComponent implements OnInit {
         if (result) {
           this.actualizarPrecioProducto(product, result);
           this.agregarNuevaFila(product);
+          this.calcularTotales();
         }
       });
     } else {
       this.agregarNuevaFila(product);
+      this.calcularTotales();
     }
   }
 
@@ -208,7 +210,7 @@ export class DialogEmitirVentaComponent implements OnInit {
     } else if (product.MonedaVenta === 'DOL' && this.monedaSeleccionada === 'SOLES') {
       product.Precio = Math.round((result.value * parseFloat(this.tipoCambioVenta)) * 100) / 100;
     } else {
-      product.Precio = result.value;
+      product.Precio = parseFloat(result.value);
     }
   }
 
@@ -312,12 +314,10 @@ export class DialogEmitirVentaComponent implements OnInit {
       }).then(result => {
         if (result.isConfirmed) {
           this.AgregarItemGrid(selectedProduct);
-          this.calcularTotales();
         }
       });
     } else {
       this.AgregarItemGrid(selectedProduct);
-      this.calcularTotales();
     }
   }
 
@@ -451,38 +451,53 @@ export class DialogEmitirVentaComponent implements OnInit {
     return pedidoCab;
   }
   
+  private markFormControlsAsTouchedAndDirty(form: NgForm) {
+    Object.keys(form.controls).forEach(field => {
+      const control = form.controls[field];
+      control.markAsTouched({ onlySelf: true });
+      control.markAsDirty({ onlySelf: true });
+    });
+  } 
+
   OpenDialogEmitirComprobante(idTipoDoc: EnumTipoDocumento): void {
     
-    if (this.dataSource.data.length <= 0) {
-      Swal.fire({
-        title: 'Validación',
-        text: `No ha ingresado ningún producto de venta.`,
-        icon: 'warning',
-        confirmButtonText: 'OK'
-      });
-      return;
+    this.markFormControlsAsTouchedAndDirty(this.form);
+
+    // Aquí puedes continuar con la lógica que tenías para emitir el comprobante
+    if (this.form.valid) {
+      if (this.dataSource.data.length <= 0) {
+        Swal.fire({
+          title: 'Validación',
+          text: `No ha ingresado ningún producto de venta.`,
+          icon: 'warning',
+          confirmButtonText: 'OK'
+        });
+        return;
+      }
+  
+   
+       const dialogTurno = this.dialog.open(DialogEmitirComprobanteComponent, {
+         disableClose: true,
+         hasBackdrop: true,
+         width: '705px', // Establece el ancho del diálogo
+         height: '800px', // Establece la altura del diálogo
+         data: { lblcambio: this.tipoCambioVenta, 
+                 dblImporte: this.sumaImporte,
+                 dblDscto: this.sumaDscto,
+                 dblTotal: this.sumaTotal,
+                 dblGranTotal: this.sumaGranTotal,
+                 idPedidoCobrar: 0,
+                 nroCuentaCobrar: 0, 
+                 idModuloVenta: 4, 
+                 idTipoDoc: idTipoDoc,
+                 pedidoCab: this.addPedido(),
+                 bTurnoIndenpendiente: this.bTurnoIndenpendiente,
+                 idCaja:this.cajaSeleccionada,
+                 IdTurno: this.addPedido().IdTurno
+               }
+       });
     }
 
  
-     const dialogTurno = this.dialog.open(DialogEmitirComprobanteComponent, {
-       disableClose: true,
-       hasBackdrop: true,
-       width: '705px', // Establece el ancho del diálogo
-       height: '800px', // Establece la altura del diálogo
-       data: { lblcambio: this.tipoCambioVenta, 
-               dblImporte: this.sumaImporte,
-               dblDscto: this.sumaDscto,
-               dblTotal: this.sumaTotal,
-               dblGranTotal: this.sumaGranTotal,
-               idPedidoCobrar: 0,
-               nroCuentaCobrar: 0, 
-               idModuloVenta: 4, 
-               idTipoDoc: idTipoDoc,
-               pedidoCab: this.addPedido(),
-               bTurnoIndenpendiente: this.bTurnoIndenpendiente,
-               idCaja:this.cajaSeleccionada,
-               IdTurno: this.addPedido().IdTurno
-             }
-     });
   }
 }

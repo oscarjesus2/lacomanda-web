@@ -1,0 +1,29 @@
+.qz-tray-required {
+    text-align: center;
+    margin-top: 50px;
+  }
+  
+  .qz-tray-required h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+  }
+  
+  .qz-tray-required p {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+  }
+  
+  .qz-tray-required .btn {
+    padding: 10px 20px;
+    font-size: 1em;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+  }
+  
+  .qz-tray-required .btn:hover {
+    background-color: #0056b3;
+  }
+  

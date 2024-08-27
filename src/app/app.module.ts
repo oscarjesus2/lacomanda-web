@@ -72,8 +72,9 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { TransaccionesDiariasComponent } from './pages/dashboard/transacciones-diarias/transacciones-diarias.component';
 import { DialogEmitirVentaComponent } from './components/dialog-emitir-venta/dialog-emitir-venta.component';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
-import { PruebaComponent } from './components/prueba/prueba.component';
 import { DialogReportecontableComponent } from './components/dialog-reportecontable/dialog-reportecontable.component';
+import { QzTrayRequiredComponent } from './qz-tray-required/qz-tray-required.component';
+import { ClienteMantenimientoComponent } from './components/mantenimiento/cliente-mantenimiento/cliente-mantenimiento.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -115,8 +116,9 @@ export const MY_DATE_FORMATS = {
     DialogMCantComponent,
     TransaccionesDiariasComponent,
     DialogEmitirVentaComponent,
-    PruebaComponent,
     DialogReportecontableComponent,
+    QzTrayRequiredComponent,
+    ClienteMantenimientoComponent,
     
   ],
   imports: [

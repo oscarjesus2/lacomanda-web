@@ -1,0 +1,142 @@
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+<div class="cliente-mantenimiento">
+  <h2>Mantenimiento de Clientes</h2>
+
+  <!-- Lista de Clientes, visible por defecto -->
+  <div class="clientes-list" *ngIf="!showForm">
+    <button mat-raised-button color="primary" (click)="nuevoCliente()">
+      Nuevo Cliente
+    </button>
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Buscar</mat-label>
+      <input matInput [(ngModel)]="filtroCliente" (ngModelChange)="applyFilter()" placeholder="Buscar por nombre, RUC, etc.">
+    </mat-form-field>
+    <mat-table [dataSource]="filteredClientes" class="mat-elevation-z8">
+      <!-- ID Column -->
+      <ng-container matColumnDef="idCliente">
+        <mat-header-cell *matHeaderCellDef> ID </mat-header-cell>
+        <mat-cell *matCellDef="let cliente"> {{cliente.IdCliente}} </mat-cell>
+      </ng-container>
+
+      <!-- RUC Column -->
+      <ng-container matColumnDef="ruc">
+        <mat-header-cell *matHeaderCellDef> RUC </mat-header-cell>
+        <mat-cell *matCellDef="let cliente"> {{cliente.Ruc}} </mat-cell>
+      </ng-container>
+
+      <!-- Razon Social Column -->
+      <ng-container matColumnDef="razonSocial">
+        <mat-header-cell *matHeaderCellDef> Razón Social </mat-header-cell>
+        <mat-cell *matCellDef="let cliente"> {{cliente.RazonSocial}} </mat-cell>
+      </ng-container>
+
+      <!-- Direccion Column -->
+      <ng-container matColumnDef="direccion">
+        <mat-header-cell *matHeaderCellDef> Dirección </mat-header-cell>
+        <mat-cell *matCellDef="let cliente"> {{cliente.Direccion}} </mat-cell>
+      </ng-container>
+
+      <!-- Estado Column -->
+      <ng-container matColumnDef="correo">
+        <mat-header-cell *matHeaderCellDef> Correo </mat-header-cell>
+        <mat-cell *matCellDef="let cliente"> {{cliente.Correo}} </mat-cell>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-cell *matCellDef="let cliente">
+          <button mat-icon-button color="primary" (click)="onEdit(cliente)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="onDelete(cliente.IdCliente)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Header and Row Declarations -->
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+    
+  </div>
+
+  <!-- Formulario de Cliente, visible solo cuando showForm es true -->
+  <form *ngIf="showForm" #clienteForm="ngForm" (ngSubmit)="onSubmit()">
+    <!-- Primera línea: Tipo Identidad y RUC -->
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Tipo de Identidad</mat-label>
+        <mat-select [(ngModel)]="cliente.TipoDocCliente" 
+        name="tipoIdentidad" 
+        required #tipoIdentidad="ngModel"
+        [compareWith]="compareTiposDocCliente"
+        (ngModelChange)="onTipoIdentidadChange($event)">
+          <mat-option *ngFor="let tipo of tiposDocCliente" [value]="tipo">
+            {{tipo.Descripcion}}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="tipoIdentidad.invalid && (tipoIdentidad.dirty || tipoIdentidad.touched)">
+          Seleccione un tipo de identidad.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>{{etiquetaCliente}}</mat-label>
+        <input matInput [(ngModel)]="cliente.Ruc" 
+                 name="ruc" 
+                 [required]="true" 
+                 [attr.maxLength]="maxLength"
+                 [pattern]="pattern" 
+                 #ruc="ngModel">
+        <mat-error *ngIf="ruc.invalid && (ruc.dirty || ruc.touched)">
+          {{ errorMessage }}
+        </mat-error>
+        
+      </mat-form-field>
+    </div>
+
+    <!-- Segunda línea: Razon Social -->
+    <mat-form-field class="full-width" appearance="fill">
+      <mat-label>Razón Social</mat-label>
+      <input matInput [(ngModel)]="cliente.RazonSocial" name="razonSocial" required #razonSocial="ngModel">
+      <mat-error *ngIf="razonSocial.invalid && (razonSocial.dirty || razonSocial.touched)">
+        La razón social es requerida.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Tercera línea: Direccion -->
+    <mat-form-field class="full-width" appearance="fill">
+      <mat-label>Dirección</mat-label>
+      <input matInput [(ngModel)]="cliente.Direccion" name="direccion" required #direccion="ngModel">
+      <mat-error *ngIf="direccion.invalid && (direccion.dirty || direccion.touched)">
+        La dirección es requerida.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Cuarta línea: Referencia -->
+    <mat-form-field class="full-width" appearance="fill">
+      <mat-label>Referencia</mat-label>
+      <input matInput [(ngModel)]="cliente.Referencia" name="referencia">
+    </mat-form-field>
+
+    <!-- Quinta línea: Correo y Telefono -->
+      <mat-form-field class="full-width" appearance="fill">
+        <mat-label>Correo</mat-label>
+        <input matInput [(ngModel)]="cliente.Correo" name="correo" required email #correo="ngModel">
+        <mat-error *ngIf="correo.invalid && (correo.dirty || correo.touched)">
+          Introduzca un correo electrónico válido.
+        </mat-error>
+      </mat-form-field>
+
+
+    <!-- Botón de Guardar o Actualizar -->
+    <button mat-raised-button color="primary">
+      {{ cliente.IdCliente ? 'Actualizar' : 'Guardar' }}
+    </button>
+    <button mat-raised-button color="warn" (click)="cancelar()">Cancelar</button>
+  </form>
+</div>

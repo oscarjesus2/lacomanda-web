@@ -25,6 +25,8 @@ import { VentaService } from 'src/app/services/venta.service';
 import { EnumTipoDocumento, EnumTipoIdentidad } from 'src/app/enums/enum';
 
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
+import {  QzTrayService } from 'src/app/services/qz-tray.service';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -41,7 +43,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   ChkVentaAlCredito: boolean = false;
   tipoDocCliente: TipoDocCliente = new TipoDocCliente({ IdTipoIdentidad: 0 });
-  cliente: Cliente = new Cliente({ TipoIdentidad: this.tipoDocCliente });
+  cliente: Cliente = new Cliente({ TipoDocCliente: this.tipoDocCliente });
 
   SerieEnabled: boolean = false;
   CorrelativoEnabled: boolean = false;
@@ -96,6 +98,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     private tarjetaService: TarjetaService,
     public dialog: MatDialog,
     private fb: FormBuilder,
+    private qzTrayService: QzTrayService,
+    private router: Router,
   ) {
     this.dataSource = new MatTableDataSource([]);
     this.nuevoRegistro.IdTarjeta = '';
@@ -123,7 +127,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     this.lblmonto = parseFloat(data.dblGranTotal).toFixed(2);
     this.idPedidoCobrar = data.idPedidoCobrar;
     this.nroCuentaCobrar = data.nroCuentaCobrar
-    this.cliente.TipoIdentidad = new TipoDocCliente({ IdTipoIdentidad: EnumTipoIdentidad.RUC, Descripcion: 'RUC' });
+    this.cliente.TipoDocCliente = new TipoDocCliente({ IdTipoIdentidad: EnumTipoIdentidad.RUC, Descripcion: 'RUC' });
 
     if (this.tipoDocumento.IdTipoDoc == EnumTipoDocumento.FacturaVenta) {
       this.rucLength = 11;
@@ -136,7 +140,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       serie: ['', Validators.required],
       lblcorrelativo: ['', Validators.required],
       cliente: this.fb.group({
-        tipoIdentidad: [this.cliente.TipoIdentidad.IdTipoIdentidad, Validators.required],
+        tipoIdentidad: [this.cliente.TipoDocCliente.IdTipoIdentidad, Validators.required],
         ruc: [this.cliente.Ruc, [Validators.required, this.rucValidator(this.rucLength, this.cliente.RazonSocial)]],
         razonSocial: [this.cliente.RazonSocial, [Validators.required, this.razonSocialValidator()]],
         direccion: [this.cliente.Direccion],
@@ -146,6 +150,12 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   async ngOnInit() {
+
+    const isRunning = await this.qzTrayService.isQzTrayRunning();
+    if (!isRunning) {
+      // Redirige a una página que instruya al usuario a descargar QZ Tray
+      this.router.navigate(['/qz-tray-required']);
+    } 
     this.initializeValoresCaja();
     this.ValidaTotalAPagar();
 
@@ -399,13 +409,13 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     let razonSocial;
     if (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BolentaVenta) {
       this.listTipoDocumentoCliente = allTipoDocumentoCliente.filter(doc => doc.IdTipoIdentidad !== 2);
-      this.cliente.TipoIdentidad = allTipoDocumentoCliente.find(doc => doc.IdTipoIdentidad === EnumTipoIdentidad.DNI) || null;
+      this.cliente.TipoDocCliente = allTipoDocumentoCliente.find(doc => doc.IdTipoIdentidad === EnumTipoIdentidad.DNI) || null;
       this.etiquetaCliente = 'DNI';
       ruc = '00000001';
       razonSocial = 'Cliente Varios';
     } else if (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.FacturaVenta) {
       this.listTipoDocumentoCliente = allTipoDocumentoCliente.filter(doc => doc.IdTipoIdentidad === 2);
-      this.cliente.TipoIdentidad = allTipoDocumentoCliente.find(doc => doc.IdTipoIdentidad === EnumTipoIdentidad.RUC) || null;
+      this.cliente.TipoDocCliente = allTipoDocumentoCliente.find(doc => doc.IdTipoIdentidad === EnumTipoIdentidad.RUC) || null;
       this.etiquetaCliente = 'RUC';
       ruc = '';
       razonSocial = '';
@@ -413,7 +423,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
     const clienteFormGroup = this.form.get('cliente') as FormGroup;
     clienteFormGroup.patchValue({
-      tipoIdentidad: this.cliente.TipoIdentidad.IdTipoIdentidad,
+      tipoIdentidad: this.cliente.TipoDocCliente.IdTipoIdentidad,
       ruc: ruc,
       razonSocial: razonSocial
     });
@@ -443,7 +453,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
           this.cliente.Ruc = "00000000";
           this.cliente.RazonSocial = "Cliente Aplicativo";
           this.cliente.IdCliente = "99998";
-          this.cliente.TipoIdentidad.IdTipoIdentidad = EnumTipoIdentidad.DNI;
+          this.cliente.TipoDocCliente.IdTipoIdentidad = EnumTipoIdentidad.DNI;
         }
         else {
           this.listTarjeta = await this.tarjetaService.getTarjeta().toPromise();
@@ -569,7 +579,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     try {
 
       this.tipoDocumento.IdTipoDoc = this.form.get('idTipoDoc')?.value;
-      this.cliente.TipoIdentidad = this.form.get('cliente.tipoIdentidad')?.value;
+      this.cliente.TipoDocCliente = this.form.get('cliente.tipoIdentidad')?.value;
       this.cliente.Ruc  = this.form.get('cliente.ruc')?.value;
       this.cliente.RazonSocial = this.form.get('cliente.razonSocial')?.value;
       this.cliente.Correo = this.form.get('cliente.correo')?.value;
@@ -592,7 +602,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
           return;
         }
       } else {
-        const tipoDocumentoCliente = this.cliente.TipoIdentidad;
+        const tipoDocumentoCliente = this.cliente.TipoDocCliente;
         if (tipoDocumentoCliente.IdTipoIdentidad === 1) {
           if (this.cliente.Ruc === '00000001' && this.cliente.RazonSocial !== 'Cliente Varios') {
             Swal.fire('Validación', 'Si el DNI es : 00000001, entonces el nombre del Cliente debe ser : Cliente Varios', 'warning');
@@ -726,8 +736,9 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   imprimirTicket(byteTicket: any) {
-    const printerName = 'FACTURA'; // Nombre de la impresora opcional
-  } 
+    const printerName = 'FACTURA'; 
+    this.qzTrayService.printPDF(byteTicket, printerName);
+  }
 
   descargarTicketPDF(ByteTicket: any, nombreArchivo: string) {
     const byteCharacters = atob(ByteTicket);
@@ -856,7 +867,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
     const ruc = this.form.get('cliente.ruc').value;
 
-    if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc.length != 8) {
+    if (this.cliente.TipoDocCliente.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc.length != 8) {
       Swal.fire({
         title: 'Validación',
         text: `El DNI debe tener 8 caracteres.`,
@@ -864,7 +875,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         confirmButtonText: 'OK'
       });
       return;
-    } else if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.RUC && ruc.length != 11) {
+    } else if (this.cliente.TipoDocCliente.IdTipoIdentidad === EnumTipoIdentidad.RUC && ruc.length != 11) {
       Swal.fire({
         title: 'Validación',
         text: `El RUC debe tener 11 caracteres.`,
@@ -872,11 +883,11 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         confirmButtonText: 'OK'
       });
       return;
-    } else if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc == '00000001') {
+    } else if (this.cliente.TipoDocCliente.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc == '00000001') {
       return;
     }
 
-    this.clienteService.ServicioBuscarCliente(ruc, this.cliente.TipoIdentidad.IdTipoIdentidad).subscribe(
+    this.clienteService.ServicioBuscarCliente(ruc, this.cliente.TipoDocCliente.IdTipoIdentidad).subscribe(
       (clienteBuscar: any) => {
         if (clienteBuscar) {
           if (clienteBuscar.RazonSocial) {
