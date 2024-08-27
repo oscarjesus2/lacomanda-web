@@ -1,0 +1,63 @@
+name: CI/CD Pipeline - Frontend
+
+on:
+  push:
+    branches:
+      - master  # Ejecuta el workflow en push a la rama 'master'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'  # Ajusta la versión según la que uses en tu proyecto
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run tests
+      run: npm test -- --watch=false --no-progress --browsers=ChromeHeadless  # Ajusta este comando según tu configuración
+
+    - name: Build Angular app
+      run: npm run build -- --prod  # Construir la aplicación para producción
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: frontend-artifact
+        path: ./dist/jbs-rest  # Cambia 'jbs-rest' si tu build genera archivos en otro lugar
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: frontend-artifact
+
+    - name: Install lftp
+      run: sudo apt-get install lftp
+
+    - name: Deploy to FTP server - Naruto Folder
+      run: |
+        lftp -e "
+        open -u loarisco,sistema1234$$ jobbusiness.pe;
+        mirror -R ./dist/jbs-rest /naruto.jobbusiness.pe;  # Ajusta esta ruta si es necesario
+        bye
+        "
+
+    - name: Deploy to FTP server - Main Folder
+      run: |
+        lftp -e "
+        open -u loarisco,sistema1234$$ jobbusiness.pe;
+        mirror -R ./dist/jbs-rest /main.jobbusiness.pe;  # Ajusta esta ruta si es necesario
+        bye
+        "
