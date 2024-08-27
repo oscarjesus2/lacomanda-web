@@ -25,8 +25,8 @@ jobs:
    #   run: npm test -- --watch=false --no-progress --browsers=ChromeHeadless  # Ajusta este comando según tu configuración
 
     - name: Build Angular app
-      run: npm run build -- --prod  # Construir la aplicación para producción
-
+      run: ng build --configuration production # Construir la aplicación para producción
+      
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2
       with:
