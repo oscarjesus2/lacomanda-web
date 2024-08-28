@@ -51,4 +51,7 @@ jobs:
 
     - name: Deploy to FTP server - Naruto Folder
       run: |
-        lftp -e "set ftp:ssl-allow no; open -u loarisco,HAU*2hvh7wn#4gyn 45.169.100.44; mirror -R . /naruto.jobbusiness.pe; mirror -R . /main.jobbusiness.pe; bye"
+        lftp -e "set ftp:ssl-allow no; 
+        open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }}; 
+        mirror -R . /naruto.jobbusiness.pe; 
+        mirror -R . /main.jobbusiness.pe; bye"
