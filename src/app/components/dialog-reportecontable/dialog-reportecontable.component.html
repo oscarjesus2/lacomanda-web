@@ -1,5 +1,4 @@
 <button mat-icon-button class="close-button" (click)="onNoClick()">
-<<<<<<< HEAD
   <mat-icon>close</mat-icon>
 </button>
 <br>
@@ -54,63 +53,4 @@
       Exportar a Excel
     </button>
   </div>
-
 </div>
-=======
-    <mat-icon>close</mat-icon>
-  </button>
-  <br>
-  <div class="container">
-    <h1 class="header">Informe Contable</h1>
-  
-    <div class="select-container">
-      <select id="select-type" class="select-basic" [(ngModel)]="tipoInformeSeleccionado"
-        (change)="onTipoInformeChange($event)" required #tipoInformeInput="ngModel">>
-        <option value="Ventas">Ventas</option>
-        <option value="Compras">Compras</option>
-      </select>
-      <mat-error *ngIf="tipoInformeInput.invalid && tipoInformeInput.touched">
-        El tipo de informe es requerido
-      </mat-error>
-    </div>
-  
-    <div class="date-container">
-      <div class="date-input">
-        <label for="fecha-inicial">Fecha Inicial</label>
-        <input type="date" id="fecha-inicial" [(ngModel)]="fechaInicial" required #fechaInicialInput="ngModel">
-        <mat-error *ngIf="fechaInicialInput.invalid && fechaInicialInput.touched">
-          La fecha inicial es requerida
-        </mat-error>
-      </div>
-      <div class="date-input">
-        <label for="fecha-final">Fecha Final</label>
-        <input type="date" id="fecha-final" [(ngModel)]="fechaFinal" required #fechaFinalInput="ngModel">
-        <mat-error *ngIf="fechaFinalInput.invalid && fechaFinalInput.touched">
-          La fecha final es requerida
-        </mat-error>
-      </div>
-    </div>
-  
-    <div class="filter-container">
-      <select class="select-filter" [(ngModel)]="tipoDocumentoSeleccionado">
-        <option *ngFor="let opcion of listTipoDocumentoVentas" [value]="opcion.IdTipoDoc">
-          {{ opcion.Descripcion }}
-        </option>
-      </select>
-      <select class="select-filter" [(ngModel)]="serieSeleccionada">
-        <option *ngFor="let opcion of listSeries" [value]="opcion.Serie">
-          {{ opcion.Descripcion }}
-        </option>
-      </select>
-    </div>
-  
-    <div class="export-button-container">
-      <button class="export-button" (click)="validarFormulario(fechaInicialInput, fechaFinalInput, tipoInformeInput)"
-        [disabled]="fechaInicialInput.invalid || fechaFinalInput.invalid || tipoInformeInput.invalid">
-        <mat-icon>download</mat-icon>
-        Exportar a Excel
-      </button>
-    </div>
-  
-  </div>
->>>>>>> baf55da921f303e4c253134a43c0638b74959374

@@ -32,8 +32,4 @@ export class TipoDocumentoService {
   getTipoDocumentoCompras(): Observable<TipoDocumento[]> {
     return this.http.get<[TipoDocumento]>(this.basePath + 'Compras');
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> baf55da921f303e4c253134a43c0638b74959374

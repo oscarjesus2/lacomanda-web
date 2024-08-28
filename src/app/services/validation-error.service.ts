@@ -34,8 +34,5 @@ export class ValidationErrorService {
   private getFormControlNameFromKey(key: string): string {
     return key.replace(/\[(\d+)\]/g, '.$1');
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> baf55da921f303e4c253134a43c0638b74959374
+

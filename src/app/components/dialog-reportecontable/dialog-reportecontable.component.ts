@@ -38,12 +38,12 @@ export class DialogReportecontableComponent {
     public compraService: CompraService,
     private spinnerService: NgxSpinnerService,
   ) { }
-  
+
   onNoClick(): void {
     this.dialogRef.close();
   }
- 
-  ngOnInit(){
+
+  ngOnInit() {
     if (this.tipoInformeSeleccionado === 'Ventas') {
       this.initializeTipoDocumento();
       this.initializeSeries();
@@ -68,114 +68,109 @@ export class DialogReportecontableComponent {
   }
 
   private async initializeTipoDocumento(): Promise<void> {
-      this.listTipoDocumentoVentas = await this.tipoDocumentoService.getTipoDocumentoVentas().toPromise();
+    this.listTipoDocumentoVentas = await this.tipoDocumentoService.getTipoDocumentoVentas().toPromise();
   }
 
   private async initializeSeries(): Promise<void> {
     this.listSeries = await this.tipoDocumentoService.getSeriesVentas().toPromise();
-}
-
-private async initializeTipoDocumentoCompras(): Promise<void> {
-  this.listTipoDocumentoVentas = await this.tipoDocumentoService.getTipoDocumentoCompras().toPromise();
-}
-
-private async initializeSeriesCompras(): Promise<void> {
-  this.listSeries = await this.tipoDocumentoService.getSeriesCompras().toPromise();
-}
-
-validarFormulario(fechaInicialInput: NgModel, fechaFinalInput: NgModel, tipoInformeInput: NgModel): void {
-  if (!this.fechaInicial) {
-    fechaInicialInput.control.markAsTouched();
   }
 
-  if (!this.fechaFinal) {
-    fechaFinalInput.control.markAsTouched();
+  private async initializeTipoDocumentoCompras(): Promise<void> {
+    this.listTipoDocumentoVentas = await this.tipoDocumentoService.getTipoDocumentoCompras().toPromise();
   }
 
-  if (!this.tipoInformeSeleccionado) {
-    tipoInformeInput.control.markAsTouched();
+  private async initializeSeriesCompras(): Promise<void> {
+    this.listSeries = await this.tipoDocumentoService.getSeriesCompras().toPromise();
   }
 
-  if (fechaInicialInput.invalid || fechaFinalInput.invalid || tipoInformeInput.invalid) {
-    return; // No continuar si hay errores
-  }
-
-  // Si todo está validado, continúa con la acción
-  if (this.tipoInformeSeleccionado =='Ventas'){
-    this.getInformeContableVentas();
-  }
-
-  if (this.tipoInformeSeleccionado =='Compras'){
-    this.getInformeContableCompras();
-  }
-  
-}
-
-
-onTipoInformeChange(event: any): void {
-  const selectedValue = event.target.value;
-
-  if (selectedValue === 'Ventas') {
-    this.initializeTipoDocumento();
-    this.initializeSeries();
-  } else if (selectedValue === 'Compras') {
-    this.initializeTipoDocumentoCompras();
-    this.initializeSeriesCompras();
-  }
-}
-
-getInformeContableVentas() {
-  this.spinnerService.show(); 
-  const fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
-  const fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
-
-  this.ventaService.getInformeContable(fechaInicial,fechaFinal, this.serieSeleccionada, this.tipoDocumentoSeleccionado).subscribe(
-    data => {
-      console.log('Datos recibidos:', data); // Agrega esto para verificar la estructura de los datos
-      this.informeContableVentaInterface = data;
-      if (this.informeContableVentaInterface.length === 0) {
-        this.spinnerService.hide();
-        Swal.fire({
-          icon: 'warning',
-          title: 'Sin registros',
-          text: 'No se encontraron registros para exportar.',
-        });
-        return; // No continuar si no hay registros
-      }
-      
-      this.exportToExcel(this.informeContableVentaInterface );
-      this.spinnerService.hide();
+  validarFormulario(fechaInicialInput: NgModel, fechaFinalInput: NgModel, tipoInformeInput: NgModel): void {
+    if (!this.fechaInicial) {
+      fechaInicialInput.control.markAsTouched();
     }
-  );
-}
 
-getInformeContableCompras() {
-  this.spinnerService.show(); 
-  const fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
-  const fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
-
-  this.compraService.getInformeContable(fechaInicial, fechaFinal, this.tipoDocumentoSeleccionado).subscribe(
-    data => {
-      console.log('Datos recibidos:', data); // Agrega esto para verificar la estructura de los datos
-      this.informeContableCompraInterface = data;
-      if (this.informeContableCompraInterface.length === 0) {
-        this.spinnerService.hide();
-        Swal.fire({
-          icon: 'warning',
-          title: 'Sin registros',
-          text: 'No se encontraron registros para exportar.',
-        });
-        return; // No continuar si no hay registros
-      }
-      
-      this.exportToExcel(this.informeContableCompraInterface);
-      this.spinnerService.hide();
+    if (!this.fechaFinal) {
+      fechaFinalInput.control.markAsTouched();
     }
-  );
-}
 
-<<<<<<< HEAD
+    if (!this.tipoInformeSeleccionado) {
+      tipoInformeInput.control.markAsTouched();
+    }
+
+    if (fechaInicialInput.invalid || fechaFinalInput.invalid || tipoInformeInput.invalid) {
+      return; // No continuar si hay errores
+    }
+
+    // Si todo está validado, continúa con la acción
+    if (this.tipoInformeSeleccionado == 'Ventas') {
+      this.getInformeContableVentas();
+    }
+
+    if (this.tipoInformeSeleccionado == 'Compras') {
+      this.getInformeContableCompras();
+    }
+
+  }
+
+
+  onTipoInformeChange(event: any): void {
+    const selectedValue = event.target.value;
+
+    if (selectedValue === 'Ventas') {
+      this.initializeTipoDocumento();
+      this.initializeSeries();
+    } else if (selectedValue === 'Compras') {
+      this.initializeTipoDocumentoCompras();
+      this.initializeSeriesCompras();
+    }
+  }
+
+  getInformeContableVentas() {
+    this.spinnerService.show();
+    const fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
+    const fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
+
+    this.ventaService.getInformeContable(fechaInicial, fechaFinal, this.serieSeleccionada, this.tipoDocumentoSeleccionado).subscribe(
+      data => {
+        console.log('Datos recibidos:', data); // Agrega esto para verificar la estructura de los datos
+        this.informeContableVentaInterface = data;
+        if (this.informeContableVentaInterface.length === 0) {
+          this.spinnerService.hide();
+          Swal.fire({
+            icon: 'warning',
+            title: 'Sin registros',
+            text: 'No se encontraron registros para exportar.',
+          });
+          return; // No continuar si no hay registros
+        }
+
+        this.exportToExcel(this.informeContableVentaInterface);
+        this.spinnerService.hide();
+      }
+    );
+  }
+
+  getInformeContableCompras() {
+    this.spinnerService.show();
+    const fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
+    const fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
+
+    this.compraService.getInformeContable(fechaInicial, fechaFinal, this.tipoDocumentoSeleccionado).subscribe(
+      data => {
+        console.log('Datos recibidos:', data); // Agrega esto para verificar la estructura de los datos
+        this.informeContableCompraInterface = data;
+        if (this.informeContableCompraInterface.length === 0) {
+          this.spinnerService.hide();
+          Swal.fire({
+            icon: 'warning',
+            title: 'Sin registros',
+            text: 'No se encontraron registros para exportar.',
+          });
+          return; // No continuar si no hay registros
+        }
+
+        this.exportToExcel(this.informeContableCompraInterface);
+        this.spinnerService.hide();
+      }
+    );
+  }
 }
-=======
-}
->>>>>>> baf55da921f303e4c253134a43c0638b74959374
