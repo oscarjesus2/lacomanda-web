@@ -44,8 +44,8 @@ export class ApiRequestInterceptor implements HttpInterceptor {
                     this.handleUnauthorizedError();
                 } else if (error.status === 400 && error.error) {
                     // Manejo de errores de validación con el nuevo formato
-                    if (error.error.errorCode === "VALIDATION_FAILED") {
-                        this.handleValidationErrors(error.error.data);
+                    if (error.error.ErrorCode === "VALIDATION_FAILED") {
+                        this.handleValidationErrors(error.error.Data);
                     } else {
                         errorMessage = this.getErrorMessage(error);
                     }
@@ -109,8 +109,8 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     }
 
     private getErrorMessage(error: HttpErrorResponse): string {
-        if (error.error && error.error.message) {
-            return error.error.message; // Obtener el mensaje directamente desde el ApiResponse
+        if (error.error && error.error.Message) {
+            return error.error.Message; // Obtener el mensaje directamente desde el ApiResponse
         }
         
         switch (error.status) {
