@@ -81,6 +81,8 @@ export class ApiRequestInterceptor implements HttpInterceptor {
             }
         }
         
+        // Mostrar errores en un formato de lista
+        
         Swal.fire({
             icon: 'error',
             title: 'Errores de Validación',

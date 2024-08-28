@@ -35,3 +35,4 @@ export class ValidationErrorService {
     return key.replace(/\[(\d+)\]/g, '.$1');
   }
 }
+

@@ -16,5 +16,4 @@ export class CompraService {
     getInformeContable(fechaInicial: string, fechaFinal: string, idTipoDocumento: string): Observable<InformeContableCompraInterface[]> {
         return this.http.get<InformeContableCompraInterface[]>(this.basePath+ 'InformeContableCompra/' + fechaInicial + '/' + fechaFinal+ '/'  + idTipoDocumento);
     }
-
 }

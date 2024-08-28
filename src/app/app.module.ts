@@ -119,7 +119,6 @@ export const MY_DATE_FORMATS = {
     DialogReportecontableComponent,
     QzTrayRequiredComponent,
     ClienteMantenimientoComponent,
-    
   ],
   imports: [
     CommonModule,
