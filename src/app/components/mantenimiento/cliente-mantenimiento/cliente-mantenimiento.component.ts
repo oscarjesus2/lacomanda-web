@@ -6,6 +6,9 @@ import Swal from 'sweetalert2';
 import { MatDialogRef } from '@angular/material/dialog';
 import { TipoDocClienteService } from 'src/app/services/tipodoccliente.service';
 import { NgForm, FormControl, Validators } from '@angular/forms';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
+import { NgxSpinnerService } from 'ngx-spinner';
 
 
 @Component({
@@ -17,29 +20,39 @@ export class ClienteMantenimientoComponent implements OnInit {
   @ViewChild('clienteForm') clienteForm: NgForm;
   cliente: Cliente = new Cliente();
   clientes: Cliente[] = [];
-  filteredClientes: Cliente[] = [];
+  filteredClientes= new MatTableDataSource<Cliente>([]);
   filtroCliente: string = '';
   tiposDocCliente: TipoDocCliente[] = [];
   showForm: boolean = false; // Controla la visibilidad del formulario
-  displayedColumns: string[] = ['idCliente', 'razonSocial', 'direccion', 'ruc', 'correo', 'actions'];
+  displayedColumns: string[] = ['ruc','razonSocial', 'direccion',  'correo', 'actions'];
   etiquetaCliente: string = '';
 
   constructor(
     private dialogRef: MatDialogRef<ClienteMantenimientoComponent >,
     private clienteService: ClienteService,
+    private spinnerService: NgxSpinnerService,
     private tipoDocClienteService: TipoDocClienteService) {}
+    @ViewChild(MatPaginator) paginator: MatPaginator;
 
+    
   ngOnInit(): void {
     this.cargarClientes();
     this.cargarTiposDocCliente();
   }
 
+  ngAfterViewInit() {
+    this.filteredClientes.paginator = this.paginator;
+  }
+
   cargarClientes(): void {
+    this.spinnerService.show(); 
     this.clienteService.getClientes().subscribe(response => {
       if (response.Success) {
         this.clientes = response.Data;
-        this.filteredClientes = response.Data; // Inicialmente, no se filtra nada
+        this.filteredClientes.data = response.Data; // Inicialmente, no se filtra nada
+        this.spinnerService.hide();
     } else {
+      this.spinnerService.hide();
         Swal.fire('Error', response.Message || 'Error al cargar los clientes', 'error');
     }
     });
@@ -62,7 +75,7 @@ export class ClienteMantenimientoComponent implements OnInit {
 
   applyFilter(): void {
     const filterValue = this.filtroCliente.toLowerCase();
-    this.filteredClientes = this.clientes.filter(cliente =>
+    this.filteredClientes.data = this.clientes.filter(cliente =>
       cliente.RazonSocial.toLowerCase().includes(filterValue) ||
       cliente.Ruc.toLowerCase().includes(filterValue) ||
       cliente.Direccion.toLowerCase().includes(filterValue)

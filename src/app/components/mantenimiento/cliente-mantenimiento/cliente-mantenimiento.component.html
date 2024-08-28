@@ -14,12 +14,6 @@
       <input matInput [(ngModel)]="filtroCliente" (ngModelChange)="applyFilter()" placeholder="Buscar por nombre, RUC, etc.">
     </mat-form-field>
     <mat-table [dataSource]="filteredClientes" class="mat-elevation-z8">
-      <!-- ID Column -->
-      <ng-container matColumnDef="idCliente">
-        <mat-header-cell *matHeaderCellDef> ID </mat-header-cell>
-        <mat-cell *matCellDef="let cliente"> {{cliente.IdCliente}} </mat-cell>
-      </ng-container>
-
       <!-- RUC Column -->
       <ng-container matColumnDef="ruc">
         <mat-header-cell *matHeaderCellDef> RUC </mat-header-cell>
@@ -61,7 +55,7 @@
       <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
     </mat-table>
-    
+    <mat-paginator [length]="clientes.length" [pageSize]="5" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
   </div>
 
   <!-- Formulario de Cliente, visible solo cuando showForm es true -->
