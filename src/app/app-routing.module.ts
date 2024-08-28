@@ -11,10 +11,13 @@ import { AdministracionComponent } from './pages/administracion/administracion.c
 // import { ProductosComponent } from './pages/ventas/productos/productos.component';
 // import { ClientesComponent } from './pages/ventas/clientes/clientes.component';
 import { DialogTurnoComponent } from '../app/components/dialog-turno/dialog-turno.component';
+import { QzTrayRequiredComponent } from './qz-tray-required/qz-tray-required.component';
 
 // Importa más componentes según sea necesario...
 
 const routes: Routes = [ 
+
+  { path: 'qz-tray-required', component: QzTrayRequiredComponent },
 {
   path:'', redirectTo:'/dashboard', pathMatch:'full'
 },

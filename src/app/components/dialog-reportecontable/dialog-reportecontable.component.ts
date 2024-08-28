@@ -174,4 +174,8 @@ getInformeContableCompras() {
   );
 }
 
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> baf55da921f303e4c253134a43c0638b74959374

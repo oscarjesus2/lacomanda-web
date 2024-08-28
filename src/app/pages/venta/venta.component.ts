@@ -756,4 +756,3 @@ export class VentaComponent implements OnInit {
 
 
 }
-

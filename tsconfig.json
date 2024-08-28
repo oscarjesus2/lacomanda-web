@@ -1,19 +1,8 @@
-/* To learn more about this file see: https://angular.io/config/tsconfig. */
 {
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./dist/out-tsc",
-    // "forceConsistentCasingInFileNames": true,
-    // "strict": true,
-    // "noImplicitOverride": true,
-    // "noPropertyAccessFromIndexSignature": true,
-    // "noImplicitReturns": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "sourceMap": true,
-    // "declaration": false,
-    // "downlevelIteration": true,
-    // "experimentalDecorators": true,
     "sourceMap": true,
     "declaration": false,
     "downlevelIteration": true,
@@ -27,13 +16,14 @@
       "ES2022",
       "dom"
     ],
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+    "paths": {
+      "tslib": ["node_modules/tslib/tslib.d.ts"]
+    },
+    "typeRoots": ["node_modules/@types"],
+    "types": []
   }
    ,
    "angularCompilerOptions": {
-  //   "enableI18nLegacyMessageIdFormat": false,
-  //   "strictInjectionParameters": true,
-  //   "strictInputAccessModifiers": true,
-  //   "strictTemplates": true
    }
 }
