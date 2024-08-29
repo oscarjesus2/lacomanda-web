@@ -43,7 +43,7 @@ import { AmbienteService } from '../../services/ambiente.services';
 import { ObservacionService } from '../../services/observacion.service';
 import { PedidoService } from '../../services/pedido.service';
 import { TurnoService } from '../../services/turno.service';
-import { EmpleadoService } from '../../services/mozo.service';
+import { EmpleadoService } from '../../services/empleado.service';
 import { Turno } from 'src/app/models/turno.models';
 import { Router } from '@angular/router';
 import { LoginService } from 'src/app/services/auth/login.service';
@@ -114,7 +114,7 @@ export class VentaComponent implements OnInit {
     private TurnoService: TurnoService,
     private ambienteService: AmbienteService,
     private mesasService: MesasService,
-    private MozoService: EmpleadoService,
+    private empleadoService: EmpleadoService,
     private ObservacionService: ObservacionService,
     private pedidoService: PedidoService,
     private dialogProductoCantidad: MatDialog,
@@ -183,7 +183,7 @@ export class VentaComponent implements OnInit {
       // 2. Se carga servicio para obtener mesas
       this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
       // 3. Se carga servicio para obtener Mozos
-      this.ListaEmpleados = await this.MozoService.getAllEmpleados().toPromise();
+      this.ListaEmpleados = await this.empleadoService.getAllEmpleados().toPromise();
       // 4. Se carga servicio para obtener ambientes
       this.listAmbiente = await this.ambienteService.getAllAmbiente().toPromise();
       // 5. Se carga combo familia

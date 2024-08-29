@@ -9,6 +9,7 @@ import { NgForm, FormControl, Validators } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { NgxSpinnerService } from 'ngx-spinner';
+import { EnumTipoIdentidad } from 'src/app/enums/enum';
 
 
 @Component({
@@ -107,7 +108,7 @@ export class ClienteMantenimientoComponent implements OnInit {
         });
     } else {
         this.clienteService.createCliente(this.cliente).subscribe(response => {
-            if (response.success) {
+            if (response.Success) {
                 this.cargarClientes();
                 this.showForm = false; // Ocultar formulario al guardar
                 Swal.fire('Cliente creado', '', 'success');
@@ -118,6 +119,63 @@ export class ClienteMantenimientoComponent implements OnInit {
     }
 }
 
+buscarCliente(): void {
+
+  const ruc = this.cliente.Ruc;
+
+  if (this.cliente.TipoDocCliente.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc.length != 8) {
+    Swal.fire({
+      title: 'Validación',
+      text: `El DNI debe tener 8 caracteres.`,
+      icon: 'warning',
+      confirmButtonText: 'OK'
+    });
+    return;
+  } else if (this.cliente.TipoDocCliente.IdTipoIdentidad === EnumTipoIdentidad.RUC && ruc.length != 11) {
+    Swal.fire({
+      title: 'Validación',
+      text: `El RUC debe tener 11 caracteres.`,
+      icon: 'warning',
+      confirmButtonText: 'OK'
+    });
+    return;
+  } else if (this.cliente.TipoDocCliente.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc == '00000001') {
+    return;
+  }
+
+  this.clienteService.ServicioBuscarCliente(ruc, this.cliente.TipoDocCliente.IdTipoIdentidad).subscribe(
+    (clienteBuscar: any) => {
+      if (clienteBuscar) {
+        if (clienteBuscar.RazonSocial) {
+            this.cliente.Ruc = clienteBuscar.Ruc;
+            this.cliente.RazonSocial = clienteBuscar.RazonSocial;
+            this.cliente.Direccion = clienteBuscar.Direccion;
+            this.cliente.Correo = clienteBuscar.Correo;
+        } else {
+          Swal.fire({
+            title: 'Validación',
+            text: `No se encontró el Cliente .`,
+            icon: 'warning',
+            confirmButtonText: 'OK'
+          });
+          this.cliente.IdCliente = '';
+          this.cliente.Ruc = '';
+            this.cliente.RazonSocial = '';
+            this.cliente.Direccion = '';
+            this.cliente.Correo = '';
+    
+        }
+      } else {
+        Swal.fire({
+          title: 'Validación',
+          text: `Vuelve a realizar la búsqueda. Tiempo de espera agotado.`,
+          icon: 'warning',
+          confirmButtonText: 'OK'
+        });
+      }
+    }
+  );
+}
 
   onEdit(cliente: Cliente): void {
     this.cliente = { ...cliente };

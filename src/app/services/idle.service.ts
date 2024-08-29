@@ -3,6 +3,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { Router } from '@angular/router';
 import {jwtDecode}  from 'jwt-decode';
 import { StorageService } from './storage.service';
+import { MatDialog } from '@angular/material/dialog';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +12,7 @@ export class IdleService {
   private timeoutId: any;
   private readonly timeout: number = 5 * 60 * 1000; // 15 minutos
 
-  constructor(private ngZone: NgZone, private router: Router, private storageService:StorageService) {
+  constructor(private ngZone: NgZone, private router: Router, private storageService:StorageService,  private dialog: MatDialog) {
     this.startWatching();
     this.setupListeners();
   }
@@ -55,6 +56,7 @@ export class IdleService {
   }
 
   private logout(): void {
+    this.dialog.closeAll();  // Cierra todos los diálogos abiertos
     this.storageService.logout();
     this.router.navigate(['/iniciar-sesion']);
   }

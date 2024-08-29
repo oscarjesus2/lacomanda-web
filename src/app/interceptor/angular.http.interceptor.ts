@@ -43,11 +43,11 @@ export class ApiRequestInterceptor implements HttpInterceptor {
                 if (error.status === 401 || error.status === 403) {
                     this.handleUnauthorizedError();
                 } else if (error.status === 400 && error.error) {
-                    // Manejo de errores de validación con el nuevo formato
-                    if (error.error.ErrorCode === "VALIDATION_FAILED") {
-                        this.handleValidationErrors(error.error.Data);
-                    } else {
+                    if (this.isModelValidationError(error)) {
+                        this.handleValidationErrors(error.error.errors);
+                    } else if (this.isCustomErrorFormat(error)) {
                         errorMessage = this.getErrorMessage(error);
+                        this.notificationService.showWarning(errorMessage);
                     }
                 } else if (error.status >= 200 && error.status < 300) {
                     return next.handle(request);
@@ -109,9 +109,10 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     }
 
     private getErrorMessage(error: HttpErrorResponse): string {
-        if (error.error && error.error.Message) {
-            return error.error.Message; // Obtener el mensaje directamente desde el ApiResponse
+        if (this.isCustomErrorFormat(error)) {
+            return error.error.Message || 'An unexpected error occurred'; // Obtener el mensaje directamente desde el ApiResponse
         }
+
         
         switch (error.status) {
             case 404:
@@ -123,6 +124,16 @@ export class ApiRequestInterceptor implements HttpInterceptor {
             default:
                 return `Unexpected Error: ${error.message}`;
         }
+    }
+
+    // Método para verificar si es un error de validación de modelo
+    private isModelValidationError(error: HttpErrorResponse): boolean {
+        return error.error && error.error.errors && error.error.title === 'One or more validation errors occurred.';
+    }
+
+    // Método para verificar si es un error en formato personalizado
+    private isCustomErrorFormat(error: HttpErrorResponse): boolean {
+        return error.error && error.error.ErrorCode && error.error.Message;
     }
 }
 
