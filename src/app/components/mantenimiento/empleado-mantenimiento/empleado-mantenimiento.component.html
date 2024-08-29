@@ -1,0 +1,132 @@
+<button mat-icon-button class="close-button" (click)="salir()">
+  <mat-icon>close</mat-icon>
+</button>
+<div class="empleado-mantenimiento">
+  <h2>Mantenimiento de Empleados</h2>
+
+  <!-- Lista de Empleados, visible por defecto -->
+  <div class="empleados-list" *ngIf="!showForm">
+    <button mat-raised-button color="primary" (click)="nuevoEmpleado()">
+      Nuevo Empleado
+    </button>
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Buscar</mat-label>
+      <input matInput [(ngModel)]="filtroEmpleado" (ngModelChange)="applyFilter()"
+        placeholder="Buscar por nombre, RUC, etc.">
+    </mat-form-field>
+    <mat-table [dataSource]="filteredEmpleados" class="mat-elevation-z8">
+      <!-- RUC Column -->
+      <ng-container matColumnDef="nombre">
+        <mat-header-cell *matHeaderCellDef> Nombre </mat-header-cell>
+        <mat-cell *matCellDef="let empleado"> {{empleado.Nombre}} </mat-cell>
+      </ng-container>
+
+      <!-- Razon Social Column -->
+      <ng-container matColumnDef="dni">
+        <mat-header-cell *matHeaderCellDef> DNI </mat-header-cell>
+        <mat-cell *matCellDef="let empleado"> {{empleado.Dni}} </mat-cell>
+      </ng-container>
+
+      <!-- Direccion Column -->
+      <ng-container matColumnDef="direccion">
+        <mat-header-cell *matHeaderCellDef> Dirección </mat-header-cell>
+        <mat-cell *matCellDef="let empleado"> {{empleado.Direccion}} </mat-cell>
+      </ng-container>
+
+      <!-- Estado Column -->
+      <ng-container matColumnDef="telefono">
+        <mat-header-cell *matHeaderCellDef> Telefono </mat-header-cell>
+        <mat-cell *matCellDef="let empleado"> {{empleado.Telefono}} </mat-cell>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-cell *matCellDef="let empleado">
+          <button mat-icon-button color="primary" (click)="onEdit(empleado)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="onDelete(empleado.IdEmpleado)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Header and Row Declarations -->
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+    <mat-paginator [length]="empleados.length" [pageSize]="5" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
+  </div>
+
+  <!-- Formulario de Empleado, visible solo cuando showForm es true -->
+  <form *ngIf="showForm" #empleadoForm="ngForm" (ngSubmit)="onSubmit()">
+    <!-- Primera línea: Tipo Identidad y RUC -->
+    <div class="form-row">
+      <mat-form-field  appearance="fill">
+        <mat-label>DNI</mat-label>
+        <input matInput [(ngModel)]="empleado.Dni" name="dni" [required]="true" [attr.maxLength]="maxLength"
+          [pattern]="pattern" #dni="ngModel">
+        <mat-error *ngIf="dni.invalid && (dni.dirty || dni.touched)">
+          El DNI es requerido.
+        </mat-error>
+
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Nombre</mat-label>
+        <input matInput [(ngModel)]="empleado.Nombre" name="nombre" required #nombre="ngModel">
+        <mat-error *ngIf="nombre.invalid && (nombre.dirty || nombre.touched)">
+          El nombre es requerido.
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Tercera línea: Direccion -->
+    <mat-form-field class="full-width" appearance="fill">
+      <mat-label>Dirección</mat-label>
+      <input matInput [(ngModel)]="empleado.Direccion" name="direccion" required #direccion="ngModel">
+      <mat-error *ngIf="direccion.invalid && (direccion.dirty || direccion.touched)">
+        La dirección es requerida.
+      </mat-error>
+    </mat-form-field>
+
+    <div class="form-row">
+      <mat-form-field  appearance="fill">
+        <mat-label>Cargo</mat-label>
+        <mat-select [(ngModel)]="empleado.Cargo" name="cargo" required #cargo="ngModel" [compareWith]="compareCargo">
+          <mat-option *ngFor="let tipo of listCargo" [value]="tipo">
+            {{tipo.Descripcion}}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="cargo.invalid && (cargo.dirty || cargo.touched)">
+          Seleccione un cargo.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Telefono</mat-label>
+        <input matInput [(ngModel)]="empleado.Telefono" name="telefono" required phone #telefono="ngModel">
+        <mat-error *ngIf="telefono.invalid && (telefono.dirty || telefono.touched)">
+          Introduzca un telefono válido.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Estado</mat-label>
+        <mat-select [(ngModel)]="empleado.Activo" name="estado" required #estado="ngModel">
+          <mat-option [value]="1">Activo</mat-option>
+          <mat-option [value]="0">Inactivo</mat-option>
+        </mat-select>
+        <mat-error *ngIf="estado.invalid && (estado.dirty || estado.touched)">
+          Seleccione un estado.
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <button mat-raised-button color="primary">
+      {{ empleado.IdEmpleado ? 'Actualizar' : 'Guardar' }}
+    </button>
+    <button mat-raised-button color="warn" (click)="cancelar()">Cancelar</button>
+  </form>
+</div>

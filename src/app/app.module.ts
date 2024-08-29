@@ -75,6 +75,7 @@ import { MomentDateAdapter } from '@angular/material-moment-adapter';
 import { DialogReportecontableComponent } from './components/dialog-reportecontable/dialog-reportecontable.component';
 import { QzTrayRequiredComponent } from './qz-tray-required/qz-tray-required.component';
 import { ClienteMantenimientoComponent } from './components/mantenimiento/cliente-mantenimiento/cliente-mantenimiento.component';
+import { EmpleadoMantenimientoComponent } from './components/mantenimiento/empleado-mantenimiento/empleado-mantenimiento.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -119,6 +120,7 @@ export const MY_DATE_FORMATS = {
     DialogReportecontableComponent,
     QzTrayRequiredComponent,
     ClienteMantenimientoComponent,
+    EmpleadoMantenimientoComponent,
   ],
   imports: [
     CommonModule,

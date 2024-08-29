@@ -86,6 +86,9 @@
                  [attr.maxLength]="maxLength"
                  [pattern]="pattern" 
                  #ruc="ngModel">
+                 <button mat-icon-button matSuffix (click)="buscarCliente()" type="button">
+                  <mat-icon>search</mat-icon>
+                </button>
         <mat-error *ngIf="ruc.invalid && (ruc.dirty || ruc.touched)">
           {{ errorMessage }}
         </mat-error>
