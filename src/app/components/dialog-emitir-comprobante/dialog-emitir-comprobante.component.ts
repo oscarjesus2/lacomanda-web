@@ -579,9 +579,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     try {
 
       this.tipoDocumento.IdTipoDoc = this.form.get('idTipoDoc')?.value;
-      this.cliente.TipoDocCliente = this.form.get('cliente.tipoIdentidad')?.value;
+      this.cliente.TipoDocCliente = new TipoDocCliente({IdTipoIdentidad:this.form.get('cliente.tipoIdentidad')?.value, Descripcion:''}) 
       this.cliente.Ruc  = this.form.get('cliente.ruc')?.value;
       this.cliente.RazonSocial = this.form.get('cliente.razonSocial')?.value;
+      this.cliente.Direccion = this.form.get('cliente.direccion')?.value;
       this.cliente.Correo = this.form.get('cliente.correo')?.value;
       
       if (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.FacturaVenta) {
@@ -632,7 +633,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
       if (this.cliente.Correo == '') {
         if (!this.isValidEmail(this.cliente.Correo)) {
-          Swal.fire('Cliente Delivery', 'El correo electrónico está mal ingresado.', 'warning');
+          Swal.fire('Validacion', 'El correo electrónico está mal ingresado.', 'warning');
           return;
         }
       }
