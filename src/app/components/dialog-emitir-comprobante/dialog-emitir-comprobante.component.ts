@@ -151,11 +151,14 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   async ngOnInit() {
 
-    const isRunning = await this.qzTrayService.isQzTrayRunning();
-    if (!isRunning) {
-      // Redirige a una página que instruya al usuario a descargar QZ Tray
-      this.router.navigate(['/qz-tray-required']);
-    } 
+    if (this.idModuloVenta!=4){
+      const isRunning = await this.qzTrayService.isQzTrayRunning();
+      if (!isRunning) {
+        // Redirige a una página que instruya al usuario a descargar QZ Tray
+        this.router.navigate(['/qz-tray-required']);
+      } 
+    }
+    
     this.initializeValoresCaja();
     this.ValidaTotalAPagar();
 
@@ -694,15 +697,16 @@ export class DialogEmitirComprobanteComponent implements OnInit {
           cancelButtonText: 'Ticket'
         }).then((result) => {
           if (result.isConfirmed) {
-            this.descargarPDFA4();
+            this.descargarA4PDF();
+            this.descargarTicketPDF(venta.ByteTicket, venta.Serie + venta.NumDocumento);
             this.imprimirPromocionesA4();
           } else if (result.dismiss === Swal.DismissReason.cancel) {
-            this.imprimirTicket(venta.ByteTicket);
+            this.descargarTicketPDF(venta.ByteTicket, venta.Serie + venta.NumDocumento);
             this.imprimirPromocionesTicket();
           }
         });
       } else {
-        this.descargarTicketPDF(venta.ByteTicket, venta.Serie + venta.NumDocumento);
+        this.imprimirTicket(venta.ByteTicket);
       }
 
       if (this.idModuloVenta === 3) {
@@ -726,7 +730,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   imprimirPromocionesTicket() {
     throw new Error('Method not implemented.');
   }
-  descargarPDFA4() {
+  descargarA4PDF() {
     throw new Error('Method not implemented.');
   }
   imprimirPrecTragoGratis(intCodVenta: any) {
