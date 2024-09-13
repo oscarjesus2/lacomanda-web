@@ -28,7 +28,7 @@ jobs:
       run: npm run build -- --configuration production # Construir la aplicación para producción
       
     - name: Upload Build Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: frontend-artifact
         path: ./dist/jbs-rest   # Cambia 'jbs-rest' si tu build genera archivos en otro lugar
