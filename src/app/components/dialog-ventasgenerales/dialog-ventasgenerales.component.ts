@@ -9,6 +9,7 @@ import { CajaService } from 'src/app/services/caja.service';
 import { Caja } from 'src/app/models/caja.models';
 import { DialogEmitirVentaComponent } from '../dialog-emitir-venta/dialog-emitir-venta.component';
 import { MatPaginator } from '@angular/material/paginator';
+import { StorageService } from 'src/app/services/storage.service';
 
 @Component({
   selector: 'app-dialog-ventasgenerales',
@@ -35,7 +36,7 @@ export class DialogVentasgeneralesComponent implements OnInit {
     public dialogRef: MatDialogRef<DialogVentasgeneralesComponent>,
     private ventaService: VentaService,
     private spinnerService: NgxSpinnerService,
-    private cajaService: CajaService,
+    private storageService: StorageService,
     public dialog: MatDialog
   ) { }
 
@@ -118,6 +119,45 @@ export class DialogVentasgeneralesComponent implements OnInit {
       // minHeight: '300px', // Establece la altura mínima del diálogo
       // maxWidth: '80vw', // Establece el ancho máximo del diálogo en porcentaje de la ventana
       // maxHeight: '80vh' // Establece la altura máxima del diálogo en porcentaje de la ventana
+    });
+  }
+
+  anularDocumento(): void {
+    if (!this.ventaSeleccionada) {
+      Swal.fire('Error', 'Debe seleccionar una venta para anular', 'error');
+      return;
+    }
+
+    // Confirmación de la anulación
+    Swal.fire({
+      title: '¿Está seguro de anular el documento seleccionado ' + this.ventaSeleccionada.Documento +  '?',
+      text: 'Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, anular',
+      cancelButtonText: 'No, cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Realiza la anulación de la venta
+        const idVenta = this.ventaSeleccionada.IdVenta;
+        const motivo = 'Anulado desde el módulo de integración.';
+        const usuAnula = this.storageService.getCurrentSession().User.IdUsuario; // Debes reemplazar esto con el usuario actual
+        const anularPedido = true; // Reemplaza si es necesario
+
+        this.spinnerService.show(); // Mostrar spinner mientras se realiza la operación
+
+        this.ventaService.anularDocumentoVenta(idVenta, motivo, usuAnula, anularPedido).subscribe(
+          (response: any) => {
+            this.spinnerService.hide();
+            Swal.fire('Anulado', 'El documento se anuló con éxito', 'success');
+            this.actualizarLista(); // Actualiza la lista después de la anulación
+          },
+          (error: any) => {
+            this.spinnerService.hide();
+            Swal.fire('Error', 'No se pudo anular el documento', 'error');
+          }
+        );
+      }
     });
   }
   

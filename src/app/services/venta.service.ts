@@ -14,7 +14,6 @@ import { Pago } from '../models/pago.models';
     providedIn: 'root'
 })
 export class VentaService {
-
     private basePath = environment.apiUrl + '/venta/';
 
     constructor(private http: HttpClient) { }
@@ -41,6 +40,12 @@ export class VentaService {
         return this.http.get<InformeContableInterface[]>(this.basePath+ 'InformeContableVenta/' + fechaInicial + '/' + fechaFinal+ '/' + serie+ '/' + tipoDoc);
     }
 
+    anularDocumentoVenta(idVenta: number, motivo: string, usuAnula: number, anularPedido: boolean) {
+        const url = `${this.basePath}anulardocumentoventa/${idVenta}/${encodeURIComponent(motivo)}/${usuAnula}/${anularPedido}`;
+        return this.http.put(url, null);
+      }
+      
+  
     guardarDocumentoVenta(idModuloVenta: number, venta: Venta, cliente: Cliente, pedidoCab: PedidoCab, listaPago: Pago[],  bTurnoIndependiente: boolean): Observable<Venta> {
 
         const body = {
