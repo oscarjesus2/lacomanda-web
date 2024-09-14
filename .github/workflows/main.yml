@@ -27,6 +27,20 @@ jobs:
     - name: Build Angular app
       run: npm run build -- --configuration production # Construir la aplicación para producción
       
+    - name: PRE Delete old artifacts
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        artifacts=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+        https://api.github.com/repos/${{ github.repository }}/actions/artifacts \
+        | jq -r '.artifacts | sort_by(.created_at) | reverse | .[3:] | .[].id')
+
+        for artifact_id in $artifacts; do
+          curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
+          https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$artifact_id
+          echo "Deleted artifact with ID: $artifact_id"
+        done
+        
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v3
       with:
