@@ -27,7 +27,7 @@ jobs:
     - name: Build Angular app
       run: npm run build -- --configuration production # Construir la aplicación para producción
       
-    - name: PRE Delete old artifacts
+    - name: PRE Delete old artifact
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
