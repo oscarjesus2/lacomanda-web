@@ -16,8 +16,12 @@ export class TurnoService {
     AbrirTurno(Turno: Turno): Observable<Turno> {
         return this.http.post<Turno>(this.basePath + '/abrir', Turno);
     }
+    
     ObtenerTurno(sIdCaja: string): Observable<Turno> {
-        return this.http.get<Turno>(this.basePath + '/' + sIdCaja);
+        return this.http.get<Turno>(this.basePath + '/ObtenerTurnoByCaja/' + sIdCaja);
     }
 
+    ObtenerTurnoByIP(iP: string): Observable<Turno> {
+        return this.http.get<Turno>(this.basePath + '/ObtenerTurnoByIp/' + iP);
+    }
 }

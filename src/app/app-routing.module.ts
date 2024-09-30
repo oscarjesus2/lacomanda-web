@@ -12,6 +12,7 @@ import { AdministracionComponent } from './pages/administracion/administracion.c
 // import { ClientesComponent } from './pages/ventas/clientes/clientes.component';
 import { DialogTurnoComponent } from '../app/components/dialog-turno/dialog-turno.component';
 import { QzTrayRequiredComponent } from './qz-tray-required/qz-tray-required.component';
+import { DigitacionMozoComponent } from './pages/digitacion-mozo/digitacion-mozo.component';
 
 // Importa más componentes según sea necesario...
 
@@ -28,7 +29,7 @@ const routes: Routes = [
 },
 {
   path:'ventas',  
-  component:VentaComponent,
+  component:DigitacionMozoComponent,
   canActivate: [AdminGuard]
 },
 {

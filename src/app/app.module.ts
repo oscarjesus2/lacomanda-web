@@ -76,6 +76,9 @@ import { DialogReportecontableComponent } from './components/dialog-reporteconta
 import { QzTrayRequiredComponent } from './qz-tray-required/qz-tray-required.component';
 import { ClienteMantenimientoComponent } from './components/mantenimiento/cliente-mantenimiento/cliente-mantenimiento.component';
 import { EmpleadoMantenimientoComponent } from './components/mantenimiento/empleado-mantenimiento/empleado-mantenimiento.component';
+import { DigitacionMozoComponent } from './pages/digitacion-mozo/digitacion-mozo.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { DialogComplementosComponent } from './components/dialog-complementos/dialog-complementos.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -121,6 +124,8 @@ export const MY_DATE_FORMATS = {
     QzTrayRequiredComponent,
     ClienteMantenimientoComponent,
     EmpleadoMantenimientoComponent,
+    DigitacionMozoComponent,
+    DialogComplementosComponent
   ],
   imports: [
     CommonModule,
@@ -158,7 +163,7 @@ export const MY_DATE_FORMATS = {
     MatListModule,
     MatButtonToggleModule,
     MatChipsModule,
-    MatAutocompleteModule
+    MatAutocompleteModule, FontAwesomeModule
 
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA,

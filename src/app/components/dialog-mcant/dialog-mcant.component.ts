@@ -15,8 +15,12 @@ export class DialogMCantComponent {
 
   constructor(
     public dialogRef: MatDialogRef<DialogMCantComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
-  ) {
+    @Inject(MAT_DIALOG_DATA) 
+    
+    public data: any
+  ) 
+  
+  {
     this.title = data.title;
     this.inputValue = data.quantity || '';
     this.isPassword = data.hideNumber || false;

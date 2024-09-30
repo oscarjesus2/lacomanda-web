@@ -88,8 +88,6 @@ export class LoginComponent implements OnInit {
     this.loginService.login({ IdNivel: idNivel, Password: password }, tenant.TenantId).subscribe({
       next: (userData) => {
         console.log('Login correcto');
-        this.loginService.UsuarioShare.emit(userData.Username);
-
         const session: Session = new Session(userData.Token, userData, this.CurrentIP, tenant.TenantId, tenant.Sucursal);
         this.storageService.setCurrentSession(session);
         

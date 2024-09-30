@@ -1,4 +1,13 @@
-<div class="report">
+<div class="report" style="position: relative; min-height: 200px;">
+  <ngx-spinner
+  bdColor="rgba(128, 128, 128, 0.8)"
+  size="medium"
+  color="#fff"
+  type="ball-scale-multiple"
+  name="ventaDiariaSpinner"
+>
+  <p style="font-size: 20px; color: rgb(71, 68, 68)">Cargando...</p>
+</ngx-spinner>
   <h2>Ventas Diarias/Semanales/Mensuales</h2>
   <select (change)="onReportTypeChange($event)">
     <option value="diarias">Diarias</option>

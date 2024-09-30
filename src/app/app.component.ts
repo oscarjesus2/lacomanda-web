@@ -9,6 +9,7 @@ import { TurnoService } from './services/turno.service';
 import { IdleService } from './services/idle.service';
 import { DataService } from '../app/services/data.service';
 import { QzTrayService } from './services/qz-tray.service';
+import { HeaderService } from './services/header.service';
 
 @Component({
   selector: 'app-root',
@@ -17,7 +18,7 @@ import { QzTrayService } from './services/qz-tray.service';
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'Jbs_Resta';
-
+  headerVisible = true;
   constructor(
     private qzTrayService: QzTrayService, 
     private spinnerService: NgxSpinnerService,
@@ -27,8 +28,12 @@ export class AppComponent implements OnInit, OnDestroy {
     private dialogTurno: MatDialog,
     private turnoService: TurnoService,
     private idleService: IdleService,
-    private dataService: DataService
-  ) {}
+    private dataService: DataService,
+    private headerService: HeaderService) {
+    this.headerService.headerVisible$.subscribe(visible => {
+      this.headerVisible = visible;
+    });
+  }
 
   ngOnDestroy(): void {
     this.storageService.logout();

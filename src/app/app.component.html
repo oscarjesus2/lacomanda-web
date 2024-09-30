@@ -7,7 +7,7 @@
   <p style="font-size: 20px; color: white">Cargando...</p>
 </ngx-spinner>
 
-<app-header></app-header>
+<app-header *ngIf="headerVisible"></app-header>
 <router-outlet></router-outlet>
 
  

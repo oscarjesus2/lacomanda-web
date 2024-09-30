@@ -10,11 +10,6 @@ import { environment } from 'src/environments/environment';
   providedIn: 'root'
 })
 export class LoginService {
- userLoginOn: EventEmitter<boolean>= new EventEmitter<boolean>();
- idturnoShare: EventEmitter<number>= new EventEmitter<number>();
- nroturnoShare: EventEmitter<number>= new EventEmitter<number>();
- turnoOpenShare: EventEmitter<boolean>= new EventEmitter<boolean>();
- UsuarioShare: EventEmitter<string>= new EventEmitter<string>();
  
   private basePath = environment.apiUrl + '/Auth/login';
   constructor(private http: HttpClient) {}

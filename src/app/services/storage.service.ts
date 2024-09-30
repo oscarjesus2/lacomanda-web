@@ -76,7 +76,5 @@ export class StorageService {
   logout(): void {
     this.removeCurrentSession();
     this.router.navigate(['/iniciar-sesion']);
-    this.loginService.userLoginOn.emit(false);
-    this.loginService.idturnoShare.emit(0);
   }
 }

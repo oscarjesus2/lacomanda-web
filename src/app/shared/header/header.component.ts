@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { NgxSpinnerService } from 'ngx-spinner';
@@ -15,6 +16,10 @@ import { DataService } from 'src/app/services/data.service';
   styleUrls: ['./header.component.css']
 })
 export class HeaderComponent {
+
+  private headerVisibleSubject = new BehaviorSubject<boolean>(true);
+  headerVisible$ = this.headerVisibleSubject.asObservable();
+
   userLoginOn: boolean = false;
   idturnoShare: number= 0;  
   nroturnoShare: number= 0;   
@@ -35,6 +40,16 @@ export class HeaderComponent {
   ) {
 
   }
+
+
+  hideHeader() {
+    this.headerVisibleSubject.next(false);
+  }
+
+  showHeader() {
+    this.headerVisibleSubject.next(true);
+  }
+
   public SalirSistemas(): void {
     this.storageService.logout();
  
@@ -68,24 +83,6 @@ export class HeaderComponent {
     this.dataService.currentVariable.subscribe(value => {
       this.title = value; // Actualiza la variable en el componente
     });
-
-    try {
-      this.loginService.userLoginOn.subscribe(data => this.userLoginOn = data);
-      this.loginService.idturnoShare.subscribe(data => this.idturnoShare = data);
-      this.loginService.nroturnoShare.subscribe(data => this.nroturnoShare = data);
-      this.loginService.turnoOpenShare.subscribe(data => this.turnoOpenShare = data);
-      this.loginService.UsuarioShare.subscribe(data => this.UsuarioShare = data);
-
-
-    } catch (e) {
-      alert(e);
-      console.log(e);
-      this.SalirSistemas();
-    }
-    finally {
-      this.spinnerService.hide();
-    }
-
   }
 
  
@@ -97,29 +94,5 @@ export class HeaderComponent {
       width: '600px', height: '400px'
       // data: { oPedidoMesa: listData, IdMesa: IdMesa, Mesa: this.mesaSelected.Descripcion + ' ' + this.mesaSelected.Numero}
     });
- 
-    dialogTurno.afterClosed().subscribe(async data => {
-
-      await this.TurnoService.ObtenerTurno('001').subscribe(data => {
-        if (data == null){
-      
-          this.loginService.idturnoShare.emit(0);
-          this.loginService.nroturnoShare.emit(0);
-          this.loginService.turnoOpenShare.emit(false);
-       
-        }else{
-          this.loginService.idturnoShare.emit(data.IdTurno);
-          this.loginService.nroturnoShare.emit(data.NroTurno);
-          this.loginService.turnoOpenShare.emit(true);
-          console.log(data.IdTurno);
-          console.log(data.NroTurno);
-          
-        }
-  
-      });
-      
-    });
-
-
-  }
+   }
 }

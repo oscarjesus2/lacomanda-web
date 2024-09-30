@@ -143,30 +143,6 @@ export class MenuVentasComponent implements OnInit {
       width: '600px', height: '400px'
       // data: { oPedidoMesa: listData, IdMesa: IdMesa, Mesa: this.mesaSelected.Descripcion + ' ' + this.mesaSelected.Numero}
     });
- 
-    dialogTurno.afterClosed().subscribe(async data => {
-
-      await this.TurnoService.ObtenerTurno('001').subscribe(data => {
-        if (data == null){
-      
-          this.loginService.idturnoShare.emit(0);
-          this.loginService.nroturnoShare.emit(0);
-          this.loginService.turnoOpenShare.emit(false);
-       
-        }else{
-          this.loginService.idturnoShare.emit(data.IdTurno);
-          this.loginService.nroturnoShare.emit(data.NroTurno);
-          this.loginService.turnoOpenShare.emit(true);
-          console.log(data.IdTurno);
-          console.log(data.NroTurno);
-          
-        }
-  
-      });
-      
-    });
-
-
   }
 
   ngOnInit(): void {

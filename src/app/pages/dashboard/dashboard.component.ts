@@ -91,24 +91,6 @@ export class DashboardComponent implements OnInit {
     try {
       this.spinnerService.show();
 
-      if (this.storageService.isAuthenticated()) {
-        const user = this.storageService.getCurrentSession().User.Username;
-        this.loginService.UsuarioShare.emit(user);
-      }
-      this.turnoService.ObtenerTurno('001').subscribe(data => {
-        if (data === null) {
-   
-          this.loginService.userLoginOn.emit(true);  
-          this.loginService.idturnoShare.emit(0);
-          this.loginService.nroturnoShare.emit(0);
-          this.loginService.turnoOpenShare.emit(false);
-        } else {
-          this.loginService.userLoginOn.emit(true);  
-          this.loginService.idturnoShare.emit(data.IdTurno);
-          this.loginService.nroturnoShare.emit(data.NroTurno);
-          this.loginService.turnoOpenShare.emit(true);
-        }
-      });
 
     } catch(e) {
       this.salir();

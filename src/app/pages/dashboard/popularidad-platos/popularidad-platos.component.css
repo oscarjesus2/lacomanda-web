@@ -32,4 +32,11 @@
     background-color: #ecf0f1;
     border-radius: 4px;
   }
+  ngx-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 999; /* Asegura que el spinner esté por encima del contenido */
+  }
   

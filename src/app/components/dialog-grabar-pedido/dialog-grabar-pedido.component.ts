@@ -40,9 +40,9 @@ export class DialogEnviarPedidoComponent {
 
     async DeleteProductoClick(oPedidoDet: PedidoDet) {
         
-        var removeIndex = this.data.oPedido.ListaPedidoDet.map(function (item) { return item.IdProducto; }).indexOf(oPedidoDet.IdProducto);
+        var removeIndex = this.data.oPedido.ListaPedidoDet.map(function (item) { return item.Producto; }).indexOf(oPedidoDet.Producto);
         this.data.oPedido.ListaPedidoDet.splice(removeIndex, 1);
-        this.oListaProductosEliminados.push(oPedidoDet.IdProducto);
+        this.oListaProductosEliminados.push(oPedidoDet.Producto.IdProducto);
         this.GridListaPedidoDetProducto.data = this.data.oPedido.ListaPedidoDet;
         this.data.oListaProductosEliminados=this.oListaProductosEliminados;
     }

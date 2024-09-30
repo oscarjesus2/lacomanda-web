@@ -1,9 +1,7 @@
 import { Component, OnInit, ElementRef, ViewChild, Input, SimpleChanges, OnChanges } from '@angular/core';
 import { NgxSpinnerService } from 'ngx-spinner';
 import * as d3 from 'd3';
-import Swal from 'sweetalert2';
 import { VentaService } from 'src/app/services/venta.service';
-import { ventadiariasemanalmensual } from 'src/app/models/ventadiariasemanalmensual.models';
 import { formatDate } from '@angular/common';
 import { StorageService } from 'src/app/services/storage.service';
 
@@ -21,6 +19,8 @@ export class HorasPicoComponent implements OnInit, OnChanges {
   private margin = { top: 20, right: 20, bottom: 30, left: 70 };
   private width: number;
   private height: number;
+  loading: boolean = true;
+
   constructor(private spinnerService: NgxSpinnerService, private ventaService: VentaService, private storageService: StorageService) { }
 
   ngOnInit(): void {
@@ -51,7 +51,8 @@ export class HorasPicoComponent implements OnInit, OnChanges {
 
 
   async getVentasHoraPico(tipo: number, fechaInicial: string, fechaFinal: string) {
-
+    this.spinnerService.show('horasPicoSpinner');
+    this.loading = true;
     let maxValor = Number.MIN_SAFE_INTEGER;
     const data = await this.ventaService.getVentasHoraPico(tipo, fechaInicial, fechaFinal).toPromise();
     data.forEach((elemento) => {
@@ -60,8 +61,8 @@ export class HorasPicoComponent implements OnInit, OnChanges {
         this.horaPico = elemento.Agrupado;
       }
     });
-
-
+    this.loading = false;
+    this.spinnerService.hide('horasPicoSpinner');
     this.updateChart(data);
 
   }
