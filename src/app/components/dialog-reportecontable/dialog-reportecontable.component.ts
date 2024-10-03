@@ -4,7 +4,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { InformeContableInterface as InformeContableVentaInterface } from 'src/app/interfaces/ventas.interface';
-import { InformeContableCompraInterface } from 'src/app/interfaces/compras.interface';
+import { InformeContableCompra } from 'src/app/interfaces/compras.interface';
 import { TipoDocumento } from 'src/app/models/tipodocumento.models';
 import { TipoDocumentoService } from 'src/app/services/tipodocumento.service';
 import { VentaService } from 'src/app/services/venta.service';
@@ -24,7 +24,7 @@ export class DialogReportecontableComponent {
   listTipoDocumentoVentas: TipoDocumento[];
   listSeries: TipoDocumento[];
   informeContableVentaInterface: InformeContableVentaInterface[] = [];
-  informeContableCompraInterface: InformeContableCompraInterface[] = [];
+  informeContableCompraInterface: InformeContableCompra[] = [];
   serieSeleccionada: string = '0';
   tipoDocumentoSeleccionado: string = '0';
 

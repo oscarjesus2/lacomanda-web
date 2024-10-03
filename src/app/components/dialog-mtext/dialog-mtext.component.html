@@ -1,0 +1,15 @@
+<div class="m-text-touch-container">
+    <h1>{{ title }}</h1>
+    <div class="display">
+      <input type="text" [(ngModel)]="inputValue" readonly />
+    </div>
+    <div class="keypad">
+      <button *ngFor="let key of keys" (click)="onKeyClick(key)">{{key}}</button>
+    </div>
+    <div class="actions">
+      <button (click)="clear()">Borrar</button>
+      <button (click)="accept()">Aceptar</button>
+      <button (click)="cancel()">Salir</button>
+    </div>
+  </div>
+  

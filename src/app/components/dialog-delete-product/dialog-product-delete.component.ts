@@ -3,7 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { LoginService as AuthServiceService } from '../../services/auth/login.service';
 import { StorageService } from '../../services/storage.service';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { Usuario } from '../../models/user.models';
+import { Usuario } from '../../models/usuario.models';
 import Swal from 'sweetalert2/dist/sweetalert2';
 
 @Component({

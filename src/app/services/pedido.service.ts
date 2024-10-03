@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs';
 import { PedidoCab } from '../models/pedido.models';
-import { PedidoDelete } from '../models/pedido.delete.models';
 import { ResponseService } from '../models/response.services';
 import { Venta } from '../models/venta.models';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/ApiResponse.interface';
 import { PedidoMesaDTO } from '../interfaces/pedidomesaDTO.interface';
+import { ImpresionDTO } from '../interfaces/impresionDTO.interface';
+import { AnularProductoYComplementoDTO } from '../interfaces/anularProductoYComplementoDTO.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -21,10 +22,6 @@ export class PedidoService {
  
     constructor(private http: HttpClient) { }
 
-    ImprimirPedido(pedido: PedidoCab): Observable<any[]> {
-        return this.http.post<any[]>(this.basePath + '/grabarpedido', pedido);
-    }
-
     totalapagar_x_detallepedido(idPedidoCobrar: number, nroCuentaCobrar: number): Observable<any[]> {
         return this.http.get<any[]>(this.basePath + '/totalapagar_x_detallepedido/' +  idPedidoCobrar + '/' + nroCuentaCobrar);
     }
@@ -36,12 +33,24 @@ export class PedidoService {
     findMesaById(idMesa: string): Observable<any[]> {
         return this.http.get<any[]>(this.basePathConsultarMesa + idMesa);
     }
+
+    ActualizarEnviosDeImpresion(idPedido: number, nroCuenta: number): Observable<ApiResponse<boolean>> {
+        return this.http.put<ApiResponse<boolean>>(`${this.basePath}/ActualizarEnviosDeImpresion/${idPedido}/${nroCuenta}`, {});
+    }
     
-    registerPedido(pedido: PedidoCab): Observable<any[]> {
-        return this.http.post<any[]>(this.basePath + '/grabarpedido', pedido);
+    ActualizarNumAnulaImpresion(idPedido: number, item: number): Observable<ApiResponse<boolean>> {
+        return this.http.put<ApiResponse<boolean>>(`${this.basePath}/ActualizarNumAnulaImpresion/${idPedido}/${item}`, {});
+    }
+    
+    RegistrarPedido(pedido: PedidoCab): Observable<ApiResponse<ImpresionDTO[]>>{
+        return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + '/grabarpedido', pedido);
     }
 
-    deletePedido(pedido: PedidoDelete): Observable<ResponseService> {
-        return this.http.post<ResponseService>(this.basePathDeletePedido, pedido);
+    AnularProductoYComplemento(pedido: AnularProductoYComplementoDTO): Observable<ApiResponse<ImpresionDTO[]>> {
+        return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + '/AnularProductoYComplemento', pedido);
+    }
+
+    ImprimirPrecuenta(idPedido: number, nroCuenta: number): Observable<ApiResponse<ImpresionDTO[]>> {
+        return this.http.get<ApiResponse<ImpresionDTO[]>>(`${this.basePath}/ImprimirPrecuenta/${idPedido}/${nroCuenta}`);
     }
 }

@@ -67,7 +67,7 @@ export class QzTrayService {
   //   }
   // }
 
-  async printPDF(ByteTicket: any, printerName: string): Promise<void> {
+  async printPDF(ByteTicket: any, printerName: string): Promise<boolean> {
     try {
       const byteCharacters = atob(ByteTicket);
       const byteNumbers = new Array(byteCharacters.length);
@@ -78,17 +78,18 @@ export class QzTrayService {
       const blob = new Blob([byteArray], { type: 'application/pdf' });
   
       await this.connect();
-
+  
       let config;
       const isAvailable = await this.isPrinterAvailable(printerName);
       if (isAvailable) {
         config = qz.configs.create(printerName);
         console.log(`Imprimiendo en la impresora ${printerName}`);
-      }else{
+      } else {
         const defaultPrinter = await qz.printers.getDefault(); // Obtener la impresora predeterminada
         config = qz.configs.create(defaultPrinter);
         console.log('Imprimiendo en la impresora predeterminada');
       }
+  
       const data = [{
         type: 'pdf',
         format: 'base64',
@@ -97,9 +98,12 @@ export class QzTrayService {
   
       await qz.print(config, data);
       console.log('Impresión exitosa');
+      return true; // Retornar true si la impresión fue exitosa
     } catch (error) {
       console.error('Error al imprimir:', error);
+      return false; // Retornar false en caso de error
     }
   }
+  
   
 }

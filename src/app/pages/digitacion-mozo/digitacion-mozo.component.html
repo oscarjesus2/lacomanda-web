@@ -6,7 +6,8 @@
         <div class="info-row">
           <div *ngIf="turnoAbierto">
             <label>Turno: {{ turnoAbierto.NroTurno }} - OPEN </label>
-            <label>Pedido: {{ turnoAbierto.IdCaja }}</label>
+            <br>
+            <label>Pedido: {{ turnoAbierto.NroPedido }}</label>
           </div>
         </div>
         
@@ -42,8 +43,8 @@
 
         
       </div>
-      <div class="data-grid">
-        <div  mat-table >
+      <div #scrollContainer class="data-grid">
+        <!-- <div  mat-table > -->
           <table mat-table [dataSource]="gridListaPedidoDetProducto">
             <ng-container matColumnDef="NombreProducto">
               <th mat-header-cell *matHeaderCellDef> Producto </th>
@@ -122,7 +123,7 @@
           </table>
           <!-- <mat-paginator [pageSizeOptions]="[6]" showFirstLastButtons></mat-paginator> -->
         </div>
-      </div>
+      <!-- </div> -->
     </div>
 
     <!-- Tres filas estáticas debajo del datagridview -->
@@ -153,7 +154,7 @@
 
 <!-- Segunda fila de botones -->
 <div class="button-row">
-  <button [disabled]="isPrecuentaDisabled">
+  <button [disabled]="isPrecuentaDisabled" (click)="ImprimirPrecuenta()">
     <fa-icon [icon]="faReceipt"></fa-icon> Precuenta
   </button>
   <button [disabled]="isAnularPedidoDisabled">

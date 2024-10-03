@@ -79,6 +79,7 @@ import { EmpleadoMantenimientoComponent } from './components/mantenimiento/emple
 import { DigitacionMozoComponent } from './pages/digitacion-mozo/digitacion-mozo.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { DialogComplementosComponent } from './components/dialog-complementos/dialog-complementos.component';
+import { DialogMTextComponent } from './components/dialog-mtext/dialog-mtext.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -125,7 +126,8 @@ export const MY_DATE_FORMATS = {
     ClienteMantenimientoComponent,
     EmpleadoMantenimientoComponent,
     DigitacionMozoComponent,
-    DialogComplementosComponent
+    DialogComplementosComponent,
+    DialogMTextComponent
   ],
   imports: [
     CommonModule,

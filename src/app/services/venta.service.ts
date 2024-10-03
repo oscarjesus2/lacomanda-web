@@ -9,6 +9,7 @@ import { Cliente } from '../models/cliente.models';
 import { PedidoCab } from '../models/pedido.models';
 import { PedidoDet } from '../models/pedidodet.models';
 import { Pago } from '../models/pago.models';
+import { ApiResponse } from '../interfaces/ApiResponse.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -46,7 +47,7 @@ export class VentaService {
       }
       
   
-    guardarDocumentoVenta(idModuloVenta: number, venta: Venta, cliente: Cliente, pedidoCab: PedidoCab, listaPago: Pago[],  bTurnoIndependiente: boolean): Observable<Venta> {
+    guardarDocumentoVenta(idModuloVenta: number, venta: Venta, cliente: Cliente, pedidoCab: PedidoCab, listaPago: Pago[],  bTurnoIndependiente: boolean): Observable<ApiResponse<Venta>> {
 
         const body = {
             idModuloVenta: idModuloVenta,
@@ -57,6 +58,6 @@ export class VentaService {
             bTurnoIndependiente: bTurnoIndependiente
         };
 
-        return this.http.post<Venta>(this.basePath + 'grabardocumentoventa', body);
+        return this.http.post<ApiResponse<Venta>>(this.basePath + 'grabardocumentoventa', body);
     }
 }

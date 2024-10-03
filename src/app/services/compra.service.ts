@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from "@angular/common/http";
 import { environment } from 'src/environments/environment';
-import { InformeContableCompraInterface} from '../interfaces/compras.interface';
+import { InformeContableCompra} from '../interfaces/compras.interface';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -13,7 +13,7 @@ export class CompraService {
 
     constructor(private http: HttpClient) { }
   
-    getInformeContable(fechaInicial: string, fechaFinal: string, idTipoDocumento: string): Observable<InformeContableCompraInterface[]> {
-        return this.http.get<InformeContableCompraInterface[]>(this.basePath+ 'InformeContableCompra/' + fechaInicial + '/' + fechaFinal+ '/'  + idTipoDocumento);
+    getInformeContable(fechaInicial: string, fechaFinal: string, idTipoDocumento: string): Observable<InformeContableCompra[]> {
+        return this.http.get<InformeContableCompra[]>(this.basePath+ 'InformeContableCompra/' + fechaInicial + '/' + fechaFinal+ '/'  + idTipoDocumento);
     }
 }

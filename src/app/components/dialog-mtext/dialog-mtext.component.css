@@ -1,0 +1,83 @@
+/* Contenedor principal */
+.m-text-touch-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background-color: #fff7e6; /* Fondo cálido */
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  /* Input de texto */
+  .m-text-touch-container .display input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 1.5em; /* Fuente más grande */
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    text-align: left;
+  }
+  
+  /* Grid de botones */
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr); /* 6 columnas */
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Botones del teclado */
+  .keypad button {
+    padding: 20px; /* Botones más grandes */
+    font-size: 1.3em; /* Fuente más grande */
+    background-color: #f0a500; /* Naranja cálido */
+    border: none;
+    border-radius: 8px;
+    color: white; /* Texto blanco para mejor contraste */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .keypad button:hover {
+    background-color: #d48c00; /* Color más oscuro en hover */
+    transform: scale(1.05); /* Efecto de agrandamiento */
+  }
+  
+  /* Botones de acción (Borrar, Aceptar, Salir) */
+  .actions {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+    width: 100%;
+  }
+  
+  .actions button {
+    flex: 1;
+    margin: 0 5px;
+    padding: 15px;
+    font-size: 1.3em;
+    border-radius: 8px;
+    border: none;
+    background-color: #4caf50; /* Verde cálido */
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .actions button.cancel {
+    background-color: #f44336; /* Rojo cálido para cancelar */
+  }
+  
+  .actions button:hover {
+    background-color: #388e3c; /* Verde más oscuro en hover */
+  }
+  
+  .actions button.cancel:hover {
+    background-color: #c62828; /* Rojo más oscuro en hover */
+  }
+  

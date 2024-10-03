@@ -1,12 +1,9 @@
-import { Component, OnInit, ViewChild, inject, HostListener  } from '@angular/core';
-import { Breakpoints, BreakpointObserver } from '@angular/cdk/layout';
-import { map } from 'rxjs/operators';
+import { Component, OnInit, ViewChild, inject, HostListener, AfterViewInit, ElementRef, ChangeDetectorRef  } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 
 
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { MatMenuTrigger } from '@angular/material/menu';
 import { NgxSpinnerService } from 'ngx-spinner';
 import Swal from 'sweetalert2';
 
@@ -17,7 +14,6 @@ import { DialogObservacionComponent } from '../../components/dialog-observacion/
 
 
 //Models
-import { PedidoDelete } from '../../models/pedido.delete.models';
 import { Product } from '../../models/product.models';
 import { Ambiente } from '../../models/ambiente.models';
 import { Mesas } from '../../models/mesas.models';
@@ -28,7 +24,7 @@ import { Observacion } from '../../models/observacion.models';
 import { PedidoCab } from '../../models/pedido.models';
 import { Familia } from '../../models/familia.models';
 import { SubFamilia } from '../../models/subfamilia.models';
-import { Usuario } from '../../models/user.models';
+import { Usuario } from '../../models/usuario.models';
 
 // Servicios
 import { StorageService } from '../../services/storage.service';
@@ -53,6 +49,12 @@ import { PedidoMesaDTO } from 'src/app/interfaces/pedidomesaDTO.interface';
 import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mcant.component';
 import { DialogComplementosComponent } from 'src/app/components/dialog-complementos/dialog-complementos.component';
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
+import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
+import { QzTrayService } from 'src/app/services/qz-tray.service';
+import { forkJoin } from 'rxjs';
+import { UsuarioService } from 'src/app/services/usuario.service';
+import { DialogMTextComponent } from 'src/app/components/dialog-mtext/dialog-mtext.component';
+import { AnularProductoYComplementoDTO } from 'src/app/interfaces/anularProductoYComplementoDTO.interface';
 
 @Component({
   selector: 'app-digitacion-mozo',
@@ -60,8 +62,8 @@ import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
   styleUrls: ['./digitacion-mozo.component.css']
 })
 
-export class DigitacionMozoComponent implements OnInit {
-
+export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
+  @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
   isEdited: boolean;
   elementArr: any = [].fill(0);
   public turnoAbierto: Turno;
@@ -122,13 +124,7 @@ export class DigitacionMozoComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   procesarPedido: boolean = false;
 
-  ngAfterViewInit() {
-
-    this.gridListaPedidoDetProducto.paginator = this.paginator;
-  }
-
   constructor(
-    private loginService: LoginService,
     private router: Router,
     private storageService: StorageService,
     private productService: ProductService,
@@ -138,14 +134,14 @@ export class DigitacionMozoComponent implements OnInit {
     private empleadoService: EmpleadoService,
     private ObservacionService: ObservacionService,
     private pedidoService: PedidoService,
-    private dialogProductoCantidad: MatDialog,
     private dialogMesa: MatDialog,
-    private dialogDeleteProduct: MatDialog,
     private dialogComprobante: MatDialog,
     private dialog: MatDialog,
-    private dialogEmisionComprobante: MatDialog,
     private spinnerService: NgxSpinnerService,
-    private familiaService: FamiliaService, private headerService: HeaderService) {
+    private qzTrayService: QzTrayService,
+    private familiaService: FamiliaService, 
+    private headerService: HeaderService,
+    private usuarioService: UsuarioService) {
 
 
     this.MostrarOcultarPanelMesa = true;
@@ -177,6 +173,7 @@ export class DigitacionMozoComponent implements OnInit {
   faLock = faLock;
   faRunning = faRunning ;
   mesas: { name: string; active: boolean; price: number, indice: number }[] = [];
+
   toggleBloquear() {
     if (!this.procesarPedido) {
       this.salir(); // Llamar a la función salir si está visible el botón Bloquear
@@ -204,12 +201,57 @@ export class DigitacionMozoComponent implements OnInit {
     console.log('Fullscreen status changed');
   }
 
+
+  private shouldScroll: boolean = false;
+
+  ngAfterViewInit() {
+    this.scrollToBottom(); // Intentamos hacer scroll cuando la vista se carga
+    
+  }
+
+  ngAfterViewChecked() {
+    // Solo hacemos scroll si los datos han cambiado o es necesario
+    if (this.shouldScroll) {
+      this.scrollToBottom();
+      this.selectLastRow(); 
+      this.shouldScroll = false;
+    }
+  }
+
+  scrollToBottom(): void {
+    try {
+      setTimeout(() => {
+        const container = this.scrollContainer.nativeElement;
+
+        // Verificamos si el scrollHeight es mayor que el clientHeight para permitir el scroll
+        if (container.scrollHeight > container.clientHeight) {
+          container.scrollTop = container.scrollHeight; // Desplazamos el scroll al final
+        }
+      }, 100); // Esperamos 100 ms para asegurarnos de que el contenido esté renderizado
+    } catch (err) {
+      console.error('Error al hacer scroll:', err);
+    }
+  }
+
+  selectLastRow(): void {
+    // Verifica si hay datos en la tabla
+    if (this.gridListaPedidoDetProducto.data.length > 0) {
+      this.selectedRow = this.gridListaPedidoDetProducto.data[this.gridListaPedidoDetProducto.data.length - 1]; // Seleccionamos la última fila
+    }
+  }
+
   selectRow(row: any) {
     this.selectedRow = row; // Asigna la fila seleccionada a la propiedad
   }
 
   async ngOnInit() {
     this.enterFullScreen();
+    const isRunning = await this.qzTrayService.isQzTrayRunning();
+    if (!isRunning) {
+      // Redirige a una página que instruya al usuario a descargar QZ Tray
+      this.router.navigate(['/qz-tray-required']);
+    } 
+
     this.spinnerService.show();
     this.headerService.hideHeader(); // Ocultar el header al entrar
     try {
@@ -292,7 +334,7 @@ export class DigitacionMozoComponent implements OnInit {
     this.selectedItemSubFamilia = oSubFamilia;
     console.log(this.listProducts);
     this.IdSubFamila = oSubFamilia.IdSubFamilia;
-    this.listProducts_x_SubFamilia = this.listProducts.filter(x => x.IdSubFamilia === oSubFamilia.IdSubFamilia);
+    this.listProducts_x_SubFamilia = this.listProducts.filter(x => x.IdSubFamilia === oSubFamilia.IdSubFamilia && x.Posicion>0);
     //this.GridListaPedidoDetProducto.data = this.ListaPedidoDetProducto.filter(x=> x.IdSubFamilia===subFamiliaId);
     this.spinnerService.hide();
   }
@@ -440,7 +482,7 @@ export class DigitacionMozoComponent implements OnInit {
   
 
   async openDialogMesa(mesa: Mesas) {
-
+    this.spinnerService.show();
     this.limpiarPedido();
 
     if (mesa.Ocupado == 0 || mesa.Ocupado == 2) {
@@ -448,39 +490,37 @@ export class DigitacionMozoComponent implements OnInit {
       this.mozoSelected = this.getMozoByMozoId(this.storageService.getCurrentSession().User.IdEmpleado);
 
         // Abrir el DialogMCantComponent para ingresar el código
-    const dialogRef = this.dialog.open(DialogMCantComponent, {
-      width: '350px',
-      data: {
-        title: 'Ingrese Nro Pax',
-        hideNumber: false,
-        decimalActive: false
-      }
-    });
+      const dialogRef = this.dialog.open(DialogMCantComponent, {
+        width: '350px',
+        data: {
+          title: 'Ingrese Nro Pax',
+          hideNumber: false,
+          decimalActive: false
+        }
+      });
   
-    dialogRef.afterClosed().subscribe((result) => {
+      dialogRef.afterClosed().subscribe((result) => {
 
-      if (result && result.value) {
-            if (!result.value || result.value <= 0) {
-              return 'Debe ingresar un número válido mayor que 0';
-            }else{
-              const nroPax = result.value;
-              this.mesaSelected.NroPersonas = nroPax;
-              this.processPedido(true);
-            }
-      }
-    });
+        if (result && result.value) {
+              if (!result.value || result.value <= 0) {
+                return 'Debe ingresar un número válido mayor que 0';
+              }else{
+                const nroPax = result.value;
+                this.mesaSelected.NroPersonas = nroPax;
+                this.processPedido(true);
+              }
+        }
+      });
       
 
-    } else {
+    } 
+    else {
       const listData: ApiResponse<PedidoMesaDTO[]> = await this.pedidoService.findPedidoMesaByIdMesa(mesa.IdMesa).toPromise();
       if (listData.Data.length > 0) {
+        this.mesaSelected = mesa;
         this.rellenarHeaderPedido(listData.Data);
         this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
-        console.log(this.listProductGrid);
-        this.gridListaPedidoDetProducto.data = this.listProductGrid;
-        this.calcularTotales();
-        this.mesaSelected = mesa;
-
+        this.actualizarDatosGrilla();
       } else {
 
         Swal.fire(
@@ -506,11 +546,11 @@ export class DigitacionMozoComponent implements OnInit {
       impuestoBolsa += item.Impuesto1;
     });
 
-    this.sumaTotal = totalAux - desctoAux;
-    this.sumaDscto = desctoAux;
-    this.sumaImporte = totalAux;
-    this.sumaImpuestoBolsa = impuestoBolsa;
-    this.sumaGranTotal = this.sumaTotal + impuestoBolsa;
+    this.sumaTotal = parseFloat((totalAux - desctoAux).toFixed(2));
+    this.sumaDscto = parseFloat(desctoAux.toFixed(2));
+    this.sumaImporte = parseFloat(totalAux.toFixed(2));
+    this.sumaImpuestoBolsa = parseFloat(impuestoBolsa.toFixed(2));
+    this.sumaGranTotal = parseFloat((this.sumaTotal + impuestoBolsa).toFixed(2));
   }
 
   async openDialogVerPedido(IdMesa: string) {
@@ -638,76 +678,143 @@ export class DigitacionMozoComponent implements OnInit {
     this.calcularTotales();
   }
 
-  async restarProductGrid(oPedidoDet: PedidoDet) {
+  async restarProductGrid(pedidoDet: PedidoDet) {
 
 
-    if (oPedidoDet.Cantidad > 1) {
-      oPedidoDet.Cantidad -= 1;
-      if (oPedidoDet.Producto.EsProductoBolsa)
+    if (pedidoDet.Cantidad > 1) {
+      pedidoDet.Cantidad -= 1;
+      if (pedidoDet.Producto.EsProductoBolsa)
         {
-            oPedidoDet.Impuesto1 = oPedidoDet.Producto.ImpuestoBolsa * oPedidoDet.Cantidad ;
+            pedidoDet.Impuesto1 = pedidoDet.Producto.ImpuestoBolsa * pedidoDet.Cantidad ;
         }
     
-        var dSubDescuento = (oPedidoDet.MontoDescuento / oPedidoDet.Cantidad);
-        var dSubtotal = oPedidoDet.Cantidad * oPedidoDet.Precio;
+        var dSubDescuento = (pedidoDet.MontoDescuento / pedidoDet.Cantidad);
+        var dSubtotal = pedidoDet.Cantidad * pedidoDet.Precio;
     
-        oPedidoDet.Subtotal = (dSubtotal) - (oPedidoDet.Cantidad * dSubDescuento);
-        oPedidoDet.MontoDescuento = (dSubDescuento * oPedidoDet.Cantidad);
+        pedidoDet.Subtotal = (dSubtotal) - (pedidoDet.Cantidad * dSubDescuento);
+        pedidoDet.MontoDescuento = (dSubDescuento * pedidoDet.Cantidad);
         this.calcularTotales();
-    }
-  }
-  async deleteProductGrid(oPedidoDet: PedidoDet) {
-
-    var dataSet: any = {
-      nombreProducto: oPedidoDet.Producto.NombreCorto,
-      motivoAnulacion: '',
-      confirmacion: false
-    };
-
-    if (oPedidoDet.Item > 0) {
-
-      const dialogDeleetProductRef = this.dialogDeleteProduct.open(DialogDeleteProductComponent, {
-        width: '350px',
-        data: dataSet,
-        hasBackdrop: true
-      });
-
-      var resultDialog: any = await dialogDeleetProductRef.afterClosed().toPromise();
-
-      if (resultDialog.confirmacion) {
-
-        var pedidoDelete: PedidoDelete = new PedidoDelete(
-          this.storageService.getCurrentSession().User.IdUsuario,
-          resultDialog.motivoAnulacion,
-          oPedidoDet.IdPedido,
-          oPedidoDet.Producto.IdProducto,
-          oPedidoDet.Item);
-
-        this.spinnerService.show();
-        var responseService: ResponseService = await this.pedidoService.deletePedido(pedidoDelete).toPromise();
-        var cofigoOk: number = 200;
-
-        if (responseService.Codigo == cofigoOk) {
-          var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(oPedidoDet);
-          this.listProductGrid.splice(removeIndex, 1);
-          this.gridListaPedidoDetProducto.data = this.listProductGrid;
-          if (this.listProductGrid.length == 0) {
-            this.limpiarPedido();
-            this.MostrarOcultarPanelMesa = true;
-            this.MostrarOcultarPanelProducto = false;
-            this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
-          }
-        }
-        this.spinnerService.hide();
-      }
-    } else {
-      // var removeIndex = this.listProductGrid.map(function (item) { return item.IdProducto; }).indexOf(oPedidoDet.IdProducto);
-      var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(oPedidoDet);
+    }else {
+      var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(pedidoDet);
       this.listProductGrid.splice(removeIndex, 1);
-      this.gridListaPedidoDetProducto.data = this.listProductGrid;
+      this.actualizarDatosGrilla();
+
     }
-    this.calcularTotales();
+
   }
+
+  actualizarDatosGrilla() {
+    this.gridListaPedidoDetProducto.data = this.listProductGrid;  // Actualizamos la fuente de datos
+    this.shouldScroll = true;  // Activamos el scroll para el siguiente ciclo de detección de cambios
+    this.calcularTotales();
+  } 
+  
+  async realizarEliminacion(pedidoDet: PedidoDet, motivoAnulacion: string) {
+
+    var pedidoDelete: AnularProductoYComplementoDTO = {
+        IdMesa: this.mesaSelected.IdMesa,
+        NroCuenta: pedidoDet.NroCuenta, 
+        UsuAnula :  this.storageService.getCurrentSession().User.IdUsuario,
+        MotivoAnula :  motivoAnulacion,
+        IdPedido : pedidoDet.IdPedido,
+        IdProducto : pedidoDet.Producto.IdProducto,
+        Item : pedidoDet.Item,
+        Ip : this.storageService.getCurrentIP()
+      };
+
+    this.spinnerService.show();
+    var responseService: ApiResponse<ImpresionDTO[]> = await this.pedidoService.AnularProductoYComplemento(pedidoDelete).toPromise();
+
+    if (responseService.Success == true) {
+      const contador = await this.imprimir(responseService.Data);
+      
+      if (contador === responseService.Data.length) {
+        const pedido = responseService.Data[0];
+        this.pedidoService.ActualizarNumAnulaImpresion(pedido.IdPedido, pedido.Item).subscribe(response => {
+          console.log('Envios actualizados correctamente', response);
+        }, error => {
+          console.error('Error al actualizar los envíos', error);
+        });
+      }
+
+      var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(pedidoDet);
+      this.listProductGrid.splice(removeIndex, 1);
+      this.actualizarDatosGrilla();
+      if (this.listProductGrid.length == 0) {
+        this.limpiarPedido();
+        this.RehacerPantalla();
+      }
+    }
+    this.spinnerService.hide();
+  }
+  
+  deleteProductGrid(pedidoDet: PedidoDet) {
+    const currentUser = this.storageService.getCurrentUser();
+
+    if (currentUser.IdNivel === '001') {
+      // Usar DialogMTextTouchComponent para el motivo de anulación
+      const dialogRef = this.dialog.open(DialogMTextComponent, {
+        width: '435px',
+        data: { title: `¿Está seguro de eliminar el producto ${pedidoDet.Producto.NombreCorto}?` }
+      });
+  
+      dialogRef.afterClosed().subscribe(result => {
+
+        if (result && result.value) {
+          const motivoAnulacion = result.value;
+          this.realizarEliminacion(pedidoDet, motivoAnulacion);
+        }
+      });
+    } else {
+      // Si el usuario no es de nivel "001", pedir primero el código del administrador con DialogMCantComponent
+      const dialogRef = this.dialog.open(DialogMCantComponent, {
+        width: '350px',
+        data: {
+          title: 'Ingresar Código de Administrador',
+          hideNumber: false,
+          decimalActive: false
+        }
+      });
+  
+      dialogRef.afterClosed().subscribe(result => {
+        if (result && result.value) {
+          const codigoAdmin = result.value;
+          // Validar el código del administrador llamando a la API
+          this.usuarioService.getUsuario('001',codigoAdmin).subscribe((response: ApiResponse<Usuario>) => {
+            if (response.Success) 
+            { 
+              if (response.Data) {
+              // Mostrar el DialogMTextTouchComponent para el motivo de anulación
+              const motivoRef = this.dialog.open(DialogMTextComponent, {
+                width: '300px',
+                data: { title: `¿Está seguro de eliminar el producto ${pedidoDet.Producto.NombreCorto}?` }
+              });
+  
+              motivoRef.afterClosed().subscribe(result => {
+                     
+                if (result && result.value) {
+                  const motivoAnulacion = result.value;
+                                             
+                  this.realizarEliminacion(pedidoDet, motivoAnulacion);
+                }
+              });
+              } else {
+                    
+              Swal.fire({
+                title: 'Código inválido',
+                text: 'El código ingresado no es correcto.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+              });
+            }
+          }
+          });
+        }
+      });
+    }
+  }
+  
+
  
   public AgregarProducto(product: Product): void {
 
@@ -730,8 +837,8 @@ export class DigitacionMozoComponent implements OnInit {
         this.AgregarProductoComplemento(pedidoDet)
       }
       this.listProductGrid.push(pedidoDet);
-    this.gridListaPedidoDetProducto.data = this.listProductGrid;
-    this.calcularTotales();
+      this.actualizarDatosGrilla();
+    
   }
   
   AgregarProductoComplemento(pedidodet: PedidoDet) {
@@ -756,15 +863,15 @@ export class DigitacionMozoComponent implements OnInit {
 
             item.pedidodet.Cantidad = iCantidad;
             item.pedidodet.Subtotal = dSubtotal;
-            this.calcularTotales();
+            
         }
       } else {
         if (item.pedidodet.Item>0)
         {
           var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(pedidodet);
           this.listProductGrid.splice(removeIndex, 1);
-          this.gridListaPedidoDetProducto.data = this.listProductGrid;
-          this.calcularTotales();
+          this.actualizarDatosGrilla();
+          
         }  
       }
     });
@@ -781,10 +888,7 @@ export class DigitacionMozoComponent implements OnInit {
       return;
     }
     this.procesarPedido=true;
-    
-    const listData: ApiResponse<PedidoMesaDTO[]> = await this.pedidoService.findPedidoMesaByIdMesa(this.mesaSelected.IdMesa).toPromise();
-    if (listData.Data.length > 0 || (esMesaNueva)) {
-      
+
       this.isAnularPedidoDisabled = true;
       this.isComboDisabled = false;
       this.isVerComplementoDisabled = false;
@@ -808,16 +912,7 @@ export class DigitacionMozoComponent implements OnInit {
       let oFamilia = this.listFamilia[0];
       this.ListarSubFamilia_x_Familia(oFamilia);
 
-    } else 
-    {
-
-      Swal.fire(
-        'Ups.!',
-        'La mesa ya fue cobrada.',
-        'warning'
-      );
-      this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
-    }
+    
   }
 
   VerPedido(){
@@ -825,6 +920,23 @@ export class DigitacionMozoComponent implements OnInit {
       return;
     }
     this.AgregarProductoComplemento(this.selectedRow);
+  }
+
+  async ImprimirPrecuenta(){
+    if (this.mesaSelected.IdMesa == null){
+      Swal.fire(
+        'Procesar Pedido',
+        'Debe seleccionar una mesa.',
+        'info'
+      );
+      return;
+    }
+
+    var responseRegisterPedido: ApiResponse<ImpresionDTO[]> = await this.pedidoService.ImprimirPrecuenta(this.pedidoId, this.nroCuenta).toPromise();
+
+    if (responseRegisterPedido.Success) {
+      this.imprimir(responseRegisterPedido.Data);
+    }
   }
 
   async EnviarPedido() {
@@ -857,8 +969,6 @@ export class DigitacionMozoComponent implements OnInit {
           listPedidoDetails.push(pedidoDetail);
         });
 
-        console.log(this.mozoSelected);
-
         var pedido: PedidoCab = new PedidoCab(
           {
             IdEmpleado: this.mozoSelected?.IdEmpleado,
@@ -881,27 +991,46 @@ export class DigitacionMozoComponent implements OnInit {
         }
         );
 
-        var responseRegisterPedido: any = await this.pedidoService.registerPedido(pedido).toPromise();
+        var responseRegisterPedido: ApiResponse<ImpresionDTO[]> = await this.pedidoService.RegistrarPedido(pedido).toPromise();
 
-        if (responseRegisterPedido) {
-       
+        if (responseRegisterPedido.Success) {
+
+          const contador = await this.imprimir(responseRegisterPedido.Data);
+
+          if (contador === responseRegisterPedido.Data.length) {
+            const pedido = responseRegisterPedido.Data[0];
+            this.pedidoService.ActualizarEnviosDeImpresion(pedido.IdPedido, pedido.NroCuenta).subscribe(response => {
+              console.log('Envios actualizados correctamente', response);
+            }, error => {
+              console.error('Error al actualizar los envíos', error);
+            });
+          }
+
           this.limpiarPedido();
           this.procesarPedido=false;
           this.Refresh();
 
           this.MostrarOcultarPanelMesa = true;
           this.MostrarOcultarPanelProducto = false;
-          
-          Swal.fire(
-            'Good job!',
-            'Se registro el pedido correctamente.',
-            'success'
-          )
         }
+        this.spinnerService.hide();
       } else {
         Swal.fire('Oops...', 'No ha ingresado ningun producto.', 'error')
       }
 
+  }
+
+  async imprimir(listImpresionDTO: ImpresionDTO[]): Promise<number> {
+    let contador: number = 0;
+  
+    for (const element of listImpresionDTO) {
+      const printerName = element.NombreImpresora; 
+      const success = await this.qzTrayService.printPDF(element.Documento, printerName);
+      if (success) {
+        contador += 1;
+      }
+    }
+   return contador;
   }
 
   async processComprobante() {
@@ -916,6 +1045,7 @@ export class DigitacionMozoComponent implements OnInit {
       if (allSaved) {
 
         var dataSet: any = {
+
           idPedido: this.pedidoId,
           userRegister: this.storageService.getCurrentSession().User.IdUsuario,
           productGrid: this.listProductGrid
@@ -992,7 +1122,7 @@ export class DigitacionMozoComponent implements OnInit {
 
   private limpiarPedido(): void {
     this.listProductGrid = [];
-    this.gridListaPedidoDetProducto.data = this.listProductGrid;
+    this.actualizarDatosGrilla();
     this.gridListaPedidoDetProducto.data = [];
     this.mozoSelected = new Empleado;
     this.mesaSelected = new Mesas;
@@ -1001,21 +1131,7 @@ export class DigitacionMozoComponent implements OnInit {
     this.nroCuenta= 0;
     this.horaPedido = '';
     this.mesaSelected.NroPersonas = 0;
-    this.calcularTotales();
-  }
-
-  private getProductGridByResponse(listData: any[]): ProductGrid[] {
-
-    var productGrid: ProductGrid;
-    var result: ProductGrid[] = [];
-    listData.forEach(data => {
-      productGrid = new ProductGrid(
-        data.Item, data.IdPedido, data.IdProducto, data.NombreCorto, data.Precio, data.Cantidad, data.Cantidad * data.Precio, data.observacion
-      );
-      result.push(productGrid);
-    });
-
-    return result;
+    
   }
 
   
@@ -1027,6 +1143,7 @@ export class DigitacionMozoComponent implements OnInit {
       oPedidoDet = new PedidoDet(
         {
         Item: data.Item, 
+        NroCuenta: data.NroCuenta,
         IdPedido: data.IdPedido, 
         Producto: new Product({
           IdProducto: data.IdProducto, 
@@ -1055,26 +1172,27 @@ export class DigitacionMozoComponent implements OnInit {
 
   private rellenarHeaderPedido(listData: any[]): void {
     var firstItem = listData[0];
+    this.mesaSelected.NroPersonas = firstItem.NroPax;
     this.mozoSelected = this.getMozoByMozoId(firstItem.IdEmpleado);
     this.pedidoId = firstItem.IdPedido;
     this.nroCuenta = firstItem.NroCuenta;
     this.horaPedido = firstItem.HoraPedido;
   }
   Refresh(): void {
-    this.productService.getAllProducts().subscribe(data => {
-      this.listProducts = data;
-    });
-
-    this.mesasService.getAllMesas().subscribe(data => {
-      this.ListaMesasTotal = data;
+    this.spinnerService.show();
+  
+    forkJoin([
+      this.productService.getAllProducts(),
+      this.mesasService.getAllMesas()
+    ]).subscribe(([productsData, mesasData]) => {
+      this.listProducts = productsData;
+      this.ListaMesasTotal = mesasData;
+      this.spinnerService.hide();  // Ocultamos el spinner una vez que ambas solicitudes han terminado
     });
   }
 
-
-
-
   RehacerRefresh(): void {
-
+    
     try {
       this.spinnerService.show();
 

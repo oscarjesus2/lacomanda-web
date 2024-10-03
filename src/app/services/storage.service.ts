@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Session } from '../models/session.models';
-import { Usuario } from '../models/user.models';
+import { Usuario } from '../models/usuario.models';
 import { LoginService } from './auth/login.service';
 import { Turno } from '../models/turno.models';
 

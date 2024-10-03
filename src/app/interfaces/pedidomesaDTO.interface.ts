@@ -2,6 +2,7 @@ import { PedidoComplemento } from "../models/pedidocomplemento.models";
 
 export interface PedidoMesaDTO {
   IdPedido: number;       // Identificador del pedido
+  NroCuenta: number;
   IdMesa: string;         // Identificador de la mesa
   NumeroPedido: string;   // Número del pedido
   FechaPedido: Date;      // Fecha del pedido

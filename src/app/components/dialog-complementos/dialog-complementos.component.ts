@@ -179,13 +179,14 @@ calcularTotal(): void {
       confirmacion: false
     };
 
-    if (pedidoComplemento.ItemRef > 0) {
+    if (pedidoComplemento.ItemComple > 0) {
 
       const dialogDeleetProductRef = this.dialog.open(DialogDeleteProductComponent, {
         width: '350px',
         data: dataSet,
         hasBackdrop: true
       });
+      
 
       var resultDialog: any = await dialogDeleetProductRef.afterClosed().toPromise();
 

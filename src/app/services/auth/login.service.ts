@@ -2,7 +2,7 @@ import { EventEmitter, Injectable, Output } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http'
 import { LoginRequest } from './loginRequest';
 import { BehaviorSubject, Observable, catchError, throwError, tap } from 'rxjs';
-import { Usuario } from 'src/app/models/user.models';
+import { Usuario } from 'src/app/models/usuario.models';
 import { Turno } from 'src/app/models/turno.models';
 import { environment } from 'src/environments/environment';
 

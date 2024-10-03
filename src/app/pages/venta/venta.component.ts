@@ -20,7 +20,6 @@ import { DialogEnviarPedidoComponent } from '../../components/dialog-grabar-pedi
 
 
 //Models
-import { PedidoDelete } from '../../models/pedido.delete.models';
 import { Product } from '../../models/product.models';
 import { Ambiente } from '../../models/ambiente.models';
 import { Mesas } from '../../models/mesas.models';
@@ -31,7 +30,7 @@ import { Observacion } from '../../models/observacion.models';
 import { PedidoCab } from '../../models/pedido.models';
 import { Familia } from '../../models/familia.models';
 import { SubFamilia } from '../../models/subfamilia.models';
-import { Usuario } from '../../models/user.models';
+import { Usuario } from '../../models/usuario.models';
 
 // Servicios
 import { StorageService } from '../../services/storage.service';
@@ -50,6 +49,8 @@ import { LoginService } from 'src/app/services/auth/login.service';
 import { DialogEmitirComprobanteComponent } from 'src/app/components/dialog-emitir-comprobante/dialog-emitir-comprobante.component';
 import { ApiResponse } from 'src/app/interfaces/ApiResponse.interface';
 import { PedidoMesaDTO } from 'src/app/interfaces/pedidomesaDTO.interface';
+import { AnularProductoYComplementoDTO } from 'src/app/interfaces/anularProductoYComplementoDTO.interface';
+import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 
 @Component({
   selector: 'app-venta',
@@ -411,18 +412,18 @@ export class VentaComponent implements OnInit {
 
       if (resultDialog.confirmacion) {
 
-        var pedidoDelete: PedidoDelete = new PedidoDelete(
+        var pedidoDelete: AnularProductoYComplementoDTO;
           this.storageService.getCurrentSession().User.IdUsuario,
           resultDialog.motivoAnulacion,
           oPedidoDet.IdPedido,
           oPedidoDet.Producto.IdProducto,
-          oPedidoDet.Item);
+          oPedidoDet.Item;
 
         this.spinnerService.show();
-        var responseService: ResponseService = await this.pedidoService.deletePedido(pedidoDelete).toPromise();
+        var responseService: ApiResponse<ImpresionDTO[]> = await this.pedidoService.AnularProductoYComplemento(pedidoDelete).toPromise();
         var cofigoOk: number = 200;
 
-        if (responseService.Codigo == cofigoOk) {
+        if (responseService.Success) {
           var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(oPedidoDet);
           this.listProductGrid.splice(removeIndex, 1);
           this.GridListaPedidoDetProducto.data = this.listProductGrid;
@@ -535,7 +536,7 @@ export class VentaComponent implements OnInit {
         }
         );
 
-        var responseRegisterPedido: any = await this.pedidoService.registerPedido(pedido).toPromise();
+        var responseRegisterPedido: any = await this.pedidoService.RegistrarPedido(pedido).toPromise();
 
         if (responseRegisterPedido) {
        

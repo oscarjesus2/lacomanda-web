@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master  # Ejecuta el workflow en push a la rama 'master'
+      - develop # Ejecuta el workflow en push a la rama 'develop'
 
 jobs:
   build:
@@ -16,55 +17,22 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '16'  # Ajusta la versión según la que uses en tu proyecto
+        node-version: '16'
 
     - name: Install dependencies
       run: npm install
 
    # - name: Run tests
-   #   run: npm test -- --watch=false --no-progress --browsers=ChromeHeadless  # Ajusta este comando según tu configuración
+   #   run: npm test -- --watch=false --no-progress --browsers=ChromeHeadless
 
     - name: Build Angular app
-      run: npm run build -- --configuration production # Construir la aplicación para producción
-      
-    - name: PRE Delete old artifact
-      env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    run: |
-      echo "Fetching artifacts from GitHub API..."
-      response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/${{ github.repository }}/actions/artifacts)
-      echo "$response"  # Agrega esta línea para ver la respuesta completa
-      artifacts=$(echo "$response" | jq -r '.artifacts | sort_by(.created_at) | reverse | .[3:] | .[].id')
-  
-      if [ -z "$artifacts" ]; then
-        echo "No artifacts to delete."
-      else
-        for artifact_id in $artifacts; do
-          curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
-          https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$artifact_id
-          echo "Deleted artifact with ID: $artifact_id"
-        done
-      fi
-        
+      run: npm run build -- --configuration production
+
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v3
       with:
         name: frontend-artifact
-        path: ./dist/jbs-rest   # Cambia 'jbs-rest' si tu build genera archivos en otro lugar
-
-    - name: Delete old artifacts
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        artifacts=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-        https://api.github.com/repos/${{ github.repository }}/actions/artifacts \
-        | jq -r '.artifacts | sort_by(.created_at) | reverse | .[3:] | .[].id')
-
-        for artifact_id in $artifacts; do
-          curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
-          https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$artifact_id
-          echo "Deleted artifact with ID: $artifact_id"
-        done
+        path: ./dist/jbs-rest
 
   deploy:
     runs-on: ubuntu-latest
@@ -80,11 +48,17 @@ jobs:
       run: sudo apt-get install lftp
 
     - name: List Built Files
-      run: ls -la . # Asegúrate de que esta ruta es correcta
+      run: ls -la . 
 
-    - name: Deploy to FTP server - Naruto Folder
+    - name: Deploy to appropriate server
       run: |
-        lftp -e "set ftp:ssl-allow no; 
-        open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }}; 
-        mirror -R . /naruto.jobbusiness.pe; 
-        mirror -R . /main.jobbusiness.pe; bye"
+        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          lftp -e "set ftp:ssl-allow no; 
+          open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
+          mirror -R . /naruto.jobbusiness.pe;
+          mirror -R . /main.jobbusiness.pe; bye";
+        elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+          lftp -e "set ftp:ssl-allow no; 
+          open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }}; 
+        mirror -R . /test.jobbusiness.pe; bye";
+        fi
