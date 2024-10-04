@@ -28,7 +28,12 @@ const routes: Routes = [
   canActivate: [AdminGuard]
 },
 {
-  path:'ventas',  
+  path:'caja',  
+  component:VentaComponent,
+  canActivate: [AdminGuard]
+},
+{
+  path:'mozo',  
   component:DigitacionMozoComponent,
   canActivate: [AdminGuard]
 },

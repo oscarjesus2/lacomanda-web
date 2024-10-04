@@ -186,21 +186,10 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
     this.headerService.showHeader(); // Mostrar el header al salir
   }
 
-  enterFullScreen() {
-    const elem = document.documentElement;
-  
-    if (elem.requestFullscreen) {
-      elem.requestFullscreen();
-    } else {
-      console.warn("Pantalla completa no es soportada por este navegador.");
-    }
-  }
-
   @HostListener('document:fullscreenchange', ['$event'])
   onFullScreenChange(event: Event) {
     console.log('Fullscreen status changed');
   }
-
 
   private shouldScroll: boolean = false;
 
@@ -211,11 +200,13 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
 
   ngAfterViewChecked() {
     // Solo hacemos scroll si los datos han cambiado o es necesario
-    if (this.shouldScroll) {
+      if (this.shouldScroll) {
+    setTimeout(() => {
       this.scrollToBottom();
-      this.selectLastRow(); 
+      this.selectLastRow();
       this.shouldScroll = false;
-    }
+    });
+  }
   }
 
   scrollToBottom(): void {
@@ -244,6 +235,16 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
     this.selectedRow = row; // Asigna la fila seleccionada a la propiedad
   }
 
+  enterFullScreen() {
+    const elem = document.documentElement;
+  
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else {
+      console.warn("Pantalla completa no es soportada por este navegador.");
+    }
+  }
+
   async ngOnInit() {
     this.enterFullScreen();
     const isRunning = await this.qzTrayService.isQzTrayRunning();
@@ -263,7 +264,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
         } else {
           Swal.fire({
             icon: 'warning',
-            title: 'No hay un turno abierto',
+            title: 'No hay un turno abierto para ' + this.storageService.getCurrentIP(),
             text: 'El componente se cerrará.',
             confirmButtonText: 'Aceptar'
           }).then(() => {
@@ -314,7 +315,6 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
   async MostrarMesas_x_Ambiente(ambiente: Ambiente) {
     this.spinnerService.show();
     this.ListaMesas_x_Ambiente = this.ListaMesasTotal.filter(x => x.IdAmbiente === ambiente.IdAmbiente);
-    console.log(this.ListaMesas_x_Ambiente);
     this.DisplayValueAmbiente = ambiente.Descripcion;
     this.spinnerService.hide();
   }
@@ -332,7 +332,6 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
   async ListarProductos_x_SubFamilia(oSubFamilia: SubFamilia) {
     this.spinnerService.show();
     this.selectedItemSubFamilia = oSubFamilia;
-    console.log(this.listProducts);
     this.IdSubFamila = oSubFamilia.IdSubFamilia;
     this.listProducts_x_SubFamilia = this.listProducts.filter(x => x.IdSubFamilia === oSubFamilia.IdSubFamilia && x.Posicion>0);
     //this.GridListaPedidoDetProducto.data = this.ListaPedidoDetProducto.filter(x=> x.IdSubFamilia===subFamiliaId);
@@ -709,12 +708,12 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
     this.calcularTotales();
   } 
   
-  async realizarEliminacion(pedidoDet: PedidoDet, motivoAnulacion: string) {
+  async realizarEliminacion(pedidoDet: PedidoDet, motivoAnulacion: string, idUsuAnula: number) {
 
     var pedidoDelete: AnularProductoYComplementoDTO = {
         IdMesa: this.mesaSelected.IdMesa,
         NroCuenta: pedidoDet.NroCuenta, 
-        UsuAnula :  this.storageService.getCurrentSession().User.IdUsuario,
+        UsuAnula :  idUsuAnula,
         MotivoAnula :  motivoAnulacion,
         IdPedido : pedidoDet.IdPedido,
         IdProducto : pedidoDet.Producto.IdProducto,
@@ -762,7 +761,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
 
         if (result && result.value) {
           const motivoAnulacion = result.value;
-          this.realizarEliminacion(pedidoDet, motivoAnulacion);
+          this.realizarEliminacion(pedidoDet, motivoAnulacion, this.storageService.getCurrentSession().User.IdUsuario);
         }
       });
     } else {
@@ -771,7 +770,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
         width: '350px',
         data: {
           title: 'Ingresar Código de Administrador',
-          hideNumber: false,
+          hideNumber: true,
           decimalActive: false
         }
       });
@@ -786,7 +785,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
               if (response.Data) {
               // Mostrar el DialogMTextTouchComponent para el motivo de anulación
               const motivoRef = this.dialog.open(DialogMTextComponent, {
-                width: '300px',
+                width: '435px',
                 data: { title: `¿Está seguro de eliminar el producto ${pedidoDet.Producto.NombreCorto}?` }
               });
   
@@ -795,7 +794,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
                 if (result && result.value) {
                   const motivoAnulacion = result.value;
                                              
-                  this.realizarEliminacion(pedidoDet, motivoAnulacion);
+                  this.realizarEliminacion(pedidoDet, motivoAnulacion, response.Data.IdUsuario);
                 }
               });
               } else {
@@ -995,20 +994,10 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
 
         if (responseRegisterPedido.Success) {
 
-          const contador = await this.imprimir(responseRegisterPedido.Data);
-
-          if (contador === responseRegisterPedido.Data.length) {
-            const pedido = responseRegisterPedido.Data[0];
-            this.pedidoService.ActualizarEnviosDeImpresion(pedido.IdPedido, pedido.NroCuenta).subscribe(response => {
-              console.log('Envios actualizados correctamente', response);
-            }, error => {
-              console.error('Error al actualizar los envíos', error);
-            });
-          }
-
+          this.imprimirPedido(responseRegisterPedido);
           this.limpiarPedido();
           this.procesarPedido=false;
-          this.Refresh();
+          this.RehacerPantalla();
 
           this.MostrarOcultarPanelMesa = true;
           this.MostrarOcultarPanelProducto = false;
@@ -1019,6 +1008,20 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
       }
 
   }
+
+  async imprimirPedido(responseRegisterPedido: ApiResponse<ImpresionDTO[]> ){
+    const contador = await this.imprimir(responseRegisterPedido.Data);
+
+    if (contador === responseRegisterPedido.Data.length) {
+      const pedido = responseRegisterPedido.Data[0];
+      this.pedidoService.ActualizarEnviosDeImpresion(pedido.IdPedido, pedido.NroCuenta).subscribe(response => {
+        console.log('Envios actualizados correctamente', response);
+      }, error => {
+        console.error('Error al actualizar los envíos', error);
+      });
+    }
+  }
+
 
   async imprimir(listImpresionDTO: ImpresionDTO[]): Promise<number> {
     let contador: number = 0;
@@ -1073,8 +1076,8 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
   public async RehacerPantalla() {
     try {
       this.spinnerService.show();
-  
-      this.mesasService.getAllMesas().subscribe(data => {
+      this.enterFullScreen();
+      await this.mesasService.getAllMesas().subscribe(data => {
         this.ListaMesasTotal = data;
         let result: Ambiente;
         result = this.listAmbiente.find(item => item.Estado == 1);
@@ -1187,6 +1190,10 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
     ]).subscribe(([productsData, mesasData]) => {
       this.listProducts = productsData;
       this.ListaMesasTotal = mesasData;
+      let result: Ambiente;
+      result = this.listAmbiente.find(item => item.Estado == 1);
+      this.MostrarMesas_x_Ambiente(result);
+
       this.spinnerService.hide();  // Ocultamos el spinner una vez que ambas solicitudes han terminado
     });
   }

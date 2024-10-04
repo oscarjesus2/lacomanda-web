@@ -8,6 +8,8 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { NotificationService } from 'src/app/services/notification.service';
 import { Session } from 'src/app/models/session.models';
 import { TenantService } from 'src/app/services/tenant.service';
+import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mcant.component';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-login',
@@ -32,6 +34,7 @@ export class LoginComponent implements OnInit {
   CurrentIP: string;
 
   constructor(
+    private dialog: MatDialog,
     private spinnerService: NgxSpinnerService,
     private fb: FormBuilder,
     private router: Router, 
@@ -71,6 +74,29 @@ export class LoginComponent implements OnInit {
       this.spinnerService.hide();
   }
   
+  openPasswordDialog() {
+    const dialogRef = this.dialog.open(DialogMCantComponent, {
+      width: '350px',
+      data: {
+        title: 'Ingresar Contraseña',
+        hideNumber: true, // Mostrar como contraseña (ocultar números)
+        decimalActive: false // No permitir punto decimal
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.value) {
+        this.password = result.value;
+        // Aquí puedes también asignar la contraseña al form si deseas
+        this.loginForm.controls['password'].setValue(this.password);
+      }
+    });
+  }
+  
+  getMaskedPassword(): string {
+    return this.password ? this.password.replace(/./g, '*') : '';
+  }
+
   login() {
     if (this.loginForm.invalid) {
       this.notificationService.showWarning('Por favor complete todos los campos.');
@@ -85,14 +111,26 @@ export class LoginComponent implements OnInit {
     const password = formValues.password;
     const tenant = formValues.tenant; 
     
-    this.loginService.login({ IdNivel: idNivel, Password: password }, tenant.TenantId).subscribe({
+    this.loginService.login({ IdNivel: idNivel, Password: password, Ip:  this.CurrentIP }, tenant.TenantId).subscribe({
       next: (userData) => {
         console.log('Login correcto');
         const session: Session = new Session(userData.Token, userData, this.CurrentIP, tenant.TenantId, tenant.Sucursal);
         this.storageService.setCurrentSession(session);
         
         this.notificationService.showSuccess('Inicio de sesión exitoso.');
-        this.router.navigateByUrl('/dashboard');
+        if (userData.TipoCompu == 0 && this.storageService.getCurrentUser().IdNivel=="001") //Si es de cualquier dispositivo pero es administrador
+        {
+            this.router.navigateByUrl('/caja');
+        }else if (userData.TipoCompu == 1) //CAJA
+        {
+            this.router.navigateByUrl('/caja');
+        }else if (userData.TipoCompu == 2) // MOZO
+        {
+          this.router.navigateByUrl('/mozo'); // ADMINISTRADOR
+        }else if (userData.TipoCompu == 3)
+        {
+          this.router.navigateByUrl('/dashboard');
+        }
         this.loginForm.reset();
         this.spinnerService.hide();
       },

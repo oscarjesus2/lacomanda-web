@@ -28,6 +28,15 @@ export class DialogMCantComponent {
     this.keys = data.decimalActive ? this.keys : this.keys.filter(key => key !== '.');
   }
 
+  getMaskedPassword(): string {
+    if (this.isPassword){
+      return this.inputValue ? this.inputValue.replace(/./g, '*') : '';
+    }else{
+      return this.inputValue;
+    }
+    
+  }
+
   onKeyClick(key: string): void {
     if (!(key === '.' && this.inputValue.includes('.'))) {
       this.inputValue += key;

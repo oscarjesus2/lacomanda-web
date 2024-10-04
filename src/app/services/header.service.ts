@@ -9,7 +9,9 @@ export class HeaderService {
   headerVisible$ = this.headerVisibleSubject.asObservable();
 
   hideHeader() {
-    this.headerVisibleSubject.next(false);
+    setTimeout(() => {
+      this.headerVisibleSubject.next(false);
+    });
   }
 
   showHeader() {

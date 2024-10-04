@@ -1,7 +1,7 @@
 <div class="m-cant-container">
   <h1>{{title}}</h1>
   <div class="display">
-    <input type="text" [(ngModel)]="inputValue" />
+    <input type="text" [value]="getMaskedPassword()" />
   </div>
   <div class="keypad">
     <button *ngFor="let key of keys" (click)="onKeyClick(key)">{{key}}</button>
