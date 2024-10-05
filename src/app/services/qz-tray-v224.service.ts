@@ -6,7 +6,7 @@ declare var qz: any;
 @Injectable({
   providedIn: 'root'
 })
-export class QzTrayService {
+export class QzTrayV224Service {
 
   private privateKeyPath: string = 'assets/signing/private-key.pem';
   private privateDigitalCertificatePath: string = 'assets/signing/certificate.pem';

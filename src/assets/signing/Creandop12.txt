@@ -1,0 +1,1 @@
+openssl pkcs12 -export -in certificate.pem -inkey private-key.pem -out qz-tray.p12

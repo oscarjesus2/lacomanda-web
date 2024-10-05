@@ -25,7 +25,7 @@ import { VentaService } from 'src/app/services/venta.service';
 import { EnumTipoDocumento, EnumTipoIdentidad } from 'src/app/enums/enum';
 
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
-import {  QzTrayService } from 'src/app/services/qz-tray.service';
+import {  QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 import { Router } from '@angular/router';
 import { ApiResponse } from 'src/app/interfaces/ApiResponse.interface';
 
@@ -99,7 +99,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     private tarjetaService: TarjetaService,
     public dialog: MatDialog,
     private fb: FormBuilder,
-    private qzTrayService: QzTrayService,
+    private qzTrayService: QzTrayV224Service,
     private router: Router,
   ) {
     this.dataSource = new MatTableDataSource([]);

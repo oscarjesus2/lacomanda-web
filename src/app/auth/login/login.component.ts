@@ -126,6 +126,7 @@ export class LoginComponent implements OnInit {
       if (result && result.value) {
         this.password = result.value;
         this.loginForm.controls['password'].setValue(this.password);
+        this.login();
       }
     });
   }

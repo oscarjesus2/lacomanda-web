@@ -50,12 +50,13 @@ import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mca
 import { DialogComplementosComponent } from 'src/app/components/dialog-complementos/dialog-complementos.component';
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
-import { QzTrayService } from 'src/app/services/qz-tray.service';
+// import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 import { forkJoin } from 'rxjs';
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { DialogMTextComponent } from 'src/app/components/dialog-mtext/dialog-mtext.component';
 import { AnularProductoYComplementoDTO } from 'src/app/interfaces/anularProductoYComplementoDTO.interface';
 import { DialogProductSearchComponent } from 'src/app/components/dialog-product-search/dialog-product-search.component';
+import { QzTrayV210Service } from 'src/app/services/qz-tray-v210.service';
 
 @Component({
   selector: 'app-digitacion-mozo',
@@ -139,7 +140,8 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
     private dialogComprobante: MatDialog,
     private dialog: MatDialog,
     private spinnerService: NgxSpinnerService,
-    private qzTrayService: QzTrayService,
+    // private qzTrayService: QzTrayV224Service,
+    private qzTrayService: QzTrayV210Service,
     private familiaService: FamiliaService, 
     private headerService: HeaderService,
     private usuarioService: UsuarioService) {
