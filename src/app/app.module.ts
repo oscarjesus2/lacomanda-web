@@ -1,4 +1,4 @@
-import { NgModule, CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA, LOCALE_ID } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA, LOCALE_ID, isDevMode } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 
@@ -80,6 +80,8 @@ import { DigitacionMozoComponent } from './pages/digitacion-mozo/digitacion-mozo
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { DialogComplementosComponent } from './components/dialog-complementos/dialog-complementos.component';
 import { DialogMTextComponent } from './components/dialog-mtext/dialog-mtext.component';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { DialogProductSearchComponent } from './components/dialog-product-search/dialog-product-search.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -127,7 +129,8 @@ export const MY_DATE_FORMATS = {
     EmpleadoMantenimientoComponent,
     DigitacionMozoComponent,
     DialogComplementosComponent,
-    DialogMTextComponent
+    DialogMTextComponent,
+    DialogProductSearchComponent
   ],
   imports: [
     CommonModule,
@@ -165,7 +168,12 @@ export const MY_DATE_FORMATS = {
     MatListModule,
     MatButtonToggleModule,
     MatChipsModule,
-    MatAutocompleteModule, FontAwesomeModule
+    MatAutocompleteModule, FontAwesomeModule, ServiceWorkerModule.register('ngsw-worker.js', {
+  enabled: !isDevMode(),
+  // Register the ServiceWorker as soon as the application is stable
+  // or after 30 seconds (whichever comes first).
+  registrationStrategy: 'registerWhenStable:30000'
+})
 
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA,

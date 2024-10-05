@@ -53,8 +53,8 @@ export class AppComponent implements OnInit, OnDestroy {
     switch (url) {
       case '/dashboard':
         return this.storageService.getCurrentNombreSucursal();
-      case '/ventas':
-        return 'Ventas';
+      case '/caja':
+        return 'caja';
       case '/administracion':
         return 'Administración';
       case '/iniciar-sesion':

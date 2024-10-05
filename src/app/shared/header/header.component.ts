@@ -52,13 +52,21 @@ export class HeaderComponent {
 
   public SalirSistemas(): void {
     this.storageService.logout();
+    this.exitFullScreen();
  
   }
-  public Ventas(): void {
+  public Caja(): void {
     this.title = 'Ventas';
     this.sDatosUsuarioTurno= 'Turno : OPEN ' + this.nroturnoShare + ' - Usuario :' + this.UsuarioShare + '';
-    this.router.navigateByUrl('/ventas');
+    this.router.navigateByUrl('/caja');
   }
+
+  public Mozo(): void {
+    this.title = 'Mozo';
+    this.sDatosUsuarioTurno= 'Turno : OPEN ' + this.nroturnoShare + ' - Usuario :' + this.UsuarioShare + '';
+    this.router.navigateByUrl('/mozo');
+  }
+
   public Administracion(): void {
     this.title = 'Administracion';
     this.sDatosUsuarioTurno='';
@@ -74,6 +82,16 @@ export class HeaderComponent {
     this.title = this.storageService.getCurrentNombreSucursal();
     this.sDatosUsuarioTurno='';
     this.router.navigateByUrl('/dashboard');
+  }
+
+  exitFullScreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+        .then(() => console.log("Saliste del modo pantalla completa"))
+        .catch((err) => console.error(err));
+    } else {
+      console.log("No estás en pantalla completa");
+    }
   }
 
   async ngOnInit(): Promise<void> {

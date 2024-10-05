@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LoginService } from 'src/app/services/auth/login.service';
@@ -17,7 +17,7 @@ import { MatDialog } from '@angular/material/dialog';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
- 
+
   hide = true;
   public loginValid = true;
   public idNivel = '001';
@@ -44,7 +44,20 @@ export class LoginComponent implements OnInit {
     private notificationService: NotificationService
   ) {}
 
+  deferredPrompt: any;
+  showInstallButton = false;
+  isiOS = false;
+
+  @HostListener('window:beforeinstallprompt', ['$event'])
+  onbeforeinstallprompt(e: Event) {
+    // Evitar que el navegador automáticamente muestre el prompt
+    e.preventDefault();
+    this.deferredPrompt = e;
+    this.showInstallButton = true; // Mostrar el botón de instalación
+  }
+
   ngOnInit(): void {
+    this.checkIfIos();
     this.loadTenants();
     this.initForm();
     const currentSession = this.storageService.getCurrentSession();
@@ -58,6 +71,31 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  checkIfIos() {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    this.isiOS = /iphone|ipad|ipod/.test(userAgent);
+    
+    // Mostrar instrucciones en lugar de botón si está en iOS
+    if (this.isiOS && !('standalone' in window.navigator)) {
+      this.showInstallButton = false;
+      // Aquí podrías mostrar un mensaje informativo a los usuarios de iOS
+      alert('Para instalar la aplicación en iOS, abre el menú de compartir y selecciona "Agregar a la pantalla de inicio".');
+    }
+  }
+
+  // Método para manejar la instalación en dispositivos compatibles
+  installPWA() {
+    this.deferredPrompt.prompt();
+    this.deferredPrompt.userChoice.then((choiceResult: any) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('El usuario aceptó la instalación');
+      } else {
+        console.log('El usuario rechazó la instalación');
+      }
+      this.deferredPrompt = null;
+    });
+  }
+  
   async initForm() {
     this.loginForm = this.fb.group({
       tenant: [null, Validators.required],
@@ -87,12 +125,11 @@ export class LoginComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.value) {
         this.password = result.value;
-        // Aquí puedes también asignar la contraseña al form si deseas
         this.loginForm.controls['password'].setValue(this.password);
       }
     });
   }
-  
+
   getMaskedPassword(): string {
     return this.password ? this.password.replace(/./g, '*') : '';
   }
@@ -105,7 +142,6 @@ export class LoginComponent implements OnInit {
 
     this.spinnerService.show();
     
-    // Obtener valores del formulario
     const formValues = this.loginForm.value;
     const idNivel = formValues.idNivel;
     const password = formValues.password;
@@ -116,20 +152,14 @@ export class LoginComponent implements OnInit {
         console.log('Login correcto');
         const session: Session = new Session(userData.Token, userData, this.CurrentIP, tenant.TenantId, tenant.Sucursal);
         this.storageService.setCurrentSession(session);
-        
-        this.notificationService.showSuccess('Inicio de sesión exitoso.');
-        if (userData.TipoCompu == 0 && this.storageService.getCurrentUser().IdNivel=="001") //Si es de cualquier dispositivo pero es administrador
-        {
+        if (userData.TipoCompu == 0 && this.storageService.getCurrentUser().IdNivel == "001") {
+            this.router.navigateByUrl('/dashboard');
+        } else if (userData.TipoCompu == 1) {
             this.router.navigateByUrl('/caja');
-        }else if (userData.TipoCompu == 1) //CAJA
-        {
-            this.router.navigateByUrl('/caja');
-        }else if (userData.TipoCompu == 2) // MOZO
-        {
-          this.router.navigateByUrl('/mozo'); // ADMINISTRADOR
-        }else if (userData.TipoCompu == 3)
-        {
-          this.router.navigateByUrl('/dashboard');
+        } else if (userData.TipoCompu == 2) {
+            this.router.navigateByUrl('/mozo');
+        } else if (userData.TipoCompu == 3) {
+            this.router.navigateByUrl('/dashboard');
         }
         this.loginForm.reset();
         this.spinnerService.hide();

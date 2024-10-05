@@ -55,6 +55,7 @@ import { forkJoin } from 'rxjs';
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { DialogMTextComponent } from 'src/app/components/dialog-mtext/dialog-mtext.component';
 import { AnularProductoYComplementoDTO } from 'src/app/interfaces/anularProductoYComplementoDTO.interface';
+import { DialogProductSearchComponent } from 'src/app/components/dialog-product-search/dialog-product-search.component';
 
 @Component({
   selector: 'app-digitacion-mozo',
@@ -247,11 +248,11 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
 
   async ngOnInit() {
     this.enterFullScreen();
-    const isRunning = await this.qzTrayService.isQzTrayRunning();
-    if (!isRunning) {
-      // Redirige a una página que instruya al usuario a descargar QZ Tray
-      this.router.navigate(['/qz-tray-required']);
-    } 
+    // // const isRunning = await this.qzTrayService.isQzTrayRunning();
+    // // if (!isRunning) {
+    // //   // Redirige a una página que instruya al usuario a descargar QZ Tray
+    // //   this.router.navigate(['/qz-tray-required']);
+    // // } 
 
     this.spinnerService.show();
     this.headerService.hideHeader(); // Ocultar el header al entrar
@@ -634,7 +635,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
 
         const dialogEnviarPedidoRef = this.dialogMesa.open(DialogObservacionComponent, {
           hasBackdrop: true,
-          width: '400px',
+          width: '600px',
           data: { ListaObservacion: this.ListaObservacion, Observaciones: oPedidoDet.Observacion, NombreCorto: oPedidoDet.Producto.NombreCorto }
         });
 
@@ -816,8 +817,37 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
 
  
   public AgregarProducto(product: Product): void {
-
-    var pedidoDet= new PedidoDet({
+  
+    // Verificar si el producto tiene el flag SinPrecio
+    if (product.SinPrecio == 1) {
+      const dialogRef = this.dialog.open(DialogMCantComponent, {
+        width: '350px',
+        data: {
+          title: 'Ingresar Precio',
+          hideNumber: false, // Mostrar los números
+          decimalActive: true // Activar el punto decimal si el precio permite decimales
+        }
+      });
+  
+      dialogRef.afterClosed().subscribe((result) => {
+        // Si se ingresó un valor de precio
+        if (result && result.value) {
+          const precioIngresado = result.value;
+          product.Precio = precioIngresado;
+  
+          // Llamar a la lógica para agregar el producto solo si se ingresó el precio
+          this.procesarAgregarProducto(product);
+        }
+      });
+    } else {
+      // Si SinPrecio no es igual a 1, agrega el producto directamente
+      this.procesarAgregarProducto(product);
+    }
+  }
+  
+  private procesarAgregarProducto(product: Product): void {
+    // Crear el detalle del pedido con el precio y la cantidad
+    const pedidoDet = new PedidoDet({
       Item: this.DEFAULT_ID,
       IdPedido: this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
       NroCuenta: this.nroCuenta == 0 ? this.DEFAULT_ID : this.nroCuenta,
@@ -827,17 +857,19 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
       Cantidad: 1,
       Subtotal: 1 * product.Precio,
       Observacion: '',
-      MontoDescuento:0,
-      Impuesto1:0,
-      Ip: this.storageService.getCurrentIP()}
-    )
-    if (product.Tipo==2)
-      {
-        this.AgregarProductoComplemento(pedidoDet)
-      }
-      this.listProductGrid.push(pedidoDet);
-      this.actualizarDatosGrilla();
-    
+      MontoDescuento: 0,
+      Impuesto1: 0,
+      Ip: this.storageService.getCurrentIP()
+    });
+  
+    // Verificar si el producto tiene complementos
+    if (product.Tipo == 2) {
+      this.AgregarProductoComplemento(pedidoDet);
+    }
+  
+    // Agregar el producto al grid de productos
+    this.listProductGrid.push(pedidoDet);
+    this.actualizarDatosGrilla();
   }
   
   AgregarProductoComplemento(pedidodet: PedidoDet) {
@@ -865,13 +897,26 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
             
         }
       } else {
-        if (item.pedidodet.Item>0)
-        {
+        if (pedidodet.Item==0)
+          {
           var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(pedidodet);
           this.listProductGrid.splice(removeIndex, 1);
           this.actualizarDatosGrilla();
-          
-        }  
+        }
+      }
+    });
+  }
+
+  openProductSearch(): void {
+    const dialogRef = this.dialog.open(DialogProductSearchComponent, {
+      width: '970px',
+      height: '820px',
+      data: { listProducts: this.listProducts }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.AgregarProducto(result);
       }
     });
   }
