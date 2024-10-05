@@ -26,7 +26,12 @@ jobs:
    #   run: npm test -- --watch=false --no-progress --browsers=ChromeHeadless
 
     - name: Build Angular app
-      run: npm run build -- --configuration production
+      run: |
+       if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+        npm run build -- --configuration production
+       elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+        npm run build -- --configuration staging
+       fi
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v3
