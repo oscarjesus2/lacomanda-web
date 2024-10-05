@@ -8,8 +8,8 @@ declare var qz: any;
 })
 export class QzTrayV210Service {
 
-  private privateKeyPath: string = 'assets/signing/private-key.pem'; // Cambia la ruta si es necesario
-  private privateDigitalCertificatePath: string = 'assets/signing/qz-tray.crt'; // Certificado en formato PEM
+  private privateKeyPath: string = 'assets/signing/private-key.pem';
+  private privateDigitalCertificatePath: string = 'assets/signing/certificate.pem';
 
   constructor(private http: HttpClient) {
     // Configuración para asegurar que las conexiones sean seguras
@@ -79,39 +79,36 @@ export class QzTrayV210Service {
   async connect(): Promise<void> {
     if (!qz.websocket.isActive()) {
       try {
-        const digitalCertificate = await this.loadDigitalCertificateKey(); // Cargar el certificado en formato PEM
+        const digitalCertificate = await this.loadDigitalCertificateKey(); // Esperar a que se cargue el certificado
         const privateKeyPem = await this.loadPrivateKey(); // Cargar la clave privada
 
-        // Usar el certificado digital desde el archivo .crt
+        // Usar el certificado digital desde la cadena de texto
         qz.security.setCertificatePromise((resolve, reject) => {
           resolve(digitalCertificate); // Pasar el certificado cargado
         });
 
-        qz.security.setSignatureAlgorithm("SHA512"); // Usar SHA-512 para la firma
+        qz.security.setSignatureAlgorithm("SHA256"); // Since 2.1
         qz.security.setSignaturePromise(async (toSign) => {
           try {
             const privateKeyPem = await this.loadPrivateKey();
-            const keyBuffer = this.pemToArrayBuffer(privateKeyPem); // Convertir PEM a ArrayBuffer
-
+            const keyBuffer = this.pemToArrayBuffer(privateKeyPem);
             const privateKey = await crypto.subtle.importKey(
-              "pkcs8", // Formato PKCS#8
+              "pkcs8",
               keyBuffer,
               {
-                name: "RSASSA-PKCS1-v1_5", // Algoritmo de firma
-                hash: { name: "SHA-512" }
+                name: "RSASSA-PKCS1-v1_5",
+                hash: { name: "SHA-256" }  // Cambiado a SHA-256
               },
               true,
               ["sign"]
             );
 
-            // Firmar los datos
             const signature = await crypto.subtle.sign(
               "RSASSA-PKCS1-v1_5",
               privateKey,
               new TextEncoder().encode(toSign)
             );
 
-            // Convertir la firma a base64
             return btoa(String.fromCharCode.apply(null, new Uint8Array(signature)));
           } catch (error) {
             console.error('Error al firmar los datos:', error);
@@ -197,10 +194,13 @@ export class QzTrayV210Service {
 
   async isQzTrayRunning(): Promise<boolean> {
     try {
+
+      // Primero intenta conectar si no está activo
       await this.connect();
-      if (!qz.websocket.isActive()) {
+      if (!qz.websocket.isActive()) { // Llama a la función que maneja la conexión con QZ Tray
         await qz.websocket.disconnect();
       }
+
       return true;
     } catch (error) {
       console.error('QZ Tray no está corriendo:', error);
