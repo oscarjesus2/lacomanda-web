@@ -132,6 +132,31 @@
   flex: 1;
 }
 
+.tables-grid button {
+  color: #333; /* Color del texto para el contraste */
+  padding: 12px 24px;
+  font-size: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.1); /* Sutil borde */
+  border-radius: 8px; /* Bordes redondeados */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08); /* Sombra */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.tables-grid button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.10); /* Sombra más intensa */
+}
+
+.tables-grid button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08); /* Restablece la sombra */
+}
+
+.tables-grid button div {
+  text-align: center;
+}
+
 .products-grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr); /* Los productos siguen siendo de 8 botones por fila */

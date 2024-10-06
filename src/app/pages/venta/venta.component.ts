@@ -178,7 +178,7 @@ export class VentaComponent implements OnInit {
       // 6. Se carga la sub familia
       this.listSubFamilia = await this.familiaService.getSubFamilia().toPromise();
       // 7. Se carga servicio observacion
-      this.ListaObservacion = await this.ObservacionService.getAllObservacion().toPromise();
+      this.ListaObservacion = (await this.ObservacionService.getAllObservacion().toPromise()).Data;
 
       this.mozoSelected.IdEmpleado = this.storageService.getCurrentSession().User.IdEmpleado;
 

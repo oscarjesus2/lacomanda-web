@@ -157,7 +157,7 @@
   <button [disabled]="isPrecuentaDisabled" (click)="ImprimirPrecuenta()">
     <fa-icon [icon]="faReceipt"></fa-icon> Precuenta
   </button>
-  <button [disabled]="isAnularPedidoDisabled">
+  <button [disabled]="isAnularPedidoDisabled" (click)="AnularPedido()">
     <fa-icon [icon]="faTimes"></fa-icon> Anular Pedido
   </button>
   <button [disabled]="isReImprimirDisabled">
@@ -200,6 +200,7 @@
       <!-- Segunda fila estática de botones con "Procesar Pedido" -->
       <div class="static-buttons-row">
         <button class="process-pedido" (click)="processPedido(false)">Procesar Pedido</button>
+        <button>Cambiar Mozo</button>
         <button>Cambiar Mesa</button>
         <button>Limpiar Mesa</button>
         <button>Activar Mesa</button>

@@ -17,7 +17,6 @@ export class PedidoService {
 
     
     private basePath = environment.apiUrl + '/pedido';
-    private basePathDeletePedido = environment.apiUrl +  '/pedido/pedidodet';
     private basePathConsultarMesa = environment.apiUrl +  '/venta/ConsultarMesa';
  
     constructor(private http: HttpClient) { }
@@ -38,8 +37,12 @@ export class PedidoService {
         return this.http.put<ApiResponse<boolean>>(`${this.basePath}/ActualizarEnviosDeImpresion/${idPedido}/${nroCuenta}`, {});
     }
     
-    ActualizarNumAnulaImpresion(idPedido: number, item: number): Observable<ApiResponse<boolean>> {
-        return this.http.put<ApiResponse<boolean>>(`${this.basePath}/ActualizarNumAnulaImpresion/${idPedido}/${item}`, {});
+    ActualizarNumAnulaItemImpresion(idPedido: number, item: number): Observable<ApiResponse<boolean>> {
+        return this.http.put<ApiResponse<boolean>>(`${this.basePath}/ActualizarNumAnulaItemImpresion/${idPedido}/${item}`, {});
+    }
+
+    ActualizarNumAnulaPedidoImpresion(idPedido: number, nroCuenta: number): Observable<ApiResponse<boolean>> {
+        return this.http.put<ApiResponse<boolean>>(`${this.basePath}/ActualizarNumAnulaPedidoImpresion/${idPedido}/${nroCuenta}`, {});
     }
     
     RegistrarPedido(pedido: PedidoCab): Observable<ApiResponse<ImpresionDTO[]>>{
@@ -48,6 +51,10 @@ export class PedidoService {
 
     AnularProductoYComplemento(pedido: AnularProductoYComplementoDTO): Observable<ApiResponse<ImpresionDTO[]>> {
         return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + '/AnularProductoYComplemento', pedido);
+    }
+
+    AnularPedido(idMesa: string, usuAnula: number, motivoAnula: string, ip: string): Observable<ApiResponse<ImpresionDTO[]>> {
+        return this.http.post<ApiResponse<ImpresionDTO[]>>(`${this.basePath}/AnularPedido/${idMesa}/${usuAnula}/${motivoAnula}/${ip}`, {});
     }
 
     ImprimirPrecuenta(idPedido: number, nroCuenta: number): Observable<ApiResponse<ImpresionDTO[]>> {

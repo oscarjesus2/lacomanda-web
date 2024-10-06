@@ -6,7 +6,7 @@
 
   <div class="keypad">
     <div *ngFor="let row of keyRows">
-      <button *ngFor="let key of row" (click)="onKeyClick(key)">{{ key }}</button>
+      <button *ngFor="let key of row" [ngClass]="{'space': key === 'Espacio'}" (click)="onKeyClick(key)">{{ key }}</button>
     </div>
   </div>
 

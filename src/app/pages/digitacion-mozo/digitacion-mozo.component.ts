@@ -56,7 +56,7 @@ import { UsuarioService } from 'src/app/services/usuario.service';
 import { DialogMTextComponent } from 'src/app/components/dialog-mtext/dialog-mtext.component';
 import { AnularProductoYComplementoDTO } from 'src/app/interfaces/anularProductoYComplementoDTO.interface';
 import { DialogProductSearchComponent } from 'src/app/components/dialog-product-search/dialog-product-search.component';
-import { QzTrayV210Service } from 'src/app/services/qz-tray-v210.service';
+import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 
 @Component({
   selector: 'app-digitacion-mozo',
@@ -74,6 +74,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
   public ListaProductosdisplayedColumns: string[] = ['icoObs', 'nombrecorto', 'precio', 'add', 'cantidad', 'remove', 'actions'];
   public DEFAULT_ID = 0;
   public listProducts: Product[];
+  public listProductoVenta: Product[];
   public listProducts_x_SubFamilia: Product[];
   public listAmbiente: Ambiente[];
   public listFamilia: Familia[];
@@ -84,8 +85,8 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
   public selectedValueDos: string;
   public ListaMesasTotal: Mesas[];
   public ListaMesas_x_Ambiente: Mesas[];
-  public ListaEmpleados: Empleado[];
-  public ListaObservacion: Observacion[];
+  public listEmpleados: Empleado[];
+  public listObservacion: Observacion[];
   public oTurno: Turno;
   public StyleCustom: string = "height: 90%";
   public IdSubFamila: string;
@@ -140,8 +141,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
     private dialogComprobante: MatDialog,
     private dialog: MatDialog,
     private spinnerService: NgxSpinnerService,
-    // private qzTrayService: QzTrayV224Service,
-    private qzTrayService: QzTrayV210Service,
+    private qzTrayService: QzTrayV224Service,
     private familiaService: FamiliaService, 
     private headerService: HeaderService,
     private usuarioService: UsuarioService) {
@@ -276,13 +276,14 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
         }
       });
 
+      this.listProductoVenta = await this.productService.getProductosParaVenta(this.storageService.getCurrentIP()).toPromise();
       // 1. Se carga servicio para obtener productos
       this.listProducts = await this.productService.getAllProducts().toPromise();
       // 2. Se carga servicio para obtener mesas
       this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
       // 3. Se carga servicio para obtener Mozos
       const response = await this.empleadoService.getAllEmpleados().toPromise();
-      this.ListaEmpleados = response.Data; // Asegúrate de asignar solo el array de empleados
+      this.listEmpleados = response.Data; // Asegúrate de asignar solo el array de empleados
       // 4. Se carga servicio para obtener ambientes
       this.listAmbiente = await this.ambienteService.getAllAmbiente().toPromise();
       // 5. Se carga combo familia
@@ -290,7 +291,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
       // 6. Se carga la sub familia
       this.listSubFamilia = await this.familiaService.getSubFamilia().toPromise();
       // 7. Se carga servicio observacion
-      this.ListaObservacion = await this.ObservacionService.getAllObservacion().toPromise();
+      this.listObservacion = (await this.ObservacionService.getAllObservacion().toPromise()).Data;
 
       this.mozoSelected.IdEmpleado = this.storageService.getCurrentSession().User.IdEmpleado;
 
@@ -637,8 +638,8 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
 
         const dialogEnviarPedidoRef = this.dialogMesa.open(DialogObservacionComponent, {
           hasBackdrop: true,
-          width: '600px',
-          data: { ListaObservacion: this.ListaObservacion, Observaciones: oPedidoDet.Observacion, NombreCorto: oPedidoDet.Producto.NombreCorto }
+          width: '700px',
+          data: { ListaObservacion: this.listObservacion.filter(x=> x.Activo==1), Observaciones: oPedidoDet.Observacion, NombreCorto: oPedidoDet.Producto.NombreCorto }
         });
 
         dialogEnviarPedidoRef.afterClosed().subscribe(Resultado => {
@@ -732,7 +733,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
       
       if (contador === responseService.Data.length) {
         const pedido = responseService.Data[0];
-        this.pedidoService.ActualizarNumAnulaImpresion(pedido.IdPedido, pedido.Item).subscribe(response => {
+        this.pedidoService.ActualizarNumAnulaItemImpresion(pedido.IdPedido, pedido.Item).subscribe(response => {
           console.log('Envios actualizados correctamente', response);
         }, error => {
           console.error('Error al actualizar los envíos', error);
@@ -756,7 +757,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
     if (currentUser.IdNivel === '001') {
       // Usar DialogMTextTouchComponent para el motivo de anulación
       const dialogRef = this.dialog.open(DialogMTextComponent, {
-        width: '435px',
+        width: '800px',
         data: { title: `¿Está seguro de eliminar el producto ${pedidoDet.Producto.NombreCorto}?` }
       });
   
@@ -788,7 +789,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
               if (response.Data) {
               // Mostrar el DialogMTextTouchComponent para el motivo de anulación
               const motivoRef = this.dialog.open(DialogMTextComponent, {
-                width: '435px',
+                width: '800px',
                 data: { title: `¿Está seguro de eliminar el producto ${pedidoDet.Producto.NombreCorto}?` }
               });
   
@@ -913,7 +914,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
     const dialogRef = this.dialog.open(DialogProductSearchComponent, {
       width: '970px',
       height: '820px',
-      data: { listProducts: this.listProducts }
+      data: { listProducts: this.listProductoVenta }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -921,6 +922,104 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
         this.AgregarProducto(result);
       }
     });
+  }
+
+  async AnularPedido() {
+
+    if (this.mesaSelected.IdMesa == null){
+      Swal.fire(
+        'Anular Pedido',
+        'Debe seleccionar una mesa.',
+        'info'
+      );
+      return;
+    }
+
+    const currentUser = this.storageService.getCurrentUser();
+
+    if (currentUser.IdNivel === '001') {
+      // Usar DialogMTextTouchComponent para el motivo de anulación
+      const dialogRef = this.dialog.open(DialogMTextComponent, {
+        width: '800px',
+        data: { title: `¿Está seguro de anular el pedido de ${this.mesaSelected.Descripcion} ${this.mesaSelected.Numero}?` }
+      });
+  
+      dialogRef.afterClosed().subscribe(result => {
+
+        if (result && result.value) {
+          const motivoAnulacion = result.value;
+          this.RealizarAnulacionPedido(this.mesaSelected, motivoAnulacion, this.storageService.getCurrentSession().User.IdUsuario);
+        }
+      });
+    } else {
+      // Si el usuario no es de nivel "001", pedir primero el código del administrador con DialogMCantComponent
+      const dialogRef = this.dialog.open(DialogMCantComponent, {
+        width: '350px',
+        data: {
+          title: 'Ingresar Código de Administrador',
+          hideNumber: true,
+          decimalActive: false
+        }
+      });
+  
+      dialogRef.afterClosed().subscribe(result => {
+        if (result && result.value) {
+          const codigoAdmin = result.value;
+          // Validar el código del administrador llamando a la API
+          this.usuarioService.getUsuario('001',codigoAdmin).subscribe((response: ApiResponse<Usuario>) => {
+            if (response.Success) 
+            { 
+              if (response.Data) {
+              // Mostrar el DialogMTextTouchComponent para el motivo de anulación
+              const motivoRef = this.dialog.open(DialogMTextComponent, {
+                width: '800px',
+                data: { title: `¿Está seguro de anulado el pedido de ${this.mesaSelected.Descripcion} ${this.mesaSelected.Numero}?` }
+              });
+  
+              motivoRef.afterClosed().subscribe(result => {
+                     
+                if (result && result.value) {
+                  const motivoAnulacion = result.value;
+                                             
+                  this.RealizarAnulacionPedido(this.mesaSelected, motivoAnulacion, response.Data.IdUsuario);
+                }
+              });
+              } else {
+                    
+              Swal.fire({
+                title: 'Código inválido',
+                text: 'El código ingresado no es correcto.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+              });
+            }
+          }
+          });
+        }
+      });
+    }
+  }
+
+
+  async RealizarAnulacionPedido(mesa: Mesas, motivoAnulacion: string, idUsuAnula: number) {
+    this.spinnerService.show();
+    var responseService: ApiResponse<ImpresionDTO[]> = await this.pedidoService.AnularPedido(mesa.IdMesa, idUsuAnula, motivoAnulacion, this.storageService.getCurrentIP()).toPromise();
+
+    if (responseService.Success == true) {
+      const contador = await this.imprimir(responseService.Data);
+      
+      if (contador === responseService.Data.length) {
+        const pedido = responseService.Data[0];
+        this.pedidoService.ActualizarNumAnulaPedidoImpresion(pedido.IdPedido, pedido.NroCuenta).subscribe(response => {
+          console.log('Envios actualizados correctamente', response);
+        }, error => {
+          console.error('Error al actualizar los envíos', error);
+        });
+      }
+        this.limpiarPedido();
+        this.RehacerPantalla();
+    }
+    this.spinnerService.hide();
   }
 
   async processPedido(esMesaNueva: boolean) {
@@ -982,10 +1081,19 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
 
     if (responseRegisterPedido.Success) {
       this.imprimir(responseRegisterPedido.Data);
+      this.RehacerPantalla(); // Llamar a la función Rehacer si está visible el botón Rehacer
     }
   }
 
   async EnviarPedido() {
+    if (this.mesaSelected.IdMesa == null){
+      Swal.fire(
+        'Enviar Pedido',
+        'Debe seleccionar una mesa.',
+        'info'
+      );
+      return;
+    }
       this.spinnerService.show();
       this.procesarPedido=true;
       if (this.listProductGrid.length > 0) {
@@ -1052,6 +1160,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
         this.spinnerService.hide();
       } else {
         Swal.fire('Oops...', 'No ha ingresado ningun producto.', 'error')
+        this.spinnerService.hide();
       }
 
   }
@@ -1150,7 +1259,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit  {
 
   private getMozoByMozoId(idMozo: string): Empleado {
     let result: Empleado;
-    this.ListaEmpleados.forEach(Mozo => {
+    this.listEmpleados.forEach(Mozo => {
       if (idMozo === Mozo.IdEmpleado) {
         result = Mozo;
       }

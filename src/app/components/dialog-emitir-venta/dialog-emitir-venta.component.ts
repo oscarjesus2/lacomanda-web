@@ -96,7 +96,7 @@ export class DialogEmitirVentaComponent implements OnInit {
 
   private async initializeProductos(): Promise<void> {
     try {
-      this.products = await this.productoService.getProductosParaVenta(1).toPromise();
+      this.products = await this.productoService.getProductosParaVenta(this.storageService.getCurrentIP()).toPromise();
       this.filteredProducts = this.productCtrl.valueChanges.pipe(
         startWith(''),
         map(value => this._filter(value)),

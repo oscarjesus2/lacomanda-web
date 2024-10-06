@@ -39,6 +39,16 @@ export class DialogObservacionComponent {
         this.dialogRef.close(this.data);
     }
 
+    onBorrarobservacion(): void{
+        if (this.data.Observaciones != null && this.data.Observaciones.trim() !== '') {
+            const observacionesArray = this.data.Observaciones.split(',').filter(obs => obs.trim() !== '');
+            observacionesArray.pop();
+            this.data.Observaciones = observacionesArray.join(',').trim();
+            this.data.Observaciones = this.data.Observaciones.replace(/^,|,$/g, '');
+        }
+    }
+   
+
     agregarobservacion(oObservacion: Observacion): void{
         if (this.data.Observaciones==null) this.data.Observaciones='';
         this.data.Observaciones+=oObservacion.Descripcion+',';
@@ -46,7 +56,7 @@ export class DialogObservacionComponent {
    
     abrirTeclado(): void {
         const dialogRef = this.dialog.open(DialogMTextComponent, {
-          width: '700px',
+          width: '800px',
           data: { texto: '' } // Puedes pasar algún valor inicial si lo deseas
         });
     

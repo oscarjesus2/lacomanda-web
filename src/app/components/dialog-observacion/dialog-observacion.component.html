@@ -5,9 +5,14 @@
     <mat-label>Observaciones</mat-label>
     <textarea matInput [(ngModel)]="data.Observaciones"></textarea>
   </mat-form-field>
-
+  <div class="actions">
+    <button (click)="abrirTeclado()">Escribir observación manual</button>
+    <button (click)="onBorrarobservacion()">Borrar</button>
+    <button (click)="onAgregarClick()">Agregar</button>
+    <button (click)="onNoClick()">Cancelar</button>
+  </div>
   <!-- Botón para abrir el teclado virtual -->
-  <button mat-raised-button class="custom-button" (click)="abrirTeclado()">Escribir observación manual</button>
+
 
   <mat-tab-group mat-align-tabs="start">
     <mat-tab label="COMIDAS">
@@ -40,7 +45,5 @@
   </mat-tab-group>
 </mat-dialog-content>
 
-<mat-dialog-actions class="example-button-row">
-  <button mat-raised-button color="primary" class="custom-button" (click)="onAgregarClick()">Agregar</button>
-  <button mat-raised-button color="warn" class="custom-button" (click)="onNoClick()">Cancelar</button>
-</mat-dialog-actions>
+
+
