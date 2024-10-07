@@ -95,36 +95,35 @@ export class LoginComponent implements OnInit {
     });
   }
   
-  async initForm() {
+  initForm() {
     this.loginForm = this.fb.group({
       tenant: [null, Validators.required],
       idNivel: ['', Validators.required],
       password: ['', Validators.required],
     });
   
-    // Intenta obtener la IP interna primero (para navegadores compatibles)
-    try {
-      this.CurrentIP = await internalIpV4();
-      console.log('IP interna obtenida:', this.CurrentIP);
-    } catch (error) {
-      console.warn('No se pudo obtener la IP interna, intentando obtener la IP pública...', error);
-  
-      // Si no se puede obtener la IP interna (como en dispositivos iOS), obtener la IP pública
-      this.CurrentIP = await this.getPublicIP();
-    }
+    internalIpV4()
+      .then((ip) => {
+        this.CurrentIP = ip;
+      })
+      .catch((error) => {
+        console.warn('No se pudo obtener la IP interna, intentando obtener la IP pública...', error);
+        this.getPublicIP().then((publicIP) => {
+          this.CurrentIP = publicIP
+        });
+      });
   }
   
-  async getPublicIP() {
-    try {
-      const response = await fetch('https://api.ipify.org?format=json');
-      const data = await response.json();
-      console.log('IP pública obtenida:', data.ip);
-      return data.ip;
-    } catch (error) {
-      console.error('Error obteniendo la IP pública:', error);
-      return null;
-    }
+  getPublicIP(): Promise<string> {
+    return fetch('https://api.ipify.org?format=json')
+      .then(response => response.json())
+      .then(data => data.ip)
+      .catch(error => {
+        console.error('Error obteniendo la IP pública:', error);
+        return 'No se pudo obtener la IP';
+      });
   }
+  
 
   private async loadTenants(): Promise<void> {
       this.spinnerService.show();
