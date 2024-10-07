@@ -61,6 +61,7 @@ jobs:
           lftp -e "set ftp:ssl-allow no; 
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
           mirror -R . /naruto.jobbusiness.pe;
+          mirror -R . /soho.jobbusiness.pe;
           mirror -R . /main.jobbusiness.pe; bye";
         elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
           lftp -e "set ftp:ssl-allow no; 
