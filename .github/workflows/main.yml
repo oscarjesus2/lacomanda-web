@@ -32,12 +32,12 @@ jobs:
        elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
         npm run build -- --configuration staging
        fi
-
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v3
       with:
         name: frontend-artifact
         path: ./dist/jbs-rest
+
 
   deploy:
     runs-on: ubuntu-latest
