@@ -101,8 +101,29 @@ export class LoginComponent implements OnInit {
       idNivel: ['', Validators.required],
       password: ['', Validators.required],
     });
-
-    this.CurrentIP = await internalIpV4();
+  
+    // Intenta obtener la IP interna primero (para navegadores compatibles)
+    try {
+      this.CurrentIP = await internalIpV4();
+      console.log('IP interna obtenida:', this.CurrentIP);
+    } catch (error) {
+      console.warn('No se pudo obtener la IP interna, intentando obtener la IP pública...', error);
+  
+      // Si no se puede obtener la IP interna (como en dispositivos iOS), obtener la IP pública
+      this.CurrentIP = await this.getPublicIP();
+    }
+  }
+  
+  async getPublicIP() {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      console.log('IP pública obtenida:', data.ip);
+      return data.ip;
+    } catch (error) {
+      console.error('Error obteniendo la IP pública:', error);
+      return null;
+    }
   }
 
   private async loadTenants(): Promise<void> {
