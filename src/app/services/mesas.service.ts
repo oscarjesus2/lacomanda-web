@@ -15,12 +15,16 @@ export class MesasService {
  
     constructor(private http: HttpClient) { }
 
-    getAllMesas(): Observable<Mesas[]> {
+    GetAllMesas(): Observable<Mesas[]> {
         return this.http.get<Mesas[]>(this.basePathMesas + '/listar');
     }
 
-    getMesa(idMesa: string): Observable<Mesas> {
+    GetMesa(idMesa: string): Observable<Mesas> {
         return this.http.get<Mesas>(this.basePathMesas + '/' + idMesa);
+    }
+
+    CambiarMesa(idMesaOrigen: string, idMesaDestino: string): Observable<ApiResponse<boolean>> {
+        return this.http.put<ApiResponse<boolean>>(`${this.basePathMesas}/CambiarMesa/${idMesaOrigen}/${idMesaDestino}`,{});
     }
 
     ImprimirPrecuenta(idMesa: string): Observable<any[]> {

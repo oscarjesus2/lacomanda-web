@@ -75,10 +75,9 @@ export class LoginComponent implements OnInit {
     const userAgent = window.navigator.userAgent.toLowerCase();
     this.isiOS = /iphone|ipad|ipod/.test(userAgent);
     
-    // Mostrar instrucciones en lugar de botón si está en iOS
-    if (this.isiOS && !('standalone' in window.navigator)) {
+    if (this.isiOS && !window.navigator['standalone']) {
+      console.log("Not in standalone mode");
       this.showInstallButton = false;
-      // Aquí podrías mostrar un mensaje informativo a los usuarios de iOS
       alert('Para instalar la aplicación en iOS, abre el menú de compartir y selecciona "Agregar a la pantalla de inicio".');
     }
   }
@@ -110,6 +109,11 @@ export class LoginComponent implements OnInit {
       this.spinnerService.show();
       this.tenantDefault = await this.tenantService.getTenant().toPromise();
       this.spinnerService.hide();
+
+        // Si solo hay un tenant, seleccionarlo automáticamente
+      if (this.tenantDefault.length === 1) {
+        this.loginForm.controls['tenant'].setValue(this.tenantDefault[0]);
+      }
   }
   
   openPasswordDialog() {

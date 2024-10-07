@@ -199,14 +199,14 @@
   
       <!-- Segunda fila estática de botones con "Procesar Pedido" -->
       <div class="static-buttons-row">
-        <button class="process-pedido" (click)="processPedido(false)">Procesar Pedido</button>
+        <button class="process-pedido" (click)="processPedido(false, true)">Procesar Pedido</button>
         <button>Cambiar Mozo</button>
-        <button>Cambiar Mesa</button>
+        <button (click)="CambiarMesa()">Cambiar Mesa</button>
         <button>Limpiar Mesa</button>
         <button>Activar Mesa</button>
       </div>
     </div>
-    <div *ngIf="procesarPedido">
+    <div *ngIf="procesarPedido ">
       <div class="static-buttons-row">
         
         <button *ngFor="let item of listFamilia"

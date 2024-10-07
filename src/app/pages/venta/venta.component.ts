@@ -168,7 +168,7 @@ export class VentaComponent implements OnInit {
       // 1. Se carga servicio para obtener productos
       this.listProducts = await this.productService.getAllProducts().toPromise();
       // 2. Se carga servicio para obtener mesas
-      this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+      this.ListaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
       // 3. Se carga servicio para obtener Mozos
       this.ListaEmpleados = await this.empleadoService.getAllEmpleados().toPromise();
       // 4. Se carga servicio para obtener ambientes
@@ -261,7 +261,7 @@ export class VentaComponent implements OnInit {
           'No existe el pedido en la mesa.',
           'warning'
         );
-        this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+        this.ListaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
       }
     }
     this.RehacerPantallaRefresh = 'RehacerPantalla';
@@ -299,7 +299,7 @@ export class VentaComponent implements OnInit {
           'No existe el pedido en la mesa.',
           'warning'
         );
-        this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+        this.ListaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
       }
 
 
@@ -431,7 +431,7 @@ export class VentaComponent implements OnInit {
             this.limpiarPedido();
             this.MostrarOcultarPanelMesa = true;
             this.MostrarOcultarPanelProducto = false;
-            this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+            this.ListaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
           }
         }
         this.spinnerService.hide();
@@ -543,7 +543,7 @@ export class VentaComponent implements OnInit {
           this.limpiarPedido();
 
        
-          this.mesasService.getAllMesas().subscribe(data => {
+          this.mesasService.GetAllMesas().subscribe(data => {
             this.ListaMesasTotal = data;
             let result: Ambiente;
             result = this.listAmbiente.find(item => item.Estado == 1);
@@ -589,7 +589,7 @@ export class VentaComponent implements OnInit {
         });
 
         var resultDialog: any = await dialogProcessComprobante.afterClosed().toPromise();
-        this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+        this.ListaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
         this.limpiarPedido();
         this.MostrarOcultarPanelMesa = true;
         this.MostrarOcultarPanelProducto = false;
@@ -601,11 +601,11 @@ export class VentaComponent implements OnInit {
     }
   }
 
-  public async RehacerPantalla() {
+  public async RehacerPantalla(verPanelMesa: boolean = true) {
     try {
       this.spinnerService.show();
   
-      this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+      this.ListaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
       this.limpiarPedido();
       this.MostrarOcultarPanelMesa = true;
       this.MostrarOcultarPanelProducto = false;
@@ -703,7 +703,7 @@ export class VentaComponent implements OnInit {
       this.listProducts = data;
     });
 
-    this.mesasService.getAllMesas().subscribe(data => {
+    this.mesasService.GetAllMesas().subscribe(data => {
       this.ListaMesasTotal = data;
       let result: Ambiente;
       result = this.listAmbiente.find(item => item.Estado == 1);
