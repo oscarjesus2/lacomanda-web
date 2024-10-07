@@ -1,7 +1,8 @@
 import { Component, Inject } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { StorageService } from '../../services/storage.service';
 import { Observacion } from '../../models/observacion.models';
+import { DialogMTextComponent } from '../dialog-mtext/dialog-mtext.component';
 
 
 @Component({
@@ -19,6 +20,7 @@ export class DialogObservacionComponent {
     ListaObservacionBebida: Observacion[];;
     constructor(
         public dialogRef: MatDialogRef<DialogObservacionComponent>,
+        private dialog: MatDialog, // Añade el servicio MatDialog
         private storageService: StorageService,
         @Inject(MAT_DIALOG_DATA) public data: DialogData) {  
             this.Observaciones= data.Observaciones;
@@ -34,14 +36,37 @@ export class DialogObservacionComponent {
     
 
     onAgregarClick(): void {
-      
+        this.dialogRef.close(this.data);
     }
+
+    onBorrarobservacion(): void{
+        if (this.data.Observaciones != null && this.data.Observaciones.trim() !== '') {
+            const observacionesArray = this.data.Observaciones.split(',').filter(obs => obs.trim() !== '');
+            observacionesArray.pop();
+            this.data.Observaciones = observacionesArray.join(',').trim();
+            this.data.Observaciones = this.data.Observaciones.replace(/^,|,$/g, '');
+        }
+    }
+   
 
     agregarobservacion(oObservacion: Observacion): void{
         if (this.data.Observaciones==null) this.data.Observaciones='';
         this.data.Observaciones+=oObservacion.Descripcion+',';
     }
    
+    abrirTeclado(): void {
+        const dialogRef = this.dialog.open(DialogMTextComponent, {
+          width: '800px',
+          data: { texto: '' } // Puedes pasar algún valor inicial si lo deseas
+        });
+    
+        dialogRef.afterClosed().subscribe(result => {
+          if (result) {
+            // Agrega el texto ingresado por el usuario a las observaciones
+            this.data.Observaciones += result.value + ',';
+          }
+        });
+      }
 }
 
 export interface DialogData {

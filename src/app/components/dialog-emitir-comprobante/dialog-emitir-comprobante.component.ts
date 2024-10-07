@@ -25,8 +25,9 @@ import { VentaService } from 'src/app/services/venta.service';
 import { EnumTipoDocumento, EnumTipoIdentidad } from 'src/app/enums/enum';
 
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
-import {  QzTrayService } from 'src/app/services/qz-tray.service';
+import {  QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 import { Router } from '@angular/router';
+import { ApiResponse } from 'src/app/interfaces/ApiResponse.interface';
 
 
 @Component({
@@ -98,7 +99,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     private tarjetaService: TarjetaService,
     public dialog: MatDialog,
     private fb: FormBuilder,
-    private qzTrayService: QzTrayService,
+    private qzTrayService: QzTrayV224Service,
     private router: Router,
   ) {
     this.dataSource = new MatTableDataSource([]);
@@ -850,9 +851,9 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
     try {
 
-      var resultGenerateComprobante: Venta = await this.ventaService.guardarDocumentoVenta(this.idModuloVenta, venta, this.cliente, this.pedidoCab, listPago, this.bTurnoIndenpendiente).toPromise();
-      if (resultGenerateComprobante) {
-        return resultGenerateComprobante;
+      var resultGenerateComprobante: ApiResponse<Venta> = await this.ventaService.guardarDocumentoVenta(this.idModuloVenta, venta, this.cliente, this.pedidoCab, listPago, this.bTurnoIndenpendiente).toPromise();
+      if (resultGenerateComprobante.Success) {
+        return resultGenerateComprobante.Data;
       } else {
         return null;
       }

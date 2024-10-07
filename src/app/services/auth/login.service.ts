@@ -2,7 +2,7 @@ import { EventEmitter, Injectable, Output } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http'
 import { LoginRequest } from './loginRequest';
 import { BehaviorSubject, Observable, catchError, throwError, tap } from 'rxjs';
-import { Usuario } from 'src/app/models/user.models';
+import { Usuario } from 'src/app/models/usuario.models';
 import { Turno } from 'src/app/models/turno.models';
 import { environment } from 'src/environments/environment';
 
@@ -10,11 +10,6 @@ import { environment } from 'src/environments/environment';
   providedIn: 'root'
 })
 export class LoginService {
- userLoginOn: EventEmitter<boolean>= new EventEmitter<boolean>();
- idturnoShare: EventEmitter<number>= new EventEmitter<number>();
- nroturnoShare: EventEmitter<number>= new EventEmitter<number>();
- turnoOpenShare: EventEmitter<boolean>= new EventEmitter<boolean>();
- UsuarioShare: EventEmitter<string>= new EventEmitter<string>();
  
   private basePath = environment.apiUrl + '/Auth/login';
   constructor(private http: HttpClient) {}

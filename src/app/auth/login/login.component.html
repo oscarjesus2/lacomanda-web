@@ -1,41 +1,49 @@
-<mat-card>
-  <mat-card-content>
-    <form [formGroup]="loginForm" (ngSubmit)="login()">
-      <h2>Log In</h2>
-      <mat-error *ngIf="!loginValid">
-        The Tipo de Usuario and password were not recognized
-      </mat-error>
+<div class="login-container">
+  <div class="login-box">
+    <img src="assets/logo.png" alt="Loaris REST Logo" class="login-logo">
+    <h2>Welcome to Loaris REST</h2>
+    <button *ngIf="showInstallButton" (click)="installPWA()">Instalar Aplicación</button>
+    <mat-card class="login-card">
+      <mat-card-content>
+        <form [formGroup]="loginForm" (ngSubmit)="login()">
+          <mat-error *ngIf="!loginValid">
+            Invalid credentials, please try again
+          </mat-error>
 
-      <mat-form-field>
-        <mat-select placeholder="Sucursal" formControlName="tenant" required>
-          <mat-option *ngFor="let tenant of tenantDefault" [value]="tenant">
-            {{tenant.Sucursal}}
-          </mat-option>
-        </mat-select>
-        <mat-error>
-          Please provide a valid Sucursal
-        </mat-error>
-      </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Sucursal</mat-label>
+            <mat-select formControlName="tenant" required>
+              <mat-option *ngFor="let tenant of tenantDefault" [value]="tenant">
+                {{tenant.Sucursal}}
+              </mat-option>
+            </mat-select>
+            <mat-error>Please provide a valid Sucursal</mat-error>
+          </mat-form-field>
 
-      <mat-form-field>
-        <mat-select placeholder="Tipo Usuario" formControlName="idNivel" required>
-          <mat-option *ngFor="let nivel of nivelUsuario" [value]="nivel.value">
-            {{nivel.nombreNivel}}
-          </mat-option>
-        </mat-select>
-        <mat-error>
-          Please provide a valid User Type
-        </mat-error>
-      </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Tipo Usuario</mat-label>
+            <mat-select formControlName="idNivel" required>
+              <mat-option *ngFor="let nivel of nivelUsuario" [value]="nivel.value">
+                {{nivel.nombreNivel}}
+              </mat-option>
+            </mat-select>
+            <mat-error>Please provide a valid User Type</mat-error>
+          </mat-form-field>
 
-      <mat-form-field>
-        <input matInput type="password" placeholder="Password" formControlName="password" required>
-        <mat-error>
-          Please provide a valid password
-        </mat-error>
-      </mat-form-field>
+          <!-- Botón para ingresar la contraseña numérica -->
+          <div class="password-field">
+            <button mat-button type="button" (click)="openPasswordDialog()">Ingresar Contraseña Touch</button>
+          </div>
+          
+          <mat-form-field appearance="outline">
+            <mat-label>Password</mat-label>
+            <input matInput type="password" formControlName="password" required>
+            <mat-error>Please provide a valid password</mat-error>
+          </mat-form-field>
 
-      <button mat-raised-button color="primary" [disabled]="!loginForm.valid">Login</button>
-    </form>
-  </mat-card-content>
-</mat-card>
+          <button mat-raised-button color="primary" class="login-button" [disabled]="!loginForm.valid">Login</button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

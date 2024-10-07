@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Usuario } from 'src/app/models/user.models';
+import { Usuario } from 'src/app/models/usuario.models';
 @Component({
   selector: 'app-dashboard',
   templateUrl: './administracion.component.html',

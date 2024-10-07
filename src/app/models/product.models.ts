@@ -1,6 +1,6 @@
 export class Product {
 
-    public Activo: boolean;
+    public Activo: number;
     public Descripcion: string;
     public IdProducto: number;
     public NombreCorto: string;
@@ -20,7 +20,14 @@ export class Product {
     public Stock: number;
     public MonedaVenta: string;
     public ImpuestoBolsa: number;
-    Tipo: number;
-    ExclusivoParaAnfitriona: boolean;
-    PermitirParaTragoCortesia: boolean;
+    public EsProductoBolsa: boolean;
+    public Tipo: number;
+    public ExclusivoParaAnfitriona: boolean;
+    public PermitirParaTragoCortesia: boolean;
+    public PosicionComplemento: number;
+    public Qty: number;
+    public FactorComplemento: number;
+    constructor(init?: Partial<Product>) {
+        Object.assign(this, init);
+    }
 }

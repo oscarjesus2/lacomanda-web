@@ -15,9 +15,10 @@ export class ProductService {
 
     constructor(private http: HttpClient) { }
 
-    getProductosParaVenta(idCompu: number): Observable<Product[]> {
-        return this.http.get<Product[]>(this.basePath + '/ListarProductosParaVenta/' + idCompu);
+    getProductosParaVenta(ip: string): Observable<Product[]> {
+        return this.http.get<Product[]>(this.basePath + '/ListarProductosParaVenta/' + ip);
     }
+
     getAllProducts(): Observable<Product[]> {
         return this.http.get<Product[]>(this.basePath+ '/listar');
     }

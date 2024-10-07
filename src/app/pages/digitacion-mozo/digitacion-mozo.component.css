@@ -1,0 +1,367 @@
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  height: 100vh;
+  padding: 10px;
+}
+
+.column-left, .column-right {
+  border: 1px solid #ccc;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+.top-section {
+  display: flex;
+  justify-content: space-between; /* Distribuye el contenido en dos partes: info y botones */
+  align-items: center; /* Alinea verticalmente el contenido */
+  background-color: #FFF3E0; /* Fondo cálido */
+  padding: 15px 20px; /* Espaciado interno */
+  border-radius: 10px; /* Bordes redondeados */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  font-size: 16px; /* Tamaño de la fuente */
+  margin-bottom: 20px; /* Espacio inferior */
+  color: #5D4037; /* Marrón oscuro para el texto */
+}
+
+.top-section label {
+  font-weight: bold; /* Negrita para el texto */
+}
+
+.channel-buttons {
+  display: flex;
+  gap: 10px; /* Espacio entre los botones */
+}
+
+.channel-buttons button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  background-color: #FF7043; /* Naranja cálido */
+  color: #FFFFFF;
+  border-radius: 8px; /* Bordes redondeados */
+  border: 2px solid transparent;
+  cursor: pointer;
+  font-size: 14px; /* Tamaño del texto */
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+
+.channel-buttons button fa-icon {
+  margin-right: 8px; /* Espacio entre el icono y el texto */
+  font-size: 18px; /* Tamaño del icono */
+}
+
+.channel-buttons button:hover {
+  background-color: #FF5722; /* Naranja más oscuro al hacer hover */
+  border-color: #FFA726; /* Borde visible en hover */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada en hover */
+}
+
+.channel-buttons button:active {
+  background-color: #E64A19; /* Color más oscuro al hacer clic */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Reduce la sombra en clic */
+}
+
+
+.middle-section {
+  flex: 1;
+}
+
+.data-grid {
+  max-height: 60vh; /* Limita la altura máxima disponible para la tabla */
+  overflow-y: auto; /* Habilita el scroll vertical si el contenido excede la altura */
+  margin-bottom: 20px; /* Espacio inferior antes de los botones */
+}
+
+.data-grid table {
+  width: 100%; /* Asegura que la tabla ocupe todo el ancho disponible */
+  border-collapse: collapse; /* Combina los bordes de las celdas */
+}
+
+.data-grid th, .data-grid td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd; /* Línea inferior en cada celda */
+}
+
+.data-grid th {
+  background-color: #FF7043; /* Fondo cálido para el encabezado */
+  color: white; /* Texto en blanco */
+  position: sticky; /* Fija el encabezado de la tabla al hacer scroll */
+  top: 0;
+  z-index: 1; /* Asegura que el encabezado esté por encima del contenido */
+}
+
+/* Estilos para las tres filas estáticas debajo del datagridview */
+.total-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.total-section input {
+  width: 100px;
+}
+
+.button-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.button-row button {
+  padding: 10px;
+  background-color: #f1f1f1;
+  border: none;
+  cursor: pointer;
+}
+
+.button-row button:hover {
+  background-color: #ccc;
+}
+
+.tables-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr); /* Cambiado a 7 columnas */
+  gap: 2px;
+  flex: 1;
+}
+
+.tables-grid button {
+  color: #333; /* Color del texto para el contraste */
+  padding: 12px 24px;
+  font-size: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.1); /* Sutil borde */
+  border-radius: 8px; /* Bordes redondeados */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08); /* Sombra */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.tables-grid button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.10); /* Sombra más intensa */
+}
+
+.tables-grid button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08); /* Restablece la sombra */
+}
+
+.tables-grid button div {
+  text-align: center;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr); /* Los productos siguen siendo de 8 botones por fila */
+  gap: 2px;
+  flex: 1;
+}
+.products-grid button {
+ 
+  background-color: var(--secondary-color); /* Color de fondo */
+  color: var(--text-color); /* Color del texto */
+  border-radius: 5px;
+  border: none;
+  display: flex; /* Usamos flexbox para alinear el contenido */
+  justify-content: center; /* Centramos horizontalmente */
+  align-items: center; /* Centramos verticalmente */
+  text-align: center; /* Aseguramos que el texto se centre */
+  font-size: 14px; /* Ajustar según tu necesidad */
+  padding: 5px; /* Espacio mínimo alrededor del texto */
+  line-height: 1.2; /* Ajuste de altura de línea para espaciar el texto */
+  white-space: normal; /* Permitir que el texto se divida en varias líneas */
+  overflow: hidden;
+  word-wrap: break-word; /* Permitir que las palabras largas se dividan */
+
+}
+
+.tables-grid button {
+  background-color: var(--secondary-color); /* Fondo */
+  color: var(--text-color); /* Color del texto */
+  border-radius: 5px;
+  border: none;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Muestra '...' si el texto es muy largo */
+  cursor: pointer;
+  display: flex; /* Usamos flex para alinear el texto */
+  justify-content: center; /* Centra horizontalmente */
+  align-items: center; /* Centra verticalmente */
+  font-size: 13px; /* Ajusta el tamaño del texto */
+  padding: 1 5px; /* Reduce el padding horizontal para aprovechar más el espacio */
+
+}
+
+.tables-grid button.active, .products-grid button:hover {
+  background-color: #4CAF50;
+  color: white;
+}
+
+/* Estilos para las filas de botones estáticos */
+.static-buttons-row {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px; /* Añade espacio entre los botones */
+  margin-top: 15px;
+}
+
+/* Estilos para los botones estáticos */
+.static-buttons-row button {
+  padding: 12px 20px; /* Aumenta el padding para hacer los botones más grandes */
+  background-color: #FF7043; /* Naranja cálido */
+  border: none;
+  cursor: pointer;
+  border-radius: 8px; /* Bordes redondeados */
+  color: #FFFFFF; /* Texto en blanco para mejor contraste */
+  font-size: 14px; /* Tamaño del texto */
+  font-weight: bold; /* Texto en negrita */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+  transition: background-color 0.3s, box-shadow 0.3s; /* Transiciones suaves */
+  /*text-transform: uppercase;  Texto en mayúsculas para darle un toque moderno */
+}
+
+.static-buttons-row button:hover {
+  background-color: #FF5722; /* Naranja más oscuro al hacer hover */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada en hover */
+}
+
+.static-buttons-row button.selected {
+  background-color: #4CAF50; /* Color verde cuando está seleccionado */
+}
+
+/* Estilos específicos para el botón "Procesar Pedido" */
+.static-buttons-row button.process-pedido {
+  background-color: #FF9800; /* Color más llamativo */
+  font-size: 14px; /* Un poco más grande que el resto */
+  padding: 14px 24px; /* Padding más grande */
+  border: 2px solid #FFA726; /* Borde sólido que lo destaca */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
+}
+
+.static-buttons-row button.process-pedido:hover {
+  background-color: #FFB74D; /* Un color más claro al hacer hover */
+  box-shadow: 0 8px 10px rgba(0, 0, 0, 0.3); /* Sombra más profunda al hacer hover */
+}
+
+/* Efecto adicional de clic */
+.static-buttons-row button:active {
+  background-color: #E64A19; /* Color más oscuro cuando se hace clic */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Reduce la sombra al hacer clic */
+}
+
+
+.table-info {
+  display: flex;
+  justify-content: space-between; /* Asegura que los elementos se distribuyan en toda la fila */
+  align-items: center; /* Alinea verticalmente los elementos */
+  gap: 20px; /* Espacio entre los elementos */
+   background-color: #FFF3E0; /* Fondo cálido */
+  padding: 15px 20px;
+  border-radius: 10px; /* Bordes redondeados */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  font-size: 16px;
+  margin-bottom: 20px;
+  color: #5D4037; /* Marrón oscuro */
+  flex-wrap: wrap; /* Permitir que los elementos se envuelvan si no caben en una fila */
+}
+
+.table-info label {
+  font-weight: bold;
+  margin-right: 15px; /* Espaciado entre el texto */
+}
+
+.table-info div {
+  display: flex;
+  align-items: center;
+  margin: 0; /* Remueve márgenes adicionales */
+}
+
+.table-info label,
+.table-info div {
+  flex: 1 1 auto; /* Asegura que los elementos se distribuyan uniformemente */
+  min-width: 150px; /* Ancho mínimo para evitar que los elementos se colapsen */
+}
+
+
+.table-info label span {
+  font-weight: normal; /* El contenido de la información no necesita ser en negrita */
+  margin-left: 5px; /* Espacio entre el título y el contenido */
+}
+
+ 
+
+.total-section {
+  display: flex;
+  justify-content: space-between; /* Espacio entre los elementos */
+  background-color: #FFF3E0; /* Fondo cálido */
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.total-section label {
+  font-weight: bold;
+  color: #5D4037; /* Marrón oscuro */
+}
+
+.total-section input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #FF7043; /* Borde naranja cálido */
+  font-size: 16px;
+  width: 100px; /* Ancho fijo para los inputs */
+}
+
+.button-row {
+  display: flex;
+  justify-content: space-between; /* Espacio entre los botones */
+  gap: 10px; /* Añadir espacio entre los botones */
+  margin-top: 15px;
+}
+
+.button-row button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  background-color: #FF7043; /* Naranja cálido */
+  color: #FFFFFF;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  font-size: 14px; /* Tamaño del texto */
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+
+.button-row button fa-icon {
+  margin-right: 8px; /* Espacio entre el icono y el texto */
+  font-size: 18px; /* Tamaño del icono */
+}
+
+.button-row button:hover {
+  background-color: #FF5722; /* Naranja más oscuro al hacer hover */
+  border-color: #FFA726; /* Borde visible en hover */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
+}
+
+.button-row button:active {
+  background-color: #E64A19; /* Color más oscuro cuando se hace clic */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Reduce la sombra cuando se hace clic */
+}
+
+.selected-row {
+  background-color: #d1e7dd; /* Color de fondo para la fila seleccionada */
+  color: #000; /* Color de texto de la fila seleccionada */
+}

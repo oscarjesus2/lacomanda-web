@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master  # Ejecuta el workflow en push a la rama 'master'
+      - develop # Ejecuta el workflow en push a la rama 'develop'
 
 jobs:
   build:
@@ -16,22 +17,27 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '16'  # Ajusta la versión según la que uses en tu proyecto
+        node-version: '16'
 
     - name: Install dependencies
       run: npm install
 
    # - name: Run tests
-   #   run: npm test -- --watch=false --no-progress --browsers=ChromeHeadless  # Ajusta este comando según tu configuración
+   #   run: npm test -- --watch=false --no-progress --browsers=ChromeHeadless
 
     - name: Build Angular app
-      run: npm run build -- --configuration production # Construir la aplicación para producción
-      
+      run: |
+       if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+        npm run build -- --configuration production
+       elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+        npm run build -- --configuration staging
+       fi
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v3
       with:
         name: frontend-artifact
-        path: ./dist/jbs-rest   # Cambia 'jbs-rest' si tu build genera archivos en otro lugar
+        path: ./dist/jbs-rest
+
 
   deploy:
     runs-on: ubuntu-latest
@@ -47,11 +53,17 @@ jobs:
       run: sudo apt-get install lftp
 
     - name: List Built Files
-      run: ls -la . # Asegúrate de que esta ruta es correcta
+      run: ls -la . 
 
-    - name: Deploy to FTP server - Naruto Folder
+    - name: Deploy to appropriate server
       run: |
-        lftp -e "set ftp:ssl-allow no; 
-        open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }}; 
-        mirror -R . /naruto.jobbusiness.pe; 
-        mirror -R . /main.jobbusiness.pe; bye"
+        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          lftp -e "set ftp:ssl-allow no; 
+          open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
+          mirror -R . /naruto.jobbusiness.pe;
+          mirror -R . /main.jobbusiness.pe; bye";
+        elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+          lftp -e "set ftp:ssl-allow no; 
+          open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }}; 
+        mirror -R . /test.jobbusiness.pe; bye";
+        fi

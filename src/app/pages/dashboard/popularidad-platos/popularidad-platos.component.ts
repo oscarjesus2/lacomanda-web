@@ -64,12 +64,12 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges {
 
 
   async getProductosMasVendidos(top: number, fechaInicial: string, fechaFinal: string) {
-
+    this.spinnerService.show('popularidadPlatoSpinner');
       const data = await this.ventaService.getProductosMasVendidos(top, fechaInicial, fechaFinal).toPromise();
 
       // Ordenar datos por cantidad de manera descendente
       data.sort((a, b) => b.Cantidad - a.Cantidad);
-
+      this.spinnerService.hide('popularidadPlatoSpinner');
       this.updateChart(data);
 
   }

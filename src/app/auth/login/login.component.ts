@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LoginService } from 'src/app/services/auth/login.service';
@@ -8,6 +8,9 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { NotificationService } from 'src/app/services/notification.service';
 import { Session } from 'src/app/models/session.models';
 import { TenantService } from 'src/app/services/tenant.service';
+import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mcant.component';
+import { MatDialog } from '@angular/material/dialog';
+import { LoginRequest } from 'src/app/services/auth/loginRequest';
 
 @Component({
   selector: 'app-login',
@@ -15,7 +18,7 @@ import { TenantService } from 'src/app/services/tenant.service';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
- 
+
   hide = true;
   public loginValid = true;
   public idNivel = '001';
@@ -32,6 +35,7 @@ export class LoginComponent implements OnInit {
   CurrentIP: string;
 
   constructor(
+    private dialog: MatDialog,
     private spinnerService: NgxSpinnerService,
     private fb: FormBuilder,
     private router: Router, 
@@ -41,7 +45,20 @@ export class LoginComponent implements OnInit {
     private notificationService: NotificationService
   ) {}
 
+  deferredPrompt: any;
+  showInstallButton = false;
+  isiOS = false;
+
+  @HostListener('window:beforeinstallprompt', ['$event'])
+  onbeforeinstallprompt(e: Event) {
+    // Evitar que el navegador automáticamente muestre el prompt
+    e.preventDefault();
+    this.deferredPrompt = e;
+    this.showInstallButton = true; // Mostrar el botón de instalación
+  }
+
   ngOnInit(): void {
+    this.checkIfIos();
     this.loadTenants();
     this.initForm();
     const currentSession = this.storageService.getCurrentSession();
@@ -55,22 +72,97 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  async initForm() {
+  checkIfIos() {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    this.isiOS = /iphone|ipad|ipod/.test(userAgent);
+    
+    if (this.isiOS && !window.navigator['standalone']) {
+      console.log("Not in standalone mode");
+      this.showInstallButton = false;
+      alert('Para instalar la aplicación en iOS, abre el menú de compartir y selecciona "Agregar a la pantalla de inicio".');
+    }
+  }
+
+  // Método para manejar la instalación en dispositivos compatibles
+  installPWA() {
+    this.deferredPrompt.prompt();
+    this.deferredPrompt.userChoice.then((choiceResult: any) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('El usuario aceptó la instalación');
+      } else {
+        console.log('El usuario rechazó la instalación');
+      }
+      this.deferredPrompt = null;
+    });
+  }
+  
+  initForm() {
     this.loginForm = this.fb.group({
       tenant: [null, Validators.required],
       idNivel: ['', Validators.required],
       password: ['', Validators.required],
     });
-
-    this.CurrentIP = await internalIpV4();
+  
+    internalIpV4()
+      .then((ip) => {
+        this.CurrentIP = ip;
+      })
+      .catch((error) => {
+        console.warn('No se pudo obtener la IP interna, intentando obtener la IP pública...', error);
+        this.getPublicIP().then((publicIP) => {
+          this.CurrentIP = publicIP;
+        }).catch(() => {
+          // Establecer un valor predeterminado si no se puede obtener ninguna IP
+          this.CurrentIP = '-';
+        });
+      });
   }
+  
+  getPublicIP(): Promise<string> {
+    return fetch('https://api.ipify.org?format=json')
+      .then(response => response.json())
+      .then(data => data.ip)
+      .catch(error => {
+        console.error('Error obteniendo la IP pública:', error);
+        return '-';
+      });
+  }
+  
 
   private async loadTenants(): Promise<void> {
       this.spinnerService.show();
       this.tenantDefault = await this.tenantService.getTenant().toPromise();
       this.spinnerService.hide();
+
+        // Si solo hay un tenant, seleccionarlo automáticamente
+      if (this.tenantDefault.length === 1) {
+        this.loginForm.controls['tenant'].setValue(this.tenantDefault[0]);
+      }
   }
   
+  openPasswordDialog() {
+    const dialogRef = this.dialog.open(DialogMCantComponent, {
+      width: '350px',
+      data: {
+        title: 'Ingresar Contraseña',
+        hideNumber: true, // Mostrar como contraseña (ocultar números)
+        decimalActive: false // No permitir punto decimal
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.value) {
+        this.password = result.value;
+        this.loginForm.controls['password'].setValue(this.password);
+        this.login();
+      }
+    });
+  }
+
+  getMaskedPassword(): string {
+    return this.password ? this.password.replace(/./g, '*') : '';
+  }
+
   login() {
     if (this.loginForm.invalid) {
       this.notificationService.showWarning('Por favor complete todos los campos.');
@@ -79,22 +171,31 @@ export class LoginComponent implements OnInit {
 
     this.spinnerService.show();
     
-    // Obtener valores del formulario
     const formValues = this.loginForm.value;
     const idNivel = formValues.idNivel;
     const password = formValues.password;
     const tenant = formValues.tenant; 
     
-    this.loginService.login({ IdNivel: idNivel, Password: password }, tenant.TenantId).subscribe({
+    const loginRequest: LoginRequest = {
+      IdNivel: idNivel,
+      Password: password,
+      Ip: this.CurrentIP || '-',   
+    };
+
+    this.loginService.login(loginRequest, tenant.TenantId).subscribe({
       next: (userData) => {
         console.log('Login correcto');
-        this.loginService.UsuarioShare.emit(userData.Username);
-
         const session: Session = new Session(userData.Token, userData, this.CurrentIP, tenant.TenantId, tenant.Sucursal);
         this.storageService.setCurrentSession(session);
-        
-        this.notificationService.showSuccess('Inicio de sesión exitoso.');
-        this.router.navigateByUrl('/dashboard');
+        if (userData.TipoCompu == 0 && this.storageService.getCurrentUser().IdNivel == "001") {
+            this.router.navigateByUrl('/dashboard');
+        } else if (userData.TipoCompu == 1) {
+            this.router.navigateByUrl('/caja');
+        } else if (userData.TipoCompu == 2) {
+            this.router.navigateByUrl('/mozo');
+        } else if (userData.TipoCompu == 3) {
+            this.router.navigateByUrl('/dashboard');
+        }
         this.loginForm.reset();
         this.spinnerService.hide();
       },

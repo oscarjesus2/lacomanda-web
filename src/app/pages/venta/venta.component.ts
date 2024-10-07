@@ -20,7 +20,6 @@ import { DialogEnviarPedidoComponent } from '../../components/dialog-grabar-pedi
 
 
 //Models
-import { PedidoDelete } from '../../models/pedido.delete.models';
 import { Product } from '../../models/product.models';
 import { Ambiente } from '../../models/ambiente.models';
 import { Mesas } from '../../models/mesas.models';
@@ -31,7 +30,7 @@ import { Observacion } from '../../models/observacion.models';
 import { PedidoCab } from '../../models/pedido.models';
 import { Familia } from '../../models/familia.models';
 import { SubFamilia } from '../../models/subfamilia.models';
-import { Usuario } from '../../models/user.models';
+import { Usuario } from '../../models/usuario.models';
 
 // Servicios
 import { StorageService } from '../../services/storage.service';
@@ -48,6 +47,10 @@ import { Turno } from 'src/app/models/turno.models';
 import { Router } from '@angular/router';
 import { LoginService } from 'src/app/services/auth/login.service';
 import { DialogEmitirComprobanteComponent } from 'src/app/components/dialog-emitir-comprobante/dialog-emitir-comprobante.component';
+import { ApiResponse } from 'src/app/interfaces/ApiResponse.interface';
+import { PedidoMesaDTO } from 'src/app/interfaces/pedidomesaDTO.interface';
+import { AnularProductoYComplementoDTO } from 'src/app/interfaces/anularProductoYComplementoDTO.interface';
+import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 
 @Component({
   selector: 'app-venta',
@@ -59,7 +62,7 @@ export class VentaComponent implements OnInit {
 
   isEdited: boolean;
   elementArr: any = [].fill(0);
-  public TurnoAbierto: boolean;
+  public turnoAbierto: Turno;
   public user: Usuario;
   public displayedColumns: string[] = ['NombreProducto', 'Precio', 'Cantidad', 'actions'];
   public ListaProductosdisplayedColumns: string[] = ['icoObs', 'nombrecorto', 'precio', 'add', 'cantidad', 'remove', 'actions'];
@@ -157,31 +160,15 @@ export class VentaComponent implements OnInit {
 
     try {
 
-      if (this.storageService.isAuthenticated()) {
-        this.loginService.UsuarioShare.emit(this.storageService.getCurrentSession().User.Username);
-      }
       await this.TurnoService.ObtenerTurno('001').subscribe(data => {
-
-        if (data == null) {
-          this.loginService.userLoginOn.emit(true);
-          this.loginService.idturnoShare.emit(0);
-          this.loginService.nroturnoShare.emit(0);
-          this.loginService.turnoOpenShare.emit(false);
-        } else {
-          this.loginService.userLoginOn.emit(true);
-          this.loginService.idturnoShare.emit(data.IdTurno);
-          this.loginService.nroturnoShare.emit(data.NroTurno);
-          this.loginService.turnoOpenShare.emit(true);
-        }
-
-
+        this.turnoAbierto = data;
       });
 
 
       // 1. Se carga servicio para obtener productos
       this.listProducts = await this.productService.getAllProducts().toPromise();
       // 2. Se carga servicio para obtener mesas
-      this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+      this.ListaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
       // 3. Se carga servicio para obtener Mozos
       this.ListaEmpleados = await this.empleadoService.getAllEmpleados().toPromise();
       // 4. Se carga servicio para obtener ambientes
@@ -191,7 +178,7 @@ export class VentaComponent implements OnInit {
       // 6. Se carga la sub familia
       this.listSubFamilia = await this.familiaService.getSubFamilia().toPromise();
       // 7. Se carga servicio observacion
-      this.ListaObservacion = await this.ObservacionService.getAllObservacion().toPromise();
+      this.ListaObservacion = (await this.ObservacionService.getAllObservacion().toPromise()).Data;
 
       this.mozoSelected.IdEmpleado = this.storageService.getCurrentSession().User.IdEmpleado;
 
@@ -257,10 +244,10 @@ export class VentaComponent implements OnInit {
  
 
     } else {
-      var listData: any[] = await this.mesasService.findMesaById(mesa.IdMesa).toPromise();
-      if (listData.length > 0) {
-        this.rellenarHeaderPedido(listData);
-        this.listProductGrid = this.getPedidoDetByResponse(listData);
+      const listData: ApiResponse<PedidoMesaDTO[]> = await this.pedidoService.findPedidoMesaByIdMesa(mesa.IdMesa).toPromise();
+      if (listData.Data.length > 0) {
+        this.rellenarHeaderPedido(listData.Data);
+        this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
         this.GridListaPedidoDetProducto.data = this.listProductGrid;
         this.mesaSelected = mesa;
         this.MostrarOcultarPanelProducto = true;
@@ -274,7 +261,7 @@ export class VentaComponent implements OnInit {
           'No existe el pedido en la mesa.',
           'warning'
         );
-        this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+        this.ListaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
       }
     }
     this.RehacerPantallaRefresh = 'RehacerPantalla';
@@ -286,10 +273,9 @@ export class VentaComponent implements OnInit {
   async openDialogVerPedido(IdMesa: string) {
     try {
       this.spinnerService.show();
+      const listData: ApiResponse<PedidoMesaDTO[]> = await this.pedidoService.findPedidoMesaByIdMesa(IdMesa).toPromise();
 
-      var listData: any[] = await this.mesasService.findMesaById(IdMesa).toPromise();
-
-      if (listData.length > 0) {
+      if (listData.Data.length > 0) {
         // this.rellenarHeaderPedido(listData);
 
         const dialogEnviarPedidoRef = this.dialogMesa.open(DialogVerPedidoComponent, {
@@ -313,7 +299,7 @@ export class VentaComponent implements OnInit {
           'No existe el pedido en la mesa.',
           'warning'
         );
-        this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+        this.ListaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
       }
 
 
@@ -366,7 +352,7 @@ export class VentaComponent implements OnInit {
         const dialogEnviarPedidoRef = this.dialogMesa.open(DialogObservacionComponent, {
           hasBackdrop: true,
           width: '400px',
-          data: { ListaObservacion: this.ListaObservacion, Observaciones: oPedidoDet.Observacion, NombreCorto: oPedidoDet.NombreCorto }
+          data: { ListaObservacion: this.ListaObservacion, Observaciones: oPedidoDet.Observacion, NombreCorto: oPedidoDet.Producto.NombreCorto }
         });
 
         dialogEnviarPedidoRef.afterClosed().subscribe(Resultado => {
@@ -409,7 +395,7 @@ export class VentaComponent implements OnInit {
   async deleteProductGrid(oPedidoDet: PedidoDet) {
 
     var dataSet: any = {
-      nombreProducto: oPedidoDet.NombreCorto,
+      nombreProducto: oPedidoDet.Producto.NombreCorto,
       motivoAnulacion: '',
       confirmacion: false
     };
@@ -426,18 +412,18 @@ export class VentaComponent implements OnInit {
 
       if (resultDialog.confirmacion) {
 
-        var pedidoDelete: PedidoDelete = new PedidoDelete(
+        var pedidoDelete: AnularProductoYComplementoDTO;
           this.storageService.getCurrentSession().User.IdUsuario,
           resultDialog.motivoAnulacion,
           oPedidoDet.IdPedido,
-          oPedidoDet.IdProducto,
-          oPedidoDet.Item);
+          oPedidoDet.Producto.IdProducto,
+          oPedidoDet.Item;
 
         this.spinnerService.show();
-        var responseService: ResponseService = await this.pedidoService.deletePedido(pedidoDelete).toPromise();
+        var responseService: ApiResponse<ImpresionDTO[]> = await this.pedidoService.AnularProductoYComplemento(pedidoDelete).toPromise();
         var cofigoOk: number = 200;
 
-        if (responseService.Codigo == cofigoOk) {
+        if (responseService.Success) {
           var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(oPedidoDet);
           this.listProductGrid.splice(removeIndex, 1);
           this.GridListaPedidoDetProducto.data = this.listProductGrid;
@@ -445,7 +431,7 @@ export class VentaComponent implements OnInit {
             this.limpiarPedido();
             this.MostrarOcultarPanelMesa = true;
             this.MostrarOcultarPanelProducto = false;
-            this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+            this.ListaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
           }
         }
         this.spinnerService.hide();
@@ -463,8 +449,7 @@ export class VentaComponent implements OnInit {
     this.listProductGrid.push(new PedidoDet({
       Item: this.DEFAULT_ID,
       IdPedido: this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
-      IdProducto: product.IdProducto,
-      NombreCorto:product.NombreCorto,
+      Producto: product,
       Precio: product.Precio,
       Cantidad: 1,
       Subtotal: 1 * product.Precio,
@@ -493,8 +478,7 @@ export class VentaComponent implements OnInit {
             {
             Item : this.DEFAULT_ID,
             IdPedido:this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
-            IdProducto: product.IdProducto,
-            NombreCorto: product.NombreCorto,
+            Producto: product,
             Precio:product.Precio,
             Cantidad: cant,
             Subtotal: cant * product.Precio,
@@ -526,8 +510,8 @@ export class VentaComponent implements OnInit {
             {
             Item: productGrid.Item,
             IdPedido : productGrid.IdPedido = productGrid.IdPedido,
-            IdProducto: productGrid.IdProducto,
-            NombreCorto: '',
+            // IdProducto: productGrid.IdProducto,
+            // NombreCorto: '',
             Precio: productGrid.Precio,
             Cantidad: productGrid.Cantidad,
             Subtotal : productGrid.Precio*productGrid.Cantidad,
@@ -552,14 +536,14 @@ export class VentaComponent implements OnInit {
         }
         );
 
-        var responseRegisterPedido: any = await this.pedidoService.registerPedido(pedido).toPromise();
+        var responseRegisterPedido: any = await this.pedidoService.RegistrarPedido(pedido).toPromise();
 
         if (responseRegisterPedido) {
        
           this.limpiarPedido();
 
        
-          this.mesasService.getAllMesas().subscribe(data => {
+          this.mesasService.GetAllMesas().subscribe(data => {
             this.ListaMesasTotal = data;
             let result: Ambiente;
             result = this.listAmbiente.find(item => item.Estado == 1);
@@ -605,7 +589,7 @@ export class VentaComponent implements OnInit {
         });
 
         var resultDialog: any = await dialogProcessComprobante.afterClosed().toPromise();
-        this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+        this.ListaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
         this.limpiarPedido();
         this.MostrarOcultarPanelMesa = true;
         this.MostrarOcultarPanelProducto = false;
@@ -617,11 +601,11 @@ export class VentaComponent implements OnInit {
     }
   }
 
-  public async RehacerPantalla() {
+  public async RehacerPantalla(verPanelMesa: boolean = true) {
     try {
       this.spinnerService.show();
   
-      this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+      this.ListaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
       this.limpiarPedido();
       this.MostrarOcultarPanelMesa = true;
       this.MostrarOcultarPanelProducto = false;
@@ -694,8 +678,7 @@ export class VentaComponent implements OnInit {
         {
        Item: data.Item, 
         IdPedido: data.IdPedido, 
-        IdProducto: data.IdProducto, 
-        NombreCorto: data.NombreCorto, 
+        // Producto: Product{data.IdProducto, data.NombreCorto}, 
         Precio : data.Precio, 
         Cantidad: data.Cantidad, 
         Subtotal: data.Cantidad * data.Precio, 
@@ -720,7 +703,7 @@ export class VentaComponent implements OnInit {
       this.listProducts = data;
     });
 
-    this.mesasService.getAllMesas().subscribe(data => {
+    this.mesasService.GetAllMesas().subscribe(data => {
       this.ListaMesasTotal = data;
       let result: Ambiente;
       result = this.listAmbiente.find(item => item.Estado == 1);

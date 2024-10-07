@@ -1,0 +1,279 @@
+/* Estilo para la línea completa de Producto */
+.producto-linea {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f9f9f9; /* Fondo suave */
+  border-radius: 10px; /* Bordes redondeados */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+}
+
+.producto-linea label {
+  font-size: 1.2em;
+  color: #333;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.producto-linea input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1em;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); /* Sombra interna para el input */
+  background-color: white; /* Fondo blanco para el input */
+  color: #333;
+}
+.producto-cantidad-linea {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f9f9f9; /* Fondo suave */
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+}
+/* Ajustar el espaciado de los inputs para evitar demasiados márgenes */
+.qty-container input, .complementos1-container input {
+  box-sizing: border-box;
+  margin-right: 5px; /* Margen lateral más pequeño para que no haya tanto espacio entre campos */
+  width: 50px; /* Asegurarse de que el ancho de los inputs sea consistente */
+}
+
+.qty-container label {
+  font-size: 1.1em;
+  margin-right: 5px;
+  color: #333;
+  font-weight: bold;
+}
+
+.qty-container button {
+  background-color: #4CAF50; /* Verde para destacar el botón */
+  color: white;
+  border-radius: 50%; /* Hacer el botón circular */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.qty-container button:hover {
+  background-color: #388E3C;
+  transform: scale(1.1); /* Efecto de agrandamiento al pasar el ratón */
+}
+
+/* Estilo para el campo Qty */
+.qty-container {
+  display: flex;
+  align-items: center;
+}
+
+.qty-container input {
+  width: 60px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 1em;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); /* Sombra interna */
+  margin-right: 10px;
+}
+
+/* Estilo para Cant. Complem. */
+.complementos1-container {
+  display: flex;
+  align-items: center;
+}
+
+.complementos1-container label {
+  font-size: 1.1em;
+  margin-right: 5px;
+  color: #333;
+  font-weight: bold;
+}
+
+.complementos-container {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  background-color: #FFF3E0; /* Fondo cálido */
+  height: 100%;
+  box-sizing: border-box;
+  border-radius: 15px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+
+.complementos1-container input {
+  width: 60px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 1em;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); /* Sombra interna */
+}
+
+.columnas {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  gap: 20px;
+}
+
+.complementos-configurados {
+  width: 50%;
+  background-color: #FFCC80; /* Fondo cálido */
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.grid-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 columnas */
+  
+  gap: 10px;
+}
+
+.grid-buttons button {
+  width: 100%;
+  height: 100%;
+  background-color: #FF7043; /* Naranja cálido */
+  color: white;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 10px; /* Tamaño de la fuente */
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+  transition: background-color 0.3s, transform 0.2s;
+  border: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  word-wrap: break-word;
+}
+
+.grid-buttons button:hover {
+  background-color: #F4511E; /* Hover más oscuro */
+  transform: scale(1.05);
+}
+.producto-info {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.producto-cantidad {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.producto-cantidad div {
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.producto-cantidad label {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #333;
+  font-family: 'Poppins', sans-serif;
+}
+
+.producto-cantidad input {
+  padding: 10px;
+  font-size: 1em;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.total-complementos {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.total-complementos div {
+  width: 45%;
+}
+
+.total-complementos input {
+  padding: 10px;
+  font-size: 1em;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.botones-accion {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.botones-accion button {
+  width: 40%;
+  font-size: 1.2em;
+  padding: 15px;
+  font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.botones-accion button:hover {
+  transform: scale(1.05);
+}
+
+/* Color del botón Aceptar */
+button.aceptar {
+  background-color: #4CAF50; /* Verde cálido */
+  color: white;
+}
+
+button.aceptar:hover {
+  background-color: #388E3C; /* Hover verde oscuro */
+}
+
+/* Color del botón Cancelar */
+button.cancelar {
+  background-color: #FF7043; /* Naranja cálido */
+  color: white;
+}
+
+button.cancelar:hover {
+  background-color: #F4511E; /* Hover naranja oscuro */
+}
+
+.mat-table {
+  margin-top: 20px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+}
+
+
+/* Establecer un límite de altura para la tabla */
+.limited-height-table {
+  max-height: 300px; /* Ajusta esta altura según tus necesidades */
+  overflow-y: auto; /* Hacer que el contenido sea desplazable si excede el límite */
+  display: block; /* Asegura que el scroll funcione correctamente */
+}
+
+.mat-elevation-z8 {
+  border-radius: 10px; /* Opcional: redondear bordes si quieres */
+}
+
+/* Ajusta el ancho de la columna "Producto" */
+.ancho-producto {
+  width: 550px; /* Puedes ajustar esta medida según tus necesidades */
+}

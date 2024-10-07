@@ -3,6 +3,8 @@ import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs';
 import { Mesas } from '../models/mesas.models';
 import { environment } from 'src/environments/environment';  // Importa el entorno correspondiente
+import { ApiResponse } from '../interfaces/ApiResponse.interface';
+import { PedidoMesaDTO } from '../interfaces/pedidomesaDTO.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -10,17 +12,21 @@ import { environment } from 'src/environments/environment';  // Importa el entor
 export class MesasService {
 
     private basePathMesas = environment.apiUrl + '/mesa';
-    private basePathConsultarMesa = environment.apiUrl + '/pedido/listarpedido_x_mesa/';
-  
+ 
     constructor(private http: HttpClient) { }
 
-    getAllMesas(): Observable<Mesas[]> {
+    GetAllMesas(): Observable<Mesas[]> {
         return this.http.get<Mesas[]>(this.basePathMesas + '/listar');
     }
 
-    findMesaById(idMesa: string): Observable<any[]> {
-        return this.http.get<any[]>(this.basePathConsultarMesa + idMesa);
+    GetMesa(idMesa: string): Observable<Mesas> {
+        return this.http.get<Mesas>(this.basePathMesas + '/' + idMesa);
     }
+
+    CambiarMesa(idMesaOrigen: string, idMesaDestino: string): Observable<ApiResponse<boolean>> {
+        return this.http.put<ApiResponse<boolean>>(`${this.basePathMesas}/CambiarMesa/${idMesaOrigen}/${idMesaDestino}`,{});
+    }
+
     ImprimirPrecuenta(idMesa: string): Observable<any[]> {
         return this.http.get<any[]>('/api/pedido/imprimirprecuenta/' + idMesa);
     }

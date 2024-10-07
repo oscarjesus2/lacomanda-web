@@ -1,5 +1,5 @@
 import { Turno } from "./turno.models";
-import { Usuario } from "./user.models";
+import { Usuario } from "./usuario.models";
 
 export class Session {
 

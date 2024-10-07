@@ -96,7 +96,7 @@ export class DialogEmitirVentaComponent implements OnInit {
 
   private async initializeProductos(): Promise<void> {
     try {
-      this.products = await this.productoService.getProductosParaVenta(1).toPromise();
+      this.products = await this.productoService.getProductosParaVenta(this.storageService.getCurrentIP()).toPromise();
       this.filteredProducts = this.productCtrl.valueChanges.pipe(
         startWith(''),
         map(value => this._filter(value)),
@@ -413,7 +413,7 @@ export class DialogEmitirVentaComponent implements OnInit {
 
       pedidoDet.IdPedido = 0;
       pedidoDet.NroCuenta = 1;
-      pedidoDet.IdProducto = item.IdProducto;
+      pedidoDet.Producto = new Product({IdProducto: item.IdProducto})
       pedidoDet.Item = correlativo;
       pedidoDet.Precio = item.Precio;
       pedidoDet.Cantidad = item.Qty;
@@ -433,13 +433,12 @@ export class DialogEmitirVentaComponent implements OnInit {
       pedidoDet.NumEnvios = 0;
       pedidoDet.Observacion = "";
       pedidoDet.Ip = this.storageService.getCurrentIP()
-      pedidoDet.IdEmpleado = this.storageService.getCurrentUser().IdEmpleado;
       pedidoDet.MotivoReimpresion = "";
       pedidoDet.NumReimpresion = null;
       pedidoDet.UsuReimpresion = null;
       pedidoDet.FecReimpresion = null;
       pedidoDet.Estado = 2;
-      pedidoDet.nombreCuenta = "";
+      pedidoDet.NombreCuenta = "";
       pedidoDet.Division = 0;
       pedidoDet.Impuesto1 = item.ImpuestoBolsa;
       correlativo++;

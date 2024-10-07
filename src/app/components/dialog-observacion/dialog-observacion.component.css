@@ -1,8 +1,133 @@
-.example-button-row button,
-.example-button-row a {
-  margin-right: 8px;
+.restaurant-toolbar {
+  background-color: #FF7043; /* Naranja cálido */
+  color: white;
+  font-size: 1.8em;
+  text-align: center;
+  padding: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  font-family: 'Poppins', sans-serif;
 }
 
 .example-full-width {
   width: 100%;
+  margin-bottom: 20px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.mat-form-field {
+  width: 100%;
+  background-color: #FFFDE7; /* Fondo suave */
+  border-radius: 8px;
+  padding: 10px;
+}
+
+textarea {
+  padding: 10px;
+  font-size: 1.2em;
+  font-family: 'Poppins', sans-serif;
+}
+
+.main-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 10px;
+  background-color: #FFEBEE; /* Fondo cálido */
+  border-radius: 10px;
+  justify-content: center;
+}
+
+.item-observacion {
+  cursor: pointer;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 15px;
+  border: 1px solid #e0e0e0;
+  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.1em;
+  text-align: center;
+  width: 120px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-observacion:hover {
+  transform: scale(1.05);
+  background-color: #FFE0B2; /* Color cálido suave */
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.custom-button {
+  background-color: #FF7043; /* Naranja vibrante */
+  color: white;
+  border-radius: 12px;
+  font-size: 1.2em;
+  padding: 12px 24px;
+  font-family: 'Poppins', sans-serif;
+  margin-top: 15px;
+  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.custom-button:hover {
+  background-color: #D84315; /* Naranja oscuro */
+}
+
+mat-dialog-actions {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 20px;
+}
+
+mat-dialog-content {
+  padding: 30px;
+  background-color: #FFF3E0; /* Fondo suave */
+  border-radius: 10px;
+}
+
+mat-tab-group {
+  margin-top: 20px;
+  font-family: 'Poppins', sans-serif;
+}
+
+mat-tab-label {
+  font-size: 1.2em;
+}
+
+.mat-tab-label-active {
+  color: #FF7043; /* Color activo acorde con la paleta */
+}
+
+.mat-tab-body {
+  padding: 10px;
+}
+
+.actions {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.actions button {
+  padding: 10px 20px;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 5px;
+  background-color: #4caf50;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+}
+
+
+.actions button.cancel {
+  background-color: #f44336;
+}
+
+.actions button:hover {
+  opacity: 0.8;
+  transform: scale(1.05); /* Animación suave en hover */
 }

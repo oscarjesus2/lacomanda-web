@@ -11,5 +11,6 @@ export class Usuario {
   public Username: string;
   public Token:string;
   public Turno: Turno;
+  public TipoCompu: number;
 }
 

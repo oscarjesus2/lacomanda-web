@@ -1,0 +1,18 @@
+<div class="m-text-touch-container">
+  <h1>{{ title }}</h1>
+  <div class="display">
+    <input type="text" [(ngModel)]="inputValue" readonly />
+  </div>
+
+  <div class="keypad">
+    <div *ngFor="let row of keyRows">
+      <button *ngFor="let key of row" [ngClass]="{'space': key === 'Espacio'}" (click)="onKeyClick(key)">{{ key }}</button>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button (click)="clear()">Borrar</button>
+    <button (click)="accept()">Aceptar</button>
+    <button (click)="cancel()">Salir</button>
+  </div>
+</div>

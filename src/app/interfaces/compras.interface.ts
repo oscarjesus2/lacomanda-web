@@ -1,5 +1,5 @@
 
-export interface InformeContableCompraInterface {
+export interface InformeContableCompra {
     IdVenta: number;
     Fecha: string;
     Serie: string;

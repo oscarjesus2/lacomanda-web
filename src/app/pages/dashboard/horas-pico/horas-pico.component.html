@@ -1,8 +1,19 @@
-<div class="report">
+<div class="report" style="position: relative; min-height: 200px;">
+  <ngx-spinner
+  bdColor="rgba(128, 128, 128, 0.8)"
+  size="medium"
+  color="#fff"
+  type="ball-scale-multiple"
+  name="horasPicoSpinner"
+>
+  <p style="font-size: 20px; color: rgb(71, 68, 68)">Cargando...</p>
+</ngx-spinner>
+
     <h2>Horas Pico</h2>
     <select (change)="onReportTypeChange($event)">
       <option value="1">Tarde</option>
       <option value="2">Noche</option>
+      <option value="3">Madrugada</option>
     </select>
     <div  class="horaPico">Hora Pico : {{horaPico}}</div> 
     <div #chart class="chart" id="chart-ventas-diarias"></div>

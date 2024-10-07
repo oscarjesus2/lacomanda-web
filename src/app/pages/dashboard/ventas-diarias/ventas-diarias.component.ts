@@ -94,9 +94,11 @@ export class VentasDiariasComponent implements OnInit, OnChanges  {
   }
 
   async getVentaDiariasSemanalMensual(tipo: number, fechaInicial: string, fechaFinal: string) {
+    this.spinnerService.show('ventaDiariaSpinner');
       const data = await this.ventaService.getVentaDiariasSemanalMensual(tipo, fechaInicial, fechaFinal).toPromise();
       this.data = data;
       this.totalVenta = this.data.reduce((acc, venta) => acc + venta.Total, 0);
+      this.spinnerService.hide('ventaDiariaSpinner');
       this.updateChart();
   }
 

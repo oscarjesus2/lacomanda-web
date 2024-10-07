@@ -17,4 +17,10 @@ export class Mesas {
     public Visible: boolean;
     public Total: number;
     public NombreEmpleado:string;
+    public Color: string;
+
+        
+    constructor(init?: Partial<Mesas>) {
+        Object.assign(this, init);
+    }
 }

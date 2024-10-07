@@ -8,7 +8,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { TurnoService } from './services/turno.service';
 import { IdleService } from './services/idle.service';
 import { DataService } from '../app/services/data.service';
-import { QzTrayService } from './services/qz-tray.service';
+import { QzTrayV224Service } from './services/qz-tray-v224.service';
+import { HeaderService } from './services/header.service';
 
 @Component({
   selector: 'app-root',
@@ -17,9 +18,9 @@ import { QzTrayService } from './services/qz-tray.service';
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'Jbs_Resta';
-
+  headerVisible = true;
   constructor(
-    private qzTrayService: QzTrayService, 
+    private qzTrayService: QzTrayV224Service, 
     private spinnerService: NgxSpinnerService,
     private router: Router,
     private loginService: LoginService,
@@ -27,8 +28,12 @@ export class AppComponent implements OnInit, OnDestroy {
     private dialogTurno: MatDialog,
     private turnoService: TurnoService,
     private idleService: IdleService,
-    private dataService: DataService
-  ) {}
+    private dataService: DataService,
+    private headerService: HeaderService) {
+    this.headerService.headerVisible$.subscribe(visible => {
+      this.headerVisible = visible;
+    });
+  }
 
   ngOnDestroy(): void {
     this.storageService.logout();
@@ -48,8 +53,8 @@ export class AppComponent implements OnInit, OnDestroy {
     switch (url) {
       case '/dashboard':
         return this.storageService.getCurrentNombreSucursal();
-      case '/ventas':
-        return 'Ventas';
+      case '/caja':
+        return 'caja';
       case '/administracion':
         return 'Administración';
       case '/iniciar-sesion':

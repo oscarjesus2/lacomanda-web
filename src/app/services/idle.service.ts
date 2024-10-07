@@ -10,7 +10,7 @@ import { MatDialog } from '@angular/material/dialog';
 })
 export class IdleService {
   private timeoutId: any;
-  private readonly timeout: number = 5 * 60 * 1000; // 15 minutos
+  private readonly timeout: number = 1 * 60 * 1000; // 15 minutos
 
   constructor(private ngZone: NgZone, private router: Router, private storageService:StorageService,  private dialog: MatDialog) {
     this.startWatching();

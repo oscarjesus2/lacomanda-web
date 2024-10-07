@@ -1,4 +1,10 @@
-<div class="report">
+<div class="report" style="position: relative; min-height: 200px;">
+  <ngx-spinner bdColor="rgba(128, 128, 128, 0.8)"
+  size="medium"
+  color="#fff"
+  type="ball-scale-multiple"
+  name="canalVentaSpinner">
+  <p style="font-size: 20px; color: rgb(71, 68, 68)">Cargando...</p></ngx-spinner>
     <h2>Ventas por Canal</h2>
     <div  class="totalVenta">Total Venta Mesa : S/. {{totalVentaMesa}}</div> 
     <div  class="totalVenta">Total Venta Llevar : S/. {{totalVentaLlevar}}</div>
@@ -6,5 +12,3 @@
 
     <div #chart class="chart" id="chart-ventas-diarias"></div>
   </div>
-
-  

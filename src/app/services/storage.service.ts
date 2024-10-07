@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Session } from '../models/session.models';
-import { Usuario } from '../models/user.models';
+import { Usuario } from '../models/usuario.models';
 import { LoginService } from './auth/login.service';
 import { Turno } from '../models/turno.models';
 
@@ -76,7 +76,5 @@ export class StorageService {
   logout(): void {
     this.removeCurrentSession();
     this.router.navigate(['/iniciar-sesion']);
-    this.loginService.userLoginOn.emit(false);
-    this.loginService.idturnoShare.emit(0);
   }
 }

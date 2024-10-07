@@ -3,6 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs';
 import { Observacion } from '../models/observacion.models';
 import { environment } from 'src/environments/environment';
+import { ApiResponse } from '../interfaces/ApiResponse.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -14,8 +15,8 @@ export class ObservacionService {
 
     constructor(private http: HttpClient) { }
 
-    getAllObservacion(): Observable<Observacion[]> {
-        return this.http.get<Observacion[]>(this.basePath + '/listar');
+    getAllObservacion(): Observable<ApiResponse<Observacion[]>> {
+        return this.http.get<ApiResponse<Observacion[]>>(this.basePath + '/listar');
     }
 
 }

@@ -40,9 +40,9 @@ export class DialogEnviarPedidoComponent {
 
     async DeleteProductoClick(oPedidoDet: PedidoDet) {
         
-        var removeIndex = this.data.oPedido.ListaPedidoDet.map(function (item) { return item.IdProducto; }).indexOf(oPedidoDet.IdProducto);
+        var removeIndex = this.data.oPedido.ListaPedidoDet.map(function (item) { return item.Producto; }).indexOf(oPedidoDet.Producto);
         this.data.oPedido.ListaPedidoDet.splice(removeIndex, 1);
-        this.oListaProductosEliminados.push(oPedidoDet.IdProducto);
+        this.oListaProductosEliminados.push(oPedidoDet.Producto.IdProducto);
         this.GridListaPedidoDetProducto.data = this.data.oPedido.ListaPedidoDet;
         this.data.oListaProductosEliminados=this.oListaProductosEliminados;
     }
@@ -58,7 +58,7 @@ export class DialogEnviarPedidoComponent {
             try
             {
                 this.spinnerService.show();
-                var responseRegisterPedido: any = await this.pedidoService.registerPedido(this.data.oPedido).toPromise();
+                var responseRegisterPedido: any = await this.pedidoService.RegistrarPedido(this.data.oPedido).toPromise();
                 if (responseRegisterPedido) {
                     this.data.Resultado = "true";
                     Swal.fire(
@@ -66,7 +66,7 @@ export class DialogEnviarPedidoComponent {
                     'Se registro el pedido correctamente.',
                     'success'
                     )
-                    var responseImprimirPedido: any = await this.pedidoService.registerPedido(this.data.oPedido).toPromise();
+                    var responseImprimirPedido: any = await this.pedidoService.RegistrarPedido(this.data.oPedido).toPromise();
 
                     this.dialogRef.close(this.data);
     

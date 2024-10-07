@@ -82,14 +82,17 @@ export class CanalVentaComponent implements OnInit, OnChanges  {
   }
 
   async getVentasPorCanal(fechaInicial: string, fechaFinal: string) {
+    
+    this.spinnerService.show('canalVentaSpinner');
+
       const data = await this.ventaService.getVentasPorCanal(fechaInicial, fechaFinal).toPromise();
       this.data = data;
   
       this.totalVentaMesa = this.data.reduce((acc, venta) => {return venta.Agrupado==='Para Mesa'? acc + venta.Total: acc}, 0);
       this.totalVentaLlevar = this.data.reduce((acc, venta) => {return venta.Agrupado==='Para Llevar'? acc + venta.Total: acc}, 0);
       this.totalVentaDelivery = this.data.reduce((acc, venta) => {return venta.Agrupado==='Delivery'? acc + venta.Total: acc}, 0);
-
       this.updateChart();
+      this.spinnerService.hide('canalVentaSpinner');
   }
 
 
