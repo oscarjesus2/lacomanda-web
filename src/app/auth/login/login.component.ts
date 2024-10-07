@@ -10,6 +10,7 @@ import { Session } from 'src/app/models/session.models';
 import { TenantService } from 'src/app/services/tenant.service';
 import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mcant.component';
 import { MatDialog } from '@angular/material/dialog';
+import { LoginRequest } from 'src/app/services/auth/loginRequest';
 
 @Component({
   selector: 'app-login',
@@ -109,7 +110,10 @@ export class LoginComponent implements OnInit {
       .catch((error) => {
         console.warn('No se pudo obtener la IP interna, intentando obtener la IP pública...', error);
         this.getPublicIP().then((publicIP) => {
-          this.CurrentIP = publicIP
+          this.CurrentIP = publicIP;
+        }).catch(() => {
+          // Establecer un valor predeterminado si no se puede obtener ninguna IP
+          this.CurrentIP = '-';
         });
       });
   }
@@ -120,7 +124,7 @@ export class LoginComponent implements OnInit {
       .then(data => data.ip)
       .catch(error => {
         console.error('Error obteniendo la IP pública:', error);
-        return 'No se pudo obtener la IP';
+        return '-';
       });
   }
   
@@ -172,7 +176,13 @@ export class LoginComponent implements OnInit {
     const password = formValues.password;
     const tenant = formValues.tenant; 
     
-    this.loginService.login({ IdNivel: idNivel, Password: password, Ip:  this.CurrentIP }, tenant.TenantId).subscribe({
+    const loginRequest: LoginRequest = {
+      IdNivel: idNivel,
+      Password: password,
+      Ip: this.CurrentIP || '-',   
+    };
+
+    this.loginService.login(loginRequest, tenant.TenantId).subscribe({
       next: (userData) => {
         console.log('Login correcto');
         const session: Session = new Session(userData.Token, userData, this.CurrentIP, tenant.TenantId, tenant.Sucursal);
