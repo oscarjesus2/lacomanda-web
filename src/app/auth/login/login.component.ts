@@ -111,6 +111,7 @@ export class LoginComponent implements OnInit {
       try {
         // Si falla, intenta obtener la IP usando WebRTC
         this.CurrentIP = await this.getLocalIPAddress();
+        console.info('CurrentIP...', this.CurrentIP);
       } catch (error) {
         console.warn('No se pudo obtener la IP con WebRTC...', error);
         // Establecer un valor predeterminado si no se puede obtener ninguna IP
