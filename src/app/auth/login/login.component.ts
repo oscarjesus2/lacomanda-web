@@ -106,6 +106,7 @@ export class LoginComponent implements OnInit {
     try {
       // Intenta obtener la IP interna
       this.CurrentIP = await internalIpV4();
+      console.info('CurrentIP con internalIpV4...', this.CurrentIP);
     } catch (error) {
       console.warn('No se pudo obtener la IP interna, intentando con WebRTC...', error);
       try {
