@@ -96,14 +96,14 @@ export class LoginComponent implements OnInit {
     });
   }
   
-  initForm() {
+  async initForm() {
     this.loginForm = this.fb.group({
       tenant: [null, Validators.required],
       idNivel: ['', Validators.required],
       password: ['', Validators.required],
     });
   
-    internalIpV4()
+    await internalIpV4()
       .then((ip) => {
         this.CurrentIP = ip;
       })
