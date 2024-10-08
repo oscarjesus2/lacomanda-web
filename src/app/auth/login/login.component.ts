@@ -166,7 +166,7 @@ export class LoginComponent implements OnInit {
   openPasswordDialog() {
     const dialogRef = this.dialog.open(DialogMCantComponent, {
       width: '350px',
-      data: {
+      data: { 
         title: 'Ingresar Contraseña',
         hideNumber: true, // Mostrar como contraseña (ocultar números)
         decimalActive: false // No permitir punto decimal
@@ -205,6 +205,7 @@ export class LoginComponent implements OnInit {
       Ip: this.CurrentIP || '-',   
     };
 
+    console.log('CurrentIP', this.CurrentIP);
     this.loginService.login(loginRequest, tenant.TenantId).subscribe({
       next: (userData) => {
         console.log('Login correcto');
