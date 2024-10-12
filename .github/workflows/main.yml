@@ -88,23 +88,30 @@ jobs:
         if [ "${{ github.ref }}" == "refs/heads/master" ]; then
           lftp -e "set ftp:ssl-allow no;
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
+          
           cd /naruto.jobbusiness.pe;
-          cls -1 | grep -v '.htaccess' | xargs -d '\n' -I {} rm -rf {};
+          glob -a rm -rf *;
+          rm -f .htaccess;
           mirror -R . /naruto.jobbusiness.pe;
 
           cd /soho.jobbusiness.pe;
-          cls -1 | grep -v '.htaccess' | xargs -d '\n' -I {} rm -rf {};
+          glob -a rm -rf *;
+          rm -f .htaccess;
           mirror -R . /soho.jobbusiness.pe;
 
           cd /main.jobbusiness.pe;
-          cls -1 | grep -v '.htaccess' | xargs -d '\n' -I {} rm -rf {};
+          glob -a rm -rf *;
+          rm -f .htaccess;
           mirror -R . /main.jobbusiness.pe;
           bye";
+        
         elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
           lftp -e "set ftp:ssl-allow no;
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
+          
           cd /test.jobbusiness.pe;
-          cls -1 | grep -v '.htaccess' | xargs -d '\n' -I {} rm -rf {};
+          glob -a rm -rf *;
+          rm -f .htaccess;
           mirror -R . /test.jobbusiness.pe;
           bye";
         fi
