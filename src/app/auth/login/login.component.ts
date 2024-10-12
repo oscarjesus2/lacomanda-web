@@ -11,6 +11,7 @@ import { TenantService } from 'src/app/services/tenant.service';
 import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mcant.component';
 import { MatDialog } from '@angular/material/dialog';
 import { LoginRequest } from 'src/app/services/auth/loginRequest';
+import { version } from 'src/environments/version';
 
 @Component({
   selector: 'app-login',
@@ -18,7 +19,7 @@ import { LoginRequest } from 'src/app/services/auth/loginRequest';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
-
+  appVersion = version;
   hide = true;
   public loginValid = true;
   public idNivel = '001';

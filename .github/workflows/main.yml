@@ -7,8 +7,30 @@ on:
       - develop # Ejecuta el workflow en push a la rama 'develop'
 
 jobs:
+  version:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Bump version and generate changelog
+      run: |
+        npm run release
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git push --follow-tags origin ${{ github.ref }}
   build:
     runs-on: ubuntu-latest
+    needs: version  # Dependerá del job de versionado
 
     steps:
     - name: Checkout code

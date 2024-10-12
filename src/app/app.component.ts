@@ -17,6 +17,7 @@ import { HeaderService } from './services/header.service';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit, OnDestroy {
+
   title = 'Jbs_Resta';
   headerVisible = true;
   constructor(

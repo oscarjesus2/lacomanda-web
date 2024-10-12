@@ -1,14 +1,15 @@
 {
   "name": "jbs-rest",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "concurrently \"ng serve --proxy-config proxy.conf.json\" \"node server.js\"",
-    "build": "ng build",
+    "start": "node ./version.js && concurrently \"ng serve --proxy-config proxy.conf.json\" \"node server.js\"",
+    "build": "node ./version.js && ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "release": "standard-version"
   },
   "private": true,
   "dependencies": {
@@ -56,6 +57,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "standard-version": "^9.5.0",
     "typescript": "~5.1.3"
   }
 }
