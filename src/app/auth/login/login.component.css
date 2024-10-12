@@ -53,3 +53,15 @@ mat-form-field {
 .login-button:hover {
   background-color: #e64a19;
 }
+
+.app-version {
+  font-size: 16px;           /* Tamaño de la fuente */
+  color: #4A4A4A;            /* Color del texto */
+  background-color: #F3F3F3; /* Color de fondo */
+  padding: 10px;             /* Espaciado interno */
+  border: 1px solid #D1D1D1; /* Borde del contenedor */
+  border-radius: 5px;       /* Bordes redondeados */
+  text-align: center;        /* Alineación del texto */
+  margin: 20px;             /* Espacio alrededor del elemento */
+  font-family: Arial, sans-serif; /* Fuente */
+}
