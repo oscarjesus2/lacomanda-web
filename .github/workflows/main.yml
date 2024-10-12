@@ -19,6 +19,11 @@ jobs:
       with:
         node-version: '16'
 
+    - name: Configure Git
+      run: |
+          git config --global user.email "oscar.bautista@jobbusiness.pe"
+          git config --global user.name "CI/CD Bot"
+
     - name: Install dependencies
       run: npm install
 
