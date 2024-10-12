@@ -91,20 +91,20 @@ jobs:
           
           cd /naruto.jobbusiness.pe;
           # Eliminar todos los archivos menos .htaccess
-          for file in $(ls -A1 | grep -v '.htaccess'); do
-            rm -rf "$file";
+          mls -1 | grep -v '.htaccess' | while read file; do
+            rm -rf \"$file\";
           done;
           mirror -R . /naruto.jobbusiness.pe;
 
           cd /soho.jobbusiness.pe;
-          for file in $(ls -A1 | grep -v '.htaccess'); do
-            rm -rf "$file";
+          mls -1 | grep -v '.htaccess' | while read file; do
+            rm -rf \"$file\";
           done;
           mirror -R . /soho.jobbusiness.pe;
 
           cd /main.jobbusiness.pe;
-          for file in $(ls -A1 | grep -v '.htaccess'); do
-            rm -rf "$file";
+          mls -1 | grep -v '.htaccess' | while read file; do
+            rm -rf \"$file\";
           done;
           mirror -R . /main.jobbusiness.pe;
           bye";
@@ -114,8 +114,8 @@ jobs:
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
           
           cd /test.jobbusiness.pe;
-          for file in $(ls -A1 | grep -v '.htaccess'); do
-            rm -rf "$file";
+          mls -1 | grep -v '.htaccess' | while read file; do
+            rm -rf \"$file\";
           done;
           mirror -R . /test.jobbusiness.pe;
           bye";
