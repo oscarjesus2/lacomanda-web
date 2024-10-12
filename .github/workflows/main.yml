@@ -96,6 +96,8 @@ jobs:
         elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
           lftp -e "set ftp:ssl-allow no; 
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
-          ls /test.jobbusiness.pe | grep -v '.htaccess' | xargs -I {} rm -r /test.jobbusiness.pe/{}; 
+          for file in $(lftp -e 'ls -1 /test.jobbusiness.pe' -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }} | grep -v '.htaccess'); do
+            rm -r /test.jobbusiness.pe/$file; 
+          done;
           mirror -R . /test.jobbusiness.pe; bye";
         fi
