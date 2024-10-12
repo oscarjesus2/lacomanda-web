@@ -91,12 +91,12 @@ jobs:
           rm -r /naruto.jobbusiness.pe;
           rm -r /soho.jobbusiness.pe;
           rm -r /main.jobbusiness.pe;
-          mirror -R --parallel=5 --verbose --allow-chown --no-umask . /naruto.jobbusiness.pe;
-          mirror -R --parallel=5 --verbose --allow-chown --no-umask . /soho.jobbusiness.pe;
-          mirror -R --parallel=5 --verbose --allow-chown --no-umask . /main.jobbusiness.pe; bye";
+          mirror -R --parallel=5 --verbose --include .htaccess . /naruto.jobbusiness.pe;
+          mirror -R --parallel=5 --verbose --include .htaccess . /soho.jobbusiness.pe;
+          mirror -R --parallel=5 --verbose --include .htaccess . /main.jobbusiness.pe; bye";
         elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
           lftp -e "set ftp:ssl-allow no; 
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
           rm -r /test.jobbusiness.pe;
-          mirror -R --parallel=5 --verbose --allow-chown --no-umask . /test.jobbusiness.pe; bye";
+          mirror -R --parallel=5 --verbose --include .htaccess . /test.jobbusiness.pe; bye";
         fi
