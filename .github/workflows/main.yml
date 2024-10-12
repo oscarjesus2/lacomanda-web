@@ -3,8 +3,8 @@ name: CI/CD Pipeline - Frontend
 on:
   push:
     branches:
-      - master
-      - develop
+      - master ##master
+      - develop ##develop
 
 jobs:
   version:
@@ -86,17 +86,15 @@ jobs:
     - name: Deploy to appropriate server
       run: |
         if [ "${{ github.ref }}" == "refs/heads/master" ]; then
-          lftp -e "set ftp:ssl-allow no; 
+          lftp -e "set ftp:ssl-allow no;
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
-          find /naruto.jobbusiness.pe/* ! -name '.htaccess' -type f -exec rm -f {} +;
-          mirror -R . /naruto.jobbusiness.pe;
-          find /soho.jobbusiness.pe/* ! -name '.htaccess' -type f -exec rm -f {} +;
-          mirror -R . /soho.jobbusiness.pe;
-          find /main.jobbusiness.pe/* ! -name '.htaccess' -type f -exec rm -f {} +;
-          mirror -R . /main.jobbusiness.pe; bye";
+          mirror -R --delete --exclude-glob .htaccess . /naruto.jobbusiness.pe;
+          mirror -R --delete --exclude-glob .htaccess . /soho.jobbusiness.pe;
+          mirror -R --delete --exclude-glob .htaccess . /main.jobbusiness.pe;
+          bye";
         elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
-          lftp -e "set ftp:ssl-allow no; 
+          lftp -e "set ftp:ssl-allow no;
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
-          find /test.jobbusiness.pe/* ! -name '.htaccess' -type f -exec rm -f {} +;
-          mirror -R . /test.jobbusiness.pe; bye";
+          mirror -R --delete --exclude-glob .htaccess . /test.jobbusiness.pe;
+          bye";
         fi
