@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 1.0.10 (2024-10-12)
+
+
+### Bug Fixes
+
+* ajustes ([184a207](https://github.com/oscarjesus2/jobbusiness/commit/184a207bcab1b2eed22adab2c7207d104b2dde1d))
+
 ### 1.0.9 (2024-10-12)
 
 ### 1.0.8 (2024-10-12)
