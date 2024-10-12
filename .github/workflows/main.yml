@@ -86,17 +86,25 @@ jobs:
     - name: Deploy to appropriate server
       run: |
         if [ "${{ github.ref }}" == "refs/heads/master" ]; then
-          lftp -e "set ftp:ssl-allow no; 
+          lftp -e "set ftp:ssl-allow no;
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
-          find /naruto.jobbusiness.pe/* ! -name '.htaccess' -type f -exec rm -f {} +;
+          cd /naruto.jobbusiness.pe;
+          cls -1 | grep -v '.htaccess' | xargs -d '\n' -I {} rm -rf {};
           mirror -R . /naruto.jobbusiness.pe;
-          find /soho.jobbusiness.pe/* ! -name '.htaccess' -type f -exec rm -f {} +;
+
+          cd /soho.jobbusiness.pe;
+          cls -1 | grep -v '.htaccess' | xargs -d '\n' -I {} rm -rf {};
           mirror -R . /soho.jobbusiness.pe;
-          find /main.jobbusiness.pe/* ! -name '.htaccess' -type f -exec rm -f {} +;
-          mirror -R . /main.jobbusiness.pe; bye";
+
+          cd /main.jobbusiness.pe;
+          cls -1 | grep -v '.htaccess' | xargs -d '\n' -I {} rm -rf {};
+          mirror -R . /main.jobbusiness.pe;
+          bye";
         elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
-          lftp -e "set ftp:ssl-allow no; 
+          lftp -e "set ftp:ssl-allow no;
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
-          find /test.jobbusiness.pe/* ! -name '.htaccess' -type f -exec rm -f {} +;
-          mirror -R . /test.jobbusiness.pe; bye";
+          cd /test.jobbusiness.pe;
+          cls -1 | grep -v '.htaccess' | xargs -d '\n' -I {} rm -rf {};
+          mirror -R . /test.jobbusiness.pe;
+          bye";
         fi
