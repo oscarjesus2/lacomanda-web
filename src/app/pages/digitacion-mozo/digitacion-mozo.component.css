@@ -29,6 +29,13 @@
   font-weight: bold; /* Negrita para el texto */
 }
 
+button:disabled {
+  background-color: #ccc; /* Cambia el fondo */
+  color: #666; /* Cambia el color del texto */
+  cursor: not-allowed; /* Cambia el cursor */
+  opacity: 0.7; /* Hace que se vea un poco más claro */
+}
+
 .channel-buttons {
   display: flex;
   gap: 10px; /* Espacio entre los botones */
@@ -365,3 +372,9 @@
   background-color: #d1e7dd; /* Color de fondo para la fila seleccionada */
   color: #000; /* Color de texto de la fila seleccionada */
 }
+
+.static-buttons-container {
+  width: 750px; /* Ocupa el 100% del espacio de la segunda columna (que es el 50% de la pantalla) */
+  overflow-x: auto; /* Permite el desplazamiento horizontal si es necesario */
+}
+

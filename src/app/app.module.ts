@@ -130,7 +130,7 @@ export const MY_DATE_FORMATS = {
     DigitacionMozoComponent,
     DialogComplementosComponent,
     DialogMTextComponent,
-    DialogProductSearchComponent
+    DialogProductSearchComponent,
   ],
   imports: [
     CommonModule,

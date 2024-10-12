@@ -244,7 +244,7 @@ export class VentaComponent implements OnInit {
  
 
     } else {
-      const listData: ApiResponse<PedidoMesaDTO[]> = await this.pedidoService.findPedidoMesaByIdMesa(mesa.IdMesa).toPromise();
+      const listData: ApiResponse<PedidoMesaDTO[]> = await this.pedidoService.FindPedidoMesaByIdMesa(mesa.IdMesa).toPromise();
       if (listData.Data.length > 0) {
         this.rellenarHeaderPedido(listData.Data);
         this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
@@ -273,7 +273,7 @@ export class VentaComponent implements OnInit {
   async openDialogVerPedido(IdMesa: string) {
     try {
       this.spinnerService.show();
-      const listData: ApiResponse<PedidoMesaDTO[]> = await this.pedidoService.findPedidoMesaByIdMesa(IdMesa).toPromise();
+      const listData: ApiResponse<PedidoMesaDTO[]> = await this.pedidoService.FindPedidoMesaByIdMesa(IdMesa).toPromise();
 
       if (listData.Data.length > 0) {
         // this.rellenarHeaderPedido(listData);
