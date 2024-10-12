@@ -87,17 +87,15 @@ jobs:
         if [ "${{ github.ref }}" == "refs/heads/master" ]; then
           lftp -e "set ftp:ssl-allow no; 
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
-          ls /naruto.jobbusiness.pe | grep -v '.htaccess' | xargs -I {} rm -r /naruto.jobbusiness.pe/{};
-          ls /soho.jobbusiness.pe | grep -v '.htaccess' | xargs -I {} rm -r /soho.jobbusiness.pe/{};
-          ls /main.jobbusiness.pe | grep -v '.htaccess' | xargs -I {} rm -r /main.jobbusiness.pe/{};
+          rm -r /naruto.jobbusiness.pe/*;
+          rm -r /soho.jobbusiness.pe/*;
+          rm -r /main.jobbusiness.pe/*;
           mirror -R . /naruto.jobbusiness.pe;
           mirror -R . /soho.jobbusiness.pe;
           mirror -R . /main.jobbusiness.pe; bye";
         elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
           lftp -e "set ftp:ssl-allow no; 
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
-          for file in $(lftp -e 'ls -1 /test.jobbusiness.pe' -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }} | grep -v '.htaccess'); do
-            rm -r /test.jobbusiness.pe/$file; 
-          done;
+          rm -r /test.jobbusiness.pe/*;
           mirror -R . /test.jobbusiness.pe; bye";
         fi
