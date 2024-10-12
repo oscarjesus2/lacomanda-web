@@ -319,7 +319,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   private async ValidaTotalAPagar(): Promise<void> {
     if (this.idModuloVenta === 1 || this.idModuloVenta === 2 || this.idModuloVenta === 3) {
-      this.pedidoService.totalapagar_x_detallepedido(this.idPedidoCobrar, this.nroCuentaCobrar).subscribe(
+      this.pedidoService.Totalapagar_x_detallepedido(this.idPedidoCobrar, this.nroCuentaCobrar).subscribe(
         (pedido: any) => {
           if (pedido.MontoPagar) {
             let dblPedTot: number = parseFloat(pedido.MontoPagar.toFixed(2));

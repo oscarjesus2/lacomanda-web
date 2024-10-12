@@ -11,6 +11,7 @@ import { TenantService } from 'src/app/services/tenant.service';
 import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mcant.component';
 import { MatDialog } from '@angular/material/dialog';
 import { LoginRequest } from 'src/app/services/auth/loginRequest';
+import { version } from 'src/environments/version';
 
 @Component({
   selector: 'app-login',
@@ -18,7 +19,7 @@ import { LoginRequest } from 'src/app/services/auth/loginRequest';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
-
+  appVersion = version;
   hide = true;
   public loginValid = true;
   public idNivel = '001';
@@ -96,36 +97,59 @@ export class LoginComponent implements OnInit {
     });
   }
   
-  initForm() {
+  async initForm() {
     this.loginForm = this.fb.group({
       tenant: [null, Validators.required],
       idNivel: ['', Validators.required],
       password: ['', Validators.required],
     });
   
-    internalIpV4()
-      .then((ip) => {
-        this.CurrentIP = ip;
-      })
-      .catch((error) => {
-        console.warn('No se pudo obtener la IP interna, intentando obtener la IP pública...', error);
-        this.getPublicIP().then((publicIP) => {
-          this.CurrentIP = publicIP;
-        }).catch(() => {
-          // Establecer un valor predeterminado si no se puede obtener ninguna IP
-          this.CurrentIP = '-';
-        });
-      });
+    try {
+      // Intenta obtener la IP interna
+      this.CurrentIP = await internalIpV4();
+      console.info('CurrentIP con internalIpV4...', this.CurrentIP);
+    } catch (error) {
+      console.warn('No se pudo obtener la IP interna, intentando con WebRTC...', error);
+      try {
+        // Si falla, intenta obtener la IP usando WebRTC
+        this.CurrentIP = await this.getLocalIPAddress();
+        console.info('CurrentIP...', this.CurrentIP);
+      } catch (error) {
+        console.warn('No se pudo obtener la IP con WebRTC...', error);
+        // Establecer un valor predeterminado si no se puede obtener ninguna IP
+        this.CurrentIP = '-';
+      }
+    }
   }
-  
-  getPublicIP(): Promise<string> {
-    return fetch('https://api.ipify.org?format=json')
-      .then(response => response.json())
-      .then(data => data.ip)
-      .catch(error => {
-        console.error('Error obteniendo la IP pública:', error);
-        return '-';
+
+  getLocalIPAddress(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const peerConnection = new RTCPeerConnection({
+        iceServers: []
       });
+  
+      peerConnection.createDataChannel('');
+  
+      peerConnection.createOffer()
+        .then((offer) => peerConnection.setLocalDescription(offer))
+        .catch((error) => reject('Error al crear oferta WebRTC: ' + error));
+  
+      peerConnection.onicecandidate = (event) => {
+        if (event && event.candidate && event.candidate.candidate) {
+          const candidateParts = event.candidate.candidate.split(' ');
+          const ip = candidateParts[4]; // La IP se encuentra en la 5ta posición
+          resolve(ip);
+          peerConnection.onicecandidate = null; // Detenemos más eventos
+          peerConnection.close(); // Cerramos la conexión para liberar recursos
+        }
+      };
+  
+      // En caso de que no haya candidatos ICE
+      setTimeout(() => {
+        reject('No se pudo obtener la IP local a través de WebRTC');
+        peerConnection.close();
+      }, 10000); // Limitar el tiempo de espera a 10 segundos
+    });
   }
   
 
@@ -143,7 +167,7 @@ export class LoginComponent implements OnInit {
   openPasswordDialog() {
     const dialogRef = this.dialog.open(DialogMCantComponent, {
       width: '350px',
-      data: {
+      data: { 
         title: 'Ingresar Contraseña',
         hideNumber: true, // Mostrar como contraseña (ocultar números)
         decimalActive: false // No permitir punto decimal
@@ -182,6 +206,7 @@ export class LoginComponent implements OnInit {
       Ip: this.CurrentIP || '-',   
     };
 
+    console.log('CurrentIP', this.CurrentIP);
     this.loginService.login(loginRequest, tenant.TenantId).subscribe({
       next: (userData) => {
         console.log('Login correcto');

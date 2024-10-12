@@ -27,7 +27,8 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
-              "src/manifest.webmanifest"
+              "src/manifest.webmanifest",
+              "src/.htaccess"
             ],
             "styles": [
               "@angular/material/prebuilt-themes/deeppurple-amber.css",
@@ -41,7 +42,8 @@
               "assets": [
                 "src/favicon.ico",
                 "src/assets",
-                "src/manifest.webmanifest"
+                "src/manifest.webmanifest",
+                "src/.htaccess"
               ],
               "budgets": [
                 {
@@ -75,7 +77,8 @@
               "assets": [
                 "src/favicon.ico",
                 "src/assets",
-                "src/manifest.webmanifest"
+                "src/manifest.webmanifest",
+                "src/.htaccess"
               ],
               "fileReplacements": [
                 {
@@ -128,7 +131,8 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
-              "src/manifest.webmanifest"
+              "src/manifest.webmanifest",
+              "src/.htaccess"
             ],
             "styles": [
               "@angular/material/prebuilt-themes/indigo-pink.css",

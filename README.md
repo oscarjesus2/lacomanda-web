@@ -25,3 +25,19 @@ Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To u
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+## Para Obtener la IP
+chrome://flags/#enable-webrtc-hide-local-ips-with-mdns
+
+
+
+## versionado semántico (SemVer) - conventional commits
+## npm install --save-dev standard-version
+## bug
+fix: corregir el bug en el formulario de login
+
+## Nuevas funcionalidad
+feat: agregar autenticación por Google
+
+## No compatible con la ultima version publicado.
+git commit -m "feat: reestructurar el sistema de autenticación BREAKING CHANGE: el sistema de login fue modificado"

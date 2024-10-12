@@ -9,7 +9,8 @@ export class Cliente {
     public Correo: string;
     public TipoDocCliente: TipoDocCliente;
     public Telefono: string;
-
+    public DireccionDelivery: string;
+    public ReferenciaDelivery: string;
     constructor(init?: Partial<Cliente>) {
         Object.assign(this, init);
     }

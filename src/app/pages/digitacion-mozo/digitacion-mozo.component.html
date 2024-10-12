@@ -20,14 +20,14 @@
         </div>
       <!-- Botones en la parte superior derecha -->
       <div class="channel-buttons">
-        <button  [disabled]="isCanalVentaDisabled">
+        <button (click)="canalVenta('001')" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faUtensils"></fa-icon> CANAL MESA
         </button>
-        <button>
-          <fa-icon [icon]="faShoppingBag"></fa-icon> CANAL LLEVAR
+        <button (click)="canalVenta('002')" [disabled]="isCanalVentaDisabled">
+          <fa-icon [icon]="faShoppingBag" ></fa-icon> CANAL LLEVAR
         </button>
-        <button>
-          <fa-icon [icon]="faTruck"></fa-icon> CANAL DELIVERY
+        <button (click)="canalVenta('003')" [disabled]="isCanalVentaDisabled">
+          <fa-icon [icon]="faTruck" ></fa-icon> CANAL DELIVERY
         </button>
         <button (click)="Refresh()">
           <fa-icon [icon]="faSync"></fa-icon> REFRESH
@@ -36,12 +36,14 @@
     </div>
     <div class="middle-section">
       <div class="table-info">
-        <label>Mesa Nº: {{ mesaSelected?.Descripcion + ' ' + mesaSelected?.Numero }}</label> 
-        <label>Nº Pax: {{ mesaSelected?.NroPersonas }}</label> 
-        <label>Mozo: {{ mozoSelected?.Nombre }}</label>
+        <label *ngIf="canalVentaSelected == '001' && mesaSelected?.Descripcion && mesaSelected?.Numero">
+          Mesa Nº: {{ mesaSelected.Descripcion + ' ' + mesaSelected.Numero }}
+        </label>
+        <label *ngIf="canalVentaSelected != '001'">Pedido Nº: {{pedidoId}}</label> 
+        <label *ngIf="canalVentaSelected == '001'">Nº Pax: {{ mesaSelected?.NroPersonas }}</label> 
+        <label *ngIf="canalVentaSelected == '001'">Mozo: {{ mozoSelected?.Nombre }}</label>
+        <label *ngIf="canalVentaSelected != '001'">Cliente: {{ clienteSelected?.RazonSocial }}</label>
         <label>Hora: {{ horaPedido }}</label> 
-
-        
       </div>
       <div #scrollContainer class="data-grid">
         <!-- <div  mat-table > -->
@@ -174,12 +176,21 @@
   <!-- Segunda Columna -->
   <div class="column-right">
     <!-- Alterna entre las mesas y los productos -->
-    <div *ngIf="MostrarOcultarPanelMesa" class="tables-grid">
-      <button *ngFor="let mesa of ListaMesas_x_Ambiente"
+    <div *ngIf="MostrarOcultarPanelMesa && canalVentaSelected=='001'" class="tables-grid">
+      <button *ngFor="let mesa of listaMesas_x_Ambiente"
         [style.background]="mesa.Color" 
         (click)="openDialogMesa(mesa)"
         [style.visibility]="mesa.Visible === false ? 'hidden' : 'visible'">
         <div style="text-align: center;">{{mesa.Descripcion}} {{mesa.Numero}} <br> S/.{{mesa.Total}} <br> {{mesa.NombreEmpleado.substring(0, 8)}}</div>
+      </button>
+    </div>
+
+    <div *ngIf="MostrarOcultarPanelMesa && canalVentaSelected!='001'" class="tables-grid">
+      <button *ngFor="let pedido of listaPedido_x_Canal"
+        [style.background]="'LightCyan'"
+        (click)="openPedido(pedido)"
+        [style.visibility]="pedido.Visible === false ? 'hidden' : 'visible'">
+        <div style="text-align: center;">{{pedido.NroPedido}} <br> S/.{{pedido.Total}} <br> {{pedido.Cliente}}</div>
       </button>
     </div>
 
@@ -192,18 +203,19 @@
 
     <!-- Fila estática de botones (Barra, Salón, Box, Patio, Terraza) -->
     <div *ngIf="!procesarPedido">
-      <div class="static-buttons-row">
+      <div class="static-buttons-row" *ngIf="canalVentaSelected == '001'">
         <button *ngFor="let item of listAmbiente"
         (click)="MostrarMesas_x_Ambiente(item)">{{item.Descripcion}}</button>
       </div>
-  
+      
       <!-- Segunda fila estática de botones con "Procesar Pedido" -->
       <div class="static-buttons-row">
-        <button class="process-pedido" (click)="processPedido(false, true)">Procesar Pedido</button>
-        <button>Cambiar Mozo</button>
-        <button (click)="CambiarMesa()">Cambiar Mesa</button>
-        <button>Limpiar Mesa</button>
-        <button>Activar Mesa</button>
+        <button *ngIf="canalVentaSelected != '001'" class="process-pedido" (click)="NuevoPedidoLlevar()">Nuevo Pedido</button>
+        <button class="process-pedido" (click)="processPedido(true)">Procesar Pedido</button>
+        <button *ngIf="canalVentaSelected == '001'">Cambiar Mozo</button>
+        <button *ngIf="canalVentaSelected == '001'" (click)="CambiarMesa()">Cambiar Mesa</button>
+        <button *ngIf="canalVentaSelected == '001'">Limpiar Mesa</button>
+        <button *ngIf="canalVentaSelected == '001'">Activar Mesa</button>
       </div>
     </div>
     <div *ngIf="procesarPedido ">
@@ -218,12 +230,17 @@
       </div>
   
       <!-- Segunda fila estática de botones con "Procesar Pedido" -->
-      <div class="static-buttons-row">
 
-        <button  *ngFor="let item of listSubFamilia_x_Familia"   [ngClass]="{'selected': selectedItemSubFamilia === item}"   
-        (click)="ListarProductos_x_SubFamilia(item)">{{item.Descripcion}}</button>
-
+      <div class="static-buttons-container">
+        <div class="static-buttons-row">
+          <button *ngFor="let item of listSubFamilia_x_Familia"   
+                  [ngClass]="{'selected': selectedItemSubFamilia === item}" 
+                  (click)="ListarProductos_x_SubFamilia(item)">
+            {{item.Descripcion}}
+          </button>
+        </div>
       </div>
+
     </div>
 
     

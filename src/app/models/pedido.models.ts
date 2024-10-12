@@ -3,24 +3,25 @@ import { PedidoDet } from "./pedidodet.models";
 
 export class PedidoCab {
 
-    public IdEmpleado: string;
+    IdEmpleado: string;
     Cliente: String;
     Direccion: String;
     Referencia: string;
-    public IdPedido: number;
+    IdPedido: number;
     NroCuenta: Number;
     NroPedido: Number;
-    public Total: number;
+    Total: number;
     IdTipoPedido: String;
     Estado: Number;
     Moneda: string;
     TipoCambioVenta: Number;
     TipoCambioCompra: Number;
     FechaCambiada: Date;
-    public Importe: number;
-    public UsuReg: number;
-    public UsuMod: number;
-    public IdMesa: string;
+    IdSocioNegocio: number;
+    Importe: number;
+    UsuReg: number;
+    UsuMod: number;
+    IdMesa: string;
     IdTurno: number;
     IdCaja: String;
     NumPrecuentas: number;
@@ -28,9 +29,9 @@ export class PedidoCab {
     MesaPrecuenta: string;
     Observacion: string;
     Dscto: number;
-    public Mesa: string;
-    public NroPax: number;
-    public ListaPedidoDet: PedidoDet[];
+    Mesa: string;
+     NroPax: number;
+     ListaPedidoDet: PedidoDet[];
     
     constructor(init?: Partial<PedidoCab>) {
         Object.assign(this, init);

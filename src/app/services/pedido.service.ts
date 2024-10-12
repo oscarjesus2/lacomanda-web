@@ -9,6 +9,7 @@ import { ApiResponse } from '../interfaces/ApiResponse.interface';
 import { PedidoMesaDTO } from '../interfaces/pedidomesaDTO.interface';
 import { ImpresionDTO } from '../interfaces/impresionDTO.interface';
 import { AnularProductoYComplementoDTO } from '../interfaces/anularProductoYComplementoDTO.interface';
+import { PedidoDeliveryDTO } from '../interfaces/pedidoDTO.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -17,20 +18,23 @@ export class PedidoService {
 
     
     private basePath = environment.apiUrl + '/pedido';
-    private basePathConsultarMesa = environment.apiUrl +  '/venta/ConsultarMesa';
- 
+
     constructor(private http: HttpClient) { }
 
-    totalapagar_x_detallepedido(idPedidoCobrar: number, nroCuentaCobrar: number): Observable<any[]> {
+    Totalapagar_x_detallepedido(idPedidoCobrar: number, nroCuentaCobrar: number): Observable<any[]> {
         return this.http.get<any[]>(this.basePath + '/totalapagar_x_detallepedido/' +  idPedidoCobrar + '/' + nroCuentaCobrar);
     }
 
-    findPedidoMesaByIdMesa(idMesa: string): Observable<ApiResponse<PedidoMesaDTO[]>> {
-        return this.http.get<ApiResponse<PedidoMesaDTO[]>>(this.basePath + '/listarpedido_x_mesa/' + idMesa);
+    FindPedidoLlevarDeliveryById(idPedido: number, nroCuenta: number): Observable<ApiResponse<PedidoMesaDTO[]>> {
+        return this.http.get<ApiResponse<PedidoMesaDTO[]>>(`${this.basePath}/custom/${idPedido}/${nroCuenta}`);
     }
-    
-    findMesaById(idMesa: string): Observable<any[]> {
-        return this.http.get<any[]>(this.basePathConsultarMesa + idMesa);
+
+    FindPedidoMesaByIdMesa(idMesa: string): Observable<ApiResponse<PedidoMesaDTO[]>> {
+        return this.http.get<ApiResponse<PedidoMesaDTO[]>>(this.basePath + '/mesa/' + idMesa);
+    }
+
+    ObtenerPedidosByIdTurno(idTurno: number): Observable<ApiResponse<PedidoDeliveryDTO[]>> {
+        return this.http.get<ApiResponse<PedidoDeliveryDTO[]>>(this.basePath + '/turno/' + idTurno);
     }
 
     ActualizarEnviosDeImpresion(idPedido: number, nroCuenta: number): Observable<ApiResponse<boolean>> {
