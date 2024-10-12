@@ -90,18 +90,18 @@ jobs:
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
           
           cd /naruto.jobbusiness.pe;
-          glob -a rm -rf *;
-          rm -f .htaccess;
+          find . -not -name '.htaccess' -type f -delete;
+          find . -not -name '.htaccess' -type d -empty -delete;
           mirror -R . /naruto.jobbusiness.pe;
 
           cd /soho.jobbusiness.pe;
-          glob -a rm -rf *;
-          rm -f .htaccess;
+          find . -not -name '.htaccess' -type f -delete;
+          find . -not -name '.htaccess' -type d -empty -delete;
           mirror -R . /soho.jobbusiness.pe;
 
           cd /main.jobbusiness.pe;
-          glob -a rm -rf *;
-          rm -f .htaccess;
+          find . -not -name '.htaccess' -type f -delete;
+          find . -not -name '.htaccess' -type d -empty -delete;
           mirror -R . /main.jobbusiness.pe;
           bye";
         
@@ -110,8 +110,8 @@ jobs:
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
           
           cd /test.jobbusiness.pe;
-          glob -a rm -rf *;
-          rm -f .htaccess;
+          find . -not -name '.htaccess' -type f -delete;
+          find . -not -name '.htaccess' -type d -empty -delete;
           mirror -R . /test.jobbusiness.pe;
           bye";
         fi
