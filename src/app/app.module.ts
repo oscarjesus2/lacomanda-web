@@ -168,7 +168,9 @@ export const MY_DATE_FORMATS = {
     MatListModule,
     MatButtonToggleModule,
     MatChipsModule,
-    MatAutocompleteModule, FontAwesomeModule, ServiceWorkerModule.register('ngsw-worker.js', {
+    MatAutocompleteModule, 
+    FontAwesomeModule, 
+    ServiceWorkerModule.register('ngsw-worker.js', {
   enabled: !isDevMode(),
   // Register the ServiceWorker as soon as the application is stable
   // or after 30 seconds (whichever comes first).
