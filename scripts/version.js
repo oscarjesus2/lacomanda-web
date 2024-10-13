@@ -1,4 +1,4 @@
-const { version } = require('./package.json'); // Cambia a ruta correcta
+const { version } = require('../package.json'); // Cambia a ruta correcta
 const { writeFileSync } = require('fs');
 const { join } = require('path');
 
