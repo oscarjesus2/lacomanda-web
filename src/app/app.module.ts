@@ -82,6 +82,7 @@ import { DialogComplementosComponent } from './components/dialog-complementos/di
 import { DialogMTextComponent } from './components/dialog-mtext/dialog-mtext.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { DialogProductSearchComponent } from './components/dialog-product-search/dialog-product-search.component';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -168,7 +169,10 @@ export const MY_DATE_FORMATS = {
     MatListModule,
     MatButtonToggleModule,
     MatChipsModule,
-    MatAutocompleteModule, FontAwesomeModule, ServiceWorkerModule.register('ngsw-worker.js', {
+    MatAutocompleteModule, 
+    FontAwesomeModule, 
+    MatSnackBarModule,
+    ServiceWorkerModule.register('ngsw-worker.js', {
   enabled: !isDevMode(),
   // Register the ServiceWorker as soon as the application is stable
   // or after 30 seconds (whichever comes first).

@@ -1,15 +1,18 @@
 {
   "name": "jbs-rest",
-  "version": "1.0.27",
+  "version": "1.0.2",
   "scripts": {
     "ng": "ng",
-    "start": "node ./version.js && concurrently \"ng serve --proxy-config proxy.conf.json\" \"node server.js\"",
-    "build": "node ./version.js && ng build",
+    "start": "node ./scripts/version.js && concurrently \"ng serve --proxy-config proxy.conf.json\" \"node server.js\"",
+    "build": "node ./scripts/version.js && ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "release": "standard-version"
+    "release": "standard-version",
+    "release:dev": "standard-version --release-as patch && node scripts/update-changelogs.js development",
+    "release:test": "standard-version --release-as minor && node scripts/update-changelogs.js testing",
+    "release:prod": "standard-version --release-as major && node scripts/update-changelogs.js production"
   },
   "private": true,
   "dependencies": {

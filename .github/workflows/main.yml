@@ -29,7 +29,11 @@ jobs:
 
     - name: Bump version and generate changelog
       run: |
-        npm run release
+        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          npm run release:prod   # Para producción
+        elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+          npm run release:dev    # Para desarrollo/staging
+        fi
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
         git push --follow-tags origin ${{ github.ref }}
@@ -86,15 +90,23 @@ jobs:
     - name: Deploy to appropriate server
       run: |
         if [ "${{ github.ref }}" == "refs/heads/master" ]; then
-          lftp -e "set ftp:ssl-allow no;
+          lftp -e "set ftp:ssl-allow no; 
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
-          mirror -R --delete --exclude-glob .htaccess . /naruto.jobbusiness.pe;
-          mirror -R --delete --exclude-glob .htaccess . /soho.jobbusiness.pe;
-          mirror -R --delete --exclude-glob .htaccess . /main.jobbusiness.pe;
+          rm -r /naruto.jobbusiness.pe;
+          rm -r /soho.jobbusiness.pe;
+          rm -r /main.jobbusiness.pe;
+          mirror -R . /naruto.jobbusiness.pe;
+          mirror -R . /soho.jobbusiness.pe;
+          mirror -R . /main.jobbusiness.pe;
+          mv /naruto.jobbusiness.pe/config.htaccess /naruto.jobbusiness.pe/.htaccess;
+          mv /soho.jobbusiness.pe/config.htaccess /soho.jobbusiness.pe/.htaccess;
+          mv /main.jobbusiness.pe/config.htaccess /main.jobbusiness.pe/.htaccess;
           bye";
         elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
-          lftp -e "set ftp:ssl-allow no;
+          lftp -e "set ftp:ssl-allow no; 
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
-          mirror -R --delete --exclude-glob .htaccess . /test.jobbusiness.pe;
+          rm -r /test.jobbusiness.pe;
+          mirror -R . /test.jobbusiness.pe;
+          mv /test.jobbusiness.pe/config.htaccess /test.jobbusiness.pe/.htaccess;
           bye";
         fi
