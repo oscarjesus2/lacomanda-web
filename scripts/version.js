@@ -1,9 +1,9 @@
-const { version } = require('../package.json'); // Cambia a ruta correcta
+const { version } = require('../package.json'); // Ruta correcta al package.json
 const { writeFileSync } = require('fs');
 const { join } = require('path');
 
 // Ruta donde se generará el archivo version.ts
-const versionFilePath = join(__dirname, 'src', 'environments', 'version.ts');
+const versionFilePath = join(__dirname, '..', 'src', 'environments', 'version.ts'); // Ajusta la ruta relativa
 
 // Contenido que se va a escribir en version.ts
 const content = `export const version = '${version}';\n`;
