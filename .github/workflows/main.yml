@@ -83,6 +83,9 @@ jobs:
     - name: List Built Files
       run: ls -la .
 
+    - name: Print working directory
+      run: pwd
+
     - name: Deploy to appropriate server
       run: |
         if [ "${{ github.ref }}" == "refs/heads/master" ]; then
@@ -100,6 +103,6 @@ jobs:
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
           rm -r /test.jobbusiness.pe;
           mirror -R . /test.jobbusiness.pe;
-          put ./dist/jbs-rest/.htaccess -o /test.jobbusiness.pe/.htaccess;
+          put $PWD/dist/jbs-rest/.htaccess -o /test.jobbusiness.pe/.htaccess;
           bye";
         fi
