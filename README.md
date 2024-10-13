@@ -40,4 +40,4 @@ fix: corregir el bug en el formulario de login
 feat: agregar autenticación por Google
 
 ## No compatible con la ultima version publicado.
-git commit -m "feat: reestructurar el sistema de autenticación BREAKING CHANGE: el sistema de login fue modificado"
+feat: reestructurar el sistema de autenticación BREAKING CHANGE: el sistema de login fue modificado"
