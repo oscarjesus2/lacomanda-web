@@ -1,15 +1,11 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { NgxSpinnerService } from 'ngx-spinner';
 import { StorageService } from 'src/app/services/storage.service';
-import { LoginService } from './services/auth/login.service';
-import { MatDialog } from '@angular/material/dialog';
-import { TurnoService } from './services/turno.service';
-import { IdleService } from './services/idle.service';
 import { DataService } from '../app/services/data.service';
-import { QzTrayV224Service } from './services/qz-tray-v224.service';
 import { HeaderService } from './services/header.service';
+import { SwUpdate } from '@angular/service-worker';
+import { MatSnackBar } from '@angular/material/snack-bar';  // O puedes usar cualquier otra notificación
 
 @Component({
   selector: 'app-root',
@@ -20,20 +16,17 @@ export class AppComponent implements OnInit, OnDestroy {
 
   title = 'Jbs_Resta';
   headerVisible = true;
-  constructor(
-    private qzTrayService: QzTrayV224Service, 
-    private spinnerService: NgxSpinnerService,
-    private router: Router,
-    private loginService: LoginService,
-    private storageService: StorageService,
-    private dialogTurno: MatDialog,
-    private turnoService: TurnoService,
-    private idleService: IdleService,
-    private dataService: DataService,
-    private headerService: HeaderService) {
+  constructor(private swUpdate: SwUpdate, private snackBar: MatSnackBar,
+              private router: Router,
+              private storageService: StorageService,
+              private dataService: DataService,
+              private headerService: HeaderService) {
+
+    this.checkForUpdates();
     this.headerService.headerVisible$.subscribe(visible => {
       this.headerVisible = visible;
     });
+    
   }
 
   ngOnDestroy(): void {
@@ -47,6 +40,26 @@ export class AppComponent implements OnInit, OnDestroy {
        const newTitle = this.getTitle(event.urlAfterRedirects);
        this.dataService.updateVariable_TituloHeader(newTitle);
      });
+  }
+
+  checkForUpdates() {
+    if (this.swUpdate.isEnabled) {
+      this.swUpdate.available.subscribe(() => {
+        const snackBarRef = this.snackBar.open('Nueva versión disponible', 'Actualizar', {
+          duration: 6000, // Duración del mensaje
+        });
+
+        snackBarRef.onAction().subscribe(() => {
+          this.updateToLatestVersion();
+        });
+      });
+    }
+  }
+
+  updateToLatestVersion() {
+    this.swUpdate.activateUpdate().then(() => {
+      document.location.reload();  // Recargar la página para cargar la nueva versión
+    });
   }
 
   getTitle(url: string): string {
