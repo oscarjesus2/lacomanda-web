@@ -29,7 +29,11 @@ jobs:
 
     - name: Bump version and generate changelog
       run: |
-        npm run release
+        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          npm run release:prod   # Para producción
+        elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+          npm run release:dev    # Para desarrollo/staging
+        fi
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
         git push --follow-tags origin ${{ github.ref }}
