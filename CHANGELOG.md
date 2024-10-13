@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 1.0.27 (2024-10-13)
+
+
+### Bug Fixes
+
+* se elimina todo y se incluye el ficheros ocultos en el mirror main.yml ([190693d](https://github.com/oscarjesus2/jobbusiness/commit/190693d7796e23777c7dec2a7d588c15260415f6))
+
 ### 1.0.26 (2024-10-12)
 
 ### 1.0.25 (2024-10-12)
