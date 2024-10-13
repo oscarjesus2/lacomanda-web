@@ -99,6 +99,6 @@ jobs:
           lftp -e "set ftp:ssl-allow no; 
           open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
           rm -r /test.jobbusiness.pe;
-          mirror -R -a . /test.jobbusiness.pe;
+          mirror -R --include-glob .htaccess -a . /test.jobbusiness.pe;
           bye";
         fi
