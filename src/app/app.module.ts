@@ -83,6 +83,7 @@ import { DialogMTextComponent } from './components/dialog-mtext/dialog-mtext.com
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { DialogProductSearchComponent } from './components/dialog-product-search/dialog-product-search.component';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { DialogDividirCuentaComponent } from './components/dialog-dividir-cuenta/dialog-dividir-cuenta.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -132,6 +133,7 @@ export const MY_DATE_FORMATS = {
     DialogComplementosComponent,
     DialogMTextComponent,
     DialogProductSearchComponent,
+    DialogDividirCuentaComponent,
   ],
   imports: [
     CommonModule,

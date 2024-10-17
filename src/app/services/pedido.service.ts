@@ -2,14 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs';
 import { PedidoCab } from '../models/pedido.models';
-import { ResponseService } from '../models/response.services';
-import { Venta } from '../models/venta.models';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/ApiResponse.interface';
 import { PedidoMesaDTO } from '../interfaces/pedidomesaDTO.interface';
 import { ImpresionDTO } from '../interfaces/impresionDTO.interface';
 import { AnularProductoYComplementoDTO } from '../interfaces/anularProductoYComplementoDTO.interface';
 import { PedidoDeliveryDTO } from '../interfaces/pedidoDTO.interface';
+import { DividirCuentaDTO } from '../interfaces/CrearCuentaDTO.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -25,12 +24,16 @@ export class PedidoService {
         return this.http.get<any[]>(this.basePath + '/totalapagar_x_detallepedido/' +  idPedidoCobrar + '/' + nroCuentaCobrar);
     }
 
-    FindPedidoLlevarDeliveryById(idPedido: number, nroCuenta: number): Observable<ApiResponse<PedidoMesaDTO[]>> {
+    FindPedidoByIdPedidoNroCuenta(idPedido: number, nroCuenta: number): Observable<ApiResponse<PedidoMesaDTO[]>> {
         return this.http.get<ApiResponse<PedidoMesaDTO[]>>(`${this.basePath}/custom/${idPedido}/${nroCuenta}`);
     }
 
-    FindPedidoMesaByIdMesa(idMesa: string): Observable<ApiResponse<PedidoMesaDTO[]>> {
-        return this.http.get<ApiResponse<PedidoMesaDTO[]>>(this.basePath + '/mesa/' + idMesa);
+    FindPedidoByIdMesa(idMesa: string): Observable<ApiResponse<PedidoMesaDTO[]>> {
+        return this.http.get<ApiResponse<PedidoMesaDTO[]>>(this.basePath + '/custom/mesa/' + idMesa);
+    }
+
+    FindPedidoByIdPedido(idPedido: number): Observable<ApiResponse<PedidoMesaDTO[]>> {
+        return this.http.get<ApiResponse<PedidoMesaDTO[]>>(`${this.basePath}/custom/${idPedido}`);
     }
 
     ObtenerPedidosByIdTurno(idTurno: number): Observable<ApiResponse<PedidoDeliveryDTO[]>> {
@@ -49,8 +52,16 @@ export class PedidoService {
         return this.http.put<ApiResponse<boolean>>(`${this.basePath}/ActualizarNumAnulaPedidoImpresion/${idPedido}/${nroCuenta}`, {});
     }
     
-    RegistrarPedido(pedido: PedidoCab): Observable<ApiResponse<ImpresionDTO[]>>{
+    GrabarPedido(pedido: PedidoCab): Observable<ApiResponse<ImpresionDTO[]>>{
         return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + '/grabarpedido', pedido);
+    }
+
+    CrearCuenta(crearCuentaDTO: DividirCuentaDTO): Observable<ApiResponse<PedidoMesaDTO[]>>{
+        return this.http.post<ApiResponse<PedidoMesaDTO[]>>(this.basePath + '/CrearCuenta', crearCuentaDTO);
+    }
+
+    EliminarCuenta(eliminarCuentaDTO: DividirCuentaDTO): Observable<ApiResponse<PedidoMesaDTO[]>>{
+        return this.http.post<ApiResponse<PedidoMesaDTO[]>>(this.basePath + '/EliminarCuenta', eliminarCuentaDTO);
     }
 
     AnularProductoYComplemento(pedido: AnularProductoYComplementoDTO): Observable<ApiResponse<ImpresionDTO[]>> {

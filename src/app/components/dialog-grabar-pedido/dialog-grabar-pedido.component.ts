@@ -58,7 +58,7 @@ export class DialogEnviarPedidoComponent {
             try
             {
                 this.spinnerService.show();
-                var responseRegisterPedido: any = await this.pedidoService.RegistrarPedido(this.data.oPedido).toPromise();
+                var responseRegisterPedido: any = await this.pedidoService.GrabarPedido(this.data.oPedido).toPromise();
                 if (responseRegisterPedido) {
                     this.data.Resultado = "true";
                     Swal.fire(
@@ -66,7 +66,7 @@ export class DialogEnviarPedidoComponent {
                     'Se registro el pedido correctamente.',
                     'success'
                     )
-                    var responseImprimirPedido: any = await this.pedidoService.RegistrarPedido(this.data.oPedido).toPromise();
+                    var responseImprimirPedido: any = await this.pedidoService.GrabarPedido(this.data.oPedido).toPromise();
 
                     this.dialogRef.close(this.data);
     

@@ -46,6 +46,11 @@ const routes: Routes = [
   path:'iniciar-sesion', 
   component:LoginComponent
 },
+{
+  path:'inicio', 
+  component:LoginComponent
+},
+
 
    // Rutas para los menús de ventas
   //  { path: 'ventas/grupos', component: GruposComponent, canActivate: [AdminGuard] },

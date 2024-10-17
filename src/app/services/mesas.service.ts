@@ -27,6 +27,10 @@ export class MesasService {
         return this.http.put<ApiResponse<boolean>>(`${this.basePathMesas}/CambiarMesa/${idMesaOrigen}/${idMesaDestino}`,{});
     }
 
+    UnirMesa(idMesaOrigen: string, idMesaDestino: string, idUsuario: number): Observable<ApiResponse<boolean>> {
+        return this.http.put<ApiResponse<boolean>>(`${this.basePathMesas}/UnirMesa/${idMesaOrigen}/${idMesaDestino}/${idUsuario}`,{});
+    }
+
     ImprimirPrecuenta(idMesa: string): Observable<any[]> {
         return this.http.get<any[]>('/api/pedido/imprimirprecuenta/' + idMesa);
     }

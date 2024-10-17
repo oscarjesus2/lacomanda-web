@@ -37,7 +37,7 @@
     <div class="middle-section">
       <div class="table-info">
         <label *ngIf="canalVentaSelected == '001' && mesaSelected?.Descripcion && mesaSelected?.Numero">
-          Mesa Nº: {{ mesaSelected.Descripcion + ' ' + mesaSelected.Numero }}
+          Mesa Nº: {{ mesaSelected.Descripcion + ' ' + mesaSelected.Numero }} {{nombreCuenta}}
         </label>
         <label *ngIf="canalVentaSelected != '001'">Pedido Nº: {{pedidoId}}</label> 
         <label *ngIf="canalVentaSelected == '001'">Nº Pax: {{ mesaSelected?.NroPersonas }}</label> 
@@ -131,10 +131,10 @@
     <!-- Tres filas estáticas debajo del datagridview -->
     <!-- Primera fila: Importe, Dscto, Total -->
     <div class="total-section">
-      <label>Importe:</label><input type="text" readonly value={{sumaImporte}} />
-      <label>Dscto:</label><input type="text" readonly  value={{sumaDscto}}/>
-      <label>Total:</label><input type="text" readonly  value={{sumaTotal}}/>
-      <input type="text" readonly value={{sumaImpuestoBolsa}}/>
+      <label>Importe:</label><input type="text" readonly [value]="sumaImporte | currency" />
+      <label>Dscto:</label><input type="text" readonly  [value]="sumaDscto | currency"/>
+      <label>Total:</label><input type="text" readonly  [value]="sumaTotal | currency"/>
+      <input type="text" readonly [value]="sumaImpuestoBolsa  | currency"/>
     </div>
 
     <!-- Segunda fila: Combo, Ver Complemento, Priorizar Despacho, Enviar Pedido -->
@@ -202,7 +202,7 @@
     </div>
 
     <!-- Fila estática de botones (Barra, Salón, Box, Patio, Terraza) -->
-    <div *ngIf="!procesarPedido">
+    <div *ngIf="!procesarPedido  || aplicarFiltroUnirMesa==true || aplicarFiltroCambioMesa==true">
       <div class="static-buttons-row" *ngIf="canalVentaSelected == '001'">
         <button *ngFor="let item of listAmbiente"
         (click)="MostrarMesas_x_Ambiente(item)">{{item.Descripcion}}</button>
@@ -214,11 +214,13 @@
         <button class="process-pedido" (click)="processPedido(true)">Procesar Pedido</button>
         <button *ngIf="canalVentaSelected == '001'">Cambiar Mozo</button>
         <button *ngIf="canalVentaSelected == '001'" (click)="CambiarMesa()">Cambiar Mesa</button>
+        <button *ngIf="canalVentaSelected == '001'" (click)="UnirMesa()">Unir Cuenta</button>
+        <button *ngIf="canalVentaSelected == '001'" (click)="dividirCuenta()">Dividir Cuenta</button>
         <button *ngIf="canalVentaSelected == '001'">Limpiar Mesa</button>
         <button *ngIf="canalVentaSelected == '001'">Activar Mesa</button>
       </div>
     </div>
-    <div *ngIf="procesarPedido ">
+    <div *ngIf="procesarPedido && aplicarFiltroUnirMesa==false && aplicarFiltroCambioMesa==false">
       <div class="static-buttons-row">
         
         <button *ngFor="let item of listFamilia"

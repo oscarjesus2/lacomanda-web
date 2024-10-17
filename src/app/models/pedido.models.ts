@@ -1,4 +1,3 @@
-import { NumberInput } from "@angular/cdk/coercion";
 import { PedidoDet } from "./pedidodet.models";
 
 export class PedidoCab {
