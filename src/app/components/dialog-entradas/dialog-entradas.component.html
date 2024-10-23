@@ -1,0 +1,87 @@
+<div class="ventas-de-entradas-container">
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+  <br>
+    <h2>VENTAS DE ENTRADAS</h2>
+  
+    <!-- Primera fila de botones -->
+    <div class="buttons-row">
+      <button class="entry-button" (click)="selectAndIncrement('socios')" [ngClass]="{'selected': selectedButton === 'socios'}">
+        Entrada de Socios <br>
+        <span>({{entradaSocios}})</span>
+      </button>
+      <button class="entry-button" (click)="selectAndIncrement('invitados')" [ngClass]="{'selected': selectedButton === 'invitados'}">
+        Entrada de Invitados<br> <span>({{entradaInvitados}})</span>
+      </button>
+      <button class="entry-button-process" (click)="procesarEntradaGratis()">
+        Procesar Entrada Gratis
+      </button>
+      <button class="entry-button" (click)="selectAndIncrement('consumo')" [ngClass]="{'selected': selectedButton === 'consumo'}">
+        Entrada por Consumo <br><span>({{entradaConsumo}})</span>
+      </button>
+      <button class="entry-button-process" (click)="procesarEntradaXConsumo()">
+        Procesar Entrada xConsumo
+      </button>
+    </div>
+  
+    <!-- Sección: Entrada Nacional, Internacional y Tragos Gratis -->
+    <div class="entry-type-section">
+      <div class="entry-type" [ngClass]="{'selected': selectedButton === 'nacional'}" (click)="select('nacional')">
+        <h3>Entrada Nacional S/80 
+            <br><span>({{entradaNacional}})</span>
+        </h3>
+        <button (click)="selectAndIncrement('nacional')" class="sumar-button">+</button>
+        <button (click)="descontarEntrada('nacional')" class="descuento-button">Descuento</button>
+        <h3>
+            <br><span *ngIf="nuevoPrecioNacional>0">Nuevo Precio ({{nuevoPrecioNacional | currency:'PEN' }})</span>
+        </h3>
+      </div>
+  
+      <div class="entry-type" [ngClass]="{'selected': selectedButton === 'internacional'}" (click)="select('internacional')">
+        <h3>Entrada Internacional S/130 
+            <br><span>({{entradaInternacional}})</span>
+        </h3>
+        <button (click)="selectAndIncrement('internacional')" class="sumar-button">+</button>
+        <button (click)="descontarEntrada('internacional')" class="descuento-button">Descuento</button>
+        <h3>
+            <br><span *ngIf="nuevoPrecioInternacional>0">Nuevo Precio ({{nuevoPrecioInternacional | currency:'PEN' }})</span>
+        </h3>
+      </div>
+  
+      <div class="tragos-section">
+        <h3>Tragos Gratis</h3>
+        <input type="number" [(ngModel)]="tragosGratis" class="tragos-input">
+      </div>
+    </div>
+  
+    <!-- Botones de acciones -->
+    <div class="actions-section">
+      <button class="action-button" (click)="restarCantidad()">Restar Cantidad</button>
+      <button class="action-button" (click)="limpiar()">Limpiar</button>
+    
+      <!-- Checkbox agregado -->
+      <div class="checkbox-container">
+        <input type="checkbox" id="taxista" [(ngModel)]="vinoConTaxista" (change)="onTaxistaChange()">
+        <label for="taxista">Vino con taxista</label>
+        <br>
+        <p>{{ mensajeTaxista }}</p> 
+      </div>
+   
+    </div>
+  
+    <div class="total-section">
+        <label>Importe:</label><input type="text" readonly [value]="subTotal | currency:'PEN' " />
+        <label>Dscto:</label><input type="text" readonly  [value]="descuentoTotal | currency:'PEN' "/>
+        <label>Total:</label><input type="text" readonly  [value]="total | currency:'PEN' "/>
+      </div>
+
+    <!-- Botones de Pago y Salir -->
+    <div class="payment-section">
+      <button class="payment-button" (click)="aceptar(TipoDocumento.Express)">Express</button>
+      <button class="payment-button" (click)="aceptar(TipoDocumento.BoletaVenta)">Boleta</button>
+      <button class="payment-button" (click)="aceptar(TipoDocumento.FacturaVenta)">Factura</button>
+      <button class="payment-button" (click)="procesarPagoTaxista()">Pagar Taxista</button>
+    </div>
+  </div>
+  

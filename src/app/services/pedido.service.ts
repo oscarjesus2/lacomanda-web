@@ -3,12 +3,13 @@ import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs';
 import { PedidoCab } from '../models/pedido.models';
 import { environment } from 'src/environments/environment';
-import { ApiResponse } from '../interfaces/ApiResponse.interface';
+import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { PedidoMesaDTO } from '../interfaces/pedidomesaDTO.interface';
 import { ImpresionDTO } from '../interfaces/impresionDTO.interface';
 import { AnularProductoYComplementoDTO } from '../interfaces/anularProductoYComplementoDTO.interface';
 import { PedidoDeliveryDTO } from '../interfaces/pedidoDTO.interface';
-import { DividirCuentaDTO } from '../interfaces/CrearCuentaDTO.interface';
+import { DividirCuentaDTO } from '../interfaces/crearcuentaDTO.interface';
+import { PedidoDescuentoDTO } from '../interfaces/pedidoDescuentoDTO.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -48,6 +49,15 @@ export class PedidoService {
         return this.http.put<ApiResponse<boolean>>(`${this.basePath}/ActualizarNumAnulaItemImpresion/${idPedido}/${item}`, {});
     }
 
+    AplicarDescuento(pedidoDescuentoDTO: PedidoDescuentoDTO): Observable<ApiResponse<boolean>> {
+        console.log(pedidoDescuentoDTO);
+        return this.http.put<ApiResponse<boolean>>(`${this.basePath}/AplicarDescuento`, pedidoDescuentoDTO);
+    }
+
+    QuitarDescuento(idPedido: number, nroCuenta: number): Observable<ApiResponse<boolean>> {
+        return this.http.put<ApiResponse<boolean>>(`${this.basePath}/QuitarDescuento/${idPedido}/${nroCuenta}`, {});
+    }
+    
     ActualizarNumAnulaPedidoImpresion(idPedido: number, nroCuenta: number): Observable<ApiResponse<boolean>> {
         return this.http.put<ApiResponse<boolean>>(`${this.basePath}/ActualizarNumAnulaPedidoImpresion/${idPedido}/${nroCuenta}`, {});
     }

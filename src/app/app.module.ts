@@ -84,6 +84,10 @@ import { ServiceWorkerModule } from '@angular/service-worker';
 import { DialogProductSearchComponent } from './components/dialog-product-search/dialog-product-search.component';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { DialogDividirCuentaComponent } from './components/dialog-dividir-cuenta/dialog-dividir-cuenta.component';
+import { DialogDescuentoComponent } from './components/dialog-descuento/dialog-descuento.component';
+import { DialogEntradasComponent } from './components/dialog-entradas/dialog-entradas.component';
+import { DialogPagarTaxistaComponent } from './components/dialog-pagar-taxista/dialog-pagar-taxista.component';
+import { DialogDocumentosEmitidosComponent } from './components/dialog-documentos-emitidos/dialog-documentos-emitidos.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -134,6 +138,10 @@ export const MY_DATE_FORMATS = {
     DialogMTextComponent,
     DialogProductSearchComponent,
     DialogDividirCuentaComponent,
+    DialogDescuentoComponent,
+    DialogEntradasComponent,
+    DialogPagarTaxistaComponent,
+    DialogDocumentosEmitidosComponent,
   ],
   imports: [
     CommonModule,

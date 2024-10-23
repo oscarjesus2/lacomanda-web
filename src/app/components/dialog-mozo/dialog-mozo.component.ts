@@ -33,43 +33,44 @@ export class DialogMozoComponent {
         this.data.IdEmpleado=this.storageService.getCurrentSession().User.IdEmpleado;
         this.data.NroPersonas= this.NroPersonas;
     }
-    onItemClick(item:any) {
+    // onItemClick(item:any) {
       
-        if (item=='Limpiar'){
+    //     if (item=='Limpiar'){
 
-            if (this.sFocus=='NroPersonas'){
-                this.NroPersonas='';
-            }
-            if (this.sFocus=='CodigoMozo'){
-                this.CodigoMozo='';
-                this.data.IdEmpleado='';
-            }
+    //         if (this.sFocus=='NroPersonas'){
+    //             this.NroPersonas='';
+    //         }
+    //         if (this.sFocus=='CodigoMozo'){
+    //             this.CodigoMozo='';
+    //             this.data.IdEmpleado='';
+    //         }
        
-        }else{
-            if (this.sFocus=='NroPersonas'){
-                this.NroPersonas+=item;
-            }
-            if (this.sFocus=='CodigoMozo'){
-                this.CodigoMozo+=item;
-                this.data.IdEmpleado=this.getEmpleadoByCodigoMozo(this.CodigoMozo).IdEmpleado;
-            }
-        }
-    }
+    //     }else{
+    //         if (this.sFocus=='NroPersonas'){
+    //             this.NroPersonas+=item;
+    //         }
+    //         if (this.sFocus=='CodigoMozo'){
+    //             this.CodigoMozo+=item;
+    //             this.data.IdEmpleado=this.getEmpleadoByCodigoMozo(this.CodigoMozo).IdEmpleado;
+    //         }
+    //     }
+    // }
+
     onsetFocus(item:any) {
         this.sFocus=item;
     }
 
 
-    private getEmpleadoByCodigoMozo(CodigoMozo: string): Empleado {
-        let result: Empleado;
-        this.data.listMozos.forEach(Mozo => {
-          if (CodigoMozo === Mozo.CodigoMozo) {
-            result = Mozo;
-          }
-        });
+    // private getEmpleadoByCodigoMozo(CodigoMozo: string): Empleado {
+    //     let result: Empleado;
+    //     this.data.listMozos.forEach(Mozo => {
+    //       if (CodigoMozo === Mozo.CodigoMozo) {
+    //         result = Mozo;
+    //       }
+    //     });
     
-        return result;
-      }
+    //     return result;
+    //   }
 }
 
 export interface DialogData {

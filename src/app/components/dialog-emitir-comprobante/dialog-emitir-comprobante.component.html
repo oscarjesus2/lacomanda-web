@@ -78,7 +78,7 @@
 
   <div class="d-flex align-items-center mb-3 cash-row">
     <div class="cash-buttons">
-      <button class="button_azul" style="width: 80px;">Soles Exacto</button>
+      <button class="button_azul" style="width: 80px;" (click)="SolesExacto()">Soles Exacto</button>
       <button class="button_azul" style="width: 50px;" (click)="SolesPredefinido(20)">S/. 20</button>
       <button class="button_azul" style="width: 50px;" (click)="SolesPredefinido(50)">S/. 50</button>
       <button class="button_azul" style="width: 50px;" (click)="SolesPredefinido(100)">S/. 100</button>
@@ -105,15 +105,15 @@
       </div>
     </div>
   </div>
-
-  <mat-table [dataSource]="dataSource" class="mat-elevation-z8 mb-3">
+  <div class="tabla-container">
+  <mat-table [dataSource]="dataSourcePago" class="mat-elevation-z8 mb-3">
     <ng-container matColumnDef="tarjeta">
       <mat-header-cell *matHeaderCellDef> Tarjeta </mat-header-cell>
-      <mat-cell *matCellDef="let element"> {{element.Tarjeta.Descripcion}} </mat-cell>
+      <mat-cell *matCellDef="let element">{{ element.Tarjeta?.Descripcion }}  </mat-cell>
       <mat-footer-cell *matFooterCellDef>
         <mat-form-field style="min-width: 200px;">
-          <mat-select placeholder="Tarjeta" [(ngModel)]="nuevoRegistro.IdTarjeta">
-            <mat-option *ngFor="let value of listTarjeta" [value]="value.IdTarjeta">{{ value.Descripcion }}</mat-option>
+          <mat-select placeholder="Tarjeta" [(ngModel)]="nuevoRegistro.Tarjeta">
+            <mat-option *ngFor="let value of listTarjeta" [value]="value">{{ value.Descripcion }}</mat-option>
           </mat-select>
         </mat-form-field>
       </mat-footer-cell>
@@ -167,7 +167,7 @@
     <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
     <mat-footer-row *matFooterRowDef="displayedColumns"></mat-footer-row>
   </mat-table>
-
+</div>
   <div class="results-row d-flex justify-content-between">
     <mat-form-field appearance="outline" class="flex-grow-1 mr-3">
       <mat-label>Monto a Pagar</mat-label>

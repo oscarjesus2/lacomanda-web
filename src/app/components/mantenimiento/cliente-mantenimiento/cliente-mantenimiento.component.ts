@@ -61,7 +61,7 @@ export class ClienteMantenimientoComponent implements OnInit {
 
   cargarTiposDocCliente(): void {
     this.tipoDocClienteService.getTipoDocClientes().subscribe(tipoDocCliente => {
-      this.tiposDocCliente = tipoDocCliente;
+      this.tiposDocCliente = tipoDocCliente.Data;
     });
   }
 

@@ -1,0 +1,56 @@
+<div class="descuento-container">
+  <h2>Descuento por Venta</h2>
+
+  <!-- Fila de botones de descuento -->
+  <div class="descuento-buttons">
+    <button  class="descuento-btn" (click)="descuentoPorTipo('P');">Descuento Por Producto</button>
+    <button  class="descuento-btn" (click)="descuentoPorTipo('T');" >Descuento Total</button>
+    <button class="descuento-btn" (click)="descuentoPorTipo('V');">Vale</button>
+  </div>
+  <div *ngIf="lblproductoVisible">
+    <h3>{{nombreCorto}} </h3>
+  </div>
+  <!-- Fila de búsqueda y tabla -->
+  <div class="main-content">
+    <div class="left-section">
+      <label for="buscar">Buscar:</label>
+      <input id="buscar" [(ngModel)]="txtBuscaDscto"  type="text" class="input-buscar" (input)="buscarDescuentos()"  />
+
+      <!-- Aquí irá la tabla de productos (simulando el DataGridView) -->
+      <div class="data-grid">
+        <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+          <!-- Columna de Descripción -->
+          <ng-container matColumnDef="Descripcion">
+            <th mat-header-cell *matHeaderCellDef> Descuento </th>
+            <td mat-cell *matCellDef="let row"> {{ row.Descripcion }} </td>
+          </ng-container>
+
+          <!-- Columna de Porcentaje -->
+          <ng-container matColumnDef="Porcentaje">
+            <th mat-header-cell *matHeaderCellDef> Porcentaje </th>
+            <td mat-cell *matCellDef="let row"> {{ row.Porcentaje }}% </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selectRow(row)" [class.selected-row]="selectedRow === row"></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Panel derecho con los campos de descuento y cupones -->
+    <div class="right-section">
+      <label for="dscto">{{label10}} {{label2}}</label>  
+      <input id="dscto" type="text" [(ngModel)]="txtValor" class="input-dscto" />
+
+      <label for="cupon">{{label3}}</label>
+      <input id="cupon" type="text" [(ngModel)]="txtCupon" class="input-cupon" />
+
+      <!-- Botones de acciones -->
+      <div class="action-buttons">
+        <button class="action-btn aceptar" (click)="cmdAceptar();">Aceptar</button>
+        <button class="action-btn salir">Salir</button>
+      </div>
+    </div>
+  </div>
+</div>

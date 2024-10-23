@@ -1,5 +1,5 @@
 export enum EnumTipoDocumento {
-    BolentaVenta = 'TK',
+    BoletaVenta = 'TK',
     FacturaVenta = 'FT',
     Express = 'DI',
     NotaCreditoVenta = 'NCV', 

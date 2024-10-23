@@ -15,6 +15,15 @@
   max-width: 700px;
 }
 
+.tabla-container {
+  height: 200px; /* Puedes ajustar esta altura a tu preferencia */
+  overflow-y: auto; /* Agrega el scrollbar cuando sea necesario */
+}
+
+.mat-table {
+  width: 100%;
+}
+
 .container {
   display: flex;
   flex-direction: column;

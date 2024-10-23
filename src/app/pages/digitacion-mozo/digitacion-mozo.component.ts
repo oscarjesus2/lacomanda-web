@@ -42,7 +42,7 @@ import { DialogEmitirComprobanteComponent } from 'src/app/components/dialog-emit
 import { HeaderService } from 'src/app/services/header.service';
 
 import { faUtensils, faShoppingBag, faTruck, faSync, faConciergeBell, faEye, faList, faPaperPlane, faReceipt, faTimes, faLock, faRunning, fas, faL } from '@fortawesome/free-solid-svg-icons';
-import { ApiResponse } from 'src/app/interfaces/ApiResponse.interface';
+import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import { PedidoMesaDTO } from 'src/app/interfaces/pedidomesaDTO.interface';
 import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mcant.component';
 import { DialogComplementosComponent } from 'src/app/components/dialog-complementos/dialog-complementos.component';
@@ -59,6 +59,7 @@ import { PedidoDeliveryDTO } from 'src/app/interfaces/pedidoDTO.interface';
 import { SocioNegocio } from 'src/app/models/socionegocio.models';
 import { Cliente } from 'src/app/models/cliente.models';
 import { DialogDividirCuentaComponent } from 'src/app/components/dialog-dividir-cuenta/dialog-dividir-cuenta.component';
+import { IdleService } from 'src/app/services/idle.service';
 
 @Component({
   selector: 'app-digitacion-mozo',
@@ -120,7 +121,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
   aplicarFiltroCambioMesa: boolean = false;
   aplicarFiltroUnirMesa: boolean = false;
   ambienteActual: Ambiente | null = null;
-  canalVentaSelected: string = "001";
+  idTipoPedidoSelected: string = "001";
 
   isCanalVentaDisabled = false;
   isBusquedaDisabled = false;
@@ -143,6 +144,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
   nombreCuenta: string = '';
 
   constructor(
+    private idleService: IdleService,
     private router: Router,
     private storageService: StorageService,
     private productService: ProductService,
@@ -232,7 +234,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
   canalVenta(idTipoPedido: string): void {
     this.limpiarPedido();
-    this.canalVentaSelected = idTipoPedido;
+    this.idTipoPedidoSelected = idTipoPedido;
     this.listaPedido_x_Canal = this.listaPedidosPendientes.filter(x => x.Estado === 1 && x.IdTipoPedido === idTipoPedido);
   }
 
@@ -513,7 +515,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     styleSheet.innerText = estilos;
     document.head.appendChild(styleSheet);
 
-    const buttonDelivery = (this.canalVentaSelected === "003") ?
+    const buttonDelivery = (this.idTipoPedidoSelected === "003") ?
       `<button id="btn-custom" style="
     display: inline-block;
     height: 50px;
@@ -531,7 +533,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     </button>`: ``;
 
     // Generar los botones dinámicamente
-    const buttonsHTML = (this.canalVentaSelected === "003") ? this.listaSociosNegocio.map((boton, index) =>
+    const buttonsHTML = (this.idTipoPedidoSelected === "003") ? this.listaSociosNegocio.map((boton, index) =>
       `<button class="swal2-confirm swal2-styled dynamic-btn" id="boton-${index}" data-descripcion="${boton.Descripcion}"
           style="
           display: inline-block;
@@ -552,11 +554,11 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
 
     // Llenar con botones vacíos si hay menos de 6 opciones
-    const emptyButtons = (this.canalVentaSelected === "003") ? Array.from({ length: maxBotones - this.listaSociosNegocio.length })
+    const emptyButtons = (this.idTipoPedidoSelected === "003") ? Array.from({ length: maxBotones - this.listaSociosNegocio.length })
       .map(() => `<button class="swal2-confirm swal2-styled dynamic-btn" style="visibility: hidden;"></button>`)
       .join('') : '';
 
-    const title = (this.canalVentaSelected === "003") ? 'Seleccione una opción' : 'Nombre de Cliente';
+    const title = (this.idTipoPedidoSelected === "003") ? 'Seleccione una opción' : 'Nombre de Cliente';
     const mostrarSwal = () => {
       Swal.fire({
         title: title,
@@ -595,7 +597,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
           if (!nombreClienteInput.trim()) {
             Swal.showValidationMessage('Debe ingresar el nombre del cliente');
           }
-          if (!socioNegocioSeleccionado && (this.canalVentaSelected === "003")) {
+          if (!socioNegocioSeleccionado && (this.idTipoPedidoSelected === "003")) {
             Swal.showValidationMessage('Debe seleccionar una opción');
           }
           return { nombreCliente: nombreClienteInput, socioNegocioSeleccionado };
@@ -1464,7 +1466,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
   async processPedido(verPanelProducto: boolean) {
 
-    if (this.mesaSelected.IdMesa == null && this.canalVentaSelected === '001') {
+    if (this.mesaSelected.IdMesa == null && this.idTipoPedidoSelected === '001') {
       Swal.fire(
         'Procesar Pedido',
         'Debe seleccionar una mesa.',
@@ -1523,7 +1525,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
   }
 
   async EnviarPedido() {
-    if (this.mesaSelected.IdMesa == null && this.canalVentaSelected === '001') {
+    if (this.mesaSelected.IdMesa == null && this.idTipoPedidoSelected === '001') {
       Swal.fire(
         'Enviar Pedido',
         'Debe seleccionar una mesa.',
@@ -1563,23 +1565,23 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
       var pedido: PedidoCab = new PedidoCab(
         {
-          IdEmpleado: (this.canalVentaSelected != '001') ? '00001' : this.mozoSelected?.IdEmpleado,
+          IdEmpleado: (this.idTipoPedidoSelected != '001') ? '00001' : this.mozoSelected?.IdEmpleado,
           IdPedido: this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
           NroCuenta: this.nroCuenta == 0 ? this.DEFAULT_ID : this.nroCuenta,
           Total: this.getTotalByListProductGrid(),
           Importe: this.getTotalByListProductGrid(),
           UsuReg: this.storageService.getCurrentSession().User.IdUsuario,
           UsuMod: this.storageService.getCurrentSession().User.IdUsuario,
-          IdMesa: (this.canalVentaSelected === '001') ? this.mesaSelected.IdMesa : '9999',
-          Mesa: (this.canalVentaSelected === '001') ? this.mesaSelected.Mesa : '',
-          NroPax: (this.canalVentaSelected === '001') ? this.mesaSelected.NroPersonas : 0,
+          IdMesa: (this.idTipoPedidoSelected === '001') ? this.mesaSelected.IdMesa : '9999',
+          Mesa: (this.idTipoPedidoSelected === '001') ? this.mesaSelected.Mesa : '',
+          NroPax: (this.idTipoPedidoSelected === '001') ? this.mesaSelected.NroPersonas : 0,
           IdCaja: "000", /*esto no es necesario dado que la caja se asigna mediante la ip de la compu*/
           Moneda: "SOL",
-          IdSocioNegocio: (this.canalVentaSelected === '003') ? this.socioNegocioSelected.IdSocioNegocio : 0,
-          Cliente: (this.canalVentaSelected === '001') ? this.listProductGrid[0]?.Anfitriona : this.clienteSelected.RazonSocial, /*solo para trago gratis */
-          Direccion: (this.canalVentaSelected === '003') ? this.clienteSelected.DireccionDelivery : '', /*solo para delivery*/
-          Referencia: (this.canalVentaSelected === '003') ? this.clienteSelected.ReferenciaDelivery : '', /*solo para delivery*/
-          IdTipoPedido: this.canalVentaSelected,
+          IdSocioNegocio: (this.idTipoPedidoSelected === '003') ? this.socioNegocioSelected.IdSocioNegocio : 0,
+          Cliente: (this.idTipoPedidoSelected === '001') ? this.listProductGrid[0]?.Anfitriona : this.clienteSelected.RazonSocial, /*solo para trago gratis */
+          Direccion: (this.idTipoPedidoSelected === '003') ? this.clienteSelected.DireccionDelivery : '', /*solo para delivery*/
+          Referencia: (this.idTipoPedidoSelected === '003') ? this.clienteSelected.ReferenciaDelivery : '', /*solo para delivery*/
+          IdTipoPedido: this.idTipoPedidoSelected,
           ListaPedidoDet: listPedidoDetails
         }
       );
@@ -1690,7 +1692,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
         if (responsePedidos.Success) {
           this.listaPedidosPendientes = responsePedidos.Data;
         }
-        this.canalVenta(this.canalVentaSelected);
+        this.canalVenta(this.idTipoPedidoSelected);
       }).catch(error => {
         console.error('Error al obtener pedidos', error);
       });

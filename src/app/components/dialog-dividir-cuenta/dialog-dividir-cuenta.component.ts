@@ -2,7 +2,7 @@ import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { DividirCuentaDTO } from 'src/app/interfaces/CrearCuentaDTO.interface';
+import { DividirCuentaDTO } from 'src/app/interfaces/crearcuentaDTO.interface';
 import { PedidoMesaDTO } from 'src/app/interfaces/pedidomesaDTO.interface';
 import { Mesas } from 'src/app/models/mesas.models';
 import { PedidoService } from 'src/app/services/pedido.service';

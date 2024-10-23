@@ -492,7 +492,7 @@ export class DialogEmitirVentaComponent implements OnInit {
                  pedidoCab: this.addPedido(),
                  bTurnoIndenpendiente: this.bTurnoIndenpendiente,
                  idCaja:this.cajaSeleccionada,
-                 IdTurno: this.addPedido().IdTurno
+                 idTurno: this.addPedido().IdTurno
                }
        });
     }

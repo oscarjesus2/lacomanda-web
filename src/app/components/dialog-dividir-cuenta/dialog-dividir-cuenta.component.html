@@ -14,8 +14,8 @@
         <!-- Información de la mesa -->
         <div class="mesa-info">
             <span>  Mesa Nº: {{ mesaSelected.Descripcion + ' ' + mesaSelected.Numero }}</span>
-            <span>Total: {{ sumaGranTotal | currency }}</span>
-            <span>ICBPER: {{ sumaImpuestoBolsa | currency }}</span>
+            <span>Total: {{ sumaGranTotal | currency:'PEN'  }}</span>
+            <span>ICBPER: {{ sumaImpuestoBolsa | currency:'PEN'  }}</span>
         </div>
     </div>
 

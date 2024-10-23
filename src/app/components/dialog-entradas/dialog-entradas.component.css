@@ -1,0 +1,205 @@
+.ventas-de-entradas-container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+    background-color: #fdfdfd;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    font-family: 'Poppins', sans-serif; /* Fuente moderna */
+  }
+  
+  h2 {
+    text-align: center;
+    color: #333;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  
+  .buttons-row {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+  }
+  
+  .entry-button {
+    background-color: #ffe6b3; /* Tonos cálidos */
+    color: #333;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .entry-button:hover {
+    background-color: #ffcc80; /* Color de hover */
+    transform: translateY(-2px); /* Animación al hacer hover */
+  }
+  
+  .entry-button.selected {
+    background-color: #ffb84d;
+    border-bottom: 3px solid #ff8c00; /* Resaltar el botón seleccionado */
+  }
+  
+  .entry-type-section {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 30px;
+  }
+  
+  .entry-type {
+    background-color: #fff;
+    padding: 25px;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    width: 220px;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .entry-type.selected {
+    box-shadow: 0 0 20px rgba(255, 128, 0, 0.5);
+  }
+  
+  .sumar-button {
+    background-color: #118f4a;
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .descuento-button {
+    background-color: #ff6666;
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .descuento-button:hover {
+    background-color: #e63946;
+    transform: translateY(-2px); /* Animación */
+  }
+  
+  .tragos-section {
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    width: 220px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .tragos-input {
+    width: 80px;
+    padding: 8px;
+    font-size: 18px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .actions-section {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 30px;
+  }
+  
+  .action-button {
+    background-color: #ffeb99;
+    color: #333;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .action-button:hover {
+    background-color: #ffd966;
+    transform: translateY(-2px);
+  }
+  
+  .payment-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  .payment-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    background-color: #FF7043; /* Naranja cálido */
+    color: #FFFFFF;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-size: 14px; /* Tamaño del texto */
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
+  }
+  .entry-button-process {
+    background-color: #FF7043; /* Naranja cálido */
+    color: #FFFFFF;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .selected {
+    border: 2px solid #ff8c00;
+    background-color: #fff7e6;
+  }
+  
+  .total-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .checkbox-container {
+    display: inline-block;
+    margin-left: 20px;
+    vertical-align: middle;
+  }
+  
+  .checkbox-container input[type="checkbox"] {
+    margin-right: 10px;
+  }
+  .close-button {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    z-index: 1000;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .close-button mat-icon {
+    font-size: 24px;
+    color: #757575;  /* Color gris medio */
+  }
+  
+  .close-button:hover mat-icon {
+    color: #212121;  /* Color más oscuro al pasar el mouse */
+  }
+  

@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 import { SocioNegocio } from '../models/socionegocio.models';
-import { ApiResponse } from '../interfaces/ApiResponse.interface';
+import { ApiResponse } from '../interfaces/apirResponse.interface';
 
 @Injectable({
   providedIn: 'root'

@@ -3,7 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs';
 import { Mesas } from '../models/mesas.models';
 import { environment } from 'src/environments/environment';  // Importa el entorno correspondiente
-import { ApiResponse } from '../interfaces/ApiResponse.interface';
+import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { PedidoMesaDTO } from '../interfaces/pedidomesaDTO.interface';
 
 @Injectable({

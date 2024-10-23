@@ -7,12 +7,12 @@ import { environment } from 'src/environments/environment';
 @Injectable({
   providedIn: 'root'
 })
-export class CargoService {
-    private basePath = environment.apiUrl + '/cargo/';
+export class TipoPedidoService {
+    private basePath = environment.apiUrl + '/TipoPedido/';
 
   constructor(private http: HttpClient) {}
 
-  getCargos(): Observable<any> {
+  getTipoPedidos(): Observable<any> {
     return this.http.get<[any]>(this.basePath);
   }
 }
