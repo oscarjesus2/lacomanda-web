@@ -40,3 +40,9 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# System files
+/CHANGELOG.md
+/changelogs/testing-changelog.md
+/changelogs/development-changelog.md
+/changelogs/production-changelog.md
