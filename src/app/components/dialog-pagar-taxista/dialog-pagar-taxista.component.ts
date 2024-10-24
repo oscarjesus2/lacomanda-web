@@ -287,7 +287,7 @@ export class DialogPagarTaxistaComponent {
 
   listarTragosGratis(): void {
     const idTurno = this.turnoAbierto.IdTurno; // Cambiar según sea necesario o tomarlo de alguna variable de la aplicación
-    this.ventaService.obtenerVentaTragoGratisPorTurno(idTurno).subscribe({
+    this.ventaService.getVentaTragoGratisPorTurno(idTurno).subscribe({
       next: (response: ApiResponse<VentaTragoGratisDTO[]>) => {
         if (response.Success) {
           this.dataSource.data = response.Data; // Asigna los datos al dataSource de la tabla

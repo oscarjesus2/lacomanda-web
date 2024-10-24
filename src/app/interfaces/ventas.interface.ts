@@ -36,6 +36,20 @@ export interface VentaTragoGratisDTO {
     FechaReg: Date;                  // Fecha de registro de la venta
   }
 
+  export interface VentasDTO {
+    IdVenta: number;            // Id de la venta
+    Tipo: string;               // Tipo de documento de la venta
+    Serie: string;              // Serie del documento
+    NumeroDocumento: string;    // Número del documento formateado
+    Fecha: Date;                // Fecha de la venta
+    Monto: number;              // Monto total de la venta
+    Cliente: string;            // Nombre del cliente o beneficiario
+    NumeroDoi: string;          // Número DOI (Documento de Identidad del cliente)
+    NombreArchivo: string;      // Nombre del archivo generado
+    FormaPago: string;          // Forma de pago utilizada
+    IdTipoPedido: string;       // Tipo de pedido
+  }
+  
 export interface InformeContableInterface {
     IdVenta: number;
     Fecha: string;

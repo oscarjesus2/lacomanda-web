@@ -1955,11 +1955,13 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   OpenDialogDocumentosEmitidos(): void {
   
+    const idTurno: number = this.turnoAbierto.IdTurno;
     const dialogDocumentosEmitidosComponent = this.dialog.open(DialogDocumentosEmitidosComponent, {
       disableClose: true,
       hasBackdrop: true,
       width: '1005px', // Establece el ancho del diálogo
       height: '715px', // Establece la altura del diálogo
+      data: { idTurno }
     });
     
 
