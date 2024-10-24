@@ -42,7 +42,6 @@ testem.log
 Thumbs.db
 
 # System files
-/CHANGELOG.md
 /changelogs/testing-changelog.md
 /changelogs/development-changelog.md
 /changelogs/production-changelog.md
