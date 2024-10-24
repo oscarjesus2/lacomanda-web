@@ -21,6 +21,21 @@ export interface VentasInterface {
     IdTipopedido: string;
 }
 
+export interface VentaTragoGratisDTO {
+    IdVenta: number;                 // Id de la venta
+    IdTipoDocumento: string;         // Tipo de documento de la venta
+    Serie: string;                   // Serie del documento
+    NroDoc: string;                  // Número del documento
+    Importe: number;                 // Importe total de la venta
+    Dscto: number;                   // Descuento aplicado
+    Total: number;                   // Total de la venta tras aplicar descuentos
+    IdTaxista: string;               // Id del taxista, en este caso '00000'
+    TipoDescuento: string;           // Tipo de descuento aplicado
+    CodigoPromocional?: string;      // Códigos promocionales asociados (opcional)
+    Activo: string;                  // Indica si el descuento está activo ('Si' o 'No')
+    FechaReg: Date;                  // Fecha de registro de la venta
+  }
+
 export interface InformeContableInterface {
     IdVenta: number;
     Fecha: string;

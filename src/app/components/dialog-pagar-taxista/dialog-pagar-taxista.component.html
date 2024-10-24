@@ -1,0 +1,123 @@
+<div class="consulta-entradas-container">
+    <button mat-icon-button class="close-button" (click)="salir()">
+        <mat-icon>close</mat-icon>
+    </button>
+    <br>
+    <h2>CONSULTA DE ENTRADAS</h2>
+
+    <!-- Sección de búsqueda -->
+    <div class="search-section">
+        <label for="buscar">Buscar Por Código</label>
+        <input id="buscar" type="text" placeholder="Ingrese código" [(ngModel)]="codigoBusqueda" name="codigoBusqueda">
+        <!-- <button mat-button class="modify-button">Modificar</button> -->
+    </div>
+    
+    <!-- Sección de formulario de datos -->
+    <form #taxistaForm="ngForm" (ngSubmit)="pagarTaxista(taxistaForm)">
+        <div class="form-section">
+            <div class="form-group">
+                <label for="dni">DNI</label>
+                <input id="dni" type="text" [(ngModel)]="dni" name="dni" (blur)="validarDNI()">
+            </div>
+            <div class="form-group">
+                <label for="nombres">Nombres</label>
+                <input id="nombres" type="text" [(ngModel)]="nombres" name="nombres">
+            </div>
+            <div class="form-group">
+                <label for="placa">Placa</label>
+                <input id="placa" type="text" [(ngModel)]="placa" name="placa">
+            </div>
+            <div class="form-group">
+                <label for="telefono">Teléfono</label>
+                <input id="telefono" type="text" [(ngModel)]="telefono" name="telefono">
+            </div>
+            <div class="form-group">
+                <label for="color">Color</label>
+                <select id="color" [(ngModel)]="color" name="color">
+                    <option value="ROJO">ROJO</option>
+                    <option value="AZUL">AZUL</option>
+                    <option value="BLANCO">BLANCO</option>
+                    <option value="NEGRO">NEGRO</option>
+                    <option value="AMARILLO">AMARILLO</option>
+                </select>
+            </div>
+            <div class="form-group total">
+                <label>Total a Pagar S/.</label>
+                <span>{{ totalPagar | currency:'PEN' }}</span>
+            </div>
+
+        </div>
+
+
+        <!-- Contenedor que contiene la tabla y los botones uno al lado del otro -->
+ 
+            <!-- Tabla de información -->
+            <div class="content-flexbox">
+                <!-- Contenedor que contiene la tabla y los botones uno al lado del otro -->
+                <div class="table-container">
+                  <!-- Contenedor con altura fija y scroll para la tabla -->
+                  <div class="table-scroll-container">
+                    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+                      <ng-container matColumnDef="tipoDoc">
+                        <th mat-header-cell *matHeaderCellDef>Tipo Doc</th>
+                        <td mat-cell *matCellDef="let element">{{ element.IdTipoDocumento }}</td>
+                      </ng-container>
+              
+                      <ng-container matColumnDef="serie">
+                        <th mat-header-cell *matHeaderCellDef>Serie</th>
+                        <td mat-cell *matCellDef="let element">{{ element.Serie }}</td>
+                      </ng-container>
+              
+                      <ng-container matColumnDef="numero">
+                        <th mat-header-cell *matHeaderCellDef>Número</th>
+                        <td mat-cell *matCellDef="let element">{{ element.NroDoc }}</td>
+                      </ng-container>
+              
+                      <ng-container matColumnDef="importe">
+                        <th mat-header-cell *matHeaderCellDef>Importe</th>
+                        <td mat-cell *matCellDef="let element">{{ element.Importe }}</td>
+                      </ng-container>
+              
+                      <ng-container matColumnDef="dscto">
+                        <th mat-header-cell *matHeaderCellDef>Dscto</th>
+                        <td mat-cell *matCellDef="let element">{{ element.Dscto }}</td>
+                      </ng-container>
+              
+                      <ng-container matColumnDef="total">
+                        <th mat-header-cell *matHeaderCellDef>Total</th>
+                        <td mat-cell *matCellDef="let element">{{ element.Total }}</td>
+                      </ng-container>
+              
+                      <ng-container matColumnDef="codigoPromo">
+                        <th mat-header-cell *matHeaderCellDef>Código Promo</th>
+                        <td mat-cell *matCellDef="let element">{{ element.CodigoPromocional }}</td>
+                      </ng-container>
+              
+                      <ng-container matColumnDef="activo">
+                        <th mat-header-cell *matHeaderCellDef>Activo</th>
+                        <td mat-cell *matCellDef="let element">{{ element.Activo }}</td>
+                      </ng-container>
+              
+                      <ng-container matColumnDef="fechaReg">
+                        <th mat-header-cell *matHeaderCellDef>Fecha Reg</th>
+                        <td mat-cell *matCellDef="let element">{{ element.FechaReg | date }}</td>
+                      </ng-container>
+              
+                      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                      <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selectRow(row)"
+                        [class.selected-row]="selectedRow === row"></tr>
+                    </table>
+                  </div>
+                </div>
+                <div class="action-buttons">
+                    <button mat-raised-button type="submit" color="primary" class="full-width-button">Pagar
+                        Taxista</button>
+                    <!-- <button mat-raised-button color="warn" class="full-width-button">Anular Pago Taxista</button> -->
+                </div>
+              </div>
+
+            <!-- Botones alineados al lado derecho de la tabla -->
+
+
+    </form>
+</div>

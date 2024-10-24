@@ -1,0 +1,137 @@
+/* Contenedor principal */
+.descuento-container {
+  width: 700px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Encabezado */
+.descuento-container h2 {
+  text-align: center;
+  font-size: 1.5em;
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+/* Fila de botones */
+.descuento-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.descuento-btn {
+  background-color: #6200ea;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.descuento-btn:hover {
+  background-color: #3700b3;
+}
+
+/* Contenedor principal de la tabla y los inputs */
+.main-content {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Sección izquierda (Búsqueda y tabla) */
+.left-section {
+  width: 65%;
+}
+
+.input-buscar {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* Tabla (simulando DataGridView) */
+.data-grid table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-grid th, .data-grid td {
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.data-grid th {
+  background-color: #6200ea;
+  color: white;
+}
+
+/* Sección derecha (Campos de descuento y botones) */
+.right-section {
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input-dscto, .input-cupon {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* Botones de acciones */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.action-btn {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.aceptar {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.aceptar:hover {
+  background-color: #388E3C;
+}
+
+.cancelar {
+  background-color: #FF9800;
+  color: white;
+}
+
+.cancelar:hover {
+  background-color: #F57C00;
+}
+
+.salir {
+  background-color: #F44336;
+  color: white;
+}
+
+.salir:hover {
+  background-color: #D32F2F;
+}
+
+.selected-row {
+  background-color: #d1e7dd; /* Color de fondo para la fila seleccionada */
+  color: #000; /* Color de texto de la fila seleccionada */
+}

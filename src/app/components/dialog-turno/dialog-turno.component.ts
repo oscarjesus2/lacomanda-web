@@ -123,7 +123,7 @@ export class DialogTurnoComponent implements OnInit {
 
         var oTurno: Turno = new Turno();
         oTurno.IdCaja = IdCaja;
-        oTurno.FechaTrabajo = FechaTrabajo; 
+        oTurno.FechaTrabajo = this.myForm.value.fecha; 
         oTurno.FechaInicio= FechaInicio; 
         oTurno.Estado= Estado; 
         oTurno.TipoCambio= TipoCambio; 

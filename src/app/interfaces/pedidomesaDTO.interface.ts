@@ -17,6 +17,7 @@ export interface PedidoMesaDTO {
   Importe: number;        
   IdEmpleado: string;
   HoraPedido: string;
+  NombreCuenta: string;
   IdProducto: number;
   Item: number;
   Qty: number;

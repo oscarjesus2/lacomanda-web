@@ -1,0 +1,141 @@
+/* Fuente principal */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f4f1ea; /* Fondo suave beige */
+  margin: 0;
+  padding: 0;
+}
+
+.component-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.05); /* Sombra más suave */
+}
+
+h2 {
+  text-align: center;
+  font-weight: 600;
+  font-size: 24px;
+  color: #3e2723; /* Marrón oscuro */
+  margin-bottom: 20px;
+}
+
+/* Botones */
+.button-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.button-row button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  background-color: #ff7043; /* Naranja cálido */
+  color: #ffffff;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+
+.button-row button fa-icon {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+.button-row button:hover {
+  background-color: #ff5722; /* Naranja más oscuro */
+  border-color: #ffab91; /* Borde visible en hover */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.button-row button:active {
+  background-color: #e64a19;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Información de la mesa */
+.mesa-info {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  background-color: #fce4ec; /* Fondo claro con tono cálido */
+  border-radius: 8px;
+  font-size: 16px;
+  color: #5d4037; /* Marrón oscuro */
+  margin-bottom: 30px;
+}
+
+/* Contenedor de las dos tablas */
+.grids-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.grid {
+  width: 48%;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* Sombra suave */
+  padding: 20px;
+}
+
+.grid h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #795548; /* Marrón medio */
+  margin-bottom: 15px;
+}
+
+/* Tablas */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0; /* Líneas suaves */
+}
+
+.table th {
+  background-color: #ffab91; /* Tono naranja claro */
+  color: #ffffff;
+}
+
+.table td {
+  color: #5d4037; /* Marrón oscuro */
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #fbe9e7; /* Fila con fondo cálido alternativo */
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .grids-container {
+    flex-direction: column;
+  }
+
+  .grid {
+    width: 100%;
+  }
+}
+
+.selected-row {
+  background-color: #d1e7dd; /* Color de fondo para la fila seleccionada */
+  color: #000; /* Color de texto de la fila seleccionada */
+}

@@ -1,0 +1,174 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #fdfdfd; /* Fondo claro */
+    font-family: 'Poppins', sans-serif; /* Fuente moderna */
+    overflow: hidden; /* Evitar scroll innecesario */
+}
+
+.consulta-entradas-container {
+  background-color: #fdfdfd;
+  padding: 20px;
+  border-radius: 15px;
+  width: 100%;  /* Ajusta el ancho al 100% del diálogo */
+  height: 100%; /* Ajusta la altura al 100% del diálogo */
+  box-sizing: border-box; /* Asegura que el padding no afecte el tamaño total */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+  font-size: 2rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.search-section input {
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background-color: #fff;
+  color: #333;
+  width: 300px;
+}
+
+.search-section input {
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #fff; /* Fondo claro */
+    color: #333;
+    width: 300px;
+}
+
+.form-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 35px;
+  margin-bottom: 35px;
+  flex-grow: 1;  /* Asegura que el formulario ocupe todo el espacio disponible */
+}
+
+.form-group {
+  width: 100%; /* Asegura que el contenedor del grupo ocupe todo el espacio */
+}
+.form-group label {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.form-group input, .form-group select {
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: #333;
+  width: 95%;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+
+.form-group.total {
+    grid-column: span 2;
+    text-align: right;
+    color: #333;
+    font-size: 1.4rem;
+}
+
+.table-scroll-container {
+  max-height: 300px; /* Fijar la altura de la tabla */
+  overflow-y: auto;  /* Habilitar el scroll vertical */
+}
+
+.mat-table {
+  width: 100%;
+}
+
+.table-container {
+  width: 100%; /* Asegurarse de que el contenedor ocupe todo el ancho */
+}
+
+.mat-header-cell {
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+    padding: 15px 8px;
+}
+
+.mat-cell {
+    color: #4a4a4a;
+    text-align: center;
+    padding: 12px 8px;
+}
+
+.content-flexbox {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 10px;
+}
+
+.action-buttons .full-width-button {
+  width: 100%;
+  background-color: #ff7043;
+  color: white;
+  padding: 14px 0;
+  font-size: 1rem;
+  text-align: center;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+}
+
+.action-buttons .full-width-button:hover {
+  background-color: #e64a19;
+}
+
+.modify-button {
+    background-color: #43a047;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.modify-button:hover {
+    background-color: #388e3c;
+}
+
+.selected-row {
+    background-color: #ffe0b2;
+    color: #333;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.close-button mat-icon {
+    font-size: 24px;
+    color: #757575;
+}
+
+.close-button:hover mat-icon {
+    color: #212121;
+}

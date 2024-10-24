@@ -3,6 +3,8 @@ import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs';
 import { Empleado  } from '../models/empleado.models';
 import { environment } from 'src/environments/environment';
+import { ApiResponse } from '../interfaces/apirResponse.interface';
+import { EmpleadoTaxistaDTO } from '../interfaces/empladoTaxistaDTO.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -12,8 +14,8 @@ export class EmpleadoService {
 
   constructor(private http: HttpClient) {}
 
-  getAllEmpleados(): Observable<any> {
-    return this.http.get<any>(this.basePath );
+  getAllEmpleados(): Observable<ApiResponse<Empleado[]>> {
+    return this.http.get<ApiResponse<Empleado[]>>(this.basePath );
   }
 
   getEmpleado(id: string): Observable<Empleado> {
@@ -27,7 +29,7 @@ export class EmpleadoService {
   updateEmpleado(empleado: Empleado): Observable<any> {
     return this.http.put<Empleado>(`${this.basePath }/${empleado.IdEmpleado}`, empleado);
   }
-
+  
   deleteEmpleado(id: string): Observable<void> {
     return this.http.delete<void>(`${this.basePath }/${id}`);
   }

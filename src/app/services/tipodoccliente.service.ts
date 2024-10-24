@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { TipoDocCliente } from '../models/tipodoccliente.models';
 import { environment } from 'src/environments/environment';
+import { ApiResponse } from '../interfaces/apirResponse.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,8 @@ export class TipoDocClienteService {
 
   constructor(private http: HttpClient) {}
 
-  getTipoDocClientes(): Observable<TipoDocCliente[]> {
-    return this.http.get<[TipoDocCliente]>(this.basePath + 'listar');
-}
+  getTipoDocClientes(): Observable<ApiResponse<TipoDocCliente[]>> {
+    
+    return this.http.get<ApiResponse<TipoDocCliente[]>>(this.basePath + 'listar');
+  }
 }

@@ -1,0 +1,74 @@
+.documentos-container {
+    background-color: #FFF3E0; /* Fondo cálido */
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .toolbar.row-1 {
+    margin-bottom: 20px;
+  }
+  
+  .toolbar.row-2 {
+    align-items: center;
+  }
+  
+  .spacer {
+    flex-grow: 1;
+  }
+  
+  .content-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  
+  .table-container {
+    width: 75%; /* Ancho fijo para que no empuje los botones */
+    max-width: 750px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mat-header-cell, .mat-cell {
+    padding: 10px;
+  }
+  
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    margin-left: 20px;
+    width: 20%; /* Ancho fijo para los botones */
+  }
+  
+  .action-btn {
+    background-color: #66BB6A; /* Verde cálido */
+    color: white;
+    margin-bottom: 10px;
+    border-radius: 4px;
+  }
+  
+  .cancel-btn {
+    background-color: #EF5350; /* Rojo suave */
+  }
+  
+  .salir-btn {
+    background-color: #8D6E63; /* Marrón suave */
+  }
+  
+  .motivo-section {
+    margin-top: 20px;
+  }
+  
+  .motivo-input {
+    width: 100%;
+  }
+  

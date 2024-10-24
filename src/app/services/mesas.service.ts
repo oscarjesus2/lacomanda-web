@@ -3,7 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs';
 import { Mesas } from '../models/mesas.models';
 import { environment } from 'src/environments/environment';  // Importa el entorno correspondiente
-import { ApiResponse } from '../interfaces/ApiResponse.interface';
+import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { PedidoMesaDTO } from '../interfaces/pedidomesaDTO.interface';
 
 @Injectable({
@@ -25,6 +25,10 @@ export class MesasService {
 
     CambiarMesa(idMesaOrigen: string, idMesaDestino: string): Observable<ApiResponse<boolean>> {
         return this.http.put<ApiResponse<boolean>>(`${this.basePathMesas}/CambiarMesa/${idMesaOrigen}/${idMesaDestino}`,{});
+    }
+
+    UnirMesa(idMesaOrigen: string, idMesaDestino: string, idUsuario: number): Observable<ApiResponse<boolean>> {
+        return this.http.put<ApiResponse<boolean>>(`${this.basePathMesas}/UnirMesa/${idMesaOrigen}/${idMesaDestino}/${idUsuario}`,{});
     }
 
     ImprimirPrecuenta(idMesa: string): Observable<any[]> {

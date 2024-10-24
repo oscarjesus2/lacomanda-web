@@ -3,13 +3,15 @@ import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { catchError, Observable, throwError } from 'rxjs';
 import { ventadiariasemanalmensual } from '../models/ventadiariasemanalmensual.models';
 import { environment } from 'src/environments/environment';
-import { InformeContableInterface, VentasInterface } from '../interfaces/ventas.interface';
+import { InformeContableInterface, VentasInterface, VentaTragoGratisDTO } from '../interfaces/ventas.interface';
 import { Venta } from '../models/venta.models';
 import { Cliente } from '../models/cliente.models';
 import { PedidoCab } from '../models/pedido.models';
 import { PedidoDet } from '../models/pedidodet.models';
 import { Pago } from '../models/pago.models';
-import { ApiResponse } from '../interfaces/ApiResponse.interface';
+import { ApiResponse } from '../interfaces/apirResponse.interface';
+import { DescuentoCodigo } from '../models/descuentocodigo.models';
+import { ImpresionDTO } from '../interfaces/impresionDTO.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -47,17 +49,22 @@ export class VentaService {
       }
       
   
-    guardarDocumentoVenta(idModuloVenta: number, venta: Venta, cliente: Cliente, pedidoCab: PedidoCab, listaPago: Pago[],  bTurnoIndependiente: boolean): Observable<ApiResponse<Venta>> {
+    guardarDocumentoVenta(idTipoPedido: string, venta: Venta, cliente: Cliente, pedidoCab: PedidoCab, listaDescuentoCodigo: DescuentoCodigo[], listaPago: Pago[],  bTurnoIndependiente: boolean): Observable<ApiResponse<ImpresionDTO[]>> {
 
         const body = {
-            idModuloVenta: idModuloVenta,
+            IdTipoPedido: idTipoPedido,
             venta: venta,
             cliente: cliente,
             pedidoCab: pedidoCab,
+            listaDescuentoCodigo: listaDescuentoCodigo,
             listaPago: listaPago,
             bTurnoIndependiente: bTurnoIndependiente
         };
 
-        return this.http.post<ApiResponse<Venta>>(this.basePath + 'grabardocumentoventa', body);
+        return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + 'grabardocumentoventa', body);
+    }
+
+    obtenerVentaTragoGratisPorTurno(idTurno: number): Observable<ApiResponse<VentaTragoGratisDTO[]>> {
+        return this.http.get<ApiResponse<VentaTragoGratisDTO[]>>(`${this.basePath}/ObtenerDatosTragoGratisPorTurno/${idTurno}`);
     }
 }

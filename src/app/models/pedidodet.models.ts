@@ -17,6 +17,7 @@ export class PedidoDet {
     public Enviado: boolean;
     public IdDescuento: string;
     public MontoDescuento: number;
+    public UsuDescuento: number;
     public NroCupon: string;
     public NumEnvios: number;
     public MotivoReimpresion: string;

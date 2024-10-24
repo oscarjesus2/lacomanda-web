@@ -27,7 +27,10 @@ import { EnumTipoDocumento, EnumTipoIdentidad } from 'src/app/enums/enum';
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
 import {  QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 import { Router } from '@angular/router';
-import { ApiResponse } from 'src/app/interfaces/ApiResponse.interface';
+import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
+import { DescuentoCodigo } from 'src/app/models/descuentocodigo.models';
+import { NgxSpinnerService } from 'ngx-spinner';
+import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 
 
 @Component({
@@ -66,13 +69,13 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   lblcambio: string = '0.00';
 
   tipoDocumento: TipoDocumento = new TipoDocumento();
-  idModuloVenta: number = 0;
+  idTipoPedido: string = '';
   idPedidoCobrar: number = 0;
   nroCuentaCobrar: number = 0;
   idCaja: string = '';
 
   displayedColumns: string[] = ['tarjeta', 'autorizacion', 'montoPagado', 'propina', 'acciones'];
-  dataSource: MatTableDataSource<Pago>;
+  dataSourcePago: MatTableDataSource<Pago>;
   nuevoRegistro: Pago = new Pago();
 
   form: FormGroup;
@@ -84,13 +87,14 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   bTurnoIndenpendiente: boolean;
   pedidoCab: PedidoCab;
   idTurno: number;
-  spinnerService: any;
+  listaDescuentoCodigo: DescuentoCodigo[]=[];
 
   constructor(
     public dialogRef: MatDialogRef<DialogEmitirComprobanteComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private clienteService: ClienteService,
     private cajaService: CajaService,
+    private spinnerService: NgxSpinnerService,
     private pedidoService: PedidoService,
     private ventaService: VentaService,
     private storageService: StorageService,
@@ -102,17 +106,18 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     private qzTrayService: QzTrayV224Service,
     private router: Router,
   ) {
-    this.dataSource = new MatTableDataSource([]);
-    this.nuevoRegistro.IdTarjeta = '';
+    this.dataSourcePago = new MatTableDataSource([]);
+    this.nuevoRegistro.Tarjeta = new Tarjeta();
     this.lblcambio = parseFloat(data.lblcambio).toFixed(2);
     this.tipoDocumento.IdTipoDoc = data.idTipoDoc;
-    this.idModuloVenta = data.idModuloVenta;
+    this.idTipoPedido = data.idTipoPedido;
     this.idCaja = data.idCaja;
 
     this.bTurnoIndenpendiente = data.bTurnoIndenpendiente;
     this.pedidoCab = data.pedidoCab;
+    this.listaDescuentoCodigo = data.listaDescuentoCodigo;
     this.idTurno = data.idTurno;
-    if (this.idModuloVenta === 3) {
+    if (this.idTipoPedido === '003') {
       if (data.ruc.trim() != "" && data.ruc.trim() != "0") {
         this.cliente.Ruc = data.ruc;
         this.cliente.IdCliente = data.idClienteDelivery;
@@ -152,7 +157,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   async ngOnInit() {
 
-    if (this.idModuloVenta!=4){
+    if (this.idTipoPedido!='004'){
       const isRunning = await this.qzTrayService.isQzTrayRunning();
       if (!isRunning) {
         // Redirige a una página que instruya al usuario a descargar QZ Tray
@@ -318,7 +323,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   private async ValidaTotalAPagar(): Promise<void> {
-    if (this.idModuloVenta === 1 || this.idModuloVenta === 2 || this.idModuloVenta === 3) {
+    if (this.idTipoPedido === '001' || this.idTipoPedido === '002' || this.idTipoPedido === '003') {
       this.pedidoService.Totalapagar_x_detallepedido(this.idPedidoCobrar, this.nroCuentaCobrar).subscribe(
         (pedido: any) => {
           if (pedido.MontoPagar) {
@@ -370,7 +375,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     this.cajaService.getCaja(this.idCaja).subscribe(
       (caja: Caja) => {
         if (caja.IdCaja) {
-          if (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BolentaVenta) {
+          if (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BoletaVenta) {
             serie = caja.NroSerieBoleta;
             correlativo = ("00000000" + (caja.NroBoleta + 1)).slice(-8);
           } else if (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.Express) {
@@ -397,7 +402,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       (error: any) => {
         console.error('Error:', error);
         Swal.fire({
-          title: 'Validación',
+          title: 'Error',
           text: error,
           icon: 'error',
           confirmButtonText: 'OK'
@@ -408,40 +413,57 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   private async initializeTipoDocCliente(): Promise<void> {
-    let allTipoDocumentoCliente = await this.tipoDocClienteService.getTipoDocClientes().toPromise();
-    let ruc;
-    let razonSocial;
-    if (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BolentaVenta) {
-      this.listTipoDocumentoCliente = allTipoDocumentoCliente.filter(doc => doc.IdTipoIdentidad !== 2);
-      this.cliente.TipoDocCliente = allTipoDocumentoCliente.find(doc => doc.IdTipoIdentidad === EnumTipoIdentidad.DNI) || null;
-      this.etiquetaCliente = 'DNI';
-      ruc = '00000001';
-      razonSocial = 'Cliente Varios';
-    } else if (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.FacturaVenta) {
-      this.listTipoDocumentoCliente = allTipoDocumentoCliente.filter(doc => doc.IdTipoIdentidad === 2);
-      this.cliente.TipoDocCliente = allTipoDocumentoCliente.find(doc => doc.IdTipoIdentidad === EnumTipoIdentidad.RUC) || null;
-      this.etiquetaCliente = 'RUC';
-      ruc = '';
-      razonSocial = '';
-    }
+    try {
+      var response = await this.tipoDocClienteService.getTipoDocClientes().toPromise();
 
-    const clienteFormGroup = this.form.get('cliente') as FormGroup;
-    clienteFormGroup.patchValue({
-      tipoIdentidad: this.cliente.TipoDocCliente.IdTipoIdentidad,
-      ruc: ruc,
-      razonSocial: razonSocial
-    });
+      const allTipoDocumentoCliente = response.Data;
+      
+      let ruc = '';
+      let razonSocial = '';
+      const isBoletaVenta = this.tipoDocumento.IdTipoDoc === (EnumTipoDocumento.BoletaVenta);
+      const isExpress = this.tipoDocumento.IdTipoDoc === (EnumTipoDocumento.Express);
+
+      this.listTipoDocumentoCliente = allTipoDocumentoCliente.filter(doc => 
+        (isBoletaVenta || isExpress) ? doc.IdTipoIdentidad !== 2 : doc.IdTipoIdentidad === 2
+      );
+      
+      this.cliente.TipoDocCliente = allTipoDocumentoCliente.find(doc =>
+        (isBoletaVenta || isExpress) ? doc.IdTipoIdentidad === EnumTipoIdentidad.DNI : doc.IdTipoIdentidad === EnumTipoIdentidad.RUC
+      ) || null;
+      
+      this.etiquetaCliente =  (isBoletaVenta || isExpress)  ? 'DNI' : 'RUC';
+      
+      if (isBoletaVenta || isExpress) {
+        ruc = '00000001';
+        razonSocial = 'Cliente Varios';
+      }
+  
+      const clienteFormGroup = this.form.get('cliente') as FormGroup;
+      clienteFormGroup.patchValue({
+        tipoIdentidad: this.cliente.TipoDocCliente?.IdTipoIdentidad ?? null,
+        ruc,
+        razonSocial
+      });
+      
+    } catch (error) {
+      console.error('Error al inicializar el tipo de documento del cliente:', error);
+      // Aquí puedes manejar errores adicionales, como mostrar una alerta al usuario.
+    }
   }
+  
 
   private async initializeTipoDocumento(): Promise<void> {
-    let allTipoDocumento = await this.tipoDocumentoService.getTipoDocumento().toPromise();
-
-    if (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BolentaVenta) {
-      this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDoc === EnumTipoDocumento.BoletaVentaManual || doc.IdTipoDoc === EnumTipoDocumento.BolentaVenta);
-      this.tipoDocumento.IdTipoDoc = EnumTipoDocumento.BolentaVenta;
+    var response = await this.tipoDocumentoService.getTipoDocumento().toPromise();
+    let allTipoDocumento = response.Data;
+    if (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BoletaVenta) {
+      this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDoc === EnumTipoDocumento.BoletaVentaManual || doc.IdTipoDoc === EnumTipoDocumento.BoletaVenta);
+      this.tipoDocumento.IdTipoDoc = EnumTipoDocumento.BoletaVenta;
     } else if (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.FacturaVenta) {
       this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDoc === EnumTipoDocumento.FacturaVentaManual || doc.IdTipoDoc === EnumTipoDocumento.FacturaVenta);
       this.tipoDocumento.IdTipoDoc = EnumTipoDocumento.FacturaVenta;
+    }else if (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.Express) {
+      this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDoc === EnumTipoDocumento.Express);
+      this.tipoDocumento.IdTipoDoc = EnumTipoDocumento.Express;
     }
 
     this.form.patchValue({
@@ -451,7 +473,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   private async initializeTarjetas(): Promise<void> {
     try {
-      if (this.idModuloVenta === 3) {
+      if (this.idTipoPedido === '003') {
         this.listTarjeta = await this.tarjetaService.getTarjeta_SocioNegocio(this.idPedidoCobrar, this.nroCuentaCobrar).toPromise();
         if (this.listTarjeta.length != 0) {
           this.cliente.Ruc = "00000000";
@@ -485,7 +507,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       }
       let monto1 = 0;
       if (nuevoRegistro.MontoPagado > 0) {
-        this.dataSource.data.forEach(row => {
+        this.dataSourcePago.data.forEach(row => {
           monto1 += row.MontoPagado;
         });
 
@@ -496,10 +518,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
           // Focus on txtmontarjeta
         } else {
           this.lblmontotarjeta = monto1.toFixed(2);
-          if (nuevoRegistro.IdTarjeta && nuevoRegistro.Autorizacion && nuevoRegistro.MontoPagado) {
-            const data = this.dataSource.data;
+          if (nuevoRegistro.Tarjeta.IdTarjeta && nuevoRegistro.Autorizacion && nuevoRegistro.MontoPagado) {
+            const data = this.dataSourcePago.data;
             data.push(nuevoRegistro);
-            this.dataSource.data = data;
+            this.dataSourcePago.data = data;
             this.nuevoRegistro = new Pago();
           }
         }
@@ -513,7 +535,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   eliminarRegistro(element: Pago) {
-    this.dataSource.data = this.dataSource.data.filter(registro => registro !== element);
+    this.dataSourcePago.data = this.dataSourcePago.data.filter(registro => registro !== element);
     this.calcularMonto();
     this.calculoMontosTarjeta();
   }
@@ -563,6 +585,12 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     this.calcularMonto();
   }
 
+  SolesExacto(): void {
+    this.solesValue = Number(this.lblmonto);
+    this.calcularMonto();
+    this.cmdCobrarClick();
+  }
+
   obtenerDolares(): void {
     this.ComponenteCantidad('Dolares').then(valor => {
       this.dolaresValue = Number(valor);
@@ -572,7 +600,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   command3Click(): void {
-    this.dataSource.data = []; // Clear the data grid
+    this.dataSourcePago.data = []; // Clear the data grid
     this.dolaresValue = 0;
     this.solesValue = parseFloat(this.lblmonto);
     this.calculoMontosTarjeta();
@@ -606,6 +634,12 @@ export class DialogEmitirComprobanteComponent implements OnInit {
           Swal.fire('Validación', 'El RUC solo debe tener números.', 'warning');
           return;
         }
+
+        if (this.cliente.Direccion == '' ||  this.cliente.Direccion == null) {
+            Swal.fire('Validacion', 'Ingrese la dirección', 'warning');
+            return;
+        }
+  
       } else {
         const tipoDocumentoCliente = this.cliente.TipoDocCliente;
         if (tipoDocumentoCliente.IdTipoIdentidad === 1) {
@@ -627,7 +661,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
           }
         }
 
-        if (parseFloat(this.lblmonto) >= 700 && (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BolentaVenta || this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BoletaVentaManual)) {
+        if (parseFloat(this.lblmonto) >= 700 && (this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BoletaVenta || this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BoletaVentaManual)) {
           if (this.cliente.Ruc === '00000001') {
             Swal.fire('Validación', 'La cuenta es igual ó superior a 700 soles, por lo cual, debe ingresar el DNI del cliente.', 'warning');
             return;
@@ -635,7 +669,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         }
       }
 
-      if (this.cliente.Correo == '') {
+      if (this.cliente.Correo != '' && this.cliente.Correo != null) {
         if (!this.isValidEmail(this.cliente.Correo)) {
           Swal.fire('Validacion', 'El correo electrónico está mal ingresado.', 'warning');
           return;
@@ -659,7 +693,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       mensaje = "¿Está Seguro de Registrar la Venta al Crédito?";
     }
 
-    if (!((this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BolentaVenta || this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BoletaVentaManual) && this.storageService.getCurrentSession().boletaRapida)) {
+    if (!((this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BoletaVenta || this.tipoDocumento.IdTipoDoc === EnumTipoDocumento.BoletaVentaManual) && this.storageService.getCurrentSession().boletaRapida)) {
       Swal.fire({
         title: mensaje,
         icon: 'question',
@@ -680,14 +714,28 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     }
   }
 
+  async imprimir(listImpresionDTO: ImpresionDTO[]): Promise<number> {
+    let contador: number = 0;
+
+    for (const element of listImpresionDTO) {
+      const printerName = element.NombreImpresora;
+      const success = await this.qzTrayService.printPDF(element.Documento, printerName);
+      if (success) {
+        contador += 1;
+      }
+    }
+    return contador;
+  }
+
+
   async procesarCobro(alCredito: boolean): Promise<void> {
     if (!this.ChkVentaAlCredito && parseFloat(this.lbltotal) < parseFloat(this.lblmonto)) {
       Swal.fire('Mensaje', 'El Total de Pago es menor que el Monto a Pagar', 'warning');
       return;
     }
-    const venta: Venta = await this.grabarDocumento();
-    if (venta) {
-      if (this.idModuloVenta === 4) {
+    const listaImpresionDTO: ImpresionDTO[] = await this.grabarDocumento();
+    if (listaImpresionDTO) {
+      if (this.idTipoPedido === '005') {
 
         Swal.fire({
           title: '¿Qué formato prefieres?',
@@ -699,30 +747,22 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         }).then((result) => {
           if (result.isConfirmed) {
             this.descargarA4PDF();
-            this.descargarTicketPDF(venta.ByteTicket, venta.Serie + venta.NumDocumento);
+            this.descargarTicketPDF(listaImpresionDTO.find[0].Documento, '');
             this.imprimirPromocionesA4();
           } else if (result.dismiss === Swal.DismissReason.cancel) {
-            this.descargarTicketPDF(venta.ByteTicket, venta.Serie + venta.NumDocumento);
+            this.descargarTicketPDF(listaImpresionDTO.find[0].Documento, '');
             this.imprimirPromocionesTicket();
           }
         });
       } else {
-        this.imprimirTicket(venta.ByteTicket);
+        this.imprimir(listaImpresionDTO);
       }
 
-      if (this.idModuloVenta === 3) {
-        this.imprimirPrecDelivery(venta.IdVenta);
+      if (this.idTipoPedido === '003') {
+        this.imprimirPrecDelivery(listaImpresionDTO);
       }
 
-      if (this.idModuloVenta === 5) {
-        this.imprimirPrecTragoGratis(venta.IdVenta);
-      }
-
-      //  dblReportaMonto = Convert.ToDouble(lblmonto.Text);
-      //  dblReportaTotal = Convert.ToDouble(lbltotal.Text);
-      //  dblReportaVuelto = Convert.ToDouble(lblvuelto.Text);
-
-      this.dialogRef.close('Cobrado');
+      this.dialogRef.close({estado: 'Cobrado', listaImpresionDTO : listaImpresionDTO});
     }
   }
   imprimirPromocionesA4() {
@@ -741,7 +781,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     throw new Error('Method not implemented.');
   }
 
-  imprimirTicket(byteTicket: any) {
+  async imprimirTicket(byteTicket: any) {
     const printerName = 'FACTURA'; 
     this.qzTrayService.printPDF(byteTicket, printerName);
   }
@@ -763,7 +803,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     URL.revokeObjectURL(objectUrl);
   }
 
-  async grabarDocumento(): Promise<Venta> {
+  async grabarDocumento(): Promise<ImpresionDTO[]> {
+    this.spinnerService.show();
     const listPago: Pago[] = [];
 
     var UsuReg: number = this.storageService.getCurrentSession().User.IdUsuario;
@@ -780,7 +821,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       NroCuenta: this.nroCuentaCobrar,
       IdCaja: this.idCaja,
       Impuesto1: parseFloat(this.lblmonto) - this.dblTotal,
-      IdEmpleado: this.storageService.getCurrentSession().User.IdEmpleado,
+      IdEmpleado: '',
       Total: this.dblTotal,
       Importe: this.dblImporte,
       Dscto: this.dblDscto,
@@ -800,7 +841,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         MontoVenta: parseFloat(this.lblmonto),
         Propina: 0,
         Vuelto: parseFloat(this.lblvuelto),
-        IdTarjeta: '',
+        Tarjeta: null,
         Autorizacion: '',
         UsuReg: this.storageService.getCurrentUser().IdUsuario,
         Estado: 1,
@@ -823,7 +864,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         MontoVenta: parseFloat(this.lblmonto),
         Propina: 0,
         Vuelto: Vuelto,
-        IdTarjeta: '',
+        Tarjeta: null,
         Autorizacion: '',
         UsuReg: this.storageService.getCurrentUser().IdUsuario,
         Estado: 1,
@@ -832,7 +873,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       listPago.push(pagoDolares);
     }
 
-    this.dataSource.data.forEach(row => {
+    this.dataSourcePago.data.forEach(row => {
       const pagoTable: Pago = {
         IdVenta: 0,
         IdTipoPago: '004',
@@ -840,7 +881,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         MontoVenta: parseFloat(this.lblmonto),
         Propina: row.Propina,
         Vuelto: 0,
-        IdTarjeta: row.IdTarjeta,
+        Tarjeta: new Tarjeta({IdTarjeta: row.Tarjeta.IdTarjeta, Descripcion: row.Tarjeta.Descripcion}),
         Autorizacion: row.Autorizacion,
         UsuReg: this.storageService.getCurrentUser().IdUsuario,
         Estado: 1,
@@ -849,24 +890,16 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       listPago.push(pagoTable);
     });
 
-    try {
 
-      var resultGenerateComprobante: ApiResponse<Venta> = await this.ventaService.guardarDocumentoVenta(this.idModuloVenta, venta, this.cliente, this.pedidoCab, listPago, this.bTurnoIndenpendiente).toPromise();
+
+      var resultGenerateComprobante: ApiResponse<ImpresionDTO[]> = await this.ventaService.guardarDocumentoVenta(this.idTipoPedido, venta, this.cliente, this.pedidoCab, this.listaDescuentoCodigo, listPago, this.bTurnoIndenpendiente).toPromise();
       if (resultGenerateComprobante.Success) {
+        this.spinnerService.hide();
         return resultGenerateComprobante.Data;
       } else {
+        this.spinnerService.hide();
         return null;
       }
-
-    } catch (e) {
-      this.data.Resultado = "false";
-      console.log(e);
-      Swal.fire(
-        'No se pudo registrar el pedido.',
-        e.error,
-        'error'
-      )
-    }
   }
 
   buscarCliente(): void {
@@ -948,7 +981,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       let monto = 0;
       let propina = 0;
 
-      this.dataSource.data.forEach(row => {
+      this.dataSourcePago.data.forEach(row => {
         monto += row.MontoPagado;
         propina += row.Propina;
       });

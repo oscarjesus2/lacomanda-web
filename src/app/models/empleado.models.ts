@@ -9,6 +9,7 @@ export class Empleado {
     public IdEmpleado: string;
     public Nombre: string;
     public Telefono: any;
-    public CodigoMozo: string;
-    
+    public IdSocioNegocio: number;
+    public Placa: string;
+    public Color: string;
 }
