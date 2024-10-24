@@ -8,7 +8,7 @@ import { PedidoMesaDTO } from '../interfaces/pedidomesaDTO.interface';
 import { ImpresionDTO } from '../interfaces/impresionDTO.interface';
 import { AnularProductoYComplementoDTO } from '../interfaces/anularProductoYComplementoDTO.interface';
 import { PedidoDeliveryDTO } from '../interfaces/pedidoDTO.interface';
-import { DividirCuentaDTO } from '../interfaces/crearcuentaDTO.interface';
+import { DividirCuentaDTO } from '../interfaces/dividircuentaDTO.interface';
 import { PedidoDescuentoDTO } from '../interfaces/pedidoDescuentoDTO.interface';
 
 @Injectable({
