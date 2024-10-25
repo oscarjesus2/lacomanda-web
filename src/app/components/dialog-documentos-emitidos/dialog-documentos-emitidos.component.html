@@ -1,86 +1,85 @@
 <div class="documentos-container">
-    <!-- Primera fila de botones -->
-    <div class="toolbar row-1">
-      <button mat-button class="btn">BOLETA</button>
-      <button mat-button class="btn">FACTURA</button>
-      <div class="spacer"></div>
-      <button mat-button class="btn">TODOS</button>
-      <button mat-button class="btn">DOCUMENTOS AL CRÉDITO</button>
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+  <br>
+    <h2>DOCUMENTOS DE VENTAS</h2>
+  <!-- Primera fila de botones -->
+  <div class="toolbar row-1">
+    <button class="btn" [ngClass]="{'selected': filterTipo === 'TK'}" (click)="selectFirstRow('TK')">BOLETA</button>
+    <button class="btn" [ngClass]="{'selected': filterTipo === 'FT'}" (click)="selectFirstRow('FT')">FACTURA</button>
+    <button class="btn" [ngClass]="{'selected': filterTipo === ''}" (click)="selectFirstRow('todos')">TODOS</button>
+    <div class="spacer"></div>
+    <button class="btn" [ngClass]="{'selected': selectedFirstRow === 'credito'}" (click)="selectFirstRow('credito')">DOCUMENTOS AL CRÉDITO</button>
+  </div>
+
+  <!-- Segunda fila de botones -->
+  <div class="toolbar row-2">
+    <button class="btn" [ngClass]="{'selected': filterFormaPago === 'Soles'}" (click)="selectSecondRow('Soles')">SOLES</button>
+    <button class="btn" [ngClass]="{'selected': filterFormaPago === 'Dolares'}" (click)="selectSecondRow('Dolares')">DOLARES</button>
+    <button class="btn" [ngClass]="{'selected': filterFormaPago === 'Tarjeta'}" (click)="selectSecondRow('Tarjeta')">TARJETA</button>
+    <button class="btn" [ngClass]="{'selected': filterFormaPago === 'Mixto'}" (click)="selectSecondRow('Mixto')">MIXTO</button>
+    <button class="btn" [ngClass]="{'selected': filterFormaPago === ''}" (click)="selectSecondRow('todos')">TODOS</button>
+    <input type="text" placeholder="Nro Documento" class="custom-input" [(ngModel)]="nroDocumento" (keyup)="onNroDocumentoChange()">
+    
+    <div class="spacer"></div>
+  </div>
+
+  <!-- Contenedor de tabla y botones laterales -->
+  <div class="content-wrapper">
+    <div class="table-container">
+      <mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+        <ng-container matColumnDef="tipo">
+          <mat-header-cell *matHeaderCellDef> Tipo </mat-header-cell>
+          <mat-cell *matCellDef="let element"> {{element.Tipo}} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="serie">
+          <mat-header-cell *matHeaderCellDef> Serie </mat-header-cell>
+          <mat-cell *matCellDef="let element"> {{element.Serie}} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="numDoc">
+          <mat-header-cell *matHeaderCellDef> N° Doc </mat-header-cell>
+          <mat-cell *matCellDef="let element"> {{element.NroDoc}} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="fecha">
+          <mat-header-cell *matHeaderCellDef> Fecha </mat-header-cell>
+          <mat-cell *matCellDef="let element"> {{element.Fecha}} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="monto">
+          <mat-header-cell *matHeaderCellDef> Monto </mat-header-cell>
+          <mat-cell *matCellDef="let element"> {{(element.Monto | number:'1.2-2')}} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="cliente">
+          <mat-header-cell *matHeaderCellDef> Cliente </mat-header-cell>
+          <mat-cell *matCellDef="let element"> {{element.Cliente}} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="numeroDoi">
+          <mat-header-cell *matHeaderCellDef> Numero Doi </mat-header-cell>
+          <mat-cell *matCellDef="let element"> {{element.NumeroDoi}} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="forr">
+          <mat-header-cell *matHeaderCellDef> Forma Pago </mat-header-cell>
+          <mat-cell *matCellDef="let element"> {{element.FormaPago}} </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"  (click)="selectRow(row)" [class.selected-row]="selectedRow === row"></mat-row>
+      </mat-table>
     </div>
-  
-    <!-- Segunda fila de botones -->
-    <div class="toolbar row-2">
-      <button mat-button class="btn">SOLES</button>
-      <button mat-button class="btn">DOLARES</button>
-      <button mat-button class="btn">TARJETA</button>
-      <button mat-button class="btn">MIXTO</button>
-      <div class="spacer"></div>
-      <mat-form-field>
-        <input matInput placeholder="Nro Documento">
-      </mat-form-field>
-      <mat-form-field>
-        <input matInput placeholder="123..." type="number">
-      </mat-form-field>
-    </div>
-  
-    <!-- Contenedor de tabla y botones laterales -->
-    <div class="content-wrapper">
-      <div class="table-container">
-        <mat-table [dataSource]="dataSource" class="mat-elevation-z8">
-          <ng-container matColumnDef="tipo">
-            <mat-header-cell *matHeaderCellDef> Tipo </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.tipo}} </mat-cell>
-          </ng-container>
-          <ng-container matColumnDef="serie">
-            <mat-header-cell *matHeaderCellDef> Serie </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.serie}} </mat-cell>
-          </ng-container>
-          <ng-container matColumnDef="numDoc">
-            <mat-header-cell *matHeaderCellDef> N° Doc </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.numDoc}} </mat-cell>
-          </ng-container>
-          <ng-container matColumnDef="fecha">
-            <mat-header-cell *matHeaderCellDef> Fecha </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.fecha}} </mat-cell>
-          </ng-container>
-          <ng-container matColumnDef="monto">
-            <mat-header-cell *matHeaderCellDef> Monto </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.monto}} </mat-cell>
-          </ng-container>
-          <ng-container matColumnDef="cliente">
-            <mat-header-cell *matHeaderCellDef> Cliente </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.cliente}} </mat-cell>
-          </ng-container>
-          <ng-container matColumnDef="numeroDoi">
-            <mat-header-cell *matHeaderCellDef> Numero Doi </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.numeroDoi}} </mat-cell>
-          </ng-container>
-          <ng-container matColumnDef="forr">
-            <mat-header-cell *matHeaderCellDef> Forr </mat-header-cell>
-            <mat-cell *matCellDef="let element"> {{element.forr}} </mat-cell>
-          </ng-container>
-  
-          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-        </mat-table>
-      </div>
-  
-      <!-- Botones de acciones laterales -->
-      <div class="action-buttons">
-        <button mat-button class="action-btn">Obtener PDF y XML</button>
-        <button mat-button class="action-btn">Reimprimir Documento</button>
-        <button mat-button class="action-btn">Modificar la Forma de Pago</button>
-        <button mat-button class="action-btn">Modificar Documento de Venta</button>
-        <button mat-button class="action-btn cancel-btn">Anular</button>
-        <button mat-button class="action-btn salir-btn">Salir</button>
-      </div>
-    </div>
-  
-    <!-- Campo de texto de motivo debajo de la tabla -->
-    <div class="motivo-section">
-      <mat-form-field class="motivo-input">
-        <input matInput placeholder="Motivo">
-      </mat-form-field>
+
+    <!-- Botones de acciones laterales -->
+    <div class="action-buttons">
+      <button class="action-btn">OBTENER PDF y XML</button>
+      <button class="action-btn" (click)="reImprimirDocumento()">REIMPRIMIR</button>
+      <button class="action-btn">MODIFICAR FORMA DE PAGO</button>
+      <button class="action-btn">MODIFICAR DOCUMENTO</button>
+      <button class="action-btn cancel-btn" (click)="anularDocumento()">ANULAR</button>
     </div>
   </div>
-  
+
+  <!-- Campo de texto de motivo debajo de la tabla -->
+  <div class="motivo-section">
+    <input type="text" class="motivo-input" placeholder="Motivo de anulación" [(ngModel)]="motivoAnulacion">
+    <button class="virtual-keyboard-btn" (click)="abrirTeclado()">Teclado Virtual</button>
+  </div>
+</div>

@@ -297,14 +297,12 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.enterFullScreen();
     const isRunning = await this.qzTrayService.isQzTrayRunning();
     if (!isRunning) {
-      // Redirige a una página que instruya al usuario a descargar QZ Tray
       this.router.navigate(['/qz-tray-required']);
     } 
     this.spinnerService.show();
-    this.headerService.hideHeader(); // Ocultar el header al entrar
+    this.headerService.hideHeader();
 
     try {
-      // Primer servicio que necesita ejecutarse antes de otros
       this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
         if (data != null) {
           this.turnoAbierto = data;
@@ -1955,11 +1953,13 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   OpenDialogDocumentosEmitidos(): void {
   
+    const idTurno: number = this.turnoAbierto.IdTurno;
     const dialogDocumentosEmitidosComponent = this.dialog.open(DialogDocumentosEmitidosComponent, {
       disableClose: true,
       hasBackdrop: true,
       width: '1005px', // Establece el ancho del diálogo
-      height: '715px', // Establece la altura del diálogo
+      height: '670,y6t7 iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikkkkkkkkkikkiikiiiiiiiiiiiiiiiiiiiiiiiiiiiiijjjjjjjjjjjjjjijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll asxd546px', // Establece la altura del diálogo
+      data: { idTurno }
     });
     
 

@@ -103,18 +103,6 @@ button:disabled {
   z-index: 1; /* Asegura que el encabezado esté por encima del contenido */
 }
 
-/* Estilos para las tres filas estáticas debajo del datagridview */
-.total-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-}
-
-.total-section input {
-  width: 100px;
-}
-
 .button-row {
   display: flex;
   justify-content: space-between;
@@ -303,10 +291,10 @@ button:disabled {
   margin-left: 5px; /* Espacio entre el título y el contenido */
 }
 
- 
-
 .total-section {
   display: flex;
+  align-items: center;
+  margin-top: 10px;
   justify-content: space-between; /* Espacio entre los elementos */
   background-color: #FFF3E0; /* Fondo cálido */
   padding: 15px;

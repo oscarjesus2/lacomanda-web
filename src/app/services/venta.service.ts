@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { catchError, Observable, throwError } from 'rxjs';
 import { ventadiariasemanalmensual } from '../models/ventadiariasemanalmensual.models';
 import { environment } from 'src/environments/environment';
-import { InformeContableInterface, VentasInterface, VentaTragoGratisDTO } from '../interfaces/ventas.interface';
+import { InformeContableInterface, VentasDTO, VentasInterface } from '../interfaces/ventas.interface';
 import { Venta } from '../models/venta.models';
 import { Cliente } from '../models/cliente.models';
 import { PedidoCab } from '../models/pedido.models';
@@ -43,9 +43,9 @@ export class VentaService {
         return this.http.get<InformeContableInterface[]>(this.basePath+ 'InformeContableVenta/' + fechaInicial + '/' + fechaFinal+ '/' + serie+ '/' + tipoDoc);
     }
 
-    anularDocumentoVenta(idVenta: number, motivo: string, usuAnula: number, anularPedido: boolean) {
+    anularDocumentoVenta(idVenta: number, motivo: string, usuAnula: number, anularPedido: boolean):  Observable<ApiResponse<ImpresionDTO[]>>  {
         const url = `${this.basePath}anulardocumentoventa/${idVenta}/${encodeURIComponent(motivo)}/${usuAnula}/${anularPedido}`;
-        return this.http.put(url, null);
+        return this.http.put< ApiResponse<ImpresionDTO[]>>(url, null);
       }
       
   
@@ -64,7 +64,15 @@ export class VentaService {
         return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + 'grabardocumentoventa', body);
     }
 
-    obtenerVentaTragoGratisPorTurno(idTurno: number): Observable<ApiResponse<VentaTragoGratisDTO[]>> {
-        return this.http.get<ApiResponse<VentaTragoGratisDTO[]>>(`${this.basePath}/ObtenerDatosTragoGratisPorTurno/${idTurno}`);
+    getVentasTurno(idTurno: number): Observable<ApiResponse<VentasDTO[]>> {
+        return this.http.get<ApiResponse<VentasDTO[]>>(`${this.basePath}GetVentasPorTurno/${idTurno}`);
+    }
+
+    getVentasTragoGratisTurno(idTurno: number): Observable<ApiResponse<VentasDTO[]>> {
+        return this.http.get<ApiResponse<VentasDTO[]>>(`${this.basePath}GetVentasTragoGratisPorTurno/${idTurno}`);
+    }
+
+    getImpresionComprobanteVenta(idventa: number): Observable<ApiResponse<ImpresionDTO[]>> {
+        return this.http.get<ApiResponse<ImpresionDTO[]>>(`${this.basePath}ImpresionComprobanteVenta/${idventa}`);
     }
 }
