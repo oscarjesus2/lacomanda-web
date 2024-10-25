@@ -65,14 +65,14 @@ export class VentaService {
     }
 
     getVentasTurno(idTurno: number): Observable<ApiResponse<VentasDTO[]>> {
-        return this.http.get<ApiResponse<VentasDTO[]>>(`${this.basePath}/GetVentasPorTurno/${idTurno}`);
+        return this.http.get<ApiResponse<VentasDTO[]>>(`${this.basePath}GetVentasPorTurno/${idTurno}`);
     }
 
     getVentasTragoGratisTurno(idTurno: number): Observable<ApiResponse<VentasDTO[]>> {
-        return this.http.get<ApiResponse<VentasDTO[]>>(`${this.basePath}/GetVentasTragoGratisPorTurno/${idTurno}`);
+        return this.http.get<ApiResponse<VentasDTO[]>>(`${this.basePath}GetVentasTragoGratisPorTurno/${idTurno}`);
     }
 
     getImpresionComprobanteVenta(idventa: number): Observable<ApiResponse<ImpresionDTO[]>> {
-        return this.http.get<ApiResponse<ImpresionDTO[]>>(`${this.basePath}/ImpresionComprobanteVenta/${idventa}`);
+        return this.http.get<ApiResponse<ImpresionDTO[]>>(`${this.basePath}ImpresionComprobanteVenta/${idventa}`);
     }
 }
