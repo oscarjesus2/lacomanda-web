@@ -171,10 +171,30 @@
   
   .total-section {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     margin-top: 10px;
+    justify-content: space-between; /* Espacio entre los elementos */
+    background-color: #FFF3E0; /* Fondo cálido */
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+    font-size: 16px;
+    margin-bottom: 20px;
   }
+  
+  .total-section label {
+    font-weight: bold;
+    color: #5D4037; /* Marrón oscuro */
+  }
+  
+  .total-section input {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #FF7043; /* Borde naranja cálido */
+    font-size: 16px;
+    width: 100px; /* Ancho fijo para los inputs */
+  }
+
   .checkbox-container {
     display: inline-block;
     margin-left: 20px;

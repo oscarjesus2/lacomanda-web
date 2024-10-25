@@ -21,26 +21,11 @@ export interface VentasInterface {
     IdTipopedido: string;
 }
 
-export interface VentaTragoGratisDTO {
-    IdVenta: number;                 // Id de la venta
-    IdTipoDocumento: string;         // Tipo de documento de la venta
-    Serie: string;                   // Serie del documento
-    NroDoc: string;                  // Número del documento
-    Importe: number;                 // Importe total de la venta
-    Dscto: number;                   // Descuento aplicado
-    Total: number;                   // Total de la venta tras aplicar descuentos
-    IdTaxista: string;               // Id del taxista, en este caso '00000'
-    TipoDescuento: string;           // Tipo de descuento aplicado
-    CodigoPromocional?: string;      // Códigos promocionales asociados (opcional)
-    Activo: string;                  // Indica si el descuento está activo ('Si' o 'No')
-    FechaReg: Date;                  // Fecha de registro de la venta
-  }
-
   export interface VentasDTO {
     IdVenta: number;            // Id de la venta
     Tipo: string;               // Tipo de documento de la venta
     Serie: string;              // Serie del documento
-    NumeroDocumento: string;    // Número del documento formateado
+    NroDoc: string;    // Número del documento formateado
     Fecha: Date;                // Fecha de la venta
     Monto: number;              // Monto total de la venta
     Cliente: string;            // Nombre del cliente o beneficiario
@@ -48,6 +33,16 @@ export interface VentaTragoGratisDTO {
     NombreArchivo: string;      // Nombre del archivo generado
     FormaPago: string;          // Forma de pago utilizada
     IdTipoPedido: string;       // Tipo de pedido
+    IdTipoDocumento: string;         // Tipo de documento de la venta
+    Importe: number;                 // Importe total de la venta
+    Dscto: number;                   // Descuento aplicado
+    Total: number;                   // Total de la venta tras aplicar descuentos
+    IdTaxista: string;               // Id del taxista, en este caso '00000'
+    TipoDescuento: string;           // Tipo de descuento aplicado
+    CodigoPromocional?: string;      // Códigos promocionales asociados (opcional)
+    Activo: string;                  // Indica si el descuento está activo ('Si' o 'No')
+    FechaReg: Date; 
+
   }
   
 export interface InformeContableInterface {

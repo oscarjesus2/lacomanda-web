@@ -12,6 +12,7 @@ import Swal from 'sweetalert2';
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
 import { Usuario } from 'src/app/models/usuario.models';
 import { NgxSpinnerService } from 'ngx-spinner';
+import { DialogMTextComponent } from '../dialog-mtext/dialog-mtext.component';
 
 @Component({
   selector: 'app-dialog-documentos-emitidos',
@@ -79,30 +80,37 @@ export class DialogDocumentosEmitidosComponent {
   }
 
   reImprimirDocumento() {
-    if (this.selectedRow ){
-      this.ventaService.getImpresionComprobanteVenta(this.selectedRow.IdVenta).subscribe((response: ApiResponse<ImpresionDTO[]>) => {
-        if (response.Success) {
-          this.imprimir(response.Data);
-        } else {
-          console.error('Error al obtener los datos', response.Message);
-        }
+    if (!this.selectedRow) {
+      Swal.fire({
+        title: 'Anular',
+        text: 'Seleccione un documento',
+        icon: 'warning',
+        confirmButtonText: 'OK'
       });
-    }else{
- 
+      return;
     }
 
+    this.ventaService.getImpresionComprobanteVenta(this.selectedRow.IdVenta).subscribe((response: ApiResponse<ImpresionDTO[]>) => {
+      if (response.Success) {
+        this.imprimir(response.Data);
+      } else {
+        console.error('Error al obtener los datos', response.Message);
+      }
+    });
   }
 
   // Función para seleccionar un botón en la primera fila
   selectFirstRow(tipo: string): void {
     this.filterTipo = tipo === 'todos' ? '' : tipo; // Si es "todos", quitamos el filtro
     this.applyFilter(); // Aplicar el filtro
+    this.selectedRow = null;
   }
 
   // Filtrar según la forma de pago (segunda fila de botones)
   selectSecondRow(formaPago: string): void {
     this.filterFormaPago = formaPago === 'todos' ? '' : formaPago; // Si es "todos", quitamos el filtro
     this.applyFilter(); // Aplicar el filtro
+    this.selectedRow = null;
   }
 
 
@@ -110,7 +118,7 @@ export class DialogDocumentosEmitidosComponent {
     this.dataSource.filterPredicate = (data: VentasDTO, filter: string) => {
       const tipoMatches = this.filterTipo === '' || data.Tipo === this.filterTipo;
       const formaPagoMatches = this.filterFormaPago === '' || data.FormaPago === this.filterFormaPago;
-      const nroDocumentoMatches = this.nroDocumento === '' || data.NumeroDocumento.includes(this.nroDocumento); 
+      const nroDocumentoMatches = this.nroDocumento === '' || data.NroDoc.includes(this.nroDocumento); 
       return tipoMatches && formaPagoMatches && nroDocumentoMatches; // Debe cumplir con ambos filtros
     };
 
@@ -118,6 +126,16 @@ export class DialogDocumentosEmitidosComponent {
   }
 
   anularDocumento() {
+    if (!this.selectedRow) {
+      Swal.fire({
+        title: 'Anular',
+        text: 'Seleccione un documento',
+        icon: 'warning',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
     const IntIdVenta = this.selectedRow.IdVenta;
     const idTipoPedido = this.selectedRow.IdTipoPedido;
     let idUsuarioAnula = 0;
@@ -185,6 +203,7 @@ export class DialogDocumentosEmitidosComponent {
           Swal.fire('Anulado', 'El documento se anuló con éxito', 'success');
           this.getVentasPorTurno(this.idTurno); 
           this.motivoAnulacion='';
+          this.selectedRow = null;
         }
         this.spinnerService.hide();
       },
@@ -192,6 +211,20 @@ export class DialogDocumentosEmitidosComponent {
         this.spinnerService.hide();
       }
     );
+  }
+  
+  abrirTeclado(): void {
+    const dialogRef = this.dialog.open(DialogMTextComponent, {
+      width: '800px',
+      data: { texto: '' } // Puedes pasar algún valor inicial si lo deseas
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Agrega el texto ingresado por el usuario a las observaciones
+        this.motivoAnulacion = result.value ;
+      }
+    });
   }
   
   // Método para abrir el modal de clave de anulación

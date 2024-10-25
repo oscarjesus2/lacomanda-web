@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { catchError, Observable, throwError } from 'rxjs';
 import { ventadiariasemanalmensual } from '../models/ventadiariasemanalmensual.models';
 import { environment } from 'src/environments/environment';
-import { InformeContableInterface, VentasDTO, VentasInterface, VentaTragoGratisDTO } from '../interfaces/ventas.interface';
+import { InformeContableInterface, VentasDTO, VentasInterface } from '../interfaces/ventas.interface';
 import { Venta } from '../models/venta.models';
 import { Cliente } from '../models/cliente.models';
 import { PedidoCab } from '../models/pedido.models';
@@ -64,12 +64,12 @@ export class VentaService {
         return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + 'grabardocumentoventa', body);
     }
 
-    getVentaTragoGratisPorTurno(idTurno: number): Observable<ApiResponse<VentaTragoGratisDTO[]>> {
-        return this.http.get<ApiResponse<VentaTragoGratisDTO[]>>(`${this.basePath}/GetTragoGratisPorTurno/${idTurno}`);
-    }
-
     getVentasTurno(idTurno: number): Observable<ApiResponse<VentasDTO[]>> {
         return this.http.get<ApiResponse<VentasDTO[]>>(`${this.basePath}/GetVentasPorTurno/${idTurno}`);
+    }
+
+    getVentasTragoGratisTurno(idTurno: number): Observable<ApiResponse<VentasDTO[]>> {
+        return this.http.get<ApiResponse<VentasDTO[]>>(`${this.basePath}/GetVentasTragoGratisPorTurno/${idTurno}`);
     }
 
     getImpresionComprobanteVenta(idventa: number): Observable<ApiResponse<ImpresionDTO[]>> {

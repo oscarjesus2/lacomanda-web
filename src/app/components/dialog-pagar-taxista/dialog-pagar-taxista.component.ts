@@ -3,7 +3,7 @@ import { NgForm } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
-import { VentaTragoGratisDTO } from 'src/app/interfaces/ventas.interface';
+import { VentasDTO } from 'src/app/interfaces/ventas.interface';
 import { VentaService } from 'src/app/services/venta.service';
 import Swal from 'sweetalert2';
 import { TurnoService } from 'src/app/services/turno.service';
@@ -40,7 +40,7 @@ export class DialogPagarTaxistaComponent {
 
   // Tabla de datos
   displayedColumns: string[] = ['tipoDoc', 'serie', 'numero', 'importe', 'dscto', 'total', 'codigoPromo', 'activo', 'fechaReg'];
-  dataSource = new MatTableDataSource<VentaTragoGratisDTO>;
+  dataSource = new MatTableDataSource<VentasDTO>;
   turnoAbierto: Turno;
 
   constructor(
@@ -149,7 +149,7 @@ export class DialogPagarTaxistaComponent {
   salir() {
     this.dialogRef.close();
   }
-  selectedRow: VentaTragoGratisDTO;
+  selectedRow: VentasDTO;
 
   selectRow(row: any) {
     this.selectedRow = row; // Asigna la fila seleccionada a la propiedad
@@ -287,8 +287,8 @@ export class DialogPagarTaxistaComponent {
 
   listarTragosGratis(): void {
     const idTurno = this.turnoAbierto.IdTurno; // Cambiar según sea necesario o tomarlo de alguna variable de la aplicación
-    this.ventaService.getVentaTragoGratisPorTurno(idTurno).subscribe({
-      next: (response: ApiResponse<VentaTragoGratisDTO[]>) => {
+    this.ventaService.getVentasTragoGratisTurno(idTurno).subscribe({
+      next: (response: ApiResponse<VentasDTO[]>) => {
         if (response.Success) {
           this.dataSource.data = response.Data; // Asigna los datos al dataSource de la tabla
         } else {

@@ -6,20 +6,20 @@
     <h2>DOCUMENTOS DE VENTAS</h2>
   <!-- Primera fila de botones -->
   <div class="toolbar row-1">
-    <button mat-button class="btn" [ngClass]="{'selected': filterTipo === 'TK'}" (click)="selectFirstRow('TK')">BOLETA</button>
-    <button mat-button class="btn" [ngClass]="{'selected': filterTipo === 'FT'}" (click)="selectFirstRow('FT')">FACTURA</button>
-    <button mat-button class="btn" [ngClass]="{'selected': filterTipo === ''}" (click)="selectFirstRow('todos')">TODOS</button>
+    <button class="btn" [ngClass]="{'selected': filterTipo === 'TK'}" (click)="selectFirstRow('TK')">BOLETA</button>
+    <button class="btn" [ngClass]="{'selected': filterTipo === 'FT'}" (click)="selectFirstRow('FT')">FACTURA</button>
+    <button class="btn" [ngClass]="{'selected': filterTipo === ''}" (click)="selectFirstRow('todos')">TODOS</button>
     <div class="spacer"></div>
-    <button mat-button class="btn" [ngClass]="{'selected': selectedFirstRow === 'credito'}" (click)="selectFirstRow('credito')">DOCUMENTOS AL CRÉDITO</button>
+    <button class="btn" [ngClass]="{'selected': selectedFirstRow === 'credito'}" (click)="selectFirstRow('credito')">DOCUMENTOS AL CRÉDITO</button>
   </div>
 
   <!-- Segunda fila de botones -->
   <div class="toolbar row-2">
-    <button mat-button class="btn" [ngClass]="{'selected': filterFormaPago === 'Soles'}" (click)="selectSecondRow('Soles')">SOLES</button>
-    <button mat-button class="btn" [ngClass]="{'selected': filterFormaPago === 'Dolares'}" (click)="selectSecondRow('Dolares')">DOLARES</button>
-    <button mat-button class="btn" [ngClass]="{'selected': filterFormaPago === 'Tarjeta'}" (click)="selectSecondRow('Tarjeta')">TARJETA</button>
-    <button mat-button class="btn" [ngClass]="{'selected': filterFormaPago === 'Mixto'}" (click)="selectSecondRow('Mixto')">MIXTO</button>
-    <button mat-button class="btn" [ngClass]="{'selected': filterFormaPago === ''}" (click)="selectSecondRow('todos')">TODOS</button>
+    <button class="btn" [ngClass]="{'selected': filterFormaPago === 'Soles'}" (click)="selectSecondRow('Soles')">SOLES</button>
+    <button class="btn" [ngClass]="{'selected': filterFormaPago === 'Dolares'}" (click)="selectSecondRow('Dolares')">DOLARES</button>
+    <button class="btn" [ngClass]="{'selected': filterFormaPago === 'Tarjeta'}" (click)="selectSecondRow('Tarjeta')">TARJETA</button>
+    <button class="btn" [ngClass]="{'selected': filterFormaPago === 'Mixto'}" (click)="selectSecondRow('Mixto')">MIXTO</button>
+    <button class="btn" [ngClass]="{'selected': filterFormaPago === ''}" (click)="selectSecondRow('todos')">TODOS</button>
     <input type="text" placeholder="Nro Documento" class="custom-input" [(ngModel)]="nroDocumento" (keyup)="onNroDocumentoChange()">
     
     <div class="spacer"></div>
@@ -39,7 +39,7 @@
         </ng-container>
         <ng-container matColumnDef="numDoc">
           <mat-header-cell *matHeaderCellDef> N° Doc </mat-header-cell>
-          <mat-cell *matCellDef="let element"> {{element.NumeroDocumento}} </mat-cell>
+          <mat-cell *matCellDef="let element"> {{element.NroDoc}} </mat-cell>
         </ng-container>
         <ng-container matColumnDef="fecha">
           <mat-header-cell *matHeaderCellDef> Fecha </mat-header-cell>
@@ -69,18 +69,17 @@
 
     <!-- Botones de acciones laterales -->
     <div class="action-buttons">
-      <button mat-button class="action-btn">Obtener PDF y XML</button>
-      <button mat-button class="action-btn" (click)="reImprimirDocumento()">Reimprimir Documento</button>
-      <button mat-button class="action-btn">Modificar la Forma de Pago</button>
-      <button mat-button class="action-btn">Modificar Documento de Venta</button>
-      <button mat-button class="action-btn cancel-btn" (click)="anularDocumento()">Anular</button>
+      <button class="action-btn">OBTENER PDF y XML</button>
+      <button class="action-btn" (click)="reImprimirDocumento()">REIMPRIMIR</button>
+      <button class="action-btn">MODIFICAR FORMA DE PAGO</button>
+      <button class="action-btn">MODIFICAR DOCUMENTO</button>
+      <button class="action-btn cancel-btn" (click)="anularDocumento()">ANULAR</button>
     </div>
   </div>
 
   <!-- Campo de texto de motivo debajo de la tabla -->
   <div class="motivo-section">
-    <mat-form-field class="motivo-input">
-      <input matInput placeholder="Motivo"  [(ngModel)]="motivoAnulacion">
-    </mat-form-field>
+    <input type="text" class="motivo-input" placeholder="Motivo de anulación" [(ngModel)]="motivoAnulacion">
+    <button class="virtual-keyboard-btn" (click)="abrirTeclado()">Teclado Virtual</button>
   </div>
 </div>
