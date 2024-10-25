@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 3.0.3 (2024-10-25)
+
+
+### Bug Fixes
+
+* Mejora de diseño en documentos emitidos ([7e2e641](https://github.com/oscarjesus2/jobbusiness/commit/7e2e64151d180bb1a992fca26c8ec2437ef0eb6c))
+
 ### 3.0.2 (2024-10-24)
 
 
