@@ -45,9 +45,7 @@ export class AppComponent implements OnInit, OnDestroy {
   checkForUpdates() {
     if (this.swUpdate.isEnabled) {
       this.swUpdate.available.subscribe(() => {
-        const snackBarRef = this.snackBar.open('Nueva versión disponible', 'Actualizar', {
-          duration: 6000, // Duración del mensaje
-        });
+        const snackBarRef = this.snackBar.open('Nueva versión disponible', 'Actualizar');
 
         snackBarRef.onAction().subscribe(() => {
           this.updateToLatestVersion();
