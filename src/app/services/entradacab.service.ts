@@ -23,6 +23,6 @@ export class EntradaCabService {
       EntradaCab: entradaCab,
       IdVentaRef: idVentaRef
   };
-    return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + '/GrabarEgresoTaxista', body);
+    return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + 'GrabarEgresoTaxista', body);
 }
 }
