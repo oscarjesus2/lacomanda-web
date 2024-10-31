@@ -23,6 +23,13 @@ export class IdleService {
     this.setupListeners();
   }
 
+  private mousemoveListener: () => void;
+private scrollListener: () => void;
+private keydownListener: () => void;
+private clickListener: () => void;
+
+
+
   private startWatching(): void {
     this.ngZone.runOutsideAngular(() => {
       this.resetTimeout();
@@ -30,11 +37,15 @@ export class IdleService {
   }
 
   private setupListeners(): void {
+    this.mousemoveListener = () => this.resetTimeout();
+    this.scrollListener = () => this.resetTimeout();
+    this.keydownListener = () => this.resetTimeout();
+    this.clickListener = () => this.resetTimeout();
+    
     window.addEventListener('mousemove', () => this.resetTimeout());
     window.addEventListener('scroll', () => this.resetTimeout());
     window.addEventListener('keydown', () => this.resetTimeout());
-    window.addEventListener('click', () => this.resetTimeout());
-	  
+    window.addEventListener('click', () => this.resetTimeout());	  
   }
 
   private resetTimeout(): void {
@@ -94,7 +105,23 @@ export class IdleService {
   }
 
   private logout(): void {
-	  Swal.close();												
+	  Swal.close();
+    
+  // Limpiar los temporizadores
+  if (this.timeoutId) {
+    clearTimeout(this.timeoutId);
+    this.timeoutId = null;
+  }
+  if (this.warningTimeoutId) {
+    clearTimeout(this.warningTimeoutId);
+    this.warningTimeoutId = null;
+  }
+
+  // Remover los event listeners
+  window.removeEventListener('mousemove', this.mousemoveListener);
+  window.removeEventListener('scroll', this.scrollListener);
+  window.removeEventListener('keydown', this.keydownListener);
+  window.removeEventListener('click', this.clickListener);												
     this.storageService.logout();
     this.router.navigate(['/iniciar-sesion']);
   }
