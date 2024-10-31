@@ -1,6 +1,6 @@
 {
   "name": "jbs-rest",
-  "version": "6.0.1",
+  "version": "6.0.2",
   "scripts": {
     "ng": "ng",
     "start": "node ./scripts/version.js && concurrently \"ng serve --proxy-config proxy.conf.json\" \"node server.js\"",
