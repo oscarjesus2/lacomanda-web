@@ -1,4 +1,4 @@
-								   
+
 import { Injectable, NgZone } from '@angular/core';
 import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
@@ -19,9 +19,18 @@ export class IdleService {
     private router: Router,
     private storageService: StorageService
   ) {
-    this.startWatching();
-    this.setupListeners();
+    if (this.storageService.isAuthenticated()) {
+      this.startWatching();
+      this.setupListeners();
+    }
   }
+
+  private mousemoveListener: () => void;
+  private scrollListener: () => void;
+  private keydownListener: () => void;
+  private clickListener: () => void;
+
+
 
   private startWatching(): void {
     this.ngZone.runOutsideAngular(() => {
@@ -30,11 +39,15 @@ export class IdleService {
   }
 
   private setupListeners(): void {
-    window.addEventListener('mousemove', () => this.resetTimeout());
-    window.addEventListener('scroll', () => this.resetTimeout());
-    window.addEventListener('keydown', () => this.resetTimeout());
-    window.addEventListener('click', () => this.resetTimeout());
-	  
+    this.mousemoveListener = () => this.resetTimeout();
+    this.scrollListener = () => this.resetTimeout();
+    this.keydownListener = () => this.resetTimeout();
+    this.clickListener = () => this.resetTimeout();
+
+    window.addEventListener('mousemove', this.mousemoveListener);
+    window.addEventListener('scroll', this.scrollListener);
+    window.addEventListener('keydown', this.keydownListener);
+    window.addEventListener('click', this.clickListener);
   }
 
   private resetTimeout(): void {
@@ -63,7 +76,7 @@ export class IdleService {
       showCancelButton: true,
       confirmButtonText: 'Sí, continuar',
       cancelButtonText: 'No, cerrar sesión',
-	    allowOutsideClick: false,
+      allowOutsideClick: false,
       allowEscapeKey: false,
       timer: this.warningTime, // Tiempo restante antes de cerrar sesión
       timerProgressBar: true,
@@ -71,8 +84,8 @@ export class IdleService {
 
       if (result.isConfirmed) {
         this.resetTimeout(); // Si el usuario confirma, resetea el temporizador
-						   
-      } else if (result.isDismissed) { 
+
+      } else if (result.isDismissed) {
         this.logout(); // Si el usuario cancela, cerrar sesión
       }
     });
@@ -92,9 +105,27 @@ export class IdleService {
     const expiryTime = decodedToken.exp * 1000; // convertir a milisegundos
     return Date.now() > expiryTime;
   }
+  private stopWatching(): void {
+    // Limpiar los temporizadores
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    }
+    if (this.warningTimeoutId) {
+      clearTimeout(this.warningTimeoutId);
+      this.warningTimeoutId = null;
+    }
+
+    // Remover los event listeners
+    window.removeEventListener('mousemove', this.mousemoveListener);
+    window.removeEventListener('scroll', this.scrollListener);
+    window.removeEventListener('keydown', this.keydownListener);
+    window.removeEventListener('click', this.clickListener);
+  }
 
   private logout(): void {
-	  Swal.close();												
+    Swal.close();
+    this.stopWatching();
     this.storageService.logout();
     this.router.navigate(['/iniciar-sesion']);
   }

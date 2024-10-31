@@ -192,7 +192,6 @@ export class DialogPagarTaxistaComponent {
         Swal.fire('Validación', 'El Total a Pagar debe ser mayor a cero y un valor numérico.', 'warning');
         return;
       }
-
     
       var  empleado = new Empleado();
       empleado.IdEmpleado = this.idEmpleado;
@@ -260,6 +259,7 @@ export class DialogPagarTaxistaComponent {
       this.spinnerService.show();
       this.entradaCabService.GrabarEgresoTaxista(empleado, entrada, this.selectedRow.IdVenta).subscribe({
         next: (response) => {
+          this.spinnerService.hide();
           // Manejar la respuesta del servidor
           if (response.Success) {
             Swal.fire('Éxito', 'Se grabaron los datos correctamente.', 'success');
@@ -271,7 +271,6 @@ export class DialogPagarTaxistaComponent {
           }
         }
       });
-      this.spinnerService.hide();
     }
   }
 
