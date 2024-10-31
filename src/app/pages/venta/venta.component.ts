@@ -254,7 +254,6 @@ export class VentaComponent implements OnInit, AfterViewInit {
     } else {
       this.listaPedido_x_Canal = this.listaPedidosPendientes.filter(x => x.Estado === 1 && x.IdTipoPedido === idTipoPedido);
     }
-
   }
 
   scrollToBottom(): void {
@@ -628,13 +627,22 @@ export class VentaComponent implements OnInit, AfterViewInit {
         }
       }).then((result) => {
         if (result.isConfirmed) {
-
+          console.log('isConfirmed');
           this.mesaSelected.NroPersonas = 0;
-          this.clienteSelected.RazonSocial = result.value.socioNegocioSeleccionado.Descripcion + "-" + result.value.nombreCliente;
-          this.socioNegocioSelected = result.value.socioNegocioSeleccionado;
+          if (this.idTipoPedidoSelected === "002"){
+            this.clienteSelected.RazonSocial = result.value.nombreCliente;
+          }
+          if (this.idTipoPedidoSelected === "003"){
+            this.clienteSelected.RazonSocial = result.value.socioNegocioSeleccionado.Descripcion + "-" + result.value.nombreCliente;
+            this.socioNegocioSelected = result.value.socioNegocioSeleccionado;
+          }
+
           this.processPedido(true);
           console.log('Botón seleccionado:', result.value.botonSeleccionado);
         } else if (result.isDenied) {
+          console.log('isDenied');
+          this.clienteSelected.RazonSocial = "Sin nombre";
+          this.processPedido(true);
           console.log('Nombre del cliente: (sin nombre)');
         }
       });

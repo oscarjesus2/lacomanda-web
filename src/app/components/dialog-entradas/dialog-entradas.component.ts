@@ -606,10 +606,10 @@ export class DialogEntradasComponent {
         if (confirmResult.isDismissed) return;
 
 
-        var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaSocios, 'SOCIOS', this.storageService.getCurrentUser().IdUsuario, null).toPromise();
+        var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaSocios, 'SOCIOS', this.storageService.getCurrentUser().IdUsuario, 0).toPromise();
         this.imprimir(responseService.Data);
 
-        var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaInvitados, 'INVITADOS', this.storageService.getCurrentUser().IdUsuario, null).toPromise();
+        var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaInvitados, 'INVITADOS', this.storageService.getCurrentUser().IdUsuario, 0).toPromise();
         this.imprimir(responseService.Data);
       } else {
         await Swal.fire({
