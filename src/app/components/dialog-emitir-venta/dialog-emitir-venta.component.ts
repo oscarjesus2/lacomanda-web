@@ -487,7 +487,7 @@ export class DialogEmitirVentaComponent implements OnInit {
                  dblGranTotal: this.sumaGranTotal,
                  idPedidoCobrar: 0,
                  nroCuentaCobrar: 0, 
-                 idModuloVenta: 4, 
+                 idTipoPedido: '004', 
                  idTipoDoc: idTipoDoc,
                  pedidoCab: this.addPedido(),
                  bTurnoIndenpendiente: this.bTurnoIndenpendiente,
