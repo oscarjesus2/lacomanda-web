@@ -429,7 +429,7 @@ export class DialogEmitirVentaComponent implements OnInit {
       }
 
       pedidoDet.MontoDescuento = item.MontoDscto; 
-      pedidoDet.NroCupon = "VENTA";
+      pedidoDet.NroCupon = "";
       pedidoDet.NumEnvios = 0;
       pedidoDet.Observacion = "";
       pedidoDet.Ip = this.storageService.getCurrentIP()
