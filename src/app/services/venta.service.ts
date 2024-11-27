@@ -64,15 +64,56 @@ export class VentaService {
         return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + 'grabardocumentoventa', body);
     }
 
-    getVentasTurno(idTurno: number): Observable<ApiResponse<VentasDTO[]>> {
+    getVentasTurno(idTurno: number): Observable<ApiResponse<VentasDTO[]>> 
+    {
         return this.http.get<ApiResponse<VentasDTO[]>>(`${this.basePath}GetVentasPorTurno/${idTurno}`);
     }
 
-    getVentasTragoGratisTurno(idTurno: number): Observable<ApiResponse<VentasDTO[]>> {
+    getVentasTragoGratisTurno(idTurno: number): Observable<ApiResponse<VentasDTO[]>> 
+    {
         return this.http.get<ApiResponse<VentasDTO[]>>(`${this.basePath}GetVentasTragoGratisPorTurno/${idTurno}`);
     }
 
-    getImpresionComprobanteVenta(idventa: number): Observable<ApiResponse<ImpresionDTO[]>> {
+    getImpresionComprobanteVenta(idventa: number): Observable<ApiResponse<ImpresionDTO[]>> 
+    {
         return this.http.get<ApiResponse<ImpresionDTO[]>>(`${this.basePath}ImpresionComprobanteVenta/${idventa}`);
     }
+
+    private isBase64(str: string): boolean {
+        try {
+          return btoa(atob(str)) === str;
+        } catch (err) {
+          return false;
+        }
+      }
+    
+    async showPDF(ByteTicket: any): Promise<boolean> {
+        try {
+          if (this.isBase64(ByteTicket)) {
+            const byteCharacters = atob(ByteTicket);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+      
+            const pdfUrl = URL.createObjectURL(blob); // Crea una URL del objeto Blob
+      
+            // Abre el PDF en una nueva ventana o pestaña
+            window.open(pdfUrl, '_blank');
+      
+            console.log('PDF mostrado en pantalla');
+            return true;
+      
+          } else {
+            console.error("Error: ByteTicket no está codificado correctamente en base64");
+            return false;
+          }
+      
+        } catch (error) {
+          console.error('Error al mostrar el PDF:', error);
+          return false;
+        }
+      }
 }

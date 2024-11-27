@@ -297,6 +297,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     const isRunning = await this.qzTrayService.isQzTrayRunning();
     if (!isRunning) {
       this.router.navigate(['/qz-tray-required']);
+      return;
     } 
     this.spinnerService.show();
     this.headerService.hideHeader();
@@ -1682,7 +1683,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
           IdMesa: (this.idTipoPedidoSelected === '001') ? this.mesaSelected.IdMesa : '9999',
           Mesa: (this.idTipoPedidoSelected === '001') ? this.mesaSelected.Mesa : '',
           NroPax: (this.idTipoPedidoSelected === '001') ? this.mesaSelected.NroPersonas : 0,
-          IdCaja: "000", /*esto no es necesario dado que la caja se asigna mediante la ip de la compu*/
+          IdCaja: this.turnoAbierto.IdCaja,
+          IdTurno: this.turnoAbierto.IdTurno,
           Moneda: "SOL",
           IdSocioNegocio: (this.idTipoPedidoSelected === '003') ? this.socioNegocioSelected.IdSocioNegocio : 0,
           Cliente: (this.idTipoPedidoSelected === '001') ? this.listProductGrid[0]?.Anfitriona : this.clienteSelected.RazonSocial, /*solo para trago gratis */

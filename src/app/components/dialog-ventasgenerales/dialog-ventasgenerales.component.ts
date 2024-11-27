@@ -10,6 +10,8 @@ import { Caja } from 'src/app/models/caja.models';
 import { DialogEmitirVentaComponent } from '../dialog-emitir-venta/dialog-emitir-venta.component';
 import { MatPaginator } from '@angular/material/paginator';
 import { StorageService } from 'src/app/services/storage.service';
+import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
+import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 
 @Component({
   selector: 'app-dialog-ventasgenerales',
@@ -121,6 +123,36 @@ export class DialogVentasgeneralesComponent implements OnInit {
       // maxHeight: '80vh' // Establece la altura máxima del diálogo en porcentaje de la ventana
     });
   }
+
+  reImprimirDocumento() {
+    if (!this.ventaSeleccionada) {
+      Swal.fire({
+        title: 'ReImprimir',
+        text: 'Seleccione un documento',
+        icon: 'warning',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+    this.spinnerService.show();
+    this.ventaService.getImpresionComprobanteVenta(this.ventaSeleccionada.IdVenta).subscribe(async (response: ApiResponse<ImpresionDTO[]>) => {
+      if (response.Success) 
+      {
+        await this.imprimir(response.Data);
+
+      } else {
+        console.error('Error al obtener los datos', response.Message);
+      }
+      this.spinnerService.hide();
+    });
+  }
+
+  async imprimir(listImpresionDTO: ImpresionDTO[]){
+    for (const element of listImpresionDTO) {
+      await this.ventaService.showPDF(element.Documento);
+    }
+  }
+
 
   anularDocumento(): void {
     if (!this.ventaSeleccionada) {
