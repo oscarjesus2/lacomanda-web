@@ -135,7 +135,7 @@ export class DialogVentasgeneralesComponent implements OnInit {
       return;
     }
     this.spinnerService.show();
-    this.ventaService.getImpresionComprobanteVenta(this.ventaSeleccionada.IdVenta).subscribe(async (response: ApiResponse<ImpresionDTO[]>) => {
+    this.ventaService.getImpresionComprobanteVenta(this.ventaSeleccionada.IdVenta, 0).subscribe(async (response: ApiResponse<ImpresionDTO[]>) => {
       if (response.Success) 
       {
         await this.imprimir(response.Data);

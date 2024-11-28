@@ -90,7 +90,7 @@ export class DialogDocumentosEmitidosComponent {
       return;
     }
 
-    this.ventaService.getImpresionComprobanteVenta(this.selectedRow.IdVenta).subscribe((response: ApiResponse<ImpresionDTO[]>) => {
+    this.ventaService.getImpresionComprobanteVenta(this.selectedRow.IdVenta, 1).subscribe((response: ApiResponse<ImpresionDTO[]>) => {
       if (response.Success) {
         this.imprimir(response.Data);
       } else {

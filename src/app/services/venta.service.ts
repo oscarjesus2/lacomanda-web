@@ -74,9 +74,9 @@ export class VentaService {
         return this.http.get<ApiResponse<VentasDTO[]>>(`${this.basePath}GetVentasTragoGratisPorTurno/${idTurno}`);
     }
 
-    getImpresionComprobanteVenta(idventa: number): Observable<ApiResponse<ImpresionDTO[]>> 
+    getImpresionComprobanteVenta(idventa: number, tipoFormato: number): Observable<ApiResponse<ImpresionDTO[]>> 
     {
-        return this.http.get<ApiResponse<ImpresionDTO[]>>(`${this.basePath}ImpresionComprobanteVenta/${idventa}`);
+        return this.http.get<ApiResponse<ImpresionDTO[]>>(`${this.basePath}ImpresionComprobanteVenta/${idventa}/${tipoFormato}`);
     }
 
     private isBase64(str: string): boolean {
