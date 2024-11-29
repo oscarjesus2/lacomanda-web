@@ -1593,7 +1593,8 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
           Direccion: (this.idTipoPedidoSelected === '003') ? this.clienteSelected.DireccionDelivery : '', /*solo para delivery*/
           Referencia: (this.idTipoPedidoSelected === '003') ? this.clienteSelected.ReferenciaDelivery : '', /*solo para delivery*/
           IdTipoPedido: this.idTipoPedidoSelected,
-          ListaPedidoDet: listPedidoDetails
+          ListaPedidoDet: listPedidoDetails,
+          Estado:1
         }
       );
 
