@@ -28,7 +28,7 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 
 ## Para Obtener la IP
 chrome://flags/#enable-webrtc-hide-local-ips-with-mdns
-
+edge://flags/#enable-webrtc-hide-local-ips-with-mdns
 
 
 ## versionado semántico (SemVer) - conventional commits

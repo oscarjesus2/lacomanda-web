@@ -30,6 +30,13 @@
             <mat-error>Please provide a valid User Type</mat-error>
           </mat-form-field>
 
+          <!-- Nuevo campo Identificador Único -->
+          <mat-form-field appearance="outline" *ngIf="shouldShowIdentifierField()">
+            <mat-label>Identificador Único</mat-label>
+            <input matInput formControlName="identifier" required>
+            <mat-error>Please provide a valid identifier</mat-error>
+          </mat-form-field>
+
           <!-- Botón para ingresar la contraseña numérica -->
           <div class="password-field">
             <button mat-button type="button" (click)="openPasswordDialog()">Ingresar Contraseña Touch</button>
