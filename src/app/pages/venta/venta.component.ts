@@ -1664,7 +1664,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
             IdDescuento: itemGrid.IdDescuento,
             Ip: this.storageService.getCurrentIP(),
             NombreCuenta: itemGrid.NombreCuenta,
-            PedidoComplemento: itemGrid.PedidoComplemento
+            PedidoComplemento: itemGrid.PedidoComplemento,
+            Estado:1
           }
         );
 
@@ -1691,7 +1692,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
           Direccion: (this.idTipoPedidoSelected === '003') ? this.clienteSelected.DireccionDelivery : '', /*solo para delivery*/
           Referencia: (this.idTipoPedidoSelected === '003') ? this.clienteSelected.ReferenciaDelivery : '', /*solo para delivery*/
           IdTipoPedido: this.idTipoPedidoSelected,
-          ListaPedidoDet: listPedidoDetails
+          ListaPedidoDet: listPedidoDetails,
+          Estado:1
         }
       );
 

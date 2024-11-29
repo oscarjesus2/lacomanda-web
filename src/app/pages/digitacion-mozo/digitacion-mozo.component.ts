@@ -1566,7 +1566,8 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
             IdDescuento: itemGrid.IdDescuento,
             Ip: this.storageService.getCurrentIP(),
             NombreCuenta: itemGrid.NombreCuenta,
-            PedidoComplemento: itemGrid.PedidoComplemento
+            PedidoComplemento: itemGrid.PedidoComplemento,
+            Estado:1
           }
         );
 
