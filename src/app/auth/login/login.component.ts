@@ -13,6 +13,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { LoginRequest } from 'src/app/services/auth/loginRequest';
 import { version } from 'src/environments/version';
 import Swal from 'sweetalert2';
+import { CookieService } from 'ngx-cookie-service';
 
 @Component({
   selector: 'app-login',
@@ -45,7 +46,8 @@ export class LoginComponent implements OnInit {
     private loginService: LoginService,
     private storageService: StorageService,
     private tenantService: TenantService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private cookieService: CookieService
   ) {}
 
   deferredPrompt: any;
@@ -64,10 +66,10 @@ export class LoginComponent implements OnInit {
     this.checkIfIos();
     this.loadTenants();
 
-    const storedIdentifier = localStorage.getItem('clientIdentifier');
-    if (storedIdentifier) {
+    let clientUUID = this.cookieService.get('clientUUID');
+    if (clientUUID) {
       this.identifierExists = true;
-      this.CurrentIP = storedIdentifier;
+      this.CurrentIP = clientUUID;
     } else {
       this.identifierExists = false;
     }
@@ -223,7 +225,9 @@ export class LoginComponent implements OnInit {
       // Manejar el identificador único para idNivel '003'
       if (!this.identifierExists) {
         this.CurrentIP = formValues.identifier;
-        localStorage.setItem('clientIdentifier', this.CurrentIP);
+        const expirationDate = new Date();
+        expirationDate.setFullYear(expirationDate.getFullYear() + 10); // Establece la expiración en 10 años
+        this.cookieService.set('clientUUID', this.CurrentIP, expirationDate);
         this.identifierExists = true;
       }
     } else {
@@ -252,6 +256,8 @@ export class LoginComponent implements OnInit {
         } else if (userData.TipoCompu == 3) {
             this.router.navigateByUrl('/dashboard');
         }else{
+          this.identifierExists = false;
+          this.cookieService.delete('clientUUID', this.CurrentIP);
           Swal.fire({
             title: 'Login',
             text: 'El identificador ' + this.CurrentIP + ' no tiene un Tipo de Estación configurado.',
