@@ -12,6 +12,8 @@ import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mca
 import { MatDialog } from '@angular/material/dialog';
 import { LoginRequest } from 'src/app/services/auth/loginRequest';
 import { version } from 'src/environments/version';
+import Swal from 'sweetalert2';
+import { CookieService } from 'ngx-cookie-service';
 
 @Component({
   selector: 'app-login',
@@ -24,6 +26,7 @@ export class LoginComponent implements OnInit {
   public loginValid = true;
   public idNivel = '001';
   public password = '';
+  identifierExists: boolean = false;
 
   nivelUsuario: UsersDefault[] = [
     { value: '001', nombreNivel: 'Administrador' },
@@ -43,7 +46,8 @@ export class LoginComponent implements OnInit {
     private loginService: LoginService,
     private storageService: StorageService,
     private tenantService: TenantService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private cookieService: CookieService
   ) {}
 
   deferredPrompt: any;
@@ -61,6 +65,15 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     this.checkIfIos();
     this.loadTenants();
+
+    let clientUUID = this.cookieService.get('clientUUID');
+    if (clientUUID) {
+      this.identifierExists = true;
+      this.CurrentIP = clientUUID;
+    } else {
+      this.identifierExists = false;
+    }
+
     this.initForm();
     const currentSession = this.storageService.getCurrentSession();
     if (currentSession) {
@@ -102,26 +115,30 @@ export class LoginComponent implements OnInit {
       tenant: [null, Validators.required],
       idNivel: ['', Validators.required],
       password: ['', Validators.required],
+      identifier: [{ value: '', disabled: true }, []], // Inicialmente deshabilitado
     });
   
-    try {
-      // Intenta obtener la IP interna
-      this.CurrentIP = await internalIpV4();
-      console.info('CurrentIP con internalIpV4...', this.CurrentIP);
-    } catch (error) {
-      console.warn('No se pudo obtener la IP interna, intentando con WebRTC...', error);
-      try {
-        // Si falla, intenta obtener la IP usando WebRTC
-        this.CurrentIP = await this.getLocalIPAddress();
-        console.info('CurrentIP...', this.CurrentIP);
-      } catch (error) {
-        console.warn('No se pudo obtener la IP con WebRTC...', error);
-        // Establecer un valor predeterminado si no se puede obtener ninguna IP
-        this.CurrentIP = '-';
-      }
-    }
+    // Suscribirse a cambios en idNivel
+    this.loginForm.get('idNivel').valueChanges.subscribe(value => {
+      this.toggleIdentifierField(value);
+    });
   }
+  toggleIdentifierField(idNivelValue: string) {
+    const identifierControl = this.loginForm.get('identifier');
 
+    if ((idNivelValue === '003' || idNivelValue === '002') && !this.identifierExists) {
+      // Habilitar y hacer requerido el campo de identificador
+      identifierControl.enable();
+      identifierControl.setValidators([Validators.required]);
+    } else {
+      // Deshabilitar y limpiar el campo de identificador
+      identifierControl.disable();
+      identifierControl.clearValidators();
+      identifierControl.reset();
+    }
+
+    identifierControl.updateValueAndValidity();
+  }
   getLocalIPAddress(): Promise<string> {
     return new Promise((resolve, reject) => {
       const peerConnection = new RTCPeerConnection({
@@ -187,6 +204,10 @@ export class LoginComponent implements OnInit {
     return this.password ? this.password.replace(/./g, '*') : '';
   }
 
+  shouldShowIdentifierField(): boolean {
+    return (this.loginForm.get('idNivel').value === '003' || this.loginForm.get('idNivel').value === '002') && !this.identifierExists;
+  }
+
   login() {
     if (this.loginForm.invalid) {
       this.notificationService.showWarning('Por favor complete todos los campos.');
@@ -200,6 +221,20 @@ export class LoginComponent implements OnInit {
     const password = formValues.password;
     const tenant = formValues.tenant; 
     
+    if (idNivel === '003' || idNivel === '002') {
+      // Manejar el identificador único para idNivel '003'
+      if (!this.identifierExists) {
+        this.CurrentIP = formValues.identifier;
+        const expirationDate = new Date();
+        expirationDate.setFullYear(expirationDate.getFullYear() + 10); // Establece la expiración en 10 años
+        this.cookieService.set('clientUUID', this.CurrentIP, expirationDate);
+        this.identifierExists = true;
+      }
+    } else {
+      // Si idNivel no es '003', limpiar el identificador
+      this.CurrentIP = '-';
+    }
+
     const loginRequest: LoginRequest = {
       IdNivel: idNivel,
       Password: password,
@@ -220,6 +255,15 @@ export class LoginComponent implements OnInit {
             this.router.navigateByUrl('/mozo');
         } else if (userData.TipoCompu == 3) {
             this.router.navigateByUrl('/dashboard');
+        }else{
+          this.identifierExists = false;
+          this.cookieService.delete('clientUUID', this.CurrentIP);
+          Swal.fire({
+            title: 'Login',
+            text: 'El identificador ' + this.CurrentIP + ' no tiene un Tipo de Estación configurado.',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+          });
         }
         this.loginForm.reset();
         this.spinnerService.hide();
