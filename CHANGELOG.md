@@ -2,16 +2,9 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### 11.0.3 (2024-12-03)
+### 12.0.1 (2024-12-04)
 
-
-### Bug Fixes
-
-* cambiar la version del cookie de 19 al 16 ([01f9fe1](https://github.com/oscarjesus2/jobbusiness/commit/01f9fe1385766b56abe6c1cf44e8da1e25c456ab))
-
-### 11.0.2 (2024-11-29)
-
-### 11.0.1 (2024-11-29)
+## 12.0.0 (2024-11-29)
 
 ## 11.0.0 (2024-11-28)
 
