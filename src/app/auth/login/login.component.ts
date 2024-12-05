@@ -228,9 +228,6 @@ export class LoginComponent implements OnInit {
         expirationDate.setFullYear(expirationDate.getFullYear() + 10); // Establece la expiración en 10 años
         this.cookieService.set('clientUUID', this.CurrentIP, expirationDate);
         this.identifierExists = true;
-      }else {
-      // Si idNivel no es '003', limpiar el identificador
-      this.CurrentIP = '-';
       }
 
     const loginRequest: LoginRequest = {
