@@ -221,7 +221,6 @@ export class LoginComponent implements OnInit {
     const password = formValues.password;
     const tenant = formValues.tenant; 
     
-    if (idNivel === '003' || idNivel === '002') {
       // Manejar el identificador único para idNivel '003'
       if (!this.identifierExists) {
         this.CurrentIP = formValues.identifier;
@@ -229,11 +228,10 @@ export class LoginComponent implements OnInit {
         expirationDate.setFullYear(expirationDate.getFullYear() + 10); // Establece la expiración en 10 años
         this.cookieService.set('clientUUID', this.CurrentIP, expirationDate);
         this.identifierExists = true;
-      }
-    } else {
+      }else {
       // Si idNivel no es '003', limpiar el identificador
       this.CurrentIP = '-';
-    }
+      }
 
     const loginRequest: LoginRequest = {
       IdNivel: idNivel,
@@ -248,6 +246,8 @@ export class LoginComponent implements OnInit {
         const session: Session = new Session(userData.Token, userData, this.CurrentIP, tenant.TenantId, tenant.Sucursal);
         this.storageService.setCurrentSession(session);
         if (userData.TipoCompu == 0 && this.storageService.getCurrentUser().IdNivel == "001") {
+          this.identifierExists = false;
+          this.cookieService.delete('clientUUID', this.CurrentIP);
             this.router.navigateByUrl('/dashboard');
         } else if (userData.TipoCompu == 1) {
             this.router.navigateByUrl('/caja');
