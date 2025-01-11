@@ -2,14 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### 13.0.2 (2025-01-11)
-
-
-### Bug Fixes
-
-* Enviar parametro IdEmpleado en el modelo Venta ([3a77827](https://github.com/oscarjesus2/jobbusiness/commit/3a77827b1dc9c0a5f30a87edb067ebacdf484ad1))
-
-### 13.0.1 (2024-12-05)
+## 14.0.0 (2024-12-05)
 
 ## 13.0.0 (2024-12-04)
 
