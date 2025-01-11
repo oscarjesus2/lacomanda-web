@@ -81,12 +81,12 @@ export class UsuariosMantenimientoComponent implements OnInit {
   }
 
   applyFilter(): void {
-    const filterValue = this.filtrousuario.toLowerCase();
-    this.filteredusuarios.data = this.usuarios.filter(usuario =>
-      usuario.Nombre.toLowerCase().includes(filterValue) ||
-      usuario.Direccion.toLowerCase().includes(filterValue) ||
-      usuario.Dni.toLowerCase().includes(filterValue)
-    );
+    // const filterValue = this.filtrousuario.toLowerCase();
+    // this.filteredusuarios.data = this.usuarios.filter(usuario =>
+    //   usuario.Nombre.toLowerCase().includes(filterValue) ||
+    //   usuario.Direccion.toLowerCase().includes(filterValue) ||
+    //   usuario.Dni.toLowerCase().includes(filterValue)
+    // );
   }
 
   private markFormTouchedAndDirty(form: NgForm): void {
@@ -103,8 +103,8 @@ export class UsuariosMantenimientoComponent implements OnInit {
         return;
     }
 
-    if (this.usuario.Idusuario) {
-        this.usuarioService.updateusuario(this.usuario).subscribe(
+    if (this.usuario.IdUsuario) {
+        this.usuarioService.updateUsuario(this.usuario).subscribe(
             response => {
                 if (response.Success) {
                     this.cargarusuarios();
@@ -116,22 +116,22 @@ export class UsuariosMantenimientoComponent implements OnInit {
             }
         );
     } else {
-        this.usuarioService.createusuario(this.usuario).subscribe(
-            response => {
-                if (response.Success) {
-                    this.cargarusuarios();
-                    this.showForm = false; // Ocultar formulario al guardar
-                    Swal.fire('usuario creado', '', 'success');
-                } else {
-                    Swal.fire('Error', response.Message || 'Error al crear el usuario', 'error');
-                }
-            }
-        );
+        // // this.usuarioService.createusuario(this.usuario).subscribe(
+        // //     response => {
+        // //         if (response.Success) {
+        // //             this.cargarusuarios();
+        // //             this.showForm = false; // Ocultar formulario al guardar
+        // //             Swal.fire('usuario creado', '', 'success');
+        // //         } else {
+        // //             Swal.fire('Error', response.Message || 'Error al crear el usuario', 'error');
+        // //         }
+        // //     }
+        // // );
     }
 }
 
 
-  onEdit(usuario: usuario): void {
+  onEdit(usuario: Usuario): void {
     this.usuario = { ...usuario};
     this.showForm = true; // Mostrar formulario al editar
   }
@@ -149,17 +149,17 @@ export class UsuariosMantenimientoComponent implements OnInit {
       confirmButtonText: 'Sí, eliminar!',
       cancelButtonText: 'No, cancelar!'
     }).then((result) => {
-      if (result.isConfirmed) {
-        this.usuarioService.deleteusuario(id).subscribe(() => {
-          this.cargarusuarios();
-          Swal.fire('usuario eliminado', '', 'success');
-        });
-      }
+      // // if (result.isConfirmed) {
+      // //   this.usuarioService.deleteusuario(id).subscribe(() => {
+      // //     this.cargarusuarios();
+      // //     Swal.fire('usuario eliminado', '', 'success');
+      // //   });
+      // // }
     });
   }
 
   resetForm(): void {
-    this.usuario = new usuario();
+    this.usuario = new Usuario();
   }
 
   cancelar(): void {
