@@ -821,7 +821,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       NroCuenta: this.nroCuentaCobrar,
       IdCaja: this.idCaja,
       Impuesto1: parseFloat(this.lblmonto) - this.dblTotal,
-      IdEmpleado: '',
+      IdEmpleado: this.storageService.getCurrentUser().IdEmpleado,
       Total: this.dblTotal,
       Importe: this.dblImporte,
       Dscto: this.dblDscto,

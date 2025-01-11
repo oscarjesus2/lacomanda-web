@@ -1,8 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Usuario } from 'src/app/models/usuario.models';
-import { LoginService } from 'src/app/services/auth/login.service';
 import Swal from 'sweetalert2';
-import { TurnoService } from '../../services/turno.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { StorageService } from 'src/app/services/storage.service';
 
@@ -21,9 +19,17 @@ export class DashboardComponent implements OnInit {
   userLoginOn: boolean = false;
   userData?: Usuario;
 
+  reportes = [
+    { titulo: 'Ventas Diarias', componente: 'ventas-diarias', visible: false },
+    { titulo: 'Popularidad de Platos', componente: 'popularidad-platos', visible: false },
+    { titulo: 'Horas Pico', componente: 'horas-pico', visible: true },
+    { titulo: 'Canal de Venta', componente: 'canal-venta', visible: true },
+    { titulo: 'Anulaciones', componente: 'anulaciones', visible: true }
+    // Puedes agregar más reportes aquí:
+    // { titulo: 'Nuevo Reporte', componente: 'nuevo-reporte', visible: false }
+  ];
+
   constructor(
-    private loginService: LoginService,
-    private turnoService: TurnoService,
     private storageService: StorageService,
     private spinnerService: NgxSpinnerService
   ) { 
@@ -87,10 +93,16 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  updateVisibleReportes() {
+    this.visibleReportes = this.reportes.filter(rep => rep.visible === true);
+  }
+
+  visibleReportes = [];
   async ngOnInit() {
     try {
       this.spinnerService.show();
-
+      
+      this.updateVisibleReportes();
 
     } catch(e) {
       this.salir();

@@ -1,4 +1,75 @@
+/* Contenedor principal en horizontal */
+.custom-toggle-container {
+  display: flex;
+  flex-wrap: wrap; /* Ajusta elementos si no caben en una fila */
+  gap: 20px; /* Espaciado entre toggles */
+  justify-content: flex-start;
+}
+
+/* Estilo para el toggle */
+.custom-toggle {
+  display: flex;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+
+/* Estilo por defecto */
+.custom-toggle {
+  color: white; /* Color del texto */
+}
+
+/* Checkbox (oculto) */
+.custom-toggle input[type='checkbox'] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* La "barra deslizante" */
+.custom-toggle .slider {
+  position: relative;
+  width: 40px;
+  height: 20px;
+  background-color: #07f787;
+  border-radius: 20px;
+  transition: background-color 0.3s;
+  margin-right: 10px; /* Espacio entre toggle y texto */
+}
+
+
+/* Cambiar el círculo dentro del toggle */
+.custom-toggle .slider::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
  
+/* Cambiar color del círculo cuando está seleccionado */
+.custom-toggle input[type='checkbox']:checked + .slider::before {
+  background-color: #4caf50; /* Color del círculo al seleccionar */
+  transform: translateX(20px); /* Deslizar círculo a la derecha */
+}
+
+/* Estilo del texto */
+.custom-toggle .toggle-label {
+  color: white; /* Cambiar color del texto */
+  margin-left: 35px;
+}
+
+
 .container {
   display: flex;
   flex-direction: column;
