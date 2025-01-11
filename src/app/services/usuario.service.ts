@@ -17,4 +17,12 @@ export class UsuarioService {
   getUsuarioAuth(idNivel: string, clave: string): Observable<ApiResponse<Usuario>> {
     return this.http.get<ApiResponse<Usuario>>(this.basePath + 'GetUsuarioAuth/' + idNivel + '/' + clave);
   }
+
+  getAllUsuarios(): Observable<ApiResponse<Usuario[] >> {
+    throw new Error('Method not implemented.');
+  }
+
+  updateUsuario(usuario: Usuario): Observable<ApiResponse<Usuario>> {
+    throw new Error('Method not implemented.');
+  }
 }
