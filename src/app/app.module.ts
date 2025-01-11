@@ -88,6 +88,7 @@ import { DialogDescuentoComponent } from './components/dialog-descuento/dialog-d
 import { DialogEntradasComponent } from './components/dialog-entradas/dialog-entradas.component';
 import { DialogPagarTaxistaComponent } from './components/dialog-pagar-taxista/dialog-pagar-taxista.component';
 import { DialogDocumentosEmitidosComponent } from './components/dialog-documentos-emitidos/dialog-documentos-emitidos.component';
+import { UsuariosMantenimientoComponent } from './components/mantenimiento/usuarios-mantenimiento/usuarios-mantenimiento.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -142,6 +143,7 @@ export const MY_DATE_FORMATS = {
     DialogEntradasComponent,
     DialogPagarTaxistaComponent,
     DialogDocumentosEmitidosComponent,
+    UsuariosMantenimientoComponent,
   ],
   imports: [
     CommonModule,

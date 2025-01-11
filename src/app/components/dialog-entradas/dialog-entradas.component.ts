@@ -230,7 +230,7 @@ export class DialogEntradasComponent {
       if (result && result.value) {
         const codigoAdmin = result.value;
         // Validar el código del administrador llamando a la API
-        this.usuarioService.getUsuario('001', codigoAdmin).subscribe(async (response: ApiResponse<Usuario>) => {
+        this.usuarioService.getUsuarioAuth('001', codigoAdmin).subscribe(async (response: ApiResponse<Usuario>) => {
           if (response.Success) {
             if (response.Data) {
               if (tipo === 'nacional') {
@@ -632,7 +632,7 @@ export class DialogEntradasComponent {
           if (result && result.value) {
             const codigoAdmin = result.value;
             // Validar el código del administrador llamando a la API
-            this.usuarioService.getUsuario('001', codigoAdmin).subscribe(async (response: ApiResponse<Usuario>) => {
+            this.usuarioService.getUsuarioAuth('001', codigoAdmin).subscribe(async (response: ApiResponse<Usuario>) => {
               if (response.Success) {
                 if (response.Data) {
                   const confirmResult = await Swal.fire({

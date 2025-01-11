@@ -244,7 +244,7 @@ export class DialogDocumentosEmitidosComponent {
           const codigoAdmin = result.value;
   
           // Validar el código del administrador llamando a la API
-          this.usuarioService.getUsuario('001', codigoAdmin).subscribe((response: ApiResponse<Usuario>) => {
+          this.usuarioService.getUsuarioAuth('001', codigoAdmin).subscribe((response: ApiResponse<Usuario>) => {
             if (response.Success && response.Data) {
               resolve(response.Data.IdUsuario);  // Devolvemos el valor
             } else {
