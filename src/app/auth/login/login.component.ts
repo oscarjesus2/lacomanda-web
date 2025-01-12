@@ -2,7 +2,6 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LoginService } from 'src/app/services/auth/login.service';
-import { internalIpV4 } from 'internal-ip';
 import { StorageService } from 'src/app/services/storage.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { NotificationService } from 'src/app/services/notification.service';
@@ -138,35 +137,6 @@ export class LoginComponent implements OnInit {
     }
 
     identifierControl.updateValueAndValidity();
-  }
-  getLocalIPAddress(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const peerConnection = new RTCPeerConnection({
-        iceServers: []
-      });
-  
-      peerConnection.createDataChannel('');
-  
-      peerConnection.createOffer()
-        .then((offer) => peerConnection.setLocalDescription(offer))
-        .catch((error) => reject('Error al crear oferta WebRTC: ' + error));
-  
-      peerConnection.onicecandidate = (event) => {
-        if (event && event.candidate && event.candidate.candidate) {
-          const candidateParts = event.candidate.candidate.split(' ');
-          const ip = candidateParts[4]; // La IP se encuentra en la 5ta posición
-          resolve(ip);
-          peerConnection.onicecandidate = null; // Detenemos más eventos
-          peerConnection.close(); // Cerramos la conexión para liberar recursos
-        }
-      };
-  
-      // En caso de que no haya candidatos ICE
-      setTimeout(() => {
-        reject('No se pudo obtener la IP local a través de WebRTC');
-        peerConnection.close();
-      }, 10000); // Limitar el tiempo de espera a 10 segundos
-    });
   }
   
 

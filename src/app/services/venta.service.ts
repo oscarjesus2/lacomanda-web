@@ -35,6 +35,11 @@ export class VentaService {
     getVentasHoraPico(tipo: number, fechaInicial: string, fechaFinal: string): Observable<ventadiariasemanalmensual[]> {
         return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'VentasHoraPico/' + tipo  + '/' + fechaInicial + '/' + fechaFinal);
     }
+
+    getAnulaciones(fechaInicial: string, fechaFinal: string): Observable<ventadiariasemanalmensual[]> {
+      return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'Anulaciones/'  + fechaInicial + '/' + fechaFinal);
+    }
+
     getListadoVentas(idTurno: number, incluirDI: number): Observable<VentasInterface[]> {
         return this.http.get<VentasInterface[]>(this.basePath+ 'Listado/' + idTurno + '/' + incluirDI);
     }

@@ -1,0 +1,83 @@
+
+.horaPico {
+  background-color: #2980b9; /* Color de fondo destacado */
+  color: #ffffff; /* Color de texto blanco para resaltar */
+  padding: 10px;
+} 
+
+.report {
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+}
+  
+  .report h2 {
+    margin-top: 0;
+    font-size: 1.25rem;
+    color: #34495e;
+    text-align: center;
+  }
+  
+  .select-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  
+  select {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  
+  .chart {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+    width: 100%;
+    background-color: #ecf0f1;
+    border-radius: 4px;
+  }
+  
+  .totalVenta {
+    background-color: #2980b9; /* Color de fondo destacado */
+    color: #ffffff; /* Color de texto blanco para resaltar */
+    padding: 10px;
+  }
+
+  ngx-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 999; /* Asegura que el spinner esté por encima del contenido */
+  }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.data-table th, .data-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+.data-table th {
+  background-color: #f4f4f4;
+}
+
+.tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}

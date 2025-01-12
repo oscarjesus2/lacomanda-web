@@ -808,7 +808,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     const listPago: Pago[] = [];
 
     var UsuReg: number = this.storageService.getCurrentSession().User.IdUsuario;
-
+    
     const venta: Venta = ({
       IdVenta: 0,
       IdCliente:'',
