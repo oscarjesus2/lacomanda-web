@@ -6,6 +6,11 @@ export class ventadiariasemanalmensual {
     public Total: number;
     public Cantidad: number;
     public Transacciones: number;
+    public Documento: string;
+    public Motivo: string;
+    public Autoriza: string;
+    public Precio: number;
+
     constructor(Agrupado: string, Producto: string, Total: number, Cantidad: number, Transacciones: number) {
         this.Agrupado = Agrupado;
         this.Producto = Producto;
