@@ -22,9 +22,9 @@ export class DashboardComponent implements OnInit {
   reportes = [
     { titulo: 'Ventas Diarias', componente: 'ventas-diarias', visible: false },
     { titulo: 'Popularidad de Platos', componente: 'popularidad-platos', visible: false },
-    { titulo: 'Horas Pico', componente: 'horas-pico', visible: true },
-    { titulo: 'Canal de Venta', componente: 'canal-venta', visible: true },
-    { titulo: 'Anulaciones', componente: 'anulaciones', visible: true }
+    { titulo: 'Horas Pico', componente: 'horas-pico', visible: false },
+    { titulo: 'Canal de Venta', componente: 'canal-venta', visible: false },
+    { titulo: 'Anulaciones', componente: 'anulaciones', visible: false }
     // Puedes agregar más reportes aquí:
     // { titulo: 'Nuevo Reporte', componente: 'nuevo-reporte', visible: false }
   ];

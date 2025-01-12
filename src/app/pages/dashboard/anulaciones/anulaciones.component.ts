@@ -80,7 +80,7 @@ export class AnulacionesComponent implements OnInit {
     }
 
     const productos = this.data.map(d => d.Producto); // Productos únicos
-    const maxCantidad = d3.max(this.data, d => d.Cantidad) || 0;
+    const maxCantidad = Math.ceil(d3.max(this.data, d => d.Cantidad) || 0);
 
     // Escalas
     const y = d3.scaleBand().domain(productos).range([0, this.height]).padding(0.2);
@@ -100,7 +100,7 @@ export class AnulacionesComponent implements OnInit {
     this.svg.append('g')
       .attr('class', 'x-axis')
       .attr('transform', `translate(0,${this.height})`)
-      .call(d3.axisBottom(x));
+      .call(d3.axisBottom(x).ticks(maxCantidad).tickFormat(d3.format('d')));;
 
     this.svg.append('g')
       .attr('class', 'y-axis')
