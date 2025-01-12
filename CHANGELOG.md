@@ -2,14 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### 15.0.2 (2025-01-12)
-
-
-### Features
-
-* Informe de Anulaciones ([2a9acdb](https://github.com/oscarjesus2/jobbusiness/commit/2a9acdbad3b604595956aaabe513af731076372a))
-
-### 15.0.1 (2025-01-11)
+## 16.0.0 (2025-01-11)
 
 ## 15.0.0 (2025-01-11)
 
