@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 19.0.2 (2025-01-19)
+
+
+### Bug Fixes
+
+* estado de usaurio ([26a2fb3](https://github.com/oscarjesus2/jobbusiness/commit/26a2fb38672313cc23a3b2952d00fbdb2b99c2f9))
+
 ### 19.0.1 (2025-01-19)
 
 ## 19.0.0 (2025-01-12)
