@@ -18,11 +18,24 @@ export class UsuarioService {
     return this.http.get<ApiResponse<Usuario>>(this.basePath + 'GetUsuarioAuth/' + idNivel + '/' + clave);
   }
 
-  getAllUsuarios(): Observable<ApiResponse<Usuario[] >> {
-    throw new Error('Method not implemented.');
+  getAllUsuarios(): Observable<ApiResponse<Usuario[]>> {
+    return this.http.get<ApiResponse<Usuario[]>>(this.basePath );
+  }
+  
+  getUsuario(id: string): Observable<Usuario> {
+    return this.http.get<Usuario>(`${this.basePath }/${id}`);
   }
 
-  updateUsuario(usuario: Usuario): Observable<ApiResponse<Usuario>> {
-    throw new Error('Method not implemented.');
+  createUsuario(Usuario: Usuario): Observable<any> {
+    return this.http.post<Usuario>(this.basePath , Usuario);
   }
+
+  updateUsuario(Usuario: Usuario): Observable<any> {
+    return this.http.put<Usuario>(`${this.basePath }/${Usuario.IdUsuario}`, Usuario);
+  }
+  
+  deleteUsuario(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.basePath }/${id}`);
+  }
+
 }

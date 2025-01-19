@@ -9,6 +9,7 @@ import { LoginService } from 'src/app/services/auth/login.service';
 import { StorageService } from 'src/app/services/storage.service';
 import { TurnoService } from 'src/app/services/turno.service';
 import { DataService } from 'src/app/services/data.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-header',
@@ -28,6 +29,7 @@ export class HeaderComponent {
   public userLoged: any = { id: "", username: "" };
   title: string = '';
   sDatosUsuarioTurno: string = '';
+  turnoAbierto: Turno;
 
   constructor(
     private spinnerService: NgxSpinnerService,
@@ -56,15 +58,41 @@ export class HeaderComponent {
  
   }
   public Caja(): void {
-    this.title = 'Ventas';
-    this.sDatosUsuarioTurno= 'Turno : OPEN ' + this.nroturnoShare + ' - Usuario :' + this.UsuarioShare + '';
-    this.router.navigateByUrl('/caja');
+    this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
+      if (data != null) {
+        this.turnoAbierto = data;
+        this.title = 'Caja';
+        this.sDatosUsuarioTurno= 'Turno : OPEN ' + this.turnoAbierto.NroTurno + ' - Usuario :' + this.UsuarioShare + '';
+        this.router.navigateByUrl('/caja');
+      }else{
+
+        Swal.fire({
+                    icon: 'warning',
+                    title: 'No hay un turno abierto para ' + this.storageService.getCurrentIP(),
+                    confirmButtonText: 'Aceptar'
+                  });
+
+      }
+    })
   }
 
   public Mozo(): void {
-    this.title = 'Mozo';
-    this.sDatosUsuarioTurno= 'Turno : OPEN ' + this.nroturnoShare + ' - Usuario :' + this.UsuarioShare + '';
-    this.router.navigateByUrl('/mozo');
+    this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
+      if (data != null) {
+        this.turnoAbierto = data;
+        this.title = 'Mozo';
+        this.sDatosUsuarioTurno= 'Turno : OPEN ' + this.turnoAbierto.NroTurno + ' - Usuario :' + this.UsuarioShare + '';
+        this.router.navigateByUrl('/mozo');
+      }else{
+
+        Swal.fire({
+                    icon: 'warning',
+                    title: 'No hay un turno abierto para ' + this.storageService.getCurrentIP(),
+                    confirmButtonText: 'Aceptar'
+                  });
+
+      }
+    })
   }
 
   public Administracion(): void {

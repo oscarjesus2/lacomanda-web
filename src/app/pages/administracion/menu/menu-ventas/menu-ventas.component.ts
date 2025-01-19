@@ -11,6 +11,7 @@ import { TurnoService } from 'src/app/services/turno.service';
 import { DialogReportecontableComponent } from 'src/app/components/dialog-reportecontable/dialog-reportecontable.component';
 import { ClienteMantenimientoComponent } from 'src/app/components/mantenimiento/cliente-mantenimiento/cliente-mantenimiento.component';
 import { EmpleadoMantenimientoComponent } from 'src/app/components/mantenimiento/empleado-mantenimiento/empleado-mantenimiento.component';
+import { UsuariosMantenimientoComponent } from 'src/app/components/mantenimiento/usuarios-mantenimiento/usuarios-mantenimiento.component';
 
 @Component({
   selector: 'app-menu-ventas',
@@ -33,6 +34,7 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Configuración de Mesas', route: '/ventas/configuracion-mesas' },
         { title: 'Descuentos', route: '/ventas/descuentos' },
         { title: 'Empleados', route: '/ventas/empleados' },
+        { title: 'Usuarios', route: '/ventas/usuarios' },
         { title: 'Familia de Productos', route: '/ventas/familia-productos' },
         { title: 'Sub Familia de Productos', route: '/ventas/subfamilia-productos' },
         { title: 'Promociones', route: '/ventas/promociones' },
@@ -77,6 +79,10 @@ export class MenuVentasComponent implements OnInit {
     if (item.title === 'Empleados') 
       {
         this.OpenEmpleadoMantenimientoComponent();
+      } 
+    if (item.title === 'Usuarios') 
+      {
+        this.OpenUsuarioMantenimientoComponent();
       } 
     if (item.title === 'Abrir Turno') 
     {
@@ -131,6 +137,16 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '900px', // Establece el ancho del diálogo
+      height: '700px', // Establece la altura del diálogo
+    });
+  }
+
+  OpenUsuarioMantenimientoComponent(): void {
+  
+    const dialog = this.dialog.open(UsuariosMantenimientoComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: '600px', // Establece el ancho del diálogo
       height: '700px', // Establece la altura del diálogo
     });
   }

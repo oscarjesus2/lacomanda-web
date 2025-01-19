@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { Usuario } from '../../../models/usuario.models';
 
 import Swal from 'sweetalert2';
@@ -7,10 +7,12 @@ import { NgForm, FormControl, Validators } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { EnumTipoIdentidad } from 'src/app/enums/enum';
 import { UsuarioService } from 'src/app/services/usuario.service';
-import { CargoService } from 'src/app/services/cargo.service';
-import { Cargo } from 'src/app/models/cargo.models';
+import { EmpleadoService } from 'src/app/services/empleado.service';
+import { Empleado } from 'src/app/models/empleado.models';
+import { Nivel_UsuarioService } from 'src/app/services/nivel_usuario.service';
+import { Nivel_Usuario } from 'src/app/models/nivel_usuario.models';
+import { encryptPassword } from 'src/app/helpers/encryption.helper';
 
 
 @Component({
@@ -24,21 +26,30 @@ export class UsuariosMantenimientoComponent implements OnInit {
   usuarios: Usuario[] = [];
   filteredusuarios= new MatTableDataSource<Usuario>([]);
   filtrousuario: string = '';
-  listCargo: Cargo[] = [];
+  listEmpleado: Empleado[] = [];
+  listNivelUsuario: Nivel_Usuario[] = [];
   showForm: boolean = false; // Controla la visibilidad del formulario
-  displayedColumns: string[] = ['nombre','dni', 'direccion',  'telefono', 'actions'];
-  
+  displayedColumns: string[] = ['username', 'niveldescripcion','activo', 'actions'];
+ 
   constructor(
     private dialogRef: MatDialogRef<UsuariosMantenimientoComponent >,
     private usuarioService: UsuarioService,
     private spinnerService: NgxSpinnerService,
-    private cargoService: CargoService) {}
+    private empleadoService: EmpleadoService,
+    private nivelUsuarioService: Nivel_UsuarioService) {}
     @ViewChild(MatPaginator) paginator: MatPaginator;
 
-    
+  
+  hide = signal(true);
+  clickEvent(event: MouseEvent) {
+    this.hide.set(!this.hide());
+    event.stopPropagation();
+  }
+
   ngOnInit(): void {
     this.cargarusuarios();
-    this.cargarCargos();
+    this.cargarEmpleados();
+    this.cargarNivelUsuario();
   }
 
   ngAfterViewInit() {
@@ -58,18 +69,32 @@ export class UsuariosMantenimientoComponent implements OnInit {
         this.filteredusuarios.paginator = this.paginator; // Reasigna el paginador
     });
 }
-  cargarCargos(): void {
+  cargarEmpleados(): void {
     this.spinnerService.show();   
-    this.cargoService.getCargos().subscribe(response => {
+    this.empleadoService.getAllEmpleados().subscribe(response => {
       if (response.Success) {
-        this.listCargo = response.Data;
+        this.listEmpleado = response.Data;
         this.spinnerService.hide();
     } else {
       this.spinnerService.hide();
-        Swal.fire('Error', response.Message || 'Error al cargar los cargos', 'error');
+        Swal.fire('Error', response.Message || 'Error al cargar los empelados', 'error');
     }
     });
   }
+
+   cargarNivelUsuario(): void {
+      this.spinnerService.show();   
+      this.nivelUsuarioService.getAllNivel_Usuario().subscribe(response => {
+        if (response.Success) {
+          this.listNivelUsuario = response.Data;
+          this.spinnerService.hide();
+      } else {
+        this.spinnerService.hide();
+          Swal.fire('Error', response.Message || 'Error al cargar los cargos', 'error');
+      }
+      });
+    }
+  
 
   nuevousuario(): void {
     this.resetForm();
@@ -81,12 +106,12 @@ export class UsuariosMantenimientoComponent implements OnInit {
   }
 
   applyFilter(): void {
-    // const filterValue = this.filtrousuario.toLowerCase();
-    // this.filteredusuarios.data = this.usuarios.filter(usuario =>
-    //   usuario.Nombre.toLowerCase().includes(filterValue) ||
-    //   usuario.Direccion.toLowerCase().includes(filterValue) ||
-    //   usuario.Dni.toLowerCase().includes(filterValue)
-    // );
+    const filterValue = this.filtrousuario.toLowerCase();
+    this.filteredusuarios.data = this.usuarios.filter(usuario =>
+      usuario.Username.toLowerCase().includes(filterValue) ||
+      usuario.IdNivel.toLowerCase().includes(filterValue) ||
+      usuario.IdEmpleado.toLowerCase().includes(filterValue)
+    );
   }
 
   private markFormTouchedAndDirty(form: NgForm): void {
@@ -103,6 +128,10 @@ export class UsuariosMantenimientoComponent implements OnInit {
         return;
     }
 
+    if (this.usuario.Password) {
+      this.usuario.ClaveE = encryptPassword(this.usuario.Password);
+    }
+
     if (this.usuario.IdUsuario) {
         this.usuarioService.updateUsuario(this.usuario).subscribe(
             response => {
@@ -116,28 +145,32 @@ export class UsuariosMantenimientoComponent implements OnInit {
             }
         );
     } else {
-        // // this.usuarioService.createusuario(this.usuario).subscribe(
-        // //     response => {
-        // //         if (response.Success) {
-        // //             this.cargarusuarios();
-        // //             this.showForm = false; // Ocultar formulario al guardar
-        // //             Swal.fire('usuario creado', '', 'success');
-        // //         } else {
-        // //             Swal.fire('Error', response.Message || 'Error al crear el usuario', 'error');
-        // //         }
-        // //     }
-        // // );
+        this.usuarioService.createUsuario(this.usuario).subscribe(
+            response => {
+                if (response.Success) {
+                    this.cargarusuarios();
+                    this.showForm = false; // Ocultar formulario al guardar
+                    Swal.fire('usuario creado', '', 'success');
+                } else {
+                    Swal.fire('Error', response.Message || 'Error al crear el usuario', 'error');
+                }
+            }
+        );
     }
 }
 
 
-  onEdit(usuario: Usuario): void {
-    this.usuario = { ...usuario};
-    this.showForm = true; // Mostrar formulario al editar
-  }
+onEdit(usuario: Usuario): void {
+  this.usuario = { ...usuario};
+  this.showForm = true; // Mostrar formulario al editar
+}
 
-  compareCargo(tipo1: Cargo, tipo2: Cargo): boolean {
-    return tipo1 && tipo2 ? tipo1.IdCargo === tipo2.IdCargo: tipo1 === tipo2;
+compareEmpleado(tipo1: Empleado, tipo2: Empleado): boolean {
+    return tipo1 && tipo2 ? tipo1.IdEmpleado === tipo2.IdEmpleado: tipo1 === tipo2;
+}
+
+compareNivel(tipo1: Nivel_Usuario, tipo2: Nivel_Usuario): boolean {
+  return tipo1 && tipo2 ? tipo1.IdNivel === tipo2.IdNivel: tipo1 === tipo2;
 }
 
   onDelete(id: string): void {
@@ -149,12 +182,12 @@ export class UsuariosMantenimientoComponent implements OnInit {
       confirmButtonText: 'Sí, eliminar!',
       cancelButtonText: 'No, cancelar!'
     }).then((result) => {
-      // // if (result.isConfirmed) {
-      // //   this.usuarioService.deleteusuario(id).subscribe(() => {
-      // //     this.cargarusuarios();
-      // //     Swal.fire('usuario eliminado', '', 'success');
-      // //   });
-      // // }
+      if (result.isConfirmed) {
+        this.usuarioService.deleteUsuario(id).subscribe(() => {
+          this.cargarusuarios();
+          Swal.fire('usuario eliminado', '', 'success');
+        });
+      }
     });
   }
 
