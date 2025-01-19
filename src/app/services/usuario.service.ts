@@ -10,12 +10,12 @@ import { ApiResponse } from '../interfaces/apirResponse.interface';
   providedIn: 'root'
 })
 export class UsuarioService {
-    private basePath = environment.apiUrl + '/Usuario/';
+    private basePath = environment.apiUrl + '/usuario';
 
   constructor(private http: HttpClient) {}
 
   getUsuarioAuth(idNivel: string, clave: string): Observable<ApiResponse<Usuario>> {
-    return this.http.get<ApiResponse<Usuario>>(this.basePath + 'GetUsuarioAuth/' + idNivel + '/' + clave);
+    return this.http.get<ApiResponse<Usuario>>(this.basePath + '/GetUsuarioAuth/' + idNivel + '/' + clave);
   }
 
   getAllUsuarios(): Observable<ApiResponse<Usuario[]>> {
@@ -26,16 +26,16 @@ export class UsuarioService {
     return this.http.get<Usuario>(`${this.basePath }/${id}`);
   }
 
-  createUsuario(Usuario: Usuario): Observable<any> {
-    return this.http.post<Usuario>(this.basePath , Usuario);
+  createUsuario(usuario: Usuario): Observable<any> {
+    return this.http.post<Usuario>(this.basePath , usuario);
   }
 
-  updateUsuario(Usuario: Usuario): Observable<any> {
-    return this.http.put<Usuario>(`${this.basePath }/${Usuario.IdUsuario}`, Usuario);
+  updateUsuario(usuario: Usuario): Observable<any> {
+    return this.http.put<Usuario>(`${this.basePath}/${usuario.IdUsuario}`, usuario);
   }
   
   deleteUsuario(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.basePath }/${id}`);
+    return this.http.delete<void>(`${this.basePath}/${id}`);
   }
 
 }

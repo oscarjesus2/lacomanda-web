@@ -12,7 +12,7 @@
       <mat-form-field appearance="fill" class="full-width">
         <mat-label>Buscar</mat-label>
         <input matInput [(ngModel)]="filtrousuario" (ngModelChange)="applyFilter()"
-          placeholder="Buscar por nombre, RUC, etc.">
+          placeholder="Buscar por nombre de usuario, nivel de usuario, etc.">
       </mat-form-field>
       <mat-table [dataSource]="filteredusuarios" class="mat-elevation-z8">
         <!-- RUC Column -->
@@ -75,11 +75,43 @@
             El password es requerido.
           </mat-error>
         </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Estado</mat-label>
+          <mat-select [(ngModel)]="usuario.Activo" name="estado" required #estado="ngModel">
+            <mat-option [value]=true>Activo</mat-option>
+            <mat-option [value]=false>Inactivo</mat-option>
+          </mat-select>
+          <mat-error *ngIf="estado.invalid && (estado.dirty || estado.touched)">
+            Seleccione un estado.
+          </mat-error>
+        </mat-form-field>
       </div>
 
       <div class="form-row">
-
         <mat-form-field class="form-field" appearance="fill">
+          <mat-label>Empleado</mat-label>
+          <input 
+            type="text" 
+            matInput 
+            [matAutocomplete]="auto" 
+            [(ngModel)]="usuario.Empleado" 
+            [ngModelOptions]="{standalone: true}" 
+            (input)="onInputChange($event.target.value)"
+            [value]="usuario.Empleado?.Nombre || ''" 
+            required
+            name="empleado">
+          <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayEmpleado">
+            <mat-option *ngFor="let item of empleadosFiltrados" [value]="item">
+              {{ item.Nombre }}
+            </mat-option>
+          </mat-autocomplete>
+          <mat-error *ngIf="!usuario.Empleado">
+            Seleccione un empleado válido.
+          </mat-error>
+        </mat-form-field>
+
+        <!-- <mat-form-field class="form-field" appearance="fill">
           <mat-label>Empleado</mat-label>
           <mat-select [(ngModel)]="usuario.Empleado" name="empleado" required #empleado="ngModel"
             [compareWith]="compareEmpleado">
@@ -90,7 +122,7 @@
           <mat-error *ngIf="empleado.invalid && (empleado.dirty || empleado.touched)">
             Seleccione un empleado.
           </mat-error>
-        </mat-form-field>
+        </mat-form-field> -->
 
         <mat-form-field appearance="fill">
           <mat-label>Nivel</mat-label>

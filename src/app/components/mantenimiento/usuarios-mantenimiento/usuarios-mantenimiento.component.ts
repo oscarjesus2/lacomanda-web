@@ -30,6 +30,7 @@ export class UsuariosMantenimientoComponent implements OnInit {
   listNivelUsuario: Nivel_Usuario[] = [];
   showForm: boolean = false; // Controla la visibilidad del formulario
   displayedColumns: string[] = ['username', 'niveldescripcion','activo', 'actions'];
+  empleadosFiltrados: Empleado[];
  
   constructor(
     private dialogRef: MatDialogRef<UsuariosMantenimientoComponent >,
@@ -74,12 +75,39 @@ export class UsuariosMantenimientoComponent implements OnInit {
     this.empleadoService.getAllEmpleados().subscribe(response => {
       if (response.Success) {
         this.listEmpleado = response.Data;
+        this.empleadosFiltrados = this.listEmpleado;
         this.spinnerService.hide();
     } else {
       this.spinnerService.hide();
-        Swal.fire('Error', response.Message || 'Error al cargar los empelados', 'error');
+        Swal.fire('Error', response.Message || 'Error al cargar los empleados', 'error');
     }
     });
+  }
+
+  onInputChange(valor: string) {
+    this.filtrarEmpleados(valor);
+
+    // Verificar si el valor coincide con un empleado exacto.
+    const coincidenciaExacta = this.listEmpleado.find(
+      empleado => empleado.Nombre.toLowerCase() === valor.toLowerCase()
+    );
+    if (!coincidenciaExacta) {
+      this.usuario.Empleado = null;
+    }
+  }
+
+  filtrarEmpleados(valor: string) {
+    const filtro = valor.toLowerCase();
+    this.empleadosFiltrados = this.listEmpleado.filter(empleado =>
+      empleado.Nombre.toLowerCase().includes(filtro)
+    );
+  }
+
+  onOptionSelected(empleado: any) {
+    this.usuario.Empleado = empleado;
+  }
+  displayEmpleado(empleado: any): string {
+    return empleado ? empleado.Nombre : '';
   }
 
    cargarNivelUsuario(): void {
@@ -109,8 +137,8 @@ export class UsuariosMantenimientoComponent implements OnInit {
     const filterValue = this.filtrousuario.toLowerCase();
     this.filteredusuarios.data = this.usuarios.filter(usuario =>
       usuario.Username.toLowerCase().includes(filterValue) ||
-      usuario.IdNivel.toLowerCase().includes(filterValue) ||
-      usuario.IdEmpleado.toLowerCase().includes(filterValue)
+      usuario.Nivel_Usuario.Descripcion.toLowerCase().includes(filterValue) ||
+      usuario.Empleado.Nombre.toLowerCase().includes(filterValue)
     );
   }
 
@@ -193,6 +221,7 @@ compareNivel(tipo1: Nivel_Usuario, tipo2: Nivel_Usuario): boolean {
 
   resetForm(): void {
     this.usuario = new Usuario();
+    this.empleadosFiltrados = this.listEmpleado;
   }
 
   cancelar(): void {
