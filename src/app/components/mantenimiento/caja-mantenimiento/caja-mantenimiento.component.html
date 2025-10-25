@@ -1,0 +1,95 @@
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+<div class="empleado-mantenimiento">
+  <h2>Mantenimiento de Cajas</h2>
+
+  <div *ngIf="!showForm">
+    <button mat-raised-button color="primary" (click)="nuevo()">Nueva Caja</button>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Buscar</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Descripción, default...">
+    </mat-form-field>
+
+    <mat-table [dataSource]="filtered" class="mat-elevation-z8">
+      <ng-container matColumnDef="descripcion">
+        <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+        <mat-cell *matCellDef="let r">{{ r.Descripcion }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="activo">
+        <mat-header-cell *matHeaderCellDef> Activo </mat-header-cell>
+        <mat-cell *matCellDef="let r">{{ r.Activo ? 'Sí' : 'No' }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="cajaDefault">
+        <mat-header-cell *matHeaderCellDef> Caja por Defecto </mat-header-cell>
+        <mat-cell *matCellDef="let r">{{ r.CajaPorDefecto ? 'Sí' : 'No' }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="canal">
+        <mat-header-cell *matHeaderCellDef> Canal Venta </mat-header-cell>
+        <mat-cell *matCellDef="let r">
+        {{ getCanalDescripcion(r.IdCanalVentaDefecto) }}
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="nroPedido">
+        <mat-header-cell *matHeaderCellDef> N° Pedido </mat-header-cell>
+        <mat-cell *matCellDef="let r">{{ r.NroPedido }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-cell *matCellDef="let r">
+          <button mat-icon-button color="primary" (click)="onEdit(r)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button (click)="configurarDocumentos(r)"><mat-icon>description</mat-icon></button>
+          <button mat-icon-button color="warn" (click)="onDelete(r.IdCaja)"><mat-icon>delete</mat-icon></button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </div>
+
+  <form *ngIf="showForm" #form="ngForm" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Descripción</mat-label>
+        <input matInput [(ngModel)]="m.Descripcion" name="descripcion" required #descripcion="ngModel">
+        <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">Requerido.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Canal de Venta por Defecto</mat-label>
+        <mat-select [(ngModel)]="m.IdCanalVentaDefecto" name="canal" required>
+          <mat-option *ngFor="let c of canales" [value]="c.IdCanalVenta">{{ c.Descripcion }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>N° Pedido</mat-label>
+        <input matInput [value]="m.NroPedido" disabled>
+      </mat-form-field>
+    </div>
+
+    <div class="toggles">
+      <mat-slide-toggle [(ngModel)]="m.Activo" name="activo">Activo</mat-slide-toggle>
+      <!-- <mat-slide-toggle [(ngModel)]="m.CajaPorDefecto" name="defecto">Caja por Defecto</mat-slide-toggle> -->
+      <mat-slide-toggle [(ngModel)]="m.EmitePrecuenta" name="precuenta">Emite Precuenta</mat-slide-toggle>
+      <mat-slide-toggle [(ngModel)]="m.EmiteComanda" name="comanda">Emite Comanda</mat-slide-toggle>
+      <mat-slide-toggle [(ngModel)]="m.EmiteDescuento" name="descuento">Emite Descuento</mat-slide-toggle>
+      <mat-slide-toggle [(ngModel)]="m.PermiteDividirPedido" name="dividir">Permite Dividir Pedido</mat-slide-toggle>
+      <mat-slide-toggle [(ngModel)]="m.PermiteCierreParcial" name="cierreParcial">Permite Cierre Parcial</mat-slide-toggle>
+      <mat-slide-toggle [(ngModel)]="m.EnvioElectronicoOnline" name="envioElec">Envío Electrónico Online</mat-slide-toggle>
+      <mat-slide-toggle [(ngModel)]="m.PrecuentaLlevarDeliveryAutomatica" name="autoPrecDelivery">
+        Precuenta Delivery Automática
+      </mat-slide-toggle>
+    </div>
+
+    <button mat-raised-button color="primary">{{ m.IdCaja ? 'Actualizar' : 'Guardar' }}</button>
+    <button mat-raised-button color="warn" type="button" (click)="cancelar()">Cancelar</button>
+  </form>
+</div>

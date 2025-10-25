@@ -8,13 +8,13 @@ import * as moment from 'moment';
 import Swal from 'sweetalert2';
 import { NgxSpinnerService } from 'ngx-spinner';
 
-import { Product } from 'src/app/models/product.models';
+import { Producto } from 'src/app/models/product.models';
 import { Caja } from 'src/app/models/caja.models';
-import { ProductService } from 'src/app/services/product.service';
+import { ProductoService } from 'src/app/services/product.service';
 import { CajaService } from 'src/app/services/caja.service';
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
 import { DialogEmitirComprobanteComponent } from '../dialog-emitir-comprobante/dialog-emitir-comprobante.component';
-import { EnumTipoDocumento } from '../../enums/enum';
+import { CanalVentaEnum, EnumTipoDocumento } from '../../enums/enum';
 import { PedidoCab } from 'src/app/models/pedido.models';
 import { PedidoDet } from 'src/app/models/pedidodet.models';
 import { StorageService } from 'src/app/services/storage.service';
@@ -45,15 +45,15 @@ export class DialogEmitirVentaComponent implements OnInit {
   @ViewChild('form') form: NgForm;
   TipoDocumento = EnumTipoDocumento; 
   productCtrl = new FormControl();
-  filteredProducts: Observable<Product[]>;
-  products: Product[];
+  filteredProducts: Observable<Producto[]>;
+  products: Producto[];
   displayedColumns: string[] = ['Producto', 'Qty', 'Precio', 'Total', 'actions'];
   dataSource = new MatTableDataSource<ProductElement>([]);
 
   bTurnoIndenpendiente: boolean = false;
   
   listCaja: Caja[];
-  cajaSeleccionada: string = '';
+  cajaSeleccionada: number = 0;
   monedaSeleccionada: string = 'SOLES';
   turnoAbierto: Turno = new Turno();
   fechaTurnoAbierto: string='';
@@ -78,14 +78,14 @@ export class DialogEmitirVentaComponent implements OnInit {
     public dialog: MatDialog,
     private storageService: StorageService,
     private cajaService: CajaService,
-    private productoService: ProductService,
+    private productoService: ProductoService,
     private spinnerService: NgxSpinnerService,
   ) {}
 
   private async initializeCaja(): Promise<void> {
     try {
-      this.listCaja = await this.cajaService.getAllCaja(1).toPromise();
-      const defaultCajaId = this.listCaja.find(x => x.IdCaja === '000') ? '000' : '001';
+      this.listCaja = (await this.cajaService.getAllCaja(true).toPromise()).Data;
+      const defaultCajaId = this.listCaja.find(x => x.IdCaja === 0) ? 0 : 1;
       this.cajaSeleccionada = defaultCajaId;
       this.ValidarCaja(this.listCaja.find(x => x.IdCaja === defaultCajaId));
     } catch (error) {
@@ -124,17 +124,17 @@ export class DialogEmitirVentaComponent implements OnInit {
     }
   }
 
-  private _filter(value: any): Product[] {
+  private _filter(value: any): Producto[] {
     const filterValue = typeof value === 'string' ? value.toLowerCase() : '';
     return this.products.filter(product => product.NombreCorto.toLowerCase().includes(filterValue));
   }
 
-  displayProductName(product?: Product): string | undefined {
+  displayProductName(product?: Producto): string | undefined {
     return product ? product.NombreCorto : undefined;
   }
 
   ValidarCaja(oCaja: Caja): void {
-    if (oCaja.IdCaja != '000') {
+    if (oCaja.IdCaja != 0) {
       if (oCaja.TurnoAbierto != null) {
         this.turnoAbierto = oCaja.TurnoAbierto;
         this.fechaTurnoAbierto = moment(new Date(this.turnoAbierto.FechaInicio)).format("DD/MM/YYYY HH:mm:ss");
@@ -153,7 +153,7 @@ export class DialogEmitirVentaComponent implements OnInit {
           icon: 'warning',
           confirmButtonText: 'OK'
         });
-        this.cajaSeleccionada = '000';
+        this.cajaSeleccionada = 0;
         this.visibleInfoTurno = false;
         this.MonedaEnabled = true;
       }
@@ -169,10 +169,10 @@ export class DialogEmitirVentaComponent implements OnInit {
   }
 
   Factura(): void {
-    this.cajaSeleccionada = '';
+    this.cajaSeleccionada = 0;
   }
 
-  AgregarItemGrid(product: Product): void {
+  AgregarItemGrid(product: Producto): void {
     let bSinPrecio = product.SinPrecio;
   
     if (bSinPrecio === 1) {
@@ -189,7 +189,7 @@ export class DialogEmitirVentaComponent implements OnInit {
     }
   }
 
-  abrirDialogoCantidad(product: Product): Promise<any> {
+  abrirDialogoCantidad(product: Producto): Promise<any> {
     let sTitulo = product.MonedaVenta === 'SOL' ? 'Precio del Producto-SOLES' : 'Precio del Producto-DOLARES';
     const dialogRef = this.dialog.open(DialogMCantComponent, {
       data: {
@@ -204,7 +204,7 @@ export class DialogEmitirVentaComponent implements OnInit {
     return dialogRef.afterClosed().toPromise();
   }
 
-  actualizarPrecioProducto(product: Product, result: any): void {
+  actualizarPrecioProducto(product: Producto, result: any): void {
     if (product.MonedaVenta === 'SOL' && this.monedaSeleccionada === 'DOLARES') {
       product.Precio = Math.round((result.value / parseFloat(this.tipoCambioCompra)) * 100) / 100;
     } else if (product.MonedaVenta === 'DOL' && this.monedaSeleccionada === 'SOLES') {
@@ -214,7 +214,7 @@ export class DialogEmitirVentaComponent implements OnInit {
     }
   }
 
-  agregarNuevaFila(product: Product): void {
+  agregarNuevaFila(product: Producto): void {
     let dPrecio = product.Precio;
     const newRow: ProductElement = {
       IdProducto: product.IdProducto,
@@ -257,7 +257,7 @@ export class DialogEmitirVentaComponent implements OnInit {
   }
 
   onProductoSelected(event: any): void {
-    const selectedProduct: Product = event.option.value;
+    const selectedProduct: Producto = event.option.value;
 
 
     
@@ -383,12 +383,12 @@ export class DialogEmitirVentaComponent implements OnInit {
     pedidoCab.NroPedido = 0;
     pedidoCab.FechaCambiada = this.fechaDocumento;
     pedidoCab.Total = this.sumaTotal;
-    pedidoCab.IdTipoPedido = "000";
+    pedidoCab.IdCanalVenta = CanalVentaEnum.VENTA_NORMAL;
     pedidoCab.Estado = 1;
     pedidoCab.Moneda = this.monedaSeleccionada.substring(0, 3);
     pedidoCab.TipoCambioVenta = parseFloat(this.tipoCambioVenta);
     pedidoCab.TipoCambioCompra = parseFloat(this.tipoCambioCompra);
-    pedidoCab.IdMesa = "9999";
+    pedidoCab.IdMesa = 9999;
     pedidoCab.IdCaja = this.cajaSeleccionada;
     pedidoCab.NumPrecuentas = 0;
     pedidoCab.FechaPrecuenta = null;
@@ -399,7 +399,7 @@ export class DialogEmitirVentaComponent implements OnInit {
     pedidoCab.UsuReg = this.storageService.getCurrentSession().User.IdUsuario;
     pedidoCab.UsuMod = this.storageService.getCurrentSession().User.IdUsuario;;
 
-    if (this.cajaSeleccionada !== "000") {
+    if (this.cajaSeleccionada !== 0) {
       pedidoCab.IdTurno = this.turnoAbierto.IdTurno;
       this.bTurnoIndenpendiente = false;
     } else {
@@ -413,7 +413,7 @@ export class DialogEmitirVentaComponent implements OnInit {
 
       pedidoDet.IdPedido = 0;
       pedidoDet.NroCuenta = 1;
-      pedidoDet.Producto = new Product({IdProducto: item.IdProducto})
+      pedidoDet.Producto = new Producto({IdProducto: item.IdProducto})
       pedidoDet.Item = correlativo;
       pedidoDet.Precio = item.Precio;
       pedidoDet.Cantidad = item.Qty;

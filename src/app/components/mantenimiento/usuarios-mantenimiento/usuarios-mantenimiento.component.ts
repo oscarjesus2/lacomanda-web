@@ -12,8 +12,6 @@ import { EmpleadoService } from 'src/app/services/empleado.service';
 import { Empleado } from 'src/app/models/empleado.models';
 import { Nivel_UsuarioService } from 'src/app/services/nivel_usuario.service';
 import { Nivel_Usuario } from 'src/app/models/nivel_usuario.models';
-import { encryptPassword } from 'src/app/helpers/encryption.helper';
-
 
 @Component({
   selector: 'app-usuarios-mantenimiento',
@@ -58,43 +56,52 @@ export class UsuariosMantenimientoComponent implements OnInit {
   }
 
   cargarusuarios(): void {
-    this.spinnerService.show(); 
-    this.usuarioService.getAllUsuarios().subscribe(response => {
-        if (response.Success) {
-            this.usuarios = response.Data;
-            this.filteredusuarios.data = response.Data;
-        } else {
-            Swal.fire('Error', response.Message || 'Error al cargar los usuarios', 'error');
-        }
-        this.spinnerService.hide();
-        this.filteredusuarios.paginator = this.paginator; // Reasigna el paginador
-    });
+  this.spinnerService.show(); 
+  this.usuarioService.getAllUsuarios().subscribe(response => {
+    if (response.Success) {
+      // fuerza IdEmpleado a number
+      this.usuarios = response.Data.map((u: any) => ({
+        ...u,
+        IdEmpleado: u.IdEmpleado != null ? Number(u.IdEmpleado) : null
+      }));
+      this.filteredusuarios.data = this.usuarios;
+    } else {
+      Swal.fire('Error', response.Message || 'Error al cargar los usuarios', 'error');
+    }
+    this.spinnerService.hide();
+    this.filteredusuarios.paginator = this.paginator;
+  });
 }
-  cargarEmpleados(): void {
-    this.spinnerService.show();   
-    this.empleadoService.getAllEmpleados().subscribe(response => {
-      if (response.Success) {
-        this.listEmpleado = response.Data;
-        this.empleadosFiltrados = this.listEmpleado;
-        this.spinnerService.hide();
+
+cargarEmpleados(): void {
+  this.spinnerService.show();   
+  this.empleadoService.getAllEmpleados().subscribe(response => {
+    if (response.Success) {
+      // fuerza IdEmpleado a number
+      this.listEmpleado = response.Data.map((e: any) => ({
+        ...e,
+        IdEmpleado: Number(e.IdEmpleado)
+      }));
+      this.empleadosFiltrados = this.listEmpleado;
+
+      // si ya hay usuario cargado en edición, alinea el tipo
+      if (this.usuario?.IdEmpleado != null) {
+        this.usuario.IdEmpleado = Number(this.usuario.IdEmpleado);
+      }
+      this.spinnerService.hide();
     } else {
       this.spinnerService.hide();
-        Swal.fire('Error', response.Message || 'Error al cargar los empleados', 'error');
+      Swal.fire('Error', response.Message || 'Error al cargar los empleados', 'error');
     }
-    });
-  }
+  });
+}
+onInputChange(valor: string) {
+  this.filtrarEmpleados(valor);
 
-  onInputChange(valor: string) {
-    this.filtrarEmpleados(valor);
-
-    // Verificar si el valor coincide con un empleado exacto.
-    const coincidenciaExacta = this.listEmpleado.find(
-      empleado => empleado.Nombre.toLowerCase() === valor.toLowerCase()
-    );
-    if (!coincidenciaExacta) {
-      this.usuario.Empleado = null;
-    }
+  if (!valor?.trim()) {
+    this.usuario.IdEmpleado = null;
   }
+}
 
   filtrarEmpleados(valor: string) {
     const filtro = valor.toLowerCase();
@@ -103,13 +110,18 @@ export class UsuariosMantenimientoComponent implements OnInit {
     );
   }
 
-  onOptionSelected(empleado: any) {
-    this.usuario.Empleado = empleado;
-  }
-  displayEmpleado(empleado: any): string {
-    return empleado ? empleado.Nombre : '';
-  }
+  // onOptionSelected(empleado: any) {
+  //   this.usuario.NombreEmpleado = empleado;
+  //   this.usuario.IdEmpleado = empleado;
+  // }
 
+  displayEmpleado = (value: number | Empleado | null): string => {
+    if (value == null) return '';
+    const emp = typeof value === 'number'
+      ? this.listEmpleado.find(e => e.IdEmpleado === value)
+      : value;
+    return emp ? emp.Nombre : '';
+  };
    cargarNivelUsuario(): void {
       this.spinnerService.show();   
       this.nivelUsuarioService.getAllNivel_Usuario().subscribe(response => {
@@ -136,9 +148,9 @@ export class UsuariosMantenimientoComponent implements OnInit {
   applyFilter(): void {
     const filterValue = this.filtrousuario.toLowerCase();
     this.filteredusuarios.data = this.usuarios.filter(usuario =>
-      usuario.Username.toLowerCase().includes(filterValue) ||
-      usuario.Nivel_Usuario.Descripcion.toLowerCase().includes(filterValue) ||
-      usuario.Empleado.Nombre.toLowerCase().includes(filterValue)
+      usuario.NombreUsuario.toLowerCase().includes(filterValue) ||
+      usuario.NivelDescripcion.toLowerCase().includes(filterValue) ||
+      usuario.NombreEmpleado.toLowerCase().includes(filterValue)
     );
   }
 
@@ -154,10 +166,6 @@ export class UsuariosMantenimientoComponent implements OnInit {
     if (this.usuarioForm.invalid) {
         this.markFormTouchedAndDirty(this.usuarioForm);
         return;
-    }
-
-    if (this.usuario.Password) {
-      this.usuario.ClaveE = encryptPassword(this.usuario.Password);
     }
 
     if (this.usuario.IdUsuario) {
@@ -189,7 +197,7 @@ export class UsuariosMantenimientoComponent implements OnInit {
 
 
 onEdit(usuario: Usuario): void {
-  this.usuario = { ...usuario};
+   this.usuario = { ...usuario, IdEmpleado: usuario.IdEmpleado != null ? Number(usuario.IdEmpleado) : null };
   this.showForm = true; // Mostrar formulario al editar
 }
 

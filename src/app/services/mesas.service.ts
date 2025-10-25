@@ -7,31 +7,48 @@ import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { PedidoMesaDTO } from '../interfaces/pedidomesaDTO.interface';
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class MesasService {
+  private basePathMesas = environment.apiUrl + '/mesa';
 
-    private basePathMesas = environment.apiUrl + '/mesa';
- 
-    constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) { }
 
-    GetAllMesas(): Observable<Mesas[]> {
-        return this.http.get<Mesas[]>(this.basePathMesas + '/listar');
-    }
 
-    GetMesa(idMesa: string): Observable<Mesas> {
-        return this.http.get<Mesas>(this.basePathMesas + '/' + idMesa);
-    }
+  createMesa(mesa: Mesas): Observable<ApiResponse<Mesas>> {
+    return this.http.post<ApiResponse<Mesas>>(this.basePathMesas, mesa);
+  }
 
-    CambiarMesa(idMesaOrigen: string, idMesaDestino: string): Observable<ApiResponse<boolean>> {
-        return this.http.put<ApiResponse<boolean>>(`${this.basePathMesas}/CambiarMesa/${idMesaOrigen}/${idMesaDestino}`,{});
-    }
+  updateMesa(mesa: Mesas): Observable<ApiResponse<Mesas>> {
+    // asumo que mesa.IdMesa viene seteado:
+    return this.http.put<ApiResponse<Mesas>>(`${this.basePathMesas}/${mesa.IdMesa}`, mesa);
+  } 
 
-    UnirMesa(idMesaOrigen: string, idMesaDestino: string, idUsuario: number): Observable<ApiResponse<boolean>> {
-        return this.http.put<ApiResponse<boolean>>(`${this.basePathMesas}/UnirMesa/${idMesaOrigen}/${idMesaDestino}/${idUsuario}`,{});
-    }
+  deleteMesa(id: number): Observable<ApiResponse<boolean>> {
+    return this.http.delete<ApiResponse<boolean>>(`${this.basePathMesas}/${id}`);
+  }
 
-    ImprimirPrecuenta(idMesa: string): Observable<any[]> {
-        return this.http.get<any[]>('/api/pedido/imprimirprecuenta/' + idMesa);
-    }
+  GetAllMesasConPedidos(): Observable<ApiResponse<Mesas[]>> {
+    return this.http.get<ApiResponse<Mesas[]>>(this.basePathMesas + '/listar');
+  }
+
+  GetAllMesas(): Observable<ApiResponse<Mesas[]>> {
+    return this.http.get<ApiResponse<Mesas[]>>(this.basePathMesas);
+  }
+
+  GetMesa(idMesa: number): Observable<Mesas> {
+    return this.http.get<Mesas>(this.basePathMesas + '/' + idMesa);
+  }
+
+  CambiarMesa(idMesaOrigen: number, idMesaDestino: number): Observable<ApiResponse<boolean>> {
+    return this.http.put<ApiResponse<boolean>>(`${this.basePathMesas}/CambiarMesa/${idMesaOrigen}/${idMesaDestino}`, {});
+  }
+
+  UnirMesa(idMesaOrigen: number, idMesaDestino: number, idUsuario: number): Observable<ApiResponse<boolean>> {
+    return this.http.put<ApiResponse<boolean>>(`${this.basePathMesas}/UnirMesa/${idMesaOrigen}/${idMesaDestino}/${idUsuario}`, {});
+  }
+
+  ImprimirPrecuenta(idMesa: number): Observable<any[]> {
+    return this.http.get<any[]>('/api/pedido/imprimirprecuenta/' + idMesa);
+  }
 }

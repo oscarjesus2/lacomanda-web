@@ -4,9 +4,9 @@ export class Mesas {
     public Descripcion: string;
     public DescripcionPC: any;
     public Divide: number;
-    public IdAmbiente: string;
+    public IdAmbiente: number;
     public IdCompu: number;
-    public IdMesa: string;
+    public IdMesa: number;
     public IdTaxista: string;
     public Mesa: any;
     public NroPersonas: number;

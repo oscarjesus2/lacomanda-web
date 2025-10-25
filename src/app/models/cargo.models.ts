@@ -1,6 +1,6 @@
 export class Cargo {
 
-   public IdCargo: string;
+   public IdCargo: number;
    public Descripcion: string;
    
    constructor(init?: Partial<Cargo>) {

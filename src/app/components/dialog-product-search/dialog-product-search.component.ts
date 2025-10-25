@@ -1,6 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Product } from 'src/app/models/product.models';
+import { Producto } from 'src/app/models/product.models';
 
 @Component({
   selector: 'app-dialog-product-search',
@@ -9,10 +9,10 @@ import { Product } from 'src/app/models/product.models';
 })
 export class DialogProductSearchComponent {
   filterText: string = '';
-  filteredProducts: Product[] = [];
-  listProducts: Product[] = [];
+  filteredProducts: Producto[] = [];
+  listProducts: Producto[] = [];
   displayedColumns: string[] = ['name', 'price', 'family'];
-  selectedProduct: Product | null = null; // Variable para almacenar el producto seleccionado
+  selectedProduct: Producto | null = null; // Variable para almacenar el producto seleccionado
 
   keyRows = [
     ['ESC', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
@@ -23,7 +23,7 @@ export class DialogProductSearchComponent {
 
   constructor(
     public dialogRef: MatDialogRef<DialogProductSearchComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { listProducts: Product[] }
+    @Inject(MAT_DIALOG_DATA) public data: { listProducts: Producto[] }
   ) {
     this.listProducts = data.listProducts;
     this.filteredProducts = [...this.listProducts]; // Inicializar la lista filtrada
@@ -49,7 +49,7 @@ export class DialogProductSearchComponent {
     this.filterProducts(); // Llamamos a la función para filtrar productos
   }
 
-  selectProduct(product: Product) {
+  selectProduct(product: Producto) {
     this.selectedProduct = product; // Asignamos el producto seleccionado
   }
 

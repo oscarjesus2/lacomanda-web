@@ -1,6 +1,7 @@
 export class Observacion{
-    public IdObservacion: string;
+    public IdObservacion: number;
     public Descripcion: string;
-    public Tipo: string;
+    public Tipo: number;
     public Activo: number;
+    public Posicion: number;
 }

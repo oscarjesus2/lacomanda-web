@@ -1,0 +1,90 @@
+<button mat-icon-button class="close-button" (click)="salir()"><mat-icon>close</mat-icon></button>
+
+<div class="empleado-mantenimiento">
+  <h2>Mantenimiento de Colores</h2>
+
+  <!-- LISTA -->
+  <div *ngIf="!showForm">
+    <button mat-raised-button color="primary" (click)="nuevo()">Nuevo Color</button>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Buscar</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Descripción o RGB">
+    </mat-form-field>
+
+    <mat-table [dataSource]="filtered" class="mat-elevation-z8">
+      <ng-container matColumnDef="preview">
+        <mat-header-cell *matHeaderCellDef> Color </mat-header-cell>
+        <mat-cell *matCellDef="let r">
+          <span class="chip" [ngStyle]="swatchStyle(r)"></span>
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="descripcion">
+        <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+        <mat-cell *matCellDef="let r">{{ r.Descripcion }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="rgb">
+        <mat-header-cell *matHeaderCellDef> RGB </mat-header-cell>
+        <mat-cell *matCellDef="let r">{{ r.Rgb1 }}, {{ r.Rgb2 }}, {{ r.Rgb3 }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-cell *matCellDef="let r">
+          <button mat-icon-button color="primary" (click)="onEdit(r)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button color="warn" (click)="onDelete(r.IdColor)"><mat-icon>delete</mat-icon></button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </div>
+
+  <!-- FORM -->
+  <form *ngIf="showForm" #form="ngForm" (ngSubmit)="onSubmit()">
+    <div class="palette-row">
+      <div class="preview" [ngStyle]="previewStyle()"></div>
+      <div class="picker">
+        <label>Elegir color</label>
+        <input type="color" [(ngModel)]="hex" name="hex" (change)="onHexChange()">
+      </div>
+    </div>
+
+    <div class="swatches">
+      <button type="button" class="swatch"
+              *ngFor="let h of presetPalette"
+              [style.background-color]="h"
+              (click)="selectHex(h)">
+      </button>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Descripción</mat-label>
+        <input matInput [(ngModel)]="c.Descripcion" name="descripcion" required #descripcion="ngModel">
+        <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">Requerido.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>R</mat-label>
+        <input matInput type="number" min="0" max="255" [(ngModel)]="c.Rgb1" (input)="onRgbManualChange()" name="r" required>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>G</mat-label>
+        <input matInput type="number" min="0" max="255" [(ngModel)]="c.Rgb2" (input)="onRgbManualChange()" name="g" required>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>B</mat-label>
+        <input matInput type="number" min="0" max="255" [(ngModel)]="c.Rgb3" (input)="onRgbManualChange()" name="b" required>
+      </mat-form-field>
+    </div>
+
+    <button mat-raised-button color="primary">{{ c.IdColor ? 'Actualizar' : 'Guardar' }}</button>
+    <button mat-raised-button color="warn" type="button" (click)="cancelar()">Cancelar</button>
+  </form>
+</div>

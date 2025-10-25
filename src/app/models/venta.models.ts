@@ -4,16 +4,16 @@ import { Cliente } from "./cliente.models";
 export class Venta {
 
     IdVenta: number;
-    IdTipoDocumento: string;
+    IdTipoDocumento: number;
     Beneficiario: string;
     NumDocumento: number;
     Serie: string;
-    IdCliente: string;
+    IdCliente: number;
     IdPedido: number;
     NroCuenta: number;
-    IdCaja: string;
+    IdCaja: number;
     Impuesto1: number;
-    IdEmpleado: string;
+    IdEmpleado: number;
     Total: number;
     Importe: number;
     Dscto: number;

@@ -18,12 +18,12 @@
         <!-- RUC Column -->
         <ng-container matColumnDef="username">
           <mat-header-cell *matHeaderCellDef> Nombre de Usuario</mat-header-cell>
-          <mat-cell *matCellDef="let usuario"> {{usuario.Username}} </mat-cell>
+          <mat-cell *matCellDef="let usuario"> {{usuario.NombreUsuario}} </mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="niveldescripcion">
           <mat-header-cell *matHeaderCellDef> Nivel </mat-header-cell>
-          <mat-cell *matCellDef="let usuario"> {{usuario.Nivel_Usuario.Descripcion}} </mat-cell>
+          <mat-cell *matCellDef="let usuario"> {{usuario.NivelDescripcion}} </mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="activo">
@@ -57,7 +57,7 @@
       <div class="form-row">
         <mat-form-field appearance="fill">
           <mat-label>Nombre de Usuario</mat-label>
-          <input matInput [(ngModel)]="usuario.Username" name="username" required #username="ngModel">
+          <input matInput [(ngModel)]="usuario.NombreUsuario" name="username" required #username="ngModel">
           <mat-error *ngIf="username.invalid && (username.dirty || username.touched)">
             El nombre de Usuario es requerido.
           </mat-error>
@@ -65,7 +65,7 @@
 
         <mat-form-field appearance="fill">
           <mat-label>Password</mat-label>
-          <input matInput [type]="hide() ? 'password' : 'text'" [(ngModel)]="usuario.Password" name="password"
+          <input matInput [type]="hide() ? 'password' : 'text'" [(ngModel)]="usuario.Contrasenia" name="password"
             required #password="ngModel">
           <button mat-icon-button matSuffix type="button" (click)="clickEvent($event)" [attr.aria-label]="'Hide password'"
             [attr.aria-pressed]="hide()">
@@ -95,40 +95,25 @@
             type="text" 
             matInput 
             [matAutocomplete]="auto" 
-            [(ngModel)]="usuario.Empleado" 
-            [ngModelOptions]="{standalone: true}" 
+            [(ngModel)]="usuario.IdEmpleado" 
             (input)="onInputChange($event.target.value)"
-            [value]="usuario.Empleado?.Nombre || ''" 
             required
             name="empleado">
           <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayEmpleado">
-            <mat-option *ngFor="let item of empleadosFiltrados" [value]="item">
+            <mat-option *ngFor="let item of empleadosFiltrados" [value]="item.IdEmpleado">
               {{ item.Nombre }}
             </mat-option>
           </mat-autocomplete>
-          <mat-error *ngIf="!usuario.Empleado">
+          <mat-error *ngIf="!usuario.IdEmpleado">
             Seleccione un empleado válido.
           </mat-error>
         </mat-form-field>
 
-        <!-- <mat-form-field class="form-field" appearance="fill">
-          <mat-label>Empleado</mat-label>
-          <mat-select [(ngModel)]="usuario.Empleado" name="empleado" required #empleado="ngModel"
-            [compareWith]="compareEmpleado">
-            <mat-option *ngFor="let item of listEmpleado" [value]="item">
-              {{item.Nombre}}
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="empleado.invalid && (empleado.dirty || empleado.touched)">
-            Seleccione un empleado.
-          </mat-error>
-        </mat-form-field> -->
-
         <mat-form-field appearance="fill">
           <mat-label>Nivel</mat-label>
-          <mat-select [(ngModel)]="usuario.Nivel_Usuario" name="nivelusuario" required #nivelusuario="ngModel"
+          <mat-select [(ngModel)]="usuario.IdNivel" name="nivelusuario" required #nivelusuario="ngModel"
             [compareWith]="compareNivel">
-            <mat-option *ngFor="let tipo of listNivelUsuario" [value]="tipo">
+            <mat-option *ngFor="let tipo of listNivelUsuario" [value]="tipo.IdNivel">
               {{tipo.Descripcion}}
             </mat-option>
           </mat-select>
@@ -139,7 +124,7 @@
       </div>
 
       <button mat-raised-button color="primary">
-        {{ usuario.Idusuario ? 'Actualizar' : 'Guardar' }}
+        {{ usuario.IdUsuario ? 'Actualizar' : 'Guardar' }}
       </button>
       <button mat-raised-button color="warn" (click)="cancelar()">Cancelar</button>
     </form>

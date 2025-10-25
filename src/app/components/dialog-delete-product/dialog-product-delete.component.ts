@@ -21,13 +21,13 @@ export class DialogDeleteProductComponent {
         public dialogRef: MatDialogRef<DialogDeleteProductComponent>,
         @Inject(MAT_DIALOG_DATA) public data: DialogData, public authService: AuthServiceService,
         public storageService: StorageService, private spinnerService: NgxSpinnerService) {
-        if (this.storageService.getCurrentSession().User.IdNivel == '001') {
+        if (this.storageService.getCurrentSession().User.IdNivel == 1) {
             data.motivoAnulacion = 'Anulacion directa por el Administrador';
         }
     }
 
     public acepta(value: Boolean): void {
-        var admin: string = '001';
+        var admin: number = 1;
         if (value) {
             if (this.storageService.getCurrentSession().User.IdNivel === admin) {
                 this.data.confirmacion = true;

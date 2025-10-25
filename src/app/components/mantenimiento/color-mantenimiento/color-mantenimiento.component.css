@@ -1,0 +1,27 @@
+/* Reusa tu estilo base (empleado-mantenimiento...) */
+.close-button{position:absolute;top:0;right:0;z-index:1000;background:transparent;border:none;cursor:pointer}
+.close-button mat-icon{font-size:24px;color:#757575}
+
+.empleado-mantenimiento{max-width:900px;margin:40px auto;padding:20px;background:#f9f9f9;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,.1);font-family:'Roboto',sans-serif}
+.empleado-mantenimiento h2{text-align:center;font-size:2rem;margin-bottom:30px;color:#3f51b5}
+
+.form-row{display:flex;gap:20px;margin-bottom:20px}
+.form-field{flex:1}
+
+.full-width{width:100%;margin-bottom:20px}
+mat-table{width:100%;margin-top:20px;background:#fff;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+mat-header-cell{font-weight:600;color:#3f51b5;padding:12px;text-align:left}
+mat-cell{padding:12px;text-align:left}
+mat-icon-button{margin-right:8px;color:#3f51b5;transition:color .3s}
+mat-icon-button:hover{color:#303f9f}
+
+.chip{display:inline-block;width:28px;height:28px;border-radius:6px;border:1px solid #e0e0e0}
+.preview{width:120px;height:60px;border-radius:8px;margin-right:16px}
+.palette-row{display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.picker input[type="color"]{width:60px;height:36px;border:none;background:transparent;padding:0}
+
+.swatches{display:grid;grid-template-columns:repeat(10, 28px);gap:8px;margin:12px 0}
+.swatch{width:28px;height:28px;border-radius:6px;border:1px solid #e0e0e0;cursor:pointer}
+.swatch:focus{outline:2px solid #3f51b5}
+
+.mat-raised-button.mat-warn{background:#e53935}.mat-raised-button.mat-warn:hover{background:#d32f2f}

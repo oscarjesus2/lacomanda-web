@@ -6,7 +6,7 @@ export class Empleado {
     public Direccion: any;
     public Dni: any;
     public Cargo: Cargo;
-    public IdEmpleado: string;
+    public IdEmpleado: number;
     public Nombre: string;
     public Telefono: any;
     public IdSocioNegocio: number;

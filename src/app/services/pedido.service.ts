@@ -29,7 +29,7 @@ export class PedidoService {
         return this.http.get<ApiResponse<PedidoMesaDTO[]>>(`${this.basePath}/custom/${idPedido}/${nroCuenta}`);
     }
 
-    FindPedidoByIdMesa(idMesa: string): Observable<ApiResponse<PedidoMesaDTO[]>> {
+    FindPedidoByIdMesa(idMesa: number): Observable<ApiResponse<PedidoMesaDTO[]>> {
         return this.http.get<ApiResponse<PedidoMesaDTO[]>>(this.basePath + '/custom/mesa/' + idMesa);
     }
 
@@ -78,7 +78,7 @@ export class PedidoService {
         return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + '/AnularProductoYComplemento', pedido);
     }
 
-    AnularPedido(idMesa: string, usuAnula: number, motivoAnula: string, ip: string): Observable<ApiResponse<ImpresionDTO[]>> {
+    AnularPedido(idMesa: number, usuAnula: number, motivoAnula: string, ip: string): Observable<ApiResponse<ImpresionDTO[]>> {
         return this.http.post<ApiResponse<ImpresionDTO[]>>(`${this.basePath}/AnularPedido/${idMesa}/${usuAnula}/${motivoAnula}/${ip}`, {});
     }
 

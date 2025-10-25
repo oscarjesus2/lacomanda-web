@@ -10,7 +10,7 @@
         <mat-form-field appearance="outline" class="h1-field">
           <mat-label>Tipo Documento</mat-label>
           <mat-select formControlName="idTipoDoc" name="tipoDocumento" (selectionChange)="onTipoDocumentoChange()"  required>
-            <mat-option *ngFor="let item of listTipoDocumento" [value]="item.IdTipoDoc">
+            <mat-option *ngFor="let item of listTipoDocumento" [value]="item.IdTipoDocumento">
               {{item.Descripcion}}
             </mat-option>
           </mat-select>

@@ -1,9 +1,9 @@
 import { PedidoComplemento } from "./pedidocomplemento.models";
-import { Product } from "./product.models";
+import { Producto } from "./product.models";
 
 export class PedidoDet {
 
-    public Producto: Product;
+    public Producto: Producto;
     public PedidoComplemento: PedidoComplemento[];
     public IdPedido: number;
     public Item: number;

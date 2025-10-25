@@ -1,6 +1,6 @@
 
 export interface AnularProductoYComplementoDTO {
-     IdMesa: string;
+     IdMesa: number;
      NroCuenta: number;
      UsuAnula: number;
      MotivoAnula: string;

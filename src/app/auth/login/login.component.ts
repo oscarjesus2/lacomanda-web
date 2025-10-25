@@ -13,6 +13,9 @@ import { LoginRequest } from 'src/app/services/auth/loginRequest';
 import { version } from 'src/environments/version';
 import Swal from 'sweetalert2';
 import { CookieService } from 'ngx-cookie-service';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { Configuracion } from 'src/app/models/configuracion.models';
+import { ConfiguracionInicialComponent } from 'src/app/components/configuracion-inicial/configuracion-inicial/configuracion-inicial.component';
 
 @Component({
   selector: 'app-login',
@@ -46,7 +49,8 @@ export class LoginComponent implements OnInit {
     private storageService: StorageService,
     private tenantService: TenantService,
     private notificationService: NotificationService,
-    private cookieService: CookieService
+    private cookieService: CookieService,
+    private configService: ConfiguracionService,
   ) {}
 
   deferredPrompt: any;
@@ -59,6 +63,53 @@ export class LoginComponent implements OnInit {
     e.preventDefault();
     this.deferredPrompt = e;
     this.showInstallButton = true; // Mostrar el botón de instalación
+  }
+
+  private isConfigValid(cfg: Configuracion | null | undefined): boolean {
+    if (!cfg) return false;
+    return !!cfg.RazonSocial && !!cfg.NombreComercial && !!cfg.Direccion &&
+          !!cfg.Telefono && !!cfg.NumeroIdentificacion && cfg.IdTipoIdentidad !== null && cfg.IdTipoIdentidad !== undefined;
+  }
+
+  private ensureConfigThenNavigate(targetUrl: string): void {
+    this.spinnerService.show();
+    this.configService.get().subscribe({
+      next: (cfg) => {
+        if (this.isConfigValid(cfg)) {
+          this.spinnerService.hide();
+          this.router.navigateByUrl(targetUrl);
+        } else {
+          this.spinnerService.hide();
+          const dialogRef = this.dialog.open(ConfiguracionInicialComponent, {
+            width: '920px',
+            disableClose: true, // obliga a completar o cerrar sesión
+            data: { /* puedes pasar cfg si quieres */ }
+          });
+
+          dialogRef.afterClosed().subscribe((result) => {
+            // convenciones: true/'saved' => guardó; falsy => canceló/cerró
+            if (result === true || result === 'saved') {
+              this.router.navigateByUrl(targetUrl);
+            } else {
+              this.logoutAndReturnToLogin();
+            }
+          });
+        }
+      },
+      error: () => {
+        this.spinnerService.hide();
+        // Si falla la consulta de config, mejor no dejar entrar
+        this.logoutAndReturnToLogin();
+      }
+    });
+  }
+
+  private logoutAndReturnToLogin(): void {
+    try {
+      this.storageService.logout?.();
+    } catch {}
+    this.cookieService.delete('clientUUID', this.CurrentIP);
+    this.router.navigateByUrl('/login');
   }
 
   ngOnInit(): void {
@@ -77,9 +128,9 @@ export class LoginComponent implements OnInit {
     const currentSession = this.storageService.getCurrentSession();
     if (currentSession) {
       const currentUser = currentSession.User;
-      if (currentUser.IdNivel === '001') {
+      if (currentUser.IdNivel === 1) {
         this.router.navigateByUrl('/dashboard');
-      } else if (currentUser.IdNivel === '002' || currentUser.IdNivel === '003') {
+      } else if (currentUser.IdNivel === 2 || currentUser.IdNivel === 3) {
         this.router.navigateByUrl('/ventas');
       }
     }
@@ -206,19 +257,18 @@ export class LoginComponent implements OnInit {
       Ip: this.CurrentIP || '-',   
     };
 
-    console.log('CurrentIP', this.CurrentIP);
     this.loginService.login(loginRequest, tenant.TenantId).subscribe({
       next: (userData) => {
         console.log('Login correcto');
         const session: Session = new Session(userData.Token, userData, this.CurrentIP, tenant.TenantId, tenant.Sucursal);
         this.storageService.setCurrentSession(session);
-        if (userData.TipoCompu == 0 && this.storageService.getCurrentUser().IdNivel == "001") {
+        if (userData.TipoCompu == 0 && this.storageService.getCurrentUser().IdNivel == 1) {
           this.identifierExists = false;
           this.cookieService.delete('clientUUID', this.CurrentIP);
-            this.router.navigateByUrl('/dashboard');
-        } else if (userData.TipoCompu == 1) {
-            this.router.navigateByUrl('/caja');
+          this.ensureConfigThenNavigate('/dashboard');
         } else if (userData.TipoCompu == 2) {
+            this.router.navigateByUrl('/caja');
+        } else if (userData.TipoCompu == 1) {
             this.router.navigateByUrl('/mozo');
         } else if (userData.TipoCompu == 3) {
             this.router.navigateByUrl('/dashboard');

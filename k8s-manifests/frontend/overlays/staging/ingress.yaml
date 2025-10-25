@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "frontend-staging-ip"  # ⚠️ nombre de tu IP reservada
+    networking.gke.io/managed-certificates: "frontend-staging-cert"
+    networking.gke.io/frontend-config: "frontend-frontendconfig"
+spec:
+  rules:
+    - host: test.jobbusiness.pe  # ⚠️ dominio de staging
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

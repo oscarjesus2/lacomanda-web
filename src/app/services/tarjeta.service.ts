@@ -9,15 +9,15 @@ import { environment } from 'src/environments/environment';
   providedIn: 'root'
 })
 export class TarjetaService {
-    private basePath = environment.apiUrl + '/tarjeta/';
+    private basePath = environment.apiUrl + '/tarjeta';
 
   constructor(private http: HttpClient) {}
 
   getTarjeta(): Observable<Tarjeta[]> {
-    return this.http.get<[Tarjeta]>(this.basePath + 'listar');
+    return this.http.get<[Tarjeta]>(this.basePath);
   }
 
   getTarjeta_SocioNegocio(idPedidoCobrar: number, nroCuentaCobrar: number): Observable<Tarjeta[]> {
-    return this.http.get<[Tarjeta]>(this.basePath + 'listar_x_socionegocio/' +idPedidoCobrar + '/' + nroCuentaCobrar);
+    return this.http.get<[Tarjeta]>(this.basePath + '/listar_x_socionegocio/' +idPedidoCobrar + '/' + nroCuentaCobrar);
   }
 }

@@ -5,7 +5,12 @@
   height: 100vh;
   padding: 10px;
 }
-
+.admin-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1000;
+}
 .column-left, .column-right {
   border: 1px solid #ccc;
   padding: 10px;

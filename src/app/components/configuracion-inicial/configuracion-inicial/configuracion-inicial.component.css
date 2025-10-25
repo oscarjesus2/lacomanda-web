@@ -1,0 +1,42 @@
+.config-wrapper{
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 8px 12px;
+  height: 100vh;              /* ocupa alto de la ventana */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Título pegado arriba */
+.config-wrapper > h2{
+  color:#3f51b5;
+  text-align:center;
+  margin: 8px 0 12px 0;
+  flex: 0 0 auto;
+}
+
+.config-wrapper form{
+  flex: 1 1 auto;
+  min-height: 0;              /* importante para que el scroll funcione */
+  overflow-y: auto;
+  padding-bottom: 76px;       /* espacio para el footer de acciones */
+}
+
+h2{color:#3f51b5;text-align:center;margin-bottom:24px}
+.card{
+  background:#f9f9f9;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+}
+
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.full{grid-column:1 / -1}
+.toggles{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+.nro-precuentas{width:180px}
+.nro-precuentas.disabled{opacity:.6}
+.actions{display:flex;justify-content:flex-end}
+.hint{font-size:.85rem;color:#666;margin-top:8px}
+@media (max-width: 800px){.grid2{grid-template-columns:1fr}}

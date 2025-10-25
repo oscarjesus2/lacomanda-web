@@ -1,0 +1,94 @@
+<button mat-icon-button class="close-button" (click)="salir()">
+  <mat-icon>close</mat-icon>
+</button>
+
+<div class="empleado-mantenimiento">
+  <h2>Mantenimiento de Estaciones</h2>
+
+  <!-- Lista -->
+  <div *ngIf="!showForm" class="empleados-list">
+    <button mat-raised-button color="primary" (click)="nuevo()">Nueva Estación</button>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Buscar</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Buscar por nombre o IdentificadorUnico">
+    </mat-form-field>
+
+    <mat-table [dataSource]="filteredEstaciones" class="mat-elevation-z8">
+      <ng-container matColumnDef="descripcion">
+        <mat-header-cell *matHeaderCellDef>Descripción</mat-header-cell>
+        <mat-cell *matCellDef="let r">{{ r.Descripcion }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="identificadorUnico">
+        <mat-header-cell *matHeaderCellDef>Identificador Único</mat-header-cell>
+        <mat-cell *matCellDef="let r">{{ r.IdentificadorUnico }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="caja">
+        <mat-header-cell *matHeaderCellDef>Caja</mat-header-cell>
+        <mat-cell *matCellDef="let r">
+           {{ cajaMap[r.IdCaja] || r.IdCaja }}
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="tipo">
+        <mat-header-cell *matHeaderCellDef>Tipo</mat-header-cell>
+        <mat-cell *matCellDef="let r">
+          {{ tipoMap[r.Tipo] || r.Tipo }}
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+        <mat-cell *matCellDef="let r">
+          <button mat-icon-button color="primary" (click)="onEdit(r)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="onDelete(r.IdEstacion)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+
+    <mat-paginator [length]="estaciones.length" [pageSize]="5" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
+  </div>
+
+  <!-- Form -->
+  <form *ngIf="showForm" #estacionForm="ngForm" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Tipo Caja</mat-label>
+        <mat-select [(ngModel)]="estacion.Tipo" name="tipo" required>
+          <mat-option *ngFor="let t of tipos" [value]="t.value">{{ t.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Caja Asignada</mat-label>
+        <mat-select [(ngModel)]="estacion.IdCaja" name="idCaja" required>
+          <mat-option *ngFor="let c of listCajas" [value]="c.IdCaja">{{ c.Descripcion }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Descripción</mat-label>
+        <input matInput [(ngModel)]="estacion.Descripcion" name="descripcion" required>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>IdentificadorUnico</mat-label>
+        <input matInput [(ngModel)]="estacion.IdentificadorUnico" name="hostname" required>
+      </mat-form-field>
+    </div>
+
+    <button mat-raised-button color="primary">{{ estacion.IdEstacion ? 'Actualizar' : 'Guardar' }}</button>
+    <button mat-raised-button color="warn" type="button" (click)="cancelar()">Cancelar</button>
+  </form>
+</div>

@@ -1,13 +1,14 @@
-import { TipoDocCliente } from "./tipodoccliente.models";
+import { TipoIdentidad } from "./tipoIdentidad.models";
 
 export class Cliente {
     public IdCliente: string;
     public RazonSocial: string;
     public Direccion: string;
-    public Ruc: string;
+    public NumeroIdentificacion: string;
     public Referencia: string;
     public Correo: string;
-    public TipoDocCliente: TipoDocCliente;
+    public IdTipoIdentidad: string;
+    public TipoIdentidad: TipoIdentidad;
     public Telefono: string;
     public DireccionDelivery: string;
     public ReferenciaDelivery: string;

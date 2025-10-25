@@ -3,8 +3,8 @@ import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dial
 import { MatTableDataSource } from '@angular/material/table';
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
 import { PedidoDet } from 'src/app/models/pedidodet.models';
-import { Product } from 'src/app/models/product.models';
-import { ProductService } from 'src/app/services/product.service';
+import { Producto } from 'src/app/models/product.models';
+import { ProductoService } from 'src/app/services/product.service';
 import Swal from 'sweetalert2';
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
 import { DialogDeleteProductComponent } from '../dialog-delete-product/dialog-product-delete.component';
@@ -23,8 +23,8 @@ export class DialogComplementosComponent {
   totalComplementos: number = 0;
   totalQty: number = 0;
 
-  listProducts: Product[];
-  listProductosComplementos: Product[];
+  listProducts: Producto[];
+  listProductosComplementos: Producto[];
   pedidodet: PedidoDet;
   cantidadComplementos: number;
   total: number = 0;
@@ -41,7 +41,7 @@ export class DialogComplementosComponent {
   {
     this.pedidodet = data.pedidodet;
     this.listProducts = data.listProducts;
-    this.listProductosComplementos = this.listProducts.filter(x=> x.Tipo === 3 && x.Activo === 1).sort(p => p.PosicionComplemento);
+    this.listProductosComplementos = this.listProducts.filter(x=> x.Tipo === 3 && x.Activo === true).sort(p => p.PosicionComplemento);
     this.cantidadComplementos =  this.pedidodet.Producto.Qty;
     this.total = this.pedidodet.Cantidad * this.cantidadComplementos;
     if (data.pedidodet.PedidoComplemento.length){
@@ -73,7 +73,7 @@ calcularTotal(): void {
 }
 
 
-  selectButton(btn: Product) {
+  selectButton(btn: Producto) {
     // Lógica para manejar la selección de botones
 
     if (this.validarCantTotal(btn.FactorComplemento) == 0){
@@ -119,12 +119,12 @@ calcularTotal(): void {
      this.calcularTotal();
    }
 
-  public AgregarProducto(product: Product): void {
+  public AgregarProducto(product: Producto): void {
    var pedidoComplemento= new PedidoComplemento({
       IdPedido: this.pedidodet.IdPedido,
       ItemComple: 0,
       ItemRef: this.pedidodet.Item,
-      ProductoComplemento: new Product({
+      ProductoComplemento: new Producto({
         IdProducto: product.IdProducto,
         NombreCorto:product.NombreCorto,
         FactorComplemento: product.FactorComplemento

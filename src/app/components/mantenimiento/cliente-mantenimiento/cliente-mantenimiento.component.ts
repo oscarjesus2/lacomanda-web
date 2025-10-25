@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { ClienteService } from '../../../services/cliente.service';
 import { Cliente } from '../../../models/cliente.models';
-import { TipoDocCliente } from '../../../models/tipodoccliente.models';
+import { TipoIdentidad } from '../../../models/tipoIdentidad.models';
 import Swal from 'sweetalert2';
 import { MatDialogRef } from '@angular/material/dialog';
 import { TipoDocClienteService } from 'src/app/services/tipodoccliente.service';
@@ -23,7 +23,7 @@ export class ClienteMantenimientoComponent implements OnInit {
   clientes: Cliente[] = [];
   filteredClientes= new MatTableDataSource<Cliente>([]);
   filtroCliente: string = '';
-  tiposDocCliente: TipoDocCliente[] = [];
+  tiposDocCliente: TipoIdentidad[] = [];
   showForm: boolean = false; // Controla la visibilidad del formulario
   displayedColumns: string[] = ['ruc','razonSocial', 'direccion',  'correo', 'actions'];
   etiquetaCliente: string = '';
@@ -78,7 +78,7 @@ export class ClienteMantenimientoComponent implements OnInit {
     const filterValue = this.filtroCliente.toLowerCase();
     this.filteredClientes.data = this.clientes.filter(cliente =>
       cliente.RazonSocial.toLowerCase().includes(filterValue) ||
-      cliente.Ruc.toLowerCase().includes(filterValue) ||
+      cliente.NumeroIdentificacion.toLowerCase().includes(filterValue) ||
       cliente.Direccion.toLowerCase().includes(filterValue)
     );
   }
@@ -121,9 +121,9 @@ export class ClienteMantenimientoComponent implements OnInit {
 
 buscarCliente(): void {
 
-  const ruc = this.cliente.Ruc;
+  const ruc = this.cliente.NumeroIdentificacion;
 
-  if (this.cliente.TipoDocCliente.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc.length != 8) {
+  if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc.length != 8) {
     Swal.fire({
       title: 'Validación',
       text: `El DNI debe tener 8 caracteres.`,
@@ -131,7 +131,7 @@ buscarCliente(): void {
       confirmButtonText: 'OK'
     });
     return;
-  } else if (this.cliente.TipoDocCliente.IdTipoIdentidad === EnumTipoIdentidad.RUC && ruc.length != 11) {
+  } else if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.RUC && ruc.length != 11) {
     Swal.fire({
       title: 'Validación',
       text: `El RUC debe tener 11 caracteres.`,
@@ -139,15 +139,15 @@ buscarCliente(): void {
       confirmButtonText: 'OK'
     });
     return;
-  } else if (this.cliente.TipoDocCliente.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc == '00000001') {
+  } else if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc == '00000001') {
     return;
   }
 
-  this.clienteService.ServicioBuscarCliente(ruc, this.cliente.TipoDocCliente.IdTipoIdentidad).subscribe(
+  this.clienteService.ServicioBuscarCliente(ruc, this.cliente.TipoIdentidad.IdTipoIdentidad).subscribe(
     (clienteBuscar: any) => {
       if (clienteBuscar) {
         if (clienteBuscar.RazonSocial) {
-            this.cliente.Ruc = clienteBuscar.Ruc;
+            this.cliente.NumeroIdentificacion = clienteBuscar.Ruc;
             this.cliente.RazonSocial = clienteBuscar.RazonSocial;
             this.cliente.Direccion = clienteBuscar.Direccion;
             this.cliente.Correo = clienteBuscar.Correo;
@@ -159,7 +159,7 @@ buscarCliente(): void {
             confirmButtonText: 'OK'
           });
           this.cliente.IdCliente = '';
-          this.cliente.Ruc = '';
+          this.cliente.NumeroIdentificacion = '';
             this.cliente.RazonSocial = '';
             this.cliente.Direccion = '';
             this.cliente.Correo = '';
@@ -182,7 +182,7 @@ buscarCliente(): void {
     this.showForm = true; // Mostrar formulario al editar
   }
 
-  compareTiposDocCliente(tipo1: TipoDocCliente, tipo2: TipoDocCliente): boolean {
+  compareTiposDocCliente(tipo1: TipoIdentidad, tipo2: TipoIdentidad): boolean {
     return tipo1 && tipo2 ? tipo1.IdTipoIdentidad === tipo2.IdTipoIdentidad : tipo1 === tipo2;
 }
 

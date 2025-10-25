@@ -21,8 +21,8 @@ export class EntradaCab {
     TasaCambio: number;
     FechaPago?: Date; // Campo opcional
     Calculo?: number; // Campo opcional
-    IdCaja?: string; // Campo opcional
-    IdEmpleado?: string; // Campo opcional
+    IdCaja?: number; // Campo opcional
+    IdEmpleado?: number; // Campo opcional
     IdTurno?: number; // Campo opcional
     Estado: number;
     EstadoPago?: number; // Campo opcional

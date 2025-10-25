@@ -1,0 +1,62 @@
+<button mat-icon-button class="close-button" (click)="salir()"><mat-icon>close</mat-icon></button>
+
+<div class="empleado-mantenimiento">
+  <h2>Grupos de Productos</h2>
+
+  <!-- Lista -->
+  <div *ngIf="!showForm">
+    <button mat-raised-button color="primary" (click)="nuevo()">Nuevo Grupo</button>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Buscar</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Descripción, estado...">
+    </mat-form-field>
+
+    <mat-table [dataSource]="filtered" class="mat-elevation-z8">
+      <ng-container matColumnDef="descripcion">
+        <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+        <mat-cell *matCellDef="let r"> {{ r.Descripcion }} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="activo">
+        <mat-header-cell *matHeaderCellDef> Activo </mat-header-cell>
+        <mat-cell *matCellDef="let r"> {{ r.Activo ? 'Sí' : 'No' }} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-cell *matCellDef="let r">
+          <button mat-icon-button color="primary" (click)="onEdit(r)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button color="warn" (click)="onDelete(r.IdGrupo)"><mat-icon>delete</mat-icon></button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </div>
+
+  <!-- Form -->
+  <form *ngIf="showForm" #form="ngForm" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Descripción</mat-label>
+        <input matInput [(ngModel)]="grupo.Descripcion" name="descripcion" required #descripcion="ngModel">
+        <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">
+          La descripción es requerida.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Activo</mat-label>
+        <mat-select [(ngModel)]="grupo.Activo" name="activo" required>
+          <mat-option [value]="true">Sí</mat-option>
+          <mat-option [value]="false">No</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <button mat-raised-button color="primary">{{ grupo.IdGrupo ? 'Actualizar' : 'Guardar' }}</button>
+    <button mat-raised-button color="warn" type="button" (click)="cancelar()">Cancelar</button>
+  </form>
+</div>

@@ -5,13 +5,14 @@ import { MatPaginator } from '@angular/material/paginator';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { InformeContableInterface as InformeContableVentaInterface } from 'src/app/interfaces/ventas.interface';
 import { InformeContableCompra } from 'src/app/interfaces/compras.interface';
-import { TipoDocumento } from 'src/app/models/tipodocumento.models';
+import { TipoDocumentoPais } from 'src/app/models/tipodocumentopais.models';
 import { TipoDocumentoService } from 'src/app/services/tipodocumento.service';
 import { VentaService } from 'src/app/services/venta.service';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import { NgModel } from '@angular/forms';
 import { CompraService } from 'src/app/services/compra.service';
+import { TipoDocumentoPaisService } from 'src/app/services/tipo-documento-pais.service';
 
 @Component({
   selector: 'app-dialog-reportecontable',
@@ -21,8 +22,8 @@ import { CompraService } from 'src/app/services/compra.service';
 export class DialogReportecontableComponent {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   tipoInformeSeleccionado: string = 'Ventas';
-  listTipoDocumentoVentas: TipoDocumento[];
-  listSeries: TipoDocumento[];
+  listTipoDocumentoVentas: TipoDocumentoPais[];
+  listSeries: TipoDocumentoPais[];
   informeContableVentaInterface: InformeContableVentaInterface[] = [];
   informeContableCompraInterface: InformeContableCompra[] = [];
   serieSeleccionada: string = '0';
@@ -33,7 +34,7 @@ export class DialogReportecontableComponent {
 
   constructor(
     public dialogRef: MatDialogRef<DialogReportecontableComponent>,
-    public tipoDocumentoService: TipoDocumentoService,
+    public tipoDocumentoService: TipoDocumentoPaisService,
     public ventaService: VentaService,
     public compraService: CompraService,
     private spinnerService: NgxSpinnerService,
@@ -68,19 +69,19 @@ export class DialogReportecontableComponent {
   }
 
   private async initializeTipoDocumento(): Promise<void> {
-    this.listTipoDocumentoVentas = await this.tipoDocumentoService.getTipoDocumentoVentas().toPromise();
+    this.listTipoDocumentoVentas = await this.tipoDocumentoService.GetTiposDocumentos().toPromise();
   }
 
   private async initializeSeries(): Promise<void> {
-    this.listSeries = await this.tipoDocumentoService.getSeriesVentas().toPromise();
+    this.listSeries = await this.tipoDocumentoService.GetTiposDocumentos().toPromise();
   }
 
   private async initializeTipoDocumentoCompras(): Promise<void> {
-    this.listTipoDocumentoVentas = await this.tipoDocumentoService.getTipoDocumentoCompras().toPromise();
+    this.listTipoDocumentoVentas = await this.tipoDocumentoService.GetTiposDocumentos().toPromise();
   }
 
   private async initializeSeriesCompras(): Promise<void> {
-    this.listSeries = await this.tipoDocumentoService.getSeriesCompras().toPromise();
+    this.listSeries = await this.tipoDocumentoService.GetTiposDocumentos().toPromise();
   }
 
   validarFormulario(fechaInicialInput: NgModel, fechaFinalInput: NgModel, tipoInformeInput: NgModel): void {

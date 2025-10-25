@@ -2,7 +2,8 @@ name: Frontend - Build & Deploy to Staging (GKE)
 
 on:
   push:
-    branches: [ develop, master ]
+    branches:
+      - develop
     paths:
       - 'dockerfiles/frontend/**'
       - 'k8s-manifests/frontend/**'
@@ -13,11 +14,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build-and-deploy-staging:
+    concurrency: frontend-staging-${{ github.ref }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      id-token: write
+      contents: write        # para poder hacer commit/push
+      id-token: write        # OIDC → Workload Identity Federation
     env:
       IMAGE_NAME: oscar020/frontend
       PROJECT_ID: resturante-ccap
@@ -27,73 +29,89 @@ jobs:
       WORKLOAD_IDENTITY_PROVIDER: projects/838506148899/locations/global/workloadIdentityPools/github-pool/providers/github-oidc
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Set branch env
-        id: branch
-        run: |
-          if [ "${{ github.ref_name }}" = "master" ]; then
-            echo "BUILD_CONFIG=production" >> $GITHUB_ENV
-            echo "TAG_SUFFIX=prod" >> $GITHUB_ENV
-            echo "OVERLAY=production" >> $GITHUB_ENV
-          else
-            echo "BUILD_CONFIG=staging" >> $GITHUB_ENV
-            echo "TAG_SUFFIX=staging" >> $GITHUB_ENV
-            echo "OVERLAY=staging" >> $GITHUB_ENV
-          fi
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Generate tags
+      run: |
+        IMAGE_TAG=$(date +%Y%m%d%H%M)-${GITHUB_SHA::7}
+        STAGING_TAG=${IMAGE_TAG}-staging
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+        echo "STAGING_TAG=$STAGING_TAG" >> $GITHUB_ENV
 
-      - name: Build & Push image
-        run: |
-          IMAGE_TAG=$(date +%Y%m%d%H%M)-${GITHUB_SHA::7}-${TAG_SUFFIX}
-          docker build \
-            --build-arg BUILD_CONFIG=${BUILD_CONFIG} \
-            -t $IMAGE_NAME:$IMAGE_TAG \
-            -f dockerfiles/frontend/Dockerfile .
-          docker push $IMAGE_NAME:$IMAGE_TAG
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+    - name: Build and push image with -staging
+      run: |
+        docker build \
+          --build-arg BUILD_CONFIG=staging \
+          -t $IMAGE_NAME:$STAGING_TAG \
+          -f ./dockerfiles/frontend/Dockerfile .
+        docker push $IMAGE_NAME:$STAGING_TAG
 
-      - name: Install kustomize
-        run: |
-          curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash
-          sudo mv kustomize /usr/local/bin/
+    - name: Install kustomize
+      run: |
+        sudo apt-get update
+        curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash
+        sudo mv kustomize /usr/local/bin/
 
-      - name: Update overlay image tag
-        run: |
-          pushd k8s-manifests/frontend/overlays/${OVERLAY}
-          kustomize edit set image $IMAGE_NAME=$IMAGE_NAME:$IMAGE_TAG
-          popd
-          git config user.name  "ci-bot"
-          git config user.email "ci@job.pe"
-          git add k8s-manifests/frontend/overlays/${OVERLAY}/kustomization.yaml
-          if ! git diff --cached --quiet; then
-            git commit -m "ci(frontend): bump ${OVERLAY} image → $IMAGE_TAG [skip ci]"
-            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-            git push origin ${{ github.ref_name }}
-          fi
+    - name: Save latest image tag and update overlay (staging)
+      run: |
+        echo "$IMAGE_TAG" > latest-frontend-image-tag.txt
 
-      - name: Auth to Google Cloud (WIF)
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ env.GSA_EMAIL }}
+        pushd k8s-manifests/frontend/overlays/staging
+        kustomize edit set image "$IMAGE_NAME=$IMAGE_NAME:$STAGING_TAG"
+        popd
 
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
+        git fetch origin develop && git checkout develop
+        git config user.name  "ci-bot"
+        git config user.email "ci@job.pe"
+        git add latest-frontend-image-tag.txt k8s-manifests/frontend/overlays/staging/kustomization.yaml
+        if ! git diff --cached --quiet; then
+          git commit -m "ci(frontend): update staging image → $STAGING_TAG [skip ci]"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git push origin develop
+        fi
 
-      - name: Get GKE credentials
-        uses: google-github-actions/get-gke-credentials@v2
-        with:
-          cluster_name: ${{ env.GKE_CLUSTER }}
-          location: ${{ env.GKE_LOCATION }}
-          project_id: ${{ env.PROJECT_ID }}
+    - name: Auth to Google Cloud (WIF)
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+        service_account: ${{ env.GSA_EMAIL }}
 
-      - name: Deploy overlay to GKE
-        run: |
-          kustomize build k8s-manifests/frontend/overlays/${OVERLAY} | kubectl apply -f -
+    - name: Setup gcloud
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Get GKE credentials
+      uses: google-github-actions/get-gke-credentials@v2
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_LOCATION }}
+        project_id: ${{ env.PROJECT_ID }}
+
+    - name: Set image tag in overlay (staging)
+      run: |
+        kustomize edit set image $IMAGE_NAME=$IMAGE_NAME:$STAGING_TAG
+      working-directory: k8s-manifests/frontend/overlays/staging
+
+    - name: Commit updated kustomization.yaml
+      run: |
+        git config --global user.email "ci@job.pe"
+        git config --global user.name "ci-bot"
+        git pull origin develop
+        git add k8s-manifests/frontend/overlays/staging/kustomization.yaml
+        if ! git diff --cached --quiet; then
+          git commit -m "ci(frontend): update kustomization.yaml with image $STAGING_TAG"
+          git remote set-url origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}
+          git push origin develop
+        else
+          echo "No hay cambios en kustomization.yaml. Ya estaba actualizado."
+        fi
+
+    - name: Deploy to staging
+      run: |
+        kustomize build k8s-manifests/frontend/overlays/staging | kubectl apply -f -

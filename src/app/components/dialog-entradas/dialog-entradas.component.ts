@@ -16,10 +16,10 @@ import { TurnoService } from 'src/app/services/turno.service';
 import { Turno } from 'src/app/models/turno.models';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { Router } from '@angular/router';
-import { Product } from 'src/app/models/product.models';
+import { Producto } from 'src/app/models/product.models';
 import { DescuentoCodigo } from 'src/app/models/descuentocodigo.models';
 import { DialogEmitirComprobanteComponent } from '../dialog-emitir-comprobante/dialog-emitir-comprobante.component';
-import { EnumTipoDocumento } from 'src/app/enums/enum';
+import { CanalVentaEnum, EnumTipoDocumento, NivelUsuarioEnum } from 'src/app/enums/enum';
 import { DialogPagarTaxistaComponent } from '../dialog-pagar-taxista/dialog-pagar-taxista.component';
 
 @Component({
@@ -87,11 +87,11 @@ export class DialogEntradasComponent {
           this.spinnerService.hide();
           Swal.fire({
             icon: 'warning',
-            title: 'No hay un turno abierto para ' + this.storageService.getCurrentIP(),
+            title: 'No hay un turno abierto para esta estación',
             text: 'El componente se cerrará.',
             confirmButtonText: 'Aceptar'
           }).then(() => {
-            if (this.storageService.getCurrentUser().IdNivel == "001") {
+            if (this.storageService.getCurrentUser().IdNivel == 1) {
               this.router.navigate(['/dashboard']);
             } else {
               this.storageService.logout();
@@ -156,7 +156,7 @@ export class DialogEntradasComponent {
 
   async aplicarDescuentoNacional() {
     try {
-      if (this.storageService.getCurrentUser().IdNivel === '001') {
+      if (this.storageService.getCurrentUser().IdNivel === 1) {
         const dialogRef = this.dialog.open(DialogMCantComponent, {
           data: { title: 'Descuento Entrada Nacional' }
         });
@@ -182,7 +182,7 @@ export class DialogEntradasComponent {
 
   async aplicarDescuentoInternacional() {
     try {
-      if (this.storageService.getCurrentUser().IdNivel === '001') {
+      if (this.storageService.getCurrentUser().IdNivel === 1) {
         const dialogRef = this.dialog.open(DialogMCantComponent, {
           data: { title: 'Descuento Entrada Internacional' }
         });
@@ -230,7 +230,7 @@ export class DialogEntradasComponent {
       if (result && result.value) {
         const codigoAdmin = result.value;
         // Validar el código del administrador llamando a la API
-        this.usuarioService.getUsuarioAuth('001', codigoAdmin).subscribe(async (response: ApiResponse<Usuario>) => {
+        this.usuarioService.getUsuarioAuth(NivelUsuarioEnum.Administrador, codigoAdmin).subscribe(async (response: ApiResponse<Usuario>) => {
           if (response.Success) {
             if (response.Data) {
               if (tipo === 'nacional') {
@@ -369,10 +369,10 @@ export class DialogEntradasComponent {
     pedidoCab.NroCuenta = 1;
     pedidoCab.NroPedido = 0;
     pedidoCab.Total = this.total;
-    pedidoCab.IdTipoPedido = "004";
+    pedidoCab.IdCanalVenta = CanalVentaEnum.ENTRADAS;
     pedidoCab.Estado = 1;
     pedidoCab.Moneda = "SOL";
-    pedidoCab.IdMesa = "9999";
+    pedidoCab.IdMesa = 9999;
     pedidoCab.IdCaja = this.turnoAbierto.IdCaja; //esto debe asignarse en el backend
     pedidoCab.NumPrecuentas = 0;
     pedidoCab.FechaPrecuenta = null;
@@ -390,7 +390,7 @@ export class DialogEntradasComponent {
 
       oPedidoDetNacional.IdPedido = 0;
       oPedidoDetNacional.NroCuenta = 1;
-      oPedidoDetNacional.Producto = new Product({ IdProducto: 1 });
+      oPedidoDetNacional.Producto = new Producto({ IdProducto: 1 });
       oPedidoDetNacional.Item = 1;
       oPedidoDetNacional.Precio = 80;
       oPedidoDetNacional.Cantidad = this.entradaNacional;
@@ -410,7 +410,7 @@ export class DialogEntradasComponent {
 
       oPedidoDetInternacional.IdPedido = 0;
       oPedidoDetInternacional.NroCuenta = 1;
-      oPedidoDetInternacional.Producto = new Product({ IdProducto: 2 });
+      oPedidoDetInternacional.Producto = new Producto({ IdProducto: 2 });
       oPedidoDetInternacional.Item = 2;
       oPedidoDetInternacional.Precio = 130;
       oPedidoDetInternacional.Cantidad = this.entradaInternacional;
@@ -590,7 +590,7 @@ export class DialogEntradasComponent {
         return;
       }
 
-      if (this.storageService.getCurrentUser().IdNivel === '001') {
+      if (this.storageService.getCurrentUser().IdNivel === 1) {
         const confirmResult = await Swal.fire({
           title: 'Está apunto de procesar:',
           html: `
@@ -632,7 +632,7 @@ export class DialogEntradasComponent {
           if (result && result.value) {
             const codigoAdmin = result.value;
             // Validar el código del administrador llamando a la API
-            this.usuarioService.getUsuarioAuth('001', codigoAdmin).subscribe(async (response: ApiResponse<Usuario>) => {
+            this.usuarioService.getUsuarioAuth(NivelUsuarioEnum.Administrador, codigoAdmin).subscribe(async (response: ApiResponse<Usuario>) => {
               if (response.Success) {
                 if (response.Data) {
                   const confirmResult = await Swal.fire({

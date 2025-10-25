@@ -2,27 +2,27 @@ import { PedidoDet } from "./pedidodet.models";
 
 export class PedidoCab {
 
-    IdEmpleado: string;
+    IdEmpleado: number;
     Cliente: String;
     Direccion: String;
     Referencia: string;
     IdPedido: number;
-    NroCuenta: Number;
-    NroPedido: Number;
+    NroCuenta: number;
+    NroPedido: number;
     Total: number;
-    IdTipoPedido: String;
-    Estado: Number;
+    IdCanalVenta: number;
+    Estado: number;
     Moneda: string;
-    TipoCambioVenta: Number;
-    TipoCambioCompra: Number;
+    TipoCambioVenta: number;
+    TipoCambioCompra: number;
     FechaCambiada: Date;
     IdSocioNegocio: number;
     Importe: number;
     UsuReg: number;
     UsuMod: number;
-    IdMesa: string;
+    IdMesa: number;
     IdTurno: number;
-    IdCaja: String;
+    IdCaja: number;
     NumPrecuentas: number;
     FechaPrecuenta?: Date;
     MesaPrecuenta: string;

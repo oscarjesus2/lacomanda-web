@@ -9,7 +9,7 @@ import { PedidoDet } from '../../models/pedidodet.models';
 import { MesasService } from '../../services/mesas.service';
 import { PedidoService } from '../../services/pedido.service';
 import { ProductGrid } from '../../models/product.grid.models';
-import { Product } from 'src/app/models/product.models';
+import { Producto } from 'src/app/models/product.models';
 
 @Component({
     selector: 'app-dialog-ver-pedido',
@@ -41,7 +41,7 @@ export class DialogVerPedidoComponent {
               oPedidoDet = new PedidoDet(
                 {
                     Item: data.Item, IdPedido : data.IdPedido,
-                    Producto: new Product({IdProducto: data.IdProducto, NombreCorto: data.NombreCorto}) , Precio: data.Precio, Cantidad: data.Cantidad, 
+                    Producto: new Producto({IdProducto: data.IdProducto, NombreCorto: data.NombreCorto}) , Precio: data.Precio, Cantidad: data.Cantidad, 
                     Subtotal : data.Cantidad * data.Precio, Observacion:  data.observacion, Ip : ''
                 }
               );
@@ -91,7 +91,7 @@ export class DialogVerPedidoComponent {
 
 export interface DialogData {
     oPedidoMesa: any,
-    IdMesa: string,
+    IdMesa: number,
     Mesa: string,
     Resultado: boolean,
 }

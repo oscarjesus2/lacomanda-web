@@ -1,0 +1,50 @@
+.titulo-dialog {
+  margin: 0 0 10px 0;
+  text-align: center;
+  color: #3f51b5;
+  font-family: 'Roboto', sans-serif;
+}
+
+.legend {
+  display: flex; gap: 12px; align-items: center;
+  justify-content: center; margin-bottom: 12px;
+  font-family: 'Roboto', sans-serif; color: #555;
+}
+.badge { width: 14px; height: 14px; border-radius: 3px; display: inline-block; margin-right: 4px; }
+.badge.libre { background: #e8f5e9; border: 1px solid #a5d6a7; }
+.badge.ocupada { background: #ffebee; border: 1px solid #ef9a9a; }
+.badge.elegida { background: #e3f2fd; border: 1px solid #90caf9; }
+
+.grid {
+  display: grid;
+  /* grid-template-columns: repeat(10, 1fr); */
+  gap: 6px;
+  max-width: 520px;
+  margin: 0 auto 16px auto;
+}
+.cell {
+  min-width: 0;           /* evita que mat-button rompa la grilla */
+  width: 56px;
+  height: 36px;
+  line-height: 36px;
+  padding: 0;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 6px !important;
+  background: #fafafa;
+}
+
+.cell:hover { filter: brightness(0.97); }
+.cell.occupied {
+  background: #fbe9e7;
+  border-color: #ffab91;
+  color: #a1887f;
+  cursor: not-allowed;
+}
+.cell.selected {
+  background: #e3f2fd;
+  border-color: #64b5f6;
+}
+
+.dialog-actions {
+  display: flex; gap: 10px; justify-content: center;
+}

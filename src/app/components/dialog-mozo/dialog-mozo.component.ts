@@ -75,7 +75,7 @@ export class DialogMozoComponent {
 
 export interface DialogData {
     listMozos: Empleado[],
-    IdEmpleado: string,
+    IdEmpleado: number,
     NroPersonas: string,
     NumMesa: string;
 }

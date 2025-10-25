@@ -24,8 +24,8 @@ export class DialogObservacionComponent {
         private storageService: StorageService,
         @Inject(MAT_DIALOG_DATA) public data: DialogData) {  
             this.Observaciones= data.Observaciones;
-            this.ListaObservacionComida= data.ListaObservacion.filter(x=> x.Tipo==='1');
-            this.ListaObservacionBebida= data.ListaObservacion.filter(x=> x.Tipo==='2');
+            this.ListaObservacionComida= data.ListaObservacion.filter(x=> x.Tipo===1);
+            this.ListaObservacionBebida= data.ListaObservacion.filter(x=> x.Tipo===2);
         }
 
     

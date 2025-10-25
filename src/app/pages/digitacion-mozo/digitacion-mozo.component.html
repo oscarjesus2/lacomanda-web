@@ -20,13 +20,13 @@
         </div>
       <!-- Botones en la parte superior derecha -->
       <div class="channel-buttons">
-        <button (click)="canalVenta('001')" [disabled]="isCanalVentaDisabled">
+        <button (click)="canalVenta(canalVentaEnum.MESA)" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faUtensils"></fa-icon> CANAL MESA
         </button>
-        <button (click)="canalVenta('002')" [disabled]="isCanalVentaDisabled">
+        <button (click)="canalVenta(canalVentaEnum.PARA_LLEVAR)" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faShoppingBag" ></fa-icon> CANAL LLEVAR
         </button>
-        <button (click)="canalVenta('003')" [disabled]="isCanalVentaDisabled">
+        <button (click)="canalVenta(canalVentaEnum.DELIVERY)" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faTruck" ></fa-icon> CANAL DELIVERY
         </button>
         <button (click)="Refresh()">
@@ -36,13 +36,13 @@
     </div>
     <div class="middle-section">
       <div class="table-info">
-        <label *ngIf="idTipoPedidoSelected == '001' && mesaSelected?.Descripcion && mesaSelected?.Numero">
+        <label *ngIf="idCanalVentaSelected == canalVentaEnum.MESA && mesaSelected?.Descripcion && mesaSelected?.Numero">
           Mesa Nº: {{ mesaSelected.Descripcion + ' ' + mesaSelected.Numero }} {{nombreCuenta}}
         </label>
-        <label *ngIf="idTipoPedidoSelected != '001'">Pedido Nº: {{pedidoId}}</label> 
-        <label *ngIf="idTipoPedidoSelected == '001'">Nº Pax: {{ mesaSelected?.NroPersonas }}</label> 
-        <label *ngIf="idTipoPedidoSelected == '001'">Mozo: {{ mozoSelected?.Nombre }}</label>
-        <label *ngIf="idTipoPedidoSelected != '001'">Cliente: {{ clienteSelected?.RazonSocial }}</label>
+        <label *ngIf="idCanalVentaSelected != canalVentaEnum.MESA">Pedido Nº: {{pedidoId}}</label> 
+        <label *ngIf="idCanalVentaSelected == canalVentaEnum.MESA">Nº Pax: {{ mesaSelected?.NroPersonas }}</label> 
+        <label *ngIf="idCanalVentaSelected == canalVentaEnum.MESA">Mozo: {{ mozoSelected?.Nombre }}</label>
+        <label *ngIf="idCanalVentaSelected != canalVentaEnum.MESA">Cliente: {{ clienteSelected?.RazonSocial }}</label>
         <label>Hora: {{ horaPedido }}</label> 
       </div>
       <div #scrollContainer class="data-grid">
@@ -176,7 +176,7 @@
   <!-- Segunda Columna -->
   <div class="column-right">
     <!-- Alterna entre las mesas y los productos -->
-    <div *ngIf="MostrarOcultarPanelMesa && idTipoPedidoSelected=='001'" class="tables-grid">
+    <div *ngIf="MostrarOcultarPanelMesa && idCanalVentaSelected==canalVentaEnum.MESA" class="tables-grid">
       <button *ngFor="let mesa of listaMesas_x_Ambiente"
         [style.background]="mesa.Color" 
         (click)="openDialogMesa(mesa)"
@@ -185,7 +185,7 @@
       </button>
     </div>
 
-    <div *ngIf="MostrarOcultarPanelMesa && idTipoPedidoSelected!='001'" class="tables-grid">
+    <div *ngIf="MostrarOcultarPanelMesa && idCanalVentaSelected!=canalVentaEnum.MESA" class="tables-grid">
       <button *ngFor="let pedido of listaPedido_x_Canal"
         [style.background]="'LightCyan'"
         (click)="openPedido(pedido)"
@@ -203,21 +203,21 @@
 
     <!-- Fila estática de botones (Barra, Salón, Box, Patio, Terraza) -->
     <div *ngIf="!procesarPedido  || aplicarFiltroUnirMesa==true || aplicarFiltroCambioMesa==true">
-      <div class="static-buttons-row" *ngIf="idTipoPedidoSelected == '001'">
+      <div class="static-buttons-row" *ngIf="idTipoPedidoSelected == canalVentaEnum.MESA">
         <button *ngFor="let item of listAmbiente"
         (click)="MostrarMesas_x_Ambiente(item)">{{item.Descripcion}}</button>
       </div>
       
       <!-- Segunda fila estática de botones con "Procesar Pedido" -->
       <div class="static-buttons-row">
-        <button *ngIf="idTipoPedidoSelected != '001'" class="process-pedido" (click)="NuevoPedidoLlevar()">Nuevo Pedido</button>
+        <button *ngIf="idTipoPedidoSelected != canalVentaEnum.MESA" class="process-pedido" (click)="NuevoPedidoLlevar()">Nuevo Pedido</button>
         <button class="process-pedido" (click)="processPedido(true)">Procesar Pedido</button>
-        <button *ngIf="idTipoPedidoSelected == '001'">Cambiar Mozo</button>
-        <button *ngIf="idTipoPedidoSelected == '001'" (click)="CambiarMesa()">Cambiar Mesa</button>
-        <button *ngIf="idTipoPedidoSelected == '001'" (click)="UnirMesa()">Unir Cuenta</button>
-        <button *ngIf="idTipoPedidoSelected == '001'" (click)="dividirCuenta()">Dividir Cuenta</button>
-        <button *ngIf="idTipoPedidoSelected == '001'">Limpiar Mesa</button>
-        <button *ngIf="idTipoPedidoSelected == '001'">Activar Mesa</button>
+        <button *ngIf="idTipoPedidoSelected == canalVentaEnum.MESA">Cambiar Mozo</button>
+        <button *ngIf="idTipoPedidoSelected == canalVentaEnum.MESA" (click)="CambiarMesa()">Cambiar Mesa</button>
+        <button *ngIf="idTipoPedidoSelected == canalVentaEnum.MESA" (click)="UnirMesa()">Unir Cuenta</button>
+        <button *ngIf="idTipoPedidoSelected == canalVentaEnum.MESA" (click)="dividirCuenta()">Dividir Cuenta</button>
+        <button *ngIf="idTipoPedidoSelected == canalVentaEnum.MESA">Limpiar Mesa</button>
+        <button *ngIf="idTipoPedidoSelected == canalVentaEnum.MESA">Activar Mesa</button>
       </div>
     </div>
     <div *ngIf="procesarPedido && aplicarFiltroUnirMesa==false && aplicarFiltroCambioMesa==false">

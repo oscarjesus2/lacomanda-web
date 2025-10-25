@@ -1,0 +1,66 @@
+<button mat-icon-button class="close-button" (click)="salir()">
+  <mat-icon>close</mat-icon>
+</button>
+
+<div class="empleado-mantenimiento">
+  <h2>Mantenimiento de Áreas de Impresión</h2>
+
+  <!-- LISTA -->
+  <div class="empleados-list" *ngIf="!showForm">
+    <button mat-raised-button color="primary" (click)="nuevo()">Nueva Área</button>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Buscar</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Descripción o impresora...">
+    </mat-form-field>
+
+    <mat-table [dataSource]="filtered" class="mat-elevation-z8">
+      <ng-container matColumnDef="descripcion">
+        <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+        <mat-cell *matCellDef="let r"> {{ r.Descripcion }} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="impresora">
+        <mat-header-cell *matHeaderCellDef> Nombre Impresora </mat-header-cell>
+        <mat-cell *matCellDef="let r"> {{ r.NombreImpresora }} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-cell *matCellDef="let r">
+          <button mat-icon-button color="primary" (click)="onEdit(r)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="onDelete(r.IdAreaImpresion)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+
+    <mat-paginator [length]="areas.length" [pageSize]="5" [pageSizeOptions]="[5,10,20]"></mat-paginator>
+  </div>
+
+  <!-- FORM -->
+  <form *ngIf="showForm" #areaForm="ngForm" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Descripción</mat-label>
+        <input matInput [(ngModel)]="a.Descripcion" name="descripcion" required #descripcion="ngModel" maxlength="100">
+        <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">Requerido.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Nombre de Impresora</mat-label>
+        <input matInput [(ngModel)]="a.NombreImpresora" name="impresora" required #impresora="ngModel" maxlength="120" placeholder="Ej. EPSON_TM20, HP_LaserJet...">
+        <mat-error *ngIf="impresora.invalid && (impresora.dirty || impresora.touched)">Requerido.</mat-error>
+      </mat-form-field>
+    </div>
+
+    <button mat-raised-button color="primary">{{ a.IdAreaImpresion ? 'Actualizar' : 'Guardar' }}</button>
+    <button mat-raised-button color="warn" type="button" (click)="cancelar()">Cancelar</button>
+  </form>
+</div>

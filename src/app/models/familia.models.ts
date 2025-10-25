@@ -1,10 +1,9 @@
 export class Familia {
 
-    public IdFamilia: string;
+    public IdFamilia: number;
     public Descripcion: string;    
 
-    constructor(IdFamilia: string, Descripcion: string) {
-        this.IdFamilia = IdFamilia;
-        this.Descripcion = Descripcion;        
+    constructor(init?: Partial<Familia>) {
+        Object.assign(this, init);
     }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs';
-import { Turno } from '../models/turno.models';
+import { AbrirTurno, Turno } from '../models/turno.models';
 import { environment } from 'src/environments/environment';  // Importa el entorno correspondiente
 
 @Injectable({
@@ -13,7 +13,7 @@ export class TurnoService {
 
     constructor(private http: HttpClient) { }
 
-    AbrirTurno(Turno: Turno): Observable<Turno> {
+    AbrirTurno(Turno: AbrirTurno): Observable<Turno> {
         return this.http.post<Turno>(this.basePath + '/abrir', Turno);
     }
     

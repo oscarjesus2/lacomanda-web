@@ -1,10 +1,13 @@
-export class Product {
+import { ProductoAreaImpresion } from "./producto-area-impresion.models";
 
-    public Activo: number;
+export class Producto {
+
+    public Activo: boolean;
     public Descripcion: string;
     public IdProducto: number;
     public NombreCorto: string;
-    public IdSubFamilia: string;
+    public IdFamilia: number;
+    public IdSubFamilia: number;
     public Posicion: number;
     public Precio: number;
     public R: number;
@@ -14,10 +17,11 @@ export class Product {
     public color: string;
     public cols: number;
     public rows: number;
-    public Visible: number;
+    public Visible: boolean;
     public EsServicio: boolean;
     public SinPrecio: number;
     public Stock: number;
+    public IdGrupoVenta: number;
     public MonedaVenta: string;
     public ImpuestoBolsa: number;
     public EsProductoBolsa: boolean;
@@ -27,7 +31,13 @@ export class Product {
     public PosicionComplemento: number;
     public Qty: number;
     public FactorComplemento: number;
-    constructor(init?: Partial<Product>) {
+    public PrecioMinimo: number;
+    public IdClaseCombo: number;
+    public IdImpuestoPais: number;
+    public InsumoProducto: string;
+      ProductoAreaImpresion?: ProductoAreaImpresion[];
+
+    constructor(init?: Partial<Producto>) {
         Object.assign(this, init);
     }
 }

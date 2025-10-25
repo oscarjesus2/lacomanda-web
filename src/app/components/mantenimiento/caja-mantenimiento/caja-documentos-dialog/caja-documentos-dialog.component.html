@@ -1,0 +1,41 @@
+<h2 mat-dialog-title>Documentos por Caja: {{ nombreCaja }}</h2>
+<div mat-dialog-content>
+  <div *ngIf="loading">Cargando...</div>
+  <div *ngIf="!loading" class="table-wrap">
+    <div class="toolbar">
+      <button mat-button (click)="toggleAll(true)">Activar todos</button>
+      <button mat-button (click)="toggleAll(false)">Desactivar todos</button>
+    </div>
+
+    <table class="docs-table">
+      <thead>
+        <tr>
+          <th>Activo</th>
+          <th>Documento</th>
+          <th>Serie</th>
+          <th># Actual</th>
+          <th>Copias</th>
+          <th>Items x Doc</th>
+          <th>Preguntar al imprimir</th>
+          <th>Mascara</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of rows">
+          <td><mat-checkbox [(ngModel)]="r.Activo"></mat-checkbox></td>
+          <td>{{ r.Descripcion }}</td>
+          <td><input matInput [(ngModel)]="r.Serie" maxlength="4"></td>
+          <td><input matInput type="number" [(ngModel)]="r.NumeroActual" min="0"></td>
+          <td><input matInput type="number" [(ngModel)]="r.CopiasImpresion" min="1"></td>
+          <td><input matInput type="number" [(ngModel)]="r.ItemsPorDocumento" min="0"></td>
+          <td><mat-checkbox [(ngModel)]="r.PreguntarParaImprimir"></mat-checkbox></td>
+          <td>{{ r.Mascara }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-raised-button color="primary" (click)="guardar()">Guardar</button>
+  <button mat-raised-button color="warn" (click)="cerrar()">Cerrar</button>
+</div>

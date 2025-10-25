@@ -1,0 +1,99 @@
+<button mat-icon-button class="close-button" (click)="salir()"><mat-icon>close</mat-icon></button>
+
+<div class="empleado-mantenimiento">
+  <h2>Mantenimiento de Observaciones</h2>
+
+  <!-- Lista -->
+  <div class="empleados-list" *ngIf="!showForm">
+    <button mat-raised-button color="primary" (click)="nuevo()">Nueva Observación</button>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Buscar</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Descripción, tipo, posición...">
+    </mat-form-field>
+
+    <mat-table [dataSource]="data" class="mat-elevation-z8">
+      <ng-container matColumnDef="descripcion">
+        <mat-header-cell *matHeaderCellDef>Descripción</mat-header-cell>
+        <mat-cell *matCellDef="let r">{{ r.Descripcion }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="tipo">
+        <mat-header-cell *matHeaderCellDef>Tipo</mat-header-cell>
+        <mat-cell *matCellDef="let r">{{ tipoLabel(r.Tipo) }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="posicion">
+        <mat-header-cell *matHeaderCellDef>Posición</mat-header-cell>
+        <mat-cell *matCellDef="let r">{{ r.Posicion }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="activo">
+        <mat-header-cell *matHeaderCellDef>Activo</mat-header-cell>
+        <mat-cell *matCellDef="let r">{{ estadoLabel(r.Activo) }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+        <mat-cell *matCellDef="let r">
+          <button mat-icon-button color="primary" (click)="onEdit(r)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button color="warn" (click)="onDelete(r.IdObservacion)"><mat-icon>delete</mat-icon></button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+    <mat-paginator [length]="rows.length" [pageSize]="10" [pageSizeOptions]="[10,20,50]"></mat-paginator>
+  </div>
+
+  <!-- Form -->
+  <form *ngIf="showForm" #form="ngForm" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Descripción</mat-label>
+        <input matInput [(ngModel)]="obs.Descripcion" name="descripcion" required>
+        <mat-hint>Ej: BIEN CALIENTE, SALSA APARTE, ...</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Tipo</mat-label>
+        <mat-select [(ngModel)]="obs.Tipo" name="tipo" required (selectionChange)="onTipoChange()">
+          <mat-option *ngFor="let t of tipos" [value]="t.value">{{ t.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Activo</mat-label>
+        <mat-select [(ngModel)]="obs.Activo" name="activo" required>
+          <mat-option [value]="1">Sí</mat-option>
+          <mat-option [value]="0">No</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="grid-card">
+      <div class="grid-title">
+        Selecciona la posición ({{ROWS}} x {{COLS}}) — Tipo: {{ tipoLabel(obs.Tipo) }}
+      </div>
+      <div class="grid">
+        <button type="button"
+                *ngFor="let i of [].constructor(ROWS*COLS); let idx = index"
+                class="pos-btn"
+                [class.selected]="obs.Posicion === (idx+1)"
+                [class.occupied]="isOccupied(idx+1)"
+                (click)="selectPos(idx+1)">
+          {{ posLabel(idx+1) }}
+        </button>
+      </div>
+      <div class="grid-legend">
+        <span class="dot selected"></span> Seleccionada
+        <span class="dot occupied"></span> Ocupada
+        <span class="dot free"></span> Libre
+      </div>
+    </div>
+
+    <button mat-raised-button color="primary">{{ obs.IdObservacion ? 'Actualizar' : 'Guardar' }}</button>
+    <button mat-raised-button color="warn" type="button" (click)="cancelar()">Cancelar</button>
+  </form>
+</div>

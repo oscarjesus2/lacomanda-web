@@ -1,11 +1,10 @@
 export class SubFamilia {
-    public IdFamilia: string;
-    public IdSubFamilia: string;
+    public IdFamilia: number;
+    public IdSubFamilia: number;
     public Descripcion: string;    
 
-    constructor(IdSubFamilia: string, Descripcion: string, IdFamilia: string) {
-        this.IdSubFamilia = IdSubFamilia;
-        this.Descripcion = Descripcion;       
-        this.IdFamilia= IdFamilia; 
+          
+    constructor(init?: Partial<SubFamilia>) {
+        Object.assign(this, init);
     }
 }

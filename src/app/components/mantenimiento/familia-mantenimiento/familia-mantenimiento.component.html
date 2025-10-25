@@ -1,0 +1,57 @@
+<button mat-icon-button class="close-button" (click)="salir()">
+  <mat-icon>close</mat-icon>
+</button>
+
+<div class="familia-mantenimiento">
+  <h2>Mantenimiento de Familias</h2>
+
+  <!-- Listado -->
+  <div *ngIf="!showForm">
+    <button mat-raised-button color="primary" (click)="nuevaFamilia()">
+      Nueva Familia
+    </button>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Buscar</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Buscar por descripción">
+    </mat-form-field>
+
+    <mat-table [dataSource]="filtered" class="mat-elevation-z8">
+      <ng-container matColumnDef="descripcion">
+        <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+        <mat-cell *matCellDef="let fam"> {{fam.Descripcion}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-cell *matCellDef="let fam">
+          <button mat-icon-button color="primary" (click)="onEdit(fam)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="onDelete(fam.IdFamilia)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </div>
+
+  <!-- Formulario -->
+  <form *ngIf="showForm" #familiaForm="ngForm" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Descripción</mat-label>
+      <input matInput [(ngModel)]="familia.Descripcion" name="descripcion" required #descripcion="ngModel">
+      <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">
+        La descripción es requerida.
+      </mat-error>
+    </mat-form-field>
+
+    <button mat-raised-button color="primary">
+      {{ familia.IdFamilia ? 'Actualizar' : 'Guardar' }}
+    </button>
+    <button mat-raised-button color="warn" type="button" (click)="cancelar()">Cancelar</button>
+  </form>
+</div>

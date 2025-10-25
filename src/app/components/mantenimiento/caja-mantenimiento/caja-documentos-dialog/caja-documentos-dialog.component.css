@@ -1,0 +1,4 @@
+.table-wrap{max-height:60vh;overflow:auto}
+.docs-table{width:100%;border-collapse:collapse}
+.docs-table th,.docs-table td{border-bottom:1px solid #eee;padding:6px 8px;text-align:left}
+.toolbar{display:flex;gap:8px;margin-bottom:8px}

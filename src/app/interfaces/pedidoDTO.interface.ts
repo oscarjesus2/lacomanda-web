@@ -4,7 +4,7 @@ export interface PedidoDeliveryDTO {
   IdMesa: string;         // Identificador de la mesa
   NroPedido: string;   // Número del pedido
   Cliente: string;
-  IdTipoPedido: string;
+  IdCanalVenta: number;
   Estado: number;
   Total: number;
   FechaPedido: Date;      // Fecha del pedido

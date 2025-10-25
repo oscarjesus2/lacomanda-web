@@ -1,7 +1,7 @@
 export class Ambiente {
 
 
-    public IdAmbiente: string;
+    public IdAmbiente: number;
     public Descripcion: string;
     public Estado: number;
     public Posicion: number;

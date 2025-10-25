@@ -90,6 +90,21 @@ import { DialogPagarTaxistaComponent } from './components/dialog-pagar-taxista/d
 import { DialogDocumentosEmitidosComponent } from './components/dialog-documentos-emitidos/dialog-documentos-emitidos.component';
 import { UsuariosMantenimientoComponent } from './components/mantenimiento/usuarios-mantenimiento/usuarios-mantenimiento.component';
 import { AnulacionesComponent } from './pages/dashboard/anulaciones/anulaciones.component';
+import { MesasMantenimientoComponent } from './components/mantenimiento/mesas-mantenimiento/mesas-mantenimiento.component';
+import { PosicionSelectorDialogComponent } from './components/posicion-selector-dialog/posicion-selector-dialog.component';
+import { AmbienteMantenimientoComponent } from './components/mantenimiento/ambiente-mantenimiento/ambiente-mantenimiento.component';
+import { ProductoMantenimientoComponent } from './components/mantenimiento/producto-mantenimiento/producto-mantenimiento.component';
+import { FamiliaMantenimientoComponent } from './components/mantenimiento/familia-mantenimiento/familia-mantenimiento.component';
+import { SubFamiliaMantenimientoComponent } from './components/mantenimiento/subfamilia-mantenimiento/subfamilia-mantenimiento.component';
+import { GrupoMantenimientoComponent } from './components/mantenimiento/grupo-mantenimiento/grupo-mantenimiento.component';
+import { ColorMantenimientoComponent } from './components/mantenimiento/color-mantenimiento/color-mantenimiento.component';
+import { ConfiguracionInicialComponent } from './components/configuracion-inicial/configuracion-inicial/configuracion-inicial.component';
+import { CajaMantenimientoComponent } from './components/mantenimiento/caja-mantenimiento/caja-mantenimiento.component';
+import { CajaDocumentosDialogComponent } from './components/mantenimiento/caja-mantenimiento/caja-documentos-dialog/caja-documentos-dialog.component';
+import { EstacionMantenimientoComponent } from './components/mantenimiento/estacion-mantenimiento/estacion-mantenimiento.component';
+import { ObservacionMantenimientoComponent } from './components/mantenimiento/observacion-mantenimiento/observacion-mantenimiento.component';
+import { ConfigurarOrdenadorComponent } from './components/configuracion-inicial/configurar-ordenador/configurar-ordenador.component';
+import { AreaImpresionMantenimientoComponent } from './components/mantenimiento/area-impresion-mantenimiento/area-impresion-mantenimiento.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -146,6 +161,21 @@ export const MY_DATE_FORMATS = {
     DialogDocumentosEmitidosComponent,
     UsuariosMantenimientoComponent,
     AnulacionesComponent,
+    MesasMantenimientoComponent,
+    PosicionSelectorDialogComponent,
+    AmbienteMantenimientoComponent,
+    ProductoMantenimientoComponent,
+    FamiliaMantenimientoComponent,
+    SubFamiliaMantenimientoComponent,
+    GrupoMantenimientoComponent,
+    ColorMantenimientoComponent,
+    ConfiguracionInicialComponent,
+    CajaMantenimientoComponent,
+    CajaDocumentosDialogComponent,
+    EstacionMantenimientoComponent,
+    ObservacionMantenimientoComponent,
+    ConfigurarOrdenadorComponent,
+    AreaImpresionMantenimientoComponent,
   ],
   imports: [
     CommonModule,

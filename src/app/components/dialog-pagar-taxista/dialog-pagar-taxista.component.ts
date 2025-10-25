@@ -30,7 +30,7 @@ export class DialogPagarTaxistaComponent {
 
   codigoBusqueda: string = '';
   taxistaFiltro: string = 'pendientes'; // Valores: 'pendientes' o 'todos'
-  idEmpleado: string = '';
+  idEmpleado: number = 0;
   dni: string = '';
   nombres: string = '';
   placa: string = '';
@@ -73,11 +73,11 @@ export class DialogPagarTaxistaComponent {
           this.spinnerService.hide();
           Swal.fire({
             icon: 'warning',
-            title: 'No hay un turno abierto para ' + this.storageService.getCurrentIP(),
+            title: 'No hay un turno abierto para esta estación',
             text: 'El componente se cerrará.',
             confirmButtonText: 'Aceptar'
           }).then(() => {
-            if (this.storageService.getCurrentUser().IdNivel == "001") {
+            if (this.storageService.getCurrentUser().IdNivel == 1) {
               this.router.navigate(['/dashboard']);
             } else {
               this.storageService.logout();
@@ -125,7 +125,7 @@ export class DialogPagarTaxistaComponent {
   }
 
   limpiarCampos(): void {
-    this.idEmpleado='';
+    this.idEmpleado=0;
     this.dni = '';
     this.nombres = '';
     this.placa = '';
@@ -199,7 +199,7 @@ export class DialogPagarTaxistaComponent {
       empleado.Dni = this.dni;
       empleado.Telefono= this.telefono;
       empleado.Direccion= null;  // Verificar si se necesita un valor por defecto
-      empleado.Cargo= new Cargo({ IdCargo: '015', Descripcion: '' }); // Asegúrate de que Cargo está definido correctamente
+      empleado.Cargo= new Cargo({ IdCargo: 15, Descripcion: '' }); // Asegúrate de que Cargo está definido correctamente
       empleado.Activo = 1;  // O 1 si Activo es un número
       empleado.IdSocioNegocio = 0;
       empleado.Placa = this.placa;

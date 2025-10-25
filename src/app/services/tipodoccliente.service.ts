@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { TipoDocCliente } from '../models/tipodoccliente.models';
+import { TipoIdentidad } from '../models/tipoIdentidad.models';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 
@@ -10,12 +10,12 @@ import { ApiResponse } from '../interfaces/apirResponse.interface';
   providedIn: 'root'
 })
 export class TipoDocClienteService {
-    private basePath = environment.apiUrl + '/tipodoccliente/';
+    private basePath = environment.apiUrl + '/tipoidentidad/';
 
   constructor(private http: HttpClient) {}
 
-  getTipoDocClientes(): Observable<ApiResponse<TipoDocCliente[]>> {
+  getTipoDocClientes(): Observable<ApiResponse<TipoIdentidad[]>> {
     
-    return this.http.get<ApiResponse<TipoDocCliente[]>>(this.basePath + 'listar');
+    return this.http.get<ApiResponse<TipoIdentidad[]>>(this.basePath + 'listar');
   }
 }

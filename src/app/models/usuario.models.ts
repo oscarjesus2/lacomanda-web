@@ -4,15 +4,14 @@ import { Turno } from "./turno.models";
 
 export class Usuario {    
   public IdUsuario: number;
-  public Username: string;
+  public NombreUsuario: string;
   public Activo: boolean;
-  public Password: string;
-  public ClaveE: string;
-  public IdNivel: string;
-  public IdEmpleado: string;
+  public Contraseña: string;
+  public IdNivel: number;
+  public IdEmpleado: number;
   public Token:string;
   public TipoCompu: number;
-  public Empleado: Empleado;
-  public Nivel_Usuario: Nivel_Usuario;
+  public NivelDescripcion: string;
+  public NombreEmpleado: string;
 }
 

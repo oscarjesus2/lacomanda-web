@@ -1,0 +1,153 @@
+
+<div class="config-wrapper">
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>Configuración Inicial</h2>
+
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+    <section class="card">
+      <h3>Datos de Negocio</h3>
+      <div class="grid2">
+        <mat-form-field appearance="fill">
+          <mat-label>País (ISO2)</mat-label>
+          <mat-select formControlName="PaisISO2" required>
+            <mat-option *ngFor="let p of paises" [value]="p">{{ p }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Tipo de Identidad</mat-label>
+          <mat-select formControlName="IdTipoIdentidad" required>
+            <mat-option *ngFor="let t of tiposIdentidadPais" [value]="t.IdTipoIdentidad">
+              {{ t.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Número de Identifición</mat-label>
+          <input matInput formControlName="NumeroIdentificacion" [placeholder]="mascaraHint || ''">
+          <mat-hint *ngIf="mascaraHint">Formato: {{ mascaraHint }}</mat-hint>
+          <mat-error *ngIf="form.get('NumeroIdentificacion')?.hasError('formatoInvalido')">
+            Formato inválido para el país/tipo seleccionado.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Razón Social</mat-label>
+          <input matInput formControlName="RazonSocial" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Nombre Comercial</mat-label>
+          <input matInput formControlName="NombreComercial" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Dirección</mat-label>
+          <input matInput formControlName="Direccion" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Teléfono</mat-label>
+          <input matInput formControlName="Telefono" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>% Servicio</mat-label>
+          <input matInput type="number" formControlName="Servicio" min="0" max="100" step="0.01" placeholder="0 - 100">
+          <mat-error *ngIf="form.get('Servicio')?.hasError('min')">Mínimo 0%</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="full">
+          <mat-label>Pie de Página (Comprobante)</mat-label>
+          <textarea matInput rows="2" formControlName="PiePagina"></textarea>
+        </mat-form-field>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Operación</h3>
+      <div class="toggles">
+        <mat-slide-toggle formControlName="Traslado">Traslado</mat-slide-toggle>
+        <mat-slide-toggle formControlName="Precuentas">Permitir Precuentas</mat-slide-toggle>
+        <mat-slide-toggle formControlName="CambioMesa">Permitir Cambio de Espacio</mat-slide-toggle>
+        <mat-slide-toggle formControlName="Diario">Control Diario</mat-slide-toggle>
+        <mat-form-field appearance="fill" class="nro-precuentas" [class.disabled]="!form.get('Precuentas')?.value">
+          <mat-label>N° de Precuentas</mat-label>
+          <input matInput type="number" formControlName="NroPrecuentas" min="1">
+        </mat-form-field>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Reportes en Cierre</h3>
+      <div class="toggles">
+        <mat-slide-toggle formControlName="ResumenVenta">Resumen de Venta</mat-slide-toggle>
+        <mat-slide-toggle formControlName="VentaPorProducto">Venta por Producto</mat-slide-toggle>
+        <mat-slide-toggle formControlName="Liquidacion">Liquidación</mat-slide-toggle>
+        <mat-slide-toggle formControlName="ConsumoArticulo">Consumo de Artículo</mat-slide-toggle>
+        <mat-slide-toggle formControlName="GastosDiarios">Gastos Diarios</mat-slide-toggle>
+        <mat-slide-toggle formControlName="IncluirExpressEnCierre">
+          Incluir "Express" en Cierre
+        </mat-slide-toggle>
+        <div class="hint">
+          Si "Incluir Express en Cierre" está activo, los comprobantes internos (sin efecto fiscal) se
+          incluirán en los reportes marcados arriba.
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Características</h3>
+      <mat-slide-toggle formControlName="Anfitrionas">
+        Habilitar campo "Anfitrionas" en Productos
+      </mat-slide-toggle>
+      <div class="hint">
+        Si está activo, en el mantenimiento de productos se mostrará y habilitará el campo
+        “ExclusivoParaAnfitriona”.
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Productos Internos</h3>
+      <div class="grid2">
+        <mat-slide-toggle formControlName="TieneProductoPropina">
+          Habilitar "propinas cobradas en POS"
+        </mat-slide-toggle>
+
+        <mat-slide-toggle formControlName="TieneProductoPrecioDelivery">
+          Habilitar "Cargo por delivery"
+        </mat-slide-toggle>
+      </div>
+
+      <div class="hint">
+        Estos son productos  que se crean como <strong>internos/ocultos</strong> para permitir:
+        <ul>
+          <li>Propinas cobradas en POS</li>
+          <li>Cargo por delivery</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card">
+    <h3>Descuento Internos</h3>
+    <div class="grid2">
+       <mat-slide-toggle formControlName="TieneDescuentoTragoCortesia">
+          Habilitar descuento "Trago Cortesía"
+        </mat-slide-toggle>
+    </div>
+    <div class="hint">
+      El porcentaje de servicio se usará para cálculos de precio final donde corresponda.
+    </div>
+  </section>
+
+
+
+    <div class="actions">
+      <button mat-raised-button color="primary" type="submit">Guardar</button>
+    </div>
+  </form>
+</div>

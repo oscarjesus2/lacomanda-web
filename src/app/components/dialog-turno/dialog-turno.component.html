@@ -39,12 +39,10 @@
             </tr>
             <tr>
                 <td>
-                    <mat-form-field class="example-full-width">
-                        <mat-label>Fecha</mat-label>
-                        <input matInput [matDatepicker]="picker1" [formControl]="myForm.get('fecha')" readonly>
-                        <mat-hint>DD/MM/YYYY HH:MM:SS</mat-hint>
-                        <mat-datepicker-toggle matIconSuffix [for]="picker1"></mat-datepicker-toggle>
-                        <mat-datepicker #picker1></mat-datepicker>
+                    <mat-form-field appearance="fill">
+                    <mat-label>Fecha Trabajo</mat-label>
+                    <input matInput [readonly]="true"
+                            [value]="myForm.get('fecha')?.value | date:'yyyy-MM-dd HH:mm:ss'">
                     </mat-form-field>
                 </td>
                 <td></td>

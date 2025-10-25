@@ -13,7 +13,7 @@ import { DialogObservacionComponent } from '../../components/dialog-observacion/
 
 
 //Models
-import { Product } from '../../models/product.models';
+import { Producto } from '../../models/product.models';
 import { Ambiente } from '../../models/ambiente.models';
 import { Mesas } from '../../models/mesas.models';
 import { ProductGrid } from '../../models/product.grid.models';
@@ -27,10 +27,10 @@ import { Usuario } from '../../models/usuario.models';
 
 // Servicios
 import { StorageService } from '../../services/storage.service';
-import { ProductService } from '../../services/product.service';
+import { ProductoService } from '../../services/product.service';
 import { MesasService } from '../../services/mesas.service';
 import { FamiliaService } from '../../services/familia.service';
-import { AmbienteService } from '../../services/ambiente.services';
+import { AmbienteService } from '../../services/ambiente.service';
 import { ObservacionService } from '../../services/observacion.service';
 import { PedidoService } from '../../services/pedido.service';
 import { TurnoService } from '../../services/turno.service';
@@ -59,13 +59,14 @@ import { PedidoDeliveryDTO } from 'src/app/interfaces/pedidoDTO.interface';
 import { SocioNegocio } from 'src/app/models/socionegocio.models';
 import { Cliente } from 'src/app/models/cliente.models';
 import { DialogDividirCuentaComponent } from 'src/app/components/dialog-dividir-cuenta/dialog-dividir-cuenta.component';
-import { EnumTipoDocumento } from 'src/app/enums/enum';
+import { EnumTipoDocumento, NivelUsuarioEnum } from 'src/app/enums/enum';
 import { DialogDescuentoComponent } from 'src/app/components/dialog-descuento/dialog-descuento.component';
 import { PedidoDescuentoDTO } from 'src/app/interfaces/pedidoDescuentoDTO.interface';
-import { TipoPedidoService } from 'src/app/services/tipopedido.service';
-import { TipoPedido } from 'src/app/models/tipopedido.models';
+import { CanalVentaService } from 'src/app/services/canal-venta.service';
+import { CanalVenta } from 'src/app/models/canalventa.models';
 import { DialogEntradasComponent } from 'src/app/components/dialog-entradas/dialog-entradas.component';
 import { DialogDocumentosEmitidosComponent } from 'src/app/components/dialog-documentos-emitidos/dialog-documentos-emitidos.component';
+import { CanalVentaEnum } from 'src/app/enums/enum';
 
 @Component({
   selector: 'app-venta',
@@ -82,9 +83,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
   public displayedColumns: string[] = ['NombreProducto', 'Precio', 'Cantidad', 'actions'];
   public ListaProductosdisplayedColumns: string[] = ['icoObs', 'nombrecorto', 'precio', 'add', 'cantidad', 'remove', 'actions'];
   public DEFAULT_ID = 0;
-  public listProducts: Product[];
-  public listProductoVenta: Product[];
-  public listProducts_x_SubFamilia: Product[];
+  public listProducts: Producto[];
+  public listProductoVenta: Producto[];
+  public listProducts_x_SubFamilia: Producto[];
   public listAmbiente: Ambiente[];
   public listFamilia: Familia[];
   public listSubFamilia: SubFamilia[];
@@ -94,7 +95,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   public selectedValueDos: string;
   public listaMesasTotal: Mesas[];
   public listaMesas_x_Ambiente: Mesas[];
-  public listaTipoPedidos: TipoPedido[];
+  public listaTipoPedidos: CanalVenta[];
   public listaPedidosPendientes: PedidoDeliveryDTO[];
   public listaPedido_x_Canal: PedidoDeliveryDTO[];
 
@@ -102,7 +103,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   public listObservacion: Observacion[];
   public oTurno: Turno;
   public StyleCustom: string = "height: 90%";
-  public IdSubFamila: string;
+  public IdSubFamila: number;
   public idPedidoCobrar: number = 0;
   public nroCuentaCobrar: number = 0;
 
@@ -128,8 +129,6 @@ export class VentaComponent implements OnInit, AfterViewInit {
   aplicarFiltroCambioMesa: boolean = false;
   aplicarFiltroUnirMesa: boolean = false;
   ambienteActual: Ambiente | null = null;
-  idTipoPedidoSelected: string = "001";
-
   textDescuento: string ='Descuento';
   isBuscarProductoDisabled= false;
   isEntrada = false;
@@ -144,17 +143,19 @@ export class VentaComponent implements OnInit, AfterViewInit {
   isReImprimirDisabled = false;
   isBloquearDisabled = false;
   selectedRow: PedidoDet;
-
+  isAdmin = false;
   listaSociosNegocio: SocioNegocio[];
+  public canalVentaEnum = CanalVentaEnum;
+  idCanalVentaSelected: number = this.canalVentaEnum.MESA;
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   procesarPedido: boolean = false;
   nombreCuenta: string = '';
-
+  idEmpleadoLlevar : number = 0;
   constructor(
     private router: Router,
     private storageService: StorageService,
-    private productService: ProductService,
+    private productService: ProductoService,
     private TurnoService: TurnoService,
     private ambienteService: AmbienteService,
     private mesasService: MesasService,
@@ -162,7 +163,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     private observacionService: ObservacionService,
     private socioNegocioService: SocioNegocioService,
     private pedidoService: PedidoService,
-    private tipoPedidoService: TipoPedidoService,
+    private tipoPedidoService: CanalVentaService,
     private dialogMesa: MatDialog,
     private dialogComprobante: MatDialog,
     private dialog: MatDialog,
@@ -182,7 +183,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.MostrarOcultarPanelPedido = false;
     this.RehacerPantallaRefresh = 'Refresh';
 
-
+    const user = this.storageService.getCurrentUser?.();
+    this.isAdmin = !!user && user.IdNivel === 1;
+    console.log(user)
   }
 
   TipoDocumento = EnumTipoDocumento; 
@@ -219,6 +222,20 @@ export class VentaComponent implements OnInit, AfterViewInit {
     }
   }
 
+  
+  goAdmin() {
+    this.router.navigateByUrl('/administracion');
+  }
+
+  // Atajo de teclado: Ctrl + Alt + A
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(e: KeyboardEvent) {
+    if (this.isAdmin && e.ctrlKey && e.altKey && (e.key.toLowerCase() === 'a')) {
+      e.preventDefault();
+      this.goAdmin();
+    }
+  }
+
   ngOnDestroy() {
     this.headerService.showHeader(); // Mostrar el header al salir
   }
@@ -246,13 +263,13 @@ export class VentaComponent implements OnInit, AfterViewInit {
     }
   }
 
-  canalVenta(idTipoPedido: string): void {
+  canalVenta(idCanalVenta: number): void {
     this.limpiarPedido();
-    this.idTipoPedidoSelected = idTipoPedido;
-    if (idTipoPedido === '004') {
+    this.idCanalVentaSelected = idCanalVenta;
+    if (idCanalVenta === this.canalVentaEnum.ENTRADAS) {
       this.abrirEntradas();
     } else {
-      this.listaPedido_x_Canal = this.listaPedidosPendientes.filter(x => x.Estado === 1 && x.IdTipoPedido === idTipoPedido);
+      this.listaPedido_x_Canal = this.listaPedidosPendientes.filter(x => x.Estado === 1 && x.IdCanalVenta === idCanalVenta);
     }
   }
 
@@ -303,6 +320,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.headerService.hideHeader();
 
     try {
+      console.log("antes");
       this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
         if (data != null) {
           this.turnoAbierto = data;
@@ -310,39 +328,39 @@ export class VentaComponent implements OnInit, AfterViewInit {
           // Aquí se ejecutan los demás servicios en paralelo una vez que se ha obtenido el turno abierto
           forkJoin({
             listProductoVenta: this.productService.getProductosParaVenta(this.storageService.getCurrentIP()),
-            listProducts: this.productService.getAllProducts(),
-            listaMesasTotal: this.mesasService.GetAllMesas(),
+            listProductosTablero: this.productService.getAllProductosTablero(),
+            listaMesasTotal: this.mesasService.GetAllMesasConPedidos(),
             responsePedidos: this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno),
             responseEmpleados: this.empleadoService.getAllEmpleados(),
             listAmbiente: this.ambienteService.getAllAmbiente(),
-            listFamilia: this.familiaService.getFamilia(),
-            listSubFamilia: this.familiaService.getSubFamilia(),
+            listFamilia: this.familiaService.getFamilias(),
+            listSubFamilia: this.familiaService.getSubFamilias(),
             listObservacion: this.observacionService.getAllObservacion(),
             responseSocioNegocio: this.socioNegocioService.getSocioNegocios(),
-            responseTipoPedidos: this.tipoPedidoService.getTipoPedidos(),
+            responseTipoPedidos: this.tipoPedidoService.listarActivos(),
           }).subscribe(results => {
+             console.log("despues");
             // Asignación de resultados
             this.listProductoVenta = results.listProductoVenta;
-            this.listProducts = results.listProducts;
-            this.listaMesasTotal = results.listaMesasTotal;
+            this.listProducts = results.listProductosTablero.Data;
+            this.listaMesasTotal = results.listaMesasTotal.Data;
 
             if (results.responsePedidos.Success) {
               this.listaPedidosPendientes = results.responsePedidos.Data;
             }
 
-            if (results.responseTipoPedidos.Success) {
-              this.listaTipoPedidos = results.responseTipoPedidos.Data;
-              const tipoPedidoEntrada: TipoPedido = this.listaTipoPedidos.find(item => item.IdTipoPedido == '004');
-              this.isEntrada = (tipoPedidoEntrada!=null);
-            }
+            this.listaTipoPedidos = results.responseTipoPedidos;
+            const tipoPedidoEntrada: CanalVenta = this.listaTipoPedidos.find(item => item.IdCanalVenta == 4);
+            this.isEntrada = (tipoPedidoEntrada!=null);
+        
 
             if (results.responseEmpleados.Success) {
               this.listEmpleados = results.responseEmpleados.Data;
             }
 
-            this.listAmbiente = results.listAmbiente;
-            this.listFamilia = results.listFamilia;
-            this.listSubFamilia = results.listSubFamilia;
+            this.listAmbiente = results.listAmbiente.Data;
+            this.listFamilia = results.listFamilia.Data;
+            this.listSubFamilia = results.listSubFamilia.Data;
             this.listObservacion = results.listObservacion.Data;
 
             if (results.responseSocioNegocio.Success) {
@@ -359,12 +377,12 @@ export class VentaComponent implements OnInit, AfterViewInit {
             // Configurar usuario logueado
             this.userLoged = {
               id: this.storageService.getCurrentSession().User.IdEmpleado,
-              username: this.storageService.getCurrentSession().User.Username
+              username: this.storageService.getCurrentSession().User.NombreUsuario
             };
 
             // Mostrar panel de mesa
             this.MostrarOcultarPanelMesa = true;
-
+            console.log("aqui")
             // Ocultar spinner
             this.spinnerService.hide();
           }, error => {
@@ -378,11 +396,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
           this.spinnerService.hide();
           Swal.fire({
             icon: 'warning',
-            title: 'No hay un turno abierto para ' + this.storageService.getCurrentIP(),
+            title: 'No hay un turno abierto para esta estación.',
             text: 'El componente se cerrará.',
             confirmButtonText: 'Aceptar'
           }).then(() => {
-            if (this.storageService.getCurrentUser().IdNivel == "001") {
+            if (this.storageService.getCurrentUser().IdNivel == 1) {
               this.router.navigate(['/dashboard']);
             } else {
               this.storageService.logout();
@@ -539,7 +557,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     styleSheet.innerText = estilos;
     document.head.appendChild(styleSheet);
 
-    const buttonDelivery = (this.idTipoPedidoSelected === "003") ?
+    const buttonDelivery = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ?
       `<button id="btn-custom" style="
     display: inline-block;
     height: 50px;
@@ -557,7 +575,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     </button>`: ``;
 
     // Generar los botones dinámicamente
-    const buttonsHTML = (this.idTipoPedidoSelected === "003") ? this.listaSociosNegocio.map((boton, index) =>
+    const buttonsHTML = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? this.listaSociosNegocio.map((boton, index) =>
       `<button class="swal2-confirm swal2-styled dynamic-btn" id="boton-${index}" data-descripcion="${boton.Descripcion}"
           style="
           display: inline-block;
@@ -578,11 +596,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
 
     // Llenar con botones vacíos si hay menos de 6 opciones
-    const emptyButtons = (this.idTipoPedidoSelected === "003") ? Array.from({ length: maxBotones - this.listaSociosNegocio.length })
+    const emptyButtons = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? Array.from({ length: maxBotones - this.listaSociosNegocio.length })
       .map(() => `<button class="swal2-confirm swal2-styled dynamic-btn" style="visibility: hidden;"></button>`)
       .join('') : '';
 
-    const title = (this.idTipoPedidoSelected === "003") ? 'Seleccione una opción' : 'Nombre de Cliente';
+    const title = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? 'Seleccione una opción' : 'Nombre de Cliente';
     const mostrarSwal = () => {
       Swal.fire({
         title: title,
@@ -621,7 +639,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
           if (!nombreClienteInput.trim()) {
             Swal.showValidationMessage('Debe ingresar el nombre del cliente');
           }
-          if (!socioNegocioSeleccionado && (this.idTipoPedidoSelected === "003")) {
+          if (!socioNegocioSeleccionado && (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY)) {
             Swal.showValidationMessage('Debe seleccionar una opción');
           }
           return { nombreCliente: nombreClienteInput, socioNegocioSeleccionado };
@@ -630,10 +648,10 @@ export class VentaComponent implements OnInit, AfterViewInit {
         if (result.isConfirmed) {
           console.log('isConfirmed');
           this.mesaSelected.NroPersonas = 0;
-          if (this.idTipoPedidoSelected === "002"){
+          if (this.idCanalVentaSelected === this.canalVentaEnum.PARA_LLEVAR){
             this.clienteSelected.RazonSocial = result.value.nombreCliente;
           }
-          if (this.idTipoPedidoSelected === "003"){
+          if (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY){
             this.clienteSelected.RazonSocial = result.value.socioNegocioSeleccionado.Descripcion + "-" + result.value.nombreCliente;
             this.socioNegocioSelected = result.value.socioNegocioSeleccionado;
           }
@@ -719,7 +737,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
           await this.showWarningAndReloadMesas('No existe el pedido en la cuenta.');
         }
       } else {
-        this.listaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
+        this.listaMesasTotal = (await this.mesasService.GetAllMesasConPedidos().toPromise()).Data;
       }
     });
   }
@@ -822,6 +840,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.spinnerService.show();
     this.selectedItemSubFamilia = oSubFamilia;
     this.IdSubFamila = oSubFamilia.IdSubFamilia;
+    console.log(this.listProducts);
     this.listProducts_x_SubFamilia = this.listProducts.filter(x => x.IdSubFamilia === oSubFamilia.IdSubFamilia && x.Posicion > 0);
     //this.GridListaPedidoDetProducto.data = this.ListaPedidoDetProducto.filter(x=> x.IdSubFamilia===subFamiliaId);
     this.spinnerService.hide();
@@ -1058,7 +1077,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async showWarningAndReloadMesas(message: string) {
     Swal.fire('Ups.!', message, 'warning');
-    this.listaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
+    this.listaMesasTotal = (await this.mesasService.GetAllMesasConPedidos().toPromise()).Data;
   }
 
 
@@ -1080,7 +1099,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.sumaGranTotal = parseFloat((this.sumaTotal + impuestoBolsa).toFixed(2));
   }
 
-  async openDialogVerPedido(IdMesa: string) {
+  async openDialogVerPedido(IdMesa: number) {
     try {
       this.spinnerService.show();
 
@@ -1110,7 +1129,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
           'No existe el pedido en la mesa.',
           'warning'
         );
-        this.listaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
+        this.listaMesasTotal = (await this.mesasService.GetAllMesasConPedidos().toPromise()).Data;
       }
 
 
@@ -1256,7 +1275,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   deleteProductGrid(pedidoDet: PedidoDet) {
     const currentUser = this.storageService.getCurrentUser();
     if (pedidoDet.Item > 0) {
-      if (currentUser.IdNivel === '001') {
+      if (currentUser.IdNivel === 1) {
         // Usar DialogMTextTouchComponent para el motivo de anulación
         const dialogRef = this.dialog.open(DialogMTextComponent, {
           width: '800px',
@@ -1285,7 +1304,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
           if (result && result.value) {
             const codigoAdmin = result.value;
             // Validar el código del administrador llamando a la API
-            this.usuarioService.getUsuarioAuth('001', codigoAdmin).subscribe((response: ApiResponse<Usuario>) => {
+            this.usuarioService.getUsuarioAuth(NivelUsuarioEnum.Administrador, codigoAdmin).subscribe((response: ApiResponse<Usuario>) => {
               if (response.Success) {
                 if (response.Data) {
                   // Mostrar el DialogMTextTouchComponent para el motivo de anulación
@@ -1325,7 +1344,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
 
 
-  public AgregarProducto(product: Product): void {
+  public AgregarProducto(product: Producto): void {
 
     // Verificar si el producto tiene el flag SinPrecio
     if (product.SinPrecio == 1) {
@@ -1354,13 +1373,14 @@ export class VentaComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private procesarAgregarProducto(product: Product): void {
+  private procesarAgregarProducto(product: Producto): void {
     // Crear el detalle del pedido con el precio y la cantidad
     const pedidoDet = new PedidoDet({
       Item: this.DEFAULT_ID,
       IdPedido: this.idPedidoCobrar == 0 ? this.DEFAULT_ID : this.idPedidoCobrar,
       NroCuenta: this.nroCuentaCobrar == 0 ? this.DEFAULT_ID : this.nroCuentaCobrar,
-      Producto: new Product(product),
+      NombreCuenta: "Pedido Inicial",
+      Producto: new Producto(product),
       PedidoComplemento: [],
       Precio: product.Precio,
       Cantidad: 1,
@@ -1441,7 +1461,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
     const currentUser = this.storageService.getCurrentUser();
 
-    if (currentUser.IdNivel === '001') {
+    if (currentUser.IdNivel === 1) {
       // Usar DialogMTextTouchComponent para el motivo de anulación
       const dialogRef = this.dialog.open(DialogMTextComponent, {
         width: '800px',
@@ -1470,7 +1490,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
         if (result && result.value) {
           const codigoAdmin = result.value;
           // Validar el código del administrador llamando a la API
-          this.usuarioService.getUsuarioAuth('001', codigoAdmin).subscribe((response: ApiResponse<Usuario>) => {
+          this.usuarioService.getUsuarioAuth(NivelUsuarioEnum.Administrador, codigoAdmin).subscribe((response: ApiResponse<Usuario>) => {
             if (response.Success) {
               if (response.Data) {
                 // Mostrar el DialogMTextTouchComponent para el motivo de anulación
@@ -1537,7 +1557,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async processPedido(verPanelProducto: boolean) {
 
-    if (this.mesaSelected.IdMesa == null && this.idTipoPedidoSelected === '001') {
+    if (this.mesaSelected.IdMesa == null && this.idCanalVentaSelected === this.canalVentaEnum.MESA) {
       Swal.fire(
         'Procesar Pedido',
         'Debe seleccionar una mesa.',
@@ -1633,7 +1653,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
   async EnviarPedido() {
-    if (this.mesaSelected.IdMesa == null && this.idTipoPedidoSelected === '001') {
+    if (this.mesaSelected.IdMesa == null && this.idCanalVentaSelected === this.canalVentaEnum.MESA) {
       Swal.fire(
         'Enviar Pedido',
         'Debe seleccionar una mesa.',
@@ -1674,24 +1694,24 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
       var pedido: PedidoCab = new PedidoCab(
         {
-          IdEmpleado: (this.idTipoPedidoSelected != '001') ? '00001' : this.mozoSelected?.IdEmpleado,
+          IdEmpleado: (this.idCanalVentaSelected != this.canalVentaEnum.MESA) ? this.idEmpleadoLlevar : this.mozoSelected?.IdEmpleado,
           IdPedido: this.idPedidoCobrar == 0 ? this.DEFAULT_ID : this.idPedidoCobrar,
           NroCuenta: this.nroCuentaCobrar == 0 ? this.DEFAULT_ID : this.nroCuentaCobrar,
           Total: this.getTotalByListProductGrid(),
           Importe: this.getTotalByListProductGrid(),
           UsuReg: this.storageService.getCurrentSession().User.IdUsuario,
           UsuMod: this.storageService.getCurrentSession().User.IdUsuario,
-          IdMesa: (this.idTipoPedidoSelected === '001') ? this.mesaSelected.IdMesa : '9999',
-          Mesa: (this.idTipoPedidoSelected === '001') ? this.mesaSelected.Mesa : '',
-          NroPax: (this.idTipoPedidoSelected === '001') ? this.mesaSelected.NroPersonas : 0,
+          IdMesa: (this.idCanalVentaSelected === this.canalVentaEnum.MESA) ? this.mesaSelected.IdMesa : 9999,
+          Mesa: (this.idCanalVentaSelected === this.canalVentaEnum.MESA) ? this.mesaSelected.Mesa : '',
+          NroPax: (this.idCanalVentaSelected === this.canalVentaEnum.MESA) ? this.mesaSelected.NroPersonas : 0,
           IdCaja: this.turnoAbierto.IdCaja,
           IdTurno: this.turnoAbierto.IdTurno,
           Moneda: "SOL",
-          IdSocioNegocio: (this.idTipoPedidoSelected === '003') ? this.socioNegocioSelected.IdSocioNegocio : 0,
-          Cliente: (this.idTipoPedidoSelected === '001') ? this.listProductGrid[0]?.Anfitriona : this.clienteSelected.RazonSocial, /*solo para trago gratis */
-          Direccion: (this.idTipoPedidoSelected === '003') ? this.clienteSelected.DireccionDelivery : '', /*solo para delivery*/
-          Referencia: (this.idTipoPedidoSelected === '003') ? this.clienteSelected.ReferenciaDelivery : '', /*solo para delivery*/
-          IdTipoPedido: this.idTipoPedidoSelected,
+          IdSocioNegocio: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY ) ? this.socioNegocioSelected.IdSocioNegocio : 0,
+          Cliente: (this.idCanalVentaSelected === this.canalVentaEnum.MESA) ? this.listProductGrid[0]?.Anfitriona : this.clienteSelected.RazonSocial, /*solo para trago gratis */
+          Direccion: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? this.clienteSelected.DireccionDelivery : '', /*solo para delivery*/
+          Referencia: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? this.clienteSelected.ReferenciaDelivery : '', /*solo para delivery*/
+          IdCanalVenta: this.idCanalVentaSelected,
           ListaPedidoDet: listPedidoDetails,
           Estado:1
         }
@@ -1769,7 +1789,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
         });
 
         var resultDialog: any = await dialogProcessComprobante.afterClosed().toPromise();
-        this.listaMesasTotal = await this.mesasService.GetAllMesas().toPromise();
+        this.listaMesasTotal = (await this.mesasService.GetAllMesasConPedidos().toPromise()).Data;
         this.limpiarPedido();
         this.MostrarOcultarPanelMesa = true;
         this.MostrarOcultarPanelProducto = false;
@@ -1789,8 +1809,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
       this.aplicarFiltroCambioMesa = false;
       this.aplicarFiltroUnirMesa = false;
       // Actualizar mesas
-      this.mesasService.GetAllMesas().toPromise().then(data => {
-        this.listaMesasTotal = data;
+      this.mesasService.GetAllMesasConPedidos().toPromise().then(data => {
+        this.listaMesasTotal = data.Data;
         let result: Ambiente;
         result = this.listAmbiente.find(item => item.Estado == 1);
         this.MostrarMesas_x_Ambiente(result);
@@ -1803,7 +1823,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
         if (responsePedidos.Success) {
           this.listaPedidosPendientes = responsePedidos.Data;
         }
-        this.canalVenta(this.idTipoPedidoSelected);
+        this.canalVenta(this.idCanalVentaSelected);
       }).catch(error => {
         console.error('Error al obtener pedidos', error);
       });
@@ -1827,7 +1847,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
 
 
-  private getMozoByMozoId(idMozo: string): Empleado {
+  private getMozoByMozoId(idMozo: number): Empleado {
     let result: Empleado;
     this.listEmpleados.forEach(Mozo => {
       if (idMozo === Mozo.IdEmpleado) {
@@ -1875,8 +1895,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
         {
           Item: data.Item,
           NroCuenta: data.NroCuenta,
+          NombreCuenta: data.NombreCuenta,
           IdPedido: data.IdPedido,
-          Producto: new Product({
+          Producto: new Producto({
             IdProducto: data.IdProducto,
             NombreCorto: data.NombreCorto,
             ExclusivoParaAnfitriona: data.ExclusivoParaAnfitriona,
@@ -1918,14 +1939,14 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
       // Ejecutar las solicitudes en paralelo
       const [productsData, mesasData, pedidoResponse] = await Promise.all([
-        this.productService.getAllProducts().toPromise(),
-        this.mesasService.GetAllMesas().toPromise(),
+        this.productService.getAllProductosTablero().toPromise(),
+        this.mesasService.GetAllMesasConPedidos().toPromise(),
         this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno).toPromise()
       ]);
 
       // Actualizar los datos con los resultados obtenidos
-      this.listProducts = productsData;
-      this.listaMesasTotal = mesasData;
+      this.listProducts = productsData.Data;
+      this.listaMesasTotal = mesasData.Data;
 
       if (pedidoResponse.Success) {
         this.listaPedidosPendientes = pedidoResponse.Data;
@@ -1995,7 +2016,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
                  dblGranTotal: this.sumaGranTotal,
                  idPedidoCobrar: this.idPedidoCobrar,
                  nroCuentaCobrar: this.nroCuentaCobrar, 
-                 idTipoPedido: this.idTipoPedidoSelected, 
+                 idTipoPedido: this.idCanalVentaSelected, 
                  idTipoDoc: idTipoDoc,
                  pedidoCab: null,
                  bTurnoIndenpendiente: false,

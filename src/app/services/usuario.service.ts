@@ -14,7 +14,7 @@ export class UsuarioService {
 
   constructor(private http: HttpClient) {}
 
-  getUsuarioAuth(idNivel: string, clave: string): Observable<ApiResponse<Usuario>> {
+  getUsuarioAuth(idNivel: number, clave: string): Observable<ApiResponse<Usuario>> {
     return this.http.get<ApiResponse<Usuario>>(this.basePath + '/GetUsuarioAuth/' + idNivel + '/' + clave);
   }
 

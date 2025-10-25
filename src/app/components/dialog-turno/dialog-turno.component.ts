@@ -8,10 +8,11 @@ import { CajaService } from '../../services/caja.service';
 import { StorageService } from 'src/app/services/storage.service';
 import { DatePipe } from '@angular/common';
 import { MatDialogRef } from '@angular/material/dialog';
-import { Turno } from 'src/app/models/turno.models';
+import { AbrirTurno, Turno } from 'src/app/models/turno.models';
 import { TurnoService } from '../../services/turno.service';
 import * as moment from 'moment'
 import Swal from 'sweetalert2';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-dialog-turno',
@@ -35,122 +36,97 @@ export class DialogTurnoComponent implements OnInit {
   ) {
 
 
- 
     this.TurnoAbierto = false;
     this.NroTurnoAbierto=0;
  
     this.myForm = this.fb.group({
-      fecha: [moment(this.today).format("DD/MM/YYYY HH:mm:ss"), [Validators.required]],
-      caja: ['001', [Validators.required]],
+      fecha: [new Date(), [Validators.required]],
+      caja: [0, [Validators.required]],
       tipocambio: ['', [Validators.required,
       Validators.maxLength(5),
       Validators.pattern(/^[0-9]+([.])?([0-9]+)?$/)]],
     });
-
-
   }
-
 
   async ngOnInit() {
 
     this.spinnerService.show();
 
     try {
-
- 
-      // 1. Se carga servicio para obtener cajas
       this.ListarCaja();
- 
-    } catch (e) {
-   
-      Swal.fire(
-        'Algo anda mal',
-        e.error,
-        'error'
-      )
-      console.log(e);
     }
     finally {
       this.spinnerService.hide();
     }
   }
 
-  async ListarCaja(){
-    var incluyeGeneral: number;
-    incluyeGeneral=1;
-    await this.cajaService.getAllCaja(incluyeGeneral).subscribe(Caja => {
-      this.listCaja=Caja;
-      this.ValidarTurnoAbierto(this.listCaja.find(x=> x.IdCaja=='001'));  
-    });
+ async ListarCaja() {
+  const incluyeGeneral = true;
+  const resp = await firstValueFrom(this.cajaService.getAllCaja(incluyeGeneral));
+  this.listCaja = resp.Data;
+
+  if (this.listCaja && this.listCaja.length > 0) {
+    // siempre tomar la primera caja
+    const primeraCaja = this.listCaja[0];
+    this.myForm.get('caja')!.setValue(primeraCaja.IdCaja);
+    this.ValidarTurnoAbierto(primeraCaja);
   }
+}
+
   public salir(): void {
     this.myForm.reset();
     this.dialogRef.close();
   }
 
   ValidarTurnoAbierto(oCaja: Caja): void {
-  
     if (oCaja.TurnoAbierto != null) {
       this.TurnoAbierto = true;
-      this.NroTurnoAbierto= oCaja.TurnoAbierto.IdTurno;
-      this.myForm.controls['tipocambio'].setValue(oCaja.TurnoAbierto.TipoCambio);
-      this.myForm.controls['fecha'].setValue(moment(new Date(oCaja.TurnoAbierto.FechaInicio)).format("DD/MM/YYYY HH:mm:ss"));
-      this.myForm.controls['tipocambio'].disable();
-      this.myForm.controls['fecha'].disable();
-   
+      this.NroTurnoAbierto = oCaja.TurnoAbierto.IdTurno;
+
+      this.myForm.get('tipocambio')!.setValue(oCaja.TurnoAbierto.TipoCambioVenta);
+      this.myForm.get('fecha')!.setValue(new Date(oCaja.TurnoAbierto.FechaInicio));
+
+      this.myForm.get('tipocambio')!.disable();
+      this.myForm.get('fecha')!.disable();
     } else {
       this.TurnoAbierto = false;
-      this.myForm.controls['tipocambio'].setValue('');
-      this.myForm.controls['fecha'].setValue(moment(this.today).format("DD/MM/YYYY HH:mm:ss"));
-      this.myForm.controls['tipocambio'].enable();
-      this.myForm.controls['fecha'].enable();
+      this.myForm.get('tipocambio')!.setValue(0);
+      this.myForm.get('fecha')!.setValue(new Date());
+      this.myForm.get('tipocambio')!.enable();
+      this.myForm.get('fecha')!.enable();
     }
-
   }
 
-  async saveData() {
+    async saveData() {
     try {
-      if (this.myForm.valid) {
-        this.spinnerService.show();
-        var IdCaja: string = this.myForm.value.caja;
-        var FechaTrabajo: string = moment(this.myForm.value.fecha, "DD/MM/YYYY").format("YYYY-MM-DD");
-        var FechaInicio: string = moment(this.myForm.value.fecha, "DD/MM/YYYY HH:mm:ss").format();
-        var Estado: number = 1;
-        var TipoCambio: number = this.myForm.value.tipocambio;
-        var TipoCambioVenta: number = this.myForm.value.tipocambio;
-        var UsuReg: number = this.storageService.getCurrentSession().User.IdUsuario;
-        var TurnoRestaurante: number = 1;
+      if (this.myForm.invalid) return;
 
-        var oTurno: Turno = new Turno();
-        oTurno.IdCaja = IdCaja;
-        oTurno.FechaTrabajo = this.myForm.value.fecha; 
-        oTurno.FechaInicio= FechaInicio; 
-        oTurno.Estado= Estado; 
-        oTurno.TipoCambio= TipoCambio; 
-        oTurno.TipoCambioVenta= TipoCambioVenta; 
-        oTurno.UsuReg =UsuReg;
-        oTurno.TurnoRestaurante= TurnoRestaurante;
+      this.spinnerService.show();
 
-        // console.log(oTurno);
-        
-        var responseAbrirTurno: any = await this.TurnoService.AbrirTurno(oTurno).toPromise();
-        if (responseAbrirTurno) {
-          this.ListarCaja();
-          this.ValidarTurnoAbierto(this.listCaja.find(x=> x.IdCaja==responseAbrirTurno.IdCaja));
-        }
+      const raw = this.myForm.getRawValue();
+      const IdCaja: number = raw.caja;
+      const FechaTrabajo: string = new Date(raw.fecha).toISOString(); // ISO con Z
+      const TipoCambioVenta: number = parseFloat(raw.tipocambio);
+      const UsuReg: number = this.storageService.getCurrentSession().User.IdUsuario;
+
+      const oTurno: AbrirTurno = {
+        IdCaja,
+        FechaTrabajo,
+        TipoCambioVenta,
+        UsuReg
+      };
+
+      const responseAbrirTurno = await firstValueFrom(this.TurnoService.AbrirTurno(oTurno));
+
+      if (responseAbrirTurno) {
+        await this.ListarCaja();
+        const cajaResp = this.listCaja.find(x => x.IdCaja === responseAbrirTurno.IdCaja);
+        if (cajaResp) this.ValidarTurnoAbierto(cajaResp);
+        Swal.fire('OK', 'Turno aperturado', 'success');
       }
-    } catch (e) {
-      Swal.fire(
-        'Algo anda mal',
-        e.error,
-        'error'
-      )
-      console.log(e);
-
     } finally {
       this.spinnerService.hide();
     }
-
   }
 
 }

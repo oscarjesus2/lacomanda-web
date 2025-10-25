@@ -1,0 +1,76 @@
+<button mat-icon-button class="close-button" (click)="salir()">
+  <mat-icon>close</mat-icon>
+</button>
+
+<div class="subfamilia-mantenimiento">
+  <h2>Mantenimiento de SubFamilias</h2>
+
+  <!-- Listado -->
+  <div *ngIf="!showForm">
+    <button mat-raised-button color="primary" (click)="nueva()">
+      Nueva SubFamilia
+    </button>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Buscar</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Buscar por descripción">
+    </mat-form-field>
+
+    <mat-table [dataSource]="filtered" class="mat-elevation-z8">
+      <ng-container matColumnDef="descripcion">
+        <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+        <mat-cell *matCellDef="let s"> {{s.Descripcion}} </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="familia">
+        <mat-header-cell *matHeaderCellDef> Familia </mat-header-cell>
+        <mat-cell *matCellDef="let s">
+          {{ getFamiliaDescripcion(s.IdFamilia) }}
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-cell *matCellDef="let s">
+          <button mat-icon-button color="primary" (click)="onEdit(s)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="onDelete(s.IdSubFamilia)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </div>
+
+  <!-- Formulario -->
+  <form *ngIf="showForm" #form="ngForm" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Familia</mat-label>
+      <mat-select [(ngModel)]="subfamilia.IdFamilia" name="idFamilia" required #idFamilia="ngModel">
+        <mat-option *ngFor="let f of familias" [value]="f.IdFamilia">
+          {{f.Descripcion}}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="idFamilia.invalid && (idFamilia.dirty || idFamilia.touched)">
+        La familia es requerida.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Descripción</mat-label>
+      <input matInput [(ngModel)]="subfamilia.Descripcion" name="descripcion" required #descripcion="ngModel">
+      <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">
+        La descripción es requerida.
+      </mat-error>
+    </mat-form-field>
+
+    <button mat-raised-button color="primary">
+      {{ subfamilia.IdSubFamilia ? 'Actualizar' : 'Guardar' }}
+    </button>
+    <button mat-raised-button color="warn" type="button" (click)="cancelar()">Cancelar</button>
+  </form>
+</div>

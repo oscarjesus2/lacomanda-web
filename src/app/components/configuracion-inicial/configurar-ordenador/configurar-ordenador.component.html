@@ -1,0 +1,40 @@
+<div class="empleado-mantenimiento">
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+  <h2>Configurar este ordenador</h2>
+  <form class="card" [formGroup]="form" (ngSubmit)="save()">
+    <section class="card">
+      <div class="grid">
+        <mat-form-field appearance="fill" class="full">
+          <mat-label>Identificador Único</mat-label>
+          <input matInput placeholder="Ej. 9b5d-... o un alias propio" formControlName="identifier">
+          <mat-hint>Solo letras, números, “-”, “_” o “.” — 6 a 64 caracteres</mat-hint>
+          <mat-error *ngIf="form.get('identifier')?.hasError('required')">Requerido</mat-error>
+          <mat-error *ngIf="form.get('identifier')?.hasError('minlength')">Mínimo 6 caracteres</mat-error>
+          <mat-error *ngIf="form.get('identifier')?.hasError('maxlength')">Máximo 64 caracteres</mat-error>
+          <mat-error *ngIf="form.get('identifier')?.hasError('pattern')">Formato no válido</mat-error>
+        </mat-form-field>
+
+        <div class="actions-row">
+          <button mat-raised-button color="primary" (click)="generate()">Generar</button>
+          <button mat-raised-button (click)="clearField()">Limpiar</button>
+          <button mat-stroked-button color="warn" (click)="deleteCookie()">Eliminar identificador</button>
+        </div>
+
+        <div class="info">
+          <p><strong>Actual:</strong> {{ currentCookie || '(no configurado)' }}</p>
+          <p><strong>Host (referencia):</strong> {{ hostHint }}</p>
+          <p class="muted">
+            Este identificador se guarda en este ordenador (cookie) y se usará al iniciar sesión para
+            asociar esta estación en el sistema.
+          </p>
+        </div>
+
+        <div class="footer">
+          <button mat-raised-button color="primary" (click)="save()">Guardar</button>
+        </div>
+      </div>
+    </section>
+  </form>
+</div>

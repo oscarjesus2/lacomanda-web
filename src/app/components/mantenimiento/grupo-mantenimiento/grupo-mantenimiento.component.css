@@ -1,0 +1,13 @@
+.close-button{position:absolute;top:0;right:0;z-index:1000;background:transparent;border:none;cursor:pointer}
+.close-button mat-icon{font-size:24px;color:#757575}
+.empleado-mantenimiento{max-width:900px;margin:40px auto;padding:20px;background:#f9f9f9;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,.1);font-family:'Roboto',sans-serif}
+.empleado-mantenimiento h2{text-align:center;font-size:2rem;margin-bottom:30px;color:#3f51b5}
+.form-row{display:flex;justify-content:space-between;margin-bottom:20px}
+.form-field{flex:1;margin-right:20px}.form-field:last-child{margin-right:0}
+.full-width{width:100%;margin-bottom:20px}
+mat-table{width:100%;margin-top:20px;background:#fff;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+mat-header-cell{font-weight:600;color:#3f51b5;padding:12px;text-align:left}
+mat-cell{padding:12px;text-align:left}
+mat-icon-button{margin-right:8px;color:#3f51b5;transition:color .3s}
+mat-icon-button:hover{color:#303f9f}
+.mat-raised-button.mat-warn{background:#e53935}.mat-raised-button.mat-warn:hover{background:#d32f2f}

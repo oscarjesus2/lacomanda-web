@@ -68,7 +68,7 @@ export class HeaderComponent {
 
         Swal.fire({
                     icon: 'warning',
-                    title: 'No hay un turno abierto para ' + this.storageService.getCurrentIP(),
+                    title: 'No hay un turno abierto para esta estación',
                     confirmButtonText: 'Aceptar'
                   });
 
@@ -87,7 +87,7 @@ export class HeaderComponent {
 
         Swal.fire({
                     icon: 'warning',
-                    title: 'No hay un turno abierto para ' + this.storageService.getCurrentIP(),
+                    title: 'No hay un turno abierto para esta estación',
                     confirmButtonText: 'Aceptar'
                   });
 

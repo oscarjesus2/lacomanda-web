@@ -8,13 +8,13 @@ import { environment } from 'src/environments/environment';
 })
 export class TenantService {
 
-    private basePath = environment.apiUrl + '/Tenant/';
+    private basePath = environment.apiUrl + '/Tenant';
 
     constructor(private http: HttpClient) { }
 
     getTenant(): Observable<any[]> {
         const domain = window.location.hostname;
-        return this.http.get<[any]>(this.basePath + domain);
+           return this.http.get<Tenant[]>(`${this.basePath}?domain=${domain}`)
     }
 
 }

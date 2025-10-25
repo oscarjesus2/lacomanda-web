@@ -1,0 +1,99 @@
+<button mat-icon-button class="close-button" (click)="salir()">
+  <mat-icon>close</mat-icon>
+</button>
+
+<div class="empleado-mantenimiento">
+  <h2>Mantenimiento de Ambientes</h2>
+
+  <!-- LISTA -->
+  <div class="empleados-list" *ngIf="!showForm">
+    <button mat-raised-button color="primary" (click)="nuevo()">Nuevo Ambiente</button>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Buscar</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Buscar por descripción, estado o posición">
+    </mat-form-field>
+
+    <mat-table [dataSource]="filteredAmbientes" class="mat-elevation-z8">
+      <!-- Descripción -->
+      <ng-container matColumnDef="descripcion">
+        <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+        <mat-cell *matCellDef="let a"> {{ a.Descripcion }} </mat-cell>
+      </ng-container>
+
+      <!-- Estado -->
+      <ng-container matColumnDef="estado">
+        <mat-header-cell *matHeaderCellDef> Estado </mat-header-cell>
+        <mat-cell *matCellDef="let a"> {{ a.Estado === 1 ? 'Activo' : 'Inactivo' }} </mat-cell>
+      </ng-container>
+
+      <!-- Posición -->
+      <ng-container matColumnDef="posicion">
+        <mat-header-cell *matHeaderCellDef> Posición </mat-header-cell>
+        <mat-cell *matCellDef="let a"> {{ a.Posicion }} </mat-cell>
+      </ng-container>
+
+      <!-- Acciones -->
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-cell *matCellDef="let a">
+          <button mat-icon-button color="primary" (click)="onEdit(a)" matTooltip="Editar">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="onDelete(a.IdAmbiente)" matTooltip="Eliminar">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+
+    <mat-paginator [length]="ambientes.length" [pageSize]="5" [pageSizeOptions]="[5,10,20]"></mat-paginator>
+  </div>
+
+  <!-- FORM -->
+  <form *ngIf="showForm" #ambienteForm="ngForm" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Descripción</mat-label>
+        <input matInput [(ngModel)]="ambiente.Descripcion" [matAutocomplete]="auto" name="descripcion" required #descripcion="ngModel">
+        <!-- <input type="text" matInput [(ngModel)]="ambiente.Descripcion" [matAutocomplete]="auto" name="descripcion" required> -->
+        <mat-autocomplete #auto="matAutocomplete">
+          <mat-option *ngFor="let opt of descripcionesEjemplo" [value]="opt">{{ opt }}</mat-option>
+        </mat-autocomplete>
+        <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">
+          La descripción es requerida.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Estado</mat-label>
+        <mat-select [(ngModel)]="ambiente.Estado" name="estado" required #estado="ngModel">
+          <mat-option [value]="1">Activo</mat-option>
+          <mat-option [value]="0">Inactivo</mat-option>
+        </mat-select>
+        <mat-error *ngIf="estado.invalid && (estado.dirty || estado.touched)">
+          Seleccione un estado.
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Posición</mat-label>
+        <input matInput [value]="ambiente.Posicion || ''" name="posicion" readonly placeholder="Seleccione una posición (1 a 10)">
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="button" (click)="abrirSelectorPosicion()">
+        Elegir posición (1 × 10)
+      </button>
+    </div>
+
+    <button mat-raised-button color="primary">
+      {{ ambiente.IdAmbiente ? 'Actualizar' : 'Guardar' }}
+    </button>
+    <button mat-raised-button color="warn" type="button" (click)="cancelar()">Cancelar</button>
+  </form>
+</div>

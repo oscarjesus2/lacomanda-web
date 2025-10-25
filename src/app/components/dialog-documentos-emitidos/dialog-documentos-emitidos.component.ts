@@ -13,6 +13,7 @@ import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
 import { Usuario } from 'src/app/models/usuario.models';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { DialogMTextComponent } from '../dialog-mtext/dialog-mtext.component';
+import { NivelUsuarioEnum } from 'src/app/enums/enum';
 
 @Component({
   selector: 'app-dialog-documentos-emitidos',
@@ -150,7 +151,7 @@ export class DialogDocumentosEmitidosComponent {
       return;
     }
   
-    if (this.storageService.getCurrentUser().IdNivel !== "001") {
+    if (this.storageService.getCurrentUser().IdNivel !== 1) {
       Swal.fire({
         title: 'Anular',
         text: 'No tiene permiso para ANULAR. Ingresa la Clave del Administrador',
@@ -244,7 +245,7 @@ export class DialogDocumentosEmitidosComponent {
           const codigoAdmin = result.value;
   
           // Validar el código del administrador llamando a la API
-          this.usuarioService.getUsuarioAuth('001', codigoAdmin).subscribe((response: ApiResponse<Usuario>) => {
+          this.usuarioService.getUsuarioAuth(NivelUsuarioEnum.Administrador, codigoAdmin).subscribe((response: ApiResponse<Usuario>) => {
             if (response.Success && response.Data) {
               resolve(response.Data.IdUsuario);  // Devolvemos el valor
             } else {

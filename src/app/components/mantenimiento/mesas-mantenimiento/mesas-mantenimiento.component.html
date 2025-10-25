@@ -1,0 +1,154 @@
+<button mat-icon-button class="close-button" (click)="salir()">
+  <mat-icon>close</mat-icon>
+</button>
+
+<div class="empleado-mantenimiento"><!-- reutilizamos estilos -->
+  <h2>Mantenimiento de Espacios</h2>
+
+  <!-- Lista de Mesas -->
+  <div class="empleados-list" *ngIf="!showForm">
+    <button mat-raised-button color="primary" (click)="nuevaMesa()">Nuevo Espacios</button>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Buscar</mat-label>
+      <input matInput [(ngModel)]="filtroMesa" (ngModelChange)="applyFilter()"
+        placeholder="Buscar por descripción, número, posición o ambiente">
+    </mat-form-field>
+
+    <mat-table [dataSource]="filteredMesas" class="mat-elevation-z8">
+      <!-- Descripcion -->
+      <ng-container matColumnDef="descripcion">
+        <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+        <mat-cell *matCellDef="let mesa"> {{ mesa.Descripcion }} </mat-cell>
+      </ng-container>
+
+      <!-- Numero -->
+      <ng-container matColumnDef="numero">
+        <mat-header-cell *matHeaderCellDef> Número </mat-header-cell>
+        <mat-cell *matCellDef="let mesa"> {{ mesa.Numero }} </mat-cell>
+      </ng-container>
+
+      <!-- Posicion -->
+      <ng-container matColumnDef="posicion">
+        <mat-header-cell *matHeaderCellDef> Posición </mat-header-cell>
+        <mat-cell *matCellDef="let mesa"> {{ mesa.Posicion }} </mat-cell>
+      </ng-container>
+
+      <!-- Ambiente -->
+      <ng-container matColumnDef="ambiente">
+        <mat-header-cell *matHeaderCellDef> Ambiente </mat-header-cell>
+        <mat-cell *matCellDef="let mesa"> {{ getAmbienteDescripcion(mesa.IdAmbiente) }} </mat-cell>
+      </ng-container>
+
+      <!-- Activo -->
+      <ng-container matColumnDef="activo">
+        <mat-header-cell *matHeaderCellDef> Activo </mat-header-cell>
+        <mat-cell *matCellDef="let mesa"> {{ mesa.Activo ? 'Sí' : 'No' }} </mat-cell>
+      </ng-container>
+
+      <!-- Visible -->
+      <ng-container matColumnDef="visible">
+        <mat-header-cell *matHeaderCellDef> Visible </mat-header-cell>
+        <mat-cell *matCellDef="let mesa"> {{ mesa.Visible ? 'Sí' : 'No' }} </mat-cell>
+      </ng-container>
+
+      <!-- Acciones -->
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-cell *matCellDef="let mesa">
+          <button mat-icon-button color="primary" (click)="onEdit(mesa)" matTooltip="Editar">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="onDelete(mesa.IdMesa)" matTooltip="Eliminar">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+
+    <mat-paginator [length]="mesas.length" [pageSize]="5" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
+  </div>
+
+  <!-- Formulario -->
+  <form *ngIf="showForm" #mesaForm="ngForm" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Descripción</mat-label>
+        <input type="text" matInput [(ngModel)]="mesa.Descripcion" [matAutocomplete]="auto" name="descripcion" required>
+        <mat-autocomplete #auto="matAutocomplete">
+          <mat-option *ngFor="let opt of descripcionesEjemplo" [value]="opt">{{ opt }}</mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Número</mat-label>
+        <input matInput type="number" [(ngModel)]="mesa.Numero" name="numero" required min="1" #numero="ngModel">
+        <mat-error *ngIf="numero.invalid && (numero.dirty || numero.touched)">
+          El número es requerido y debe ser mayor a 0.
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Ambiente</mat-label>
+        <mat-select
+          [(ngModel)]="selectedAmbiente"
+          name="ambiente"
+          required
+          #ambiente="ngModel"
+          [compareWith]="compareAmbiente"
+          (selectionChange)="onAmbienteChange()">
+          <mat-option *ngFor="let a of listAmbientes" [value]="a">
+            {{ a.Descripcion }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="ambiente.invalid && (ambiente.dirty || ambiente.touched)">
+          Seleccione un ambiente.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Posición</mat-label>
+        <input matInput [value]="mesa.Posicion || ''" name="posicion" readonly placeholder="Seleccione una posición">
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="button" (click)="abrirSelectorPosicion()" [disabled]="!selectedAmbiente">
+        Elegir posición
+      </button>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Activo</mat-label>
+        <mat-select [(ngModel)]="mesa.Activo" name="activo" required #activo="ngModel">
+          <mat-option [value]="true">Sí</mat-option>
+          <mat-option [value]="false">No</mat-option>
+        </mat-select>
+        <mat-error *ngIf="activo.invalid && (activo.dirty || activo.touched)">
+          Seleccione si está activo.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Visible</mat-label>
+        <mat-select [(ngModel)]="mesa.Visible" name="visible" required #visible="ngModel">
+          <mat-option [value]="true">Sí</mat-option>
+          <mat-option [value]="false">No</mat-option>
+        </mat-select>
+        <mat-error *ngIf="visible.invalid && (visible.dirty || visible.touched)">
+          Seleccione si es visible.
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <button mat-raised-button color="primary">
+      {{ mesa.IdMesa ? 'Actualizar' : 'Guardar' }}
+    </button>
+    <button mat-raised-button color="warn" (click)="cancelar()" type="button">Cancelar</button>
+  </form>
+</div>
