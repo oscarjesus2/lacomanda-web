@@ -17,8 +17,8 @@ jobs:
     concurrency: frontend-staging-${{ github.ref }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write        # para poder hacer commit/push
-      id-token: write        # OIDC → Workload Identity Federation
+      contents: write # para poder hacer commit/push
+      id-token: write # OIDC → Workload Identity Federation
     env:
       IMAGE_NAME: oscar020/frontend
       PROJECT_ID: resturante-ccap
