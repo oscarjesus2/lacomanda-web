@@ -5,6 +5,7 @@ on:
     branches:
       - master ##master
       - develop ##develop
+  workflow_dispatch:
 
 jobs:
   version:
