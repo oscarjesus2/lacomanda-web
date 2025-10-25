@@ -1,7 +1,7 @@
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
 metadata:
-  name: frontend-prod-cert
+  name: frontend-cert
 spec:
   domains:
-    - main.jobbusiness.pe  # ⚠️
+    - app.lacomanda.store

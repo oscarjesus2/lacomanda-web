@@ -1,7 +1,7 @@
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
 metadata:
-  name: frontend-staging-cert
+  name: frontend-cert
 spec:
   domains:
-    - test.jobbusiness.pe  # ⚠️
+    - app.staging.lacomanda.store

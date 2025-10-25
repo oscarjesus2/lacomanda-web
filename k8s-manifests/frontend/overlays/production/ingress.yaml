@@ -1,15 +1,21 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-namespace: frontend-production   # ⚠️
-
-resources:
-  - ../../base
-  - ingress.yaml
-  - managed-cert.yaml
-  - frontendconfig.yaml
-
-images:
-  - name: oscar020/frontend
-    newName: oscar020/frontend
-    newTag: 20251025-prod  # ⚠️ pipeline lo cambia
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "frontend-production-global-ip"
+    networking.gke.io/managed-certificates: "frontend-cert"
+    networking.gke.io/frontend-config: "frontend-frontendconfig"
+spec:
+  rules:
+    - host: app.lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

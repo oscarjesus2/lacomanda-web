@@ -4,12 +4,12 @@ metadata:
   name: frontend-ingress
   annotations:
     kubernetes.io/ingress.class: "gce"
-    kubernetes.io/ingress.global-static-ip-name: "frontend-staging-ip"  # ⚠️ nombre de tu IP reservada
-    networking.gke.io/managed-certificates: "frontend-staging-cert"
+    kubernetes.io/ingress.global-static-ip-name: "frontend-staging-global-ip"
+    networking.gke.io/managed-certificates: "frontend-cert"
     networking.gke.io/frontend-config: "frontend-frontendconfig"
 spec:
   rules:
-    - host: test.jobbusiness.pe  # ⚠️ dominio de staging
+    - host: app.staging.lacomanda.store
       http:
         paths:
           - path: /
