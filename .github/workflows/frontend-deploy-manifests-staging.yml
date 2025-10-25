@@ -1,0 +1,99 @@
+name: Frontend - Build & Deploy to Staging (GKE)
+
+on:
+  push:
+    branches: [ develop, master ]
+    paths:
+      - 'dockerfiles/frontend/**'
+      - 'k8s-manifests/frontend/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'angular.json'
+      - 'src/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      IMAGE_NAME: oscar020/frontend
+      PROJECT_ID: resturante-ccap
+      GKE_CLUSTER: cluster-1
+      GKE_LOCATION: europe-southwest1
+      GSA_EMAIL: gke-deployer@resturante-ccap.iam.gserviceaccount.com
+      WORKLOAD_IDENTITY_PROVIDER: projects/838506148899/locations/global/workloadIdentityPools/github-pool/providers/github-oidc
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set branch env
+        id: branch
+        run: |
+          if [ "${{ github.ref_name }}" = "master" ]; then
+            echo "BUILD_CONFIG=production" >> $GITHUB_ENV
+            echo "TAG_SUFFIX=prod" >> $GITHUB_ENV
+            echo "OVERLAY=production" >> $GITHUB_ENV
+          else
+            echo "BUILD_CONFIG=staging" >> $GITHUB_ENV
+            echo "TAG_SUFFIX=staging" >> $GITHUB_ENV
+            echo "OVERLAY=staging" >> $GITHUB_ENV
+          fi
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & Push image
+        run: |
+          IMAGE_TAG=$(date +%Y%m%d%H%M)-${GITHUB_SHA::7}-${TAG_SUFFIX}
+          docker build \
+            --build-arg BUILD_CONFIG=${BUILD_CONFIG} \
+            -t $IMAGE_NAME:$IMAGE_TAG \
+            -f dockerfiles/frontend/Dockerfile .
+          docker push $IMAGE_NAME:$IMAGE_TAG
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Install kustomize
+        run: |
+          curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Update overlay image tag
+        run: |
+          pushd k8s-manifests/frontend/overlays/${OVERLAY}
+          kustomize edit set image $IMAGE_NAME=$IMAGE_NAME:$IMAGE_TAG
+          popd
+          git config user.name  "ci-bot"
+          git config user.email "ci@job.pe"
+          git add k8s-manifests/frontend/overlays/${OVERLAY}/kustomization.yaml
+          if ! git diff --cached --quiet; then
+            git commit -m "ci(frontend): bump ${OVERLAY} image → $IMAGE_TAG [skip ci]"
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+            git push origin ${{ github.ref_name }}
+          fi
+
+      - name: Auth to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GSA_EMAIL }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_LOCATION }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Deploy overlay to GKE
+        run: |
+          kustomize build k8s-manifests/frontend/overlays/${OVERLAY} | kubectl apply -f -
