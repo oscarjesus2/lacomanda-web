@@ -16,8 +16,9 @@ RUN npm run build -- --configuration $BUILD_CONFIG
 
 # ---------- Runtime (NGINX) ----------
 FROM nginx:1.27-alpine AS runtime
+
 # NGINX conf para SPA + /health
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY dockerfiles/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copia el build (ajusta si tu directorio dist tiene otro nombre)
 COPY --from=build /app/dist/jbs-rest /usr/share/nginx/html
