@@ -11,7 +11,6 @@ on:
       - 'package-lock.json'
       - 'angular.json'
       - 'src/**'
-  workflow_dispatch:
 
 jobs:
   build-and-deploy-staging:
