@@ -5,4 +5,3 @@ metadata:
 spec:
   redirectToHttps:
     enabled: true
-    responseCode: 301
