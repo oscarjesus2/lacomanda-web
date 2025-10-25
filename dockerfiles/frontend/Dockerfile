@@ -1,4 +1,4 @@
-# ---------- Build (Angular) ----------
+# Build (Angular) ----------
 FROM node:20-alpine AS build
 WORKDIR /app
 
