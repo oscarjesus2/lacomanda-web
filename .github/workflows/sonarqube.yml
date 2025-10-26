@@ -1,0 +1,66 @@
+name: SonarQube - Analyze
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'angular.json'
+      - '.github/workflows/sonarqube.yml'
+  pull_request:
+    branches:
+      - develop
+      - master
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'angular.json'
+  workflow_dispatch:
+
+jobs:
+  sonar-analysis:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    permissions: read-all
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # recomendado por SonarQube para un mejor análisis
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      # Ejecuta tests para generar cobertura.
+      - name: Run unit tests with coverage
+        run: |
+          npm test -- --watch=false --code-coverage || true
+
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+  # Job verifica el Quality Gate.
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: sonar-analysis
+    steps:
+      - name: Check Quality Gate
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
