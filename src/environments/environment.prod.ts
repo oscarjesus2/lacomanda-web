@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://production.api.lacomanda.store'
+  apiUrl: 'https://production.api.lacomanda.store/api'
 };
