@@ -1,60 +1,85 @@
 <div class="login-container">
   <div class="login-box">
-    <img src="assets/logo.png" alt="Loaris REST Logo" class="login-logo">
-    <h2>Welcome to Loaris REST</h2>
-    <button *ngIf="showInstallButton" (click)="installPWA()">Instalar Aplicación</button>
-    <mat-card class="login-card">
-      <mat-card-content>
-        <form [formGroup]="loginForm" (ngSubmit)="login()">
-          <mat-error *ngIf="!loginValid">
-            Invalid credentials, please try again
-          </mat-error>
+    <!-- Logo + encabezado -->
+    <div class="brand">
+      <img src="/assets/logo.svg" alt="LaComanda Logo" class="login-logo" />
+      <h1 class="title">LaComanda</h1>
+      <p class="tagline">Gestión ágil para restaurantes y hostelería</p>
+      <button *ngIf="showInstallButton" class="pwa-btn" (click)="installPWA()">Instalar aplicación</button>
+    </div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Sucursal</mat-label>
-            <mat-select formControlName="tenant" required>
-              <mat-option *ngFor="let tenant of tenantDefault" [value]="tenant">
-                {{tenant.Sucursal}}
-              </mat-option>
-            </mat-select>
-            <mat-error>Please provide a valid Sucursal</mat-error>
-          </mat-form-field>
+    <!-- Card del formulario -->
+    <div class="login-card">
+      <form [formGroup]="loginForm" (ngSubmit)="login()">
+        <div *ngIf="!loginValid" class="error-banner">Credenciales inválidas. Inténtalo de nuevo.</div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Tipo Usuario</mat-label>
-            <mat-select formControlName="idNivel" required>
-              <mat-option *ngFor="let nivel of nivelUsuario" [value]="nivel.value">
-                {{nivel.nombreNivel}}
-              </mat-option>
-            </mat-select>
-            <mat-error>Please provide a valid User Type</mat-error>
-          </mat-form-field>
-
-          <!-- Nuevo campo Identificador Único -->
-          <mat-form-field appearance="outline" *ngIf="shouldShowIdentifierField()">
-            <mat-label>Identificador Único</mat-label>
-            <input matInput formControlName="identifier" required>
-            <mat-error>Please provide a valid identifier</mat-error>
-          </mat-form-field>
-
-          <!-- Botón para ingresar la contraseña numérica -->
-          <div class="password-field">
-            <button mat-button type="button" (click)="openPasswordDialog()">Ingresar Contraseña Touch</button>
+        <!-- Selector de sucursal -->
+        <div class="form-group">
+          <label for="tenant">Sucursal</label>
+          <div class="custom-select">
+            <select id="tenant" formControlName="tenant" required>
+              <option *ngFor="let tenant of tenantDefault" [ngValue]="tenant">
+                {{ tenant.Sucursal }}
+              </option>
+            </select>
           </div>
-          
-          <mat-form-field appearance="outline">
-            <mat-label>Password</mat-label>
-            <input matInput type="password" formControlName="password" required>
-            <mat-error>Please provide a valid password</mat-error>
-          </mat-form-field>
+        </div>
 
-          <button mat-raised-button color="primary" class="login-button" [disabled]="!loginForm.valid">Login</button>
-        </form>
-      </mat-card-content>
-    </mat-card>
-    <br>
+        <!-- Tipo de usuario -->
+        <div class="form-group">
+          <label for="idNivel">Tipo de usuario</label>
+          <div class="custom-select">
+            <select id="idNivel" formControlName="idNivel" required>
+              <option *ngFor="let nivel of nivelUsuario" [value]="nivel.value">
+                {{ nivel.nombreNivel }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Identificador único (solo si aplica) -->
+        <div class="form-group" *ngIf="shouldShowIdentifierField()">
+          <label for="identifier">Identificador único</label>
+          <input id="identifier" type="text" formControlName="identifier" required />
+        </div>
+
+        <!-- Botón contraseña táctil -->
+        <div class="password-field">
+          <button type="button" class="lc-btn lc-btn-ghost" (click)="openPasswordDialog()">
+            <span class="lc-btn__icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2a7 7 0 0 0-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                <path d="M19 9a7 7 0 0 0-7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".7" />
+                <path d="M5 13a7 7 0 0 0 7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                <path d="M12 6a5 5 0 0 0-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                <path d="M17 11a5 5 0 0 0-5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".7" />
+              </svg>
+            </span>
+            Ingresar contraseña táctil
+          </button>
+        </div>
+
+        <!-- Contraseña -->
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input id="password" type="password" formControlName="password" required />
+        </div>
+
+        <!-- Botón principal -->
+        <button
+          type="submit"
+          class="lc-btn lc-btn-primary login-button"
+          [disabled]="isSubmitting || loginForm.invalid">
+          <ng-container *ngIf="!isSubmitting; else loadingTpl">Entrar</ng-container>
+        </button>
+
+        <ng-template #loadingTpl>
+          <span aria-busy="true">Ingresando…</span>
+        </ng-template>
+      </form>
+    </div>
+
+    <!-- Versión app -->
     <p class="app-version">Versión de la aplicación: {{ appVersion }}</p>
-
   </div>
-
 </div>

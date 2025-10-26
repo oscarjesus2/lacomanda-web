@@ -1,67 +1,233 @@
-/* Fondo con imagen o degradado */
-.login-container {
-  background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* ============================================
+   LOGIN - LACOMANDA (versión sin Angular Material)
+   ============================================ */
+
+:host {
+  display: block;
+  min-height: 100dvh;
 }
 
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Poppins', 'Inter', sans-serif;
+  background: #0d0d0d;
+  overflow: hidden;
+}
+
+/* Fondo animado */
+.login-container {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 24px;
+  background: radial-gradient(circle at 80% 10%, rgba(225, 77, 42, 0.4), transparent 50%),
+              radial-gradient(circle at 15% 90%, rgba(255, 138, 91, 0.25), transparent 60%),
+              linear-gradient(to bottom, #1c1c1c 0%, #0d0d0d 100%);
+  background-size: cover;
+  background-position: center;
+  animation: bgShift 12s ease-in-out infinite alternate;
+}
+
+@keyframes bgShift {
+  0% { background-position: 80% 10%, 15% 90%; }
+  100% { background-position: 85% 20%, 10% 80%; }
+}
+
+/* Caja principal */
 .login-box {
+  width: min(92vw, 480px);
+  display: grid;
+  gap: 16px;
   text-align: center;
-  background-color: white;
-  padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-10px);
+}
+
+/* Header */
+.brand {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  color: #fff;
 }
 
 .login-logo {
   width: 100px;
-  height: auto;
-  margin-bottom: 20px;
-  border-radius: 5px;
+  height: 100px;
+  filter: drop-shadow(0 8px 18px rgba(0,0,0,.4));
 }
 
-h2 {
-  font-size: 24px;
-  color: #333;
-  margin-bottom: 20px;
+.title {
+  font-size: clamp(20px, 2.4vw, 26px);
+  font-weight: 800;
+  color: #e6e6e6;
 }
 
-/* Estilos del formulario */
+.tagline {
+  font-size: 14px;
+  color: #e6e6e6;
+}
+
+/* Botón PWA */
+.pwa-btn {
+  margin-top: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.pwa-btn:hover {
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-1px);
+}
+
+/* Card del formulario */
 .login-card {
-  max-width: 350px;
-  margin: 0 auto;
-  padding: 20px;
+  backdrop-filter: blur(22px);
+  background: rgba(30,30,30,0.65);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 16px;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.45);
+  color: #f5f5f5;
+  padding: 24px 28px;
+  text-align: left;
 }
 
-mat-form-field {
+/* Inputs */
+.form-group {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.form-group input[type="password"] {
   width: 100%;
-  margin-bottom: 20px;
+  box-sizing: border-box;
 }
 
-/* Estilo del botón de login */
+.password-field {
+  margin-bottom: 0;
+}
+
+label {
+  font-size: 13px;
+  color: #dcdcdc;
+}
+
+input, select {
+  width: 100%;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.08);
+  color: #f3f3f3;
+  font-size: 14px;
+  padding: 0 12px;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+input:focus, select:focus {
+  border-color: #ff7a55;
+  background: rgba(255,255,255,0.12);
+}
+
+/* Custom select arrow */
+.custom-select {
+  position: relative;
+}
+.custom-select select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='12' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23ffffff' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px 8px;
+}
+
+/* Error banner */
+.error-banner {
+  background: rgba(255, 87, 87, 0.15);
+  border: 1px solid rgba(255, 87, 87, 0.35);
+  color: #ff9a9a;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+/* Botón táctil */
+.password-field {
+  display: flex;
+  justify-content: flex-end;
+  margin: 4px 0 10px;
+}
+
+/* Botones reutilizables */
+.lc-btn {
+  --lc-ring: #ff7a55;
+  --lc-txt: #fff;
+  --lc-bg: rgba(255,255,255,0.06);
+  --lc-bd: rgba(255,255,255,0.35);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--lc-bd);
+  background: var(--lc-bg);
+  color: var(--lc-txt);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.lc-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.5); }
+.lc-btn:active { transform: translateY(1px); }
+
+.lc-btn-primary {
+  background: linear-gradient(90deg, #e14d2a, #ff7043);
+  border: none;
+  box-shadow: 0 8px 26px rgba(225,77,42,.45);
+}
+.lc-btn-primary:hover { filter: brightness(1.05); }
+.lc-btn-primary:active { transform: translateY(1px) scale(.99); }
+
 .login-button {
   width: 100%;
-  height: 50px;
-  background-color: #ff5722;
-  color: white;
-  font-size: 16px;
-  transition: background-color 0.3s ease;
+  height: 46px;
 }
 
-.login-button:hover {
-  background-color: #e64a19;
-}
-
+/* Versión app */
 .app-version {
-  font-size: 16px;           /* Tamaño de la fuente */
-  color: #4A4A4A;            /* Color del texto */
-  background-color: #F3F3F3; /* Color de fondo */
-  padding: 10px;             /* Espaciado interno */
-  border: 1px solid #D1D1D1; /* Borde del contenedor */
-  border-radius: 5px;       /* Bordes redondeados */
-  text-align: center;        /* Alineación del texto */
-  margin: 20px;             /* Espacio alrededor del elemento */
-  font-family: Arial, sans-serif; /* Fuente */
+  font-size: 12px;
+  color: #e6e6e6;
+  opacity: 0.9;
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* Responsive */
+@media (max-width: 420px) {
+  .login-card { padding: 20px; }
+  .login-logo { width: 80px; height: 80px; }
+}
+
+select option {
+  background-color: #2a2a2a;
+  color: #f5f5f5;
+}
+
+/* Opcional: resalta la opción al pasar el mouse */
+select option:hover {
+  background-color: #ff7a55;
+  color: #fff;
 }

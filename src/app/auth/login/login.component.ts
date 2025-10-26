@@ -16,6 +16,8 @@ import { CookieService } from 'ngx-cookie-service';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { Configuracion } from 'src/app/models/configuracion.models';
 import { ConfiguracionInicialComponent } from 'src/app/components/configuracion-inicial/configuracion-inicial/configuracion-inicial.component';
+import { finalize } from 'rxjs/operators';
+import { HeaderService } from 'src/app/services/header.service';
 
 @Component({
   selector: 'app-login',
@@ -24,6 +26,7 @@ import { ConfiguracionInicialComponent } from 'src/app/components/configuracion-
 })
 export class LoginComponent implements OnInit {
   appVersion = version;
+  isSubmitting = false;
   hide = true;
   public loginValid = true;
   public idNivel = '001';
@@ -51,6 +54,7 @@ export class LoginComponent implements OnInit {
     private notificationService: NotificationService,
     private cookieService: CookieService,
     private configService: ConfiguracionService,
+    private headerService: HeaderService,
   ) {}
 
   deferredPrompt: any;
@@ -113,6 +117,7 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
+      this.headerService.hideHeader(); 
     this.checkIfIos();
     this.loadTenants();
 
@@ -236,6 +241,7 @@ export class LoginComponent implements OnInit {
 
   
   openPasswordDialog() {
+     if (this.isSubmitting) return; 
     const dialogRef = this.dialog.open(DialogMCantComponent, {
       width: '350px',
       data: { 
@@ -268,21 +274,21 @@ export class LoginComponent implements OnInit {
       return;
     }
 
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
+
     this.spinnerService.show();
-    
-    const formValues = this.loginForm.value;
-    const idNivel = formValues.idNivel;
-    const password = formValues.password;
-    const tenant = formValues.tenant; 
-    
-      // Manejar el identificador único para idNivel '003'
-      if (!this.identifierExists) {
-        this.CurrentIP = formValues.identifier;
-        const expirationDate = new Date();
-        expirationDate.setFullYear(expirationDate.getFullYear() + 10); // Establece la expiración en 10 años
-        this.cookieService.set('clientUUID', this.CurrentIP, expirationDate);
-        this.identifierExists = true;
-      }
+
+    const { tenant, idNivel, password, identifier } = this.loginForm.getRawValue();
+    this.loginForm.disable({ emitEvent: false });
+
+    if (!this.identifierExists) {
+      this.CurrentIP = identifier;
+      const expirationDate = new Date();
+      expirationDate.setFullYear(expirationDate.getFullYear() + 10); // Establece la expiración en 10 años
+      this.cookieService.set('clientUUID', this.CurrentIP, expirationDate);
+      this.identifierExists = true;
+    }
 
     const loginRequest: LoginRequest = {
       IdNivel: idNivel,
@@ -290,41 +296,50 @@ export class LoginComponent implements OnInit {
       Ip: this.CurrentIP || '-',   
     };
 
-    this.loginService.login(loginRequest, tenant.TenantId).subscribe({
-      next: (userData) => {
-        console.log('Login correcto');
-        const session: Session = new Session(userData.Token, userData, this.CurrentIP, tenant.TenantId, tenant.Sucursal);
-        this.storageService.setCurrentSession(session);
-        if (userData.TipoCompu == 0 && this.storageService.getCurrentUser().IdNivel == 1) {
-          this.identifierExists = false;
-          this.cookieService.delete('clientUUID', this.CurrentIP);
-          this.ensureConfigThenNavigate('/dashboard');
-        } else if (userData.TipoCompu == 2) {
+    this.loginService.login(loginRequest, tenant.TenantId)
+      .pipe(
+        finalize(() => {
+          // Siempre se ejecuta (éxito o error)
+          this.isSubmitting = false;      // <— NUEVO
+          this.loginForm.enable();        // <— NUEVO
+          this.spinnerService.hide();     // <— Mover aquí
+        })
+      )
+      .subscribe({
+        next: (userData) => {
+          console.log('Login correcto');
+          const session: Session = new Session(userData.Token, userData, this.CurrentIP, tenant.TenantId, tenant.Sucursal);
+          this.storageService.setCurrentSession(session);
+
+          if (userData.TipoCompu == 0 && this.storageService.getCurrentUser().IdNivel == 1) {
+            this.identifierExists = false;
+            this.cookieService.delete('clientUUID', this.CurrentIP);
+            this.ensureConfigThenNavigate('/dashboard');
+          } else if (userData.TipoCompu == 2) {
             this.router.navigateByUrl('/caja');
-        } else if (userData.TipoCompu == 1) {
+          } else if (userData.TipoCompu == 1) {
             this.router.navigateByUrl('/mozo');
-        } else if (userData.TipoCompu == 3) {
+          } else if (userData.TipoCompu == 3) {
             this.router.navigateByUrl('/dashboard');
-        }else{
-          this.identifierExists = false;
-          this.cookieService.delete('clientUUID', this.CurrentIP);
-          Swal.fire({
-            title: 'Login',
-            text: 'El identificador ' + this.CurrentIP + ' no tiene un Tipo de Estación configurado.',
-            icon: 'warning',
-            confirmButtonText: 'OK'
-          });
+          } else {
+            this.identifierExists = false;
+            this.cookieService.delete('clientUUID', this.CurrentIP);
+            Swal.fire({
+              title: 'Login',
+              text: 'El identificador ' + this.CurrentIP + ' no tiene un Tipo de Estación configurado.',
+              icon: 'warning',
+              confirmButtonText: 'OK'
+            });
+          }
+
+          this.loginForm.reset();
+        },
+        error: (errorData) => {
+          this.loginValid = false;
+          this.notificationService.showError('Contraseña incorrecta');
+          this.loginError = errorData;
         }
-        this.loginForm.reset();
-        this.spinnerService.hide();
-      },
-      error: (errorData) => {
-        this.loginValid = false;
-        this.notificationService.showError('Contraseña incorrecta');
-        this.loginError = errorData;
-        this.spinnerService.hide();
-      }
-    });
+      });
   }
 }
 
