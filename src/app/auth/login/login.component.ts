@@ -191,16 +191,49 @@ export class LoginComponent implements OnInit {
   }
   
 
-  private async loadTenants(): Promise<void> {
-      this.spinnerService.show();
-      this.tenantDefault = await this.tenantService.getTenant().toPromise();
-      this.spinnerService.hide();
+ private async loadTenants(): Promise<void> {
+  this.spinnerService.show();
+  try {
+    const resp = await this.tenantService.getTenant().toPromise();  
+    const tenants = resp?.Data ?? [];
 
-        // Si solo hay un tenant, seleccionarlo automáticamente
-      if (this.tenantDefault.length === 1) {
-        this.loginForm.controls['tenant'].setValue(this.tenantDefault[0]);
-      }
+    if (resp && resp.Success === false) {
+      // error lógico desde el backend
+      (this.notificationService?.showError?.bind(this.notificationService) ?? console.error)(
+        resp.Message || 'No se pudo obtener la lista de tenants.'
+      );
+      this.loginForm?.get('tenant')?.disable();
+      return;
+    }
+
+    // sin registros
+    if (tenants.length === 0) {
+      (this.notificationService?.showWarning?.bind(this.notificationService) ?? console.warn)(
+        'No hay tenants disponibles. Contacta al administrador.'
+      );
+      this.loginForm?.get('tenant')?.disable();
+      return;
+    }
+
+    // asigna al arreglo existente en el componente
+    this.tenantDefault = tenants as any; // misma forma { TenantId, Sucursal }
+
+    // si solo hay uno, seleccionarlo; si hay más, habilitar selector
+    if (this.tenantDefault.length === 1) {
+      this.loginForm?.controls['tenant']?.setValue(this.tenantDefault[0]);
+    } else {
+      this.loginForm?.get('tenant')?.enable();
+    }
+  } catch (e) {
+    (this.notificationService?.showError?.bind(this.notificationService) ?? console.error)(
+      'No se pudieron cargar los tenants. Inténtalo nuevamente.'
+    );
+    this.loginForm?.get('tenant')?.disable();
+  } finally {
+    this.spinnerService.hide();
   }
+}
+
   
   openPasswordDialog() {
     const dialogRef = this.dialog.open(DialogMCantComponent, {
