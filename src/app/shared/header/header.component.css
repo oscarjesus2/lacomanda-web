@@ -1,22 +1,69 @@
-.sidenav-container {
-    height: 100%;
-  }
-  
-  .sidenav {
-    width: 200px;
-  }
-  
-  .sidenav .mat-toolbar {
-    background: inherit;
-  }
-  
-  .mat-toolbar.mat-primary {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-  }
-  
-  .example-spacer {
-    flex: 1 1 auto;
-  }
-   
+/* Toolbar con guiño al Login (degradado) pero legible en claro */
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 64px;
+  padding: 0 12px;
+  background: var(--lc-grad-accent);
+  color: #fff;
+  box-shadow: var(--lc-shadow-2);
+  backdrop-filter: saturate(120%) blur(6px);
+}
+
+.app-toolbar .mat-icon {
+  color: #fff;
+  opacity: .95;
+}
+
+.app-toolbar__title {
+  margin-left: 8px;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+/* Chip informativo de turno con “glass” */
+.turno-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 48vw;
+  padding: 6px 12px;
+  margin: 0 12px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.28);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 22px rgba(0,0,0,.15);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Menú Material con acentos de la paleta del Login */
+::ng-deep .app-menu .mat-mdc-menu-content {
+  padding: 6px 0;
+}
+::ng-deep .app-menu .mat-mdc-menu-item .mat-icon {
+  margin-right: 8px;
+}
+::ng-deep .app-menu .mat-mdc-menu-item.mdc-list-item {
+  border-radius: 8px;
+  margin: 2px 8px;
+}
+::ng-deep .app-menu .mat-mdc-menu-item.mdc-list-item:hover {
+  background:
+    linear-gradient(0deg, rgba(255,255,255,.08), rgba(255,255,255,.08)),
+    var(--lc-grad-accent);
+  color: #fff;
+}
+
+/* Espaciadores existentes */
+.example-spacer { flex: 1 1 auto; }
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .turno-chip { display: none; }
+  .app-toolbar__title { font-size: 15px; }
+}

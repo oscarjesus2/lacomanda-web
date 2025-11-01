@@ -5,7 +5,6 @@
         <h3 class="menu-subtitle">{{ section.title }}</h3>
         <ul class="menu-list">
           <li *ngFor="let item of section.children" class="menu-item">
-            <!-- <a [routerLink]="item.route">{{ item.title }}</a> -->
             <a   (click)="openDialog(item)">{{ item.title }}</a>
             
           </li>

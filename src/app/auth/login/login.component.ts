@@ -117,7 +117,7 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-      this.headerService.hideHeader(); 
+    this.headerService.hideHeader(); 
     this.checkIfIos();
     this.loadTenants();
 

@@ -3,6 +3,7 @@ import { Usuario } from 'src/app/models/usuario.models';
 import Swal from 'sweetalert2';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { StorageService } from 'src/app/services/storage.service';
+import { HeaderService } from 'src/app/services/header.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -31,7 +32,8 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private storageService: StorageService,
-    private spinnerService: NgxSpinnerService
+    private spinnerService: NgxSpinnerService,
+    private headerService: HeaderService
   ) { 
     const lastday = new Date(new Date());
     lastday.setDate(new Date().getDate() - 1);
@@ -101,10 +103,9 @@ export class DashboardComponent implements OnInit {
   async ngOnInit() {
     try {
       this.spinnerService.show();
-      
+      this.headerService.showHeader();
       this.updateVisibleReportes();
-
-    } catch(e) {
+    } catch(e) {  
       this.salir();
       Swal.fire('Error', e.message, 'error');
     } finally {

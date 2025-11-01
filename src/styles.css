@@ -1,74 +1,26 @@
-@import '~@angular/material/prebuilt-themes/indigo-pink.css';
-.mat-select-panel {
-  min-width: 200px; /* Ajusta el ancho según tus necesidades */
+:root{
+  --lc-accent-1:#e14d2a;        /* login gradiente inicio */
+  --lc-accent-2:#ff7043;        /* login gradiente fin   */
+  --lc-accent-ring:#ff7a55;     /* foco / ring            */
+  --lc-bg-dark-1:#0d0d0d;
+  --lc-bg-dark-2:#1c1c1c;
+
+  /* Superficies claras por defecto (post-login) */
+  --lc-surface:#ffffff;
+  --lc-surface-2:#f7f8fb;
+  --lc-border:#e7e9ee;
+  --lc-border-strong:#d9dde6;
+
+  --lc-text-1:#0f172a;
+  --lc-text-2:#334155;
+  --lc-text-3:#64748b;
+
+  --lc-shadow-1:0 6px 18px rgba(15,23,42,.08);
+  --lc-shadow-2:0 18px 40px rgba(15,23,42,.10);
+
+  --lc-grad-accent:linear-gradient(90deg, var(--lc-accent-1), var(--lc-accent-2));
+  --lc-grad-soft:
+    radial-gradient(1200px 600px at 90% -10%, rgba(225,77,42,.08), transparent 60%),
+    radial-gradient(900px 500px at 0% 100%, rgba(255,112,67,.06), transparent 60%),
+    linear-gradient(#fff,#fff);
 }
-
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: 'Poppins', 'Inter', sans-serif;
-  background-color: #f5f5f5;
-}
-
-h1 {
-  font-size: 28px;
-  margin-bottom: 30px;
-  color: #333;
-}
-
-button {
-  /* min-width: 100px; */
-  padding: 10px 15px;
-  font-size: 14px;
-  border: none;
-  cursor: pointer;
-
-
-  /* margin-top: 10px; */
-  padding: 12px 20px;
-  text-align: left;
-  border-radius: 4px;
-  transition: background-color 0.3s, box-shadow 0.3s;
-  }
-  
-  .button_azul {
-    background-color: #2196f3;
-    color: white;
-  }
-  
-  .btn_verde {
-    background-color: #4caf50;
-    color: white;
-  }
-  
-  .btn_naranja {
-    background-color: #ff9800;
-    color: white;
-  }
-  
-  .btn_amarillo {
-    background-color: #ffeb3b;
-    color: black;
-  }
-  
-  .search-button .icon-search {
-    margin-right: 5px;
-  }
-  
-  button:hover {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .icon-button {
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    color: #1976d2;
-  }
-  
-  .icon-button:disabled {
-    color: #ccc;
-    cursor: not-allowed;
-  }

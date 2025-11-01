@@ -1,153 +1,207 @@
-/* Contenedor principal en horizontal */
-.custom-toggle-container {
-  display: flex;
-  flex-wrap: wrap; /* Ajusta elementos si no caben en una fila */
-  gap: 20px; /* Espaciado entre toggles */
-  justify-content: flex-start;
-}
-
-/* Estilo para el toggle */
-.custom-toggle {
-  display: flex;
-  align-items: center;
-  position: relative;
-  cursor: pointer;
-  user-select: none;
-  padding: 5px 10px;
-  border-radius: 5px;
-  transition: background-color 0.3s, color 0.3s;
-}
-
-
-/* Estilo por defecto */
-.custom-toggle {
-  color: white; /* Color del texto */
-}
-
-/* Checkbox (oculto) */
-.custom-toggle input[type='checkbox'] {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-/* La "barra deslizante" */
-.custom-toggle .slider {
-  position: relative;
-  width: 40px;
-  height: 20px;
-  background-color: #07f787;
-  border-radius: 20px;
-  transition: background-color 0.3s;
-  margin-right: 10px; /* Espacio entre toggle y texto */
-}
-
-
-/* Cambiar el círculo dentro del toggle */
-.custom-toggle .slider::before {
-  content: '';
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  background-color: white;
-  border-radius: 50%;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.3s;
-}
- 
-/* Cambiar color del círculo cuando está seleccionado */
-.custom-toggle input[type='checkbox']:checked + .slider::before {
-  background-color: #4caf50; /* Color del círculo al seleccionar */
-  transform: translateX(20px); /* Deslizar círculo a la derecha */
-}
-
-/* Estilo del texto */
-.custom-toggle .toggle-label {
-  color: white; /* Cambiar color del texto */
-  margin-left: 35px;
-}
-
-
+/* Lienzo claro con leves acentos del Login en el fondo */
 .container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background: var(--lc-grad-soft);
+  color: var(--lc-text-1);
 }
 
+/* ---------- Header del dashboard ---------- */
 header {
-  background-color: #2c3e50;
-  color: white;
-  padding: 1rem 2rem;
-  text-align: center;
+  background: var(--lc-surface);
+  border-bottom: 1px solid var(--lc-border);
+  box-shadow: var(--lc-shadow-1);
+  padding: 18px 20px;
+  position: sticky;
+  top: 64px; /* debajo del mat-toolbar */
+  z-index: 5;
 }
+
 header h1 {
-  color: white;
+  margin: 0 0 12px;
+  font-size: 22px;
+  color: var(--lc-text-2);
+  font-weight: 800;
+  letter-spacing: .2px;
 }
+
+/* Controles de fecha */
 header label {
   display: block;
-  margin: 10px 0 5px;
+  margin: 8px 0 6px;
+  font-size: 13px;
+  color: var(--lc-text-3);
 }
 
-header input {
-  width: calc(100% - 22px);
-  padding: 10px;
-  margin-bottom: 10px;
-  border: none;
-  border-radius: 4px;
+header input[type="date"] {
+  width: 100%;
+  max-width: 260px;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--lc-border);
+  background: #fff;
+  color: var(--lc-text-1);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  box-shadow: 0 1px 0 rgba(2, 8, 23, .02);
+  margin-right: 8px;
 }
 
-.focus:focus {
-  background-color: darkgrey;
+header input[type="date"]:focus {
+  border-color: var(--lc-accent-ring);
+  box-shadow: 0 0 0 3px rgba(255,122,85,.18);
 }
 
+/* === TOGGLES v3 – chip + switch, legibles === */
+/* ===== TOGGLES — layout absoluto, sin solapes ===== */
+.custom-toggle-container{
+  display:flex; flex-wrap:wrap;
+  gap:12px; margin-top:12px;
+}
+
+/* El chip reserva espacio a la izquierda para el slider */
+.custom-toggle{
+  position:relative;
+  display:inline-flex; align-items:center;
+  padding:10px 16px 10px 62px;   /* << espacio para el switch */
+  background:#fff;
+  border:1px solid var(--lc-border, #e7e9ee);
+  border-radius:999px;
+  box-shadow:0 2px 10px rgba(2,8,23,.06);
+  color:var(--lc-text-1, #0f172a);
+  cursor:pointer; user-select:none;
+  transition:transform .15s ease, box-shadow .2s ease, border-color .2s;
+  overflow:visible;
+}
+
+.custom-toggle:hover{
+  transform:translateY(-1px);
+  box-shadow:0 12px 26px rgba(2,8,23,.10);
+  border-color:var(--lc-border-strong, #d9dde6);
+}
+
+/* Checkbox real oculto */
+.custom-toggle input[type='checkbox']{
+  position:absolute; opacity:0; width:0; height:0;
+}
+
+/* Slider fijo a la izquierda, centrado verticalmente */
+.custom-toggle .slider{
+  position:absolute; left:14px; top:50%;
+  transform:translateY(-50%);
+  width:44px; height:24px; border-radius:999px;
+  background:#e6eaf2;
+  border:1px solid var(--lc-border, #e7e9ee);
+  transition:background-color .25s, border-color .25s, box-shadow .25s;
+}
+.custom-toggle .slider::before{
+  content:""; position:absolute; top:50%; left:3px;
+  width:18px; height:18px; border-radius:50%;
+  background:#fff; transform:translateY(-50%);
+  transition:transform .25s; box-shadow:0 2px 6px rgba(15,23,42,.18);
+}
+
+/* Estilo del texto */
+.custom-toggle .toggle-label {
+  color:var(--lc-text-2, #334155);
+  margin-left: 35px;
+}
+
+.custom-toggle input[type='checkbox']:checked + .slider{
+  background:var(--lc-grad-accent, linear-gradient(90deg,#e14d2a,#ff7043));
+  border-color:transparent;
+  box-shadow:0 8px 22px rgba(225,77,42,.28);
+}
+.custom-toggle input[type='checkbox']:checked + .slider::before{
+  transform:translate(18px, -50%);
+}
+.custom-toggle input[type='checkbox']:checked ~ .toggle-label{
+  color:var(--lc-text-1, #0f172a);
+}
+
+/* Foco accesible */
+.custom-toggle:focus-within{
+  border-color:var(--lc-accent-ring, #ff7a55);
+  box-shadow:0 0 0 3px rgba(255,122,85,.18);
+}
+
+/* ---------- Main: grid de reportes ---------- */
 main {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
-  background-color: cornflowerblue;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+  padding: 18px;
+  background: transparent;
 }
 
+/* Tarjeta de reporte clara por defecto */
 .report {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1rem;
+  background: var(--lc-surface);
+  border: 1px solid var(--lc-border);
+  border-radius: 16px;
+  box-shadow: var(--lc-shadow-1);
+  padding: 14px;
   display: flex;
   flex-direction: column;
+  transition: box-shadow .2s ease, transform .12s ease;
+}
+
+.report:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 36px rgba(2,8,23,.10);
 }
 
 .report h2 {
-  margin-top: 0;
-  font-size: 1.25rem;
-  color: #34495e;
+  margin: 4px 4px 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--lc-text-2);
 }
 
+/* Contenedor de gráfico, con fondo suave */
 .chart {
   flex: 1;
-  height: 200px;
-  background-color: #ecf0f1;
-  border-radius: 4px;
+  min-height: 240px;
+  background: #f3f5f9;
+  border: 1px dashed var(--lc-border);
+  border-radius: 12px;
+  padding: 6px;
 }
 
+/* Variante opcional “oscura puntual” por tarjeta (si algún reporte lo amerita) */
+.report.is-dark {
+  background: rgba(30,30,30,.85);
+  border-color: rgba(255,255,255,.12);
+  color: #f5f5f5;
+  box-shadow: 0 18px 40px rgba(0,0,0,.30);
+}
+.report.is-dark .chart {
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.18);
+}
+
+/* ---------- Footer ---------- */
 footer {
-  background-color: #2c3e50;
-  color: white;
+  background: #fff;
+  border-top: 1px solid var(--lc-border);
+  color: var(--lc-text-3);
   text-align: center;
-  padding: 1rem;
+  padding: 14px;
 }
 
+/* --------- Accesibilidad y foco --------- */
+.focus:focus {
+  background-color: #eef2ff;
+  outline: 3px solid rgba(255,122,85,.18);
+  outline-offset: 2px;
+}
+
+/* ---------- Responsive ---------- */
 @media (max-width: 768px) {
-  header {
-    padding: 1rem;
-  }
-  main {
-    grid-template-columns: 1fr;
-  }
-  .container {
-    margin: 0;
-  }
+  header { padding: 16px; }
+  main { grid-template-columns: 1fr; padding: 14px; }
+  .container { margin: 0; }
 }
