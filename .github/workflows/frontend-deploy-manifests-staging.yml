@@ -21,11 +21,11 @@ jobs:
       id-token: write # OIDC → Workload Identity Federation
     env:
       IMAGE_NAME: oscar020/frontend
-      PROJECT_ID: resturante-ccap
-      GKE_CLUSTER: cluster-1
+      PROJECT_ID: lacomanda-477709
+      GKE_CLUSTER: gke-eusw1-autopilot-01
       GKE_LOCATION: europe-southwest1
-      GSA_EMAIL: gke-deployer@resturante-ccap.iam.gserviceaccount.com
-      WORKLOAD_IDENTITY_PROVIDER: projects/838506148899/locations/global/workloadIdentityPools/github-pool/providers/github-oidc
+      GSA_EMAIL: gha-gke-deployer@lacomanda-477709.iam.gserviceaccount.com
+      WORKLOAD_IDENTITY_PROVIDER: projects/161733769525/locations/global/workloadIdentityPools/github-pool/providers/github-pool
 
     steps:
     - name: Checkout repo
