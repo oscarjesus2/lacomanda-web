@@ -1,28 +1,46 @@
-<h3 class="titulo-dialog">Seleccionar posición</h3>
-
-<div class="legend">
-  <span class="badge libre"></span> Libre
-  <span class="badge ocupada"></span> Ocupada
-  <span class="badge elegida"></span> Elegida
-</div>
-
-<div class="grid"
-     [style.gridTemplateColumns]="'repeat(' + data.cols + ', auto)'">
-  <button
-    *ngFor="let n of grid"
-    mat-button
-    class="cell"
-    [class.occupied]="isTaken(n)"
-    [class.selected]="selected === n"
-    (click)="pick(n)"
-    [disabled]="isTaken(n)"
-    [matTooltip]="'Posición ' + n"
-  >
-    {{ n }}
+<div class="mant-panel pos-panel">
+  <!-- CERRAR -->
+  <button mat-icon-button class="close-button" (click)="cancel()">
+    <mat-icon>close</mat-icon>
   </button>
-</div>
 
-<div class="dialog-actions">
-  <button mat-raised-button color="primary" (click)="confirm()" [disabled]="!selected">Aceptar</button>
-  <button mat-raised-button color="warn" (click)="cancel()">Cancelar</button>
+  <h3 class="pos-panel__title">Seleccionar posición</h3>
+
+  <div class="pos-panel__legend">
+    <span class="pos-badge pos-badge--free"></span> Libre
+    <span class="pos-badge pos-badge--taken"></span> Ocupada
+    <span class="pos-badge pos-badge--selected"></span> Elegida
+  </div>
+
+  <div
+    class="pos-grid"
+    [style.gridTemplateColumns]="'repeat(' + data.cols + ', auto)'"
+  >
+    <button
+      *ngFor="let n of grid"
+      mat-button
+      class="pos-cell"
+      [class.pos-cell--taken]="isTaken(n)"
+      [class.pos-cell--selected]="selected === n"
+      (click)="pick(n)"
+      [disabled]="isTaken(n)"
+      [matTooltip]="'Posición ' + n"
+    >
+      {{ n }}
+    </button>
+  </div>
+
+  <div class="pos-panel__actions">
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="confirm()"
+      [disabled]="!selected"
+    >
+      Aceptar
+    </button>
+    <button mat-raised-button color="warn" (click)="cancel()">
+      Cancelar
+    </button>
+  </div>
 </div>

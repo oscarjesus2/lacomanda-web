@@ -1,50 +1,112 @@
-.titulo-dialog {
-  margin: 0 0 10px 0;
-  text-align: center;
-  color: #3f51b5;
-  font-family: 'Roboto', sans-serif;
+/* El panel usa la tarjeta global .mant-panel; aquí solo ajustamos interior */
+.pos-panel {
+  padding-top: 26px; /* espacio para la X */
 }
 
-.legend {
-  display: flex; gap: 12px; align-items: center;
-  justify-content: center; margin-bottom: 12px;
-  font-family: 'Roboto', sans-serif; color: #555;
+/* Título del diálogo */
+.pos-panel__title {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3b220a;
 }
-.badge { width: 14px; height: 14px; border-radius: 3px; display: inline-block; margin-right: 4px; }
-.badge.libre { background: #e8f5e9; border: 1px solid #a5d6a7; }
-.badge.ocupada { background: #ffebee; border: 1px solid #ef9a9a; }
-.badge.elegida { background: #e3f2fd; border: 1px solid #90caf9; }
 
-.grid {
+/* Leyenda de estados */
+.pos-panel__legend {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 12px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(59, 34, 10, 0.7);
+}
+
+.pos-badge {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-right: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.pos-badge--free {
+  background: #e5f6df;
+  border: 1px solid #8bc34a;
+}
+
+.pos-badge--taken {
+  background: #ffebee;
+  border: 1px solid #e57373;
+}
+
+.pos-badge--selected {
+  background: #fff3cd;
+  border: 1px solid #f4b23a;
+}
+
+/* Grid de posiciones */
+.pos-grid {
   display: grid;
-  /* grid-template-columns: repeat(10, 1fr); */
   gap: 6px;
-  max-width: 520px;
+  max-width: 420px;
   margin: 0 auto 16px auto;
+  justify-content: center;
 }
-.cell {
-  min-width: 0;           /* evita que mat-button rompa la grilla */
-  width: 56px;
-  height: 36px;
-  line-height: 36px;
+
+/* Botón de posición */
+.pos-cell {
+  min-width: 0; /* para que mat-button no rompa la grilla */
+  width: 52px;
+  height: 34px;
   padding: 0;
-  border: 1px solid #e0e0e0 !important;
-  border-radius: 6px !important;
-  background: #fafafa;
+
+  border-radius: 999px !important;
+  border: 1px solid rgba(59, 34, 10, 0.15) !important;
+  background: #fffdf7 !important;
+  color: #3b220a !important;
+
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease,
+    box-shadow 0.18s ease,
+    border-color 0.15s ease;
 }
 
-.cell:hover { filter: brightness(0.97); }
-.cell.occupied {
-  background: #fbe9e7;
-  border-color: #ffab91;
-  color: #a1887f;
+.pos-cell:hover:not(:disabled):not(.pos-cell--taken) {
+  background: #fff8e8 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* Ocupada */
+.pos-cell--taken {
+  background: #fbe9e7 !important;
+  border-color: #ffab91 !important;
+  color: #a1887f !important;
   cursor: not-allowed;
-}
-.cell.selected {
-  background: #e3f2fd;
-  border-color: #64b5f6;
+  box-shadow: none;
 }
 
-.dialog-actions {
-  display: flex; gap: 10px; justify-content: center;
+/* Seleccionada */
+.pos-cell--selected:not(.pos-cell--taken) {
+  background: #f4b23a !important;
+  border-color: #f4b23a !important;
+  color: #3b220a !important;
+}
+
+/* Acciones del diálogo */
+.pos-panel__actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
 }

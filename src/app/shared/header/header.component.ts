@@ -96,7 +96,7 @@ export class HeaderComponent {
   }
 
   public Administracion(): void {
-    this.title = 'Administracion';
+    this.title = this.storageService.getCurrentNombreSucursal();
     this.sDatosUsuarioTurno='';
     this.router.navigateByUrl('/administracion');
   }

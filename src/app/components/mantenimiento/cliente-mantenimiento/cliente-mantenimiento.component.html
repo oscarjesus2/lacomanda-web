@@ -19,7 +19,7 @@
         <!-- RUC Column -->
         <ng-container matColumnDef="ruc">
           <mat-header-cell *matHeaderCellDef> RUC </mat-header-cell>
-          <mat-cell *matCellDef="let cliente"> {{cliente.Ruc}} </mat-cell>
+          <mat-cell *matCellDef="let cliente"> {{cliente.NumeroIdentificacion}} </mat-cell>
         </ng-container>
 
         <!-- Razon Social Column -->
@@ -67,7 +67,7 @@
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>Tipo de Identidad</mat-label>
-        <mat-select [(ngModel)]="cliente.TipoDocCliente" 
+        <mat-select [(ngModel)]="cliente.IdTipoIdentidad" 
         name="tipoIdentidad" 
         required #tipoIdentidad="ngModel"
         [compareWith]="compareTiposDocCliente"
@@ -83,7 +83,7 @@
 
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>{{etiquetaCliente}}</mat-label>
-        <input matInput [(ngModel)]="cliente.Ruc" 
+        <input matInput [(ngModel)]="cliente.NumeroIdentificacion" 
                  name="ruc" 
                  [required]="true" 
                  [attr.maxLength]="maxLength"

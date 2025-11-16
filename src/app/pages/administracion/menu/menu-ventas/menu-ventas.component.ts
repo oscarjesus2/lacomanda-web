@@ -347,7 +347,8 @@ export class MenuVentasComponent implements OnInit {
     const dialog = this.dialog.open(ConfiguracionInicialComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '920px'
+      width: '920px',
+      height: '800px'
     });
   }
 

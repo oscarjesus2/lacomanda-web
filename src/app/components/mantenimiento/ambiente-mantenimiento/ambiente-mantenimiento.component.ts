@@ -128,7 +128,7 @@ export class AmbienteMantenimientoComponent implements OnInit, AfterViewInit {
     };
 
     const ref = this.dialog.open(PosicionSelectorDialogComponent, {
-      width: '560px',
+      width: '600px',
       data
     });
 
