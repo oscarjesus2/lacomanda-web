@@ -1,48 +1,106 @@
-<div class="container">
-  <header>
-    <h1>Dashboard de Reportes para Restaurantes</h1>
+<div class="dashboard">
+<div class="dashboard__inner">
 
-    <label for="fecha-inicial">Fecha Inicial :</label>
-    <input type="date" id="fecha-inicial"
-           [(ngModel)]="fechaInicial"
-           (change)="onFechaInicialChange()"
-           [min]="minFechaFinal">
+  <!-- BARRA DE FILTROS -->
+  <section class="dashboard__filters">
 
-    <label for="fecha-final">Fecha Final :</label>
-    <input type="date" id="fecha-final"
-           [(ngModel)]="fechaFinal"
-           [min]="minFechaFinal"
-           [max]="maxFechaFinal"
-           (change)="onFechaFinalChange()">
+    <div class="dashboard__titles">
+      <h1 class="dashboard__title">Dashboard de reportes</h1>
+      <p class="dashboard__subtitle">
+        Analiza ventas, popularidad de platos y rendimiento por rango de fechas.
+      </p>
+    </div>
 
-    <div class="custom-toggle-container">
-      <label class="custom-toggle" *ngFor="let rep of reportes">
-        <input type="checkbox"
-               [(ngModel)]="rep.visible"
-               (change)="updateVisibleReportes()" />
-        <span class="slider"></span>
-        <span class="toggle-label">{{ rep.titulo }}</span>
+    <div class="dashboard__controls">
+
+      <div class="dashboard__field">
+        <label for="fecha-inicial" class="dashboard__label">Fecha inicial</label>
+        <input
+          type="date"
+          id="fecha-inicial"
+          [(ngModel)]="fechaInicial"
+          (change)="onFechaInicialChange()"
+          [min]="minFechaFinal"
+          class="dashboard__input"
+        />
+      </div>
+
+      <div class="dashboard__field">
+        <label for="fecha-final" class="dashboard__label">Fecha final</label>
+        <input
+          type="date"
+          id="fecha-final"
+          [(ngModel)]="fechaFinal"
+          [min]="minFechaFinal"
+          [max]="maxFechaFinal"
+          (change)="onFechaFinalChange()"
+          class="dashboard__input"
+        />
+      </div>
+
+    </div>
+
+    <!-- TOGGLES DE REPORTES -->
+    <div class="dashboard__toggles">
+      <label class="dash-toggle" *ngFor="let rep of reportes">
+        <input
+          type="checkbox"
+          [(ngModel)]="rep.visible"
+          (change)="updateVisibleReportes()"
+        />
+        <span class="dash-toggle__slider"></span>
+        <span class="dash-toggle__label">{{ rep.titulo }}</span>
       </label>
     </div>
-  </header>
 
-  <main>
-    <div *ngFor="let rep of visibleReportes">
-      <div class="report" [class.is-dark]="false">
-        <div class="chart">
-          <ng-container [ngSwitch]="rep.componente">
-            <app-ventas-diarias *ngSwitchCase="'ventas-diarias'" [fechaInicial]="fechaInicial" [fechaFinal]="fechaFinal"></app-ventas-diarias>
-            <app-popularidad-platos *ngSwitchCase="'popularidad-platos'" [fechaInicial]="fechaInicial" [fechaFinal]="fechaFinal"></app-popularidad-platos>
-            <app-horas-pico *ngSwitchCase="'horas-pico'" [fechaInicial]="fechaInicial" [fechaFinal]="fechaFinal"></app-horas-pico>
-            <app-canal-venta *ngSwitchCase="'canal-venta'" [fechaInicial]="fechaInicial" [fechaFinal]="fechaFinal"></app-canal-venta>
-            <app-anulaciones *ngSwitchCase="'anulaciones'" [fechaInicial]="fechaInicial" [fechaFinal]="fechaFinal"></app-anulaciones>
-          </ng-container>
-        </div>
+  </section>
+
+  <!-- GRID DE REPORTES -->
+  <main class="dashboard__grid">
+    <article
+      class="dashboard-card"
+      *ngFor="let rep of visibleReportes"
+    >
+      <div class="dashboard-card__chart">
+        <ng-container [ngSwitch]="rep.componente">
+
+          <app-ventas-diarias
+            *ngSwitchCase="'ventas-diarias'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-ventas-diarias>
+
+          <app-popularidad-platos
+            *ngSwitchCase="'popularidad-platos'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-popularidad-platos>
+
+          <app-horas-pico
+            *ngSwitchCase="'horas-pico'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-horas-pico>
+
+          <app-canal-venta
+            *ngSwitchCase="'canal-venta'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-canal-venta>
+
+          <app-anulaciones
+            *ngSwitchCase="'anulaciones'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-anulaciones>
+
+        </ng-container>
       </div>
-    </div>
+    </article>
   </main>
-
-  <footer>
-    <p>© 2024 Dashboard de Restaurantes. Todos los derechos reservados.</p>
+  
+</div>
+  <footer class="dashboard__footer">
+    <p>© 2024 LaComanda · Dashboard de Restaurantes.</p>
   </footer>
 </div>

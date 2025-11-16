@@ -1,21 +1,43 @@
-<div class="report" style="position: relative; min-height: 200px;">
-  <ngx-spinner
-  bdColor="rgba(128, 128, 128, 0.8)"
-  size="medium"
-  color="#fff"
-  type="ball-scale-multiple"
-  name="popularidadPlatoSpinner"
->
-  <p style="font-size: 20px; color: rgb(71, 68, 68)">Cargando...</p>
-</ngx-spinner>
-    <h2>Popularidad de Platos</h2>
-    <select (change)="onReportTypeChange($event)">
-      <option value="1">Top 1</option>
-      <option value="2">Top 2</option>
-      <option value="3">Top 3</option>
-      <option value="4">Top 4</option>
-    </select>
-    <div #chart class="chart" id="chart-ventas-diarias"></div>
-  </div>
+<div class="report report-panel">
 
-  
+  <ngx-spinner
+    bdColor="rgba(0, 0, 0, 0.35)"
+    size="medium"
+    color="#fff"
+    type="ball-scale-multiple"
+    name="popularidadPlatoSpinner"
+    class="report-panel__spinner"
+  >
+    <p>Cargando popularidad...</p>
+  </ngx-spinner>
+
+  <header class="report-panel__header">
+    <div>
+      <h3 class="report-panel__title">Popularidad de platos</h3>
+      <p class="report-panel__subtitle">
+        Top de platos más vendidos
+      </p>
+    </div>
+
+    <label class="report-panel__control">
+      <span>Top</span>
+      <select
+        class="report-panel__select"
+        (change)="onReportTypeChange($event)"
+      >
+        <option value="1">Top 1</option>
+        <option value="2">Top 2</option>
+        <option value="3">Top 3</option>
+        <option value="4">Top 4</option>
+      </select>
+    </label>
+  </header>
+
+  <div class="report-panel__chart-container">
+    <div
+      #chart
+      class="report-panel__chart"
+      id="chart-ventas-diarias"
+    ></div>
+  </div>
+</div>

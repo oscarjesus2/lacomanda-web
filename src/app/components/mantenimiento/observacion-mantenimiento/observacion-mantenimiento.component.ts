@@ -16,10 +16,6 @@ export class ObservacionMantenimientoComponent implements OnInit {
   @ViewChild('form') form: NgForm;
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
-  // Parametrizable "en duro"
-  readonly ROWS = 5;
-  readonly COLS = 5;
-
   tipos = [
     { value: 1, label: 'Comida' },
     { value: 2, label: 'Bebida' },

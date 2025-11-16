@@ -1,6 +1,8 @@
-<button mat-icon-button class="close-button" (click)="salir()"><mat-icon>close</mat-icon></button>
-
-<div class="empleado-mantenimiento">
+<div class="mant-panel">
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+  
   <h2>Grupos de Productos</h2>
 
   <!-- Lista -->
@@ -11,29 +13,31 @@
       <mat-label>Buscar</mat-label>
       <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Descripción, estado...">
     </mat-form-field>
+    <div class="mant-table-card">
+        <mat-table [dataSource]="data" class="mat-elevation-z8">
+          <ng-container matColumnDef="descripcion">
+            <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+            <mat-cell *matCellDef="let r"> {{ r.Descripcion }} </mat-cell>
+          </ng-container>
 
-    <mat-table [dataSource]="filtered" class="mat-elevation-z8">
-      <ng-container matColumnDef="descripcion">
-        <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
-        <mat-cell *matCellDef="let r"> {{ r.Descripcion }} </mat-cell>
-      </ng-container>
+          <ng-container matColumnDef="activo">
+            <mat-header-cell *matHeaderCellDef> Activo </mat-header-cell>
+            <mat-cell *matCellDef="let r"> {{ r.Activo ? 'Sí' : 'No' }} </mat-cell>
+          </ng-container>
 
-      <ng-container matColumnDef="activo">
-        <mat-header-cell *matHeaderCellDef> Activo </mat-header-cell>
-        <mat-cell *matCellDef="let r"> {{ r.Activo ? 'Sí' : 'No' }} </mat-cell>
-      </ng-container>
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+            <mat-cell *matCellDef="let r">
+              <button mat-icon-button color="primary" (click)="onEdit(r)"><mat-icon>edit</mat-icon></button>
+              <button mat-icon-button color="warn" (click)="onDelete(r.IdGrupo)"><mat-icon>delete</mat-icon></button>
+            </mat-cell>
+          </ng-container>
 
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
-        <mat-cell *matCellDef="let r">
-          <button mat-icon-button color="primary" (click)="onEdit(r)"><mat-icon>edit</mat-icon></button>
-          <button mat-icon-button color="warn" (click)="onDelete(r.IdGrupo)"><mat-icon>delete</mat-icon></button>
-        </mat-cell>
-      </ng-container>
-
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-    </mat-table>
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [length]="rows.length" [pageSize]="5" [pageSizeOptions]="[5,10,20,50]"></mat-paginator>
+    </div>
   </div>
 
   <!-- Form -->

@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "Jbs_Rest": {
+    "LaComanda": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -17,7 +17,7 @@
               "moment",
               "sweetalert2"
             ],
-            "outputPath": "dist/jbs-rest",
+            "outputPath": "dist/LaComanda",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": [
@@ -29,12 +29,12 @@
               "src/assets",
               "src/manifest.webmanifest"
             ],
-            "styles": [
-              "@angular/material/prebuilt-themes/deeppurple-amber.css",
-              "src/styles.css"
-            ],
             "serviceWorker": true,
-            "ngswConfigPath": "ngsw-config.json"
+            "ngswConfigPath": "ngsw-config.json",
+            "styles": [
+              "src/custom-theme.scss",
+              "src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {
@@ -101,14 +101,14 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "Jbs_Rest:build:production",
+              "browserTarget": "LaComanda:build:production",
               "proxyConfig": "proxy.conf.json"
             },
             "development": {
-              "browserTarget": "Jbs_Rest:build:development"
+              "browserTarget": "LaComanda:build:development"
             },
             "staging": {
-              "browserTarget": "Jbs_Rest:build:staging"
+              "browserTarget": "LaComanda:build:staging"
             }
           },
           "defaultConfiguration": "development"
@@ -116,7 +116,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "Jbs_Rest:build"
+            "browserTarget": "LaComanda:build"
           }
         },
         "test": {
@@ -131,10 +131,6 @@
               "src/favicon.ico",
               "src/assets",
               "src/manifest.webmanifest"
-            ],
-            "styles": [
-              "@angular/material/prebuilt-themes/indigo-pink.css",
-              "src/styles.css"
             ],
             "scripts": []
           }

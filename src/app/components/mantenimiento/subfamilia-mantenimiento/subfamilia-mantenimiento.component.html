@@ -1,8 +1,8 @@
-<button mat-icon-button class="close-button" (click)="salir()">
-  <mat-icon>close</mat-icon>
-</button>
-
-<div class="subfamilia-mantenimiento">
+<div class="mant-panel">
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+  
   <h2>Mantenimiento de SubFamilias</h2>
 
   <!-- Listado -->
@@ -15,7 +15,7 @@
       <mat-label>Buscar</mat-label>
       <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Buscar por descripción">
     </mat-form-field>
-
+<div class="mant-table-card">
     <mat-table [dataSource]="filtered" class="mat-elevation-z8">
       <ng-container matColumnDef="descripcion">
         <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
@@ -45,7 +45,7 @@
       <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
     </mat-table>
   </div>
-
+</div>
   <!-- Formulario -->
   <form *ngIf="showForm" #form="ngForm" (ngSubmit)="onSubmit()">
     <mat-form-field appearance="fill" class="full-width">

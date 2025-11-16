@@ -20,7 +20,7 @@ export class HeaderComponent {
 
   private headerVisibleSubject = new BehaviorSubject<boolean>(true);
   headerVisible$ = this.headerVisibleSubject.asObservable();
-
+  isMainMenuOpen = false;
   userLoginOn: boolean = false;
   idturnoShare: number= 0;  
   nroturnoShare: number= 0;   
@@ -52,7 +52,7 @@ export class HeaderComponent {
     this.headerVisibleSubject.next(true);
   }
 
-  public SalirSistemas(): void {
+  public onLogout(): void {
     this.storageService.logout();
     this.exitFullScreen();
  

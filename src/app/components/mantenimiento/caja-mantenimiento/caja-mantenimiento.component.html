@@ -1,7 +1,8 @@
+<div class="mant-panel">
   <button mat-icon-button class="close-button" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
-<div class="empleado-mantenimiento">
+  
   <h2>Mantenimiento de Cajas</h2>
 
   <div *ngIf="!showForm">
@@ -11,7 +12,7 @@
       <mat-label>Buscar</mat-label>
       <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Descripción, default...">
     </mat-form-field>
-
+ <div class="mant-table-card"> 
     <mat-table [dataSource]="filtered" class="mat-elevation-z8">
       <ng-container matColumnDef="descripcion">
         <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
@@ -53,7 +54,7 @@
       <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
     </mat-table>
   </div>
-
+</div>
   <form *ngIf="showForm" #form="ngForm" (ngSubmit)="onSubmit()">
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">

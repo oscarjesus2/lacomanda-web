@@ -1,19 +1,19 @@
-<button mat-icon-button class="close-button" (click)="salir()">
-  <mat-icon>close</mat-icon>
-</button>
-
-<div class="empleado-mantenimiento">
+<div class="mant-panel">
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+  
   <h2>Mantenimiento de Ambientes</h2>
 
   <!-- LISTA -->
-  <div class="empleados-list" *ngIf="!showForm">
+  <div *ngIf="!showForm">
     <button mat-raised-button color="primary" (click)="nuevo()">Nuevo Ambiente</button>
 
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Buscar</mat-label>
       <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Buscar por descripción, estado o posición">
     </mat-form-field>
-
+   <div class="mant-table-card">  
     <mat-table [dataSource]="filteredAmbientes" class="mat-elevation-z8">
       <!-- Descripción -->
       <ng-container matColumnDef="descripcion">
@@ -51,6 +51,7 @@
     </mat-table>
 
     <mat-paginator [length]="ambientes.length" [pageSize]="5" [pageSizeOptions]="[5,10,20]"></mat-paginator>
+  </div>
   </div>
 
   <!-- FORM -->

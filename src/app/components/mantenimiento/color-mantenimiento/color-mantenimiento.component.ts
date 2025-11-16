@@ -5,6 +5,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 import Swal from 'sweetalert2';
 import { Color } from 'src/app/models/color.models';
 import { ColorService } from 'src/app/services/color.service';
+import { MatPaginator } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-color-mantenimiento',
@@ -13,7 +14,8 @@ import { ColorService } from 'src/app/services/color.service';
 })
 export class ColorMantenimientoComponent implements OnInit {
   @ViewChild('form') form: NgForm;
-
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+  
   colores: Color[] = [];
   filtered = new MatTableDataSource<Color>([]);
   filtro = '';
@@ -38,12 +40,13 @@ export class ColorMantenimientoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void { this.cargar(); }
-
+  ngAfterViewInit() { this.filtered.paginator = this.paginator; }
   cargar(): void {
     this.service.getColores().subscribe(r => {
       if (r.Success) {
         this.colores = r.Data || [];
         this.filtered.data = this.colores;
+        this.filtered.paginator = this.paginator; 
       } else {
         Swal.fire('Error', r.Message || 'No se pudo cargar colores', 'error');
       }

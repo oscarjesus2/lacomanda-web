@@ -1,8 +1,8 @@
-<button mat-icon-button class="close-button" (click)="salir()">
-  <mat-icon>close</mat-icon>
-</button>
-
-<div class="empleado-mantenimiento">
+<div class="mant-panel">
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+  
   <h2>Mantenimiento de Áreas de Impresión</h2>
 
   <!-- LISTA -->
@@ -13,7 +13,7 @@
       <mat-label>Buscar</mat-label>
       <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Descripción o impresora...">
     </mat-form-field>
-
+ <div class="mant-table-card">
     <mat-table [dataSource]="filtered" class="mat-elevation-z8">
       <ng-container matColumnDef="descripcion">
         <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
@@ -43,7 +43,7 @@
 
     <mat-paginator [length]="areas.length" [pageSize]="5" [pageSizeOptions]="[5,10,20]"></mat-paginator>
   </div>
-
+</div>
   <!-- FORM -->
   <form *ngIf="showForm" #areaForm="ngForm" (ngSubmit)="onSubmit()">
     <div class="form-row">

@@ -1,12 +1,43 @@
-<div class="report">
-    <h2>Transacciones Diarias/Semanales/Mensuales</h2>
-    <select (change)="onReportTypeChange($event)">
-      <option value="diarias">Diarias</option>
-      <option value="semanales">Semanales</option>
-      <option value="mensuales">Mensuales</option>
-    </select>
-    <div  class="totalVenta">Total Transacciones : {{totalTransaccion}}</div> 
-    <div #chart class="chart" id="chart-ventas-diarias"></div>
-  <div id="tooltip" class="tooltip"></div>
+<div class="report report-panel">
+
+  <header class="report-panel__header">
+    <div>
+      <h3 class="report-panel__title">Transacciones</h3>
+      <p class="report-panel__subtitle">
+        Diarias · Semanales · Mensuales
+      </p>
+    </div>
+
+    <label class="report-panel__control">
+      <span>Periodo</span>
+      <select
+        class="report-panel__select"
+        (change)="onReportTypeChange($event)"
+      >
+        <option value="diarias">Diarias</option>
+        <option value="semanales">Semanales</option>
+        <option value="mensuales">Mensuales</option>
+      </select>
+    </label>
+  </header>
+
+  <section class="report-panel__summary" *ngIf="totalTransaccion != null">
+    <span class="report-panel__summary-label">Total transacciones</span>
+    <span class="report-panel__summary-value">
+      {{ totalTransaccion }}
+    </span>
+  </section>
+
+  <div class="report-panel__chart-container">
+    <div
+      #chart
+      class="report-panel__chart"
+      id="chart-ventas-diarias"
+    ></div>
+
+    <div
+      id="tooltip"
+      class="report-panel__tooltip"
+    ></div>
   </div>
-  
+</div>

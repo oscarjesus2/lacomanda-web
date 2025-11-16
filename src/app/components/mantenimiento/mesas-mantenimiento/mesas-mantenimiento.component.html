@@ -1,8 +1,8 @@
-<button mat-icon-button class="close-button" (click)="salir()">
-  <mat-icon>close</mat-icon>
-</button>
-
-<div class="empleado-mantenimiento"><!-- reutilizamos estilos -->
+<div class="mant-panel">
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+  
   <h2>Mantenimiento de Espacios</h2>
 
   <!-- Lista de Mesas -->
@@ -14,7 +14,7 @@
       <input matInput [(ngModel)]="filtroMesa" (ngModelChange)="applyFilter()"
         placeholder="Buscar por descripción, número, posición o ambiente">
     </mat-form-field>
-
+<div class="mant-table-card">
     <mat-table [dataSource]="filteredMesas" class="mat-elevation-z8">
       <!-- Descripcion -->
       <ng-container matColumnDef="descripcion">
@@ -71,7 +71,7 @@
 
     <mat-paginator [length]="mesas.length" [pageSize]="5" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
   </div>
-
+</div>
   <!-- Formulario -->
   <form *ngIf="showForm" #mesaForm="ngForm" (ngSubmit)="onSubmit()">
     <div class="form-row">

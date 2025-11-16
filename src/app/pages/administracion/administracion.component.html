@@ -1,21 +1,30 @@
-<!-- 
-<p  *ngIf="!userLoginOn">Usuario no autenticado!</p>
-<div *ngIf="userLoginOn">
-    <p>token : {{userData?.token}}</p>
-    <p>IdEmpleado : {{userData?.IdEmpleado}}</p>
-    <p>IdUsuario : {{userData?.IdUsuario}}</p>
-    <p>IdNivel : {{userData?.IdNivel}}</p>
-    <p>Usuario : {{userData?.Usuario}}</p>
-</div> -->
-<div class="container">
-    <h1 class="page-title">Página de Administración</h1>
-    <div class="menu-columns">
-      <div class="menu-column">
+<div class="admin-page">
+  <div class="admin-page__inner">
+
+    <header class="admin-page__header">
+      <h1 class="admin-page__title">Administración</h1>
+      <p class="admin-page__subtitle">
+        Configura ventas, almacén y parámetros del sistema.
+      </p>
+    </header>
+
+    <section class="admin-page__columns">
+      <article class="admin-card">
+        <h2 class="admin-card__title">Ventas</h2>
+        <p class="admin-card__subtitle">
+          Operaciones, cierres y reportes
+        </p>
         <app-menu-ventas></app-menu-ventas>
-      </div>
-      <div class="menu-column">
+      </article>
+
+      <article class="admin-card">
+        <h2 class="admin-card__title">Almacén</h2>
+        <p class="admin-card__subtitle">
+          Productos, stock y compras
+        </p>
         <app-menu-almacen></app-menu-almacen>
-      </div>
-    </div>
+      </article>
+    </section>
+
   </div>
-  
+</div>

@@ -1,43 +1,81 @@
-<mat-toolbar class="app-toolbar">
-  <button type="button" aria-label="Toggle sidenav" mat-icon-button [matMenuTriggerFor]="afterMenu">
-    <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
-  </button>
+<mat-toolbar class="app-header">
 
-  <mat-menu #afterMenu="matMenu" xPosition="after" class="app-menu">
-    <mat-nav-list>
-      <button mat-menu-item (click)="Dashboard()">
-        <mat-icon>dashboard</mat-icon>
-        <span>Dashboard</span>
-      </button>
-      <button mat-menu-item (click)="Administracion()">
-        <mat-icon>settings</mat-icon>
-        <span>Administración</span>
-      </button>
-      <button mat-menu-item (click)="Caja()">
-        <mat-icon>point_of_sale</mat-icon>
-        <span>Caja</span>
-      </button>
-      <button mat-menu-item (click)="Mozo()">
-        <mat-icon>restaurant</mat-icon>
-        <span>Mozo</span>
-      </button>
-    </mat-nav-list>
-  </mat-menu>
+  <!-- LADO IZQUIERDO: menú + marca -->
+  <div class="app-header__left">
 
-  <span class="app-toolbar__title">{{ title }}</span>
+    <!-- Botón menú (hamburguesa) -->
+    <button
+      mat-icon-button
+      class="app-header__menu-btn"
+      aria-label="Abrir menú principal"
+      [matMenuTriggerFor]="afterMenu">
+      <mat-icon>menu</mat-icon>
+    </button>
 
-  <span class="example-spacer"></span>
+    <!-- Nombre / título del sistema -->
+    <div class="app-header__brand">
+      <div class="app-header__brand-title">
+        {{ title }}
+      </div>
+      <div class="app-header__brand-subtitle">
+        LaComanda · Restaurante
+      </div>
+    </div>
 
-  <div class="turno-chip" *ngIf="userLoginOn && turnoOpenShare">
-    {{ sDatosUsuarioTurno }}
   </div>
 
-  <span class="example-spacer"></span>
+  <!-- Espaciador flexible -->
+  <span class="toolbar-spacer"></span>
 
-  <button mat-icon-button matTooltip="Ir al inicio" (click)="reiniciar()">
-    <mat-icon>home</mat-icon>
-  </button>
-  <button mat-icon-button matTooltip="Salir" (click)="SalirSistemas()">
-    <mat-icon>exit_to_app</mat-icon>
-  </button>
+  <!-- LADO DERECHO: usuario + botones -->
+  <div class="app-header__right">
+
+    <!-- Datos de usuario / turno -->
+    <div *ngIf="userLoginOn && turnoOpenShare">
+      {{ sDatosUsuarioTurno }}
+    </div>
+
+    <!-- Botón Home -->
+    <button
+      mat-icon-button
+      class="app-header__icon-btn"
+      matTooltip="Ir al inicio"
+      (click)="reiniciar()">
+      <mat-icon>home</mat-icon>
+    </button>
+
+    <!-- Botón Salir -->
+    <button
+      class="app-header__logout-btn"
+      matTooltip="Salir"
+      (click)="onLogout()">
+      <mat-icon class="app-header__logout-icon">exit_to_app</mat-icon>
+      <span>Salir</span>
+    </button>
+
+  </div>
+
 </mat-toolbar>
+
+<!-- MENÚ PRINCIPAL -->
+<mat-menu #afterMenu="matMenu" xPosition="after">
+  <button mat-menu-item (click)="Dashboard()">
+    <mat-icon>dashboard</mat-icon>
+    <span>Dashboard</span>
+  </button>
+
+  <button mat-menu-item (click)="Administracion()">
+    <mat-icon>settings</mat-icon>
+    <span>Administración</span>
+  </button>
+
+  <button mat-menu-item (click)="Caja()">
+    <mat-icon>point_of_sale</mat-icon>
+    <span>Caja</span>
+  </button>
+
+  <button mat-menu-item (click)="Mozo()">
+    <mat-icon>restaurant</mat-icon>
+    <span>Mozo</span>
+  </button>
+</mat-menu>

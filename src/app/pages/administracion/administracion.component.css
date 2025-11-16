@@ -1,25 +1,94 @@
-.container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
+/* CONTENEDOR GENERAL */
+.admin-page {
+  min-height: calc(100vh - 64px);
+  background: linear-gradient(to bottom, #fcf7ec, #f5edda);
+  display: flex;
+}
+
+.admin-page__inner {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px 22px 24px;
+}
+
+/* HEADER DE LA PÁGINA */
+.admin-page__header {
+  margin-bottom: 18px;
+}
+
+.admin-page__title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #3b220a;
+}
+
+.admin-page__subtitle {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(59, 34, 10, 0.65);
+}
+
+/* COLUMNAS DE TARJETAS */
+.admin-page__columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+/* TARJETA DE SECCIÓN (VENTAS / ALMACÉN) */
+.admin-card {
+  background: #fff8e8;
+  border-radius: 18px;
+  border: 1px solid rgba(59, 34, 10, 0.16);
+  padding: 16px 16px 18px;
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.16),
+    0 0 0 1px rgba(255, 255, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.75);
+}
+
+.admin-card__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3b220a;
+}
+
+.admin-card__subtitle {
+  margin: 2px 0 4px;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(59, 34, 10, 0.65);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .admin-page__inner {
+    padding: 14px 14px 20px;
   }
-  
-  .page-title {
-    font-size: 2rem;
-    margin-bottom: 20px;
+
+  .admin-page__title {
+    font-size: 1.2rem;
   }
-  
-  .menu-columns {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-  }
-  
-  .menu-column {
-    flex: 1;
-    max-width: 50%;
-    box-sizing: border-box;
-    padding: 10px;
-  }
-  
+}

@@ -1,7 +1,8 @@
-<button mat-icon-button class="close-button" (click)="salir()">
-  <mat-icon>close</mat-icon>
-</button>
-<div class="empleado-mantenimiento">
+<div class="mant-panel">
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+  
   <h2>Mantenimiento de Empleados</h2>
 
   <!-- Lista de Empleados, visible por defecto -->
@@ -14,6 +15,7 @@
       <input matInput [(ngModel)]="filtroEmpleado" (ngModelChange)="applyFilter()"
         placeholder="Buscar por nombre, RUC, etc.">
     </mat-form-field>
+    <div class="mant-table-card">
     <mat-table [dataSource]="filteredEmpleados" class="mat-elevation-z8">
       <!-- RUC Column -->
       <ng-container matColumnDef="nombre">
@@ -57,7 +59,7 @@
       <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
     </mat-table>
     <mat-paginator [length]="empleados.length" [pageSize]="5" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
-  </div>
+  </div></div>
 
   <!-- Formulario de Empleado, visible solo cuando showForm es true -->
   <form *ngIf="showForm" #empleadoForm="ngForm" (ngSubmit)="onSubmit()">

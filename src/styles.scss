@@ -1,0 +1,926 @@
+/* Paleta cálida para restaurante */
+:root {
+  --header-bg-start: #3a1c0f; // marrón oscuro
+  --header-bg-end:   #b9552a; // terracota
+  --header-accent:   #f4b23a; // dorado cálido
+  --header-text:     #fff8e8; // blanco cálido
+  --header-muted:    #f0e0cf;
+}
+
+/* CONTENEDOR PRINCIPAL HEADER */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.75rem;
+  gap: 1rem;
+  height: 64px;
+
+  background: linear-gradient(
+    120deg,
+    var(--header-bg-start),
+    var(--header-bg-end)
+  ) !important;
+  color: var(--header-text);
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Layout izquierda / derecha */
+.app-header__left,
+.app-header__right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.app-header__left {
+  min-width: 0;
+}
+
+.app-header__right {
+  margin-left: auto;
+}
+
+/* NOMBRE DE LA TIENDA */
+.app-header__brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.1;
+}
+
+.app-header__brand-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--header-text);
+}
+
+.app-header__brand-subtitle {
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--header-muted);
+}
+
+/* BOTÓN DE MENÚ (HAMBURGUESA) */
+.app-header__menu-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+  padding: 0;
+
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+
+  transition:
+    background 150ms ease-out,
+    transform 120ms ease-out,
+    box-shadow 150ms ease-out;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.app-header__menu-btn:hover {
+  background: rgba(0, 0, 0, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+}
+
+.app-header__menu-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.app-header__menu-btn:focus-visible {
+  outline: 2px solid var(--header-accent);
+  outline-offset: 2px;
+}
+
+/* Icono hamburguesa */
+.app-header__menu-icon {
+  position: relative;
+  width: 18px;
+  height: 14px;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.app-header__menu-icon span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--header-text);
+  transition:
+    transform 140ms ease-out,
+    opacity 140ms ease-out,
+    width 140ms ease-out;
+}
+
+/* Botones icono a la derecha (casita, etc.) */
+.app-header__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+
+  border-radius: 999px;
+  border: none;
+  background: rgba(0, 0, 0, 0.16);
+  cursor: pointer;
+
+  transition:
+    background 150ms ease-out,
+    transform 120ms ease-out,
+    box-shadow 150ms ease-out;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+
+  color: var(--header-text);
+}
+
+.app-header__icon-btn:hover {
+  background: rgba(0, 0, 0, 0.26);
+  transform: translateY(-1px);
+}
+
+.app-header__icon-btn:active {
+  transform: translateY(0);
+}
+
+.app-header__icon-btn:focus-visible {
+  outline: 2px solid var(--header-accent);
+  outline-offset: 2px;
+}
+
+/* BOTÓN SALIR */
+.app-header__logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  border: none;
+  border-radius: 999px;
+  padding: 0.4rem 0.95rem;
+
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  background: var(--header-accent);
+  color: #3b220a;
+  cursor: pointer;
+
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+  transition:
+    background 150ms ease-out,
+    transform 120ms ease-out,
+    box-shadow 150ms ease-out;
+}
+
+.app-header__logout-btn:hover {
+  background: #f7c25c;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.app-header__logout-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+}
+
+.app-header__logout-btn:focus-visible {
+  outline: 2px solid #fff5d1;
+  outline-offset: 2px;
+}
+
+/* Iconos de Angular Material dentro del header */
+.app-header mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+}
+
+.app-header__logout-icon {
+  font-size: 18px;
+}
+
+/* MENÚ DE ANGULAR MATERIAL (mat-menu) PERSONALIZADO */
+.mat-mdc-menu-panel,
+.mat-menu-panel {
+  background: #2b1710;
+  color: var(--header-text);
+  border-radius: 18px !important;
+  padding: 0.25rem 0 !important;
+  box-shadow:
+    0 14px 35px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Items del menú */
+.mat-mdc-menu-item,
+.mat-menu-item {
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+
+  color: var(--header-text);
+}
+
+.mat-mdc-menu-item:hover,
+.mat-menu-item:hover {
+  background: rgba(244, 178, 58, 0.12);
+}
+
+/* Divider del menú */
+.mat-mdc-menu-panel .mat-divider,
+.mat-menu-panel .mat-divider {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* RESPONSIVE: en pantallas pequeñas, ajustar */
+@media (max-width: 768px) {
+  .app-header {
+    padding-inline: 1rem;
+    height: 56px;
+  }
+
+  .app-header__brand-title {
+    font-size: 1.05rem;
+  }
+
+  .app-header__brand-subtitle {
+    display: none;
+  }
+
+  .app-header__right {
+    gap: 0.5rem;
+  }
+
+  .app-header__logout-btn span {
+    display: none; /* solo icono en móvil */
+  }
+
+  .app-header__logout-btn {
+    padding-inline: 0.7rem;
+  }
+}
+
+html, body { 
+  height: 100%; 
+}
+
+body { 
+  margin: 0; 
+  font-family: Roboto, "Helvetica Neue", sans-serif; 
+}
+
+.toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+/* ====== REPORTES DASHBOARD (COMÚN) ====== */
+
+.report-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+  min-height: 220px;
+  font-family: inherit;
+  color: #3b220a;
+}
+
+/* HEADER (título + selector) */
+.report-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.report-panel__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3b220a;
+}
+
+.report-panel__subtitle {
+  margin: 2px 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(59, 34, 10, 0.6);
+}
+
+.report-panel__control {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(59, 34, 10, 0.65);
+}
+
+.report-panel__select {
+  min-width: 150px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(59, 34, 10, 0.25);
+  padding: 0 12px;
+  background: #fffdf7;
+  color: #3b220a;
+  font-size: 0.85rem;
+  outline: none;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.report-panel__select:focus {
+  border-color: var(--header-accent, #f4b23a);
+  box-shadow: 0 0 0 2px rgba(244, 178, 58, 0.35);
+  background: #fff8e8;
+}
+
+/* RESUMEN (total, hora pico, etc.) */
+.report-panel__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  background: #fff8e8;
+  border: 1px solid rgba(59, 34, 10, 0.12);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(59, 34, 10, 0.85);
+}
+
+.report-panel__summary-label {
+  opacity: 0.8;
+}
+
+.report-panel__summary-value {
+  font-weight: 700;
+}
+
+/* Para varios chips de resumen (ej. canal de venta) */
+.report-panel__summary-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.report-panel__summary-chip {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: #fffdf7;
+  border: 1px solid rgba(59, 34, 10, 0.12);
+  font-size: 0.75rem;
+}
+
+/* CHART */
+.report-panel__chart-container {
+  flex: 1;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.report-panel__chart {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+}
+
+/* Tooltip del chart */
+.report-panel__tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: #3b220a;
+  color: #fff8e8;
+  padding: 0.35rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translate(-50%, -110%);
+  transition: opacity 0.12s ease;
+}
+
+/* Spinner sobre el gráfico */
+.report-panel__spinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.report-panel__spinner p {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: #fdf5e0;
+}
+
+/* Tabla (para anulaciones) – base */
+.report-panel__table-wrapper {
+  margin-top: 0.75rem;
+  border-radius: 12px;
+  background: #fffdf7;
+  border: 1px solid rgba(59, 34, 10, 0.12);
+  max-height: 260px;
+  overflow: auto;
+}
+
+.report-panel__table-title {
+  margin: 0.4rem 0 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(59, 34, 10, 0.75);
+}
+
+/* responsive header controls */
+@media (max-width: 768px) {
+  .report-panel__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .report-panel__control {
+    align-items: flex-start;
+  }
+
+  .report-panel__select {
+    width: 100%;
+  }
+}
+
+/* CONTENEDOR DEL MENÚ */
+.admin-menu {
+  width: 100%;
+  background: transparent;
+  border-radius: 14px;
+  padding: 6px 2px 2px;
+}
+
+.admin-menu__title {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(59, 34, 10, 0.9);
+}
+
+/* SECCIONES (bloques dentro de la tarjeta) */
+.admin-menu__sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.admin-menu__section {
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 12px;
+  padding: 10px 10px 8px;
+  border: 1px solid rgba(59, 34, 10, 0.08);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.admin-menu__subtitle {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(59, 34, 10, 0.7);
+}
+
+/* LISTA DE OPCIONES */
+.admin-menu__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-menu__item {
+  width: 100%;
+}
+
+/* BOTONES / LINKS */
+.admin-menu__link {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+
+  border: none;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+
+  background: #fff8e8;
+  color: #3b220a;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  text-decoration: none;
+  cursor: pointer;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  transition:
+    background-color 0.16s ease,
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
+}
+
+.admin-menu__link--anchor {
+  /* por si quieres estilos distintos para el <a> */
+}
+
+.admin-menu__link:hover {
+  background: #f7e0a8;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+.admin-menu__link:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.22);
+}
+
+.admin-menu__link:focus-visible {
+  outline: 2px solid var(--header-accent, #f4b23a);
+  outline-offset: 2px;
+}
+
+/* TEXTO DEL LINK */
+.admin-menu__link-label {
+  white-space: nowrap;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .admin-menu__sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* FILAS DE FORMULARIO / ACCIONES */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 18px;
+  margin-bottom: 12px;
+}
+
+.form-field {
+  flex: 1 1 220px;
+}
+
+.form-field--grow {
+  flex: 1 1 320px;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* =========================
+   FORM FIELDS ANGULAR MATERIAL
+   GLOBAL
+   ========================= */
+
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+.mat-mdc-text-field-wrapper {
+  border-radius: 999px !important;
+  background: #fffdf7 !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* =========================
+   BOTONES ANGULAR MATERIAL
+   GLOBAL
+   ========================= */
+
+/* Forma por defecto para TODOS los raised / flat */
+.mat-mdc-raised-button,
+.mat-mdc-unelevated-button {
+  border-radius: 999px !important;
+  padding: 0 20px !important;
+  height: 40px !important;
+
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22) !important;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.18s ease !important;
+}
+
+.mat-mdc-raised-button:hover {
+  box-shadow: 0 7px 16px rgba(0, 0, 0, 0.28) !important;
+}
+
+/* PRIMARY: cualquier mat-raised-button color="primary" */
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-unelevated-button.mat-primary {
+  background-color: var(--header-accent, #f4b23a) !important;
+  color: #3b220a !important;
+}
+
+.mat-mdc-raised-button.mat-primary:hover,
+.mat-mdc-unelevated-button.mat-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* WARN: cualquier mat-raised-button color="warn" (Cancelar, etc.) */
+.mat-mdc-raised-button.mat-warn,
+.mat-mdc-unelevated-button.mat-warn {
+  background-color: #e53935 !important;
+  color: #fff8e8 !important;
+}
+
+.mat-mdc-raised-button.mat-warn:hover,
+.mat-mdc-unelevated-button.mat-warn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Botones icono en tabla (editar / eliminar) */
+mat-icon-button {
+  margin-right: 4px;
+}
+
+.mat-mdc-icon-button.mat-primary {
+  color: #3b220a;
+}
+
+.mat-mdc-icon-button.mat-warn {
+  color: #d32f2f;
+}
+
+/* =========================
+   TABLAS ANGULAR MATERIAL
+   GLOBAL
+   ========================= */
+
+mat-table {
+  width: 100%;
+  margin-top: 18px;
+  margin-bottom: 4px; /* un pequeño respiro antes del paginador */
+  background: #fffdf7;
+  border-radius: 14px 14px 0 0; /* arriba redondo, abajo recto para pegarse al paginator */
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+mat-header-row,
+mat-row {
+  border-bottom: 1px solid rgba(59, 34, 10, 0.08);
+}
+
+mat-header-row:last-child,
+mat-row:last-child {
+  border-bottom: none;
+}
+
+mat-header-cell,
+mat-cell {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+}
+
+/* Cabecera con fondo suave y texto marrón */
+mat-header-cell {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(59, 34, 10, 0.9);
+  background: rgba(59, 34, 10, 0.04);
+}
+
+mat-row:nth-child(even) mat-cell {
+  background: rgba(59, 34, 10, 0.015);
+}
+
+.mant-panel {
+  position: relative;
+
+  max-width: 1100px;
+  margin: 24px auto 24px;
+  padding: 20px 22px 24px;
+
+  background: #fff8e8;
+  border-radius: 18px;
+  border: 1px solid rgba(59, 34, 10, 0.16);
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.16),
+    0 0 0 1px rgba(255, 255, 255, 0.6);
+
+  font-family: inherit;
+  color: #3b220a;
+}
+
+.mant-panel h2 {
+  margin: 0 0 14px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #3b220a;
+}
+
+.mant-panel mat-table {
+  margin-top: 22px; /* en vez de 18 si lo tienes así */
+}
+
+.mant-panel .close-button {
+  position: absolute;
+  top: 12px;
+  right: 16px;       /* importante: a la derecha, no left: 10px */
+  z-index: 10;
+
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.16);
+  cursor: pointer;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
+}
+
+/* pisamos cualquier cosa de mat-icon-button dentro */
+.mant-panel .close-button.mat-mdc-icon-button {
+  padding: 0 !important;
+}
+
+.mant-panel .close-button mat-icon {
+  font-size: 18px;
+  color: #fff8e8;
+}
+
+.mant-panel .close-button:hover {
+  background: rgba(0, 0, 0, 0.24);
+  transform: translateY(-1px);
+}
+
+.mant-panel .close-button:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+
+.mant-table-card {
+  margin-top: 18px;
+  border-radius: 14px;
+  background: #fffdf7;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+/* Elimina sombras/márgenes propios de la tabla porque la tarjeta ya los da */
+.mant-table-card mat-table {
+  width: 100%;
+  margin: 0;
+  box-shadow: none;
+  border-radius: 0;
+  background: #fffdf7;
+}
+
+/* Cabecera / filas igual que antes (global) */
+mat-header-row,
+mat-row {
+  border-bottom: 1px solid rgba(59, 34, 10, 0.08);
+}
+
+mat-header-cell,
+mat-cell {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+}
+
+mat-header-cell {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(59, 34, 10, 0.9);
+  background: rgba(59, 34, 10, 0.04);
+}
+
+/* Paginador pegado a la tabla, con fondo y radios */
+.mant-table-card .mat-mdc-paginator {
+  background: #fffdf7;
+  border-top: 1px solid rgba(59, 34, 10, 0.06);
+  font-size: 0.8rem;
+  color: rgba(59, 34, 10, 0.8);
+}
+
+
+/* PAGINADOR GLOBAL */
+
+.mat-mdc-paginator {
+  background: #fffdf7;
+  border-top: 1px solid rgba(59, 34, 10, 0.08);
+  font-size: 0.8rem;
+  color: rgba(59, 34, 10, 0.8);
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.mat-mdc-paginator-container {
+  padding-inline: 16px !important;
+}
+
+.mat-mdc-paginator-range-label,
+.mat-mdc-paginator-page-size-label {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Flechas más discretas */
+.mat-mdc-paginator-navigation-previous,
+.mat-mdc-paginator-navigation-next {
+  color: rgba(59, 34, 10, 0.6);
+}
+
+/* Ajuste general de diálogos Angular Material */
+.mat-mdc-dialog-container {
+  background: transparent;            /* dejamos solo nuestro panel como tarjeta */
+  box-shadow: none;
+  padding: 0 !important;
+}
+
+.mat-mdc-dialog-surface {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.cdk-overlay-pane {
+  max-width: 1100px !important;
+}

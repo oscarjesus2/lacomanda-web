@@ -1,14 +1,23 @@
-<div class="menu-container">
-    <h2 class="menu-title">Sección Almacén</h2>
-    <div class="menu-sections">
-      <div class="menu-section" *ngFor="let section of almacenMenu">
-        <h3 class="menu-subtitle">{{ section.title }}</h3>
-        <ul class="menu-list">
-          <li *ngFor="let item of section.children" class="menu-item">
-            <a [routerLink]="item.route">{{ item.title }}</a>
-          </li>
-        </ul>
-      </div>
-    </div>
+<div class="admin-menu">
+  <h3 class="admin-menu__title">Sección almacén</h3>
+
+  <div class="admin-menu__sections">
+    <section class="admin-menu__section" *ngFor="let section of almacenMenu">
+      <h4 class="admin-menu__subtitle">{{ section.title }}</h4>
+
+      <ul class="admin-menu__list">
+        <li
+          class="admin-menu__item"
+          *ngFor="let item of section.children"
+        >
+          <a
+            [routerLink]="item.route"
+            class="admin-menu__link admin-menu__link--anchor"
+          >
+            <span class="admin-menu__link-label">{{ item.title }}</span>
+          </a>
+        </li>
+      </ul>
+    </section>
   </div>
-  
+</div>

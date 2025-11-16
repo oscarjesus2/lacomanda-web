@@ -1,6 +1,8 @@
-<button mat-icon-button class="close-button" (click)="salir()"><mat-icon>close</mat-icon></button>
-
-<div class="empleado-mantenimiento">
+<div class="mant-panel">
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+  
   <h2>Mantenimiento de Colores</h2>
 
   <!-- LISTA -->
@@ -11,7 +13,7 @@
       <mat-label>Buscar</mat-label>
       <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Descripción o RGB">
     </mat-form-field>
-
+ <div class="mant-table-card">
     <mat-table [dataSource]="filtered" class="mat-elevation-z8">
       <ng-container matColumnDef="preview">
         <mat-header-cell *matHeaderCellDef> Color </mat-header-cell>
@@ -41,7 +43,8 @@
       <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
     </mat-table>
-  </div>
+    <mat-paginator [length]="colores.length" [pageSize]="5" [pageSizeOptions]="[5,10,20,50]"></mat-paginator>
+  </div></div>
 
   <!-- FORM -->
   <form *ngIf="showForm" #form="ngForm" (ngSubmit)="onSubmit()">
