@@ -7,30 +7,30 @@ import { NgForm } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { NgxSpinnerService } from 'ngx-spinner';
 
-import { Mesas } from 'src/app/models/mesas.models';
+import { Espacios } from 'src/app/models/espacios.models';
 import { Ambiente } from 'src/app/models/ambiente.models';
-import { MesasService } from 'src/app/services/mesas.service';
+import { EspaciosService } from 'src/app/services/espacios.service';
 import { AmbienteService } from 'src/app/services/ambiente.service';
 import { PosicionSelectorDialogComponent, PosicionSelectorData } from '../../posicion-selector-dialog/posicion-selector-dialog.component';
 
 @Component({
-  selector: 'app-mesas-mantenimiento',
-  templateUrl: './mesas-mantenimiento.component.html',
-  styleUrls: ['./mesas-mantenimiento.component.css']
+  selector: 'app-espacios-mantenimiento',
+  templateUrl: './espacios-mantenimiento.component.html',
+  styleUrls: ['./espacios-mantenimiento.component.css']
 })
-export class MesasMantenimientoComponent implements OnInit, AfterViewInit {
-  @ViewChild('mesaForm') mesaForm: NgForm;
+export class EspaciosMantenimientoComponent implements OnInit, AfterViewInit {
+  @ViewChild('espacioForm') espacioForm: NgForm;
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
   // Estado UI
   showForm = false;
-  descripcionesEjemplo = ['Mesa','Barra','Box','Lounge','Mostrador'];
+  descripcionesEjemplo = ['Espacio','Barra','Box','Lounge','Mostrador'];
 
   // Datos
-  mesa: Mesas = new Mesas();
-  mesas: Mesas[] = [];
-  filteredMesas = new MatTableDataSource<Mesas>([]);
-  filtroMesa: string = '';
+  espacio: Espacios = new Espacios();
+  espacios: Espacios[] = [];
+  filteredEspacios = new MatTableDataSource<Espacios>([]);
+  filtroEspacio: string = '';
 
   // Ambientes
   listAmbientes: Ambiente[] = [];
@@ -44,39 +44,39 @@ export class MesasMantenimientoComponent implements OnInit, AfterViewInit {
   readonly GRID_COLS = 7;
 
   constructor(
-    private dialogRef: MatDialogRef<MesasMantenimientoComponent>,
+    private dialogRef: MatDialogRef<EspaciosMantenimientoComponent>,
     private dialog: MatDialog,
-    private mesaService: MesasService,
+    private espacioService: EspaciosService,
     private ambienteService: AmbienteService,
     private spinnerService: NgxSpinnerService
   ) {}
 
   ngOnInit(): void {
-    this.cargarMesas();
+    this.cargarEspacios();
     this.cargarAmbientes();
   }
 
   ngAfterViewInit(): void {
-    this.filteredMesas.paginator = this.paginator;
+    this.filteredEspacios.paginator = this.paginator;
   }
 
   // ---------- CARGAS ----------
-  cargarMesas(): void {
+  cargarEspacios(): void {
     this.spinnerService.show();
-    this.mesaService.GetAllMesas().subscribe({
+    this.espacioService.GetAllEspacios().subscribe({
       next: (res) => {
         if (res.Success) {
-          this.mesas = res.Data || [];
-          this.filteredMesas.data = this.mesas;
+          this.espacios = res.Data || [];
+          this.filteredEspacios.data = this.espacios;
         } else {
-          Swal.fire('Error', res.Message || 'Error al cargar las mesas', 'error');
+          Swal.fire('Error', res.Message || 'Error al cargar las espacios', 'error');
         }
         this.spinnerService.hide();
-        this.filteredMesas.paginator = this.paginator;
+        this.filteredEspacios.paginator = this.paginator;
       },
       error: () => {
         this.spinnerService.hide();
-        Swal.fire('Error', 'No se pudo cargar las mesas', 'error');
+        Swal.fire('Error', 'No se pudo cargar las espacios', 'error');
       }
     });
   }
@@ -101,8 +101,8 @@ export class MesasMantenimientoComponent implements OnInit, AfterViewInit {
 
   // ---------- LISTA ----------
   applyFilter(): void {
-    const filterValue = (this.filtroMesa || '').toLowerCase();
-    this.filteredMesas.data = this.mesas.filter(m =>
+    const filterValue = (this.filtroEspacio || '').toLowerCase();
+    this.filteredEspacios.data = this.espacios.filter(m =>
       (m.Descripcion || '').toLowerCase().includes(filterValue) ||
       String(m.Numero || '').toLowerCase().includes(filterValue) ||
       String(m.Posicion || '').toLowerCase().includes(filterValue) ||
@@ -115,37 +115,34 @@ export class MesasMantenimientoComponent implements OnInit, AfterViewInit {
   }
 
   // ---------- FORM ----------
-  nuevaMesa(): void {
+  nuevaEspacio(): void {
     this.resetForm();
     this.showForm = true;
   }
 
-  onEdit(mesa: Mesas): void {
-    this.mesa = { ...mesa };
-    this.selectedAmbiente = this.listAmbientes.find(a => a.IdAmbiente === mesa.IdAmbiente) || null;
+  onEdit(espacio: Espacios): void {
+    this.espacio = { ...espacio };
+    this.selectedAmbiente = this.listAmbientes.find(a => a.IdAmbiente === espacio.IdAmbiente) || null;
     this.showForm = true;
   }
 
-  onDelete(id: number): void {
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: 'No podrás revertir esto!',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar!',
-      cancelButtonText: 'No, cancelar!'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.mesaService.deleteMesa(id).subscribe({
-          next: () => {
-            this.cargarMesas();
-            Swal.fire('Mesa eliminada', '', 'success');
-          },
-          error: () => Swal.fire('Error', 'No se pudo eliminar la mesa', 'error')
-        });
-      }
-    });
-  }
+    onDelete(id: number): void {
+      Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esto!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar!',
+        cancelButtonText: 'No, cancelar!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.espacioService.deleteEspacio(id).subscribe(() => {
+            this.cargarEspacios();
+            Swal.fire('Espacio eliminado', '', 'success');
+          });
+        }
+      });
+    }
 
   private markFormTouchedAndDirty(form: NgForm): void {
     Object.values(form.controls).forEach(control => {
@@ -161,53 +158,53 @@ export class MesasMantenimientoComponent implements OnInit, AfterViewInit {
       return;
     }
     // Seteamos IdAmbiente desde el combo
-    this.mesa.IdAmbiente = this.selectedAmbiente.IdAmbiente;
+    this.espacio.IdAmbiente = this.selectedAmbiente.IdAmbiente;
 
-    if (this.mesaForm.invalid || !this.mesa.Posicion) {
-      this.markFormTouchedAndDirty(this.mesaForm);
-      if (!this.mesa.Posicion) {
+    if (this.espacioForm.invalid || !this.espacio.Posicion) {
+      this.markFormTouchedAndDirty(this.espacioForm);
+      if (!this.espacio.Posicion) {
         Swal.fire('Validación', 'Debe elegir una posición.', 'info');
       }
       return;
     }
 
-    if (this.mesa.IdMesa) {
-      this.mesaService.updateMesa(this.mesa).subscribe({
+    if (this.espacio.IdEspacio) {
+      this.espacioService.updateEspacio(this.espacio).subscribe({
         next: (res) => {
           if (res.Success) {
-            this.cargarMesas();
+            this.cargarEspacios();
             this.showForm = false;
-            Swal.fire('Mesa actualizada', '', 'success');
+            Swal.fire('espacio actualizada', '', 'success');
           } else {
-            Swal.fire('Error', res.Message || 'Error al actualizar la mesa', 'error');
+            Swal.fire('Error', res.Message || 'Error al actualizar la espacio', 'error');
           }
         },
-        error: () => Swal.fire('Error', 'No se pudo actualizar la mesa', 'error')
+        error: () => Swal.fire('Error', 'No se pudo actualizar la espacio', 'error')
       });
     } else {
-      this.mesaService.createMesa(this.mesa).subscribe({
+      this.espacioService.createEspacio(this.espacio).subscribe({
         next: (res) => {
           if (res.Success) {
-            this.cargarMesas();
+            this.cargarEspacios();
             this.showForm = false;
-            Swal.fire('Mesa creada', '', 'success');
+            Swal.fire('Espacio creada', '', 'success');
           } else {
-            Swal.fire('Error', res.Message || 'Error al crear la mesa', 'error');
+            Swal.fire('Error', res.Message || 'Error al crear la espacio', 'error');
           }
         },
-        error: () => Swal.fire('Error', 'No se pudo crear la mesa', 'error')
+        error: () => Swal.fire('Error', 'No se pudo crear la espacio', 'error')
       });
     }
   }
 
   cancelar(): void {
     this.resetForm();
-    this.cargarMesas();
+    this.cargarEspacios();
     this.showForm = false;
   }
 
   resetForm(): void {
-    this.mesa = new Mesas();
+    this.espacio = new Espacios();
     this.selectedAmbiente = null;
   }
 
@@ -231,17 +228,17 @@ export class MesasMantenimientoComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    // Posiciones ocupadas en el ambiente seleccionado (excluyendo la mesa actual si está editando)
-    const ocupadas = this.mesas
+    // Posiciones ocupadas en el ambiente seleccionado (excluyendo la espacio actual si está editando)
+    const ocupadas = this.espacios
       .filter(m => m.IdAmbiente === this.selectedAmbiente!.IdAmbiente)
-      .filter(m => !(this.mesa.IdMesa && m.IdMesa === this.mesa.IdMesa))
+      .filter(m => !(this.espacio.IdEspacio && m.IdEspacio === this.espacio.IdEspacio))
       .map(m => m.Posicion);
 
     const data: PosicionSelectorData = {
       rows: this.GRID_ROWS,
       cols: this.GRID_COLS,
       occupied: ocupadas,
-      initial: this.mesa.Posicion || null
+      initial: this.espacio.Posicion || null
     };
 
     const ref = this.dialog.open(PosicionSelectorDialogComponent, {
@@ -251,7 +248,7 @@ export class MesasMantenimientoComponent implements OnInit, AfterViewInit {
 
     ref.afterClosed().subscribe((pos: number | null) => {
       if (pos) {
-        this.mesa.Posicion = pos;
+        this.espacio.Posicion = pos;
       }
     });
   }

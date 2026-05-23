@@ -33,7 +33,6 @@ export interface ProductElement {
   Tipo: number;
   ExclusivoParaAnfitriona: boolean;
   PermitirParaTragoCortesia: boolean; 
-  ImpuestoBolsa: number;
 }
 
 @Component({
@@ -225,7 +224,6 @@ export class DialogEmitirVentaComponent implements OnInit {
       CodDscto: '',
       NroCupon: '',
       MontoDscto: 0,
-      ImpuestoBolsa: product.ImpuestoBolsa,
       Tipo: product.Tipo,
       ExclusivoParaAnfitriona: product.ExclusivoParaAnfitriona,
       PermitirParaTragoCortesia: product.PermitirParaTragoCortesia,
@@ -324,19 +322,17 @@ export class DialogEmitirVentaComponent implements OnInit {
   calcularTotales(): void {
     let totalAux = 0;
     let desctoAux = 0;
-    let impuestoBolsa = 0;
 
     this.dataSource.data.forEach(item => {
       totalAux += item.Total;
       desctoAux += item.MontoDscto;
-      impuestoBolsa += item.ImpuestoBolsa;
     });
 
     this.sumaImporte = totalAux;
     this.sumaDscto = desctoAux;
     this.sumaTotal = totalAux - desctoAux;
-    this.sumaImpuestoBolsa = impuestoBolsa;
-    this.sumaGranTotal = this.sumaTotal + impuestoBolsa;
+    this.sumaImpuestoBolsa = 0;
+    this.sumaGranTotal = this.sumaTotal;
   }
 
   salir(): void {
@@ -388,11 +384,11 @@ export class DialogEmitirVentaComponent implements OnInit {
     pedidoCab.Moneda = this.monedaSeleccionada.substring(0, 3);
     pedidoCab.TipoCambioVenta = parseFloat(this.tipoCambioVenta);
     pedidoCab.TipoCambioCompra = parseFloat(this.tipoCambioCompra);
-    pedidoCab.IdMesa = 9999;
+    pedidoCab.IdEspacio = 9999;
     pedidoCab.IdCaja = this.cajaSeleccionada;
     pedidoCab.NumPrecuentas = 0;
     pedidoCab.FechaPrecuenta = null;
-    pedidoCab.MesaPrecuenta = null;
+    pedidoCab.EspacioPrecuenta = null;
     pedidoCab.Observacion = this.observacionValue;
     pedidoCab.Dscto = this.sumaDscto;
     pedidoCab.Importe =  this.sumaImporte;
@@ -440,7 +436,6 @@ export class DialogEmitirVentaComponent implements OnInit {
       pedidoDet.Estado = 2;
       pedidoDet.NombreCuenta = "";
       pedidoDet.Division = 0;
-      pedidoDet.Impuesto1 = item.ImpuestoBolsa;
       correlativo++;
       oListaPedidoDet.push(pedidoDet);
     });
@@ -478,8 +473,7 @@ export class DialogEmitirVentaComponent implements OnInit {
        const dialogTurno = this.dialog.open(DialogEmitirComprobanteComponent, {
          disableClose: true,
          hasBackdrop: true,
-         width: '705px', // Establece el ancho del diálogo
-         height: '800px', // Establece la altura del diálogo
+         width: '755px', // Establece el ancho del diálogo
          data: { lblcambio: this.tipoCambioVenta, 
                  dblImporte: this.sumaImporte,
                  dblDscto: this.sumaDscto,

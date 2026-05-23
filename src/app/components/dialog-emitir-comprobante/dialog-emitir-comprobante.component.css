@@ -1,155 +1,171 @@
-.custom-select-panel .mat-select-panel {
-  width: 500px !important; /* Ajusta el ancho según tus necesidades */
+/* =========================
+   COBRO / EMITIR COMPROBANTE
+   ========================= */
+
+.cobranza-panel {
+  /* ya hereda fondo, bordes y sombras de .mant-panel */
 }
 
-.custom-select-panel .mat-option {
-  width: 500px !important; /* Ajusta el ancho según tus necesidades */
-}
-
-.example-button-container {
-  display: flex;
-  justify-content: center;
-  width: 120px;
-}
-.cash-card {
-  max-width: 700px;
-}
-
-.tabla-container {
-  height: 200px; /* Puedes ajustar esta altura a tu preferencia */
-  overflow-y: auto; /* Agrega el scrollbar cuando sea necesario */
-}
-
-.mat-table {
-  width: 100%;
-}
-
-.container {
+/* Formulario principal un pelín más compacto */
+.cobranza-panel__form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin: 1rem;
+  gap: 6px;
 }
 
-.full-width {
-  width: 100%;
-}
-.h1-field {
-  flex: 1 1 30%;
-}
-.numero-field {
-  flex: 1 1 10%;
-}
-.serie-field {
-  flex: 1 1 5%;
-}
-.ruc-field {
-  flex: 1 1 30%;
+.cobranza-panel__row--compact {
+  margin-bottom: 6px;
 }
 
-.cliente-field {
-  flex: 1 1 70%;
+/* Proporciones de los campos de la cabecera */
+.cobranza-panel__field-doc-type {
+  flex: 2 1 260px;
 }
 
-.GrupoLabel {
+.cobranza-panel__field-serie {
+  flex: 1 1 120px;
+}
+
+.cobranza-panel__field-numero {
+  flex: 1 1 140px;
+}
+
+/* Campos de cliente */
+.cobranza-panel__field-doc-cliente {
+  flex: 1 1 220px;
+}
+
+.cobranza-panel__field-ruc {
+  flex: 2 1 260px;
+}
+
+/* Campos del pie de la tabla */
+.cobranza-panel__field-tarjeta {
+  min-width: 200px;
+}
+
+.cobranza-panel__field-compact {
+  min-width: 110px;
+}
+
+/* ===== EFECTIVO / CAMBIO ===== */
+
+/* =========================
+   COBRANZA – BOTONES RÁPIDOS
+   ========================= */
+
+.cobranza-panel__cash-row {
   display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-  padding: 10px;
-  background-color: #ffffff;
-  border: 1px solid #d0d0d0;
-}
-
-.cash-buttons {
-  display: flex;
-  gap: 0.75rem;
   flex-wrap: wrap;
-  padding: auto;
-}
-
-.results-row {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.d-flex {
-  display: flex;
-}
-
-.align-items-center {
+  gap: 14px;
   align-items: center;
+  margin-top: 10px;
 }
 
-.justify-content-between {
-  justify-content: space-between;
-}
-
-.justify-content-end {
-  justify-content: flex-end;
-}
-
-.flex-column {
-  flex-direction: column;
-}
-
-.flex-grow-1 {
-  flex-grow: 1;
-}
-
-.mr-3 {
-  margin-right: 1rem;
-}
-
-.mb-3 {
-  margin-bottom: 1rem;
-}
-
-.mt-3 {
-  margin-top: 1rem;
-}
-
-.button-group {
-  display: flex;
-  gap: 1rem;
-}
-
-.close-button {
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  z-index: 1000;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.close-button mat-icon {
-  font-size: 24px;
-  color: #757575;  /* Color gris medio */
-}
-
-.close-button:hover mat-icon {
-  color: #212121;  /* Color más oscuro al pasar el mouse */
-}
-
-.form-row {
+/* Botones “Soles exacto”, S/. 20, 50, etc. */
+.cobranza-panel__cash-presets {
   display: flex;
   flex-wrap: wrap;
-  margin-bottom: 0px;
+  gap: 8px;
 }
 
-.cash-row {
-  gap: 1.5rem; /* Add some space between sections */
+/* === AQUÍ LOS SOL / DÓLARES UNO DEBAJO DEL OTRO === */
+.cobranza-panel__cash-modes {
+  display: flex;
+  flex-direction: column;   /* los apila verticalmente */
+  gap: 8px;
 }
 
-.align-buttons {
-  margin-left: auto; /* Align the buttons to the right */
-}
-
-.align-labels .GrupoLabel {
-  background-color: #f0f0f0; /* Slightly different background for labels */
+/* Reutilizamos un estilo tipo "pill" para todos los botones rápidos */
+.cobranza-panel__cash-presets .button_azul,
+.cobranza-panel__cash-modes .button_azul {
   border: none;
-  padding: 5px;
+  border-radius: 999px;
+  padding: 0 14px;
+  height: 32px;
+
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  background: var(--header-accent, #f4b23a);
+  color: #3b220a;
+  cursor: pointer;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.18s ease,
+    background-color 0.16s ease;
+}
+
+.cobranza-panel__cash-presets .button_azul:hover,
+.cobranza-panel__cash-modes .button_azul:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 16px rgba(0, 0, 0, 0.28);
+  background: #f7c25c;
+}
+
+.cobranza-panel__cash-presets .button_azul:active,
+.cobranza-panel__cash-modes .button_azul:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.32);
+}
+
+
+.cobranza-panel__cash-values {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cobranza-panel__label-chip {
+  min-width: 90px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fffdf7;
+  border: 1px solid rgba(59, 34, 10, 0.12);
   text-align: center;
-  margin-bottom: 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #3b220a;
+}
+
+/* ===== TABLA PAGOS TARJETA ===== */
+
+.cobranza-panel__table-card {
+  margin-top: 12px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+/* alineación de acciones en tabla */
+.cobranza-panel__table-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== RESULTADOS + BOTÓN COBRAR ===== */
+
+.cobranza-panel__results-row {
+  margin-top: 14px;
+  align-items: flex-end;
+}
+
+.cobranza-panel__result-field {
+  flex: 1 1 160px;
+}
+
+.cobranza-panel__submit {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
+/* Opcional: el botón Cobrar un poco más “protagónico” */
+.cobranza-panel__submit button {
+  min-width: 140px;
 }

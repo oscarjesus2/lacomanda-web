@@ -13,45 +13,45 @@
       <mat-label>Buscar</mat-label>
       <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Buscar por descripción, estado o posición">
     </mat-form-field>
-   <div class="mant-table-card">  
-    <mat-table [dataSource]="filteredAmbientes" class="mat-elevation-z8">
-      <!-- Descripción -->
-      <ng-container matColumnDef="descripcion">
-        <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
-        <mat-cell *matCellDef="let a"> {{ a.Descripcion }} </mat-cell>
-      </ng-container>
+    <div class="mant-table-card">  
+      <mat-table [dataSource]="filteredAmbientes" class="mat-elevation-z8">
+        <!-- Descripción -->
+        <ng-container matColumnDef="descripcion">
+          <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+          <mat-cell *matCellDef="let a"> {{ a.Descripcion }} </mat-cell>
+        </ng-container>
 
-      <!-- Estado -->
-      <ng-container matColumnDef="estado">
-        <mat-header-cell *matHeaderCellDef> Estado </mat-header-cell>
-        <mat-cell *matCellDef="let a"> {{ a.Estado === 1 ? 'Activo' : 'Inactivo' }} </mat-cell>
-      </ng-container>
+        <!-- Estado -->
+        <ng-container matColumnDef="estado">
+          <mat-header-cell *matHeaderCellDef> Estado </mat-header-cell>
+          <mat-cell *matCellDef="let a"> {{ a.Estado === 1 ? 'Activo' : 'Inactivo' }} </mat-cell>
+        </ng-container>
 
-      <!-- Posición -->
-      <ng-container matColumnDef="posicion">
-        <mat-header-cell *matHeaderCellDef> Posición </mat-header-cell>
-        <mat-cell *matCellDef="let a"> {{ a.Posicion }} </mat-cell>
-      </ng-container>
+        <!-- Posición -->
+        <ng-container matColumnDef="posicion">
+          <mat-header-cell *matHeaderCellDef> Posición </mat-header-cell>
+          <mat-cell *matCellDef="let a"> {{ a.Posicion }} </mat-cell>
+        </ng-container>
 
-      <!-- Acciones -->
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
-        <mat-cell *matCellDef="let a">
-          <button mat-icon-button color="primary" (click)="onEdit(a)" matTooltip="Editar">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="onDelete(a.IdAmbiente)" matTooltip="Eliminar">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-cell>
-      </ng-container>
+        <!-- Acciones -->
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+          <mat-cell *matCellDef="let a">
+            <button mat-icon-button color="primary" (click)="onEdit(a)" matTooltip="Editar">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="onDelete(a.IdAmbiente)" matTooltip="Eliminar">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
 
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-    </mat-table>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      </mat-table>
 
-    <mat-paginator [length]="ambientes.length" [pageSize]="5" [pageSizeOptions]="[5,10,20]"></mat-paginator>
-  </div>
+      <mat-paginator [length]="ambientes.length" [pageSize]="5" [pageSizeOptions]="[5,10,20]"></mat-paginator>
+    </div>
   </div>
 
   <!-- FORM -->

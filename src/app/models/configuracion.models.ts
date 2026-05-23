@@ -18,7 +18,7 @@ export class Configuracion {
   PiePagina: string;
   Traslado: boolean;
   Precuentas: boolean;
-  CambioMesa: boolean;
+  CambioEspacio: boolean;
   Diario: boolean;
   NroPrecuentas: number;
   Anfitrionas: boolean;

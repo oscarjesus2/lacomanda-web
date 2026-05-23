@@ -16,7 +16,7 @@ export class CanalVentaComponent implements OnInit, OnChanges  {
   private chartContainer: ElementRef;
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
-  totalVentaMesa: number;
+  totalVentaEspacio: number;
   totalVentaLlevar: number;
   totalVentaDelivery: number;
   private data: ventadiariasemanalmensual[];
@@ -88,7 +88,7 @@ export class CanalVentaComponent implements OnInit, OnChanges  {
       const data = await this.ventaService.getVentasPorCanal(fechaInicial, fechaFinal).toPromise();
       this.data = data;
   
-      this.totalVentaMesa = this.data.reduce((acc, venta) => {return venta.Agrupado==='Para Mesa'? acc + venta.Total: acc}, 0);
+      this.totalVentaEspacio = this.data.reduce((acc, venta) => {return venta.Agrupado==='Para Mesa'? acc + venta.Total: acc}, 0);
       this.totalVentaLlevar = this.data.reduce((acc, venta) => {return venta.Agrupado==='Para Llevar'? acc + venta.Total: acc}, 0);
       this.totalVentaDelivery = this.data.reduce((acc, venta) => {return venta.Agrupado==='Delivery'? acc + venta.Total: acc}, 0);
       this.updateChart();

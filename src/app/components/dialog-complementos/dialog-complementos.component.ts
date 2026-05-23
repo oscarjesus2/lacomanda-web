@@ -209,9 +209,9 @@ calcularTotal(): void {
       //     this.gridListaPedidoDetProducto.data = this.listProductGrid;
       //     if (this.listProductGrid.length == 0) {
       //       this.limpiarPedido();
-      //       this.MostrarOcultarPanelMesa = true;
+      //       this.MostrarOcultarPanelEspacio = true;
       //       this.MostrarOcultarPanelProducto = false;
-      //       this.ListaMesasTotal = await this.mesasService.getAllMesas().toPromise();
+      //       this.ListaEspaciosTotal = await this.espaciosService.getAllEspacios().toPromise();
       //     }
       //   }
       //   this.spinnerService.hide();

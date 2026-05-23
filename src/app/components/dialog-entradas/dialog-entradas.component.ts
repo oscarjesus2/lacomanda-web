@@ -372,11 +372,11 @@ export class DialogEntradasComponent {
     pedidoCab.IdCanalVenta = CanalVentaEnum.ENTRADAS;
     pedidoCab.Estado = 1;
     pedidoCab.Moneda = "SOL";
-    pedidoCab.IdMesa = 9999;
+    pedidoCab.IdEspacio = 9999;
     pedidoCab.IdCaja = this.turnoAbierto.IdCaja; //esto debe asignarse en el backend
     pedidoCab.NumPrecuentas = 0;
     pedidoCab.FechaPrecuenta = null;
-    pedidoCab.MesaPrecuenta = null;
+    pedidoCab.EspacioPrecuenta = null;
     pedidoCab.Observacion = '';
     pedidoCab.Dscto = this.descuentoTotal;
     pedidoCab.Importe = this.subTotal;
@@ -444,8 +444,7 @@ export class DialogEntradasComponent {
     const dialogEmitirComprobanteComponent = this.dialog.open(DialogEmitirComprobanteComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '705px', // Establece el ancho del diálogo
-      height: '915px', // Establece la altura del diálogo
+      width: '755px', 
       data: {
         lblcambio: this.turnoAbierto.TipoCambioVenta,
         dblImporte: this.subTotal,

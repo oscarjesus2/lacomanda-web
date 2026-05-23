@@ -138,7 +138,7 @@ export class HeaderComponent {
       disableClose: true,
       hasBackdrop: true,
       width: '600px', height: '400px'
-      // data: { oPedidoMesa: listData, IdMesa: IdMesa, Mesa: this.mesaSelected.Descripcion + ' ' + this.mesaSelected.Numero}
+      
     });
    }
 }

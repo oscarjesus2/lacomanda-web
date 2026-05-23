@@ -77,6 +77,6 @@ export interface DialogData {
     listMozos: Empleado[],
     IdEmpleado: number,
     NroPersonas: string,
-    NumMesa: string;
+    NumEspacio: string;
 }
 

@@ -1,14 +1,14 @@
-export class Mesas {
+export class Espacios {
 
     public Activo: boolean;
     public Descripcion: string;
     public DescripcionPC: any;
     public Divide: number;
     public IdAmbiente: number;
-    public IdCompu: number;
-    public IdMesa: number;
+    public IdEstacionEnUso: number;
+    public IdEspacio: number;
     public IdTaxista: string;
-    public Mesa: any;
+    public Espacio: any;
     public NroPersonas: number;
     public Numero: number;
     public Ocupado: number;
@@ -20,7 +20,7 @@ export class Mesas {
     public Color: string;
 
         
-    constructor(init?: Partial<Mesas>) {
+    constructor(init?: Partial<Espacios>) {
         Object.assign(this, init);
     }
 }

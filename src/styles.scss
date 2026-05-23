@@ -1069,3 +1069,21 @@ mat-header-cell {
     width: 100%;
   }
 }
+
+/* Centramos TODOS los overlays de Angular Material */
+.cdk-global-overlay-wrapper {
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Panel genérico de mantenimientos: scroll interno, no del body */
+.cdk-global-overlay-wrapper .mant-panel {
+  max-height: calc(100vh - 64px);   /* margen arriba/abajo para que respire */
+  overflow-y: auto;                 /* scroll SOLO dentro del panel */
+}
+
+/* Lo mismo para configuración inicial, que usa otro panel */
+.cdk-global-overlay-wrapper .config-panel {
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+}

@@ -23,7 +23,6 @@ export class Producto {
     public Stock: number;
     public IdGrupoVenta: number;
     public MonedaVenta: string;
-    public ImpuestoBolsa: number;
     public EsProductoBolsa: boolean;
     public Tipo: number;
     public ExclusivoParaAnfitriona: boolean;

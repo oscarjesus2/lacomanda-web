@@ -83,7 +83,7 @@ import { DialogPagarTaxistaComponent } from './components/dialog-pagar-taxista/d
 import { DialogDocumentosEmitidosComponent } from './components/dialog-documentos-emitidos/dialog-documentos-emitidos.component';
 import { UsuariosMantenimientoComponent } from './components/mantenimiento/usuarios-mantenimiento/usuarios-mantenimiento.component';
 import { AnulacionesComponent } from './pages/dashboard/anulaciones/anulaciones.component';
-import { MesasMantenimientoComponent } from './components/mantenimiento/mesas-mantenimiento/mesas-mantenimiento.component';
+import { EspaciosMantenimientoComponent } from './components/mantenimiento/espacios-mantenimiento/espacios-mantenimiento.component';
 import { PosicionSelectorDialogComponent } from './components/posicion-selector-dialog/posicion-selector-dialog.component';
 import { AmbienteMantenimientoComponent } from './components/mantenimiento/ambiente-mantenimiento/ambiente-mantenimiento.component';
 import { ProductoMantenimientoComponent } from './components/mantenimiento/producto-mantenimiento/producto-mantenimiento.component';
@@ -154,7 +154,7 @@ export const MY_DATE_FORMATS = {
     DialogDocumentosEmitidosComponent,
     UsuariosMantenimientoComponent,
     AnulacionesComponent,
-    MesasMantenimientoComponent,
+    EspaciosMantenimientoComponent,
     PosicionSelectorDialogComponent,
     AmbienteMantenimientoComponent,
     ProductoMantenimientoComponent,

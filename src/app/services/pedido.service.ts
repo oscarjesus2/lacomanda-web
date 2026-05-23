@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { PedidoCab } from '../models/pedido.models';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
-import { PedidoMesaDTO } from '../interfaces/pedidomesaDTO.interface';
+import { PedidoEspacioDTO as PedidoEspacioDTO } from '../interfaces/pedidoespacioDTO.interface';
 import { ImpresionDTO } from '../interfaces/impresionDTO.interface';
 import { AnularProductoYComplementoDTO } from '../interfaces/anularProductoYComplementoDTO.interface';
 import { PedidoDeliveryDTO } from '../interfaces/pedidoDTO.interface';
@@ -25,16 +25,16 @@ export class PedidoService {
         return this.http.get<any[]>(this.basePath + '/totalapagar_x_detallepedido/' +  idPedidoCobrar + '/' + nroCuentaCobrar);
     }
 
-    FindPedidoByIdPedidoNroCuenta(idPedido: number, nroCuenta: number): Observable<ApiResponse<PedidoMesaDTO[]>> {
-        return this.http.get<ApiResponse<PedidoMesaDTO[]>>(`${this.basePath}/custom/${idPedido}/${nroCuenta}`);
+    FindPedidoByIdPedidoNroCuenta(idPedido: number, nroCuenta: number): Observable<ApiResponse<PedidoEspacioDTO[]>> {
+        return this.http.get<ApiResponse<PedidoEspacioDTO[]>>(`${this.basePath}/custom/${idPedido}/${nroCuenta}`);
     }
 
-    FindPedidoByIdMesa(idMesa: number): Observable<ApiResponse<PedidoMesaDTO[]>> {
-        return this.http.get<ApiResponse<PedidoMesaDTO[]>>(this.basePath + '/custom/mesa/' + idMesa);
+    FindPedidoByIdEspacio(idEspacio: number): Observable<ApiResponse<PedidoEspacioDTO[]>> {
+        return this.http.get<ApiResponse<PedidoEspacioDTO[]>>(this.basePath + '/custom/mesa/' + idEspacio);
     }
 
-    FindPedidoByIdPedido(idPedido: number): Observable<ApiResponse<PedidoMesaDTO[]>> {
-        return this.http.get<ApiResponse<PedidoMesaDTO[]>>(`${this.basePath}/custom/${idPedido}`);
+    FindPedidoByIdPedido(idPedido: number): Observable<ApiResponse<PedidoEspacioDTO[]>> {
+        return this.http.get<ApiResponse<PedidoEspacioDTO[]>>(`${this.basePath}/custom/${idPedido}`);
     }
 
     ObtenerPedidosByIdTurno(idTurno: number): Observable<ApiResponse<PedidoDeliveryDTO[]>> {
@@ -66,20 +66,20 @@ export class PedidoService {
         return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + '/grabarpedido', pedido);
     }
 
-    CrearCuenta(crearCuentaDTO: DividirCuentaDTO): Observable<ApiResponse<PedidoMesaDTO[]>>{
-        return this.http.post<ApiResponse<PedidoMesaDTO[]>>(this.basePath + '/CrearCuenta', crearCuentaDTO);
+    CrearCuenta(crearCuentaDTO: DividirCuentaDTO): Observable<ApiResponse<PedidoEspacioDTO[]>>{
+        return this.http.post<ApiResponse<PedidoEspacioDTO[]>>(this.basePath + '/CrearCuenta', crearCuentaDTO);
     }
 
-    EliminarCuenta(eliminarCuentaDTO: DividirCuentaDTO): Observable<ApiResponse<PedidoMesaDTO[]>>{
-        return this.http.post<ApiResponse<PedidoMesaDTO[]>>(this.basePath + '/EliminarCuenta', eliminarCuentaDTO);
+    EliminarCuenta(eliminarCuentaDTO: DividirCuentaDTO): Observable<ApiResponse<PedidoEspacioDTO[]>>{
+        return this.http.post<ApiResponse<PedidoEspacioDTO[]>>(this.basePath + '/EliminarCuenta', eliminarCuentaDTO);
     }
 
     AnularProductoYComplemento(pedido: AnularProductoYComplementoDTO): Observable<ApiResponse<ImpresionDTO[]>> {
         return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + '/AnularProductoYComplemento', pedido);
     }
 
-    AnularPedido(idMesa: number, usuAnula: number, motivoAnula: string, ip: string): Observable<ApiResponse<ImpresionDTO[]>> {
-        return this.http.post<ApiResponse<ImpresionDTO[]>>(`${this.basePath}/AnularPedido/${idMesa}/${usuAnula}/${motivoAnula}/${ip}`, {});
+    AnularPedido(idEspacio: number, usuAnula: number, motivoAnula: string, ip: string): Observable<ApiResponse<ImpresionDTO[]>> {
+        return this.http.post<ApiResponse<ImpresionDTO[]>>(`${this.basePath}/AnularPedido/${idEspacio}/${usuAnula}/${motivoAnula}/${ip}`, {});
     }
 
     ImprimirPrecuenta(idPedido: number, nroCuenta: number): Observable<ApiResponse<ImpresionDTO[]>> {

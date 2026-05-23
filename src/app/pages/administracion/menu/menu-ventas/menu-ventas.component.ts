@@ -12,7 +12,7 @@ import { DialogReportecontableComponent } from 'src/app/components/dialog-report
 import { ClienteMantenimientoComponent } from 'src/app/components/mantenimiento/cliente-mantenimiento/cliente-mantenimiento.component';
 import { EmpleadoMantenimientoComponent } from 'src/app/components/mantenimiento/empleado-mantenimiento/empleado-mantenimiento.component';
 import { UsuariosMantenimientoComponent } from 'src/app/components/mantenimiento/usuarios-mantenimiento/usuarios-mantenimiento.component';
-import { MesasMantenimientoComponent } from 'src/app/components/mantenimiento/mesas-mantenimiento/mesas-mantenimiento.component';
+import { EspaciosMantenimientoComponent } from 'src/app/components/mantenimiento/espacios-mantenimiento/espacios-mantenimiento.component';
 import { AmbienteMantenimientoComponent } from 'src/app/components/mantenimiento/ambiente-mantenimiento/ambiente-mantenimiento.component';
 import { ProductoMantenimientoComponent } from 'src/app/components/mantenimiento/producto-mantenimiento/producto-mantenimiento.component';
 import { FamiliaMantenimientoComponent } from 'src/app/components/mantenimiento/familia-mantenimiento/familia-mantenimiento.component';
@@ -124,7 +124,7 @@ export class MenuVentasComponent implements OnInit {
       } 
     if (item.title === 'Configuración de Espacios') 
       {
-        this.OpenMesaMantenimientoComponent();
+        this.OpenEspacioMantenimientoComponent();
       }
     if (item.title === 'Familia de Productos') 
       {
@@ -211,13 +211,11 @@ export class MenuVentasComponent implements OnInit {
 
   OpenDialogVentasGeneralesTurno(): void {
 
-    const dialogTurno = this.dialog.open(DialogVentasgeneralesComponent, {
-      disableClose: true,
-      hasBackdrop: true,
-      width: '100vw',  
-      height: '100vh', 
-      maxWidth: '100vw',
-      maxHeight: '100vh'
+    const dialog = this.dialog.open(DialogVentasgeneralesComponent, {
+       disableClose: true,
+        hasBackdrop: true,
+        width: '100vw',
+        height: '100vh',
     });
   }
 
@@ -227,7 +225,7 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '600px', 
-      height: '410px', 
+      // height: '410px', 
     });
   }
 
@@ -237,7 +235,7 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '900px', 
-      height: '700px', 
+      // height: '700px', 
     });
   }
 
@@ -247,7 +245,7 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '900px', 
-      height: '700px', 
+      // height: '700px', 
     });
   }
 
@@ -257,7 +255,7 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '900px', 
-      height: '700px', 
+      // height: '700px', 
     });
   }
 
@@ -267,7 +265,7 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '900px', 
-      height: '700px', 
+      // height: '700px', 
     });
   }
 
@@ -292,9 +290,9 @@ export class MenuVentasComponent implements OnInit {
   }
 
 
-  OpenMesaMantenimientoComponent(): void {
+  OpenEspacioMantenimientoComponent(): void {
   
-    const dialog = this.dialog.open(MesasMantenimientoComponent, {
+    const dialog = this.dialog.open(EspaciosMantenimientoComponent, {
       disableClose: true,
       hasBackdrop: true,
       width: '900px', 
@@ -338,7 +336,7 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '600px', height: '400px'
-      // data: { oPedidoMesa: listData, IdMesa: IdMesa, Mesa: this.mesaSelected.Descripcion + ' ' + this.mesaSelected.Numero}
+      // data: { oPedidoEspacio: listData, IdEspacio: IdEspacio, Espacio: this.espacioSelected.Descripcion + ' ' + this.espacioSelected.Numero}
     });
   }
 
@@ -348,7 +346,6 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '920px',
-      height: '800px'
     });
   }
 
@@ -357,7 +354,6 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '700px', 
-      height: '600px', 
     });
   }
 

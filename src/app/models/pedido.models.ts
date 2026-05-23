@@ -20,15 +20,15 @@ export class PedidoCab {
     Importe: number;
     UsuReg: number;
     UsuMod: number;
-    IdMesa: number;
+    IdEspacio: number;
     IdTurno: number;
     IdCaja: number;
     NumPrecuentas: number;
     FechaPrecuenta?: Date;
-    MesaPrecuenta: string;
+    EspacioPrecuenta: string;
     Observacion: string;
     Dscto: number;
-    Mesa: string;
+    Espacio: string;
      NroPax: number;
      ListaPedidoDet: PedidoDet[];
     

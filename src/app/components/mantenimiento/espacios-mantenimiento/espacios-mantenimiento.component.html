@@ -7,59 +7,59 @@
 
   <!-- Lista de Mesas -->
   <div class="empleados-list" *ngIf="!showForm">
-    <button mat-raised-button color="primary" (click)="nuevaMesa()">Nuevo Espacios</button>
+    <button mat-raised-button color="primary" (click)="nuevaEspacio()">Nuevo Espacios</button>
 
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Buscar</mat-label>
-      <input matInput [(ngModel)]="filtroMesa" (ngModelChange)="applyFilter()"
+      <input matInput [(ngModel)]="filtroEspacio" (ngModelChange)="applyFilter()"
         placeholder="Buscar por descripción, número, posición o ambiente">
     </mat-form-field>
 <div class="mant-table-card">
-    <mat-table [dataSource]="filteredMesas" class="mat-elevation-z8">
+    <mat-table [dataSource]="filteredEspacios" class="mat-elevation-z8">
       <!-- Descripcion -->
       <ng-container matColumnDef="descripcion">
         <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
-        <mat-cell *matCellDef="let mesa"> {{ mesa.Descripcion }} </mat-cell>
+        <mat-cell *matCellDef="let espacio"> {{ espacio.Descripcion }} </mat-cell>
       </ng-container>
 
       <!-- Numero -->
       <ng-container matColumnDef="numero">
         <mat-header-cell *matHeaderCellDef> Número </mat-header-cell>
-        <mat-cell *matCellDef="let mesa"> {{ mesa.Numero }} </mat-cell>
+        <mat-cell *matCellDef="let espacio"> {{ espacio.Numero }} </mat-cell>
       </ng-container>
 
       <!-- Posicion -->
       <ng-container matColumnDef="posicion">
         <mat-header-cell *matHeaderCellDef> Posición </mat-header-cell>
-        <mat-cell *matCellDef="let mesa"> {{ mesa.Posicion }} </mat-cell>
+        <mat-cell *matCellDef="let espacio"> {{ espacio.Posicion }} </mat-cell>
       </ng-container>
 
       <!-- Ambiente -->
       <ng-container matColumnDef="ambiente">
         <mat-header-cell *matHeaderCellDef> Ambiente </mat-header-cell>
-        <mat-cell *matCellDef="let mesa"> {{ getAmbienteDescripcion(mesa.IdAmbiente) }} </mat-cell>
+        <mat-cell *matCellDef="let espacio"> {{ getAmbienteDescripcion(espacio.IdAmbiente) }} </mat-cell>
       </ng-container>
 
       <!-- Activo -->
       <ng-container matColumnDef="activo">
         <mat-header-cell *matHeaderCellDef> Activo </mat-header-cell>
-        <mat-cell *matCellDef="let mesa"> {{ mesa.Activo ? 'Sí' : 'No' }} </mat-cell>
+        <mat-cell *matCellDef="let espacio"> {{ espacio.Activo ? 'Sí' : 'No' }} </mat-cell>
       </ng-container>
 
       <!-- Visible -->
       <ng-container matColumnDef="visible">
         <mat-header-cell *matHeaderCellDef> Visible </mat-header-cell>
-        <mat-cell *matCellDef="let mesa"> {{ mesa.Visible ? 'Sí' : 'No' }} </mat-cell>
+        <mat-cell *matCellDef="let espacio"> {{ espacio.Visible ? 'Sí' : 'No' }} </mat-cell>
       </ng-container>
 
       <!-- Acciones -->
       <ng-container matColumnDef="actions">
         <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
-        <mat-cell *matCellDef="let mesa">
-          <button mat-icon-button color="primary" (click)="onEdit(mesa)" matTooltip="Editar">
+        <mat-cell *matCellDef="let espacio">
+          <button mat-icon-button color="primary" (click)="onEdit(espacio)" matTooltip="Editar">
             <mat-icon>edit</mat-icon>
           </button>
-          <button mat-icon-button color="warn" (click)="onDelete(mesa.IdMesa)" matTooltip="Eliminar">
+          <button mat-icon-button color="warn" (click)="onDelete(espacio.IdEspacio)" matTooltip="Eliminar">
             <mat-icon>delete</mat-icon>
           </button>
         </mat-cell>
@@ -69,7 +69,7 @@
       <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
     </mat-table>
 
-    <mat-paginator [length]="mesas.length" [pageSize]="5" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
+    <mat-paginator [length]="espacios.length" [pageSize]="5" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
   </div>
 </div>
   <!-- Formulario -->
@@ -77,7 +77,7 @@
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>Descripción</mat-label>
-        <input type="text" matInput [(ngModel)]="mesa.Descripcion" [matAutocomplete]="auto" name="descripcion" required>
+        <input type="text" matInput [(ngModel)]="espacio.Descripcion" [matAutocomplete]="auto" name="descripcion" required>
         <mat-autocomplete #auto="matAutocomplete">
           <mat-option *ngFor="let opt of descripcionesEjemplo" [value]="opt">{{ opt }}</mat-option>
         </mat-autocomplete>
@@ -86,7 +86,7 @@
 
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>Número</mat-label>
-        <input matInput type="number" [(ngModel)]="mesa.Numero" name="numero" required min="1" #numero="ngModel">
+        <input matInput type="number" [(ngModel)]="espacio.Numero" name="numero" required min="1" #numero="ngModel">
         <mat-error *ngIf="numero.invalid && (numero.dirty || numero.touched)">
           El número es requerido y debe ser mayor a 0.
         </mat-error>
@@ -114,7 +114,7 @@
 
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>Posición</mat-label>
-        <input matInput [value]="mesa.Posicion || ''" name="posicion" readonly placeholder="Seleccione una posición">
+        <input matInput [value]="espacio.Posicion || ''" name="posicion" readonly placeholder="Seleccione una posición">
       </mat-form-field>
 
       <button mat-raised-button color="primary" type="button" (click)="abrirSelectorPosicion()" [disabled]="!selectedAmbiente">
@@ -125,7 +125,7 @@
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>Activo</mat-label>
-        <mat-select [(ngModel)]="mesa.Activo" name="activo" required #activo="ngModel">
+        <mat-select [(ngModel)]="espacio.Activo" name="activo" required #activo="ngModel">
           <mat-option [value]="true">Sí</mat-option>
           <mat-option [value]="false">No</mat-option>
         </mat-select>
@@ -136,7 +136,7 @@
 
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>Visible</mat-label>
-        <mat-select [(ngModel)]="mesa.Visible" name="visible" required #visible="ngModel">
+        <mat-select [(ngModel)]="espacio.Visible" name="visible" required #visible="ngModel">
           <mat-option [value]="true">Sí</mat-option>
           <mat-option [value]="false">No</mat-option>
         </mat-select>
@@ -147,7 +147,7 @@
     </div>
 
     <button mat-raised-button color="primary">
-      {{ mesa.IdMesa ? 'Actualizar' : 'Guardar' }}
+      {{ espacio.IdEspacio ? 'Actualizar' : 'Guardar' }}
     </button>
     <button mat-raised-button color="warn" (click)="cancelar()" type="button">Cancelar</button>
   </form>

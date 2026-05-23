@@ -29,7 +29,7 @@
         </div>
       <!-- Botones en la parte superior derecha -->
       <div class="channel-buttons">
-        <button (click)="canalVenta(canalVentaEnum.MESA)" [disabled]="isCanalVentaDisabled">
+        <button (click)="canalVenta(canalVentaEnum.ESPACIO)" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faUtensils"></fa-icon> CANAL MESA
         </button>
         <button (click)="canalVenta(canalVentaEnum.PARA_LLEVAR)" [disabled]="isCanalVentaDisabled">
@@ -48,13 +48,13 @@
     </div>
     <div class="middle-section">
       <div class="table-info">
-        <label *ngIf="idCanalVentaSelected == canalVentaEnum.MESA && mesaSelected?.Descripcion && mesaSelected?.Numero">
-          Mesa Nº: {{ mesaSelected.Descripcion + ' ' + mesaSelected.Numero }} {{nombreCuenta}}
+        <label *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO && espacioSelected?.Descripcion && espacioSelected?.Numero">
+          Espacio Nº: {{ espacioSelected.Descripcion + ' ' + espacioSelected.Numero }} {{nombreCuenta}}
         </label>
-        <label *ngIf="idCanalVentaSelected != canalVentaEnum.MESA">Pedido Nº: {{pedidoId}}</label> 
-        <label *ngIf="idCanalVentaSelected == canalVentaEnum.MESA">Nº Pax: {{ mesaSelected?.NroPersonas }}</label> 
-        <label *ngIf="idCanalVentaSelected == canalVentaEnum.MESA">Mozo: {{ mozoSelected?.Nombre }}</label>
-        <label *ngIf="idCanalVentaSelected != canalVentaEnum.MESA">Cliente: {{ clienteSelected?.RazonSocial }}</label>
+        <label *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO">Pedido Nº: {{pedidoId}}</label> 
+        <label *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Nº Pax: {{ espacioSelected?.NroPersonas }}</label> 
+        <label *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Mozo: {{ mozoSelected?.Nombre }}</label>
+        <label *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO">Cliente: {{ clienteSelected?.RazonSocial }}</label>
         <label>Hora: {{ horaPedido }}</label> 
       </div>
       <div #scrollContainer class="data-grid">
@@ -128,10 +128,6 @@
               </td>
             </ng-container>
 
-
-
-
-
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selectRow(row)" [class.selected-row]="selectedRow === row"></tr>
           </table>
@@ -190,17 +186,17 @@
 
   <!-- Segunda Columna -->
   <div class="column-right">
-    <!-- Alterna entre las mesas y los productos -->
-    <div *ngIf="MostrarOcultarPanelMesa && idCanalVentaSelected==canalVentaEnum.MESA" class="tables-grid">
-      <button *ngFor="let mesa of listaMesas_x_Ambiente"
-        [style.background]="mesa.Color" 
-        (click)="openDialogMesa(mesa)"
-        [style.visibility]="mesa.Visible === false ? 'hidden' : 'visible'">
-        <div style="text-align: center;">{{mesa.Descripcion}} {{mesa.Numero}} <br> S/.{{mesa.Total}} <br> {{mesa.NombreEmpleado?.substring(0, 8)}}</div>
+    <!-- Alterna entre las espacios y los productos -->
+    <div *ngIf="MostrarOcultarPanelEspacio && idCanalVentaSelected==canalVentaEnum.ESPACIO" class="tables-grid">
+      <button *ngFor="let espacio of listaEspacios_x_Ambiente"
+        [style.background]="espacio.Color" 
+        (click)="openDialogEspacio(espacio)"
+        [style.visibility]="espacio.Visible === false ? 'hidden' : 'visible'">
+        <div style="text-align: center;">{{espacio.Descripcion}} {{espacio.Numero}} <br> S/.{{espacio.Total}} <br> {{espacio.NombreEmpleado?.substring(0, 8)}}</div>
       </button>
     </div>
 
-    <div *ngIf="MostrarOcultarPanelMesa && idCanalVentaSelected!=canalVentaEnum.MESA" class="tables-grid">
+    <div *ngIf="MostrarOcultarPanelEspacio && idCanalVentaSelected!=canalVentaEnum.ESPACIO" class="tables-grid">
       <button *ngFor="let pedido of listaPedido_x_Canal"
         [style.background]="'LightCyan'"
         (click)="openPedido(pedido)"
@@ -218,25 +214,25 @@
     </div>
 
     <!-- Fila estática de botones (Barra, Salón, Box, Patio, Terraza) -->
-    <div *ngIf="!procesarPedido  || aplicarFiltroUnirMesa==true || aplicarFiltroCambioMesa==true">
-      <div class="static-buttons-row" *ngIf="idCanalVentaSelected == canalVentaEnum.MESA">
+    <div *ngIf="!procesarPedido  || aplicarFiltroUnirEspacio==true || aplicarFiltroCambioEspacio==true">
+      <div class="static-buttons-row" *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">
         <button *ngFor="let item of listAmbiente"
-        (click)="MostrarMesas_x_Ambiente(item)">{{item.Descripcion}}</button>
+        (click)="MostrarEspacios_x_Ambiente(item)">{{item.Descripcion}}</button>
       </div>
       
       <!-- Segunda fila estática de botones con "Procesar Pedido" -->
       <div class="static-buttons-row">
-        <button *ngIf="idCanalVentaSelected != canalVentaEnum.MESA" class="process-pedido" (click)="NuevoPedidoLlevar()">Nuevo Pedido</button>
+        <button *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO" class="process-pedido" (click)="NuevoPedidoLlevar()">Nuevo Pedido</button>
         <button class="process-pedido" (click)="processPedido(true)">Procesar Pedido</button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.MESA">Cambiar Mozo</button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.MESA" (click)="CambiarMesa()">Cambiar Mesa</button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.MESA" (click)="UnirMesa()">Unir Cuenta</button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.MESA" (click)="dividirCuenta()">Dividir Cuenta</button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.MESA">Limpiar Mesa</button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.MESA">Activar Mesa</button>
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Cambiar Mozo</button>
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO" (click)="CambiarEspacio()">Cambiar Espacio</button>
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO" (click)="UnirEspacio()">Unir Cuenta</button>
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO" (click)="dividirCuenta()">Dividir Cuenta</button>
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Limpiar Espacio</button>
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Activar Espacio</button>
       </div>
     </div>
-    <div *ngIf="procesarPedido && aplicarFiltroUnirMesa==false && aplicarFiltroCambioMesa==false">
+    <div *ngIf="procesarPedido && aplicarFiltroUnirEspacio==false && aplicarFiltroCambioEspacio==false">
       <div class="static-buttons-row">
         
         <button *ngFor="let item of listFamilia"

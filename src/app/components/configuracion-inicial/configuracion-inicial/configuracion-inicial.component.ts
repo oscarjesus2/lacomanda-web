@@ -32,7 +32,7 @@ export class ConfiguracionInicialComponent implements OnInit {
 
     Traslado: [false],
     Precuentas: [true],
-    CambioMesa: [true],
+    CambioEspacio: [true],
     Diario: [false],
     NroPrecuentas: [1, [Validators.min(1)]],
     Anfitrionas: [false],

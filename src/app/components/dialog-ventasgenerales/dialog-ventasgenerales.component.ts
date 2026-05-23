@@ -23,11 +23,26 @@ export class DialogVentasgeneralesComponent implements OnInit {
   listCaja: Caja[];
   ventas: VentasInterface[] = [];
   dataSource = new MatTableDataSource<VentasInterface>([]);
-  displayedColumns: string[] = [
-    'Caja', 'TipoDocumento', 'Documento', 'Cliente', 'FechaVenta',
-    'Moneda', 'Dscto', 'Inafecto', 'ValorVenta', 'IGV', 'Servicio',
-    'ICBPER', 'Total', 'EstadoDescripcion', 'EstadoPago'
+  columnDefs = [
+    { key: 'Caja',              label: 'Caja' },
+    { key: 'TipoDocumento',     label: 'Tipo Doc.' },
+    { key: 'Documento',         label: 'Nº Doc.' },
+    { key: 'Cliente',           label: 'Cliente' },
+    { key: 'FechaVenta',        label: 'Fecha' },
+    { key: 'Moneda',            label: 'Moneda' },
+    { key: 'Dscto',             label: 'Dscto' },
+    { key: 'Inafecto',          label: 'Inafecto' },
+    { key: 'ValorVenta',        label: 'Valor Venta' },
+    { key: 'IGV',               label: 'IGV' },
+    { key: 'Servicio',          label: 'Servicio' },
+    { key: 'ICBPER',            label: 'ICBPER' },
+    { key: 'Total',             label: 'Total' },
+    { key: 'EstadoDescripcion', label: 'Estado Desc.' },
+    { key: 'EstadoPago',        label: 'Estado Pago' },
+    { key: 'acciones',          label: 'Opciones' }
   ];
+
+  displayedColumns: string[] = this.columnDefs.map(c => c.key);
   ventaSeleccionada: VentasInterface | null = null;
   listarTodosLosTurnos: boolean = false;
   listarDI: boolean = false;
@@ -116,7 +131,7 @@ export class DialogVentasgeneralesComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '900px', // Establece el ancho del diálogo
-      height: '610px', // Establece la altura del diálogo
+      //  // Establece la altura del diálogo
       // minWidth: '300px', // Establece el ancho mínimo del diálogo
       // minHeight: '300px', // Establece la altura mínima del diálogo
       // maxWidth: '80vw', // Establece el ancho máximo del diálogo en porcentaje de la ventana

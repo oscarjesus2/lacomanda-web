@@ -453,10 +453,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     var response = await this.cajaTipoDocumentoService.GetTiposDocumentos(this.idCaja).toPromise();
     let allTipoDocumento = response;
     if (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta) {
-      this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDocumento === EnumTipoDocumento.BoletaVentaManual || doc.IdTipoDocumento === EnumTipoDocumento.BoletaVenta);
+      this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDocumento === EnumTipoDocumento.BoletaManual || doc.IdTipoDocumento === EnumTipoDocumento.BoletaVenta);
       this.tipoDocumento.IdTipoDocumento = EnumTipoDocumento.BoletaVenta;
     } else if (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.FacturaVenta) {
-      this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDocumento === EnumTipoDocumento.FacturaVentaManual || doc.IdTipoDocumento === EnumTipoDocumento.FacturaVenta);
+      this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDocumento === EnumTipoDocumento.FacturaManual || doc.IdTipoDocumento === EnumTipoDocumento.FacturaVenta);
       this.tipoDocumento.IdTipoDocumento = EnumTipoDocumento.FacturaVenta;
     } else if (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.Express) {
       this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDocumento === EnumTipoDocumento.Express);
@@ -658,7 +658,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
           }
         }
 
-        if (parseFloat(this.lblmonto) >= 700 && (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta || this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVentaManual)) {
+        if (parseFloat(this.lblmonto) >= 700 && (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta || this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaManual)) {
           if (this.cliente.NumeroIdentificacion === '00000001') {
             Swal.fire('Validación', 'La cuenta es igual ó superior a 700 soles, por lo cual, debe ingresar el DNI del cliente.', 'warning');
             return;
@@ -690,7 +690,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       mensaje = "¿Está Seguro de Registrar la Venta al Crédito?";
     }
 
-    if (!((this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta || this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVentaManual) && this.storageService.getCurrentSession().boletaRapida)) {
+    if (!((this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta || this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaManual) && this.storageService.getCurrentSession().boletaRapida)) {
       Swal.fire({
         title: mensaje,
         icon: 'question',

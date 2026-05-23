@@ -1,140 +1,164 @@
-dialog-ventasgenerales.component.css
 
-  
-.close-button {
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  z-index: 1000;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-}
 
-.close-button mat-icon {
-  font-size: 24px;
-  color: #757575;  /* Color gris medio */
-}
-
-.close-button:hover mat-icon {
-  color: #212121;  /* Color más oscuro al pasar el mouse */
-}
-
-.ventas-generales-container {
-  padding: 30px;
+/* FILTROS */
+.ventas-panel__filters {
   display: flex;
-  flex-direction: column;
-  height: 100vh;
-  box-sizing: border-box;
-  overflow: hidden; 
-}
-
-.filters {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 30px;
   flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: flex-end;
+  margin-bottom: 4px;
 }
 
-.filters input[type="text"],
-.filters select {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
+.ventas-panel__checkbox {
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(59, 34, 10, 0.75);
 }
 
-.btn-actualizar {
-  padding: 10px 15px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+/* usa tus .form-field globales */
+.ventas-panel__filters .form-field {
+  flex: 1 1 220px;
 }
 
-.btn-actualizar:hover {
-  background-color: #45a049;
+.ventas-panel__filters .form-field--sm {
+  max-width: 220px;
 }
 
-.table-buttons-container {
-  flex: 1; /* Hace que este contenedor ocupe todo el espacio restante */
+.ventas-panel__filters .form-field--grow {
+  flex: 2 1 320px;
+}
+
+/* CONTENIDO PRINCIPAL: tabla + acciones */
+.ventas-panel__content {
+  flex: 1;
   display: flex;
+  gap: 16px;
   overflow: hidden;
 }
 
-.ventas-table-container {
+/* Tarjeta que envuelve la tabla */
+.ventas-panel__table-card {
   flex: 1;
-  overflow-y: auto; /* Permite el scroll vertical en la tabla */
-  margin-right: 20px;
+  display: flex;
+  flex-direction: column;
+
+  border-radius: 14px;
+  background: #fffdf7;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
 }
 
+/* Zona scrolleable de la tabla */
+.ventas-panel__table-wrapper {
+  flex: 1;
+  overflow: auto;
+}
+
+/* La tabla respeta anchos fijos y recorta texto */
 .ventas-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  table-layout: fixed;
 }
+
+.ventas-table .mat-header-cell,
+.ventas-table .mat-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 4px 8px;
+}
+
+/* --- Anchos por columna --- */
+
+.ventas-table .mat-column-Caja {
+  width: 80px;
+}
+
+.ventas-table .mat-column-TipoDocumento {
+  width: 140px;
+}
+
+.ventas-table .mat-column-Documento {
+  width: 140px;
+}
+
+.ventas-table .mat-column-Cliente {
+  width: 240px;
+}
+
+.ventas-table .mat-column-FechaVenta {
+  width: 120px;
+}
+
+.ventas-table .mat-column-Moneda {
+  width: 90px;
+}
+
+.ventas-table .mat-column-Dscto {
+  width: 100px;
+}
+
+.ventas-table .mat-column-Inafecto {
+  width: 110px;
+}
+
+.ventas-table .mat-column-ValorVenta {
+  width: 120px;
+}
+
+.ventas-table .mat-column-IGV {
+  width: 90px;
+}
+
+.ventas-table .mat-column-Servicio {
+  width: 110px;
+}
+
+.ventas-table .mat-column-ICBPER {
+  width: 100px;
+}
+
+.ventas-table .mat-column-Total {
+  width: 120px;
+}
+
+.ventas-table .mat-column-EstadoDescripcion {
+  width: 200px;
+}
+
+.ventas-table .mat-column-EstadoPago {
+  width: 130px;
+}
+.ventas-table .mat-column-acciones {
+  width: 80px;
+  text-align: center;
+}
+
 
 .ventas-table th,
 .ventas-table td {
-								
-  padding: 12px;
+  padding: 8px 10px;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(59, 34, 10, 0.08);
 }
 
 .ventas-table th {
-  background-color: #f8f8f8;
-  font-weight: bold;
-  color: #333;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(59, 34, 10, 0.04);
+  color: rgba(59, 34, 10, 0.8);
 }
 
-.buttons {
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
+.ventas-table tr:nth-child(even) td {
+  background: rgba(59, 34, 10, 0.015);
 }
 
-.buttons button {
-  margin-top: 10px;
-  padding: 12px 20px;
-  width: 220px;
-  text-align: left;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s, box-shadow 0.3s;
-  font-size: 14px;
-}
-
-.buttons button:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.btn-salir {
-  background-color: #f44336;
-  color: white;
-}
-
-.btn-emitir-comprobante,
-.btn-nota-credito,
-.btn-modificar-doc,
-.btn-modificacion-pagos,
-.btn-pdf-xml,
-.btn-reimprimir-doc {
-			 
-  background-color: #2196F3;
-  color: white;
-}
-
-.btn-anular {
-  background-color: #FF9800;
-  color: white;
-}
-
-.selected {
+/* Fila seleccionada / hover */
+.ventas-table .selected .mat-mdc-cell,
+.mat-mdc-row.selected .mat-mdc-cell {
   background-color: #e3f2fd;
 }
 
@@ -142,29 +166,33 @@ dialog-ventasgenerales.component.css
   background-color: #f5f5f5;
 }
 
-.mat-mdc-row .mat-mdc-cell {
-  border-bottom: 1px solid #e0e0e0;
-  transition: background-color 0.3s;
-				  
+/* COLUMNA DE BOTONES LATERALES */
+.ventas-panel__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 260px;
+  align-self: flex-start;
 }
 
-
-							 
-.close-button {
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  z-index: 1000;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
+.ventas-panel__actions button {
+  width: 100%;
+  justify-content: flex-start;
 }
 
-.close-button mat-icon {
-  font-size: 24px;
-  color: #757575;  /* Color gris medio */
-}
+/* Responsive: en pantallas estrechas, la columna de acciones pasa abajo */
+@media (max-width: 900px) {
+  .ventas-panel__content {
+    flex-direction: column;
+  }
 
-.close-button:hover mat-icon {
-  color: #212121;  /* Color más oscuro al pasar el mouse */
+  .ventas-panel__actions {
+    max-width: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .ventas-panel__actions button {
+    flex: 1 1 220px;
+  }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -12,9 +12,13 @@ import { MatDialogRef } from '@angular/material/dialog';
   templateUrl: './observacion-mantenimiento.component.html',
   styleUrls: ['./observacion-mantenimiento.component.css']
 })
-export class ObservacionMantenimientoComponent implements OnInit {
+export class ObservacionMantenimientoComponent implements OnInit, AfterViewInit {
   @ViewChild('form') form: NgForm;
   @ViewChild(MatPaginator) paginator: MatPaginator;
+
+  // Tamaño de la botonera
+  ROWS = 4;
+  COLS = 4;
 
   tipos = [
     { value: 1, label: 'Comida' },
@@ -30,25 +34,40 @@ export class ObservacionMantenimientoComponent implements OnInit {
   // posiciones ocupadas por el tipo seleccionado
   usedPositions = new Set<number>();
 
-  displayedColumns = ['descripcion','tipo','posicion','activo','actions'];
+  displayedColumns = ['descripcion', 'tipo', 'posicion', 'activo', 'actions'];
 
-  constructor(private service: ObservacionService,
+  constructor(
+    private service: ObservacionService,
     private dialogRef: MatDialogRef<ObservacionMantenimientoComponent>
   ) {}
 
-  ngOnInit(): void { this.cargar(); }
+  ngOnInit(): void {
+    this.cargar();
+  }
 
-  ngAfterViewInit() { this.data.paginator = this.paginator; }
+  ngAfterViewInit(): void {
+    this.data.paginator = this.paginator;
+  }
 
   private blank(): Observacion {
     return { IdObservacion: 0, Descripcion: '', Tipo: 1, Activo: 1, Posicion: 0 };
+  }
+
+  // --- grid de posiciones ---
+  get gridPositions(): number[] {
+    const len = this.ROWS * this.COLS;
+    return Array.from({ length: len }, (_, i) => i + 1);
   }
 
   cargar(): void {
     this.service.getAllObservacion().subscribe({
       next: r => {
         if (r.Success) {
-          this.rows = r.Data ?? [];
+          this.rows = (r.Data ?? []).map((o: any) => ({
+            ...o,
+            Tipo: Number(o.Tipo),
+            Activo: Number(o.Activo),
+          }));
           this.data.data = this.rows;
         } else {
           Swal.fire('Error', r.Message || 'No se pudo cargar', 'error');
@@ -74,7 +93,11 @@ export class ObservacionMantenimientoComponent implements OnInit {
   }
 
   onEdit(r: Observacion): void {
-    this.obs = { ...r };
+    this.obs = {
+      ...r,
+      Tipo: Number(r.Tipo),
+      Activo: Number(r.Activo),
+    };
     this.showForm = true;
     this.refreshUsedPositions();
   }
@@ -97,42 +120,69 @@ export class ObservacionMantenimientoComponent implements OnInit {
     });
   }
 
-  cancelar(): void { this.showForm = false; }
+  cancelar(): void {
+    this.showForm = false;
+  }
 
   // --- Botonera ---
-  onTipoChange(): void { this.refreshUsedPositions(); }
+  onTipoChange(): void {
+    this.refreshUsedPositions();
+  }
 
   refreshUsedPositions(): void {
     this.usedPositions.clear();
     const tipo = this.obs.Tipo;
-    // carga posiciones actuales del tipo (desde memoria o API)
-    const ocupadas = this.rows.filter(x => x.Tipo === tipo).map(x => x.Posicion);
-    for (const p of ocupadas) this.usedPositions.add(p);
+    const ocupadas = this.rows
+      .filter(x => Number(x.Tipo) === Number(tipo))
+      .map(x => x.Posicion);
+
+    for (const p of ocupadas) {
+      this.usedPositions.add(p);
+    }
+
     // si estamos editando, permitir su propia posición
-    if (this.obs.IdObservacion && this.obs.Posicion) this.usedPositions.delete(this.obs.Posicion);
+    if (this.obs.IdObservacion && this.obs.Posicion) {
+      this.usedPositions.delete(this.obs.Posicion);
+    }
   }
 
-  isOccupied(pos: number): boolean { return this.usedPositions.has(pos); }
+  isOccupied(pos: number): boolean {
+    return this.usedPositions.has(pos);
+  }
 
   selectPos(pos: number): void {
-    if (this.isOccupied(pos)) return;
+    if (this.isOccupied(pos)) {
+      return;
+    }
     this.obs.Posicion = pos;
   }
 
-  posLabel(pos: number): string { return String(pos); }
+  posLabel(pos: number): string {
+    return String(pos);
+  }
 
   // --- Submit ---
   private touchForm(): void {
-    Object.values(this.form.controls).forEach(c => { c.markAsTouched(); c.markAsDirty(); });
+    if (!this.form) return;
+    Object.values(this.form.controls).forEach(c => {
+      c.markAsTouched();
+      c.markAsDirty();
+    });
   }
 
   onSubmit(): void {
     if (this.form.invalid || !this.obs.Posicion) {
       this.touchForm();
-      if (!this.obs.Posicion) Swal.fire('Posición', 'Selecciona una posición libre en la botonera', 'warning');
+      if (!this.obs.Posicion) {
+        Swal.fire('Posición', 'Selecciona una posición libre en la botonera', 'warning');
+      }
       return;
     }
-    const obs$ = this.obs.IdObservacion ? this.service.actualizar(this.obs) : this.service.crear(this.obs);
+
+    const obs$ = this.obs.IdObservacion
+      ? this.service.actualizar(this.obs)
+      : this.service.crear(this.obs);
+
     obs$.subscribe({
       next: r => {
         if (r.Success) {
@@ -147,9 +197,16 @@ export class ObservacionMantenimientoComponent implements OnInit {
     });
   }
 
-  // helpers para mostrar texto simple en tabla (evitar funciones flecha en template)
-  tipoLabel(t: number): string { return t === 1 ? 'Comida' : 'Bebida'; }
-  estadoLabel(a: number): string { return a === 1 ? 'Sí' : 'No'; }
+  // helpers tabla
+  tipoLabel(t: number): string {
+    return Number(t) === 1 ? 'Comida' : 'Bebida';
+  }
 
-   salir(): void { this.dialogRef.close(); }
+  estadoLabel(a: number): string {
+    return Number(a) === 1 ? 'Sí' : 'No';
+  }
+
+  salir(): void {
+    this.dialogRef.close();
+  }
 }

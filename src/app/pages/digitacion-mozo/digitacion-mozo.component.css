@@ -5,7 +5,12 @@
   height: 100vh;
   padding: 10px;
 }
-
+.admin-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1000;
+}
 .column-left, .column-right {
   border: 1px solid #ccc;
   padding: 10px;
@@ -101,18 +106,6 @@ button:disabled {
   position: sticky; /* Fija el encabezado de la tabla al hacer scroll */
   top: 0;
   z-index: 1; /* Asegura que el encabezado esté por encima del contenido */
-}
-
-/* Estilos para las tres filas estáticas debajo del datagridview */
-.total-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-}
-
-.total-section input {
-  width: 100px;
 }
 
 .button-row {
@@ -303,10 +296,10 @@ button:disabled {
   margin-left: 5px; /* Espacio entre el título y el contenido */
 }
 
- 
-
 .total-section {
   display: flex;
+  align-items: center;
+  margin-top: 10px;
   justify-content: space-between; /* Espacio entre los elementos */
   background-color: #FFF3E0; /* Fondo cálido */
   padding: 15px;

@@ -1,109 +1,96 @@
+/* Columna producto un poco más ancha */
 .product-column {
-  min-width: 400px; /* Ajusta este valor según sea necesario */
+  min-width: 320px;
 }
- 
-.invoice-form {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 20px;
-    /* background-color: #e0e0e0; */
-    border-radius: 8px;
-  }
 
-  .close-button {
-    position: absolute;
-    top: 0px;
-    right: 0px;
-    z-index: 1000;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .close-button mat-icon {
-    font-size: 24px;
-    color: #757575;  /* Color gris medio */
-  }
-  
-  .close-button:hover mat-icon {
-    color: #212121;  /* Color más oscuro al pasar el mouse */
-  }
-  
-  .full-width {
-    width: 100%;
-  }
-  
-  .inline-form {
-    display: flex;
-    gap: 10px;
-  }
-  
-  .flex-item {
-    flex: 1;
-  }
-  
-  .table-container {
-    display: flex;
-    gap: 10px;
-  }
-  
-  .table-wrapper {
-    flex: 1;
-    overflow: auto;
-    min-height: 220px;
-    max-height: 220px;
-  }
-  
-  .actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    justify-content: flex-start;
-  }
-  
-  .totals {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #ffffff;
-    border: 1px solid #d0d0d0;
-  }
-  
-  
-  mat-form-field {
-    width: 100%;
-  }
-  
-  .mat-raised-button {
-    margin-right: 10px;
-  }
-  
+/* Ajustes específicos de este panel dentro del patrón mant-panel */
+.mant-panel--invoice {
+  /* si quieres un pelín más de espacio abajo para totales */
+  padding-bottom: 18px;
+}
 
-  
-  button.mat-raised-button {
-    margin-top: 10px;
-  }
-  
-  .mat-header-cell {
-    background-color: #f0f0f0;
-  }
-  
-  .mat-row:nth-child(even) {
-    background-color: #f9f9f9;
-  }
-  
-  .mat-row:nth-child(odd) {
-    background-color: #ffffff;
-  }
-  
-  .search-button .icon-search {
-    margin-right: 5px;
-  }
-  
-  
-  .mat-select, .mat-input-element, .mat-textarea-element {
-    padding: 10px;
-  }
+/* Layout tabla + columna de botones */
+.invoice-layout {
+  margin-top: 16px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+/* Tabla con scroll vertical */
+.mant-table-card--invoice {
+  flex: 1 1 auto;
+  max-height: 260px;
+  overflow: auto;
+}
+
+/* Botones de la derecha (Descuento / Boleta / Factura) */
+.invoice-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Botones dentro de cada fila de la tabla */
+.invoice-row-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Caja de totales */
+.invoice-totals {
+  margin-top: 18px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #fffdf7;
+  border: 1px solid rgba(59, 34, 10, 0.1);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  justify-content: flex-end;
+  font-size: 0.85rem;
+}
+
+.invoice-totals__item {
+  display: flex;
+  gap: 4px;
+}
+
+.invoice-totals__label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(59, 34, 10, 0.7);
+}
+
+.invoice-totals__value {
+  font-weight: 600;
+  color: #3b220a;
+}
+
+.invoice-totals__item--strong .invoice-totals__value {
+  font-weight: 800;
+}
+
+
+/* Columna de acciones más ancha */
+.invoice-table .mat-column-actions {
+  width: 80px;              /* sube/baja este valor si quieres más/menos ancho */
+}
+
+/* Botones de acciones en horizontal, centrados */
+.invoice-table .actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;                  /* separación entre + y - */
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* Opcional: fila un poco más baja (si quieres mantenerla delgada) */
+.invoice-table .mat-mdc-row,
+.invoice-table .mat-mdc-header-row,
+.invoice-table .mat-mdc-footer-row {
+  height: 32px;
+}

@@ -15,7 +15,7 @@ import { DialogObservacionComponent } from '../../components/dialog-observacion/
 //Models
 import { Producto } from '../../models/product.models';
 import { Ambiente } from '../../models/ambiente.models';
-import { Mesas } from '../../models/mesas.models';
+import { Espacios } from '../../models/espacios.models';
 import { ProductGrid } from '../../models/product.grid.models';
 import { Empleado } from '../../models/empleado.models';
 import { PedidoDet } from '../../models/pedidodet.models';
@@ -28,7 +28,7 @@ import { Usuario } from '../../models/usuario.models';
 // Servicios
 import { StorageService } from '../../services/storage.service';
 import { ProductoService } from '../../services/product.service';
-import { MesasService } from '../../services/mesas.service';
+import { EspaciosService } from '../../services/espacios.service';
 import { FamiliaService } from '../../services/familia.service';
 import { AmbienteService } from '../../services/ambiente.service';
 import { ObservacionService } from '../../services/observacion.service';
@@ -43,7 +43,7 @@ import { HeaderService } from 'src/app/services/header.service';
 
 import { faUtensils, faShoppingBag, faTruck, faSync, faConciergeBell, faEye, faList, faPaperPlane, faReceipt, faTimes, faLock, faRunning, fas, faL } from '@fortawesome/free-solid-svg-icons';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
-import { PedidoMesaDTO } from 'src/app/interfaces/pedidomesaDTO.interface';
+import { PedidoEspacioDTO } from 'src/app/interfaces/pedidoespacioDTO.interface';
 import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mcant.component';
 import { DialogComplementosComponent } from 'src/app/components/dialog-complementos/dialog-complementos.component';
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
@@ -60,6 +60,8 @@ import { SocioNegocio } from 'src/app/models/socionegocio.models';
 import { Cliente } from 'src/app/models/cliente.models';
 import { DialogDividirCuentaComponent } from 'src/app/components/dialog-dividir-cuenta/dialog-dividir-cuenta.component';
 import { IdleService } from 'src/app/services/idle.service';
+import { CanalVentaService } from 'src/app/services/canal-venta.service';																				   
+import { CanalVenta } from 'src/app/models/canalventa.models';
 import { CanalVentaEnum, NivelUsuarioEnum } from 'src/app/enums/enum';
 
 @Component({
@@ -87,8 +89,9 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
   public selectedValue: string;
   public displayValueAmbiente: string;
   public selectedValueDos: string;
-  public listaMesasTotal: Mesas[];
-  public listaMesas_x_Ambiente: Mesas[];
+  public listaEspaciosTotal: Espacios[];
+  public listaEspacios_x_Ambiente: Espacios[];
+  public listaTipoPedidos: CanalVenta[];
   public listaPedidosPendientes: PedidoDeliveryDTO[];
   public listaPedido_x_Canal: PedidoDeliveryDTO[];
 
@@ -108,22 +111,23 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
   // public ListaPedidoDetProducto: PedidoDet[] = [];
 
   public MostrarOcultarPanelProducto: Boolean;
-  public MostrarOcultarPanelMesa: Boolean;
+  public MostrarOcultarPanelEspacio: Boolean;
   public MostrarOcultarPanelPedido: Boolean;
   public mozoSelected: Empleado;
   public clienteSelected: Cliente;
   public socioNegocioSelected: SocioNegocio;
-  public mesaSelected: Mesas;
+  public espacioSelected: Espacios;
 
   public RehacerPantallaRefresh: string = "";
   selectedItemFamilia: any = null;
   selectedItemSubFamilia: any = null;
 
-  aplicarFiltroCambioMesa: boolean = false;
-  aplicarFiltroUnirMesa: boolean = false;
+  aplicarFiltroCambioEspacio: boolean = false;
+  aplicarFiltroUnirEspacio: boolean = false;
   ambienteActual: Ambiente | null = null;
-  idCanalVentaSelected: number = CanalVentaEnum.MESA;
+  idCanalVentaSelected: number = CanalVentaEnum.ESPACIO;
 
+					
   isCanalVentaDisabled = false;
   isBusquedaDisabled = false;
   isPanelProductoDisabled = false;
@@ -136,10 +140,12 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
   isAnularPedidoDisabled = false;
   isReImprimirDisabled = false;
   isBloquearDisabled = false;
-  selectedRow: any;
+  selectedRow: PedidoDet;
+  isAdmin = false;
 
   listaSociosNegocio: SocioNegocio[];
   public canalVentaEnum = CanalVentaEnum;
+															 
   
   @ViewChild(MatPaginator) paginator: MatPaginator;
   procesarPedido: boolean = false;
@@ -152,12 +158,13 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     private productService: ProductoService,
     private TurnoService: TurnoService,
     private ambienteService: AmbienteService,
-    private mesasService: MesasService,
+    private espaciosService: EspaciosService,
     private empleadoService: EmpleadoService,
     private observacionService: ObservacionService,
     private socioNegocioService: SocioNegocioService,
     private pedidoService: PedidoService,
-    private dialogMesa: MatDialog,
+	  private tipoPedidoService: CanalVentaService,										 
+    private dialogEspacio: MatDialog,
     private dialogComprobante: MatDialog,
     private dialog: MatDialog,
     private spinnerService: NgxSpinnerService,
@@ -167,27 +174,27 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     private usuarioService: UsuarioService) {
 
 
-    this.MostrarOcultarPanelMesa = true;
+    this.MostrarOcultarPanelEspacio = true;
     this.MostrarOcultarPanelProducto = false;
     this.mozoSelected = new Empleado;
     this.clienteSelected = new Cliente;
     this.socioNegocioSelected = new SocioNegocio;
-    this.mesaSelected = new Mesas;
+    this.espacioSelected = new Espacios;
     this.MostrarOcultarPanelPedido = false;
     this.RehacerPantallaRefresh = 'Refresh';
-
-
+    const user = this.storageService.getCurrentUser?.();
+    this.isAdmin = !!user && user.IdNivel === 1;
   }
 
+									 
   sumaTotal: number = 0;
   sumaDscto: number = 0;
   sumaImporte: number = 0;
   sumaImpuestoBolsa: number = 0;
-  sumaGranTotal: number = 0;
-
+  sumaGranTotal: number = 0;		  
   faUtensils = faUtensils;
   faShoppingBag = faShoppingBag;
-  faTruck = faTruck;
+  faTruck = faTruck;	
   faSync = faSync;
   faConciergeBell = faConciergeBell;
   faEye = faEye;
@@ -197,7 +204,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
   faTimes = faTimes;
   faLock = faLock;
   faRunning = faRunning;
-  mesas: { name: string; active: boolean; price: number, indice: number }[] = [];
+  espacios: { name: string; active: boolean; price: number, indice: number }[] = [];
 
   toggleBloquear() {
     if (!this.procesarPedido) {
@@ -206,6 +213,20 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
       this.RehacerPantalla(); // Llamar a la función Rehacer si está visible el botón Rehacer
     }
   }
+
+  
+  goAdmin() {
+    this.router.navigateByUrl('/administracion');
+  }
+
+// Atajo de teclado: Ctrl + Alt + A
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(e: KeyboardEvent) {
+    if (this.isAdmin && e.ctrlKey && e.altKey && (e.key.toLowerCase() === 'a')) {
+      e.preventDefault();
+      this.goAdmin();
+    }
+  }											 
 
   ngOnDestroy() {
     this.headerService.showHeader(); // Mostrar el header al salir
@@ -234,10 +255,11 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     }
   }
 
-  canalVenta(IdCanalVenta: number): void {
+  canalVenta(idCanalVenta: number): void {
     this.limpiarPedido();
-    this.idCanalVentaSelected = IdCanalVenta;
-    this.listaPedido_x_Canal = this.listaPedidosPendientes.filter(x => x.Estado === 1 && x.IdCanalVenta === IdCanalVenta);
+    this.idCanalVentaSelected = idCanalVenta;
+
+    this.listaPedido_x_Canal = this.listaPedidosPendientes.filter(x => x.Estado === 1 && x.IdCanalVenta === idCanalVenta);
   }
 
   scrollToBottom(): void {
@@ -285,7 +307,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
       return;
     } 
     this.spinnerService.show();
-    this.headerService.hideHeader(); // Ocultar el header al entrar
+    this.headerService.hideHeader();
 
     try {
       // Primer servicio que necesita ejecutarse antes de otros
@@ -296,24 +318,33 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
           // Aquí se ejecutan los demás servicios en paralelo una vez que se ha obtenido el turno abierto
           forkJoin({
             listProductoVenta: this.productService.getProductosParaVenta(this.storageService.getCurrentIP()),
-            listProducts: this.productService.getAllProductosTablero(),
-            listaMesasTotal: this.mesasService.GetAllMesasConPedidos(),
+            listProductosTablero: this.productService.getAllProductosTablero(),
+            listaEspaciosTotal: this.espaciosService.GetAllEspaciosConPedidos(),
             responsePedidos: this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno),
             responseEmpleados: this.empleadoService.getAllEmpleados(),
             listAmbiente: this.ambienteService.getAllAmbiente(),
             listFamilia: this.familiaService.getFamilias(),
             listSubFamilia: this.familiaService.getSubFamilias(),
             listObservacion: this.observacionService.getAllObservacion(),
-            responseSocioNegocio: this.socioNegocioService.getSocioNegocios()
+            responseSocioNegocio: this.socioNegocioService.getSocioNegocios(),
+            responseTipoPedidos: this.tipoPedidoService.listarActivos(),
+																		
           }).subscribe(results => {
+									
             // Asignación de resultados
             this.listProductoVenta = results.listProductoVenta;
-            this.listProducts = results.listProducts.Data;
-            this.listaMesasTotal = results.listaMesasTotal.Data;
+            this.listProducts = results.listProductosTablero.Data;
+            this.listaEspaciosTotal = results.listaEspaciosTotal.Data;
 
             if (results.responsePedidos.Success) {
               this.listaPedidosPendientes = results.responsePedidos.Data;
             }
+			
+			this.listaTipoPedidos = results.responseTipoPedidos;
+																
+																											 
+													   
+		
 
             if (results.responseEmpleados.Success) {
               this.listEmpleados = results.responseEmpleados.Data;
@@ -331,9 +362,9 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
             // Seleccionar mozo
             this.mozoSelected.IdEmpleado = this.storageService.getCurrentSession().User.IdEmpleado;
 
-            // Mostrar mesas por ambiente
+            // Mostrar espacios por ambiente
             const result: Ambiente = this.listAmbiente.find(item => item.Estado == 1);
-            this.MostrarMesas_x_Ambiente(result);
+            this.MostrarEspacios_x_Ambiente(result);
 
             // Configurar usuario logueado
             this.userLoged = {
@@ -341,8 +372,8 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
               username: this.storageService.getCurrentSession().User.NombreUsuario
             };
 
-            // Mostrar panel de mesa
-            this.MostrarOcultarPanelMesa = true;
+            // Mostrar panel de espacio
+            this.MostrarOcultarPanelEspacio = true;
 
             // Ocultar spinner
             this.spinnerService.hide();
@@ -357,7 +388,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
           this.spinnerService.hide();
           Swal.fire({
             icon: 'warning',
-            title: 'No hay un turno abierto para esta estación',
+            title: 'No hay un turno abierto para esta estación.',
             text: 'El componente se cerrará.',
             confirmButtonText: 'Aceptar'
           }).then(() => {
@@ -382,79 +413,79 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
 
 
-  async MostrarMesas_x_Ambiente(ambiente: Ambiente) {
+  async MostrarEspacios_x_Ambiente(ambiente: Ambiente) {
     this.spinnerService.show();
 
     this.ambienteActual = ambiente;
-    if (this.aplicarFiltroCambioMesa) {
-      this.listaMesas_x_Ambiente = this.listaMesasTotal
+    if (this.aplicarFiltroCambioEspacio) {
+      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
         .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
-        .map(mesa => {
-          if ([1, 3, 4].includes(mesa.Ocupado)) {
-            mesa.Visible = false;
+        .map(espacio => {
+          if ([1, 3, 4].includes(espacio.Ocupado)) {
+            espacio.Visible = false;
           }
-          else if (mesa.Ocupado === 2) {
-            mesa.Color = "White";
+          else if (espacio.Ocupado === 2) {
+            espacio.Color = "White";
           }
-          else if (mesa.Ocupado === 5) {
-            mesa.Color = "LightCyan";
+          else if (espacio.Ocupado === 5) {
+            espacio.Color = "LightCyan";
           }
           else {
-            mesa.Color = "White";
+            espacio.Color = "White";
           }
-          return mesa;
+          return espacio;
         });
-    } else if (this.aplicarFiltroUnirMesa) {
-      this.listaMesas_x_Ambiente = this.listaMesasTotal
+    } else if (this.aplicarFiltroUnirEspacio) {
+      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
         .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
-        .map(mesa => {
-          if ([1].includes(mesa.Ocupado) && this.mesaSelected.IdMesa != mesa.IdMesa) {
-            mesa.Visible = true;
+        .map(espacio => {
+          if ([1].includes(espacio.Ocupado) && this.espacioSelected.IdEspacio != espacio.IdEspacio) {
+            espacio.Visible = true;
           }
           else {
-            mesa.Visible = false;
+            espacio.Visible = false;
           }
-          return mesa;
+          return espacio;
         });
     } else {
-      this.listaMesas_x_Ambiente = this.listaMesasTotal.filter(x => x.IdAmbiente === ambiente.IdAmbiente);
+      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal.filter(x => x.IdAmbiente === ambiente.IdAmbiente);
     }
     this.displayValueAmbiente = ambiente.Descripcion;
     this.spinnerService.hide();
   }
 
-  async UnirMesa() {
+  async UnirEspacio() {
 
-    if (this.mesaSelected.IdMesa == null) {
+    if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
-        'Unir Mesa',
-        'Debe seleccionar una mesa.',
+        'Unir Espacio',
+        'Debe seleccionar una espacio.',
         'info'
       );
       return;
     }
-    this.aplicarFiltroUnirMesa = true;
+    this.aplicarFiltroUnirEspacio = true;
     this.procesarPedido = true;
     if (this.ambienteActual) {
-      await this.MostrarMesas_x_Ambiente(this.ambienteActual);
+      await this.MostrarEspacios_x_Ambiente(this.ambienteActual);
     }
     this.RehacerPantallaRefresh === 'RehacerPantalla';
   }
 
-  async CambiarMesa() {
+  async CambiarEspacio() {
 
-    if (this.mesaSelected.IdMesa == null) {
+    if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
-        'Cambiar Mesa',
-        'Debe seleccionar una mesa.',
+        'Cambiar Espacio',
+        'Debe seleccionar una espacio.',
         'info'
       );
       return;
     }
-    this.aplicarFiltroCambioMesa = true;
+    this.aplicarFiltroCambioEspacio = true;
     this.procesarPedido = true;
     if (this.ambienteActual) {
-      await this.MostrarMesas_x_Ambiente(this.ambienteActual);
+      await this.MostrarEspacios_x_Ambiente(this.ambienteActual);
     }
     this.RehacerPantallaRefresh === 'RehacerPantalla';
   }
@@ -518,7 +549,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     styleSheet.innerText = estilos;
     document.head.appendChild(styleSheet);
 
-    const buttonDelivery = (this.idCanalVentaSelected === CanalVentaEnum.DELIVERY) ?
+    const buttonDelivery = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ?
       `<button id="btn-custom" style="
     display: inline-block;
     height: 50px;
@@ -536,7 +567,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     </button>`: ``;
 
     // Generar los botones dinámicamente
-    const buttonsHTML = (this.idCanalVentaSelected === CanalVentaEnum.DELIVERY) ? this.listaSociosNegocio.map((boton, index) =>
+    const buttonsHTML = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? this.listaSociosNegocio.map((boton, index) =>
       `<button class="swal2-confirm swal2-styled dynamic-btn" id="boton-${index}" data-descripcion="${boton.Descripcion}"
           style="
           display: inline-block;
@@ -557,11 +588,11 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
 
     // Llenar con botones vacíos si hay menos de 6 opciones
-    const emptyButtons = (this.idCanalVentaSelected === CanalVentaEnum.DELIVERY) ? Array.from({ length: maxBotones - this.listaSociosNegocio.length })
+    const emptyButtons = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? Array.from({ length: maxBotones - this.listaSociosNegocio.length })
       .map(() => `<button class="swal2-confirm swal2-styled dynamic-btn" style="visibility: hidden;"></button>`)
       .join('') : '';
 
-    const title = (this.idCanalVentaSelected === CanalVentaEnum.DELIVERY) ? 'Seleccione una opción' : 'Nombre de Cliente';
+    const title = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? 'Seleccione una opción' : 'Nombre de Cliente';
     const mostrarSwal = () => {
       Swal.fire({
         title: title,
@@ -600,7 +631,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
           if (!nombreClienteInput.trim()) {
             Swal.showValidationMessage('Debe ingresar el nombre del cliente');
           }
-          if (!socioNegocioSeleccionado && (this.idCanalVentaSelected === CanalVentaEnum.DELIVERY)) {
+          if (!socioNegocioSeleccionado && (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY)) {
             Swal.showValidationMessage('Debe seleccionar una opción');
           }
           return { nombreCliente: nombreClienteInput, socioNegocioSeleccionado };
@@ -608,11 +639,11 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
       }).then((result) => {
         if (result.isConfirmed) {
           console.log('isConfirmed');
-          this.mesaSelected.NroPersonas = 0;
-          if (this.idCanalVentaSelected === CanalVentaEnum.PARA_LLEVAR){
+          this.espacioSelected.NroPersonas = 0;
+          if (this.idCanalVentaSelected === this.canalVentaEnum.PARA_LLEVAR){
             this.clienteSelected.RazonSocial = result.value.nombreCliente;
           }
-          if (this.idCanalVentaSelected === CanalVentaEnum.DELIVERY){
+          if (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY){
             this.clienteSelected.RazonSocial = result.value.socioNegocioSeleccionado.Descripcion + "-" + result.value.nombreCliente;
             this.socioNegocioSelected = result.value.socioNegocioSeleccionado;
           }
@@ -663,24 +694,24 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
   dividirCuenta(): void {
 
-    if (this.mesaSelected.IdMesa == null) {
+    if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
-        'Cambiar Mesa',
-        'Debe seleccionar una mesa.',
+        'Cambiar Espacio',
+        'Debe seleccionar una espacio.',
         'info'
       );
       return;
     }
 
-    this.openDialogoDividirCuenta(this.mesaSelected, this.pedidoId)
+    this.openDialogoDividirCuenta(this.espacioSelected, this.pedidoId)
 
   }
 
-  openDialogoDividirCuenta(mesaSelected: Mesas, idPedido: number): void {
+  openDialogoDividirCuenta(espacioSelected: Espacios, idPedido: number): void {
     const dialogRef = this.dialog.open(DialogDividirCuentaComponent, {
       width: '800px',
       height: '800px',
-      data: { idPedido, mesaSelected }
+      data: { idPedido, espacioSelected }
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -689,17 +720,64 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
         const listData = await this.pedidoService.FindPedidoByIdPedidoNroCuenta(result.idPedido, result.nroCuenta).toPromise();
 
         if (listData.Data.length > 0) {
-          this.mesaSelected = mesaSelected;
+          this.espacioSelected = espacioSelected;
           this.nombreCuenta = " - " + result.nombreCuenta;
           this.rellenarHeaderPedido(listData.Data);
           this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
           this.actualizarDatosGrilla();
         } else {
-          await this.showWarningAndReloadMesas('No existe el pedido en la cuenta.');
+          await this.showWarningAndReloadEspacios('No existe el pedido en la cuenta.');
         }
       } else {
-        this.listaMesasTotal = (await this.mesasService.GetAllMesasConPedidos().toPromise()).Data;
+        this.listaEspaciosTotal = (await this.espaciosService.GetAllEspaciosConPedidos().toPromise()).Data;
       }
+	   
+   
+
+														
+
+													   
+														 
+											
+												 
+
+																  
+					 
+					  
+																		
+	   
+
+
+														 
+				   
+														
+										
+										  
+								   
+											   
+												 
+										   
+																	  
+		  
+		
+								   
+																						   
+																																		   
+
+										 
+													 
+																			  
+										 
+												
+													
+				  
+																						 
+		   
+									 
+		  
+
+	  
+	   
     });
   }
 
@@ -726,8 +804,19 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
         // Si se cancela el teclado, vuelve a abrir el Swal sin cambios
         this.NuevoPedidoLlevar();
       }
+	   
+   
+
+				   
+																 
+					
     });
+
+												 
+
+	   
   }
+
 
   async ListarSubFamilia_x_Familia(oFamilia: Familia) {
     this.selectedItemFamilia = oFamilia;
@@ -743,6 +832,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     this.spinnerService.show();
     this.selectedItemSubFamilia = oSubFamilia;
     this.IdSubFamila = oSubFamilia.IdSubFamilia;
+								   
     this.listProducts_x_SubFamilia = this.listProducts.filter(x => x.IdSubFamilia === oSubFamilia.IdSubFamilia && x.Posicion > 0);
     //this.GridListaPedidoDetProducto.data = this.ListaPedidoDetProducto.filter(x=> x.IdSubFamilia===subFamiliaId);
     this.spinnerService.hide();
@@ -892,7 +982,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
   async openPedido(pedido: PedidoDeliveryDTO) {
     this.limpiarPedido();
-    const listData: ApiResponse<PedidoMesaDTO[]> = await this.pedidoService.FindPedidoByIdPedidoNroCuenta(pedido.IdPedido, pedido.NroCuenta).toPromise();
+    const listData: ApiResponse<PedidoEspacioDTO[]> = await this.pedidoService.FindPedidoByIdPedidoNroCuenta(pedido.IdPedido, pedido.NroCuenta).toPromise();
     if (listData.Data.length > 0) {
       this.rellenarHeaderPedido(listData.Data);
       this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
@@ -909,29 +999,29 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     }
   }
 
-  async openDialogMesa(mesa: Mesas) {
+  async openDialogEspacio(espacio: Espacios) {
     this.spinnerService.show();
 
-    if (mesa.Ocupado === 0 || mesa.Ocupado === 2) {
-      await this.handleMesaDisponible(mesa);
-    } else if (mesa.Ocupado === 1 || mesa.Ocupado === 4) {
-      await this.handleMesaOcupada(mesa);
+    if (espacio.Ocupado === 0 || espacio.Ocupado === 2) {
+      await this.handleEspacioDisponible(espacio);
+    } else if (espacio.Ocupado === 1 || espacio.Ocupado === 4) {
+      await this.handleEspacioOcupada(espacio);
     } else {
-      await this.handleMesaDividirCuenta(mesa);
+      await this.handleEspacioDividirCuenta(espacio);
     }
 
     this.RehacerPantallaRefresh = 'RehacerPantalla';
     this.spinnerService.hide();
   }
 
-  async handleMesaDisponible(mesa: Mesas) {
-    if (this.aplicarFiltroCambioMesa) {
-      const response = await this.mesasService.CambiarMesa(this.mesaSelected.IdMesa, mesa.IdMesa).toPromise();
+  async handleEspacioDisponible(espacio: Espacios) {
+    if (this.aplicarFiltroCambioEspacio) {
+      const response = await this.espaciosService.CambiarEspacio(this.espacioSelected.IdEspacio, espacio.IdEspacio).toPromise();
       if (response.Data) this.RehacerPantalla();
     } else {
       this.limpiarPedido();
       this.mozoSelected = this.getMozoByMozoId(this.storageService.getCurrentSession().User.IdEmpleado);
-      this.mesaSelected = mesa;
+      this.espacioSelected = espacio;
 
       const dialogRef = this.dialog.open(DialogMCantComponent, {
         width: '350px',
@@ -940,7 +1030,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
       dialogRef.afterClosed().subscribe((result) => {
         if (result?.value && result.value > 0) {
-          this.mesaSelected.NroPersonas = result.value;
+          this.espacioSelected.NroPersonas = result.value;
           this.processPedido(true);
         } else {
           return 'Debe ingresar un número válido mayor que 0';
@@ -949,37 +1039,37 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     }
   }
 
-  async handleMesaOcupada(mesa: Mesas) {
-    if (this.aplicarFiltroUnirMesa) {
-      const response = await this.mesasService.UnirMesa(this.mesaSelected.IdMesa, mesa.IdMesa, this.storageService.getCurrentSession().User.IdUsuario).toPromise();
+  async handleEspacioOcupada(espacio: Espacios) {
+    if (this.aplicarFiltroUnirEspacio) {
+      const response = await this.espaciosService.UnirEspacio(this.espacioSelected.IdEspacio, espacio.IdEspacio, this.storageService.getCurrentSession().User.IdUsuario).toPromise();
       if (response.Data) this.RehacerPantalla();
     } else {
       this.limpiarPedido();
-      const listData = await this.pedidoService.FindPedidoByIdMesa(mesa.IdMesa).toPromise();
+      const listData = await this.pedidoService.FindPedidoByIdEspacio(espacio.IdEspacio).toPromise();
       if (listData.Data.length > 0) {
-        this.mesaSelected = mesa;
+        this.espacioSelected = espacio;
         this.rellenarHeaderPedido(listData.Data);
         this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
         this.actualizarDatosGrilla();
       } else {
-        await this.showWarningAndReloadMesas('No existe el pedido en la mesa.');
+        await this.showWarningAndReloadEspacios('No existe el pedido en la espacio.');
       }
     }
   }
 
-  async handleMesaDividirCuenta(mesa: Mesas) {
+  async handleEspacioDividirCuenta(espacio: Espacios) {
     this.limpiarPedido();
-    const listData = await this.pedidoService.FindPedidoByIdMesa(mesa.IdMesa).toPromise();
+    const listData = await this.pedidoService.FindPedidoByIdEspacio(espacio.IdEspacio).toPromise();
     if (listData.Data.length > 0) {
-      this.openDialogoDividirCuenta(mesa, listData.Data[0].IdPedido);
+      this.openDialogoDividirCuenta(espacio, listData.Data[0].IdPedido);
     } else {
-      await this.showWarningAndReloadMesas('No existe el pedido en la mesa.');
+      await this.showWarningAndReloadEspacios('No existe el pedido en la espacio.');
     }
   }
 
-  async showWarningAndReloadMesas(message: string) {
+  async showWarningAndReloadEspacios(message: string) {
     Swal.fire('Ups.!', message, 'warning');
-    this.listaMesasTotal = (await this.mesasService.GetAllMesasConPedidos().toPromise()).Data;
+    this.listaEspaciosTotal = (await this.espaciosService.GetAllEspaciosConPedidos().toPromise()).Data;
   }
 
 
@@ -1001,20 +1091,20 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     this.sumaGranTotal = parseFloat((this.sumaTotal + impuestoBolsa).toFixed(2));
   }
 
-  async openDialogVerPedido(IdMesa: number) {
+  async openDialogVerPedido(IdEspacio: number) {
     try {
       this.spinnerService.show();
 
-      const listData: ApiResponse<PedidoMesaDTO[]> = await this.pedidoService.FindPedidoByIdMesa(IdMesa).toPromise();
+      const listData: ApiResponse<PedidoEspacioDTO[]> = await this.pedidoService.FindPedidoByIdEspacio(IdEspacio).toPromise();
 
       if (listData.Data.length > 0) {
         // this.rellenarHeaderPedido(listData);
 
-        const dialogEnviarPedidoRef = this.dialogMesa.open(DialogVerPedidoComponent, {
+        const dialogEnviarPedidoRef = this.dialogEspacio.open(DialogVerPedidoComponent, {
           disableClose: true,
           hasBackdrop: true,
           width: '400px',
-          data: { oPedidoMesa: listData.Data, IdMesa: IdMesa, Mesa: this.mesaSelected.Descripcion + ' ' + this.mesaSelected.Numero }
+          data: { oPedidoEspacio: listData.Data, IdEspacio: IdEspacio, Espacio: this.espacioSelected.Descripcion + ' ' + this.espacioSelected.Numero }
         });
 
         dialogEnviarPedidoRef.afterClosed().subscribe(data => {
@@ -1028,10 +1118,10 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
         Swal.fire(
           'Ups.!',
-          'No existe el pedido en la mesa.',
+          'No existe el pedido en la espacio.',
           'warning'
         );
-        this.listaMesasTotal = (await this.mesasService.GetAllMesasConPedidos().toPromise()).Data;
+        this.listaEspaciosTotal = (await this.espaciosService.GetAllEspaciosConPedidos().toPromise()).Data;
       }
 
 
@@ -1049,26 +1139,6 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
   }
 
-  async openEmitirComprobante() {
-    try {
-
-
-
-
-
-    } catch (e) {
-      Swal.fire(
-        'Algo anda mal',
-        e.error,
-        'error'
-      )
-      console.log(e);
-    } finally {
-      this.spinnerService.hide();
-
-    }
-
-  }
   async openDialoObservaciones(oPedidoDet: PedidoDet) {
     try {
       if (oPedidoDet.Cantidad == 0) {
@@ -1081,7 +1151,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
         this.spinnerService.show();
 
 
-        const dialogEnviarPedidoRef = this.dialogMesa.open(DialogObservacionComponent, {
+        const dialogEnviarPedidoRef = this.dialogEspacio.open(DialogObservacionComponent, {
           hasBackdrop: true,
           width: '700px',
           data: { ListaObservacion: this.listObservacion.filter(x => x.Activo == 1), Observaciones: oPedidoDet.Observacion, NombreCorto: oPedidoDet.Producto.NombreCorto }
@@ -1112,10 +1182,6 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
     oPedidoDet.Cantidad += 1;
 
-    if (oPedidoDet.Producto.EsProductoBolsa) {
-      oPedidoDet.Impuesto1 = oPedidoDet.Producto.ImpuestoBolsa * oPedidoDet.Cantidad;
-    }
-
     var dSubDescuento = (oPedidoDet.MontoDescuento / oPedidoDet.Cantidad);
     var dSubtotal = oPedidoDet.Cantidad * oPedidoDet.Precio;
 
@@ -1130,9 +1196,6 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
     if (pedidoDet.Cantidad > 1) {
       pedidoDet.Cantidad -= 1;
-      if (pedidoDet.Producto.EsProductoBolsa) {
-        pedidoDet.Impuesto1 = pedidoDet.Producto.ImpuestoBolsa * pedidoDet.Cantidad;
-      }
 
       var dSubDescuento = (pedidoDet.MontoDescuento / pedidoDet.Cantidad);
       var dSubtotal = pedidoDet.Cantidad * pedidoDet.Precio;
@@ -1158,7 +1221,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
   async realizarEliminacion(pedidoDet: PedidoDet, motivoAnulacion: string, idUsuAnula: number) {
 
     var pedidoDelete: AnularProductoYComplementoDTO = {
-      IdMesa: this.mesaSelected.IdMesa,
+      IdEspacio: this.espacioSelected.IdEspacio,
       NroCuenta: pedidoDet.NroCuenta,
       UsuAnula: idUsuAnula,
       MotivoAnula: motivoAnulacion,
@@ -1301,6 +1364,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
       Item: this.DEFAULT_ID,
       IdPedido: this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
       NroCuenta: this.nroCuenta == 0 ? this.DEFAULT_ID : this.nroCuenta,
+									 
       Producto: new Producto(product),
       PedidoComplemento: [],
       Precio: product.Precio,
@@ -1371,10 +1435,10 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
   async AnularPedido() {
 
-    if (this.mesaSelected.IdMesa == null) {
+    if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
         'Anular Pedido',
-        'Debe seleccionar una mesa.',
+        'Debe seleccionar una espacio.',
         'info'
       );
       return;
@@ -1386,14 +1450,14 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
       // Usar DialogMTextTouchComponent para el motivo de anulación
       const dialogRef = this.dialog.open(DialogMTextComponent, {
         width: '800px',
-        data: { title: `¿Está seguro de anular el pedido de ${this.mesaSelected.Descripcion} ${this.mesaSelected.Numero}?` }
+        data: { title: `¿Está seguro de anular el pedido de ${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}?` }
       });
 
       dialogRef.afterClosed().subscribe(result => {
 
         if (result && result.value) {
           const motivoAnulacion = result.value;
-          this.RealizarAnulacionPedido(this.mesaSelected, motivoAnulacion, this.storageService.getCurrentSession().User.IdUsuario);
+          this.RealizarAnulacionPedido(this.espacioSelected, motivoAnulacion, this.storageService.getCurrentSession().User.IdUsuario);
         }
       });
     } else {
@@ -1417,7 +1481,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
                 // Mostrar el DialogMTextTouchComponent para el motivo de anulación
                 const motivoRef = this.dialog.open(DialogMTextComponent, {
                   width: '800px',
-                  data: { title: `¿Está seguro de anulado el pedido de ${this.mesaSelected.Descripcion} ${this.mesaSelected.Numero}?` }
+                  data: { title: `¿Está seguro de anulado el pedido de ${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}?` }
                 });
 
                 motivoRef.afterClosed().subscribe(result => {
@@ -1425,7 +1489,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
                   if (result && result.value) {
                     const motivoAnulacion = result.value;
 
-                    this.RealizarAnulacionPedido(this.mesaSelected, motivoAnulacion, response.Data.IdUsuario);
+                    this.RealizarAnulacionPedido(this.espacioSelected, motivoAnulacion, response.Data.IdUsuario);
                   }
                 });
               } else {
@@ -1445,9 +1509,9 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
   }
 
 
-  async RealizarAnulacionPedido(mesa: Mesas, motivoAnulacion: string, idUsuAnula: number) {
+  async RealizarAnulacionPedido(espacio: Espacios, motivoAnulacion: string, idUsuAnula: number) {
     this.spinnerService.show();
-    var responseService: ApiResponse<ImpresionDTO[]> = await this.pedidoService.AnularPedido(mesa.IdMesa, idUsuAnula, motivoAnulacion, this.storageService.getCurrentIP()).toPromise();
+    var responseService: ApiResponse<ImpresionDTO[]> = await this.pedidoService.AnularPedido(espacio.IdEspacio, idUsuAnula, motivoAnulacion, this.storageService.getCurrentIP()).toPromise();
 
     if (responseService.Success == true) {
       const contador = await this.imprimir(responseService.Data);
@@ -1478,10 +1542,10 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
   async processPedido(verPanelProducto: boolean) {
 
-    if (this.mesaSelected.IdMesa == null && this.idCanalVentaSelected === CanalVentaEnum.MESA) {
+    if (this.espacioSelected.IdEspacio == null && this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) {
       Swal.fire(
         'Procesar Pedido',
-        'Debe seleccionar una mesa.',
+        'Debe seleccionar una espacio.',
         'info'
       );
       return;
@@ -1492,7 +1556,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     this.isVerComplementoDisabled = false;
     this.isReImprimirDisabled = false;
     this.isPrecuentaDisabled = false;
-    this.MostrarOcultarPanelMesa = !verPanelProducto;
+    this.MostrarOcultarPanelEspacio = !verPanelProducto;
     this.MostrarOcultarPanelProducto = verPanelProducto;
     this.isCanalVentaDisabled = true;
     this.isBusquedaDisabled = false;
@@ -1500,9 +1564,11 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     if (this.sumaDscto > 0) {
       this.isBusquedaDisabled = true;
       this.isPanelProductoDisabled = true;
+											  
     } else {
       this.isBusquedaDisabled = false;
       this.isPanelProductoDisabled = false;
+									   
     }
 
     let oFamilia = this.listFamilia[0];
@@ -1518,11 +1584,50 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     this.AgregarProductoComplemento(this.selectedRow);
   }
 
+					  
+													
+							 
+		  
+												  
+	 
+	
+	
+					  
+	
+				 
+														
+						 
+							   
+								 
+							  
+						   
+								 
+																												 
+																																			 
+
+											 
+														 
+																				  
+											 
+					  
+																							 
+			   
+			   
+  
+																			 
+											   
+				
+				  
+		 
+		 
+	 
+  
+
   async ImprimirPrecuenta() {
-    if (this.mesaSelected.IdMesa == null) {
+    if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
         'Imprimir Precuenta',
-        'Debe seleccionar una mesa.',
+        'Debe seleccionar una espacio.',
         'info'
       );
       return;
@@ -1537,10 +1642,10 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
   }
 
   async EnviarPedido() {
-    if (this.mesaSelected.IdMesa == null && this.idCanalVentaSelected === CanalVentaEnum.MESA) {
+    if (this.espacioSelected.IdEspacio == null && this.idCanalVentaSelected === CanalVentaEnum.ESPACIO) {
       Swal.fire(
         'Enviar Pedido',
-        'Debe seleccionar una mesa.',
+        'Debe seleccionar una espacio.',
         'info'
       );
       return;
@@ -1578,21 +1683,21 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
       var pedido: PedidoCab = new PedidoCab(
         {
-          IdEmpleado: (this.idCanalVentaSelected != CanalVentaEnum.MESA) ? this.idEmpleadoLlevar : this.mozoSelected?.IdEmpleado,
+          IdEmpleado: (this.idCanalVentaSelected != CanalVentaEnum.ESPACIO) ? this.idEmpleadoLlevar : this.mozoSelected?.IdEmpleado,
           IdPedido: this.pedidoId == 0 ? this.DEFAULT_ID : this.pedidoId,
           NroCuenta: this.nroCuenta == 0 ? this.DEFAULT_ID : this.nroCuenta,
           Total: this.getTotalByListProductGrid(),
           Importe: this.getTotalByListProductGrid(),
           UsuReg: this.storageService.getCurrentSession().User.IdUsuario,
           UsuMod: this.storageService.getCurrentSession().User.IdUsuario,
-          IdMesa: (this.idCanalVentaSelected === CanalVentaEnum.MESA) ? this.mesaSelected.IdMesa : 9999,
-          Mesa: (this.idCanalVentaSelected === CanalVentaEnum.MESA) ? this.mesaSelected.Mesa : '',
-          NroPax: (this.idCanalVentaSelected === CanalVentaEnum.MESA) ? this.mesaSelected.NroPersonas : 0,
+          IdEspacio: (this.idCanalVentaSelected === CanalVentaEnum.ESPACIO) ? this.espacioSelected.IdEspacio : 9999,
+          Espacio: (this.idCanalVentaSelected === CanalVentaEnum.ESPACIO) ? this.espacioSelected.Espacio : '',
+          NroPax: (this.idCanalVentaSelected === CanalVentaEnum.ESPACIO) ? this.espacioSelected.NroPersonas : 0,
           IdCaja: this.turnoAbierto.IdCaja,
           IdTurno: this.turnoAbierto.IdTurno,
           Moneda: "SOL",
           IdSocioNegocio: (this.idCanalVentaSelected === CanalVentaEnum.DELIVERY) ? this.socioNegocioSelected.IdSocioNegocio : 0,
-          Cliente: (this.idCanalVentaSelected === CanalVentaEnum.MESA) ? this.listProductGrid[0]?.Anfitriona : this.clienteSelected.RazonSocial, /*solo para trago gratis */
+          Cliente: (this.idCanalVentaSelected === CanalVentaEnum.ESPACIO) ? this.listProductGrid[0]?.Anfitriona : this.clienteSelected.RazonSocial, /*solo para trago gratis */
           Direccion: (this.idCanalVentaSelected === CanalVentaEnum.DELIVERY) ? this.clienteSelected.DireccionDelivery : '', /*solo para delivery*/
           Referencia: (this.idCanalVentaSelected === CanalVentaEnum.DELIVERY) ? this.clienteSelected.ReferenciaDelivery : '', /*solo para delivery*/
           IdCanalVenta: this.idCanalVentaSelected,
@@ -1610,7 +1715,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
         this.procesarPedido = false;
         this.RehacerPantalla();
 
-        this.MostrarOcultarPanelMesa = true;
+        this.MostrarOcultarPanelEspacio = true;
         this.MostrarOcultarPanelProducto = false;
       }
       this.spinnerService.hide();
@@ -1673,9 +1778,9 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
         });
 
         var resultDialog: any = await dialogProcessComprobante.afterClosed().toPromise();
-        this.listaMesasTotal = (await this.mesasService.GetAllMesasConPedidos().toPromise()).Data;
+        this.listaEspaciosTotal = (await this.espaciosService.GetAllEspaciosConPedidos().toPromise()).Data;
         this.limpiarPedido();
-        this.MostrarOcultarPanelMesa = true;
+        this.MostrarOcultarPanelEspacio = true;
         this.MostrarOcultarPanelProducto = false;
       } else {
         alert('No guardo todos los productos de la grilla.')
@@ -1690,16 +1795,16 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
       this.spinnerService.show();
       this.enterFullScreen();
 
-      this.aplicarFiltroCambioMesa = false;
-      this.aplicarFiltroUnirMesa = false;
-      // Actualizar mesas
-      this.mesasService.GetAllMesasConPedidos().toPromise().then(data => {
-        this.listaMesasTotal = data.Data;
+      this.aplicarFiltroCambioEspacio = false;
+      this.aplicarFiltroUnirEspacio = false;
+      // Actualizar espacios
+      this.espaciosService.GetAllEspaciosConPedidos().toPromise().then(data => {
+        this.listaEspaciosTotal = data.Data;
         let result: Ambiente;
         result = this.listAmbiente.find(item => item.Estado == 1);
-        this.MostrarMesas_x_Ambiente(result);
+        this.MostrarEspacios_x_Ambiente(result);
       }).catch(error => {
-        console.error('Error al obtener mesas', error);
+        console.error('Error al obtener espacios', error);
       });
 
       // Actualizar pedidos
@@ -1714,7 +1819,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
 
       // Limpieza de la pantalla y actualización de paneles
       this.limpiarPedido();
-      this.MostrarOcultarPanelMesa = true;
+      this.MostrarOcultarPanelEspacio = true;
       this.MostrarOcultarPanelProducto = false;
       this.RehacerPantallaRefresh = 'Refresh';
       this.isCanalVentaDisabled = false;
@@ -1759,19 +1864,19 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     this.actualizarDatosGrilla();
     this.gridListaPedidoDetProducto.data = [];
     this.mozoSelected = new Empleado;
-    this.mesaSelected = new Mesas;
+    this.espacioSelected = new Espacios;
     this.procesarPedido = false;
     this.pedidoId = 0;
     this.nroCuenta = 0;
     this.horaPedido = '';
     this.nombreCuenta = '';
-    this.mesaSelected.NroPersonas = 0;
+    this.espacioSelected.NroPersonas = 0;
     this.clienteSelected = new Cliente;
     this.socioNegocioSelected = new SocioNegocio;
   }
 
 
-  private getPedidoDetByResponse(listData: PedidoMesaDTO[]): PedidoDet[] {
+  private getPedidoDetByResponse(listData: PedidoEspacioDTO[]): PedidoDet[] {
 
     var oPedidoDet: PedidoDet;
     var result: PedidoDet[] = [];
@@ -1780,6 +1885,7 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
         {
           Item: data.Item,
           NroCuenta: data.NroCuenta,
+		  NombreCuenta: data.NombreCuenta,
           IdPedido: data.IdPedido,
           Producto: new Producto({
             IdProducto: data.IdProducto,
@@ -1807,9 +1913,9 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     return result;
   }
 
-  private rellenarHeaderPedido(listData: PedidoMesaDTO[]): void {
+  private rellenarHeaderPedido(listData: PedidoEspacioDTO[]): void {
     var firstItem = listData[0];
-    this.mesaSelected.NroPersonas = firstItem.NroPax;
+    this.espacioSelected.NroPersonas = firstItem.NroPax;
     this.mozoSelected = this.getMozoByMozoId(firstItem.IdEmpleado);
     this.clienteSelected.RazonSocial = firstItem.Cliente;
     this.pedidoId = firstItem.IdPedido;
@@ -1822,24 +1928,24 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
       this.spinnerService.show();
 
       // Ejecutar las solicitudes en paralelo
-      const [productsData, mesasData, pedidoResponse] = await Promise.all([
+      const [productsData, espaciosData, pedidoResponse] = await Promise.all([
         this.productService.getAllProductosTablero().toPromise(),
-        this.mesasService.GetAllMesasConPedidos().toPromise(),
+        this.espaciosService.GetAllEspaciosConPedidos().toPromise(),
         this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno).toPromise()
       ]);
 
       // Actualizar los datos con los resultados obtenidos
       this.listProducts = productsData.Data;
-      this.listaMesasTotal = mesasData.Data;
+      this.listaEspaciosTotal = espaciosData.Data;
 
       if (pedidoResponse.Success) {
         this.listaPedidosPendientes = pedidoResponse.Data;
       }
 
-      // Mostrar las mesas en el ambiente correspondiente
+      // Mostrar las espacios en el ambiente correspondiente
       let result: Ambiente;
       result = this.listAmbiente.find(item => item.Estado == 1);
-      this.MostrarMesas_x_Ambiente(result);
+      this.MostrarEspacios_x_Ambiente(result);
 
     } catch (error) {
       console.error('Error al refrescar los datos', error);
@@ -1866,5 +1972,9 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     } finally {
       this.spinnerService.hide();
     }
-  }
+   										 
+												   
+  }	
+ 
 }
+ 

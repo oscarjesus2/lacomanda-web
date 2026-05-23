@@ -3,8 +3,8 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { DividirCuentaDTO } from 'src/app/interfaces/dividircuentaDTO.interface';
-import { PedidoMesaDTO } from 'src/app/interfaces/pedidomesaDTO.interface';
-import { Mesas } from 'src/app/models/mesas.models';
+import { PedidoEspacioDTO as PedidoEspacioDTO } from 'src/app/interfaces/pedidoespacioDTO.interface';
+import { Espacios } from 'src/app/models/espacios.models';
 import { PedidoService } from 'src/app/services/pedido.service';
 import Swal from 'sweetalert2';
 
@@ -15,13 +15,13 @@ import Swal from 'sweetalert2';
 })
 export class DialogDividirCuentaComponent {
 
-  mesaSelected: Mesas;
-  distinctPedidos = new MatTableDataSource<PedidoMesaDTO>();
-  productosPedido:  PedidoMesaDTO[]=[];
-  productosPedidoCuenta:  PedidoMesaDTO[]=[];
-  productosNuevaCuenta:  PedidoMesaDTO[]=[];
-  pedidoCuentaOrigen:  PedidoMesaDTO[]=[];
-  selectedRowCuenta: PedidoMesaDTO;
+  espacioSelected: Espacios;
+  distinctPedidos = new MatTableDataSource<PedidoEspacioDTO>();
+  productosPedido:  PedidoEspacioDTO[]=[];
+  productosPedidoCuenta:  PedidoEspacioDTO[]=[];
+  productosNuevaCuenta:  PedidoEspacioDTO[]=[];
+  pedidoCuentaOrigen:  PedidoEspacioDTO[]=[];
+  selectedRowCuenta: PedidoEspacioDTO;
   selectedRowOrigen: any;
   selectedRowDestino: any;
   nombreCuentaOrigen: string;
@@ -36,7 +36,7 @@ export class DialogDividirCuentaComponent {
   ) 
   {
     this.idPedido = this.data.idPedido;
-    this.mesaSelected = this.data.mesaSelected;
+    this.espacioSelected = this.data.espacioSelected;
   }
     
   displayedColumnsCuenta: string[] = ['NombreCuenta', 'NroCuenta', 'Actions'];
@@ -53,7 +53,7 @@ export class DialogDividirCuentaComponent {
      this.productosNuevaCuenta = [];
    }
  
-   EliminarCuenta(element: PedidoMesaDTO): void {
+   EliminarCuenta(element: PedidoEspacioDTO): void {
     const currentIndex = this.distinctPedidos.data.findIndex(p => p === element);
   
     if (currentIndex === 0) {
@@ -103,7 +103,7 @@ export class DialogDividirCuentaComponent {
     });
   }
   
-  private eliminarCuenta(element: PedidoMesaDTO): void {
+  private eliminarCuenta(element: PedidoEspacioDTO): void {
     this.spinnerService.show();
     const eliminarCuentaDTO: DividirCuentaDTO = {
       IdPedido: this.idPedido,
@@ -198,15 +198,15 @@ export class DialogDividirCuentaComponent {
     });
    }
  
-   ActualizarCuentas(pedidoMesaDTO: PedidoMesaDTO[]){
-    this.distinctPedidos.data = pedidoMesaDTO.filter((pedido, index, self) =>
+   ActualizarCuentas(pedidoEspacioDTO: PedidoEspacioDTO[]){
+    this.distinctPedidos.data = pedidoEspacioDTO.filter((pedido, index, self) =>
       index === self.findIndex(p => (
         p.IdPedido === pedido.IdPedido && 
         p.NroCuenta === pedido.NroCuenta && 
         p.NombreCuenta === pedido.NombreCuenta
       ))
     ).sort((a, b) => a.NroCuenta - b.NroCuenta);
-    this.productosPedido =  pedidoMesaDTO;
+    this.productosPedido =  pedidoEspacioDTO;
    }
 
    // Cancelar la división de cuentas y volver a la vista anterior
@@ -223,7 +223,7 @@ export class DialogDividirCuentaComponent {
     }
   }
 
-  selectCuenta(row: PedidoMesaDTO) {
+  selectCuenta(row: PedidoEspacioDTO) {
     this.selectedRowCuenta = row; // Asigna la fila seleccionada a la propiedad
     this.productosPedidoCuenta = this.productosPedido.filter(x => x.NroCuenta === row.NroCuenta);
     this.calcularTotales();
