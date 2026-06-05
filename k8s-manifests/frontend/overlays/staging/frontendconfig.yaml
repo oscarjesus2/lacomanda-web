@@ -4,4 +4,4 @@ metadata:
   name: frontend-frontendconfig
 spec:
   redirectToHttps:
-    enabled: true
+    enabled: false
