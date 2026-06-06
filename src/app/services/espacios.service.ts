@@ -14,7 +14,6 @@ export class EspaciosService {
 
   constructor(private http: HttpClient) { }
 
-
   createEspacio(mesa: Espacios): Observable<ApiResponse<Espacios>> {
     return this.http.post<ApiResponse<Espacios>>(this.basePathMesas, mesa);
   }
