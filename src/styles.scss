@@ -5,20 +5,20 @@
    ============================================================ */
 :root {
 
-  /* --- Colores de marca (restaurante) --- */
-  --color-primary:       #e65100;   /* Deep Orange 800 — acción principal */
-  --color-primary-dark:  #bf360c;   /* Deep Orange 900 — hover/active */
-  --color-primary-light: #ff8a65;   /* Deep Orange 300 — tono claro */
-  --color-accent:        #f4b23a;   /* Amber 600 — dorado, seleccionado */
-  --color-accent-dark:   #e09820;   /* Amber 700 */
-  --color-success:       #2e7d32;   /* Green 800 — estado seleccionado */
+  /* --- Colores de marca (restaurante japonés) --- */
+  --color-primary:       #00796b;   /* Teal 700 — acción principal */
+  --color-primary-dark:  #004d40;   /* Teal 900 — hover/active */
+  --color-primary-light: #4db6ac;   /* Teal 300 — tono claro */
+  --color-accent:        #f9a825;   /* Amber 700 — dorado, seleccionado */
+  --color-accent-dark:   #f57f17;   /* Amber 900 */
+  --color-success:       #2e7d32;   /* Green 800 — estado confirmado */
   --color-warn:          #c62828;   /* Red 800 — advertencia/eliminar */
 
   /* --- Superficies y fondos --- */
-  --color-bg:            #f5efe6;   /* Fondo general de página */
-  --color-surface:       #fffdf7;   /* Superficie blanca cálida */
-  --color-surface-warm:  #fff8e8;   /* Tarjetas/paneles */
-  --color-surface-alt:   rgba(255, 255, 255, 0.72);
+  --color-bg:            #f0f4f3;   /* Fondo general — gris verdoso muy suave */
+  --color-surface:       #ffffff;   /* Superficie principal */
+  --color-surface-warm:  #f5faf9;   /* Tarjetas/paneles — teal muy claro */
+  --color-surface-alt:   rgba(255, 255, 255, 0.80);
 
   /* --- Texto --- */
   --color-text:          #3b220a;   /* Texto principal — marrón oscuro */
@@ -29,12 +29,12 @@
   --color-border:        rgba(59, 34, 10, 0.12);
   --color-border-strong: rgba(59, 34, 10, 0.25);
 
-  /* --- Header (ya existía, se mantiene) --- */
-  --header-bg-start: #3a1c0f;
-  --header-bg-end:   #b9552a;
-  --header-accent:   #f4b23a;
-  --header-text:     #fff8e8;
-  --header-muted:    #f0e0cf;
+  /* --- Header --- */
+  --header-bg-start: #004d40;   /* Teal 900 */
+  --header-bg-end:   #00796b;   /* Teal 700 */
+  --header-accent:   #f9a825;   /* Amber 700 — dorado */
+  --header-text:     #e0f2f1;   /* Teal 50 — blanco verdoso */
+  --header-muted:    #b2dfdb;   /* Teal 100 */
 
   /* --- Radios de borde --- */
   --radius-sm:   4px;

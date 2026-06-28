@@ -11,23 +11,31 @@
 <div class="column-left">
 
     <div class="top-section">
-         <!-- Primera fila: Turno y Pedido -->
-        <div class="info-row">
-          <div *ngIf="turnoAbierto">
-            <label>Turno: {{ turnoAbierto.NroTurno }} - OPEN </label>
-            <br>
-            <label>Pedido: {{ turnoAbierto.CajaDto?.NroPedido }}</label>
+      <!-- Info de sesión -->
+      <div class="session-info">
+        <div class="session-info__item" *ngIf="turnoAbierto">
+          <span class="session-info__icon-wrap"><mat-icon>receipt_long</mat-icon></span>
+          <div class="session-info__text">
+            <span class="session-info__label">Turno</span>
+            <span class="session-info__value">{{ turnoAbierto.NroTurno }} <span class="session-info__badge">OPEN</span></span>
           </div>
         </div>
-        
-        <!-- Segunda fila: Fecha y Usuario -->
-        <div class="info-row">
-          <div *ngIf="turnoAbierto">
-          <label>Fecha: {{ turnoAbierto.FechaTrabajo| date: 'dd/MM/yyyy' }} </label>
+        <div class="session-info__item" *ngIf="turnoAbierto">
+          <span class="session-info__icon-wrap"><mat-icon>calendar_today</mat-icon></span>
+          <div class="session-info__text">
+            <span class="session-info__label">Fecha</span>
+            <span class="session-info__value">{{ turnoAbierto.FechaTrabajo | date: 'dd/MM/yyyy' }}</span>
+          </div>
         </div>
-          <label>Usuario: {{ userLoged.username }}</label>
+        <div class="session-info__item">
+          <span class="session-info__icon-wrap"><mat-icon>person</mat-icon></span>
+          <div class="session-info__text">
+            <span class="session-info__label">Usuario</span>
+            <span class="session-info__value">{{ userLoged.username }}</span>
+          </div>
         </div>
-      <!-- Botones en la parte superior derecha -->
+      </div>
+      <!-- Botones de canal -->
       <div class="channel-buttons">
         <button (click)="canalVenta(canalVentaEnum.ESPACIO)" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faUtensils"></fa-icon> CANAL MESA
@@ -48,14 +56,48 @@
     </div>
     <div class="middle-section">
       <div class="table-info">
-        <label *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO && espacioSelected?.Descripcion && espacioSelected?.Numero">
-          Espacio Nº: {{ espacioSelected.Descripcion + ' ' + espacioSelected.Numero }} {{nombreCuenta}}
-        </label>
-        <label *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO">Pedido Nº: {{numeroPedido}}</label> 
-        <label *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Nº Pax: {{ espacioSelected?.NroPersonas }}</label> 
-        <label *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Mozo: {{ mozoSelected?.Nombre }}</label>
-        <label *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO">Cliente: {{ clienteSelected?.RazonSocial }}</label>
-        <label>Hora: {{ horaPedido }}</label> 
+        <div class="table-info__item" *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO && espacioSelected?.Descripcion && espacioSelected?.Numero">
+          <span class="table-info__icon-wrap"><mat-icon>table_restaurant</mat-icon></span>
+          <div class="table-info__text">
+            <span class="table-info__label">Mesa</span>
+            <span class="table-info__value table-info__value--primary">{{ espacioSelected.Descripcion }} {{ espacioSelected.Numero }} {{ nombreCuenta }}</span>
+          </div>
+        </div>
+        <div class="table-info__item" *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO">
+          <span class="table-info__icon-wrap"><mat-icon>confirmation_number</mat-icon></span>
+          <div class="table-info__text">
+            <span class="table-info__label">Pedido Nº</span>
+            <span class="table-info__value table-info__value--primary">{{ numeroPedido }}</span>
+          </div>
+        </div>
+        <div class="table-info__item" *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">
+          <span class="table-info__icon-wrap"><mat-icon>group</mat-icon></span>
+          <div class="table-info__text">
+            <span class="table-info__label">Pax</span>
+            <span class="table-info__value">{{ espacioSelected?.NroPersonas }}</span>
+          </div>
+        </div>
+        <div class="table-info__item" *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">
+          <span class="table-info__icon-wrap"><mat-icon>badge</mat-icon></span>
+          <div class="table-info__text">
+            <span class="table-info__label">Mozo</span>
+            <span class="table-info__value">{{ mozoSelected?.Nombre }}</span>
+          </div>
+        </div>
+        <div class="table-info__item" *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO">
+          <span class="table-info__icon-wrap"><mat-icon>person_pin</mat-icon></span>
+          <div class="table-info__text">
+            <span class="table-info__label">Cliente</span>
+            <span class="table-info__value">{{ clienteSelected?.RazonSocial }}</span>
+          </div>
+        </div>
+        <div class="table-info__item" *ngIf="horaPedido">
+          <span class="table-info__icon-wrap"><mat-icon>schedule</mat-icon></span>
+          <div class="table-info__text">
+            <span class="table-info__label">Hora</span>
+            <span class="table-info__value">{{ horaPedido }}</span>
+          </div>
+        </div>
       </div>
       <div #scrollContainer class="data-grid">
         <!-- <div  mat-table > -->
@@ -139,10 +181,22 @@
     <!-- Tres filas estáticas debajo del datagridview -->
     <!-- Primera fila: Importe, Dscto, Total -->
     <div class="total-section">
-      <label>Importe:</label><input type="text" readonly [value]="(config?.SimboloMoneda || '-') + ' ' + (sumaImporte | number:'1.2-2')" />
-      <label>Dscto:</label><input type="text" readonly  [value]="(config?.SimboloMoneda || '-') + ' ' + (sumaDscto | number:'1.2-2')"/>
-      <label>Total:</label><input type="text" readonly  [value]="(config?.SimboloMoneda || '-') + ' ' + (sumaTotal | number:'1.2-2')"/>
-      <input type="text" readonly [value]="(config?.SimboloMoneda || '-') + ' ' + (sumaImpuestoBolsa | number:'1.2-2')"/>
+      <div class="total-section__item">
+        <span class="total-section__label">Importe</span>
+        <span class="total-section__value">{{ config?.SimboloMoneda || '-' }} {{ sumaImporte | number:'1.2-2' }}</span>
+      </div>
+      <div class="total-section__item">
+        <span class="total-section__label">Descuento</span>
+        <span class="total-section__value total-section__value--discount">{{ config?.SimboloMoneda || '-' }} {{ sumaDscto | number:'1.2-2' }}</span>
+      </div>
+      <div class="total-section__item total-section__item--total">
+        <span class="total-section__label">Total</span>
+        <span class="total-section__value total-section__value--total">{{ config?.SimboloMoneda || '-' }} {{ sumaTotal | number:'1.2-2' }}</span>
+      </div>
+      <div class="total-section__item" *ngIf="sumaImpuestoBolsa > 0">
+        <span class="total-section__label">Bolsa</span>
+        <span class="total-section__value">{{ config?.SimboloMoneda || '-' }} {{ sumaImpuestoBolsa | number:'1.2-2' }}</span>
+      </div>
     </div>
 
     <!-- Segunda fila: Combo, Ver Complemento, Priorizar Despacho, Enviar Pedido -->
@@ -173,7 +227,7 @@
   <button [disabled]="!procesarPedido" (click)="OpenDialogEmitirComprobante(TipoDocumento.Express)">
     <fa-icon [icon]="faReceipt"></fa-icon> Express
   </button>
-  <button [disabled]="isEnviarPedidoDisabled" (click)="EnviarPedido()">
+  <button class="btn--primary-action" [disabled]="isEnviarPedidoDisabled" (click)="EnviarPedido()">
     <fa-icon [icon]="faPaperPlane"></fa-icon> Enviar Pedido
   </button>
   <button [disabled]="isBloquearDisabled" (click)="toggleBloquear()">
@@ -206,8 +260,8 @@
     </div>
 
     <div *ngIf="MostrarOcultarPanelProducto" class="products-grid">
-      <button *ngFor="let producto of listProducts_x_SubFamilia" 
-      style="{{ producto.Color }}"
+      <button *ngFor="let producto of listProducts_x_SubFamilia"
+      [style.background-color]="getProductColor(producto.Color)"
       [style.visibility]="producto.Visible ? 'visible' : 'hidden'" (click)="AgregarProducto(producto)" [disabled]="isPanelProductoDisabled">
         <div style="text-align: center;"> {{producto.NombreCorto}} <br> {{getSimboloProducto(producto.IdMoneda)}}{{producto.Precio}}</div>
       </button>

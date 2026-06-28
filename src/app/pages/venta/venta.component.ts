@@ -1852,6 +1852,20 @@ export class VentaComponent implements OnInit, AfterViewInit {
     return this.config?.SimboloMoneda || '-';
   }
 
+  /**
+   * Extrae solo el valor de background-color del campo Color del producto.
+   * El campo puede venir como "background-color: #FF0000" o simplemente "#FF0000" o "red".
+   * Esto evita que estilos de posicionamiento u otros lleguen al botón.
+   */
+  getProductColor(colorStyle: string): string {
+    if (!colorStyle) return '';
+    // Si viene con "background-color:", extrae solo el valor
+    const match = colorStyle.match(/background-color\s*:\s*([^;]+)/i);
+    if (match) return match[1].trim();
+    // Si viene como color directo (ej: "#FF0000" o "red"), retornarlo tal cual
+    return colorStyle.trim();
+  }
+
 
   private getMozoByMozoId(idMozo: number): Empleado | undefined {
     return this.listEmpleados.find(Mozo => idMozo === Mozo.IdEmpleado);
