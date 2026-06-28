@@ -59,8 +59,11 @@
         <div class="table-info__item" *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO && espacioSelected?.Descripcion && espacioSelected?.Numero">
           <span class="table-info__icon-wrap"><mat-icon>table_restaurant</mat-icon></span>
           <div class="table-info__text">
-            <span class="table-info__label">Mesa</span>
-            <span class="table-info__value table-info__value--primary">{{ espacioSelected.Descripcion }} {{ espacioSelected.Numero }} {{ nombreCuenta }}</span>
+            <!-- <span class="table-info__label">Mesa</span> -->
+            <span class="table-info__value table-info__value--primary">
+              <span class="table-info__chip">{{ espacioSelected.Descripcion }} {{ espacioSelected.Numero }}</span>
+              <span *ngIf="nombreCuenta" class="table-info__cuenta">{{ nombreCuenta }}</span>
+            </span>
           </div>
         </div>
         <div class="table-info__item" *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO">
@@ -73,14 +76,14 @@
         <div class="table-info__item" *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">
           <span class="table-info__icon-wrap"><mat-icon>group</mat-icon></span>
           <div class="table-info__text">
-            <span class="table-info__label">Pax</span>
+            <!-- <span class="table-info__label">Pax</span> -->
             <span class="table-info__value">{{ espacioSelected?.NroPersonas }}</span>
           </div>
         </div>
         <div class="table-info__item" *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">
           <span class="table-info__icon-wrap"><mat-icon>badge</mat-icon></span>
           <div class="table-info__text">
-            <span class="table-info__label">Mozo</span>
+            <!-- <span class="table-info__label">Mozo</span> -->
             <span class="table-info__value">{{ mozoSelected?.Nombre }}</span>
           </div>
         </div>
