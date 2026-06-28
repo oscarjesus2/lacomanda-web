@@ -16,6 +16,7 @@
   padding: 10px;
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* Evita que el contenido desborde la columna */
 }
 .top-section {
   display: flex;
@@ -127,9 +128,11 @@ button:disabled {
 
 .tables-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr); /* Cambiado a 7 columnas */
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 1fr;
   gap: 2px;
   flex: 1;
+  min-height: 0;
 }
 
 .tables-grid button {
@@ -159,9 +162,11 @@ button:disabled {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr); /* Los productos siguen siendo de 8 botones por fila */
+  grid-template-columns: repeat(8, 1fr);
+  grid-auto-rows: 1fr;
   gap: 2px;
   flex: 1;
+  min-height: 0;
 }
 .products-grid button {
  
@@ -209,23 +214,26 @@ button:disabled {
 .static-buttons-row {
   display: flex;
   justify-content: flex-start;
-  gap: 10px; /* Añade espacio entre los botones */
-  margin-top: 15px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-shrink: 0;
 }
 
 /* Estilos para los botones estáticos */
 .static-buttons-row button {
-  padding: 12px 20px; /* Aumenta el padding para hacer los botones más grandes */
-  background-color: #FF7043; /* Naranja cálido */
+  padding: 6px 14px;
+  background-color: #FF7043;
   border: none;
   cursor: pointer;
-  border-radius: 8px; /* Bordes redondeados */
-  color: #FFFFFF; /* Texto en blanco para mejor contraste */
-  font-size: 14px; /* Tamaño del texto */
-  font-weight: bold; /* Texto en negrita */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra sutil */
-  transition: background-color 0.3s, box-shadow 0.3s; /* Transiciones suaves */
-  /*text-transform: uppercase;  Texto en mayúsculas para darle un toque moderno */
+  border-radius: 6px;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: bold;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.3s, box-shadow 0.3s;
 }
 
 .static-buttons-row button:hover {
@@ -239,11 +247,11 @@ button:disabled {
 
 /* Estilos específicos para el botón "Procesar Pedido" */
 .static-buttons-row button.process-pedido {
-  background-color: #FF9800; /* Color más llamativo */
-  font-size: 14px; /* Un poco más grande que el resto */
-  padding: 14px 24px; /* Padding más grande */
-  border: 2px solid #FFA726; /* Borde sólido que lo destaca */
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
+  background-color: #FF9800;
+  font-size: 13px;
+  padding: 6px 14px;
+  border: 2px solid #FFA726;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 .static-buttons-row button.process-pedido:hover {
@@ -367,7 +375,14 @@ button:disabled {
 }
 
 .static-buttons-container {
-  width: 750px; /* Ocupa el 100% del espacio de la segunda columna (que es el 50% de la pantalla) */
-  overflow-x: auto; /* Permite el desplazamiento horizontal si es necesario */
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
+}
+
+.static-buttons-container .static-buttons-row {
+  flex-wrap: nowrap;
+  margin-top: 4px;
 }
 
