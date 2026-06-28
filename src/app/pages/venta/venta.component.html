@@ -270,16 +270,23 @@
       </button>
     </div>
 
-    <!-- Fila estática de botones (Barra, Salón, Box, Patio, Terraza) -->
+    <!-- Fila AMBIENTES + Fila ACCIONES DE MESA -->
     <div *ngIf="!procesarPedido  || aplicarFiltroUnirEspacio==true || aplicarFiltroCambioEspacio==true">
-      <div class="static-buttons-row" *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">
+
+      <!-- Ambientes (Salon, 2do Nivel, Barra...) -->
+      <div class="static-buttons-row static-buttons-row--ambiente"
+           *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">
         <button *ngFor="let item of listAmbiente"
-        (click)="MostrarEspacios_x_Ambiente(item)">{{item.Descripcion}}</button>
+          [ngClass]="{'selected': selectedAmbiente === item}"
+          (click)="MostrarEspacios_x_Ambiente(item)">
+          {{item.Descripcion}}
+        </button>
       </div>
-      
-      <!-- Segunda fila estática de botones con "Procesar Pedido" -->
-      <div class="static-buttons-row">
-        <button *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO" class="process-pedido" (click)="NuevoPedidoLlevar()">Nuevo Pedido</button>
+
+      <!-- Acciones de mesa -->
+      <div class="static-buttons-row static-buttons-row--acciones">
+        <button *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO"
+                class="process-pedido" (click)="NuevoPedidoLlevar()">Nuevo Pedido</button>
         <button class="process-pedido" (click)="processPedido(true)">Procesar Pedido</button>
         <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Cambiar Mozo</button>
         <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO" (click)="CambiarEspacio()">Cambiar Espacio</button>
@@ -288,24 +295,27 @@
         <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Limpiar Espacio</button>
         <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Activar Espacio</button>
       </div>
+
     </div>
     <div *ngIf="procesarPedido && aplicarFiltroUnirEspacio==false && aplicarFiltroCambioEspacio==false">
-      <div class="static-buttons-row">
-        
+
+      <!-- Fila FAMILIA -->
+      <div class="static-buttons-row static-buttons-row--familia">
         <button *ngFor="let item of listFamilia"
-        [ngClass]="{'selected': selectedItemFamilia === item}"   
-        (click)="ListarSubFamilia_x_Familia(item)">
+          [ngClass]="{'selected': selectedItemFamilia === item}"
+          (click)="ListarSubFamilia_x_Familia(item)">
           {{item.Descripcion}}
         </button>
-        <button [disabled]="isPanelProductoDisabled" (click)="openProductSearch()">Buscar Productos</button>
+        <button class="btn-buscar" [disabled]="isPanelProductoDisabled" (click)="openProductSearch()">
+          Buscar Productos
+        </button>
       </div>
-  
-      <!-- Segunda fila estática de botones con "Procesar Pedido" -->
 
-      <div class="static-buttons-container">
-        <div class="static-buttons-row">
-          <button *ngFor="let item of listSubFamilia_x_Familia"   
-                  [ngClass]="{'selected': selectedItemSubFamilia === item}" 
+      <!-- Fila SUBFAMILIA -->
+      <div class="static-buttons-container static-buttons-container--subfamilia">
+        <div class="static-buttons-row static-buttons-row--subfamilia">
+          <button *ngFor="let item of listSubFamilia_x_Familia"
+                  [ngClass]="{'selected': selectedItemSubFamilia === item}"
                   (click)="ListarProductos_x_SubFamilia(item)">
             {{item.Descripcion}}
           </button>

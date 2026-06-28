@@ -572,7 +572,175 @@
   color: var(--color-text-light);
 }
 
-/* Contenedor de subfamilias — scroll horizontal, altura fija */
+/* ── FAMILIA — fila principal, más protagonismo ─────────────── */
+.static-buttons-row--familia {
+  background: var(--color-primary-dark);
+  padding: 6px 8px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.static-buttons-row--familia button {
+  height: 38px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.80);
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+}
+
+.static-buttons-row--familia button:hover {
+  background: rgba(255, 255, 255, 0.20);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Familia ACTIVA — amber dorado, muy visible */
+.static-buttons-row--familia button.selected {
+  background: var(--color-accent) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-accent-dark) !important;
+  box-shadow: 0 3px 10px rgba(249, 168, 37, 0.50) !important;
+  font-weight: 800;
+}
+
+/* Botón buscar — diferenciado */
+.static-buttons-row--familia .btn-buscar {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.30) !important;
+  color: rgba(255, 255, 255, 0.60) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+}
+
+.static-buttons-row--familia .btn-buscar:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #fff !important;
+}
+
+/* ── SUBFAMILIA — fila secundaria, más discreta ─────────────── */
+.static-buttons-container--subfamilia {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
+  background: rgba(0, 77, 64, 0.55);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  padding: 4px 8px 6px;
+}
+
+.static-buttons-row--subfamilia {
+  gap: 5px;
+}
+
+.static-buttons-row--subfamilia button {
+  height: 30px;
+  font-size: 11px;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.65);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: var(--transition-fast);
+}
+
+.static-buttons-row--subfamilia button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Subfamilia ACTIVA — teal sólido */
+.static-buttons-row--subfamilia button.selected {
+  background: var(--color-primary-light) !important;
+  color: var(--color-primary-dark) !important;
+  border-color: var(--color-primary-light) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(77, 182, 172, 0.40) !important;
+}
+
+/* ── AMBIENTE — misma jerarquía que FAMILIA ─────────────────── */
+.static-buttons-row--ambiente {
+  background: var(--color-primary-dark);
+  padding: 6px 8px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.static-buttons-row--ambiente button {
+  height: 36px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.80);
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+}
+
+.static-buttons-row--ambiente button:hover {
+  background: rgba(255, 255, 255, 0.20);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Ambiente ACTIVO — amber dorado */
+.static-buttons-row--ambiente button.selected {
+  background: var(--color-accent) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-accent-dark) !important;
+  box-shadow: 0 3px 10px rgba(249, 168, 37, 0.50) !important;
+  font-weight: 800;
+}
+
+/* ── ACCIONES DE MESA — fila subordinada oscura ─────────────── */
+.static-buttons-row--acciones {
+  background: rgba(0, 77, 64, 0.55);
+  padding: 5px 8px 7px;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  gap: 5px;
+}
+
+/* Todas las acciones: ghost sobre fondo oscuro */
+.static-buttons-row--acciones button {
+  height: 32px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.70);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.static-buttons-row--acciones button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.40);
+}
+
+/* Procesar Pedido / Nuevo Pedido — acción primaria, amber */
+.static-buttons-row--acciones button.process-pedido {
+  background: var(--color-accent) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-accent-dark) !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 8px rgba(249, 168, 37, 0.40) !important;
+}
+
+.static-buttons-row--acciones button.process-pedido:hover {
+  background: var(--color-accent-dark) !important;
+  box-shadow: 0 4px 12px rgba(249, 168, 37, 0.55) !important;
+}
+
+/* Contenedor de subfamilias — scroll horizontal (genérico legacy) */
 .static-buttons-container {
   width: 100%;
   overflow-x: auto;
