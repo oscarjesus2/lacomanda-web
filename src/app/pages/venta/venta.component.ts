@@ -315,8 +315,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
   async ngOnInit() {
-    // Suscribir config cacheada (cargada en login)
-    this.configuracionService.config$.subscribe(cfg => this.config = cfg);
+    this.configuracionService.get().subscribe(cfg => this.config = cfg);
 
     this.enterFullScreen();
     const isRunning = await this.qzTrayService.isQzTrayRunning();
@@ -1850,10 +1849,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
   /** Devuelve el símbolo de moneda para un producto.
    *  Usa la moneda del producto si coincide con la config; de lo contrario el símbolo por defecto. */
   getSimboloProducto(monedaVenta: string): string {
-    if (!monedaVenta || !this.config) return '-';
-    if (monedaVenta === this.config.IdMoneda) return this.config.SimboloMoneda || 'S/.';
-    return this.configuracionService.getSimboloMoneda(monedaVenta);
+    return this.config?.SimboloMoneda || '-';
   }
+
 
   private getMozoByMozoId(idMozo: number): Empleado | undefined {
     return this.listEmpleados.find(Mozo => idMozo === Mozo.IdEmpleado);
