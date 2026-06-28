@@ -4,6 +4,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { Configuracion, TipoIdentidadEnum } from 'src/app/models/configuracion.models';
 import { TipoIdentidadPaisService, TipoIdentidadPaisVM } from 'src/app/services/tipo-identidad-pais.service';
+import { MonedaService } from 'src/app/services/moneda.service';
+import { Moneda } from 'src/app/models/moneda.models';
 import { MatDialogRef } from '@angular/material/dialog';
 import { distinctUntilChanged } from 'rxjs/operators';
 
@@ -15,7 +17,8 @@ import { distinctUntilChanged } from 'rxjs/operators';
 export class ConfiguracionInicialComponent implements OnInit {
   tiposIdentidadPais: TipoIdentidadPaisVM[] = [];
   tiposEnum = TipoIdentidadEnum;
-  enumKeys = Object.keys(TipoIdentidadEnum).filter(k => isNaN(Number(k))); // ['DNI','NIE',...]
+  enumKeys = Object.keys(TipoIdentidadEnum).filter(k => isNaN(Number(k)));
+  monedas: Moneda[] = [];
 
   // paises = ['PE','ES','AR','CL','MX','CO','US','FR','DE','IT','PT'];
   paises = ['PE','ES'];
@@ -47,6 +50,9 @@ export class ConfiguracionInicialComponent implements OnInit {
     TieneProductoPrecioDelivery: [false],
     TieneDescuentoTragoCortesia: [false],
     Servicio: [0, [Validators.min(0), Validators.max(100)]], // %
+    IdMoneda: [null as string | null, Validators.required],
+    SimboloMoneda: [''],
+    CodigoISO4217: [''],
   });
 
   mascaraHint?: string;
@@ -57,6 +63,7 @@ export class ConfiguracionInicialComponent implements OnInit {
     private snack: MatSnackBar,
     private configSrv: ConfiguracionService,
     private tipIdPaisSrv: TipoIdentidadPaisService,
+    private monedaSrv: MonedaService,
     private dialogRef: MatDialogRef<ConfiguracionInicialComponent>
   ) {}
 
@@ -65,21 +72,25 @@ export class ConfiguracionInicialComponent implements OnInit {
     this.configSrv.get().subscribe(cfg => {
       if (cfg) this.form.patchValue(cfg);
       const pais = this.form.get('PaisISO2')!.value;
-      if (pais) this.onPaisChange(pais);       // ⬅️ solo si ya hay país
+      if (pais) this.onPaisChange(pais);
       this.applyBusinessRules();
     });
 
     // reaccionar a cambios de toggles
     this.form.get('Precuentas')!.valueChanges
-    .subscribe(() => this.applyBusinessRules());
+      .subscribe(() => this.applyBusinessRules());
 
     this.form.get('PaisISO2')!.valueChanges
       .pipe(distinctUntilChanged())
-      .subscribe(pais => this.onPaisChange(pais));     // ⬅️ usa el valor emitido
+      .subscribe(pais => this.onPaisChange(pais));
 
     this.form.get('IdTipoIdentidad')!.valueChanges
       .subscribe(() => this.onTipoIdentidadChange());
-    }
+
+    // cuando cambia la moneda, sincronizar símbolo e ISO
+    this.form.get('IdMoneda')!.valueChanges
+      .subscribe(idMoneda => this.onMonedaChange(idMoneda));
+  }
 
   private applyBusinessRules(): void {
     const prec = !!this.form.get('Precuentas')!.value;
@@ -96,23 +107,38 @@ export class ConfiguracionInicialComponent implements OnInit {
     nro.updateValueAndValidity({ emitEvent: false });
   }
 
- private onPaisChange(pais: string | null | undefined): void {
-  const p = (pais || '').toUpperCase().trim();
-  if (!p) { this.tiposIdentidadPais = []; return; }
-
-  console.log('[UI] pais:', p);
-  this.tipIdPaisSrv.byPais(p).subscribe(list => {
-    console.log('[API] list:', list);
-    this.tiposIdentidadPais = (list || []).filter(x => x.Activo);
-
-    const sel = this.form.value.IdTipoIdentidad as string | null;
-    if (!sel || !this.tiposIdentidadPais.some(x => x.IdTipoIdentidad === sel)) {
-      const first = this.tiposIdentidadPais[0]?.IdTipoIdentidad ?? null;
-      this.form.patchValue({ IdTipoIdentidad: first }, { emitEvent: false });
+  private onPaisChange(pais: string | null | undefined): void {
+    const p = (pais || '').toUpperCase().trim();
+    if (!p) {
+      this.tiposIdentidadPais = [];
+      this.monedas = [];
+      return;
     }
-    this.onTipoIdentidadChange();
-  });
-}
+
+    // Tipos de identidad por país
+    this.tipIdPaisSrv.byPais(p).subscribe(list => {
+      this.tiposIdentidadPais = (list || []).filter(x => x.Activo);
+
+      const sel = this.form.value.IdTipoIdentidad as string | null;
+      if (!sel || !this.tiposIdentidadPais.some(x => x.IdTipoIdentidad === sel)) {
+        const first = this.tiposIdentidadPais[0]?.IdTipoIdentidad ?? null;
+        this.form.patchValue({ IdTipoIdentidad: first }, { emitEvent: false });
+      }
+      this.onTipoIdentidadChange();
+    });
+
+    // Monedas por país
+    this.monedaSrv.getMonedaPorPais(p).subscribe(r => {
+      this.monedas = r.Data || [];
+
+      const selMoneda = this.form.value.IdMoneda;
+      if (!selMoneda || !this.monedas.some(m => m.IdMoneda === selMoneda)) {
+        const primera = this.monedas[0]?.IdMoneda ?? null;
+        this.form.patchValue({ IdMoneda: primera }, { emitEvent: false });
+        this.onMonedaChange(primera);
+      }
+    });
+  }
 
   private onTipoIdentidadChange(): void {
     const sel = this.form.value.IdTipoIdentidad as string | null;
@@ -122,7 +148,7 @@ export class ConfiguracionInicialComponent implements OnInit {
     this.regexValidacion = meta?.RegexValidacion ?? undefined;
 
     // aplicar/retirar validador regex si existe
-    const ctrl = this.form.get('NumeroDocumento')!;
+    const ctrl = this.form.get('NumeroIdentificacion')!;
     const validators = [Validators.required, Validators.maxLength(20)];
     if (this.regexValidacion) {
       const rx = new RegExp(this.regexValidacion);
@@ -132,9 +158,17 @@ export class ConfiguracionInicialComponent implements OnInit {
     ctrl.updateValueAndValidity();
   }
 
-   salir() {
+  private onMonedaChange(idMoneda: string | null): void {
+    const moneda = this.monedas.find(m => m.IdMoneda === idMoneda);
+    this.form.patchValue({
+      SimboloMoneda: moneda?.Simbolo ?? '',
+      CodigoISO4217: moneda?.CodigoISO ?? '',
+    }, { emitEvent: false });
+  }
+
+  salir() {
     this.dialogRef.close();
-   }
+  }
 
   guardar(): void {
     if (this.form.invalid) {

@@ -16,7 +16,7 @@
           <div *ngIf="turnoAbierto">
             <label>Turno: {{ turnoAbierto.NroTurno }} - OPEN </label>
             <br>
-            <label>Pedido: {{ turnoAbierto.NroPedido }}</label>
+            <label>Pedido: {{ turnoAbierto.CajaDto?.NroPedido }}</label>
           </div>
         </div>
         
@@ -51,7 +51,7 @@
         <label *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO && espacioSelected?.Descripcion && espacioSelected?.Numero">
           Espacio Nº: {{ espacioSelected.Descripcion + ' ' + espacioSelected.Numero }} {{nombreCuenta}}
         </label>
-        <label *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO">Pedido Nº: {{pedidoId}}</label> 
+        <label *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO">Pedido Nº: {{numeroPedido}}</label> 
         <label *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Nº Pax: {{ espacioSelected?.NroPersonas }}</label> 
         <label *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Mozo: {{ mozoSelected?.Nombre }}</label>
         <label *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO">Cliente: {{ clienteSelected?.RazonSocial }}</label>
@@ -139,10 +139,10 @@
     <!-- Tres filas estáticas debajo del datagridview -->
     <!-- Primera fila: Importe, Dscto, Total -->
     <div class="total-section">
-      <label>Importe:</label><input type="text" readonly [value]="sumaImporte | currency:'PEN' " />
-      <label>Dscto:</label><input type="text" readonly  [value]="sumaDscto | currency:'PEN' "/>
-      <label>Total:</label><input type="text" readonly  [value]="sumaTotal | currency:'PEN' "/>
-      <input type="text" readonly [value]="sumaImpuestoBolsa  | currency:'PEN' "/>
+      <label>Importe:</label><input type="text" readonly [value]="(config?.SimboloMoneda || '-') + ' ' + (sumaImporte | number:'1.2-2')" />
+      <label>Dscto:</label><input type="text" readonly  [value]="(config?.SimboloMoneda || '-') + ' ' + (sumaDscto | number:'1.2-2')"/>
+      <label>Total:</label><input type="text" readonly  [value]="(config?.SimboloMoneda || '-') + ' ' + (sumaTotal | number:'1.2-2')"/>
+      <input type="text" readonly [value]="(config?.SimboloMoneda || '-') + ' ' + (sumaImpuestoBolsa | number:'1.2-2')"/>
     </div>
 
     <!-- Segunda fila: Combo, Ver Complemento, Priorizar Despacho, Enviar Pedido -->
@@ -192,7 +192,7 @@
         [style.background]="espacio.Color" 
         (click)="openDialogEspacio(espacio)"
         [style.visibility]="espacio.Visible === false ? 'hidden' : 'visible'">
-        <div style="text-align: center;">{{espacio.Descripcion}} {{espacio.Numero}} <br> S/.{{espacio.Total}} <br> {{espacio.NombreEmpleado?.substring(0, 8)}}</div>
+        <div style="text-align: center;">{{espacio.Descripcion}} {{espacio.Numero}} <br> {{config?.SimboloMoneda || '-'}}.{{espacio.Total}} <br> {{espacio.NombreEmpleado?.substring(0, 8)}}</div>
       </button>
     </div>
 
@@ -201,15 +201,15 @@
         [style.background]="'LightCyan'"
         (click)="openPedido(pedido)"
         [style.visibility]="pedido.Visible === false ? 'hidden' : 'visible'">
-        <div style="text-align: center;">{{pedido.NroPedido}} <br> S/.{{pedido.Total}} <br> {{pedido.Cliente}}</div>
+        <div style="text-align: center;">{{pedido.NroPedido}} <br> {{config?.SimboloMoneda || '-'}}.{{pedido.Total}} <br> {{pedido.Cliente}}</div>
       </button>
     </div>
 
     <div *ngIf="MostrarOcultarPanelProducto" class="products-grid">
       <button *ngFor="let producto of listProducts_x_SubFamilia" 
-      style="{{producto.Color}}"
+      style="{{ producto.Color }}"
       [style.visibility]="producto.Visible ? 'visible' : 'hidden'" (click)="AgregarProducto(producto)" [disabled]="isPanelProductoDisabled">
-        <div style="text-align: center;"> {{producto.NombreCorto}} <br> S/.{{producto.Precio}}</div>
+        <div style="text-align: center;"> {{producto.NombreCorto}} <br> {{getSimboloProducto(producto.IdMoneda)}}{{producto.Precio}}</div>
       </button>
     </div>
 

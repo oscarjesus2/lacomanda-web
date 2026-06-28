@@ -1,6 +1,6 @@
 import { Turno } from "./turno.models";
 
-export class Caja {
+export class CajaDto {
     public IdCaja: number;
     public TurnoAbierto: Turno;
     public Descripcion: string;

@@ -59,8 +59,8 @@ export class HeaderComponent {
   }
   public Caja(): void {
     this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
-      if (data != null) {
-        this.turnoAbierto = data;
+      if (data?.Data != null) {
+        this.turnoAbierto = data.Data;
         this.title = 'Caja';
         this.sDatosUsuarioTurno= 'Turno : OPEN ' + this.turnoAbierto.NroTurno + ' - Usuario :' + this.UsuarioShare + '';
         this.router.navigateByUrl('/caja');
@@ -78,8 +78,8 @@ export class HeaderComponent {
 
   public Mozo(): void {
     this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
-      if (data != null) {
-        this.turnoAbierto = data;
+      if (data?.Data != null) {
+        this.turnoAbierto = data.Data;
         this.title = 'Mozo';
         this.sDatosUsuarioTurno= 'Turno : OPEN ' + this.turnoAbierto.NroTurno + ' - Usuario :' + this.UsuarioShare + '';
         this.router.navigateByUrl('/mozo');

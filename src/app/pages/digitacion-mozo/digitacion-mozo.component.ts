@@ -312,8 +312,8 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
     try {
       // Primer servicio que necesita ejecutarse antes de otros
       this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
-        if (data != null) {
-          this.turnoAbierto = data;
+        if (data?.Data != null) {
+          this.turnoAbierto = data.Data;
 
           // Aquí se ejecutan los demás servicios en paralelo una vez que se ha obtenido el turno abierto
           forkJoin({

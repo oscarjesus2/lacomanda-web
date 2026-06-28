@@ -8,7 +8,7 @@ import Swal from 'sweetalert2';
 import { Estacion } from 'src/app/models/estacion.models';
 import { EstacionService } from 'src/app/services/estacion.service';
 import { CajaService } from 'src/app/services/caja.service';
-import { Caja } from 'src/app/models/caja.models';
+import { CajaDto } from 'src/app/models/caja.models';
 import { EstacionTipoEnum } from 'src/app/enums/enum';
 import { NgxSpinnerService } from 'ngx-spinner';
 
@@ -27,7 +27,7 @@ export class EstacionMantenimientoComponent implements OnInit {
   filtro: string = '';
   showForm: boolean = false;
 
-  listCajas: Caja[] = [];
+  listCajas: CajaDto[] = [];
   tipos = [
     { value: EstacionTipoEnum.MOZO, label: 'Mozo' },
     { value: EstacionTipoEnum.CAJA, label: 'Caja' }

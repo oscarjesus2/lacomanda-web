@@ -9,7 +9,7 @@ import Swal from 'sweetalert2';
 import { NgxSpinnerService } from 'ngx-spinner';
 
 import { Producto } from 'src/app/models/product.models';
-import { Caja } from 'src/app/models/caja.models';
+import { CajaDto } from 'src/app/models/caja.models';
 import { ProductoService } from 'src/app/services/product.service';
 import { CajaService } from 'src/app/services/caja.service';
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
@@ -51,7 +51,7 @@ export class DialogEmitirVentaComponent implements OnInit {
 
   bTurnoIndenpendiente: boolean = false;
   
-  listCaja: Caja[];
+  listCaja: CajaDto[];
   cajaSeleccionada: number = 0;
   monedaSeleccionada: string = 'SOLES';
   turnoAbierto: Turno = new Turno();
@@ -132,7 +132,7 @@ export class DialogEmitirVentaComponent implements OnInit {
     return product ? product.NombreCorto : undefined;
   }
 
-  ValidarCaja(oCaja: Caja): void {
+  ValidarCaja(oCaja: CajaDto): void {
     if (oCaja.IdCaja != 0) {
       if (oCaja.TurnoAbierto != null) {
         this.turnoAbierto = oCaja.TurnoAbierto;
@@ -189,7 +189,7 @@ export class DialogEmitirVentaComponent implements OnInit {
   }
 
   abrirDialogoCantidad(product: Producto): Promise<any> {
-    let sTitulo = product.MonedaVenta === 'SOL' ? 'Precio del Producto-SOLES' : 'Precio del Producto-DOLARES';
+    let sTitulo = product.IdMoneda === 'SOL' ? 'Precio del Producto-SOLES' : 'Precio del Producto-DOLARES';
     const dialogRef = this.dialog.open(DialogMCantComponent, {
       data: {
         title: sTitulo,
@@ -204,9 +204,9 @@ export class DialogEmitirVentaComponent implements OnInit {
   }
 
   actualizarPrecioProducto(product: Producto, result: any): void {
-    if (product.MonedaVenta === 'SOL' && this.monedaSeleccionada === 'DOLARES') {
+    if (product.IdMoneda === 'SOL' && this.monedaSeleccionada === 'DOLARES') {
       product.Precio = Math.round((result.value / parseFloat(this.tipoCambioCompra)) * 100) / 100;
-    } else if (product.MonedaVenta === 'DOL' && this.monedaSeleccionada === 'SOLES') {
+    } else if (product.IdMoneda === 'DOL' && this.monedaSeleccionada === 'SOLES') {
       product.Precio = Math.round((result.value * parseFloat(this.tipoCambioVenta)) * 100) / 100;
     } else {
       product.Precio = parseFloat(result.value);
@@ -227,7 +227,7 @@ export class DialogEmitirVentaComponent implements OnInit {
       Tipo: product.Tipo,
       ExclusivoParaAnfitriona: product.ExclusivoParaAnfitriona,
       PermitirParaTragoCortesia: product.PermitirParaTragoCortesia,
-      Moneda: product.MonedaVenta
+      Moneda: product.IdMoneda
     };
   
     this.dataSource.data.push(newRow);
@@ -281,7 +281,7 @@ export class DialogEmitirVentaComponent implements OnInit {
         return;
       }
 
-    if (selectedProduct.MonedaVenta === 'SOL' && this.monedaSeleccionada === 'DOLARES' && parseFloat(this.tipoCambioCompra) === 0) {
+    if (selectedProduct.IdMoneda === 'SOL' && this.monedaSeleccionada === 'DOLARES' && parseFloat(this.tipoCambioCompra) === 0) {
       Swal.fire({
         title: 'Validación',
         text: `El producto ${selectedProduct.NombreCorto} está en SOLES. Para realizar la venta en DOLARES es necesario ingresar el Tipo de Cambio COMPRA.`,
@@ -291,7 +291,7 @@ export class DialogEmitirVentaComponent implements OnInit {
       return;
     }
 
-    if (selectedProduct.MonedaVenta === 'DOL' && this.monedaSeleccionada === 'SOLES' && parseFloat(this.tipoCambioVenta) === 0) {
+    if (selectedProduct.IdMoneda === 'DOL' && this.monedaSeleccionada === 'SOLES' && parseFloat(this.tipoCambioVenta) === 0) {
       Swal.fire({
         title: 'Validación',
         text: `El producto ${selectedProduct.NombreCorto} está en DOLARES. Para realizar la venta en SOLES es necesario ingresar el Tipo de Cambio VENTA.`,

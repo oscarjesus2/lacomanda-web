@@ -15,6 +15,10 @@ export class MonedaService {
   constructor(private http: HttpClient) {}
 
   getMoneda(): Observable<ApiResponse<Moneda[]>> {
-                return this.http.get<ApiResponse<Moneda[]>>(this.basePath);
+    return this.http.get<ApiResponse<Moneda[]>>(this.basePath);
+  }
+
+  getMonedaPorPais(paisISO2: string): Observable<ApiResponse<Moneda[]>> {
+    return this.http.get<ApiResponse<Moneda[]>>(`${this.basePath}/pais/${paisISO2}`);
   }
 }

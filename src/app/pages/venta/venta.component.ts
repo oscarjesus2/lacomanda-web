@@ -49,7 +49,7 @@ import { DialogComplementosComponent } from 'src/app/components/dialog-complemen
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 // import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, lastValueFrom } from 'rxjs';
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { DialogMTextComponent } from 'src/app/components/dialog-mtext/dialog-mtext.component';
 import { AnularProductoYComplementoDTO } from 'src/app/interfaces/anularProductoYComplementoDTO.interface';
@@ -62,6 +62,8 @@ import { DialogDividirCuentaComponent } from 'src/app/components/dialog-dividir-
 import { EnumTipoDocumento, NivelUsuarioEnum } from 'src/app/enums/enum';
 import { DialogDescuentoComponent } from 'src/app/components/dialog-descuento/dialog-descuento.component';
 import { PedidoDescuentoDTO } from 'src/app/interfaces/pedidoDescuentoDTO.interface';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { Configuracion } from 'src/app/models/configuracion.models';
 import { CanalVentaService } from 'src/app/services/canal-venta.service';
 import { CanalVenta } from 'src/app/models/canalventa.models';
 import { DialogEntradasComponent } from 'src/app/components/dialog-entradas/dialog-entradas.component';
@@ -80,6 +82,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   elementArr: any = [].fill(0);
   public turnoAbierto: Turno;
   public user: Usuario;
+  public config: Configuracion | null = null;
   public displayedColumns: string[] = ['NombreProducto', 'Precio', 'Cantidad', 'actions'];
   public ListaProductosdisplayedColumns: string[] = ['icoObs', 'nombrecorto', 'precio', 'add', 'cantidad', 'remove', 'actions'];
   public DEFAULT_ID = 0;
@@ -107,6 +110,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   public idPedidoCobrar: number = 0;
   public nroCuentaCobrar: number = 0;
 
+  public numeroPedido: string = "";
   public horaPedido: string = "";
   public userLoged: any = { id: "", username: "" };
 
@@ -117,7 +121,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   public MostrarOcultarPanelProducto: Boolean;
   public MostrarOcultarPanelEspacio: Boolean;
   public MostrarOcultarPanelPedido: Boolean;
-  public mozoSelected: Empleado;
+  public mozoSelected: Empleado | undefined;
   public clienteSelected: Cliente;
   public socioNegocioSelected: SocioNegocio;
   public espacioSelected: Espacios;
@@ -171,7 +175,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
     private qzTrayService: QzTrayV224Service,
     private familiaService: FamiliaService,
     private headerService: HeaderService,
-    private usuarioService: UsuarioService) {
+    private usuarioService: UsuarioService,
+    private configuracionService: ConfiguracionService) {
 
 
     this.MostrarOcultarPanelEspacio = true;
@@ -310,6 +315,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
   async ngOnInit() {
+    // Suscribir config cacheada (cargada en login)
+    this.configuracionService.config$.subscribe(cfg => this.config = cfg);
+
     this.enterFullScreen();
     const isRunning = await this.qzTrayService.isQzTrayRunning();
     if (!isRunning) {
@@ -322,8 +330,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
     try {
       console.log("antes");
       this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
-        if (data != null) {
-          this.turnoAbierto = data;
+        if (data?.Data != null) {
+          this.turnoAbierto = data.Data;
 
           // Aquí se ejecutan los demás servicios en paralelo una vez que se ha obtenido el turno abierto
           forkJoin({
@@ -350,7 +358,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
             }
 
             this.listaTipoPedidos = results.responseTipoPedidos;
-            const tipoPedidoEntrada: CanalVenta = this.listaTipoPedidos.find(item => item.IdCanalVenta == 4);
+            const tipoPedidoEntrada: CanalVenta | undefined = this.listaTipoPedidos.find(item => item.IdCanalVenta == 4);
             this.isEntrada = (tipoPedidoEntrada!=null);
         
 
@@ -371,8 +379,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
             this.mozoSelected.IdEmpleado = this.storageService.getCurrentSession().User.IdEmpleado;
 
             // Mostrar espacios por ambiente
-            const result: Ambiente = this.listAmbiente.find(item => item.Estado == 1);
-            this.MostrarEspacios_x_Ambiente(result);
+            const result = this.listAmbiente.find(item => item.Estado == 1);
+            if (result) this.MostrarEspacios_x_Ambiente(result);
 
             // Configurar usuario logueado
             this.userLoged = {
@@ -635,7 +643,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
           cancelButton: 'custom-cancel-button'  // Clase personalizada para el botón "Cancelar"
         },
         preConfirm: () => {
-          const nombreClienteInput = (Swal.getPopup().querySelector('#nombreCliente') as HTMLInputElement).value;
+          const nombreClienteInput = (Swal.getPopup()?.querySelector('#nombreCliente') as HTMLInputElement)?.value;
           if (!nombreClienteInput.trim()) {
             Swal.showValidationMessage('Debe ingresar el nombre del cliente');
           }
@@ -725,7 +733,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
         this.limpiarPedido();
-        const listData = await this.pedidoService.FindPedidoByIdPedidoNroCuenta(result.idPedido, result.nroCuenta).toPromise();
+        const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdPedidoNroCuenta(result.idPedido, result.nroCuenta));
 
         if (listData.Data.length > 0) {
           this.espacioSelected = espacioSelected;
@@ -737,7 +745,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
           await this.showWarningAndReloadEspacios('No existe el pedido en la cuenta.');
         }
       } else {
-        this.listaEspaciosTotal = (await this.espaciosService.GetAllEspaciosConPedidos().toPromise()).Data;
+        this.listaEspaciosTotal = (await lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos())).Data;
       }
     });
   }
@@ -770,7 +778,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
         
         this.spinnerService.show();
         await this.pedidoService.AplicarDescuento(pedidoDescuentoDTO).subscribe(async ()=>{
-            const listData = await this.pedidoService.FindPedidoByIdPedidoNroCuenta(this.idPedidoCobrar, this.nroCuentaCobrar).toPromise();
+        const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdPedidoNroCuenta(this.idPedidoCobrar, this.nroCuentaCobrar));
 
           if (listData.Data.length > 0) {
             this.rellenarHeaderPedido(listData.Data);
@@ -805,8 +813,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
         const nombreIngresado = result.value;
         if (nombreIngresado) {
           this.NuevoPedidoLlevar();  // Reabrir el Swal con el valor ingresado
-          const inputNombreCliente = Swal.getPopup().querySelector('#nombreCliente') as HTMLInputElement;
-          inputNombreCliente.value = nombreIngresado;
+          const inputNombreCliente = Swal.getPopup()?.querySelector('#nombreCliente') as HTMLInputElement | null;
+          if (inputNombreCliente) inputNombreCliente.value = nombreIngresado;
         }
       } else {
         // Si se cancela el teclado, vuelve a abrir el Swal sin cambios
@@ -832,7 +840,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.listProducts_x_SubFamilia = [];
     this.listSubFamilia_x_Familia = this.listSubFamilia.filter(x => x.IdFamilia === oFamilia.IdFamilia);
     let oSubFamilia = this.listSubFamilia_x_Familia.find((item) => (item.IdFamilia === oFamilia.IdFamilia));
-    this.ListarProductos_x_SubFamilia(oSubFamilia);
+    if (oSubFamilia) this.ListarProductos_x_SubFamilia(oSubFamilia);
     this.spinnerService.hide();
   }
 
@@ -990,7 +998,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async openPedido(pedido: PedidoDeliveryDTO) {
     this.limpiarPedido();
-    const listData: ApiResponse<PedidoEspacioDTO[]> = await this.pedidoService.FindPedidoByIdPedidoNroCuenta(pedido.IdPedido, pedido.NroCuenta).toPromise();
+    const listData: ApiResponse<PedidoEspacioDTO[]> = await lastValueFrom(this.pedidoService.FindPedidoByIdPedidoNroCuenta(pedido.IdPedido, pedido.NroCuenta));
     if (listData.Data.length > 0) {
       this.rellenarHeaderPedido(listData.Data);
       this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
@@ -1003,7 +1011,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
         'No existe el pedido.',
         'warning'
       );
-      this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno).toPromise();
+      lastValueFrom(this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno));
     }
   }
 
@@ -1024,7 +1032,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async handleEspacioDisponible(espacio: Espacios) {
     if (this.aplicarFiltroCambioEspacio) {
-      const response = await this.espaciosService.CambiarEspacio(this.espacioSelected.IdEspacio, espacio.IdEspacio).toPromise();
+      const response = await lastValueFrom(this.espaciosService.CambiarEspacio(this.espacioSelected.IdEspacio, espacio.IdEspacio));
       if (response.Data) this.RehacerPantalla();
     } else {
       this.limpiarPedido();
@@ -1049,11 +1057,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async handleEspacioOcupada(espacio: Espacios) {
     if (this.aplicarFiltroUnirEspacio) {
-      const response = await this.espaciosService.UnirEspacio(this.espacioSelected.IdEspacio, espacio.IdEspacio, this.storageService.getCurrentSession().User.IdUsuario).toPromise();
+      const response = await lastValueFrom(this.espaciosService.UnirEspacio(this.espacioSelected.IdEspacio, espacio.IdEspacio, this.storageService.getCurrentSession().User.IdUsuario));
       if (response.Data) this.RehacerPantalla();
     } else {
       this.limpiarPedido();
-      const listData = await this.pedidoService.FindPedidoByIdEspacio(espacio.IdEspacio).toPromise();
+      const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdEspacio(espacio.IdEspacio));
       if (listData.Data.length > 0) {
         this.espacioSelected = espacio;
         this.rellenarHeaderPedido(listData.Data);
@@ -1067,7 +1075,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async handleEspacioDividirCuenta(espacio: Espacios) {
     this.limpiarPedido();
-    const listData = await this.pedidoService.FindPedidoByIdEspacio(espacio.IdEspacio).toPromise();
+    const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdEspacio(espacio.IdEspacio));
     if (listData.Data.length > 0) {
       this.openDialogoDividirCuenta(espacio, listData.Data[0].IdPedido);
     } else {
@@ -1077,7 +1085,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async showWarningAndReloadEspacios(message: string) {
     Swal.fire('Ups.!', message, 'warning');
-    this.listaEspaciosTotal = (await this.espaciosService.GetAllEspaciosConPedidos().toPromise()).Data;
+    this.listaEspaciosTotal = (await lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos())).Data;
   }
 
 
@@ -1103,7 +1111,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     try {
       this.spinnerService.show();
 
-      const listData: ApiResponse<PedidoEspacioDTO[]> = await this.pedidoService.FindPedidoByIdEspacio(IdEspacio).toPromise();
+      const listData: ApiResponse<PedidoEspacioDTO[]> = await lastValueFrom(this.pedidoService.FindPedidoByIdEspacio(IdEspacio));
 
       if (listData.Data.length > 0) {
         // this.rellenarHeaderPedido(listData);
@@ -1129,7 +1137,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
           'No existe el pedido en la espacio.',
           'warning'
         );
-        this.listaEspaciosTotal = (await this.espaciosService.GetAllEspaciosConPedidos().toPromise()).Data;
+        this.listaEspaciosTotal = (await lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos())).Data;
       }
 
 
@@ -1240,7 +1248,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     };
 
     this.spinnerService.show();
-    var responseService: ApiResponse<ImpresionDTO[]> = await this.pedidoService.AnularProductoYComplemento(pedidoDelete).toPromise();
+    var responseService: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.AnularProductoYComplemento(pedidoDelete));
 
     if (responseService.Success == true) {
       const contador = await this.imprimir(responseService.Data);
@@ -1519,7 +1527,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async RealizarAnulacionPedido(espacio: Espacios, motivoAnulacion: string, idUsuAnula: number) {
     this.spinnerService.show();
-    var responseService: ApiResponse<ImpresionDTO[]> = await this.pedidoService.AnularPedido(espacio.IdEspacio, idUsuAnula, motivoAnulacion, this.storageService.getCurrentIP()).toPromise();
+    var responseService: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.AnularPedido(espacio.IdEspacio, idUsuAnula, motivoAnulacion, this.storageService.getCurrentIP()));
 
     if (responseService.Success == true) {
       const contador = await this.imprimir(responseService.Data);
@@ -1539,13 +1547,13 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
   scrollLeft() {
-    const container = document.querySelector('.static-buttons-row');
-    container.scrollLeft -= 100;
+    const container = document.querySelector<HTMLElement>('.static-buttons-row');
+    if (container) container.scrollLeft -= 100;
   }
 
   scrollRight() {
-    const container = document.querySelector('.static-buttons-row');
-    container.scrollLeft += 100;
+    const container = document.querySelector<HTMLElement>('.static-buttons-row');
+    if (container) container.scrollLeft += 100;
   }
 
   async processPedido(verPanelProducto: boolean) {
@@ -1607,7 +1615,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       }).then((result) => {
         if (result.isConfirmed) {
             this.pedidoService.QuitarDescuento(this.idPedidoCobrar, this.nroCuentaCobrar).subscribe(async () => {
-              const listData = await this.pedidoService.FindPedidoByIdPedidoNroCuenta(this.idPedidoCobrar, this.nroCuentaCobrar).toPromise();
+              const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdPedidoNroCuenta(this.idPedidoCobrar, this.nroCuentaCobrar));
 
               if (listData.Data.length > 0) {
                 this.rellenarHeaderPedido(listData.Data);
@@ -1637,7 +1645,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    var responseRegisterPedido: ApiResponse<ImpresionDTO[]> = await this.pedidoService.ImprimirPrecuenta(this.idPedidoCobrar, this.nroCuentaCobrar).toPromise();
+    var responseRegisterPedido: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.ImprimirPrecuenta(this.idPedidoCobrar, this.nroCuentaCobrar));
 
     if (responseRegisterPedido.Success) {
       this.imprimir(responseRegisterPedido.Data);
@@ -1699,7 +1707,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
           NroPax: (this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) ? this.espacioSelected.NroPersonas : 0,
           IdCaja: this.turnoAbierto.IdCaja,
           IdTurno: this.turnoAbierto.IdTurno,
-          Moneda: "SOL",
+          Moneda: this.config?.IdMoneda ?? 'SOL',
           IdSocioNegocio: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY ) ? this.socioNegocioSelected.IdSocioNegocio : 0,
           Cliente: (this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) ? this.listProductGrid[0]?.Anfitriona : this.clienteSelected.RazonSocial, /*solo para trago gratis */
           Direccion: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? this.clienteSelected.DireccionDelivery : '', /*solo para delivery*/
@@ -1710,7 +1718,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
         }
       );
 
-      var responseRegisterPedido: ApiResponse<ImpresionDTO[]> = await this.pedidoService.GrabarPedido(pedido).toPromise();
+      var responseRegisterPedido: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.GrabarPedido(pedido));
 
       if (responseRegisterPedido.Success) {
 
@@ -1781,8 +1789,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
           hasBackdrop: true
         });
 
-        var resultDialog: any = await dialogProcessComprobante.afterClosed().toPromise();
-        this.listaEspaciosTotal = (await this.espaciosService.GetAllEspaciosConPedidos().toPromise()).Data;
+        var resultDialog: any = await lastValueFrom(dialogProcessComprobante.afterClosed());
+        this.listaEspaciosTotal = (await lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos())).Data;
         this.limpiarPedido();
         this.MostrarOcultarPanelEspacio = true;
         this.MostrarOcultarPanelProducto = false;
@@ -1802,17 +1810,16 @@ export class VentaComponent implements OnInit, AfterViewInit {
       this.aplicarFiltroCambioEspacio = false;
       this.aplicarFiltroUnirEspacio = false;
       // Actualizar espacios
-      this.espaciosService.GetAllEspaciosConPedidos().toPromise().then(data => {
+      lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos()).then(data => {
         this.listaEspaciosTotal = data.Data;
-        let result: Ambiente;
-        result = this.listAmbiente.find(item => item.Estado == 1);
-        this.MostrarEspacios_x_Ambiente(result);
+        const result = this.listAmbiente.find(item => item.Estado == 1);
+        if (result) this.MostrarEspacios_x_Ambiente(result);
       }).catch(error => {
         console.error('Error al obtener espacios', error);
       });
 
       // Actualizar pedidos
-      this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno).toPromise().then(responsePedidos => {
+      lastValueFrom(this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno)).then(responsePedidos => {
         if (responsePedidos.Success) {
           this.listaPedidosPendientes = responsePedidos.Data;
         }
@@ -1840,15 +1847,16 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
 
 
-  private getMozoByMozoId(idMozo: number): Empleado {
-    let result: Empleado;
-    this.listEmpleados.forEach(Mozo => {
-      if (idMozo === Mozo.IdEmpleado) {
-        result = Mozo;
-      }
-    });
+  /** Devuelve el símbolo de moneda para un producto.
+   *  Usa la moneda del producto si coincide con la config; de lo contrario el símbolo por defecto. */
+  getSimboloProducto(monedaVenta: string): string {
+    if (!monedaVenta || !this.config) return '-';
+    if (monedaVenta === this.config.IdMoneda) return this.config.SimboloMoneda || 'S/.';
+    return this.configuracionService.getSimboloMoneda(monedaVenta);
+  }
 
-    return result;
+  private getMozoByMozoId(idMozo: number): Empleado | undefined {
+    return this.listEmpleados.find(Mozo => idMozo === Mozo.IdEmpleado);
   }
 
   private getTotalByListProductGrid(): number {
@@ -1924,6 +1932,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.idPedidoCobrar = firstItem.IdPedido;
     this.nroCuentaCobrar = firstItem.NroCuenta;
     this.horaPedido = firstItem.HoraPedido;
+    this.horaPedido = firstItem.NumeroPedido;
   }
 
   async Refresh(): Promise<void> {
@@ -1932,9 +1941,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
       // Ejecutar las solicitudes en paralelo
       const [productsData, espaciosData, pedidoResponse] = await Promise.all([
-        this.productService.getAllProductosTablero().toPromise(),
-        this.espaciosService.GetAllEspaciosConPedidos().toPromise(),
-        this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno).toPromise()
+        lastValueFrom(this.productService.getAllProductosTablero()),
+        lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos()),
+        lastValueFrom(this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno))
       ]);
 
       // Actualizar los datos con los resultados obtenidos
@@ -1946,9 +1955,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
       }
 
       // Mostrar las espacios en el ambiente correspondiente
-      let result: Ambiente;
-      result = this.listAmbiente.find(item => item.Estado == 1);
-      this.MostrarEspacios_x_Ambiente(result);
+      const result = this.listAmbiente.find(item => item.Estado == 1);
+      if (result) this.MostrarEspacios_x_Ambiente(result);
 
     } catch (error) {
       console.error('Error al refrescar los datos', error);

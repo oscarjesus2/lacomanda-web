@@ -3,7 +3,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { Caja } from 'src/app/models/caja.models';
+import { CajaDto } from 'src/app/models/caja.models';
 import { CajaService } from '../../services/caja.service';
 import { StorageService } from 'src/app/services/storage.service';
 import { DatePipe } from '@angular/common';
@@ -24,7 +24,7 @@ export class DialogTurnoComponent implements OnInit {
   NroTurnoAbierto: number;
   today = new Date();
   myForm: FormGroup;
-  listCaja: Caja[];
+  listCaja: CajaDto[];
  
   constructor(
     public dialogRef: MatDialogRef<DialogTurnoComponent>,
@@ -78,7 +78,7 @@ export class DialogTurnoComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  ValidarTurnoAbierto(oCaja: Caja): void {
+  ValidarTurnoAbierto(oCaja: CajaDto): void {
     if (oCaja.TurnoAbierto != null) {
       this.TurnoAbierto = true;
       this.NroTurnoAbierto = oCaja.TurnoAbierto.IdTurno;

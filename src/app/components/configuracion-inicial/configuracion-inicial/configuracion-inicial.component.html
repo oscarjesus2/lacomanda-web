@@ -23,6 +23,19 @@
           </mat-select>
         </mat-form-field>
 
+        <!-- Moneda por defecto -->
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>Moneda por defecto</mat-label>
+          <mat-select formControlName="IdMoneda" required>
+            <mat-option *ngFor="let m of monedas" [value]="m.IdMoneda">
+              {{ m.Simbolo }} — {{ m.Descripcion }}
+            </mat-option>
+          </mat-select>
+          <mat-hint *ngIf="form.get('SimboloMoneda')?.value">
+            Símbolo: {{ form.get('SimboloMoneda')?.value }}
+          </mat-hint>
+        </mat-form-field>
+
         <!-- Tipo de identidad -->
         <mat-form-field appearance="fill" class="form-field">
           <mat-label>Tipo de Identidad</mat-label>

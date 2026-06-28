@@ -6,7 +6,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import Swal from 'sweetalert2';
 import { VentasInterface } from 'src/app/interfaces/ventas.interface';
 import { CajaService } from 'src/app/services/caja.service';
-import { Caja } from 'src/app/models/caja.models';
+import { CajaDto } from 'src/app/models/caja.models';
 import { DialogEmitirVentaComponent } from '../dialog-emitir-venta/dialog-emitir-venta.component';
 import { MatPaginator } from '@angular/material/paginator';
 import { StorageService } from 'src/app/services/storage.service';
@@ -20,7 +20,7 @@ import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 })
 export class DialogVentasgeneralesComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
-  listCaja: Caja[];
+  listCaja: CajaDto[];
   ventas: VentasInterface[] = [];
   dataSource = new MatTableDataSource<VentasInterface>([]);
   columnDefs = [

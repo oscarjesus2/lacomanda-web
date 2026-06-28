@@ -4,7 +4,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { AbstractControl, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
 
-import { Caja } from 'src/app/models/caja.models';
+import { CajaDto } from 'src/app/models/caja.models';
 import { Cliente } from 'src/app/models/cliente.models';
 import { Pago } from 'src/app/models/pago.models';
 import { PedidoCab } from 'src/app/models/pedido.models';

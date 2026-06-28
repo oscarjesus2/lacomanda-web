@@ -1,3 +1,5 @@
+import { CajaDto } from "./caja.models";
+
 export class Turno {
     public IdTurno: number;
     public NroTurno: number;
@@ -8,6 +10,7 @@ export class Turno {
     public TipoCambio: number;
     public TipoCambioVenta: number;
     public UsuReg: number;
+    public CajaDto: CajaDto;
     constructor(init?: Partial<Turno>) {
       Object.assign(this, init);
   }

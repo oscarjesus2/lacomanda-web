@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from "@angular/common/http";
 import { map, Observable } from 'rxjs';
-import { Caja  } from '../models/caja.models';
+import { CajaDto  } from '../models/caja.models';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { CajaTipoDocumento } from '../models/caja-tipo-documento.model';
@@ -15,19 +15,19 @@ export class CajaService {
 
     constructor(private http: HttpClient) { }
 
-    getAllCaja(incluyeGeneral: boolean): Observable<ApiResponse<Caja[]>> {
-        return this.http.get<ApiResponse<Caja[]>>(`${this.basePath}?incluyeGeneral=${incluyeGeneral}`);
+    getAllCaja(incluyeGeneral: boolean): Observable<ApiResponse<CajaDto[]>> {
+        return this.http.get<ApiResponse<CajaDto[]>>(`${this.basePath}?incluyeGeneral=${incluyeGeneral}`);
     }
     
-    getCaja(idCaja: number): Observable<ApiResponse<Caja>> {
-        return this.http.get<ApiResponse<Caja>>(`${this.basePath}/${idCaja}`);
+    getCaja(idCaja: number): Observable<ApiResponse<CajaDto>> {
+        return this.http.get<ApiResponse<CajaDto>>(`${this.basePath}/${idCaja}`);
     }
 
-    crear(m: Caja): Observable<ApiResponse<Caja>> {
-        return this.http.post<ApiResponse<Caja>>(this.basePath, m);
+    crear(m: CajaDto): Observable<ApiResponse<CajaDto>> {
+        return this.http.post<ApiResponse<CajaDto>>(this.basePath, m);
     }
-    actualizar(m: Caja): Observable<ApiResponse<Caja>> {
-        return this.http.put<ApiResponse<Caja>>(`${this.basePath}/${m.IdCaja}`, m);
+    actualizar(m: CajaDto): Observable<ApiResponse<CajaDto>> {
+        return this.http.put<ApiResponse<CajaDto>>(`${this.basePath}/${m.IdCaja}`, m);
     }
     eliminar(id: number): Observable<ApiResponse<boolean>> {
         return this.http.delete<ApiResponse<boolean>>(`${this.basePath}/${id}`);

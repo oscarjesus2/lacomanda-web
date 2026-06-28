@@ -63,8 +63,8 @@ export class DialogPagarTaxistaComponent {
     try {
       // Primer servicio que necesita ejecutarse antes de otros
       this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
-        if (data != null) {
-          this.turnoAbierto = data;
+        if (data?.Data != null) {
+          this.turnoAbierto = data.Data;
 
           this.listarTragosGratis();
           this.spinnerService.hide();

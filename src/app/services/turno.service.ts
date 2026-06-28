@@ -3,6 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs';
 import { AbrirTurno, Turno } from '../models/turno.models';
 import { environment } from 'src/environments/environment';  // Importa el entorno correspondiente
+import { ApiResponse } from '../interfaces/apirResponse.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -21,7 +22,7 @@ export class TurnoService {
         return this.http.get<Turno>(this.basePath + '/ObtenerTurnoByCaja/' + sIdCaja);
     }
 
-    ObtenerTurnoByIP(iP: string): Observable<Turno> {
-        return this.http.get<Turno>(this.basePath + '/ObtenerTurnoByIp/' + iP);
+    ObtenerTurnoByIP(iP: string): Observable<ApiResponse<Turno>> {
+        return this.http.get<ApiResponse<Turno>>(this.basePath + '/ObtenerTurnoByIp/' + iP);
     }
 }

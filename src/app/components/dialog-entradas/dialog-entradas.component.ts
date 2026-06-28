@@ -79,8 +79,8 @@ export class DialogEntradasComponent {
     try {
       // Primer servicio que necesita ejecutarse antes de otros
       this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
-        if (data != null) {
-          this.turnoAbierto = data;
+        if (data?.Data != null) {
+          this.turnoAbierto = data.Data;
           this.spinnerService.hide();
         } else {
           // Si no hay turno abierto

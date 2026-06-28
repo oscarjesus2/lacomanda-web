@@ -31,5 +31,8 @@ export class Configuracion {
   TieneProductoPropina: boolean;
   TieneProductoPrecioDelivery: boolean;
   TieneDescuentoTragoCortesia: boolean;
-  Servicio: number;  
+  Servicio: number;
+  IdMoneda: string;
+  SimboloMoneda: string;
+  CodigoISO4217: string;
 }

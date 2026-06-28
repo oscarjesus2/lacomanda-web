@@ -3,7 +3,7 @@ import { NgForm } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import Swal from 'sweetalert2';
-import { Caja } from 'src/app/models/caja.models';
+import { CajaDto } from 'src/app/models/caja.models';
 import { CajaService } from 'src/app/services/caja.service';
 import { CanalVentaService } from 'src/app/services/canal-venta.service';
 import { CajaDocumentosDialogComponent } from './caja-documentos-dialog/caja-documentos-dialog.component';
@@ -18,13 +18,13 @@ import { faL } from '@fortawesome/free-solid-svg-icons';
 export class CajaMantenimientoComponent implements OnInit {
   @ViewChild('form') form: NgForm;
 
-  cajas: Caja[] = [];
-  filtered = new MatTableDataSource<Caja>([]);
+  cajas: CajaDto[] = [];
+  filtered = new MatTableDataSource<CajaDto>([]);
   filtro = '';
   showForm = false;
 
   canales: CanalVenta[] = [];
-  m: Caja = this.blank();
+  m: CajaDto = this.blank();
 
   displayedColumns: string[] = ['descripcion','activo','cajaDefault','canal','nroPedido','actions'];
 
@@ -40,7 +40,7 @@ export class CajaMantenimientoComponent implements OnInit {
     this.canalSrv.listarActivos().subscribe(x => this.canales = x);
   }
 
-  private blank(): Caja {
+  private blank(): CajaDto {
     return {
       IdCaja: 0, TurnoAbierto: null, Descripcion: '', Activo: true, NroPedido: 0, CajaPorDefecto: false,
       UsuRegistro: 0, FecRegistro: '', IdCanalVentaDefecto: 0, UsuModi: undefined, FecModi: undefined,
@@ -74,7 +74,7 @@ export class CajaMantenimientoComponent implements OnInit {
   }
 
   nuevo(): void { this.m = this.blank(); this.showForm = true; }
-  onEdit(row: Caja): void { this.m = { ...row }; this.showForm = true; }
+  onEdit(row: CajaDto): void { this.m = { ...row }; this.showForm = true; }
 
   onDelete(id: number): void {
     Swal.fire({
@@ -112,7 +112,7 @@ export class CajaMantenimientoComponent implements OnInit {
       this.dialogRef.close();
     }
     
-  configurarDocumentos(row: Caja): void {
+  configurarDocumentos(row: CajaDto): void {
     const ref = this.dialog.open(CajaDocumentosDialogComponent, {
       width: '900px',
       data: { idCaja: row.IdCaja, nombreCaja: row.Descripcion }
