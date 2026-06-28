@@ -6,10 +6,10 @@
   max-width: 400px;
   margin: auto;
   padding: 20px;
-  border: 1px solid #FF7043; /* Borde color cálido */
-  border-radius: 12px; /* Bordes más redondeados */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Sombra suave */
-  background-color: #FFF3E0; /* Fondo cálido */
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  background-color: var(--color-surface-warm);
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -17,14 +17,18 @@
 .display input {
   width: calc(100% - 20px);
   padding: 15px;
-  font-size: 2em; /* Tamaño más grande para ser fácilmente visible en touch */
+  font-size: 2em;
   text-align: right;
-  border: 2px solid #FF7043; /* Borde color cálido */
-  border-radius: 8px;
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
   margin-bottom: 20px;
-  background-color: #fff; /* Fondo blanco */
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra interna */
-  color: #333; /* Texto oscuro */
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.display input:focus {
+  border-color: var(--color-primary);
+  outline: none;
 }
 
 .keypad {
@@ -37,17 +41,17 @@
 .keypad button {
   padding: 20px;
   font-size: 1.5em;
-  border: 2px solid #FF7043; /* Borde cálido */
-  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  background-color: #FFCC80; /* Fondo cálido */
-  color: #333; /* Texto oscuro */
-  transition: background-color 0.3s ease, transform 0.2s ease; /* Animación */
+  background-color: rgba(249, 168, 37, 0.15);
+  color: var(--color-text);
+  transition: var(--transition-fast);
 }
 
 .keypad button:hover {
-  background-color: #FFA726; /* Hover más oscuro */
-  transform: translateY(-2px); /* Efecto de levitación */
+  background-color: rgba(249, 168, 37, 0.30);
+  transform: translateY(-2px);
 }
 
 .actions {
@@ -62,24 +66,25 @@
   margin: 0 5px;
   padding: 15px;
   font-size: 1.5em;
-  border: 2px solid #FF7043;
-  border-radius: 10px;
+  border: none;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  background-color: #FF7043;
+  background-color: var(--color-primary);
   color: white;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition: var(--transition-fast);
 }
 
 .actions button:hover {
-  background-color: #F4511E; /* Hover en botones de acciones */
-  transform: translateY(-2px); /* Efecto de levitación */
+  background-color: var(--color-primary-dark);
+  transform: translateY(-2px);
 }
 
 .actions button:first-child {
-  background-color: #FFCC80; /* Botón Borrar color diferente */
-  color: #333; /* Texto oscuro */
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
 }
 
 .actions button:first-child:hover {
-  background-color: #FFA726;
+  background-color: var(--color-bg);
 }

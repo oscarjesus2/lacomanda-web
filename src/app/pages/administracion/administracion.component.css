@@ -1,68 +1,79 @@
-/* CONTENEDOR GENERAL */
+/* ============================================================
+   administracion.component.css
+   ============================================================ */
+
 .admin-page {
   min-height: calc(100vh - 64px);
-  background: linear-gradient(to bottom, #fcf7ec, #f5edda);
+  background: var(--color-bg);
   display: flex;
 }
 
 .admin-page__inner {
   flex: 1;
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 18px 22px 24px;
+  padding: 24px 28px 32px;
 }
 
-/* HEADER DE LA PÁGINA */
+/* ── Header ────────────────────────────────────────────────── */
 .admin-page__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 18px;
+}
+
+.admin-page__header-accent {
+  width: 4px;
+  height: 32px;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, var(--color-primary), var(--color-primary-light));
+  flex-shrink: 0;
 }
 
 .admin-page__title {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
-  color: #3b220a;
+  color: var(--color-primary-dark);
+  line-height: 1;
 }
 
 .admin-page__subtitle {
   margin: 4px 0 0;
-  font-size: 0.78rem;
-  letter-spacing: 0.16em;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(59, 34, 10, 0.65);
+  color: var(--color-text-muted);
 }
 
-/* COLUMNAS DE TARJETAS */
+/* ── Columnas ──────────────────────────────────────────────── */
 .admin-page__columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 20px;
+  align-items: start;
 }
 
-/* TARJETA DE SECCIÓN (VENTAS / ALMACÉN) */
+/* ── Tarjeta ───────────────────────────────────────────────── */
 .admin-card {
-  background: #fff8e8;
-  border-radius: 18px;
-  border: 1px solid rgba(59, 34, 10, 0.16);
-  padding: 16px 16px 18px;
-  box-shadow:
-    0 14px 34px rgba(0, 0, 0, 0.16),
-    0 0 0 1px rgba(255, 255, 255, 0.6);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--color-primary);
+  padding: 18px 18px 22px;
+  box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.2s ease;
+  transition: var(--transition-normal);
 }
 
 .admin-card:hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.75);
+  box-shadow: var(--shadow-lg);
 }
 
 .admin-card__title {
@@ -71,24 +82,20 @@
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #3b220a;
+  color: var(--color-primary-dark);
 }
 
 .admin-card__subtitle {
-  margin: 2px 0 4px;
-  font-size: 0.75rem;
+  margin: 2px 0 6px;
+  font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(59, 34, 10, 0.65);
+  color: var(--color-text-muted);
 }
 
-/* RESPONSIVE */
+/* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .admin-page__inner {
-    padding: 14px 14px 20px;
-  }
-
-  .admin-page__title {
-    font-size: 1.2rem;
-  }
+  .admin-page__inner { padding: 16px 14px 24px; }
+  .admin-page__title { font-size: 1.2rem; }
+  .admin-page__columns { grid-template-columns: 1fr; }
 }

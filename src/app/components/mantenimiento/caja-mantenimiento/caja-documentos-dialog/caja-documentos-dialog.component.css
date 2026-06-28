@@ -10,14 +10,14 @@
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #3b220a;
+  color: var(--color-text);
 }
 
 /* Estado "Cargando" */
 .docs-panel__loading {
   padding: 16px 4px;
   font-size: 0.9rem;
-  color: rgba(59, 34, 10, 0.8);
+  color: var(--color-text-muted);
 }
 
 /* Contenido principal */
@@ -42,9 +42,9 @@
 /* Contenedor scrolleable de la tabla */
 .docs-panel__table-wrap {
   max-height: 60vh;
-  border-radius: 14px;
-  background: #fffdf7;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-warm);
+  box-shadow: var(--shadow-md);
   overflow: auto;
 }
 
@@ -59,14 +59,14 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background: rgba(59, 34, 10, 0.04);
+  background: rgba(0, 121, 107, 0.05);
 }
 
 .docs-table th,
 .docs-table td {
   padding: 6px 10px;
   text-align: left;
-  border-bottom: 1px solid rgba(59, 34, 10, 0.08);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .docs-table th {
@@ -74,11 +74,11 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(59, 34, 10, 0.8);
+  color: var(--color-text-muted);
 }
 
 .docs-table tr:nth-child(even) td {
-  background: rgba(59, 34, 10, 0.015);
+  background: var(--color-surface-warm);
 }
 
 .docs-table__cell--center {
@@ -89,22 +89,19 @@
 .docs-input {
   width: 100%;
   box-sizing: border-box;
-  border-radius: 999px;
-  border: 1px solid rgba(59, 34, 10, 0.18);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border-strong);
   padding: 4px 8px;
   font-size: 0.8rem;
-  background: #fffdf7;
+  background: var(--color-surface-warm);
   outline: none;
-  transition:
-    border-color 0.16s ease,
-    box-shadow 0.16s ease,
-    background-color 0.16s ease;
+  transition: var(--transition-fast);
 }
 
 .docs-input:focus {
-  border-color: #f4b23a;
-  box-shadow: 0 0 0 2px rgba(244, 178, 58, 0.25);
-  background: #fff8e8;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(249, 168, 37, 0.25);
+  background: var(--color-surface);
 }
 
 .docs-input--number {
@@ -124,7 +121,7 @@
   gap: 10px;
 }
 
-/* Responsive: en pantallas pequeñas, que la tabla pueda scrollear horizontal */
+/* Responsive */
 @media (max-width: 768px) {
   .docs-panel__table-wrap {
     overflow-x: auto;

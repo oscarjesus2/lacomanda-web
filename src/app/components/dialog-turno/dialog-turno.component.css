@@ -12,7 +12,7 @@
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #3b220a;
+  color: var(--color-text);
 }
 
 /* Formulario interno */

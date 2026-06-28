@@ -3,7 +3,7 @@
 
 body {
   font-family: 'Poppins', sans-serif;
-  background-color: #f4f1ea; /* Fondo suave beige */
+  background-color: var(--color-bg);
   margin: 0;
   padding: 0;
 }
@@ -12,16 +12,16 @@ body {
   max-width: 1200px;
   margin: 40px auto;
   padding: 20px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.05); /* Sombra más suave */
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }
 
 h2 {
   text-align: center;
   font-weight: 600;
   font-size: 24px;
-  color: #3e2723; /* Marrón oscuro */
+  color: var(--color-text);
   margin-bottom: 20px;
 }
 
@@ -38,15 +38,15 @@ h2 {
   align-items: center;
   justify-content: center;
   padding: 12px 20px;
-  background-color: #ff7043; /* Naranja cálido */
+  background-color: var(--color-primary);
   color: #ffffff;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 2px solid transparent;
   cursor: pointer;
   font-size: 14px;
   font-weight: bold;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
-  transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
 }
 
 .button-row button fa-icon {
@@ -55,14 +55,14 @@ h2 {
 }
 
 .button-row button:hover {
-  background-color: #ff5722; /* Naranja más oscuro */
-  border-color: #ffab91; /* Borde visible en hover */
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-md);
 }
 
 .button-row button:active {
-  background-color: #e64a19;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  background-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-xs);
 }
 
 /* Información de la mesa */
@@ -70,10 +70,10 @@ h2 {
   display: flex;
   justify-content: space-between;
   padding: 15px;
-  background-color: #fce4ec; /* Fondo claro con tono cálido */
-  border-radius: 8px;
+  background-color: var(--color-surface-warm);
+  border-radius: var(--radius-md);
   font-size: 16px;
-  color: #5d4037; /* Marrón oscuro */
+  color: var(--color-text);
   margin-bottom: 30px;
 }
 
@@ -86,16 +86,16 @@ h2 {
 
 .grid {
   width: 48%;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* Sombra suave */
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
   padding: 20px;
 }
 
 .grid h3 {
   font-size: 18px;
   font-weight: 600;
-  color: #795548; /* Marrón medio */
+  color: var(--color-primary-dark);
   margin-bottom: 15px;
 }
 
@@ -108,20 +108,20 @@ h2 {
 .table th, .table td {
   padding: 10px;
   text-align: left;
-  border-bottom: 1px solid #e0e0e0; /* Líneas suaves */
+  border-bottom: 1px solid var(--color-border);
 }
 
 .table th {
-  background-color: #ffab91; /* Tono naranja claro */
+  background-color: var(--color-primary);
   color: #ffffff;
 }
 
 .table td {
-  color: #5d4037; /* Marrón oscuro */
+  color: var(--color-text);
 }
 
 .table tbody tr:nth-child(even) {
-  background-color: #fbe9e7; /* Fila con fondo cálido alternativo */
+  background-color: var(--color-surface-warm);
 }
 
 /* Responsividad */
@@ -136,6 +136,6 @@ h2 {
 }
 
 .selected-row {
-  background-color: #d1e7dd; /* Color de fondo para la fila seleccionada */
-  color: #000; /* Color de texto de la fila seleccionada */
+  background-color: rgba(0, 121, 107, 0.12);
+  color: var(--color-text);
 }

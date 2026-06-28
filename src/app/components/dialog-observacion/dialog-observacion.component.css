@@ -1,30 +1,22 @@
 .restaurant-toolbar {
-  background-color: #FF7043; /* Naranja cálido */
+  background-color: var(--color-primary);
   color: white;
   font-size: 1.8em;
   text-align: center;
   padding: 15px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  font-family: 'Poppins', sans-serif;
+  box-shadow: var(--shadow-md);
 }
 
 .example-full-width {
   width: 100%;
   margin-bottom: 20px;
-  font-family: 'Poppins', sans-serif;
 }
 
 .mat-form-field {
   width: 100%;
-  background-color: #FFFDE7; /* Fondo suave */
-  border-radius: 8px;
+  background-color: var(--color-surface-warm);
+  border-radius: var(--radius-md);
   padding: 10px;
-}
-
-textarea {
-  padding: 10px;
-  font-size: 1.2em;
-  font-family: 'Poppins', sans-serif;
 }
 
 .main-group {
@@ -32,19 +24,18 @@ textarea {
   flex-wrap: wrap;
   gap: 15px;
   padding: 10px;
-  background-color: #FFEBEE; /* Fondo cálido */
-  border-radius: 10px;
+  background-color: var(--color-bg);
+  border-radius: var(--radius-lg);
   justify-content: center;
 }
 
 .item-observacion {
   cursor: pointer;
   padding: 20px;
-  background-color: #ffffff;
-  border-radius: 15px;
-  border: 1px solid #e0e0e0;
-  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
-  font-family: 'Poppins', sans-serif;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  transition: var(--transition-fast);
   font-size: 1.1em;
   text-align: center;
   width: 120px;
@@ -56,24 +47,25 @@ textarea {
 
 .item-observacion:hover {
   transform: scale(1.05);
-  background-color: #FFE0B2; /* Color cálido suave */
-  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+  background-color: rgba(249, 168, 37, 0.12);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent);
 }
 
 .custom-button {
-  background-color: #FF7043; /* Naranja vibrante */
+  background-color: var(--color-primary);
   color: white;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 1.2em;
   padding: 12px 24px;
-  font-family: 'Poppins', sans-serif;
   margin-top: 15px;
-  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-fast);
 }
 
-.custom-button:hover {
-  background-color: #D84315; /* Naranja oscuro */
-}
+.custom-button:hover { background-color: var(--color-primary-dark); }
 
 mat-dialog-actions {
   display: flex;
@@ -83,26 +75,11 @@ mat-dialog-actions {
 
 mat-dialog-content {
   padding: 30px;
-  background-color: #FFF3E0; /* Fondo suave */
-  border-radius: 10px;
+  background-color: var(--color-surface-warm);
+  border-radius: var(--radius-lg);
 }
 
-mat-tab-group {
-  margin-top: 20px;
-  font-family: 'Poppins', sans-serif;
-}
-
-mat-tab-label {
-  font-size: 1.2em;
-}
-
-.mat-tab-label-active {
-  color: #FF7043; /* Color activo acorde con la paleta */
-}
-
-.mat-tab-body {
-  padding: 10px;
-}
+.mat-tab-label-active { color: var(--color-primary); }
 
 .actions {
   display: flex;
@@ -114,20 +91,18 @@ mat-tab-label {
   padding: 10px 20px;
   font-size: 1.2em;
   border: none;
-  border-radius: 5px;
-  background-color: #4caf50;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-success);
   color: white;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.2s;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
-
 
 .actions button.cancel {
-  background-color: #f44336;
+  background-color: var(--color-surface-warm);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
 }
 
-.actions button:hover {
-  opacity: 0.8;
-  transform: scale(1.05); /* Animación suave en hover */
-}
+.actions button:hover { opacity: 0.85; transform: scale(1.05); }

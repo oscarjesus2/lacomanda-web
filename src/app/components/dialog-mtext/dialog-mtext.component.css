@@ -6,60 +6,58 @@
   max-width: 750px;
   margin: auto;
   padding: 20px;
-  background-color: #fff3e0;
-  border-radius: 10px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-  font-family: 'Poppins', sans-serif; /* Fuente moderna y elegante */
+  background-color: var(--color-surface-warm);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }
-.display {
-  width: 100%;
-}
+
+.display { width: 100%; }
+
 .display input {
   width: 100%;
   padding: 10px;
   font-size: 1.5em;
   text-align: right;
   margin-bottom: 20px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  background-color: #fff; /* Fondo blanco para mejor contraste */
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .keypad {
   display: grid;
-  grid-template-columns: repeat(11, 1fr); /* Para 11 botones por fila */
+  grid-template-columns: repeat(11, 1fr);
   gap: 10px;
-  width: 100%; /* Para que ocupe todo el ancho */
-  background-color: #ffebee; /* Fondo claro para el teclado */
+  width: 100%;
+  background-color: var(--color-bg);
   padding: 15px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
-.keypad div {
-  display: contents;
-}
+.keypad div { display: contents; }
 
 .keypad button {
   padding: 15px;
   font-size: 1.5em;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  color: var(--color-text);
   text-align: center;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-xs);
 }
 
 .keypad button:hover {
-  background-color: #ffe0b2; /* Cambiar el color al pasar el ratón */
-  transform: scale(1.05); /* Aumenta ligeramente el tamaño */
+  background-color: rgba(0, 121, 107, 0.08);
+  border-color: var(--color-primary-light);
+  transform: scale(1.05);
 }
 
-.keypad button.space {
-  grid-column: span 10; /* Hacer que el botón Espacio ocupe todo el ancho de la fila */
-  text-align: center;
-}
+.keypad button.space { grid-column: span 10; text-align: center; }
+
 .actions {
   display: flex;
   gap: 20px;
@@ -70,20 +68,18 @@
   padding: 10px 20px;
   font-size: 1.2em;
   border: none;
-  border-radius: 5px;
-  background-color: #4caf50;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-success);
   color: white;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.2s;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
-
 
 .actions button.cancel {
-  background-color: #f44336;
+  background-color: var(--color-surface-warm);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
 }
 
-.actions button:hover {
-  opacity: 0.8;
-  transform: scale(1.05); /* Animación suave en hover */
-}
+.actions button:hover { opacity: 0.85; transform: scale(1.05); }

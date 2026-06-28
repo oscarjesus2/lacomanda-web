@@ -1,373 +1,330 @@
-.container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  height: 100vh;
-  padding: 10px;
-}
+/* ============================================================
+   digitacion-mozo.component.css
+   Misma estructura que venta.component — mismo sistema de diseño.
+   Todos los colores via design tokens de styles.scss.
+   ============================================================ */
+
 .admin-fab {
   position: fixed;
   right: 24px;
   bottom: 24px;
   z-index: 1000;
 }
-.column-left, .column-right {
-  border: 1px solid #ccc;
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  height: 100vh;
   padding: 10px;
+  background-color: var(--color-bg);
+  box-sizing: border-box;
+}
+
+.column-left,
+.column-right {
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+  padding: 10px;
 }
+
+/* ── Cabecera ──────────────────────────────────────────────── */
 .top-section {
   display: flex;
-  justify-content: space-between; /* Distribuye el contenido en dos partes: info y botones */
-  align-items: center; /* Alinea verticalmente el contenido */
-  background-color: #FFF3E0; /* Fondo cálido */
-  padding: 15px 20px; /* Espaciado interno */
-  border-radius: 10px; /* Bordes redondeados */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
-  font-size: 16px; /* Tamaño de la fuente */
-  margin-bottom: 20px; /* Espacio inferior */
-  color: #5D4037; /* Marrón oscuro para el texto */
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(120deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-md);
+  flex-shrink: 0;
 }
 
 .top-section label {
-  font-weight: bold; /* Negrita para el texto */
-}
-
-button:disabled {
-  background-color: #ccc; /* Cambia el fondo */
-  color: #666; /* Cambia el color del texto */
-  cursor: not-allowed; /* Cambia el cursor */
-  opacity: 0.7; /* Hace que se vea un poco más claro */
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
 }
 
 .channel-buttons {
   display: flex;
-  gap: 10px; /* Espacio entre los botones */
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .channel-buttons button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 10px 15px;
-  background-color: #FF7043; /* Naranja cálido */
-  color: #FFFFFF;
-  border-radius: 8px; /* Bordes redondeados */
-  border: 2px solid transparent;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
-  font-size: 14px; /* Tamaño del texto */
-  font-weight: bold;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
-  transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
-}
-
-.channel-buttons button fa-icon {
-  margin-right: 8px; /* Espacio entre el icono y el texto */
-  font-size: 18px; /* Tamaño del icono */
+  transition: var(--transition-fast);
 }
 
 .channel-buttons button:hover {
-  background-color: #FF5722; /* Naranja más oscuro al hacer hover */
-  border-color: #FFA726; /* Borde visible en hover */
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada en hover */
+  background-color: rgba(255, 255, 255, 0.28);
 }
 
-.channel-buttons button:active {
-  background-color: #E64A19; /* Color más oscuro al hacer clic */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Reduce la sombra en clic */
-}
-
-
-.middle-section {
-  flex: 1;
-}
-
-.data-grid {
-  max-height: 60vh; /* Limita la altura máxima disponible para la tabla */
-  overflow-y: auto; /* Habilita el scroll vertical si el contenido excede la altura */
-  margin-bottom: 20px; /* Espacio inferior antes de los botones */
-}
-
-.data-grid table {
-  width: 100%; /* Asegura que la tabla ocupe todo el ancho disponible */
-  border-collapse: collapse; /* Combina los bordes de las celdas */
-}
-
-.data-grid th, .data-grid td {
-  padding: 10px;
-  text-align: left;
-  border-bottom: 1px solid #ddd; /* Línea inferior en cada celda */
-}
-
-.data-grid th {
-  background-color: #FF7043; /* Fondo cálido para el encabezado */
-  color: white; /* Texto en blanco */
-  position: sticky; /* Fija el encabezado de la tabla al hacer scroll */
-  top: 0;
-  z-index: 1; /* Asegura que el encabezado esté por encima del contenido */
-}
-
-.button-row {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-
-.button-row button {
-  padding: 10px;
-  background-color: #f1f1f1;
-  border: none;
-  cursor: pointer;
-}
-
-.button-row button:hover {
-  background-color: #ccc;
-}
-
-.tables-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr); /* Cambiado a 7 columnas */
-  gap: 2px;
-  flex: 1;
-}
-
-.tables-grid button {
-  color: #333; /* Color del texto para el contraste */
-  padding: 12px 24px;
-  font-size: 14px;
-  border: 2px solid rgba(0, 0, 0, 0.1); /* Sutil borde */
-  border-radius: 8px; /* Bordes redondeados */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08); /* Sombra */
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer;
-}
-
-.tables-grid button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.10); /* Sombra más intensa */
-}
-
-.tables-grid button:active {
-  transform: translateY(0);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08); /* Restablece la sombra */
-}
-
-.tables-grid button div {
-  text-align: center;
-}
-
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr); /* Los productos siguen siendo de 8 botones por fila */
-  gap: 2px;
-  flex: 1;
-}
-.products-grid button {
- 
-  background-color: var(--secondary-color); /* Color de fondo */
-  color: var(--text-color); /* Color del texto */
-  border-radius: 5px;
-  border: none;
-  display: flex; /* Usamos flexbox para alinear el contenido */
-  justify-content: center; /* Centramos horizontalmente */
-  align-items: center; /* Centramos verticalmente */
-  text-align: center; /* Aseguramos que el texto se centre */
-  font-size: 14px; /* Ajustar según tu necesidad */
-  padding: 5px; /* Espacio mínimo alrededor del texto */
-  line-height: 1.2; /* Ajuste de altura de línea para espaciar el texto */
-  white-space: normal; /* Permitir que el texto se divida en varias líneas */
-  overflow: hidden;
-  word-wrap: break-word; /* Permitir que las palabras largas se dividan */
-
-}
-
-.tables-grid button {
-  background-color: var(--secondary-color); /* Fondo */
-  color: var(--text-color); /* Color del texto */
-  border-radius: 5px;
-  border: none;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis; /* Muestra '...' si el texto es muy largo */
-  cursor: pointer;
-  display: flex; /* Usamos flex para alinear el texto */
-  justify-content: center; /* Centra horizontalmente */
-  align-items: center; /* Centra verticalmente */
-  font-size: 13px; /* Ajusta el tamaño del texto */
-  padding: 1 5px; /* Reduce el padding horizontal para aprovechar más el espacio */
-
-}
-
-.tables-grid button.active, .products-grid button:hover {
-  background-color: #4CAF50;
-  color: white;
-}
-
-/* Estilos para las filas de botones estáticos */
-.static-buttons-row {
-  display: flex;
-  justify-content: flex-start;
-  gap: 10px; /* Añade espacio entre los botones */
-  margin-top: 15px;
-}
-
-/* Estilos para los botones estáticos */
-.static-buttons-row button {
-  padding: 12px 20px; /* Aumenta el padding para hacer los botones más grandes */
-  background-color: #FF7043; /* Naranja cálido */
-  border: none;
-  cursor: pointer;
-  border-radius: 8px; /* Bordes redondeados */
-  color: #FFFFFF; /* Texto en blanco para mejor contraste */
-  font-size: 14px; /* Tamaño del texto */
-  font-weight: bold; /* Texto en negrita */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra sutil */
-  transition: background-color 0.3s, box-shadow 0.3s; /* Transiciones suaves */
-  /*text-transform: uppercase;  Texto en mayúsculas para darle un toque moderno */
-}
-
-.static-buttons-row button:hover {
-  background-color: #FF5722; /* Naranja más oscuro al hacer hover */
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada en hover */
-}
-
-.static-buttons-row button.selected {
-  background-color: #4CAF50; /* Color verde cuando está seleccionado */
-}
-
-/* Estilos específicos para el botón "Procesar Pedido" */
-.static-buttons-row button.process-pedido {
-  background-color: #FF9800; /* Color más llamativo */
-  font-size: 14px; /* Un poco más grande que el resto */
-  padding: 14px 24px; /* Padding más grande */
-  border: 2px solid #FFA726; /* Borde sólido que lo destaca */
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
-}
-
-.static-buttons-row button.process-pedido:hover {
-  background-color: #FFB74D; /* Un color más claro al hacer hover */
-  box-shadow: 0 8px 10px rgba(0, 0, 0, 0.3); /* Sombra más profunda al hacer hover */
-}
-
-/* Efecto adicional de clic */
-.static-buttons-row button:active {
-  background-color: #E64A19; /* Color más oscuro cuando se hace clic */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Reduce la sombra al hacer clic */
-}
-
-
+/* ── Info mesa ─────────────────────────────────────────────── */
 .table-info {
   display: flex;
-  justify-content: space-between; /* Asegura que los elementos se distribuyan en toda la fila */
-  align-items: center; /* Alinea verticalmente los elementos */
-  gap: 20px; /* Espacio entre los elementos */
-   background-color: #FFF3E0; /* Fondo cálido */
-  padding: 15px 20px;
-  border-radius: 10px; /* Bordes redondeados */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
-  font-size: 16px;
-  margin-bottom: 20px;
-  color: #5D4037; /* Marrón oscuro */
-  flex-wrap: wrap; /* Permitir que los elementos se envuelvan si no caben en una fila */
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+  background: linear-gradient(120deg, rgba(249,168,37,0.10) 0%, var(--color-surface-warm) 55%);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-xs);
+  flex-shrink: 0;
 }
 
 .table-info label {
-  font-weight: bold;
-  margin-right: 15px; /* Espaciado entre el texto */
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+  flex: 1 1 auto;
+  min-width: 120px;
 }
 
-.table-info div {
+/* ── Sección media (grid de pedido) ────────────────────────── */
+.middle-section {
+  flex: 1;
   display: flex;
-  align-items: center;
-  margin: 0; /* Remueve márgenes adicionales */
+  flex-direction: column;
+  min-height: 0;
 }
 
-.table-info label,
-.table-info div {
-  flex: 1 1 auto; /* Asegura que los elementos se distribuyan uniformemente */
-  min-width: 150px; /* Ancho mínimo para evitar que los elementos se colapsen */
+.data-grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
-
-.table-info label span {
-  font-weight: normal; /* El contenido de la información no necesita ser en negrita */
-  margin-left: 5px; /* Espacio entre el título y el contenido */
+.data-grid table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.total-section {
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
-  justify-content: space-between; /* Espacio entre los elementos */
-  background-color: #FFF3E0; /* Fondo cálido */
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra sutil */
-  font-size: 16px;
-  margin-bottom: 20px;
+.data-grid th,
+.data-grid td {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 13px;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.total-section label {
-  font-weight: bold;
-  color: #5D4037; /* Marrón oscuro */
-}
-
-.total-section input {
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #FF7043; /* Borde naranja cálido */
-  font-size: 16px;
-  width: 100px; /* Ancho fijo para los inputs */
-}
-
-.button-row {
-  display: flex;
-  justify-content: space-between; /* Espacio entre los botones */
-  gap: 10px; /* Añadir espacio entre los botones */
-  margin-top: 15px;
-}
-
-.button-row button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 20px;
-  background-color: #FF7043; /* Naranja cálido */
-  color: #FFFFFF;
-  border-radius: 8px;
-  border: 2px solid transparent;
-  cursor: pointer;
-  font-size: 14px; /* Tamaño del texto */
-  font-weight: bold;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
-  transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
-}
-
-.button-row button fa-icon {
-  margin-right: 8px; /* Espacio entre el icono y el texto */
-  font-size: 18px; /* Tamaño del icono */
-}
-
-.button-row button:hover {
-  background-color: #FF5722; /* Naranja más oscuro al hacer hover */
-  border-color: #FFA726; /* Borde visible en hover */
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
-}
-
-.button-row button:active {
-  background-color: #E64A19; /* Color más oscuro cuando se hace clic */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Reduce la sombra cuando se hace clic */
+.data-grid th {
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .selected-row {
-  background-color: #d1e7dd; /* Color de fondo para la fila seleccionada */
-  color: #000; /* Color de texto de la fila seleccionada */
+  background-color: rgba(46, 125, 50, 0.08) !important;
+}
+
+/* ── Totales ───────────────────────────────────────────────── */
+.total-section {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: var(--color-surface-warm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+.total-section label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-transform: uppercase;
+}
+
+.total-section input {
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  width: 90px;
+  text-align: right;
+}
+
+/* ── Filas de botones ──────────────────────────────────────── */
+.button-row {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.button-row button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.button-row button:hover { background-color: var(--color-primary-dark); }
+.button-row button:active { transform: translateY(1px); }
+.button-row button:disabled {
+  background-color: var(--color-border);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Grids derecha ─────────────────────────────────────────── */
+.tables-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+}
+
+.tables-grid button {
+  background-color: var(--color-surface-warm);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition-fast);
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.tables-grid button:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+}
+
+.products-grid button {
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+  cursor: pointer;
+  line-height: 1.2;
+  white-space: normal;
+  overflow: hidden;
+  word-break: break-word;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition-fast);
+}
+
+.products-grid button:hover { filter: brightness(0.92); }
+
+/* ── Barra familias / subfamilias ──────────────────────────── */
+.static-buttons-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.static-buttons-row button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition-fast);
+}
+
+.static-buttons-row button:hover { background-color: var(--color-primary-dark); }
+.static-buttons-row button.selected { background-color: var(--color-success); }
+
+.static-buttons-row button.process-pedido {
+  background-color: var(--color-accent);
+  color: var(--color-text);
+  border: 2px solid var(--color-accent-dark);
 }
 
 .static-buttons-container {
-  width: 750px; /* Ocupa el 100% del espacio de la segunda columna (que es el 50% de la pantalla) */
-  overflow-x: auto; /* Permite el desplazamiento horizontal si es necesario */
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
 }
 
+.static-buttons-container .static-buttons-row {
+  flex-wrap: nowrap;
+  padding-bottom: 2px;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

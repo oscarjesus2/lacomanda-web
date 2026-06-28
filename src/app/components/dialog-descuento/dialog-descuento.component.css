@@ -1,23 +1,20 @@
-/* Contenedor principal */
 .descuento-container {
   width: 700px;
   margin: 20px auto;
   padding: 20px;
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: var(--color-surface-warm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
 }
 
-/* Encabezado */
 .descuento-container h2 {
   text-align: center;
   font-size: 1.5em;
   margin-bottom: 20px;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
-/* Fila de botones */
 .descuento-buttons {
   display: flex;
   justify-content: space-between;
@@ -25,39 +22,34 @@
 }
 
 .descuento-btn {
-  background-color: #6200ea;
+  background-color: var(--color-primary);
   color: white;
   padding: 10px 15px;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: var(--transition-fast);
 }
 
-.descuento-btn:hover {
-  background-color: #3700b3;
-}
+.descuento-btn:hover { background-color: var(--color-primary-dark); }
 
-/* Contenedor principal de la tabla y los inputs */
 .main-content {
   display: flex;
   justify-content: space-between;
 }
 
-/* Sección izquierda (Búsqueda y tabla) */
-.left-section {
-  width: 65%;
-}
+.left-section { width: 65%; }
 
 .input-buscar {
   width: 100%;
   padding: 8px;
   margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
 }
 
-/* Tabla (simulando DataGridView) */
 .data-grid table {
   width: 100%;
   border-collapse: collapse;
@@ -65,15 +57,16 @@
 
 .data-grid th, .data-grid td {
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
 }
 
 .data-grid th {
-  background-color: #6200ea;
+  background-color: var(--color-primary);
   color: white;
 }
 
-/* Sección derecha (Campos de descuento y botones) */
+.data-grid td { color: var(--color-text); }
+
 .right-section {
   width: 30%;
   display: flex;
@@ -84,11 +77,12 @@
 .input-dscto, .input-cupon {
   width: 100%;
   padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
 }
 
-/* Botones de acciones */
 .action-buttons {
   display: flex;
   flex-direction: column;
@@ -99,39 +93,25 @@
 .action-btn {
   padding: 10px;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: var(--transition-fast);
 }
 
-.aceptar {
-  background-color: #4CAF50;
-  color: white;
-}
-
-.aceptar:hover {
-  background-color: #388E3C;
-}
+.aceptar { background-color: var(--color-success); color: white; }
+.aceptar:hover { filter: brightness(0.9); }
 
 .cancelar {
-  background-color: #FF9800;
-  color: white;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
 }
+.cancelar:hover { background-color: var(--color-bg); }
 
-.cancelar:hover {
-  background-color: #F57C00;
-}
-
-.salir {
-  background-color: #F44336;
-  color: white;
-}
-
-.salir:hover {
-  background-color: #D32F2F;
-}
+.salir { background-color: var(--color-warn); color: white; }
+.salir:hover { filter: brightness(0.9); }
 
 .selected-row {
-  background-color: #d1e7dd; /* Color de fondo para la fila seleccionada */
-  color: #000; /* Color de texto de la fila seleccionada */
+  background-color: rgba(0, 121, 107, 0.12);
+  color: var(--color-text);
 }

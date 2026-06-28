@@ -1,23 +1,29 @@
 <div class="admin-menu">
-  <h3 class="admin-menu__title">Sección almacén</h3>
 
-  <div class="admin-menu__sections">
-    <section class="admin-menu__section" *ngFor="let section of almacenMenu">
+  <ng-container *ngFor="let section of almacenMenu">
+
+    <!-- Sección con ítems -->
+    <div class="admin-menu__section" *ngIf="section.children.length > 0">
       <h4 class="admin-menu__subtitle">{{ section.title }}</h4>
-
-      <ul class="admin-menu__list">
-        <li
-          class="admin-menu__item"
+      <div class="tiles-grid">
+        <a
+          class="tile"
           *ngFor="let item of section.children"
+          [routerLink]="item.route"
+          [title]="item.title"
         >
-          <a
-            [routerLink]="item.route"
-            class="admin-menu__link admin-menu__link--anchor"
-          >
-            <span class="admin-menu__link-label">{{ item.title }}</span>
-          </a>
-        </li>
-      </ul>
-    </section>
-  </div>
+          <mat-icon class="tile__icon">{{ item.icon }}</mat-icon>
+          <span class="tile__label">{{ item.label }}</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Sección sin ítems → tile deshabilitado (próximamente) -->
+    <div class="tile tile--disabled" *ngIf="section.children.length === 0" [title]="section.title">
+      <mat-icon class="tile__icon">{{ section.icon }}</mat-icon>
+      <span class="tile__label">{{ section.label }}</span>
+    </div>
+
+  </ng-container>
+
 </div>

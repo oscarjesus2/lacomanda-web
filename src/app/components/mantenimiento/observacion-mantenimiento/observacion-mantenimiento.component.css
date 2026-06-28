@@ -1,20 +1,20 @@
 /* Botonera de posiciones */
-.grid-card{background:#fff;border-radius:8px;padding:14px;margin-bottom:16px;box-shadow:0 2px 5px rgba(0,0,0,.08)}
-.grid-title{font-weight:600;margin-bottom:10px}
-.grid{display:grid;grid-template-columns: repeat(5, 1fr); gap:8px}
-.pos-btn{padding:10px 0;border:1px solid #e0e0e0;border-radius:6px;background:#fafafa;cursor:pointer;transition:all .15s ease}
-.pos-btn:hover{background:#f0f0ff;border-color:#c5c5ff}
-.pos-btn.selected{background:#f4b23a;color:#fff;border-color:#f4b23a}
-.pos-btn.occupied{background:#ffe9e9;border-color:#ffb3b3;color:#a33;cursor:not-allowed}
+.grid-card { background: var(--color-surface); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
+.grid-title { font-weight: 600; margin-bottom: 10px; }
+.grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.pos-btn { padding: 10px 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-warm); cursor: pointer; transition: var(--transition-fast); }
+.pos-btn:hover { background: rgba(0, 121, 107, 0.08); border-color: var(--color-primary-light); }
+.pos-btn.selected { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+.pos-btn.occupied { background: rgba(198, 40, 40, 0.08); border-color: rgba(198, 40, 40, 0.35); color: var(--color-warn); cursor: not-allowed; }
 
 /* Leyenda */
-.grid-legend{display:flex;gap:12px;align-items:center;margin-top:8px;font-size:.9rem;color:#555}
-.dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;border:1px solid #ccc}
-.dot.selected{background:#f4b23a;border-color:#f4b23a}
-.dot.occupied{background:#ffe9e9;border-color:#ffb3b3}
-.dot.free{background:#fafafa;border-color:#e0e0e0}
+.grid-legend { display: flex; gap: 12px; align-items: center; margin-top: 8px; font-size: .9rem; color: var(--color-text-muted); }
+.dot { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 4px; border: 1px solid var(--color-border); }
+.dot.selected { background: var(--color-accent); border-color: var(--color-accent); }
+.dot.occupied { background: rgba(198, 40, 40, 0.08); border-color: rgba(198, 40, 40, 0.35); }
+.dot.free { background: var(--color-surface-warm); border-color: var(--color-border); }
 
-@media (max-width:900px){
-  .form-row{flex-direction:column}
-  .grid{grid-template-columns: repeat(5, 1fr);} /* ajusta si cambias COLS */
+@media (max-width: 900px) {
+  .form-row { flex-direction: column; }
+  .grid { grid-template-columns: repeat(5, 1fr); }
 }

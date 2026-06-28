@@ -37,49 +37,49 @@ export class MenuVentasComponent implements OnInit {
     {
       title: 'Maestros',
       children: [
-        { title: 'Configuración de Ambientes', route: '/ventas/configuracion-ambientes' },
-        { title: 'Configuración de Espacios', route: '/ventas/configuracion-espacios' },
-        { title: 'Familia de Productos', route: '/ventas/familia-productos' },
-        { title: 'Sub Familia de Productos', route: '/ventas/subfamilia-productos' },
-        { title: 'Grupos de Productos', route: '/ventas/grupos' },
-        { title: 'Colores', route: '/ventas/colores' },
-        { title: 'Areas de Impresión', route: '/ventas/area-impresion' },
-        { title: 'Productos', route: '/ventas/productos' },
-        { title: 'Socios de Negocio', route: '/ventas/socios-negocio' },
-        { title: 'Configuración de Combos', route: '/ventas/configuracion-combos' },
-        { title: 'Observaciones', route: '/ventas/observaciones' },
-        { title: 'Empleados', route: '/ventas/empleados' },
-        { title: 'Usuarios', route: '/ventas/usuarios' },
-        { title: 'Caja', route: '/ventas/caja' },
-        { title: 'Estacion', route: '/ventas/estacion' },
-        { title: 'Descuentos', route: '/ventas/descuentos' },
-        { title: 'Tarjetas', route: '/ventas/tarjetas' },
-        { title: 'Promociones', route: '/ventas/promociones' },
-        { title: 'Clientes', route: '/ventas/clientes' },
+        { title: 'Configuración de Ambientes', route: '/ventas/configuracion-ambientes', icon: 'meeting_room',     label: 'Ambientes'    },
+        { title: 'Configuración de Espacios',  route: '/ventas/configuracion-espacios',  icon: 'table_restaurant', label: 'Espacios'     },
+        { title: 'Familia de Productos',        route: '/ventas/familia-productos',        icon: 'category',         label: 'Familias'     },
+        { title: 'Sub Familia de Productos',    route: '/ventas/subfamilia-productos',     icon: 'account_tree',     label: 'Sub familias' },
+        { title: 'Grupos de Productos',         route: '/ventas/grupos',                   icon: 'inventory_2',      label: 'Grupos'       },
+        { title: 'Colores',                     route: '/ventas/colores',                  icon: 'palette',          label: 'Colores'      },
+        { title: 'Areas de Impresión',          route: '/ventas/area-impresion',           icon: 'print',            label: 'Impresión'    },
+        { title: 'Productos',                   route: '/ventas/productos',                icon: 'restaurant_menu',  label: 'Productos'    },
+        { title: 'Socios de Negocio',           route: '/ventas/socios-negocio',           icon: 'handshake',        label: 'Socios'       },
+        { title: 'Configuración de Combos',     route: '/ventas/configuracion-combos',     icon: 'tune',             label: 'Combos'       },
+        { title: 'Observaciones',               route: '/ventas/observaciones',            icon: 'sticky_note_2',    label: 'Observac.'    },
+        { title: 'Empleados',                   route: '/ventas/empleados',                icon: 'badge',            label: 'Empleados'    },
+        { title: 'Usuarios',                    route: '/ventas/usuarios',                 icon: 'manage_accounts',  label: 'Usuarios'     },
+        { title: 'Caja',                        route: '/ventas/caja',                     icon: 'point_of_sale',    label: 'Caja'         },
+        { title: 'Estacion',                    route: '/ventas/estacion',                 icon: 'computer',         label: 'Estación'     },
+        { title: 'Descuentos',                  route: '/ventas/descuentos',               icon: 'local_offer',      label: 'Descuentos'   },
+        { title: 'Tarjetas',                    route: '/ventas/tarjetas',                 icon: 'credit_card',      label: 'Tarjetas'     },
+        { title: 'Promociones',                 route: '/ventas/promociones',              icon: 'campaign',         label: 'Promociones'  },
+        { title: 'Clientes',                    route: '/ventas/clientes',                 icon: 'people',           label: 'Clientes'     },
       ]
     },
     {
       title: 'Operaciones',
       children: [
-        { title: 'Abrir Turno', route: '/ventas/abrir-turno' },
-        { title: 'Cerrar Turno', route: '/ventas/cerrar-turno' },
-        { title: 'Listado de Ventas', route: '/ventas/cerrar-turno' }
+        { title: 'Abrir Turno',      route: '/ventas/abrir-turno',        icon: 'lock_open',    label: 'Abrir turno'  },
+        { title: 'Cerrar Turno',     route: '/ventas/cerrar-turno',       icon: 'lock',         label: 'Cerrar turno' },
+        { title: 'Listado de Ventas',route: '/ventas/cerrar-turno',       icon: 'receipt_long', label: 'Ventas'       }
       ]
     },
     {
       title: 'Reportes',
       children: [
-        { title: 'Contable', route: '/ventas/contable' },
-        { title: 'Ventas por Producto', route: '/ventas/ventas-por-producto' },
-        { title: 'Resumen de Ventas', route: '/ventas/resumen-ventas' },
-        { title: 'Liquidación', route: '/ventas/liquidacion' }
+        { title: 'Contable',           route: '/ventas/contable',           icon: 'calculate',  label: 'Contable'    },
+        { title: 'Ventas por Producto',route: '/ventas/ventas-por-producto',icon: 'bar_chart',  label: 'Por producto'},
+        { title: 'Resumen de Ventas',  route: '/ventas/resumen-ventas',     icon: 'summarize',  label: 'Resumen'     },
+        { title: 'Liquidación',        route: '/ventas/liquidacion',        icon: 'payments',   label: 'Liquidación' }
       ]
     },
     {
       title: 'Configuracion',
       children: [
-        { title: 'Configuración Inicial', route: '/ventas/config-inicial' },
-        { title: 'Configurar esta estación', route: '/ventas/config-estacion' }
+        { title: 'Configuración Inicial',      route: '/ventas/config-inicial',  icon: 'settings',  label: 'Config. inicial' },
+        { title: 'Configurar esta estación',   route: '/ventas/config-estacion', icon: 'computer',  label: 'Esta estación'   }
       ]
     }
   ];
