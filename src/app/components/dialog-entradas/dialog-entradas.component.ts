@@ -444,7 +444,8 @@ export class DialogEntradasComponent {
     const dialogEmitirComprobanteComponent = this.dialog.open(DialogEmitirComprobanteComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '755px', 
+      width: '900px',
+      maxWidth: '95vw',
       data: {
         lblcambio: this.turnoAbierto.TipoCambioVenta,
         dblImporte: this.subTotal,

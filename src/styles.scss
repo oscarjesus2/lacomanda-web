@@ -845,6 +845,7 @@ mat-row:hover mat-cell {
 
 .mant-panel {
   position: relative;
+  box-sizing: border-box;
 
   max-width: 1100px;
   margin: 24px auto 24px;
@@ -973,7 +974,7 @@ mat-row:hover mat-cell {
 
 /* Ajuste general de diálogos Angular Material */
 .mat-mdc-dialog-container {
-  background: transparent;            /* dejamos solo nuestro panel como tarjeta */
+  background: transparent;
   box-shadow: none;
   padding: 0 !important;
 }
@@ -982,10 +983,15 @@ mat-row:hover mat-cell {
   background: transparent !important;
   box-shadow: none !important;
   padding: 0 !important;
+  /* El scroll lo maneja el surface, no el panel ni el body */
+  max-height: calc(100vh - 32px) !important;
+  overflow-y: auto !important;
 }
 
 .cdk-overlay-pane {
-  max-width: 1100px !important;
+  max-width: min(1100px, calc(100vw - 32px)) !important;
+  max-height: 100vh !important;
+  /* Sin overflow hidden: el pane se expande al ancho del contenido */
 }
 
 /* =========================
@@ -1138,14 +1144,34 @@ mat-row:hover mat-cell {
   justify-content: center !important;
 }
 
-/* Panel genérico de mantenimientos: scroll interno, no del body */
+/* Panel genérico de mantenimientos en dialog: sin scroll propio.
+   El scroll lo gestiona .mat-mdc-dialog-surface para evitar que la barra
+   aparezca desde el borde superior del panel. */
 .cdk-global-overlay-wrapper .mant-panel {
-  max-height: calc(100vh - 64px);   /* margen arriba/abajo para que respire */
-  overflow-y: auto;                 /* scroll SOLO dentro del panel */
+  margin: 16px auto;        /* centrado horizontal + margen vertical */
+  max-height: none;         /* sin límite — el surface ya tiene max-height */
+  overflow: visible;
+  width: fit-content;       /* el pane crece con el contenido del dialog */
+  max-width: calc(100vw - 32px);
 }
 
-/* Lo mismo para configuración inicial, que usa otro panel */
+/* Título sticky: se queda fijo mientras el resto del dialog se scrollea */
+.cdk-global-overlay-wrapper .mant-panel > h2 {
+  position: sticky;
+  top: -16px;               /* compensa el margin:16px del panel */
+  z-index: 5;
+  background: var(--color-surface);
+  margin-left: -22px;
+  margin-right: -22px;
+  margin-top: -20px;
+  padding: 20px 22px 12px;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Config panel — mismo tratamiento */
 .cdk-global-overlay-wrapper .config-panel {
-  max-height: calc(100vh - 64px);
-  overflow-y: auto;
+  margin: 16px auto;
+  max-height: none;
+  overflow: visible;
 }

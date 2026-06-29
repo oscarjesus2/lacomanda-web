@@ -1772,7 +1772,8 @@ export class DigitacionMozoComponent implements OnInit, AfterViewInit {
         };
 
         const dialogProcessComprobante = this.dialogComprobante.open(DialogEmitirComprobanteComponent, {
-          width: '400px',
+          width: '900px',
+          maxWidth: '95vw',
           data: dataSet,
           hasBackdrop: true
         });

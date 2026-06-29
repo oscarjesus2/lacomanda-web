@@ -1783,7 +1783,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
         };
 
         const dialogProcessComprobante = this.dialogComprobante.open(DialogEmitirComprobanteComponent, {
-          width: '400px',
+          width: '900px',
+          maxWidth: '95vw',
           data: dataSet,
           hasBackdrop: true
         });
@@ -2004,7 +2005,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       disableClose: true,
       hasBackdrop: true,
       width: '1005px', // Establece el ancho del diálogo
-      height: '670,y6t7 iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikkkkkkkkkikkiikiiiiiiiiiiiiiiiiiiiiiiiiiiiiijjjjjjjjjjjjjjijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll asxd546px', // Establece la altura del diálogo
+      height: '546px', // Establece la altura del diálogo
       data: { idTurno }
     });
     
@@ -2020,8 +2021,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
        const dialogEmitirComprobanteComponent = this.dialog.open(DialogEmitirComprobanteComponent, {
          disableClose: true,
          hasBackdrop: true,
-         width: '705px', // Establece el ancho del diálogo
-         height: '915px', // Establece la altura del diálogo
+         width: '900px',
+         maxWidth: '95vw',
          data: { lblcambio: this.turnoAbierto.TipoCambioVenta, 
                  dblImporte: this.sumaImporte,
                  dblDscto: this.sumaDscto,

@@ -1,0 +1,130 @@
+/* =============================================================
+   PRODUCTO MANTENIMIENTO — layout 2 columnas
+   ============================================================= */
+
+/* Ancho del panel */
+.prod-panel {
+  box-sizing: border-box;
+  width: min(1080px, calc(100vw - 32px));
+}
+
+/* Grid 2 columnas + fila de acciones */
+.prod-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 24px;
+  align-items: start;
+}
+
+/* Columnas */
+.prod-col {
+  min-width: 0;
+}
+
+.prod-col--left {
+  padding-right: 20px;
+  border-right: 1px solid var(--color-border);
+}
+
+.prod-col--right {
+  padding-left: 4px;
+}
+
+/* Los form-field globales tienen flex: 1 1 220px, diseñado para contenedores anchos.
+   Dentro de una columna de ~450px, dos campos de 220px + gap = 458px → wrap a fila única.
+   Reducimos el flex-basis para que 2 quepan cómodamente en ambas columnas. */
+.prod-col .form-field {
+  flex: 1 1 175px;
+}
+
+/* Etiqueta de sección */
+.prod-col-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 10px;
+}
+
+/* Fila posición: input + botón + precio mínimo alineados */
+.prod-posicion-row {
+  align-items: center;
+}
+
+.prod-posicion-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Acciones (full width, debajo de ambas columnas) */
+.prod-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  padding-top: 16px;
+  margin-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* ── Áreas de impresión ──────────────────────────────────────── */
+.prod-areas-card {
+  margin-top: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.prod-areas-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0;
+  padding: 8px 14px;
+  background: var(--color-surface-warm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.prod-areas-list {
+  padding: 4px 0 !important;
+}
+
+.prod-areas-list .mat-mdc-list-option {
+  min-height: 36px !important;
+  font-size: 0.82rem;
+}
+
+.prod-areas-impresora {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  margin-left: 6px;
+}
+
+.prod-areas-hint {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  padding: 6px 14px 8px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-warm);
+}
+
+/* Responsive: columna única en pantallas pequeñas */
+@media (max-width: 700px) {
+  .prod-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .prod-col--left {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding-right: 0;
+    padding-bottom: 16px;
+    margin-bottom: 8px;
+  }
+  .prod-col--right {
+    padding-left: 0;
+  }
+}

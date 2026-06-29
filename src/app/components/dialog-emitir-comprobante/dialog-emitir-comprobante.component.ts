@@ -21,6 +21,10 @@ import { TarjetaService } from 'src/app/services/tarjeta.service';
 import { TipoDocClienteService } from 'src/app/services/tipodoccliente.service';
 import { TipoDocumentoService } from 'src/app/services/tipodocumento.service';
 import { VentaService } from 'src/app/services/venta.service';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { MonedaService } from 'src/app/services/moneda.service';
+import { Configuracion } from 'src/app/models/configuracion.models';
+import { Moneda } from 'src/app/models/moneda.models';
 
 import { EnumTipoDocumento, EnumTipoIdentidad } from 'src/app/enums/enum';
 
@@ -48,6 +52,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   listTipoDocumento: CajaTipoDocumento[] = [];
   listTarjeta: Tarjeta[] = [];
 
+  config: Configuracion | null = null;
+  monedaPrincipal: Moneda | null = null;
+  monedaAlternativa: Moneda | null = null;
+
   ChkVentaAlCredito: boolean = false;
   tipoIdentidad: TipoIdentidad = new TipoIdentidad({ IdTipoIdentidad: '' });
   cliente: Cliente = new Cliente({ TipoIdentidad: this.tipoIdentidad });
@@ -58,10 +66,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   solesValue: number = 0;
   dolaresValue: number = 0;
   tarjetaValue: number = 0;
-  lbltotal: string = '0';
-  lblvuelto: string = '0';
-  lblpropinas: string = '0';
-  Label14: string = '';
+  lbltotal: string = '0.00';
+  lblvuelto: string = '0.00';
+  lblpropinas: string = '0.00';
+  Label14: string = 'Vuelto';
   lblmontotarjeta: string = '0.00';
   etiquetaCliente: string = '';
 
@@ -83,7 +91,6 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   form: FormGroup;
   emailPattern = "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,4}$";
-  rucLength: number;
   dblImporte: number;
   dblDscto: number;
   dblTotal: number;
@@ -108,6 +115,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     private fb: FormBuilder,
     private qzTrayService: QzTrayV224Service,
     private router: Router,
+    private configuracionService: ConfiguracionService,
+    private monedaService: MonedaService,
   ) {
     this.dataSourcePago = new MatTableDataSource([]);
     this.nuevoRegistro.Tarjeta = new Tarjeta();
@@ -138,19 +147,15 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     this.nroCuentaCobrar = data.nroCuentaCobrar
     this.cliente.TipoIdentidad = new TipoIdentidad({ IdTipoIdentidad: EnumTipoIdentidad.RUC, Descripcion: 'RUC' });
 
-    if (this.tipoDocumento.IdTipoDocumento == EnumTipoDocumento.FacturaVenta) {
-      this.rucLength = 11;
-    } else {
-      this.rucLength = 8;
-    }
-
     this.form = this.fb.group({
       idTipoDoc: [this.tipoDocumento.IdTipoDocumento, Validators.required],
       serie: ['', Validators.required],
       lblcorrelativo: ['', Validators.required],
       cliente: this.fb.group({
         tipoIdentidad: [this.cliente.TipoIdentidad.IdTipoIdentidad, Validators.required],
-        ruc: [this.cliente.NumeroIdentificacion, [Validators.required, this.rucValidator(this.rucLength, this.cliente.RazonSocial)]],
+        // Validador de formato se aplica dinámicamente en updateRucValidator()
+        // una vez que listTipoDocumentoCliente esté cargado desde el backend.
+        ruc: [this.cliente.NumeroIdentificacion, [Validators.required]],
         razonSocial: [this.cliente.RazonSocial, [Validators.required, this.razonSocialValidator()]],
         direccion: [this.cliente.Direccion],
         correo: [this.cliente.Correo, [Validators.pattern(this.emailPattern)]]
@@ -160,10 +165,21 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   async ngOnInit() {
 
+    // Cargar configuración y monedas del país
+    this.configuracionService.get().subscribe(cfg => {
+      this.config = cfg;
+      if (cfg?.PaisISO2) {
+        this.monedaService.getMonedaPorPais(cfg.PaisISO2).subscribe(res => {
+          const monedas = res?.Data ?? [];
+          this.monedaPrincipal    = monedas.find(m => m.IdMoneda === cfg.IdMoneda) ?? null;
+          this.monedaAlternativa  = monedas.find(m => m.IdMoneda !== cfg.IdMoneda) ?? null;
+        });
+      }
+    });
+
     if (this.idTipoPedido != '004') {
       const isRunning = await this.qzTrayService.isQzTrayRunning();
       if (!isRunning) {
-        // Redirige a una página que instruya al usuario a descargar QZ Tray
         this.router.navigate(['/qz-tray-required']);
       }
     }
@@ -199,31 +215,21 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   tipoDocumentoClienteChange() {
     const tipoIdentidad = this.form.get('cliente.tipoIdentidad')?.value;
     const clienteFormGroup = this.form.get('cliente') as FormGroup;
-    clienteFormGroup.patchValue({
-      ruc: '',
-      razonSocial: ''
-    });
 
-    if (tipoIdentidad === EnumTipoIdentidad.DNI) {
-      this.etiquetaCliente = 'DNI';
-      clienteFormGroup.patchValue({
-        ruc: '00000001',
-        razonSocial: 'Cliente Varios'
-      });
+    // Actualizar etiqueta con el id del tipo seleccionado
+    this.etiquetaCliente = tipoIdentidad ?? '';
+
+    // Limpiar campos de cliente
+    clienteFormGroup.patchValue({ ruc: '', razonSocial: '' });
+
+    // Para DNI: pre-rellenar con "Cliente Varios" cuando es Boleta/Express
+    const isBoletaVenta = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta;
+    const isExpress    = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.Express;
+    if ((isBoletaVenta || isExpress) && tipoIdentidad === EnumTipoIdentidad.DNI) {
+      clienteFormGroup.patchValue({ ruc: '00000001', razonSocial: 'Cliente Varios' });
     }
-    if (tipoIdentidad === EnumTipoIdentidad.RUC) {
-      this.etiquetaCliente = 'RUC';
-    }
-    if (tipoIdentidad === EnumTipoIdentidad.CARNETEXT) {
-      this.etiquetaCliente = 'CARNETEXT';
-    }
-    if (tipoIdentidad === EnumTipoIdentidad.PASAPORTE) {
-      this.etiquetaCliente = 'PASAPORTE';
-    }
-    if (tipoIdentidad === EnumTipoIdentidad.OTROS) {
-      this.etiquetaCliente = 'OTROS';
-    }
-    clienteFormGroup.updateValueAndValidity(); // Asegúrate de que el grupo de controles se actualice
+
+    clienteFormGroup.updateValueAndValidity();
   }
 
   onTipoDocumentoChange(): void {
@@ -245,54 +251,79 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     }
   }
 
-  updateRucValidator() {
-    const tipoIdentidadControl = this.form.get('cliente.tipoIdentidad');
-    const rucControl = this.form.get('cliente.ruc');
-    const razonSocialControl = this.form.get('cliente.razonSocial');
+  /**
+   * Valida el número de identificación contra RegexValidacion del backend.
+   * Devuelve el mensaje de error, o null si es válido.
+   * Punto único de verdad: usado en el form validator, cmdCobrarClick y buscarCliente.
+   */
+  private validarNumeroIdentificacion(value: string, tipoIdentidad: TipoIdentidad | null): string | null {
+    if (!value || !tipoIdentidad) return null;
 
-    if (tipoIdentidadControl && rucControl && razonSocialControl) {
-      const tipoIdentidad = tipoIdentidadControl.value;
-
-      // Establece el validador en función del TipoIdentidad
-      rucControl.clearValidators(); // Limpia los validadores existentes
-      rucControl.updateValueAndValidity();
-
-      if (tipoIdentidad === EnumTipoIdentidad.DNI) {
-        this.rucLength = 8;
-        rucControl.setValidators([
-          Validators.required,
-          this.rucValidator(8, razonSocialControl.value)
-        ]);
-      } else if (tipoIdentidad === EnumTipoIdentidad.RUC) {
-        this.rucLength = 11;
-        rucControl.setValidators([
-          Validators.required,
-          this.rucValidator(11, razonSocialControl.value)
-        ]);
+    const regexStr = tipoIdentidad.RegexValidacion;
+    if (regexStr) {
+      try {
+        if (!new RegExp(regexStr).test(value)) {
+          const hint = tipoIdentidad.Mascara ? ` (esperado: ${tipoIdentidad.Mascara})` : '';
+          return `Formato de ${tipoIdentidad.Descripcion} inválido${hint}.`;
+        }
+      } catch {
+        console.warn('RegexValidacion inválido desde backend:', regexStr);
       }
-
-      rucControl.updateValueAndValidity(); // Actualiza la validez del control
-      razonSocialControl.updateValueAndValidity(); // Actualiza la validez de RazonSocial
+    } else {
+      // Fallback si el backend no envía RegexValidacion
+      if (tipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.DNI) {
+        if (value.length !== 8) return 'El DNI debe tener 8 caracteres.';
+        if (!/^\d+$/.test(value)) return 'El DNI solo debe tener números.';
+      } else if (tipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.RUC) {
+        if (value.length !== 11) return 'El RUC debe tener 11 caracteres.';
+        if (!/^\d+$/.test(value)) return 'El RUC solo debe tener números.';
+      }
     }
+    return null;
   }
 
-  rucValidator(length: number, razonSocial: string): ValidatorFn {
+  /** TipoIdentidad actualmente seleccionado (para usar en template y validators). */
+  get selectedTipoIdentidad(): TipoIdentidad | null {
+    const id = this.form?.get('cliente.tipoIdentidad')?.value;
+    return this.listTipoDocumentoCliente?.find(t => t.IdTipoIdentidad === id) ?? null;
+  }
+
+  /**
+   * Aplica el validador de formato al campo RUC/documento usando
+   * el RegexValidacion que viene del backend en TipoIdentidad.
+   * Si el backend no lo provee, hace fallback a la lógica anterior.
+   */
+  updateRucValidator() {
+    const rucControl        = this.form?.get('cliente.ruc');
+    const razonSocialControl = this.form?.get('cliente.razonSocial');
+    if (!rucControl || !razonSocialControl) return;
+
+    const tipoIdentidad = this.selectedTipoIdentidad;
+
+    rucControl.clearValidators();
+    rucControl.setValidators([
+      Validators.required,
+      this.rucValidator(tipoIdentidad)
+    ]);
+    rucControl.updateValueAndValidity();
+    razonSocialControl.updateValueAndValidity();
+  }
+
+  /**
+   * Valida el número de identificación contra RegexValidacion del backend.
+   * Fallback a reglas hardcoded solo si el backend no envía regex.
+   */
+  rucValidator(tipoIdentidad: TipoIdentidad | null): ValidatorFn {
     return (control: AbstractControl): { [key: string]: any } | null => {
-      const ruc = control.value;
+      const value: string = control.value ?? '';
+      if (!value) return null;
 
-      if (ruc && ruc.length !== length) {
-        return { length: true };
-      }
-      if (ruc && !/^\d+$/.test(ruc)) {
-        return { pattern: true };
-      }
+      // Delega al método centralizado
+      const error = this.validarNumeroIdentificacion(value, tipoIdentidad);
+      if (error) return { pattern: true };
 
-      // Validación adicional para DNI
-      if (length === 8 && ruc === '00000001' && parseFloat(this.lblmonto) >= 700) {
-        return { invalidRUC: true };
-      }
-
-      if (razonSocial === 'Cliente Varios' && ruc != '00000001') {
+      // Regla de negocio: "00000001" no válido para montos ≥ 700
+      if (value === '00000001' && parseFloat(this.lblmonto) >= 700) {
         return { invalidRUC: true };
       }
 
@@ -411,26 +442,31 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   private async initializeTipoDocCliente(): Promise<void> {
     try {
-      var response = await this.tipoDocClienteService.getTipoDocClientes().toPromise();
+      const response = await this.tipoDocClienteService.getTipoDocClientes().toPromise();
+      const allTipoDocumentoCliente = response.Data ?? [];
 
-      const allTipoDocumentoCliente = response.Data;
+      const isBoletaVenta = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta;
+      const isExpress    = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.Express;
+      const esSimplificada = isBoletaVenta || isExpress;
+
+      // Boleta/Express → todos los tipos de identidad
+      // Factura → solo los que RequiereParaFactura === true
+      this.listTipoDocumentoCliente = esSimplificada
+        ? allTipoDocumentoCliente
+        : allTipoDocumentoCliente.filter(doc => doc.RequiereParaFactura === true);
+
+      // Selección por defecto: DNI para boleta, primer RequiereParaFactura para factura
+      this.cliente.TipoIdentidad = esSimplificada
+        ? (allTipoDocumentoCliente.find(doc => doc.IdTipoIdentidad === EnumTipoIdentidad.DNI)
+            ?? allTipoDocumentoCliente[0]
+            ?? null)
+        : (this.listTipoDocumentoCliente[0] ?? null);
+
+      this.etiquetaCliente = this.cliente.TipoIdentidad?.IdTipoIdentidad ?? '';
 
       let ruc = '';
       let razonSocial = '';
-      const isBoletaVenta = this.tipoDocumento.IdTipoDocumento === (EnumTipoDocumento.BoletaVenta);
-      const isExpress = this.tipoDocumento.IdTipoDocumento === (EnumTipoDocumento.Express);
-
-      this.listTipoDocumentoCliente = allTipoDocumentoCliente.filter(doc =>
-        (isBoletaVenta || isExpress) ? doc.IdTipoIdentidad !== 'RUC' : doc.IdTipoIdentidad === 'RUC'
-      );
-
-      this.cliente.TipoIdentidad = allTipoDocumentoCliente.find(doc =>
-        (isBoletaVenta || isExpress) ? doc.IdTipoIdentidad === EnumTipoIdentidad.DNI : doc.IdTipoIdentidad === EnumTipoIdentidad.RUC
-      ) || null;
-
-      this.etiquetaCliente = (isBoletaVenta || isExpress) ? 'DNI' : 'RUC';
-
-      if (isBoletaVenta || isExpress) {
+      if (esSimplificada) {
         ruc = '00000001';
         razonSocial = 'Cliente Varios';
       }
@@ -441,10 +477,17 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         ruc,
         razonSocial
       });
-      this.cliente.IdTipoIdentidad = this.cliente.TipoIdentidad.IdTipoIdentidad;
+
+      // optional chaining para evitar crash si TipoIdentidad es null
+      this.cliente.IdTipoIdentidad = this.cliente.TipoIdentidad?.IdTipoIdentidad ?? '';
+
+      // Aplicar el validador basado en regex ahora que la lista está cargada.
+      // (La suscripción a valueChanges se registra después de ngOnInit, así que
+      //  aquí lo llamamos manualmente por primera vez.)
+      this.updateRucValidator();
+
     } catch (error) {
       console.error('Error al inicializar el tipo de documento del cliente:', error);
-      // Aquí puedes manejar errores adicionales, como mostrar una alerta al usuario.
     }
   }
 
@@ -571,7 +614,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   obtenerSoles(): void {
-    this.ComponenteCantidad('Soles').then(valor => {
+    const titulo = this.monedaPrincipal?.Descripcion ?? 'Moneda principal';
+    this.ComponenteCantidad(titulo).then(valor => {
       this.solesValue = Number(valor);
       this.calcularMonto();
     });
@@ -589,7 +633,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   obtenerDolares(): void {
-    this.ComponenteCantidad('Dolares').then(valor => {
+    const titulo = this.monedaAlternativa?.Descripcion ?? 'Moneda alternativa';
+    this.ComponenteCantidad(titulo).then(valor => {
       this.dolaresValue = Number(valor);
       this.lblcal = ((this.dolaresValue) * parseFloat(this.lblcambio)).toFixed(2);
       this.calcularMonto();
@@ -608,59 +653,59 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     try {
 
       this.tipoDocumento.IdTipoDocumento = this.form.get('idTipoDoc')?.value;
-      this.cliente.TipoIdentidad = new TipoIdentidad({ IdTipoIdentidad: this.form.get('cliente.tipoIdentidad')?.value, Descripcion: '' })
+
+      // Sincronizar TipoIdentidad desde el formulario, usando el objeto completo
+      // del listado para no perder Descripcion, RegexValidacion, etc.
+      const tipoIdentidadId: string = this.form.get('cliente.tipoIdentidad')?.value;
+      const tipoIdentidadCompleto = this.listTipoDocumentoCliente.find(
+        t => t.IdTipoIdentidad === tipoIdentidadId
+      ) ?? new TipoIdentidad({ IdTipoIdentidad: tipoIdentidadId, Descripcion: '' });
+
+      this.cliente.TipoIdentidad  = tipoIdentidadCompleto;
+      this.cliente.IdTipoIdentidad = tipoIdentidadId;   // ← sincronizar la propiedad plana
+
       this.cliente.NumeroIdentificacion = this.form.get('cliente.ruc')?.value;
       this.cliente.RazonSocial = this.form.get('cliente.razonSocial')?.value;
       this.cliente.Direccion = this.form.get('cliente.direccion')?.value;
       this.cliente.Correo = this.form.get('cliente.correo')?.value;
 
+      // ── Validación de formato via regex del backend ──────────────────
+      const tipoIdentidadObj = this.listTipoDocumentoCliente.find(
+        t => t.IdTipoIdentidad === this.cliente.TipoIdentidad.IdTipoIdentidad
+      ) ?? null;
+
+      const formatError = this.validarNumeroIdentificacion(this.cliente.NumeroIdentificacion, tipoIdentidadObj);
+      if (formatError) {
+        Swal.fire('Validación', formatError, 'warning');
+        return;
+      }
+
+      // ── Validaciones de negocio (independientes del formato) ─────────
       if (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.FacturaVenta) {
         if (!this.cliente.NumeroIdentificacion || this.cliente.NumeroIdentificacion === '99999999999') {
-          Swal.fire('Validación', 'Ingrese el Ruc del Cliente Correctamente', 'warning');
+          Swal.fire('Validación', 'Ingrese el número de identificación del cliente correctamente.', 'warning');
           return;
         }
-        if (!this.cliente) {
-          Swal.fire('Validación', 'Ingrese el Cliente', 'warning');
-          return;
-        }
-        if (this.cliente.NumeroIdentificacion.length !== 11) {
-          Swal.fire('Validación', 'El RUC debe tener 11 caracteres.', 'warning');
-          return;
-        }
-        if (!this.isNumeric(this.cliente.NumeroIdentificacion)) {
-          Swal.fire('Validación', 'El RUC solo debe tener números.', 'warning');
-          return;
-        }
-
         if (this.cliente.Direccion == '' || this.cliente.Direccion == null) {
-          Swal.fire('Validacion', 'Ingrese la dirección', 'warning');
+          Swal.fire('Validación', 'Ingrese la dirección del cliente.', 'warning');
           return;
         }
-
       } else {
-        const tipoDocumentoCliente = this.cliente.TipoIdentidad;
-        if (tipoDocumentoCliente.IdTipoIdentidad === 'DNI') {
+        // Regla "Cliente Varios" / "00000001" solo aplica para DNI
+        if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.DNI) {
           if (this.cliente.NumeroIdentificacion === '00000001' && this.cliente.RazonSocial !== 'Cliente Varios') {
-            Swal.fire('Validación', 'Si el DNI es : 00000001, entonces el nombre del Cliente debe ser : Cliente Varios', 'warning');
+            Swal.fire('Validación', 'Si el DNI es 00000001, el nombre del cliente debe ser "Cliente Varios".', 'warning');
             return;
           }
           if (this.cliente.NumeroIdentificacion !== '00000001' && this.cliente.RazonSocial === 'Cliente Varios') {
-            Swal.fire('Validación', 'Si el nombre del Cliente es : Cliente Varios, entonces el DNI debe ser 00000001', 'warning');
-            return;
-          }
-          if (this.cliente.NumeroIdentificacion.length !== 8) {
-            Swal.fire('Validación', 'El DNI debe tener 8 caracteres.', 'warning');
-            return;
-          }
-          if (!this.isNumeric(this.cliente.NumeroIdentificacion)) {
-            Swal.fire('Validación', 'El DNI solo debe tener números.', 'warning');
+            Swal.fire('Validación', 'Si el cliente es "Cliente Varios", el DNI debe ser 00000001.', 'warning');
             return;
           }
         }
-
+        // Monto ≥ 700: no permitir "00000001"
         if (parseFloat(this.lblmonto) >= 700 && (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta || this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaManual)) {
           if (this.cliente.NumeroIdentificacion === '00000001') {
-            Swal.fire('Validación', 'La cuenta es igual ó superior a 700 soles, por lo cual, debe ingresar el DNI del cliente.', 'warning');
+            Swal.fire('Validación', 'La cuenta es igual o superior a 700, debe ingresar el documento de identidad del cliente.', 'warning');
             return;
           }
         }
@@ -903,23 +948,26 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
     const ruc = this.form.get('cliente.ruc').value;
 
-    if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc.length != 8) {
-      Swal.fire({
-        title: 'Validación',
-        text: `El DNI debe tener 8 caracteres.`,
-        icon: 'warning',
-        confirmButtonText: 'OK'
-      });
+    // Leer siempre desde el form para no depender del estado desincronizado de this.cliente
+    const tipoIdentidadId: string = this.form.get('cliente.tipoIdentidad')?.value;
+    const tipoIdentidadObj = this.listTipoDocumentoCliente.find(
+      t => t.IdTipoIdentidad === tipoIdentidadId
+    ) ?? null;
+
+    // Sincronizar para que la API de búsqueda use el tipo correcto
+    if (tipoIdentidadObj) {
+      this.cliente.TipoIdentidad  = tipoIdentidadObj;
+      this.cliente.IdTipoIdentidad = tipoIdentidadId;
+    }
+
+    const formatError = this.validarNumeroIdentificacion(ruc, tipoIdentidadObj);
+    if (formatError) {
+      Swal.fire({ title: 'Validación', text: formatError, icon: 'warning', confirmButtonText: 'OK' });
       return;
-    } else if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.RUC && ruc.length != 11) {
-      Swal.fire({
-        title: 'Validación',
-        text: `El RUC debe tener 11 caracteres.`,
-        icon: 'warning',
-        confirmButtonText: 'OK'
-      });
-      return;
-    } else if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc == '00000001') {
+    }
+
+    // "00000001" = Cliente Varios genérico, no hay nada que buscar
+    if (tipoIdentidadId === EnumTipoIdentidad.DNI && ruc === '00000001') {
       return;
     }
 
@@ -1030,6 +1078,20 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   isNumeric(value: string): boolean {
     return !isNaN(parseFloat(value)) && isFinite(parseFloat(value));
+  }
+
+  /** true cuando el pago acumulado cubre el monto a cobrar. */
+  get pagoCompleto(): boolean {
+    const monto = parseFloat(this.lblmonto) || 0;
+    return monto > 0 && parseFloat(this.lbltotal) >= monto;
+  }
+
+  /** Porcentaje del monto total cubierto (0–100, sin exceder 100). */
+  getProgresoPago(): number {
+    const monto = parseFloat(this.lblmonto) || 0;
+    if (monto === 0) return 0;
+    const total = parseFloat(this.lbltotal) || 0;
+    return Math.min((total / monto) * 100, 100);
   }
 
 }

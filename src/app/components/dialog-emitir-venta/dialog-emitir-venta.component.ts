@@ -473,7 +473,8 @@ export class DialogEmitirVentaComponent implements OnInit {
        const dialogTurno = this.dialog.open(DialogEmitirComprobanteComponent, {
          disableClose: true,
          hasBackdrop: true,
-         width: '755px', // Establece el ancho del diálogo
+         width: '900px',
+         maxWidth: '95vw',
          data: { lblcambio: this.tipoCambioVenta, 
                  dblImporte: this.sumaImporte,
                  dblDscto: this.sumaDscto,
