@@ -29,14 +29,15 @@ export class EstacionMantenimientoComponent implements OnInit {
 
   listCajas: CajaDto[] = [];
   tipos = [
-    { value: EstacionTipoEnum.MOZO, label: 'Mozo' },
-    { value: EstacionTipoEnum.CAJA, label: 'Caja' }
+    { value: EstacionTipoEnum.ADMINISTRADOR, label: 'Administrador' },
+    { value: EstacionTipoEnum.MOZO,          label: 'Mozo' },
+    { value: EstacionTipoEnum.CAJA,          label: 'Caja' }
   ];
 
   displayedColumns: string[] = ['descripcion', 'identificadorUnico', 'caja', 'tipo', 'actions'];
- 
+
   cajaMap: Record<number, string> = {};
-  tipoMap: Record<number, string> = { 1: 'Mozo', 2: 'Caja' };
+  tipoMap: Record<number, string> = { 0: 'Administrador', 1: 'Mozo', 2: 'Caja' };
 
   constructor(
     private dialogRef: MatDialogRef<EstacionMantenimientoComponent>,

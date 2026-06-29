@@ -183,11 +183,10 @@ export class MenuVentasComponent implements OnInit {
   }
 
   OpenEstacionesMantenimientoComponent() {
-     const dialog = this.dialog.open(EstacionMantenimientoComponent, {
+    const dialog = this.dialog.open(EstacionMantenimientoComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '900px', 
-      height: '500px', 
+      width: '900px',
     });
   }
 
@@ -321,12 +320,11 @@ export class MenuVentasComponent implements OnInit {
   }
 
   OpenSubFamiliaMantenimientoComponent(): void {
-  
+
     const dialog = this.dialog.open(SubFamiliaMantenimientoComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '600px', 
-      height: '700px', 
+      width: '600px',
     });
   }
 

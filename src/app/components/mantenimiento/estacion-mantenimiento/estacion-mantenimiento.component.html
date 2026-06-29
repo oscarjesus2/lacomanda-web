@@ -62,7 +62,7 @@
   <form *ngIf="showForm" #estacionForm="ngForm" (ngSubmit)="onSubmit()">
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Tipo Caja</mat-label>
+        <mat-label>Tipo Estación</mat-label>
         <mat-select [(ngModel)]="estacion.Tipo" name="tipo" required>
           <mat-option *ngFor="let t of tipos" [value]="t.value">{{ t.label }}</mat-option>
         </mat-select>

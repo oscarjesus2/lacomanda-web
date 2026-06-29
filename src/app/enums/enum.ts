@@ -21,6 +21,7 @@ export enum EnumTipoIdentidad {
 }
 
 export enum EstacionTipoEnum {
+  ADMINISTRADOR = 0,
   MOZO = 1,
   CAJA = 2
 }
