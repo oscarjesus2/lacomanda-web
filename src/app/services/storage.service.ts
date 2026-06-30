@@ -2,79 +2,95 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Session } from '../models/session.models';
 import { Usuario } from '../models/usuario.models';
-import { LoginService } from './auth/login.service';
-import { Turno } from '../models/turno.models';
+import { KeycloakAuthService } from './auth/keycloak-auth.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class StorageService {
+  private readonly store = localStorage;
+  private currentSession: Session | null = null;
 
-  private localStorageService;
-  private currentSession: Session = null;
- 
-  private currentIp: string = null;
-
-  constructor(private router: Router, 
-              private loginService: LoginService,) {
-
-    this.localStorageService = localStorage;
+  constructor(
+    private router: Router,
+    private keycloakAuth: KeycloakAuthService,
+  ) {
     this.currentSession = this.loadSessionData();
   }
 
+  // ── Sesión ────────────────────────────────────────────────────────────────
 
   setCurrentSession(session: Session): void {
     this.currentSession = session;
-    this.localStorageService.setItem('currentSession', JSON.stringify(session));
+    this.store.setItem('currentSession', JSON.stringify(session));
   }
 
-  loadSessionData(): Session {
-    var sessionStr = this.localStorageService.getItem('currentSession');
-    return (sessionStr) ? <Session>JSON.parse(sessionStr) : null;
+  loadSessionData(): Session | null {
+    const raw = this.store.getItem('currentSession');
+    return raw ? (JSON.parse(raw) as Session) : null;
   }
 
- 
-
-   getCurrentSession(): Session {
+  getCurrentSession(): Session | null {
     return this.currentSession;
   }
 
-  getCurrentIP(): string {
-    var session: Session = this.getCurrentSession();
-    return (session && session.Ip) ? session.Ip : null;
-  }
-  getCurrentUser(): Usuario {
-    var session: Session = this.getCurrentSession();
-    return (session && session.User) ? session.User : null;
-  };
-  getCurrentNombreSucursal(): string {
-    var session: Session = this.getCurrentSession();
-    return (session && session.nombresucursal) ? session.nombresucursal : null;
-  };
-
-  getBoletaRapida(): boolean {
-    var session: Session = this.getCurrentSession();
-    return (session && session.boletaRapida) ? session.boletaRapida : null;
-  };
-
-  getCurrentToken(): string {
-    var session = this.getCurrentSession();
-    return (session && session.Token) ? session.Token : null;
-  };
-
-
   removeCurrentSession(): void {
-    this.localStorageService.removeItem('currentSession');
+    this.store.removeItem('currentSession');
     this.currentSession = null;
   }
 
-  isAuthenticated(): boolean {
-    return (this.getCurrentToken() != null) ? true : false;
-  };
+  // ── Tokens ────────────────────────────────────────────────────────────────
 
+  getCurrentToken(): string | null {
+    return this.currentSession?.Token ?? null;
+  }
+
+  getRefreshToken(): string | null {
+    return this.currentSession?.RefreshToken ?? null;
+  }
+
+  /** Actualiza el access_token (y opcionalmente el refresh_token) en la sesión persistida. */
+  updateToken(accessToken: string, refreshToken?: string): void {
+    if (!this.currentSession) return;
+    this.currentSession.Token = accessToken;
+    if (refreshToken) this.currentSession.RefreshToken = refreshToken;
+    this.store.setItem('currentSession', JSON.stringify(this.currentSession));
+  }
+
+  // ── Usuario / extras ──────────────────────────────────────────────────────
+
+  getCurrentUser(): Usuario | null {
+    return this.currentSession?.User ?? null;
+  }
+
+  getCurrentIP(): string | null {
+    return this.currentSession?.Ip ?? null;
+  }
+
+  getCurrentNombreSucursal(): string | null {
+    return this.currentSession?.nombresucursal ?? null;
+  }
+
+  getBoletaRapida(): boolean {
+    return this.currentSession?.boletaRapida ?? false;
+  }
+
+  isAuthenticated(): boolean {
+    return !!this.getCurrentToken();
+  }
+
+  // ── Logout ────────────────────────────────────────────────────────────────
 
   logout(): void {
+    const refreshToken = this.getRefreshToken();
+    const realm        = this.currentSession?.TenantID ?? '';
     this.removeCurrentSession();
+
+    if (refreshToken && realm) {
+      // Invalidar sesión en Keycloak (fire & forget — no bloqueamos la navegación)
+      this.keycloakAuth.logout(refreshToken, realm).subscribe({
+        error: () => { /* Keycloak puede estar caído — ignoramos */ }
+      });
+    }
+
     this.router.navigate(['/iniciar-sesion']);
   }
 }

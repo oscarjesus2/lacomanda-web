@@ -95,7 +95,7 @@ export class EstacionMantenimientoComponent implements OnInit {
     const filterValue = this.filtro.toLowerCase();
     this.filteredEstaciones.data = this.estaciones.filter(e =>
       e.Descripcion.toLowerCase().includes(filterValue) ||
-      e.HostName.toLowerCase().includes(filterValue)
+      e.IdentificadorUnico.toLowerCase().includes(filterValue)
     );
   }
 

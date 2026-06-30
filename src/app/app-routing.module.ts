@@ -4,6 +4,7 @@ import { LoginComponent } from './auth/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { VentaComponent } from './pages/venta/venta.component';
 import { AdminGuard } from './guards/admin.guard';
+import { RoleGuard } from './guards/role.guard';
 import { AdministracionComponent } from './pages/administracion/administracion.component';
  
  // Importa los componentes de las sub-secciones
@@ -23,24 +24,28 @@ const routes: Routes = [
   path:'', redirectTo:'/dashboard', pathMatch:'full'
 },
 {
-  path:'dashboard', 
-  component:DashboardComponent,
-  canActivate: [AdminGuard]
+  path: 'dashboard',
+  component: DashboardComponent,
+  canActivate: [RoleGuard],
+  data: { roles: ['admin'] }
 },
 {
-  path:'caja',  
-  component:VentaComponent,
-  canActivate: [AdminGuard]
+  path: 'caja',
+  component: VentaComponent,
+  canActivate: [RoleGuard],
+  data: { roles: ['admin', 'caja'] }
 },
 {
-  path:'mozo',  
-  component:DigitacionMozoComponent,
-  canActivate: [AdminGuard]
+  path: 'mozo',
+  component: DigitacionMozoComponent,
+  canActivate: [RoleGuard],
+  data: { roles: ['admin', 'mozo'] }
 },
 {
-  path:'administracion', 
-  component:AdministracionComponent,
-  canActivate: [AdminGuard]
+  path: 'administracion',
+  component: AdministracionComponent,
+  canActivate: [RoleGuard],
+  data: { roles: ['admin'] }
 },
 {
   path:'iniciar-sesion', 

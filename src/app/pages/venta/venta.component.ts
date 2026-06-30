@@ -66,6 +66,7 @@ import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { Configuracion } from 'src/app/models/configuracion.models';
 import { CanalVentaService } from 'src/app/services/canal-venta.service';
 import { CanalVenta } from 'src/app/models/canalventa.models';
+import { CajaService } from 'src/app/services/caja.service';
 import { DialogEntradasComponent } from 'src/app/components/dialog-entradas/dialog-entradas.component';
 import { DialogDocumentosEmitidosComponent } from 'src/app/components/dialog-documentos-emitidos/dialog-documentos-emitidos.component';
 import { CanalVentaEnum } from 'src/app/enums/enum';
@@ -99,7 +100,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   public listaEspaciosTotal: Espacios[];
   public listaEspacios_x_Ambiente: Espacios[];
   public listaTipoPedidos: CanalVenta[];
-  public listaPedidosPendientes: PedidoDeliveryDTO[];
+  public listaPedidosPendientes: PedidoDeliveryDTO[] = [];
   public listaPedido_x_Canal: PedidoDeliveryDTO[];
 
   public listEmpleados: Empleado[];
@@ -135,7 +136,10 @@ export class VentaComponent implements OnInit, AfterViewInit {
   ambienteActual: Ambiente | null = null;
   textDescuento: string ='Descuento';
   isBuscarProductoDisabled= false;
-  isEntrada = false;
+  isEntrada    = false;
+  isEspacio    = true;   // visible por defecto; se actualiza al cargar la caja
+  isParaLlevar = true;
+  isDelivery   = true;
   isCanalVentaDisabled = false;
   isPanelProductoDisabled = false;
   isComboDisabled = false;
@@ -168,6 +172,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     private socioNegocioService: SocioNegocioService,
     private pedidoService: PedidoService,
     private tipoPedidoService: CanalVentaService,
+    private cajaService: CajaService,
     private dialogEspacio: MatDialog,
     private dialogComprobante: MatDialog,
     private dialog: MatDialog,
@@ -268,6 +273,21 @@ export class VentaComponent implements OnInit, AfterViewInit {
     }
   }
 
+  /** Actualiza los flags de visibilidad de cada botón de canal según lo configurado en la caja */
+  actualizarFlagsCanales(): void {
+    const ids = this.listaTipoPedidos.map(c => c.IdCanalVenta);
+    // Si viene vacío (sin configuración) mostramos todos
+    if (ids.length === 0) {
+      this.isEspacio = this.isParaLlevar = this.isDelivery = true;
+      this.isEntrada = false;
+      return;
+    }
+    this.isEspacio    = ids.includes(this.canalVentaEnum.ESPACIO);
+    this.isParaLlevar = ids.includes(this.canalVentaEnum.PARA_LLEVAR);
+    this.isDelivery   = ids.includes(this.canalVentaEnum.DELIVERY);
+    this.isEntrada    = ids.includes(this.canalVentaEnum.ENTRADAS);
+  }
+
   canalVenta(idCanalVenta: number): void {
     this.limpiarPedido();
     this.idCanalVentaSelected = idCanalVenta;
@@ -344,7 +364,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
             listSubFamilia: this.familiaService.getSubFamilias(),
             listObservacion: this.observacionService.getAllObservacion(),
             responseSocioNegocio: this.socioNegocioService.getSocioNegocios(),
-            responseTipoPedidos: this.tipoPedidoService.listarActivos(),
+            responseTipoPedidos: this.cajaService.getCanalesVentaByCaja(data.Data.IdCaja),
           }).subscribe(results => {
              console.log("despues");
             // Asignación de resultados
@@ -356,9 +376,19 @@ export class VentaComponent implements OnInit, AfterViewInit {
               this.listaPedidosPendientes = results.responsePedidos.Data;
             }
 
-            this.listaTipoPedidos = results.responseTipoPedidos;
-            const tipoPedidoEntrada: CanalVenta | undefined = this.listaTipoPedidos.find(item => item.IdCanalVenta == 4);
-            this.isEntrada = (tipoPedidoEntrada!=null);
+            // Si la caja tiene canales configurados, filtrar; si no, mostrar todos
+            const canalesCaja = results.responseTipoPedidos;
+            if (canalesCaja.length > 0) {
+              this.listaTipoPedidos = canalesCaja;
+            } else {
+              // Sin configuración → fallback: cargar todos los activos
+              this.tipoPedidoService.listarActivos().subscribe(todos => {
+                this.listaTipoPedidos = todos;
+                this.actualizarFlagsCanales();
+              });
+            }
+            this.listaTipoPedidos = canalesCaja.length > 0 ? canalesCaja : this.listaTipoPedidos;
+            this.actualizarFlagsCanales();
         
 
             if (results.responseEmpleados.Success) {

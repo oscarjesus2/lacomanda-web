@@ -11,58 +11,51 @@
     <!-- Card del formulario -->
     <div class="login-card">
       <form [formGroup]="loginForm" (ngSubmit)="login()">
-        <div *ngIf="!loginValid" class="error-banner">Credenciales inválidas. Inténtalo de nuevo.</div>
+        <div *ngIf="!loginValid" class="error-banner">Usuario o contraseña incorrectos. Inténtalo de nuevo.</div>
 
         <!-- Selector de sucursal -->
         <div class="form-group">
           <label for="tenant">Sucursal</label>
           <div class="custom-select">
             <select id="tenant" formControlName="tenant" required>
-              <option *ngFor="let tenant of tenantDefault" [ngValue]="tenant">
-                {{ tenant.Sucursal }}
-              </option>
+              <option *ngFor="let t of tenantDefault" [ngValue]="t">{{ t.Sucursal }}</option>
             </select>
           </div>
         </div>
 
-        <!-- Tipo de usuario -->
+        <!-- Usuario -->
         <div class="form-group">
-          <label for="idNivel">Tipo de usuario</label>
-          <div class="custom-select">
-            <select id="idNivel" formControlName="idNivel" required>
-              <option *ngFor="let nivel of nivelUsuario" [value]="nivel.value">
-                {{ nivel.nombreNivel }}
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Identificador único (solo si aplica) -->
-        <div class="form-group" *ngIf="shouldShowIdentifierField()">
-          <label for="identifier">Identificador único</label>
-          <input id="identifier" type="text" formControlName="identifier" required />
-        </div>
-
-        <!-- Botón contraseña táctil -->
-        <div class="password-field">
-          <button type="button" class="lc-btn lc-btn-ghost" (click)="openPasswordDialog()">
-            <span class="lc-btn__icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2a7 7 0 0 0-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-                <path d="M19 9a7 7 0 0 0-7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".7" />
-                <path d="M5 13a7 7 0 0 0 7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-                <path d="M12 6a5 5 0 0 0-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-                <path d="M17 11a5 5 0 0 0-5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".7" />
-              </svg>
-            </span>
-            Ingresar contraseña táctil
-          </button>
+          <label for="username">Usuario</label>
+          <input
+            id="username"
+            type="text"
+            formControlName="username"
+            autocomplete="username"
+            placeholder="Ingresa tu usuario"
+            required />
         </div>
 
         <!-- Contraseña -->
-        <div class="form-group">
+        <div class="form-group password-group">
           <label for="password">Contraseña</label>
-          <input id="password" type="password" formControlName="password" required />
+          <div class="password-row">
+            <input
+              id="password"
+              type="password"
+              formControlName="password"
+              autocomplete="current-password"
+              placeholder="Ingresa tu contraseña"
+              required />
+            <!-- Botón contraseña táctil -->
+            <button
+              type="button"
+              class="lc-btn lc-btn-secondary tactile-btn"
+              title="Teclado numérico"
+              [disabled]="isSubmitting"
+              (click)="openPasswordDialog()">
+              🔢
+            </button>
+          </div>
         </div>
 
         <!-- Botón principal -->
@@ -71,11 +64,8 @@
           class="lc-btn lc-btn-primary login-button"
           [disabled]="isSubmitting || loginForm.invalid">
           <ng-container *ngIf="!isSubmitting; else loadingTpl">Entrar</ng-container>
+          <ng-template #loadingTpl><span aria-busy="true">Ingresando…</span></ng-template>
         </button>
-
-        <ng-template #loadingTpl>
-          <span aria-busy="true">Ingresando…</span>
-        </ng-template>
       </form>
     </div>
 

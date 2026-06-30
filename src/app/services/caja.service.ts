@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from "@angular/common/http";
 import { map, Observable } from 'rxjs';
 import { CajaDto  } from '../models/caja.models';
+import { CanalVenta } from '../models/canalventa.models';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { CajaTipoDocumento } from '../models/caja-tipo-documento.model';
@@ -32,4 +33,11 @@ export class CajaService {
     eliminar(id: number): Observable<ApiResponse<boolean>> {
         return this.http.delete<ApiResponse<boolean>>(`${this.basePath}/${id}`);
     }
+
+    /** GET /api/Caja/{idCaja}/canales-venta — canales habilitados para una caja */
+    getCanalesVentaByCaja(idCaja: number): Observable<CanalVenta[]> {
+        return this.http.get<ApiResponse<CanalVenta[]>>(`${this.basePath}/${idCaja}/canales-venta`)
+            .pipe(map(r => r.Data ?? []));
+    }
+
 }

@@ -56,6 +56,8 @@
   </div>
 </div>
   <form *ngIf="showForm" #form="ngForm" (ngSubmit)="onSubmit()">
+
+    <!-- Fila 1: Descripción + N° Pedido -->
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>Descripción</mat-label>
@@ -64,15 +66,36 @@
       </mat-form-field>
 
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Canal de Venta por Defecto</mat-label>
-        <mat-select [(ngModel)]="m.IdCanalVentaDefecto" name="canal" required>
-          <mat-option *ngFor="let c of canales" [value]="c.IdCanalVenta">{{ c.Descripcion }}</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field class="form-field" appearance="fill">
         <mat-label>N° Pedido</mat-label>
         <input matInput [value]="m.NroPedido" disabled>
+      </mat-form-field>
+    </div>
+
+    <!-- Canales de venta habilitados para esta caja -->
+    <div class="caja-canales-section">
+      <p class="caja-canales-label">Canales de venta habilitados</p>
+      <div class="caja-canales-chips">
+        <mat-checkbox
+          *ngFor="let c of canales"
+          [checked]="isCanal(c.IdCanalVenta)"
+          (change)="toggleCanal(c.IdCanalVenta, $event.checked)"
+          color="primary">
+          {{ c.Descripcion }}
+        </mat-checkbox>
+      </div>
+    </div>
+
+    <!-- Canal por Defecto — solo muestra los canales seleccionados arriba -->
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>Canal de Venta por Defecto</mat-label>
+        <mat-select [(ngModel)]="m.IdCanalVentaDefecto" name="canal" required
+                    [disabled]="canalesHabilitados.length === 0">
+          <mat-option *ngFor="let c of canalesHabilitados" [value]="c.IdCanalVenta">
+            {{ c.Descripcion }}
+          </mat-option>
+        </mat-select>
+        <mat-hint *ngIf="canalesHabilitados.length === 0">Selecciona al menos un canal arriba.</mat-hint>
       </mat-form-field>
     </div>
 

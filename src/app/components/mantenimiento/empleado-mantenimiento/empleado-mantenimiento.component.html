@@ -94,18 +94,6 @@
     </mat-form-field>
 
     <div class="form-row">
-      <mat-form-field  appearance="fill">
-        <mat-label>Cargo</mat-label>
-        <mat-select [(ngModel)]="empleado.Cargo" name="cargo" required #cargo="ngModel" [compareWith]="compareCargo">
-          <mat-option *ngFor="let tipo of listCargo" [value]="tipo">
-            {{tipo.Descripcion}}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="cargo.invalid && (cargo.dirty || cargo.touched)">
-          Seleccione un cargo.
-        </mat-error>
-      </mat-form-field>
-
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>Telefono</mat-label>
         <input matInput [(ngModel)]="empleado.Telefono" name="telefono" required phone #telefono="ngModel">

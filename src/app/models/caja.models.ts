@@ -12,6 +12,7 @@ export class CajaDto {
     public UsuModi?: number;
     public FecModi?: string;
     public IdCanalVentaDefecto: number;
+    public IdCanalesVenta: number[] = [];
     public EmitePrecuenta: boolean;
     public EmiteComanda: boolean;
     public EmiteDescuento: boolean;

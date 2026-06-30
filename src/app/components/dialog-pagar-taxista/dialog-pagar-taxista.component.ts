@@ -199,7 +199,7 @@ export class DialogPagarTaxistaComponent {
       empleado.Dni = this.dni;
       empleado.Telefono= this.telefono;
       empleado.Direccion= null;  // Verificar si se necesita un valor por defecto
-      empleado.Cargo= new Cargo({ IdCargo: 15, Descripcion: '' }); // Asegúrate de que Cargo está definido correctamente
+      empleado.EsTaxista = true;
       empleado.Activo = 1;  // O 1 si Activo es un número
       empleado.IdSocioNegocio = 0;
       empleado.Placa = this.placa;

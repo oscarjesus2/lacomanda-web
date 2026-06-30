@@ -35,19 +35,23 @@
           </div>
         </div>
       </div>
-      <!-- Botones de canal -->
+      <!-- Botones de canal — controlados por la configuración de la caja activa -->
       <div class="channel-buttons">
-        <button (click)="canalVenta(canalVentaEnum.ESPACIO)" [disabled]="isCanalVentaDisabled">
+        <button *ngIf="isEspacio"
+                (click)="canalVenta(canalVentaEnum.ESPACIO)" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faUtensils"></fa-icon> CANAL MESA
         </button>
-        <button (click)="canalVenta(canalVentaEnum.PARA_LLEVAR)" [disabled]="isCanalVentaDisabled">
-          <fa-icon [icon]="faShoppingBag" ></fa-icon> CANAL LLEVAR
+        <button *ngIf="isParaLlevar"
+                (click)="canalVenta(canalVentaEnum.PARA_LLEVAR)" [disabled]="isCanalVentaDisabled">
+          <fa-icon [icon]="faShoppingBag"></fa-icon> CANAL LLEVAR
         </button>
-        <button *ngIf="!isEntrada" (click)="canalVenta(canalVentaEnum.DELIVERY)" [disabled]="isCanalVentaDisabled">
-          <fa-icon [icon]="faTruck" ></fa-icon> CANAL DELIVERY
+        <button *ngIf="isDelivery && !isEntrada"
+                (click)="canalVenta(canalVentaEnum.DELIVERY)" [disabled]="isCanalVentaDisabled">
+          <fa-icon [icon]="faTruck"></fa-icon> CANAL DELIVERY
         </button>
-        <button *ngIf="isEntrada" (click)="canalVenta(canalVentaEnum.ENTRADAS)" [disabled]="isCanalVentaDisabled">
-          <fa-icon [icon]="faWalking" ></fa-icon> ENTRADA
+        <button *ngIf="isEntrada"
+                (click)="canalVenta(canalVentaEnum.ENTRADAS)" [disabled]="isCanalVentaDisabled">
+          <fa-icon [icon]="faWalking"></fa-icon> ENTRADA
         </button>
         <button (click)="Refresh()">
           <fa-icon [icon]="faSync"></fa-icon> REFRESH

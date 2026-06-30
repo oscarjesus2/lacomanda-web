@@ -9,8 +9,6 @@ import { MatPaginator } from '@angular/material/paginator';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { EnumTipoIdentidad } from 'src/app/enums/enum';
 import { EmpleadoService } from 'src/app/services/empleado.service';
-import { CargoService } from 'src/app/services/cargo.service';
-import { Cargo } from 'src/app/models/cargo.models';
 
 
 @Component({
@@ -24,21 +22,19 @@ export class EmpleadoMantenimientoComponent implements OnInit {
   empleados: Empleado[] = [];
   filteredEmpleados= new MatTableDataSource<Empleado>([]);
   filtroEmpleado: string = '';
-  listCargo: Cargo[] = [];
   showForm: boolean = false; // Controla la visibilidad del formulario
   displayedColumns: string[] = ['nombre','dni', 'direccion',  'telefono', 'actions'];
   
   constructor(
     private dialogRef: MatDialogRef<EmpleadoMantenimientoComponent >,
     private empleadoService: EmpleadoService,
-    private spinnerService: NgxSpinnerService,
-    private cargoService: CargoService) {}
+    private spinnerService: NgxSpinnerService) {}
     @ViewChild(MatPaginator) paginator: MatPaginator;
 
     
   ngOnInit(): void {
     this.cargarEmpleados();
-    this.cargarCargos();
+
   }
 
   ngAfterViewInit() {
@@ -58,18 +54,6 @@ export class EmpleadoMantenimientoComponent implements OnInit {
         this.filteredEmpleados.paginator = this.paginator; // Reasigna el paginador
     });
 }
-  cargarCargos(): void {
-    this.spinnerService.show();   
-    this.cargoService.getCargos().subscribe(response => {
-      if (response.Success) {
-        this.listCargo = response.Data;
-        this.spinnerService.hide();
-    } else {
-      this.spinnerService.hide();
-        Swal.fire('Error', response.Message || 'Error al cargar los cargos', 'error');
-    }
-    });
-  }
 
   nuevoEmpleado(): void {
     this.resetForm();
@@ -136,9 +120,6 @@ export class EmpleadoMantenimientoComponent implements OnInit {
     this.showForm = true; // Mostrar formulario al editar
   }
 
-  compareCargo(tipo1: Cargo, tipo2: Cargo): boolean {
-    return tipo1 && tipo2 ? tipo1.IdCargo === tipo2.IdCargo: tipo1 === tipo2;
-}
 
   onDelete(id: string): void {
     Swal.fire({

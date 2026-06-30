@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HTTP_INTERCEPTORS, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, throwError, BehaviorSubject, of } from 'rxjs';
+import { catchError, filter, switchMap, take } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { StorageService } from '../services/storage.service';
+import { KeycloakAuthService } from '../services/auth/keycloak-auth.service';
 import { NotificationService } from '../services/notification.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { ValidationErrorService } from '../services/validation-error.service';
@@ -13,8 +14,14 @@ import Swal from 'sweetalert2';
     providedIn: 'root'
 })
 export class ApiRequestInterceptor implements HttpInterceptor {
+
+    /** Evita múltiples refresh simultáneos — sólo el primer 401 dispara el refresh. */
+    private isRefreshing = false;
+    private refreshDone$ = new BehaviorSubject<string | null>(null);
+
     constructor(
         private storageService: StorageService,
+        private keycloakAuth: KeycloakAuthService,
         private router: Router,
         private notificationService: NotificationService,
         private spinnerService: NgxSpinnerService,
@@ -23,24 +30,29 @@ export class ApiRequestInterceptor implements HttpInterceptor {
 
     intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
-        if (request.url.includes('/api/Auth/login')) {
-            this.storageService.removeCurrentSession();
-        } else {
-            const currentSession = this.storageService.getCurrentSession();
-            if (currentSession && currentSession.Token) {
-                request = request.clone({
-                    setHeaders: {
-                        Authorization: 'Bearer ' + currentSession.Token,
-                        'Tenant-ID': currentSession.TenantID
-                    }
-                });
-            }
+        // Excluir endpoints de autenticación: Keycloak token y el legacy /api/Auth/login
+        const isAuthEndpoint = request.url.includes('/protocol/openid-connect/token')
+                            || request.url.includes('/api/Auth/login');
+
+        if (!isAuthEndpoint) {
+            request = this.addAuthHeaders(request);
         }
 
         return next.handle(request).pipe(
             catchError((error: HttpErrorResponse) => {
+                // Endpoints de auth (Keycloak token/logout): no mostrar notificaciones —
+                // el LoginComponent maneja el error con su propio subscriber.
+                if (isAuthEndpoint) {
+                    this.spinnerService.hide();
+                    return throwError(() => error);
+                }
+
+                if (error.status === 401) {
+                    return this.handle401(request, next);
+                }
+
                 let errorMessage = 'An unexpected error occurred';
-                if (error.status === 401 || error.status === 403) {
+                if (error.status === 403) {
                     this.handleUnauthorizedError();
                 } else if (error.status === 400 && error.error) {
                     if (this.isModelValidationError(error)) {
@@ -52,22 +64,82 @@ export class ApiRequestInterceptor implements HttpInterceptor {
                 } else if (error.status >= 200 && error.status < 300) {
                     return next.handle(request);
                 } else {
-                    // Manejo estandarizado de otros errores
                     errorMessage = this.getErrorMessage(error);
                     this.notificationService.showError(errorMessage);
                     console.error(errorMessage);
                 }
                 this.spinnerService.hide();
-                return throwError(errorMessage);
+                return throwError(() => new Error(errorMessage));
             })
         );
     }
 
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private addAuthHeaders(request: HttpRequest<any>): HttpRequest<any> {
+        const session = this.storageService.getCurrentSession();
+        if (session?.Token) {
+            return request.clone({
+                setHeaders: {
+                    Authorization: 'Bearer ' + session.Token,
+                    'Tenant-ID':   session.TenantID,
+                }
+            });
+        }
+        return request;
+    }
+
+    /**
+     * Maneja un 401:
+     * - Si no hay refresh en curso → inicia uno, actualiza la sesión, reintenta.
+     * - Si ya hay refresh en curso → espera a que termine y reintenta con el nuevo token.
+     * - Si el refresh falla → logout.
+     */
+    private handle401(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+        const refreshToken = this.storageService.getRefreshToken();
+
+        if (!refreshToken) {
+            this.forceLogout();
+            return throwError(() => new Error('No refresh token — sesión expirada'));
+        }
+
+        if (!this.isRefreshing) {
+            this.isRefreshing = true;
+            this.refreshDone$.next(null);
+
+            // El realm = TenantID de la sesión (un realm por tenant)
+            const realm = this.storageService.getCurrentSession()?.TenantID ?? '';
+
+            return this.keycloakAuth.refresh(refreshToken, realm).pipe(
+                switchMap((resp) => {
+                    this.isRefreshing = false;
+                    this.storageService.updateToken(resp.access_token, resp.refresh_token);
+                    this.refreshDone$.next(resp.access_token);
+                    return next.handle(this.addAuthHeaders(request));
+                }),
+                catchError((err) => {
+                    this.isRefreshing = false;
+                    this.forceLogout();
+                    return throwError(() => err);
+                })
+            );
+        }
+
+        // Otro hilo ya está refrescando — esperar el resultado
+        return this.refreshDone$.pipe(
+            filter((token): token is string => token !== null),
+            take(1),
+            switchMap(() => next.handle(this.addAuthHeaders(request)))
+        );
+    }
+
+    private forceLogout(): void {
+        this.storageService.logout();
+    }
+
     private handleUnauthorizedError() {
-        console.log('Token inválido o vencido, redirigir al login');
-        this.notificationService.showError('Token inválido o vencido, redirigiendo al login');
-        this.storageService.removeCurrentSession();
-        this.router.navigate(['/iniciar-sesion']);
+        console.log('Acceso denegado (403)');
+        this.notificationService.showError('No tiene permisos para realizar esta acción');
     }
 
     private handleValidationErrors(errors: any) {

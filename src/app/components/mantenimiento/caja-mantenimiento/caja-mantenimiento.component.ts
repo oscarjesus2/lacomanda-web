@@ -23,8 +23,14 @@ export class CajaMantenimientoComponent implements OnInit {
   filtro = '';
   showForm = false;
 
-  canales: CanalVenta[] = [];
+  canales: CanalVenta[] = [];        // todos los canales activos del sistema
+  canalesSeleccionados: number[] = []; // IDs de canales habilitados para la caja actual
   m: CajaDto = this.blank();
+
+  /** Canales filtrados a los seleccionados — alimenta el dropdown "Canal por Defecto" */
+  get canalesHabilitados(): CanalVenta[] {
+    return this.canales.filter(c => this.canalesSeleccionados.includes(c.IdCanalVenta));
+  }
 
   displayedColumns: string[] = ['descripcion','activo','cajaDefault','canal','nroPedido','actions'];
 
@@ -44,6 +50,7 @@ export class CajaMantenimientoComponent implements OnInit {
     return {
       IdCaja: 0, TurnoAbierto: null, Descripcion: '', Activo: true, NroPedido: 0, CajaPorDefecto: false,
       UsuRegistro: 0, FecRegistro: '', IdCanalVentaDefecto: 0, UsuModi: undefined, FecModi: undefined,
+      IdCanalesVenta: [],
       EmitePrecuenta: true, EmiteComanda: true, EmiteDescuento: true, PermiteDividirPedido: true,
       PermiteCierreParcial: false, EnvioElectronicoOnline: false, PrecuentaLlevarDeliveryAutomatica: false
     };
@@ -73,8 +80,39 @@ export class CajaMantenimientoComponent implements OnInit {
     );
   }
 
-  nuevo(): void { this.m = this.blank(); this.showForm = true; }
-  onEdit(row: CajaDto): void { this.m = { ...row }; this.showForm = true; }
+  isCanal(id: number): boolean {
+    return this.canalesSeleccionados.includes(id);
+  }
+
+  toggleCanal(id: number, checked: boolean): void {
+    if (checked) {
+      if (!this.canalesSeleccionados.includes(id)) {
+        this.canalesSeleccionados = [...this.canalesSeleccionados, id];
+      }
+    } else {
+      this.canalesSeleccionados = this.canalesSeleccionados.filter(x => x !== id);
+      // Si el canal desactivado era el default, limpiar
+      if (this.m.IdCanalVentaDefecto === id) {
+        this.m.IdCanalVentaDefecto = this.canalesSeleccionados[0] ?? 0;
+      }
+    }
+  }
+
+  nuevo(): void {
+    this.m = this.blank();
+    this.canalesSeleccionados = [];
+    this.showForm = true;
+  }
+
+  onEdit(row: CajaDto): void {
+    this.m = { ...row };
+    this.canalesSeleccionados = [];
+    // Cargar canales existentes de la caja
+    this.service.getCanalesVentaByCaja(row.IdCaja).subscribe(canales => {
+      this.canalesSeleccionados = canales.map(c => c.IdCanalVenta);
+    });
+    this.showForm = true;
+  }
 
   onDelete(id: number): void {
     Swal.fire({
@@ -96,11 +134,14 @@ export class CajaMantenimientoComponent implements OnInit {
 
   onSubmit(): void {
     if (this.form.invalid) { this.touchForm(); return; }
+    // Incluir los canales en el mismo DTO que va al Create/Update
+    this.m.IdCanalesVenta = [...this.canalesSeleccionados];
     const obs = this.m.IdCaja ? this.service.actualizar(this.m) : this.service.crear(this.m);
     obs.subscribe(r => {
       if (r.Success) {
         Swal.fire(this.m.IdCaja ? 'Actualizado' : 'Guardado', '', 'success');
-        this.cargar(); this.showForm = false;
+        this.cargar();
+        this.showForm = false;
       } else {
         Swal.fire('Error', r.Message || 'Operación no realizada', 'error');
       }

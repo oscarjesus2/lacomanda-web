@@ -67,6 +67,16 @@
         </mat-form-field>
 
         <mat-form-field appearance="fill">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" [(ngModel)]="usuario.Email" name="email" #email="ngModel"
+            pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$">
+          <mat-icon matSuffix>email</mat-icon>
+          <mat-error *ngIf="email.invalid && (email.dirty || email.touched)">
+            Ingrese un email válido.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
           <mat-label>Password</mat-label>
           <input matInput [type]="hide() ? 'password' : 'text'" [(ngModel)]="usuario.Contrasenia" name="password"
             required #password="ngModel">
