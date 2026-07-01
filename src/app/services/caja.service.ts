@@ -40,4 +40,10 @@ export class CajaService {
             .pipe(map(r => r.Data ?? []));
     }
 
+    /** GET /api/Caja/{idCaja}/tipo-documento — tipos de documento configurados para una caja */
+    getTipoDocumentoByCaja(idCaja: number): Observable<CajaTipoDocumento[]> {
+        return this.http.get<ApiResponse<CajaTipoDocumento[]>>(`${this.basePath}/${idCaja}/tipo-documento`)
+            .pipe(map(r => r.Data ?? []));
+    }
+
 }

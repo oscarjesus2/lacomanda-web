@@ -67,6 +67,7 @@ import { Configuracion } from 'src/app/models/configuracion.models';
 import { CanalVentaService } from 'src/app/services/canal-venta.service';
 import { CanalVenta } from 'src/app/models/canalventa.models';
 import { CajaService } from 'src/app/services/caja.service';
+import { CajaTipoDocumento } from 'src/app/models/caja-tipo-documento.model';
 import { DialogEntradasComponent } from 'src/app/components/dialog-entradas/dialog-entradas.component';
 import { DialogDocumentosEmitidosComponent } from 'src/app/components/dialog-documentos-emitidos/dialog-documentos-emitidos.component';
 import { CanalVentaEnum } from 'src/app/enums/enum';
@@ -137,9 +138,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
   textDescuento: string ='Descuento';
   isBuscarProductoDisabled= false;
   isEntrada    = false;
-  isEspacio    = true;   // visible por defecto; se actualiza al cargar la caja
-  isParaLlevar = true;
-  isDelivery   = true;
+  isEspacio    = false;  // ocultos hasta que se cargue la configuración de la caja
+  isParaLlevar = false;
+  isDelivery   = false;
   isCanalVentaDisabled = false;
   isPanelProductoDisabled = false;
   isComboDisabled = false;
@@ -155,6 +156,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   listaSociosNegocio: SocioNegocio[];
   public canalVentaEnum = CanalVentaEnum;
   idCanalVentaSelected: number = this.canalVentaEnum.ESPACIO;
+  idCanalVentaDefectoCaja: number = 0;  // canal por defecto configurado en la caja activa
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   procesarPedido: boolean = false;
@@ -198,8 +200,16 @@ export class VentaComponent implements OnInit, AfterViewInit {
     console.log(user)
   }
 
-  TipoDocumento = EnumTipoDocumento; 
+  TipoDocumento = EnumTipoDocumento;
   sumaTotal: number = 0;
+
+  // Botones Factura / Boleta — controlados por tipos de documento configurados en la caja
+  mostrarFactura  = false;
+  mostrarBoleta   = false;
+  textoFactura    = 'Factura';
+  textoBoleta     = 'Boleta';
+  idTipoDocFactura: EnumTipoDocumento = EnumTipoDocumento.FacturaVenta;
+  idTipoDocBoleta:  EnumTipoDocumento = EnumTipoDocumento.BoletaVenta;
   sumaDscto: number = 0;
   sumaImporte: number = 0;
   sumaImpuestoBolsa: number = 0;
@@ -273,6 +283,27 @@ export class VentaComponent implements OnInit, AfterViewInit {
     }
   }
 
+  /** Calcula visibilidad y texto de los botones Factura y Boleta */
+  calcularBotonesDocumento(docs: CajaTipoDocumento[]): void {
+    const E = EnumTipoDocumento;
+
+    // ── FACTURA ──────────────────────────────────────────────────
+    const docFactura = docs.find(d => d.IdTipoDocumento === E.FacturaVenta)
+                    ?? docs.find(d => d.IdTipoDocumento === E.FacturaManual);
+    this.mostrarFactura  = !!docFactura;
+    this.textoFactura    = docFactura?.Descripcion ?? 'Factura';
+    this.idTipoDocFactura = docFactura?.IdTipoDocumento as EnumTipoDocumento ?? E.FacturaVenta;
+
+    // ── BOLETA ───────────────────────────────────────────────────
+    // Prioridad: BoletaVenta(2) → FacturaSimplificada(5) → BoletaManual(8)
+    const docBoleta = docs.find(d => d.IdTipoDocumento === E.BoletaVenta)
+                   ?? docs.find(d => d.IdTipoDocumento === E.FacturaSimplificada)
+                   ?? docs.find(d => d.IdTipoDocumento === E.BoletaManual);
+    this.mostrarBoleta  = !!docBoleta;
+    this.textoBoleta    = docBoleta?.Descripcion ?? 'Boleta';
+    this.idTipoDocBoleta = docBoleta?.IdTipoDocumento as EnumTipoDocumento ?? E.BoletaVenta;
+  }
+
   /** Actualiza los flags de visibilidad de cada botón de canal según lo configurado en la caja */
   actualizarFlagsCanales(): void {
     const ids = this.listaTipoPedidos.map(c => c.IdCanalVenta);
@@ -286,6 +317,14 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.isParaLlevar = ids.includes(this.canalVentaEnum.PARA_LLEVAR);
     this.isDelivery   = ids.includes(this.canalVentaEnum.DELIVERY);
     this.isEntrada    = ids.includes(this.canalVentaEnum.ENTRADAS);
+
+    // Si el canal activo no está habilitado para esta caja, activar el canal por defecto
+    if (!ids.includes(this.idCanalVentaSelected) && this.listaTipoPedidos.length > 0) {
+      const defecto = ids.includes(this.idCanalVentaDefectoCaja)
+        ? this.idCanalVentaDefectoCaja
+        : this.listaTipoPedidos[0].IdCanalVenta;   // fallback: primero disponible
+      this.canalVenta(defecto);
+    }
   }
 
   canalVenta(idCanalVenta: number): void {
@@ -365,6 +404,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
             listObservacion: this.observacionService.getAllObservacion(),
             responseSocioNegocio: this.socioNegocioService.getSocioNegocios(),
             responseTipoPedidos: this.cajaService.getCanalesVentaByCaja(data.Data.IdCaja),
+            cajaDatos: this.cajaService.getCaja(data.Data.IdCaja),
+            tiposDocumentoCaja: this.cajaService.getTipoDocumentoByCaja(data.Data.IdCaja),
           }).subscribe(results => {
              console.log("despues");
             // Asignación de resultados
@@ -376,19 +417,23 @@ export class VentaComponent implements OnInit, AfterViewInit {
               this.listaPedidosPendientes = results.responsePedidos.Data;
             }
 
-            // Si la caja tiene canales configurados, filtrar; si no, mostrar todos
+            // Guardar el canal por defecto de la caja
+            this.idCanalVentaDefectoCaja = results.cajaDatos?.Data?.IdCanalVentaDefecto ?? 0;
+
+            // Calcular visibilidad y texto de botones Factura / Boleta
+            this.calcularBotonesDocumento(results.tiposDocumentoCaja);
+
+            // Si la caja tiene canales configurados, usar esos; si no, cargar todos como fallback
             const canalesCaja = results.responseTipoPedidos;
             if (canalesCaja.length > 0) {
               this.listaTipoPedidos = canalesCaja;
+              this.actualizarFlagsCanales();
             } else {
-              // Sin configuración → fallback: cargar todos los activos
               this.tipoPedidoService.listarActivos().subscribe(todos => {
                 this.listaTipoPedidos = todos;
                 this.actualizarFlagsCanales();
               });
             }
-            this.listaTipoPedidos = canalesCaja.length > 0 ? canalesCaja : this.listaTipoPedidos;
-            this.actualizarFlagsCanales();
         
 
             if (results.responseEmpleados.Success) {

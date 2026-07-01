@@ -225,11 +225,15 @@
 
 <!-- Segunda fila de botones -->
 <div class="button-row">
-  <button [disabled]="!procesarPedido" (click)="OpenDialogEmitirComprobante(TipoDocumento.BoletaVenta)">
-    <fa-icon [icon]="faFileInvoiceDollar"></fa-icon> Boleta
+  <button *ngIf="mostrarBoleta"
+          [disabled]="!procesarPedido"
+          (click)="OpenDialogEmitirComprobante(idTipoDocBoleta)">
+    <fa-icon [icon]="faFileInvoiceDollar"></fa-icon> {{ textoBoleta }}
   </button>
-  <button [disabled]="!procesarPedido" (click)="OpenDialogEmitirComprobante(TipoDocumento.FacturaVenta)">
-    <fa-icon [icon]="faFileInvoice" ></fa-icon> Factura
+  <button *ngIf="mostrarFactura"
+          [disabled]="!procesarPedido"
+          (click)="OpenDialogEmitirComprobante(idTipoDocFactura)">
+    <fa-icon [icon]="faFileInvoice"></fa-icon> {{ textoFactura }}
   </button>
   <button [disabled]="!procesarPedido" (click)="OpenDialogEmitirComprobante(TipoDocumento.Express)">
     <fa-icon [icon]="faReceipt"></fa-icon> Express
