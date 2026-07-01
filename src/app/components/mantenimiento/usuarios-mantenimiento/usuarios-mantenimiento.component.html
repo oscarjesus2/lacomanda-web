@@ -76,16 +76,16 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Password</mat-label>
+        <!-- Contraseña solo al crear un usuario nuevo -->
+        <mat-form-field *ngIf="!usuario.IdUsuario" appearance="fill">
+          <mat-label>Contraseña</mat-label>
           <input matInput [type]="hide() ? 'password' : 'text'" [(ngModel)]="usuario.Contrasenia" name="password"
             required #password="ngModel">
-          <button mat-icon-button matSuffix type="button" (click)="clickEvent($event)" [attr.aria-label]="'Hide password'"
-            [attr.aria-pressed]="hide()">
+          <button mat-icon-button matSuffix type="button" (click)="clickEvent($event)">
             <mat-icon>{{hide() ? 'visibility_off' : 'visibility'}}</mat-icon>
           </button>
           <mat-error *ngIf="password.invalid && (password.dirty || password.touched)">
-            El password es requerido.
+            La contraseña es requerida.
           </mat-error>
         </mat-form-field>
 
@@ -136,9 +136,62 @@
         </mat-form-field>
       </div>
 
-      <button mat-raised-button color="primary">
-        {{ usuario.IdUsuario ? 'Actualizar' : 'Guardar' }}
-      </button>
-      <button mat-stroked-button (click)="cancelar()">Cancelar</button>
+      <div class="form-actions">
+        <button mat-raised-button color="primary">
+          {{ usuario.IdUsuario ? 'Actualizar' : 'Guardar' }}
+        </button>
+        <button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>
+
+        <!-- Botón cambiar contraseña solo en edición -->
+        <button *ngIf="usuario.IdUsuario" mat-stroked-button type="button"
+                class="usr-pwd-toggle-btn"
+                (click)="toggleCambiarPassword()">
+          <mat-icon>key</mat-icon>
+          {{ showCambiarPassword ? 'Cancelar cambio' : 'Cambiar contraseña' }}
+        </button>
+      </div>
+
+      <!-- Sección inline para cambiar contraseña -->
+      <div *ngIf="usuario.IdUsuario && showCambiarPassword" class="usr-pwd-section">
+        <p class="usr-pwd-section__title">Cambiar contraseña</p>
+
+        <div class="form-row">
+          <mat-form-field appearance="fill">
+            <mat-label>Contraseña actual</mat-label>
+            <input matInput [type]="hideActual() ? 'password' : 'text'"
+                   [(ngModel)]="pwd.PasswordActual" name="pwdActual">
+            <button mat-icon-button matSuffix type="button" (click)="hideActual.set(!hideActual())">
+              <mat-icon>{{ hideActual() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Nueva contraseña</mat-label>
+            <input matInput [type]="hideNueva() ? 'password' : 'text'"
+                   [(ngModel)]="pwd.PasswordNueva" name="pwdNueva">
+            <button mat-icon-button matSuffix type="button" (click)="hideNueva.set(!hideNueva())">
+              <mat-icon>{{ hideNueva() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Confirmar contraseña</mat-label>
+            <input matInput [type]="hideConfirmar() ? 'password' : 'text'"
+                   [(ngModel)]="pwd.PasswordConfirmar" name="pwdConfirmar">
+            <button mat-icon-button matSuffix type="button" (click)="hideConfirmar.set(!hideConfirmar())">
+              <mat-icon>{{ hideConfirmar() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-hint *ngIf="pwd.PasswordNueva && pwd.PasswordConfirmar && pwd.PasswordNueva !== pwd.PasswordConfirmar"
+                      class="usr-pwd-mismatch">
+              Las contraseñas no coinciden
+            </mat-hint>
+          </mat-form-field>
+        </div>
+
+        <button mat-raised-button color="primary" type="button" (click)="guardarPassword()">
+          <mat-icon>save</mat-icon>
+          Guardar contraseña
+        </button>
+      </div>
     </form>
   </div>

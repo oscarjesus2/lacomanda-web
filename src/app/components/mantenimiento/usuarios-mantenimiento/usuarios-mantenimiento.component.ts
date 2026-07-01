@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, ViewChild } from '@angular/core';
-import { Usuario } from '../../../models/usuario.models';
+import { Usuario, CambiarPasswordDto } from '../../../models/usuario.models';
 
 import Swal from 'sweetalert2';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -39,10 +39,42 @@ export class UsuariosMantenimientoComponent implements OnInit {
     @ViewChild(MatPaginator) paginator: MatPaginator;
 
   
-  hide = signal(true);
-  clickEvent(event: MouseEvent) {
-    this.hide.set(!this.hide());
-    event.stopPropagation();
+  // ── Visibilidad de passwords (solo para nuevo usuario y cambio de password) ──
+  hide         = signal(true);
+  hideActual   = signal(true);
+  hideNueva    = signal(true);
+  hideConfirmar = signal(true);
+
+  clickEvent(event: MouseEvent) { this.hide.set(!this.hide()); event.stopPropagation(); }
+
+  // ── Cambio de contraseña ──────────────────────────────────────────────────
+  showCambiarPassword: boolean = false;
+  pwd: CambiarPasswordDto = { PasswordActual: '', PasswordNueva: '', PasswordConfirmar: '' };
+
+  toggleCambiarPassword(): void {
+    this.showCambiarPassword = !this.showCambiarPassword;
+    this.pwd = { PasswordActual: '', PasswordNueva: '', PasswordConfirmar: '' };
+  }
+
+  guardarPassword(): void {
+    if (!this.pwd.PasswordActual) {
+      Swal.fire('Validación', 'Ingrese la contraseña actual.', 'warning'); return;
+    }
+    if (!this.pwd.PasswordNueva) {
+      Swal.fire('Validación', 'Ingrese la nueva contraseña.', 'warning'); return;
+    }
+    if (this.pwd.PasswordNueva !== this.pwd.PasswordConfirmar) {
+      Swal.fire('Validación', 'La nueva contraseña y la confirmación no coinciden.', 'warning'); return;
+    }
+    this.usuarioService.cambiarPassword(this.usuario.IdUsuario, this.pwd).subscribe({
+      next: () => {
+        Swal.fire('Contraseña actualizada', '', 'success');
+        this.toggleCambiarPassword();
+      },
+      error: () => {
+        Swal.fire('Error', 'No se pudo cambiar la contraseña. Verifique la contraseña actual.', 'error');
+      }
+    });
   }
 
   ngOnInit(): void {

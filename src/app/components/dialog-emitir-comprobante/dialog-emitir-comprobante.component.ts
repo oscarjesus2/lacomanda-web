@@ -85,6 +85,15 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   nroCuentaCobrar: number = 0;
   idCaja: number = 0;
 
+  /** true cuando el cliente es opcional para este tipo de documento
+   *  (Boleta, BoletaManual, FacturaSimplificada, Express).
+   *  El bloque de datos del cliente se oculta por defecto y se muestra bajo demanda. */
+  clienteOpcional: boolean = false;
+  /** true cuando el bloque de datos del cliente debe mostrarse y ser válido */
+  mostrarDatosCliente: boolean = true;
+  /** true cuando el cajero activó manualmente "Añadir datos del cliente" */
+  clienteSolicitaDatos: boolean = false;
+
   displayedColumns: string[] = ['tarjeta', 'autorizacion', 'montoPagado', 'propina', 'acciones'];
   dataSourcePago: MatTableDataSource<Pago>;
   nuevoRegistro: Pago = new Pago();
@@ -186,8 +195,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
     this.ValidaTotalAPagar();
 
-    await this.initializeTipoDocCliente();
-    await this.initializeTipoDocumento();
+    await this.initializeTipoDocumento();   // primero: detecta isFactSimplificadaES
+    await this.initializeTipoDocCliente(); // segundo: usa isFactSimplificadaES para saber si omitir cliente
     await this.initializeValoresCaja();
 
     await this.initializeTarjetas();
@@ -222,10 +231,12 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     // Limpiar campos de cliente
     clienteFormGroup.patchValue({ ruc: '', razonSocial: '' });
 
-    // Para DNI: pre-rellenar con "Cliente Varios" cuando es Boleta/Express
-    const isBoletaVenta = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta;
-    const isExpress    = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.Express;
-    if ((isBoletaVenta || isExpress) && tipoIdentidad === EnumTipoIdentidad.DNI) {
+    // Para DNI: pre-rellenar con "Cliente Varios" cuando es Boleta/FactSimplificada/Express
+    const isBoletaVenta      = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta;
+    const isExpress          = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.Express;
+    const isFactSimplificada = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.FacturaSimplificada;
+    const isBoletaManual     = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaManual;
+    if ((isBoletaVenta || isExpress || isFactSimplificada || isBoletaManual) && tipoIdentidad === EnumTipoIdentidad.DNI) {
       clienteFormGroup.patchValue({ ruc: '00000001', razonSocial: 'Cliente Varios' });
     }
 
@@ -445,9 +456,18 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       const response = await this.tipoDocClienteService.getTipoDocClientes().toPromise();
       const allTipoDocumentoCliente = response.Data ?? [];
 
-      const isBoletaVenta = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta;
-      const isExpress    = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.Express;
-      const esSimplificada = isBoletaVenta || isExpress;
+      // Para tipos con cliente opcional (Boleta, FS, Express): precargar la lista
+      // pero NO rellenar datos del cliente (el bloque está oculto por defecto).
+      if (this.clienteOpcional && !this.mostrarDatosCliente) {
+        this.listTipoDocumentoCliente = allTipoDocumentoCliente;
+        return;
+      }
+
+      const isBoletaVenta       = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta;
+      const isExpress           = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.Express;
+      const isFactSimplificada  = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.FacturaSimplificada;
+      const isBoletaManual      = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaManual;
+      const esSimplificada = isBoletaVenta || isExpress || isFactSimplificada || isBoletaManual;
 
       // Boleta/Express → todos los tipos de identidad
       // Factura → solo los que RequiereParaFactura === true
@@ -492,18 +512,82 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
 
+  /**
+   * Ajusta los validators del bloque cliente según `mostrarDatosCliente`.
+   * Para FacturaSimplificada ES: cuando el monto < 400 y el cliente no pide datos,
+   * los campos del cliente son opcionales y se limpian.
+   */
+  actualizarValidadoresCliente(): void {
+    const clienteGrp = this.form.get('cliente') as FormGroup;
+    if (this.mostrarDatosCliente) {
+      clienteGrp.get('tipoIdentidad')?.setValidators([Validators.required]);
+      clienteGrp.get('ruc')?.setValidators([Validators.required]);
+      clienteGrp.get('razonSocial')?.setValidators([Validators.required, this.razonSocialValidator()]);
+    } else {
+      clienteGrp.get('tipoIdentidad')?.clearValidators();
+      clienteGrp.get('ruc')?.clearValidators();
+      clienteGrp.get('razonSocial')?.clearValidators();
+      clienteGrp.patchValue({ ruc: '', razonSocial: '' });
+    }
+    clienteGrp.get('tipoIdentidad')?.updateValueAndValidity();
+    clienteGrp.get('ruc')?.updateValueAndValidity();
+    clienteGrp.get('razonSocial')?.updateValueAndValidity();
+  }
+
+  /** El cajero activa manualmente los datos del cliente en FacturaSimplificada ES */
+  toggleClienteDatos(): void {
+    this.clienteSolicitaDatos = true;
+    this.mostrarDatosCliente = true;
+    // Abrir vacío — sin valores por defecto
+    const clienteGrp = this.form.get('cliente') as FormGroup;
+    clienteGrp.patchValue({ tipoIdentidad: null, ruc: '', razonSocial: '', direccion: '', correo: '' });
+    this.etiquetaCliente = '';
+    this.actualizarValidadoresCliente();
+    this.updateRucValidator();
+  }
+
+  /** El cajero decide no incluir datos del cliente (Boleta, FS, Express) */
+  ocultarClienteDatos(): void {
+    this.clienteSolicitaDatos = false;
+    this.mostrarDatosCliente = false;
+    // Limpiar campos
+    const clienteGrp = this.form.get('cliente') as FormGroup;
+    clienteGrp.patchValue({ tipoIdentidad: null, ruc: '', razonSocial: '', direccion: '', correo: '' });
+    this.actualizarValidadoresCliente();
+  }
+
   private async initializeTipoDocumento(): Promise<void> {
     var response = await this.cajaTipoDocumentoService.GetTiposDocumentos(this.idCaja).toPromise();
     let allTipoDocumento = response;
     if (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta) {
       this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDocumento === EnumTipoDocumento.BoletaManual || doc.IdTipoDocumento === EnumTipoDocumento.BoletaVenta);
       this.tipoDocumento.IdTipoDocumento = EnumTipoDocumento.BoletaVenta;
+      this.clienteOpcional = true;
     } else if (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.FacturaVenta) {
       this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDocumento === EnumTipoDocumento.FacturaManual || doc.IdTipoDocumento === EnumTipoDocumento.FacturaVenta);
       this.tipoDocumento.IdTipoDocumento = EnumTipoDocumento.FacturaVenta;
+    } else if (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.FacturaSimplificada) {
+      this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDocumento === EnumTipoDocumento.FacturaSimplificada);
+      this.tipoDocumento.IdTipoDocumento = EnumTipoDocumento.FacturaSimplificada;
+      this.clienteOpcional = true;
     } else if (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.Express) {
       this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDocumento === EnumTipoDocumento.Express);
       this.tipoDocumento.IdTipoDocumento = EnumTipoDocumento.Express;
+      this.clienteOpcional = true;
+    } else if (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaManual) {
+      this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDocumento === EnumTipoDocumento.BoletaManual);
+      this.tipoDocumento.IdTipoDocumento = EnumTipoDocumento.BoletaManual;
+      this.clienteOpcional = true;
+    } else if (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.FacturaManual) {
+      this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDocumento === EnumTipoDocumento.FacturaManual);
+      this.tipoDocumento.IdTipoDocumento = EnumTipoDocumento.FacturaManual;
+    }
+
+    // Para tipos con cliente opcional: ocultar bloque por defecto
+    if (this.clienteOpcional) {
+      this.clienteSolicitaDatos = false;
+      this.mostrarDatosCliente = false;
+      this.actualizarValidadoresCliente();
     }
 
     this.form.patchValue({
@@ -651,23 +735,49 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   cmdCobrarClick(): void {
     try {
-
       this.tipoDocumento.IdTipoDocumento = this.form.get('idTipoDoc')?.value;
 
-      // Sincronizar TipoIdentidad desde el formulario, usando el objeto completo
-      // del listado para no perder Descripcion, RegexValidacion, etc.
+      // ── Calcular si el backend usará cliente genérico ────────────────
+      const E = EnumTipoDocumento;
+      const tipoDoc = this.tipoDocumento.IdTipoDocumento;
+      const esFacturaObligatoria = tipoDoc === E.FacturaVenta || tipoDoc === E.FacturaManual;
+      const rucForm: string = this.form.get('cliente.ruc')?.value ?? '';
+      const usarClienteGenerico = esFacturaObligatoria
+        ? false
+        : !this.mostrarDatosCliente || !rucForm || rucForm === '00000001';
+
+      // ── Si se usa cliente genérico: no se necesitan datos del cliente ─
+      if (usarClienteGenerico) {
+        this.cobrar(false);
+        return;
+      }
+
+      // ── Sincronizar cliente desde el formulario ──────────────────────
       const tipoIdentidadId: string = this.form.get('cliente.tipoIdentidad')?.value;
       const tipoIdentidadCompleto = this.listTipoDocumentoCliente.find(
         t => t.IdTipoIdentidad === tipoIdentidadId
       ) ?? new TipoIdentidad({ IdTipoIdentidad: tipoIdentidadId, Descripcion: '' });
 
-      this.cliente.TipoIdentidad  = tipoIdentidadCompleto;
-      this.cliente.IdTipoIdentidad = tipoIdentidadId;   // ← sincronizar la propiedad plana
+      this.cliente.TipoIdentidad       = tipoIdentidadCompleto;
+      this.cliente.IdTipoIdentidad      = tipoIdentidadId;
+      this.cliente.NumeroIdentificacion = rucForm;
+      this.cliente.RazonSocial          = this.form.get('cliente.razonSocial')?.value;
+      this.cliente.Direccion            = this.form.get('cliente.direccion')?.value;
+      this.cliente.Correo               = this.form.get('cliente.correo')?.value;
 
-      this.cliente.NumeroIdentificacion = this.form.get('cliente.ruc')?.value;
-      this.cliente.RazonSocial = this.form.get('cliente.razonSocial')?.value;
-      this.cliente.Direccion = this.form.get('cliente.direccion')?.value;
-      this.cliente.Correo = this.form.get('cliente.correo')?.value;
+      // ── Validar campos obligatorios del cliente ──────────────────────
+      if (!tipoIdentidadId) {
+        Swal.fire('Validación', 'Seleccione el tipo de documento del cliente.', 'warning');
+        return;
+      }
+      if (!rucForm) {
+        Swal.fire('Validación', 'Ingrese el número de identificación del cliente.', 'warning');
+        return;
+      }
+      if (!this.cliente.RazonSocial) {
+        Swal.fire('Validación', 'Ingrese el nombre o razón social del cliente.', 'warning');
+        return;
+      }
 
       // ── Validación de formato via regex del backend ──────────────────
       const tipoIdentidadObj = this.listTipoDocumentoCliente.find(
@@ -680,18 +790,18 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         return;
       }
 
-      // ── Validaciones de negocio (independientes del formato) ─────────
-      if (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.FacturaVenta) {
+      // ── Validaciones de negocio ──────────────────────────────────────
+      if (tipoDoc === E.FacturaVenta) {
         if (!this.cliente.NumeroIdentificacion || this.cliente.NumeroIdentificacion === '99999999999') {
           Swal.fire('Validación', 'Ingrese el número de identificación del cliente correctamente.', 'warning');
           return;
         }
-        if (this.cliente.Direccion == '' || this.cliente.Direccion == null) {
+        if (!this.cliente.Direccion) {
           Swal.fire('Validación', 'Ingrese la dirección del cliente.', 'warning');
           return;
         }
       } else {
-        // Regla "Cliente Varios" / "00000001" solo aplica para DNI
+        // Regla "Cliente Varios" / "00000001" solo aplica para DNI en Boleta
         if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.DNI) {
           if (this.cliente.NumeroIdentificacion === '00000001' && this.cliente.RazonSocial !== 'Cliente Varios') {
             Swal.fire('Validación', 'Si el DNI es 00000001, el nombre del cliente debe ser "Cliente Varios".', 'warning');
@@ -702,8 +812,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
             return;
           }
         }
-        // Monto ≥ 700: no permitir "00000001"
-        if (parseFloat(this.lblmonto) >= 700 && (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta || this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaManual)) {
+        // Monto ≥ 700: no permitir "00000001" en Boleta
+        if (parseFloat(this.lblmonto) >= 700 && (tipoDoc === E.BoletaVenta || tipoDoc === E.BoletaManual)) {
           if (this.cliente.NumeroIdentificacion === '00000001') {
             Swal.fire('Validación', 'La cuenta es igual o superior a 700, debe ingresar el documento de identidad del cliente.', 'warning');
             return;
@@ -711,11 +821,9 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         }
       }
 
-      if (this.cliente.Correo != '' && this.cliente.Correo != null) {
-        if (!this.isValidEmail(this.cliente.Correo)) {
-          Swal.fire('Validacion', 'El correo electrónico está mal ingresado.', 'warning');
-          return;
-        }
+      if (this.cliente.Correo && !this.isValidEmail(this.cliente.Correo)) {
+        Swal.fire('Validación', 'El correo electrónico está mal ingresado.', 'warning');
+        return;
       }
 
       this.cobrar(false);
@@ -934,7 +1042,21 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
 
 
-    var resultGenerateComprobante: ApiResponse<ImpresionDTO[]> = await this.ventaService.guardarDocumentoVenta(this.idTipoPedido, venta, this.cliente, this.pedidoCab, this.listaDescuentoCodigo, listPago, this.bTurnoIndenpendiente).toPromise();
+    // Determinar si el backend debe usar el cliente genérico
+    const E = EnumTipoDocumento;
+    const tipoDoc = this.tipoDocumento.IdTipoDocumento;
+    const esFacturaObligatoria = tipoDoc === E.FacturaVenta || tipoDoc === E.FacturaManual;
+    const usarClienteGenerico = esFacturaObligatoria
+      ? false
+      : !this.mostrarDatosCliente
+        || !this.cliente.NumeroIdentificacion
+        || this.cliente.NumeroIdentificacion === '00000001';
+
+    var resultGenerateComprobante: ApiResponse<ImpresionDTO[]> = await this.ventaService.guardarDocumentoVenta(
+      this.idTipoPedido, venta, this.cliente, this.pedidoCab,
+      this.listaDescuentoCodigo, listPago, this.bTurnoIndenpendiente,
+      usarClienteGenerico
+    ).toPromise();
     if (resultGenerateComprobante.Success) {
       this.spinnerService.hide();
       return resultGenerateComprobante.Data;

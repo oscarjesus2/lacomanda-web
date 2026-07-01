@@ -37,7 +37,18 @@
         </div>
 
         <!-- BLOQUE CLIENTE -->
-        <div formGroupName="cliente">
+        <!-- Para Factura Simplificada (ES): oculto por defecto hasta que el cajero lo active -->
+        <div formGroupName="cliente" *ngIf="!clienteOpcional || mostrarDatosCliente">
+
+          <!-- Cabecera con botón para cerrar el bloque (solo FS-ES) -->
+          <div *ngIf="clienteOpcional" class="fs-es-cliente-header">
+            <span class="fs-es-cliente-header__label">Datos del cliente</span>
+            <button type="button" mat-icon-button class="fs-es-cliente-header__close"
+                    matTooltip="Quitar datos del cliente"
+                    (click)="ocultarClienteDatos()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
           <div class="form-row cobranza-panel__row--compact">
             <mat-form-field appearance="fill" class="form-field cobranza-panel__field-doc-cliente">
               <mat-label>Tipo Documento Cliente</mat-label>
@@ -91,6 +102,16 @@
             </mat-error>
           </mat-form-field>
         </div>
+
+        <!-- Botón para añadir datos del cliente (FS-ES, bloque oculto) -->
+        <button *ngIf="clienteOpcional && !mostrarDatosCliente"
+                type="button"
+                class="fs-es-cliente-btn"
+                (click)="toggleClienteDatos()">
+          <mat-icon>person_add</mat-icon>
+          Añadir datos del cliente
+        </button>
+
       </form>
 
     </div>

@@ -3,6 +3,7 @@ import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HTTP_INTERCEPTORS
 import { Observable, throwError, BehaviorSubject, of } from 'rxjs';
 import { catchError, filter, switchMap, take } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { StorageService } from '../services/storage.service';
 import { KeycloakAuthService } from '../services/auth/keycloak-auth.service';
 import { NotificationService } from '../services/notification.service';
@@ -23,6 +24,7 @@ export class ApiRequestInterceptor implements HttpInterceptor {
         private storageService: StorageService,
         private keycloakAuth: KeycloakAuthService,
         private router: Router,
+        private dialog: MatDialog,
         private notificationService: NotificationService,
         private spinnerService: NgxSpinnerService,
         private validationErrorService: ValidationErrorService,
@@ -134,6 +136,8 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     }
 
     private forceLogout(): void {
+        this.spinnerService.hide();
+        this.dialog.closeAll();       // cierra cualquier dialog abierto antes de navegar
         this.storageService.logout();
     }
 

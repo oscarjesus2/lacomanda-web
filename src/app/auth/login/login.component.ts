@@ -306,6 +306,7 @@ export class LoginComponent implements OnInit {
       this.tenantDefault = tenants as any;
       if (this.tenantDefault.length === 1) {
         this.loginForm?.controls['tenant']?.setValue(this.tenantDefault[0]);
+        setTimeout(() => (document.getElementById('username') as HTMLInputElement)?.focus(), 120);
       }
     } catch {
       this.notificationService.showError('No se pudieron cargar los tenants. Inténtalo nuevamente.');

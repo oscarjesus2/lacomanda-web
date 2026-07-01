@@ -54,16 +54,26 @@ export class VentaService {
       }
       
   
-    guardarDocumentoVenta(idTipoPedido: string, venta: Venta, cliente: Cliente, pedidoCab: PedidoCab, listaDescuentoCodigo: DescuentoCodigo[], listaPago: Pago[],  bTurnoIndependiente: boolean): Observable<ApiResponse<ImpresionDTO[]>> {
+    guardarDocumentoVenta(
+        idTipoPedido: string,
+        venta: Venta,
+        cliente: Cliente | null,
+        pedidoCab: PedidoCab,
+        listaDescuentoCodigo: DescuentoCodigo[],
+        listaPago: Pago[],
+        bTurnoIndependiente: boolean,
+        usarClienteGenerico: boolean
+    ): Observable<ApiResponse<ImpresionDTO[]>> {
 
         const body = {
             IdTipoPedido: idTipoPedido,
             venta: venta,
-            cliente: cliente,
+            cliente: usarClienteGenerico ? null : cliente,
             pedidoCab: pedidoCab,
             listaDescuentoCodigo: listaDescuentoCodigo,
             listaPago: listaPago,
-            bTurnoIndependiente: bTurnoIndependiente
+            bTurnoIndependiente: bTurnoIndependiente,
+            usarClienteGenerico: usarClienteGenerico
         };
 
         return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + 'grabardocumentoventa', body);
