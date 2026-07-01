@@ -8,20 +8,20 @@
 .data-table td {
   padding: 0.4rem 0.6rem;
   text-align: left;
-  border-bottom: 1px solid rgba(59, 34, 10, 0.08);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
 }
 
 .data-table thead {
   position: sticky;
   top: 0;
-  background: #f1e3ca;
+  background: var(--color-surface-warm);
   z-index: 1;
 }
 
 .data-table tbody tr:nth-child(even) {
-  background: rgba(59, 34, 10, 0.02);
+  background: color-mix(in srgb, var(--color-text) 2%, transparent);
 }
 
 .data-table tbody tr:hover {
-  background: rgba(244, 178, 58, 0.12);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }

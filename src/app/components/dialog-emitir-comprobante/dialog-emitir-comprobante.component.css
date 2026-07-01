@@ -163,7 +163,7 @@
 }
 
 .cp-btn--exacto:hover {
-  background: #c62828;
+  background: var(--color-warn);
   transform: translateY(-1px);
   box-shadow: 0 5px 15px rgba(229,57,53,.45);
 }
@@ -265,16 +265,16 @@
   transform: translateY(-1px);
 }
 
-/* Moneda alternativa — teal */
+/* Moneda alternativa — primary */
 .cp-btn--alt {
   background: var(--color-primary);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 121, 107, 0.30);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 .cp-btn--alt:hover {
   background: var(--color-primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 121, 107, 0.40);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
 .cp-btn:active {
@@ -374,8 +374,8 @@
 /* Chip de equivalencia en moneda principal */
 .cobranza-panel__value-chip--accent .cobranza-panel__value-chip-val {
   color: var(--color-primary-dark);
-  border-color: rgba(0, 121, 107, 0.25);
-  background: rgba(0, 121, 107, 0.06);
+  border-color: color-mix(in srgb, var(--color-primary-dark) 25%, transparent);
+  background: color-mix(in srgb, var(--color-primary-dark) 6%, transparent);
 }
 
 /* ── HERO FALTA / VUELTO ───────────────────────────────────── */
@@ -392,13 +392,13 @@
 }
 
 .cobranza-panel__hero--falta {
-  background: linear-gradient(135deg, rgba(229,57,53,.07), rgba(229,57,53,.02));
-  border-color: rgba(229,57,53,.32);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-warn) 7%, transparent), color-mix(in srgb, var(--color-warn) 2%, transparent));
+  border-color: color-mix(in srgb, var(--color-warn) 32%, transparent);
 }
 
 .cobranza-panel__hero--completo {
-  background: linear-gradient(135deg, rgba(56,142,60,.08), rgba(56,142,60,.02));
-  border-color: rgba(56,142,60,.32);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-success) 8%, transparent), color-mix(in srgb, var(--color-success) 2%, transparent));
+  border-color: color-mix(in srgb, var(--color-success) 32%, transparent);
 }
 
 .cobranza-panel__hero-left {
@@ -423,8 +423,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-.cobranza-panel__hero--falta .cobranza-panel__hero-value { color: #c62828; }
-.cobranza-panel__hero--completo .cobranza-panel__hero-value { color: #2e7d32; }
+.cobranza-panel__hero--falta .cobranza-panel__hero-value { color: var(--color-warn); }
+.cobranza-panel__hero--completo .cobranza-panel__hero-value { color: var(--color-success); }
 
 .cobranza-panel__hero-ref {
   font-size: 0.72rem;
@@ -448,7 +448,7 @@
   line-height: 1;
 }
 
-.cobranza-panel__hero--completo .cobranza-panel__hero-pct { color: #2e7d32; }
+.cobranza-panel__hero--completo .cobranza-panel__hero-pct { color: var(--color-success); }
 
 /* Barra de progreso (dentro del hero) */
 .cobranza-panel__progress-track {
@@ -579,8 +579,8 @@
 
 /* Fila de inputs diferenciada visualmente */
 .cobranza-panel__input-row .mat-mdc-footer-cell {
-  background: rgba(0, 121, 107, 0.04) !important;
-  border-top: 1.5px dashed rgba(0, 121, 107, 0.28) !important;
+  background: color-mix(in srgb, var(--color-primary) 4%, transparent) !important;
+  border-top: 1.5px dashed color-mix(in srgb, var(--color-primary) 28%, transparent) !important;
   padding-top: 10px !important;
   padding-bottom: 10px !important;
 }
@@ -635,18 +635,18 @@
   flex-shrink: 0;
 }
 
-/* Efectivo → amber */
+/* Efectivo → primary */
 .cobranza-panel__payment-card-total--cash {
-  color: #e65100;
-  background: rgba(230, 81, 0, 0.08);
-  border-color: rgba(230, 81, 0, 0.28);
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 28%, transparent);
 }
 
-/* Tarjeta → teal */
+/* Tarjeta → primary dark */
 .cobranza-panel__payment-card-total--card {
   color: var(--color-primary-dark);
-  background: rgba(0, 121, 107, 0.08);
-  border-color: rgba(0, 121, 107, 0.25);
+  background: color-mix(in srgb, var(--color-primary-dark) 8%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary-dark) 25%, transparent);
 }
 
 /* Body de la card de efectivo */

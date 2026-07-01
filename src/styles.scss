@@ -2,39 +2,42 @@
    LaComanda – Design Tokens Globales
    Una sola fuente de verdad para colores, radios y sombras.
    Usa siempre estas variables en los componentes.
+
+   PALETA: Naranja-ámbar cálido (ciencia del color para restaurantes)
+   El naranja-ámbar estimula el apetito, genera calidez y urgencia.
    ============================================================ */
 :root {
 
-  /* --- Colores de marca (restaurante japonés) --- */
-  --color-primary:       #00796b;   /* Teal 700 — acción principal */
-  --color-primary-dark:  #004d40;   /* Teal 900 — hover/active */
-  --color-primary-light: #4db6ac;   /* Teal 300 — tono claro */
-  --color-accent:        #f9a825;   /* Amber 700 — dorado, seleccionado */
-  --color-accent-dark:   #f57f17;   /* Amber 900 */
+  /* --- Colores de marca — cálido restaurante --- */
+  --color-primary:       #BF360C;   /* Deep Orange 900 — acción principal */
+  --color-primary-dark:  #870000;   /* Deep Orange oscuro — hover/active */
+  --color-primary-light: #FF6E40;   /* Deep Orange claro — accents */
+  --color-accent:        #FFB300;   /* Amber 700 — dorado, seleccionado */
+  --color-accent-dark:   #FF8F00;   /* Amber 800 */
   --color-success:       #2e7d32;   /* Green 800 — estado confirmado */
   --color-warn:          #c62828;   /* Red 800 — advertencia/eliminar */
 
   /* --- Superficies y fondos --- */
-  --color-bg:            #f0f4f3;   /* Fondo general — gris verdoso muy suave */
+  --color-bg:            #FFF8F2;   /* Fondo general — crema cálida */
   --color-surface:       #ffffff;   /* Superficie principal */
-  --color-surface-warm:  #f5faf9;   /* Tarjetas/paneles — teal muy claro */
+  --color-surface-warm:  #FFF4EC;   /* Tarjetas/paneles — naranja muy suave */
   --color-surface-alt:   rgba(255, 255, 255, 0.80);
 
   /* --- Texto --- */
-  --color-text:          #3b220a;   /* Texto principal — marrón oscuro */
-  --color-text-muted:    rgba(59, 34, 10, 0.60);
-  --color-text-light:    #fff8e8;   /* Texto sobre fondos oscuros */
+  --color-text:          #2D1A0A;   /* Texto principal — marrón espresso */
+  --color-text-muted:    rgba(45, 26, 10, 0.60);
+  --color-text-light:    #FFF8F0;   /* Texto sobre fondos oscuros */
 
   /* --- Bordes --- */
-  --color-border:        rgba(59, 34, 10, 0.12);
-  --color-border-strong: rgba(59, 34, 10, 0.25);
+  --color-border:        rgba(45, 26, 10, 0.12);
+  --color-border-strong: rgba(45, 26, 10, 0.25);
 
   /* --- Header --- */
-  --header-bg-start: #004d40;   /* Teal 900 */
-  --header-bg-end:   #00796b;   /* Teal 700 */
-  --header-accent:   #f9a825;   /* Amber 700 — dorado */
+  --header-bg-start: #7A1900;   /* Deep Orange muy oscuro */
+  --header-bg-end:   #BF360C;   /* Deep Orange 900 */
+  --header-accent:   #FFB300;   /* Amber 700 — dorado */
   --header-text:     #ffffff;   /* Blanco puro */
-  --header-muted:    #b2dfdb;   /* Teal 100 */
+  --header-muted:    #FFCCBC;   /* Deep Orange 100 */
 
   /* --- Radios de borde --- */
   --radius-sm:   4px;

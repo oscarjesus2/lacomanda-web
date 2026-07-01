@@ -46,9 +46,9 @@
 
 /* Chip turno activo — amber cálido */
 .app-header__chip--turno {
-  background: rgba(249, 168, 37, 0.20);
-  border: 1px solid rgba(249, 168, 37, 0.50);
-  color: #ffd54f;
+  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 50%, transparent);
+  color: var(--color-accent);
 }
 
 /* Punto verde pulsante */
@@ -56,16 +56,16 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #69f0ae;
-  box-shadow: 0 0 0 0 rgba(105, 240, 174, 0.6);
+  background: var(--color-success);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 60%, transparent);
   animation: pulse-dot 2s ease-in-out infinite;
   flex-shrink: 0;
 }
 
 @keyframes pulse-dot {
-  0%   { box-shadow: 0 0 0 0 rgba(105, 240, 174, 0.6); }
-  50%  { box-shadow: 0 0 0 5px rgba(105, 240, 174, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(105, 240, 174, 0); }
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 60%, transparent); }
+  50%  { box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-success) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 0%, transparent); }
 }
 
 /* Chip sin turno — gris apagado */
@@ -79,7 +79,7 @@
 .app-header__chip--user {
   background: rgba(255, 255, 255, 0.10);
   border: 1px solid rgba(255, 255, 255, 0.22);
-  color: #e0f2f1;
+  color: var(--header-muted);
 }
 
 /* ── Stat cards del turno ──────────────────────────────────── */
@@ -106,7 +106,7 @@
 .app-header__stat-value {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--header-text);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -132,7 +132,7 @@
 .app-header__clock-time {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--header-text);
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
 }

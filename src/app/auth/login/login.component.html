@@ -80,7 +80,7 @@
         <!-- Botón principal -->
         <button
           type="submit"
-          class="lc-btn lc-btn-primary login-button"
+          class="login-button"
           [disabled]="isSubmitting || loginForm.invalid">
           <ng-container *ngIf="!isSubmitting; else loadingTpl">Entrar</ng-container>
           <ng-template #loadingTpl><span aria-busy="true">Ingresando…</span></ng-template>

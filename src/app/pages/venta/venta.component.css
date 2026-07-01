@@ -313,7 +313,7 @@
 }
 
 .selected-row {
-  background-color: rgba(46, 125, 50, 0.08) !important;
+  background-color: color-mix(in srgb, var(--color-success) 10%, transparent) !important;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -603,7 +603,7 @@
   background: var(--color-accent) !important;
   color: var(--color-text) !important;
   border-color: var(--color-accent-dark) !important;
-  box-shadow: 0 3px 10px rgba(249, 168, 37, 0.50) !important;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--color-accent) 50%, transparent) !important;
   font-weight: 800;
 }
 
@@ -627,7 +627,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   flex-shrink: 0;
-  background: rgba(0, 77, 64, 0.55);
+  background: color-mix(in srgb, var(--color-primary-dark) 55%, transparent);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   padding: 4px 8px 6px;
 }
@@ -661,7 +661,7 @@
   color: var(--color-primary-dark) !important;
   border-color: var(--color-primary-light) !important;
   font-weight: 700 !important;
-  box-shadow: 0 2px 6px rgba(77, 182, 172, 0.40) !important;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--color-primary-light) 40%, transparent) !important;
 }
 
 /* ── AMBIENTE — misma jerarquía que FAMILIA ─────────────────── */
@@ -695,13 +695,13 @@
   background: var(--color-accent) !important;
   color: var(--color-text) !important;
   border-color: var(--color-accent-dark) !important;
-  box-shadow: 0 3px 10px rgba(249, 168, 37, 0.50) !important;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--color-accent) 50%, transparent) !important;
   font-weight: 800;
 }
 
 /* ── ACCIONES DE MESA — fila subordinada oscura ─────────────── */
 .static-buttons-row--acciones {
-  background: rgba(0, 77, 64, 0.55);
+  background: color-mix(in srgb, var(--color-primary-dark) 55%, transparent);
   padding: 5px 8px 7px;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   gap: 5px;
@@ -732,12 +732,12 @@
   color: var(--color-text) !important;
   border-color: var(--color-accent-dark) !important;
   font-weight: 800 !important;
-  box-shadow: 0 2px 8px rgba(249, 168, 37, 0.40) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent) 40%, transparent) !important;
 }
 
 .static-buttons-row--acciones button.process-pedido:hover {
   background: var(--color-accent-dark) !important;
-  box-shadow: 0 4px 12px rgba(249, 168, 37, 0.55) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent) 55%, transparent) !important;
 }
 
 /* Contenedor de subfamilias — scroll horizontal (genérico legacy) */

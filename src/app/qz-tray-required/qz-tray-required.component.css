@@ -16,14 +16,14 @@
   .qz-tray-required .btn {
     padding: 10px 20px;
     font-size: 1em;
-    color: #fff;
-    background-color: #007bff;
+    color: var(--color-text-light);
+    background-color: var(--color-primary);
     border: none;
     border-radius: 5px;
     text-decoration: none;
   }
-  
+
   .qz-tray-required .btn:hover {
-    background-color: #0056b3;
+    background-color: var(--color-primary-dark);
   }
   
