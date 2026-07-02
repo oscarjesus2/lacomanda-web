@@ -2021,7 +2021,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.idPedidoCobrar = firstItem.IdPedido;
     this.nroCuentaCobrar = firstItem.NroCuenta;
     this.horaPedido = firstItem.HoraPedido;
-    this.horaPedido = firstItem.NumeroPedido;
+    this.numeroPedido = firstItem.NroPedido;
   }
 
   async Refresh(): Promise<void> {

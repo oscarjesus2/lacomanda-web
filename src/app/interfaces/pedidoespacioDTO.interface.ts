@@ -6,7 +6,7 @@ export interface PedidoEspacioDTO {
   NroPax: number;
   IdEspacio: string;         // Identificador de la espacio
   Cliente: string;
-  NumeroPedido: string;   // Número del pedido
+  NroPedido: string;   // Número del pedido
   FechaPedido: Date;      // Fecha del pedido
   IdMozo: string;         // Identificador del mozo
   NombreMozo: string;     // Nombre del mozo
