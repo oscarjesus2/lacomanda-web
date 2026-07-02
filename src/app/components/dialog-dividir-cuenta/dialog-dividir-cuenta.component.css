@@ -1,141 +1,169 @@
-/* Fuente principal */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+/* ==========================================================
+   dialog-dividir-cuenta — hereda mant-panel del global
+   ========================================================== */
 
-body {
-  font-family: 'Poppins', sans-serif;
-  background-color: var(--color-bg);
-  margin: 0;
-  padding: 0;
+.dc-panel {
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
-.component-container {
-  max-width: 1200px;
-  margin: 40px auto;
-  padding: 20px;
-  background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-}
-
-h2 {
-  text-align: center;
-  font-weight: 600;
-  font-size: 24px;
-  color: var(--color-text);
-  margin-bottom: 20px;
-}
-
-/* Botones */
-.button-row {
+/* ── Barra superior: acciones + info de mesa ──────────────── */
+.dc-topbar {
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.button-row button {
+.dc-topbar__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dc-info {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 12px 20px;
-  background-color: var(--color-primary);
-  color: #ffffff;
-  border-radius: var(--radius-md);
-  border: 2px solid transparent;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+  background: color-mix(in srgb, var(--color-surface-warm) 60%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  font-size: 0.82rem;
+}
+
+.dc-info__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin-right: 2px;
+}
+
+.dc-info__item { color: var(--color-text); }
+.dc-info__sep  { color: var(--color-text-muted); }
+
+/* ── Botones ─────────────────────────────────────────────── */
+.dc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 18px;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  box-shadow: var(--shadow-sm);
   transition: var(--transition-fast);
 }
 
-.button-row button fa-icon {
-  margin-right: 8px;
-  font-size: 18px;
+.dc-btn mat-icon {
+  font-size: 17px;
+  width: 17px;
+  height: 17px;
+  line-height: 17px;
 }
 
-.button-row button:hover {
-  background-color: var(--color-primary-dark);
-  border-color: var(--color-primary-light);
-  box-shadow: var(--shadow-md);
+.dc-btn--primary {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+}
+.dc-btn--primary:hover {
+  background: var(--color-primary-dark);
 }
 
-.button-row button:active {
-  background-color: var(--color-primary-dark);
-  box-shadow: var(--shadow-xs);
+.dc-btn--secondary {
+  background: transparent;
+  border: 1.5px solid var(--color-primary);
+  color: var(--color-primary);
+}
+.dc-btn--secondary:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
-/* Información de la mesa */
-.espacio-info {
+/* ── Grillas lado a lado ─────────────────────────────────── */
+.dc-grids {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  min-width: 0;
+}
+
+.dc-grid {
   display: flex;
-  justify-content: space-between;
-  padding: 15px;
-  background-color: var(--color-surface-warm);
-  border-radius: var(--radius-md);
-  font-size: 16px;
-  color: var(--color-text);
-  margin-bottom: 30px;
+  flex-direction: column;
+  min-width: 0;
 }
 
-/* Contenedor de las dos tablas */
-.grids-container {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.grid {
-  width: 48%;
-  background-color: var(--color-surface);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  padding: 20px;
-}
-
-.grid h3 {
-  font-size: 18px;
-  font-weight: 600;
+.dc-grid__title {
+  margin: 0 0 4px;
+  font-size: 0.80rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--color-primary-dark);
-  margin-bottom: 15px;
 }
 
-/* Tablas */
-.table {
-  width: 100%;
-  border-collapse: collapse;
+.dc-grid__subtitle {
+  margin: 0 0 8px;
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
 }
 
-.table th, .table td {
-  padding: 10px;
-  text-align: left;
+/* ── Tabla ───────────────────────────────────────────────── */
+.dc-table-wrap {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 340px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.dc-table { width: 100%; }
+
+.dc-table .mat-mdc-header-cell {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 10px 12px;
+}
+
+.dc-table .mat-mdc-cell {
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  color: var(--color-text);
   border-bottom: 1px solid var(--color-border);
 }
 
-.table th {
-  background-color: var(--color-primary);
-  color: #ffffff;
+.dc-table .mat-mdc-row:hover .mat-mdc-cell {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  cursor: pointer;
 }
 
-.table td {
-  color: var(--color-text);
+.dc-table .mat-mdc-row.dc-row--selected .mat-mdc-cell {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  font-weight: 600;
 }
 
-.table tbody tr:nth-child(even) {
-  background-color: var(--color-surface-warm);
-}
-
-/* Responsividad */
-@media (max-width: 768px) {
-  .grids-container {
-    flex-direction: column;
-  }
-
-  .grid {
-    width: 100%;
-  }
-}
-
-.selected-row {
-  background-color: rgba(0, 121, 107, 0.12);
-  color: var(--color-text);
+/* ── Barra de acciones (vista 2) ─────────────────────────── */
+.dc-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
 }

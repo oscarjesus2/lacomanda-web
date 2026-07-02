@@ -10,82 +10,151 @@
 
     <!-- Card del formulario -->
     <div class="login-card">
-      <form [formGroup]="loginForm" (ngSubmit)="login()">
-        <div *ngIf="!loginValid" class="error-banner">Usuario o contraseña incorrectos. Inténtalo de nuevo.</div>
 
-        <!-- Selector de sucursal -->
-        <div class="form-group">
-          <label for="tenant">Sucursal</label>
-          <div class="custom-select">
-            <select id="tenant" formControlName="tenant" required>
-              <option *ngFor="let t of tenantDefault" [ngValue]="t">{{ t.Sucursal }}</option>
-            </select>
+      <!-- ── Vista: Login normal ─────────────────────────────────────────── -->
+      <ng-container *ngIf="!showForgotPassword">
+        <form [formGroup]="loginForm" (ngSubmit)="login()">
+          <div *ngIf="!loginValid" class="error-banner">Usuario o contraseña incorrectos. Inténtalo de nuevo.</div>
+
+          <!-- Selector de sucursal -->
+          <div class="form-group">
+            <label for="tenant">Sucursal</label>
+            <div class="custom-select">
+              <select id="tenant" formControlName="tenant" required>
+                <option *ngFor="let t of tenantDefault" [ngValue]="t">{{ t.Sucursal }}</option>
+              </select>
+            </div>
           </div>
-        </div>
 
-        <!-- Usuario -->
-        <div class="form-group">
-          <label for="username">Usuario</label>
-          <input
-            id="username"
-            type="text"
-            formControlName="username"
-            autocomplete="username"
-            placeholder="Ingresa tu usuario"
-            required />
-        </div>
-
-        <!-- Contraseña -->
-        <div class="form-group password-group">
-          <label for="password">Contraseña</label>
-          <div class="password-row">
+          <!-- Usuario -->
+          <div class="form-group">
+            <label for="username">Usuario</label>
             <input
-              id="password"
-              [type]="hide ? 'password' : 'text'"
-              formControlName="password"
-              autocomplete="current-password"
-              placeholder="Ingresa tu contraseña"
+              id="username"
+              type="text"
+              formControlName="username"
+              autocomplete="username"
+              placeholder="Ingresa tu usuario"
               required />
+          </div>
 
-            <!-- Toggle mostrar/ocultar -->
-            <button type="button" class="pwd-icon-btn" (click)="hide = !hide"
-                    [title]="hide ? 'Mostrar contraseña' : 'Ocultar contraseña'">
-              <!-- Ojo abierto -->
-              <svg *ngIf="hide" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-              <!-- Ojo tachado -->
-              <svg *ngIf="!hide" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                <line x1="1" y1="1" x2="23" y2="23"/>
-              </svg>
-            </button>
+          <!-- Contraseña -->
+          <div class="form-group password-group">
+            <label for="password">Contraseña</label>
+            <div class="password-row">
+              <input
+                id="password"
+                [type]="hide ? 'password' : 'text'"
+                formControlName="password"
+                autocomplete="current-password"
+                placeholder="Ingresa tu contraseña"
+                required />
 
-            <!-- Teclado táctil (pantallas POS) -->
-            <button type="button" class="pwd-icon-btn keypad-btn" title="Teclado numérico"
-                    [disabled]="isSubmitting" (click)="openPasswordDialog()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="8"  cy="7"  r="1.5"/><circle cx="12" cy="7"  r="1.5"/><circle cx="16" cy="7"  r="1.5"/>
-                <circle cx="8"  cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/>
-                <circle cx="8"  cy="17" r="1.5"/><circle cx="12" cy="17" r="1.5"/><circle cx="16" cy="17" r="1.5"/>
-              </svg>
+              <!-- Toggle mostrar/ocultar -->
+              <button type="button" class="pwd-icon-btn" (click)="hide = !hide"
+                      [title]="hide ? 'Mostrar contraseña' : 'Ocultar contraseña'">
+                <svg *ngIf="hide" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg *ngIf="!hide" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+
+              <!-- Teclado táctil (pantallas POS) -->
+              <button type="button" class="pwd-icon-btn keypad-btn" title="Teclado numérico"
+                      [disabled]="isSubmitting" (click)="openPasswordDialog()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="8"  cy="7"  r="1.5"/><circle cx="12" cy="7"  r="1.5"/><circle cx="16" cy="7"  r="1.5"/>
+                  <circle cx="8"  cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/>
+                  <circle cx="8"  cy="17" r="1.5"/><circle cx="12" cy="17" r="1.5"/><circle cx="16" cy="17" r="1.5"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Botón principal -->
+          <button
+            type="submit"
+            class="login-button"
+            [disabled]="isSubmitting || loginForm.invalid">
+            <ng-container *ngIf="!isSubmitting; else loadingTpl">Entrar</ng-container>
+            <ng-template #loadingTpl><span aria-busy="true">Ingresando…</span></ng-template>
+          </button>
+
+          <!-- Link olvidé contraseña -->
+          <div class="forgot-link-row">
+            <button type="button" class="forgot-link" (click)="openForgotPassword()">
+              ¿Olvidaste tu contraseña?
             </button>
           </div>
-        </div>
+        </form>
+      </ng-container>
 
-        <!-- Botón principal -->
-        <button
-          type="submit"
-          class="login-button"
-          [disabled]="isSubmitting || loginForm.invalid">
-          <ng-container *ngIf="!isSubmitting; else loadingTpl">Entrar</ng-container>
-          <ng-template #loadingTpl><span aria-busy="true">Ingresando…</span></ng-template>
-        </button>
-      </form>
+      <!-- ── Vista: Recuperar contraseña ────────────────────────────────── -->
+      <ng-container *ngIf="showForgotPassword">
+        <div class="forgot-view">
+
+          <!-- Éxito -->
+          <ng-container *ngIf="forgotSent">
+            <div class="forgot-success">
+              <div class="forgot-success__icon">✉</div>
+              <h2 class="forgot-success__title">Revisa tu email</h2>
+              <p class="forgot-success__msg">
+                Si el usuario <strong>{{ forgotUsername }}</strong> tiene un email registrado,
+                recibirás un enlace para restablecer tu contraseña en los próximos minutos.
+              </p>
+            </div>
+            <button type="button" class="login-button" (click)="closeForgotPassword()">
+              Volver al inicio de sesión
+            </button>
+          </ng-container>
+
+          <!-- Formulario -->
+          <ng-container *ngIf="!forgotSent">
+            <div class="forgot-header">
+              <button type="button" class="forgot-back" (click)="closeForgotPassword()" title="Volver">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+              </button>
+              <div>
+                <h2 class="forgot-title">Recuperar contraseña</h2>
+                <p class="forgot-subtitle">Te enviaremos un enlace a tu email registrado.</p>
+              </div>
+            </div>
+
+            <div *ngIf="forgotError" class="error-banner">{{ forgotError }}</div>
+
+            <div class="form-group">
+              <label for="forgot-username">Usuario</label>
+              <input
+                id="forgot-username"
+                type="text"
+                [(ngModel)]="forgotUsername"
+                placeholder="Ingresa tu nombre de usuario"
+                autocomplete="username" />
+            </div>
+
+            <button
+              type="button"
+              class="login-button"
+              [disabled]="forgotSending || !forgotUsername.trim()"
+              (click)="sendForgotPassword()">
+              <ng-container *ngIf="!forgotSending; else sendingTpl">Enviar instrucciones</ng-container>
+              <ng-template #sendingTpl><span aria-busy="true">Enviando…</span></ng-template>
+            </button>
+          </ng-container>
+
+        </div>
+      </ng-container>
+
     </div>
 
     <!-- Versión app -->

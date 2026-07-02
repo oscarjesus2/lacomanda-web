@@ -799,8 +799,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   openDialogoDividirCuenta(espacioSelected: Espacios, idPedido: number): void {
     const dialogRef = this.dialog.open(DialogDividirCuentaComponent, {
-      width: '800px',
-      height: '800px',
+      width: '860px',
+      maxWidth: '96vw',
+      maxHeight: '92vh',
       data: { idPedido, espacioSelected }
     });
 
@@ -2079,9 +2080,10 @@ export class VentaComponent implements OnInit, AfterViewInit {
     const dialogDocumentosEmitidosComponent = this.dialog.open(DialogDocumentosEmitidosComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '1005px', // Establece el ancho del diálogo
-      height: '546px', // Establece la altura del diálogo
-      data: { idTurno }
+      width: '1060px',
+      maxWidth: '96vw',
+      maxHeight: '92vh',
+      data: { idTurno, idCaja: this.turnoAbierto.IdCaja }
     });
     
 

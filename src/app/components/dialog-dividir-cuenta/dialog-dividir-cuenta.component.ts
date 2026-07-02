@@ -236,7 +236,8 @@ export class DialogDividirCuentaComponent {
 
     try {
       // Primer servicio que necesita ejecutarse antes de otros
-      this.pedidoService.FindPedidoByIdPedido(this.idPedido).subscribe(response => {
+      // Carga todos los ítems del pedido (todas las cuentas) usando el idEspacio
+      this.pedidoService.FindPedidoByIdEspacio(this.espacioSelected.IdEspacio).subscribe(response => {
         this.ActualizarCuentas(response.Data)
         this.spinnerService.hide();
       });

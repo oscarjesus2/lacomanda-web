@@ -17,6 +17,7 @@ import { Configuracion } from 'src/app/models/configuracion.models';
 import { ConfiguracionInicialComponent } from 'src/app/components/configuracion-inicial/configuracion-inicial/configuracion-inicial.component';
 import { HeaderService } from 'src/app/services/header.service';
 import { EstacionTipoEnum } from 'src/app/enums/enum';
+import { UsuarioService } from 'src/app/services/usuario.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -33,6 +34,13 @@ export class LoginComponent implements OnInit {
 
   /** true si ya existe la cookie clientUUID → no se pide identificador */
   identifierExists = false;
+
+  // ── Forgot password ───────────────────────────────────────────────────────
+  showForgotPassword    = false;
+  forgotUsername        = '';
+  forgotSending         = false;
+  forgotSent            = false;
+  forgotError           = '';
 
   tenantDefault: TenantDefault[] = [];
   loginForm: FormGroup;
@@ -55,6 +63,7 @@ export class LoginComponent implements OnInit {
     private cookieService: CookieService,
     private configService: ConfiguracionService,
     private headerService: HeaderService,
+    private usuarioService: UsuarioService,
   ) {}
 
   @HostListener('window:beforeinstallprompt', ['$event'])
@@ -221,7 +230,6 @@ export class LoginComponent implements OnInit {
         this.loginForm.enable();
         this.spinnerService.hide();
         this.loginValid = false;
-        this.notificationService.showError('Usuario o contraseña incorrectos');
       }
     });
   }
@@ -266,6 +274,46 @@ export class LoginComponent implements OnInit {
   private logoutAndReturnToLogin(): void {
     try { this.storageService.logout?.(); } catch {}
     this.router.navigateByUrl('/iniciar-sesion');
+  }
+
+  // ── Forgot password ───────────────────────────────────────────────────────
+
+  openForgotPassword(): void {
+    this.forgotUsername = this.loginForm?.controls['username']?.value ?? '';
+    this.forgotSent     = false;
+    this.forgotError    = '';
+    this.showForgotPassword = true;
+  }
+
+  closeForgotPassword(): void {
+    this.showForgotPassword = false;
+    this.forgotSent  = false;
+    this.forgotError = '';
+  }
+
+  sendForgotPassword(): void {
+    const username = this.forgotUsername.trim();
+    const tenant   = this.loginForm?.controls['tenant']?.value;
+
+    if (!username || !tenant?.TenantId) {
+      this.forgotError = 'Seleccioná una sucursal e ingresá tu usuario.';
+      return;
+    }
+
+    this.forgotSending = true;
+    this.forgotError   = '';
+
+    this.usuarioService.forgotPassword(username, tenant.TenantId).subscribe({
+      next: () => {
+        this.forgotSending = false;
+        this.forgotSent    = true;
+      },
+      error: () => {
+        this.forgotSending = false;
+        // Siempre mostramos éxito (no revelar si el usuario existe)
+        this.forgotSent = true;
+      },
+    });
   }
 
   // ── PWA ───────────────────────────────────────────────────────────────────

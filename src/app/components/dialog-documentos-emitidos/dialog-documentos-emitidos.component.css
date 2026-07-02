@@ -1,146 +1,230 @@
-.documentos-container {
-  background-color: var(--color-surface-warm);
-  padding: 16px;
+/* ==========================================================
+   dialog-documentos-emitidos — hereda mant-panel del global
+   ========================================================== */
+
+.dv-panel {
+  /* Ocupa todo el ancho del dialog sin desbordarlo */
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* ── Barras de filtro ───────────────────────────────────── */
+.dv-toolbar {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
 }
 
-h2 {
-  text-align: center;
-  font-size: 2rem;
-  margin-bottom: 20px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: var(--color-text);
-}
+.dv-toolbar--secondary { margin-bottom: 14px; }
 
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
+.dv-toolbar__spacer { flex: 1; }
 
-.toolbar.row-1 { margin-bottom: 1px; }
-.toolbar.row-2 { align-items: center; }
-.spacer { flex-grow: 1; }
-
-.btn {
-  background-color: var(--color-primary);
-  color: white;
-  margin-right: 8px;
-  border-radius: var(--radius-md);
-  height: 50px;
-  border: none;
+/* ── Botones de filtro ──────────────────────────────────── */
+.dv-filter-btn {
+  height: 36px;
+  padding: 0 16px;
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: var(--transition-fast);
+  white-space: nowrap;
 }
 
-.btn:hover { background-color: var(--color-primary-dark); }
+.dv-filter-btn:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
 
-.custom-input {
-  padding: 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border-strong);
-  width: 150px;
-  margin-right: 8px;
+.dv-filter-btn--active {
+  background: var(--color-primary) !important;
+  color: var(--color-text-light) !important;
+}
+
+/* Botón "Al Crédito" alineado a la derecha */
+.dv-filter-btn--credito {
+  border-color: var(--color-accent-dark);
+  color: var(--color-accent-dark);
+}
+.dv-filter-btn--credito:hover {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+.dv-filter-btn--credito.dv-filter-btn--active {
+  background: var(--color-accent) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-accent) !important;
+}
+
+/* Botones más pequeños para fila secundaria */
+.dv-filter-btn--sm {
   height: 30px;
-  color: var(--color-text);
+  padding: 0 12px;
+  font-size: 0.72rem;
+}
+
+/* Input número de documento */
+.dv-search-input {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--color-border-strong);
   background: var(--color-surface);
-}
-
-.selected {
-  background-color: var(--color-accent) !important;
-  color: white;
-}
-
-.content-wrapper {
-  display: flex;
-  justify-content: space-between;
-}
-
-.table-container {
-  max-width: 750px;
-  height: 395px;
-  overflow-y: auto;
-  background-color: var(--color-surface);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  width: 75%;
-}
-
-.selected-row {
-  background-color: rgba(0, 121, 107, 0.12);
   color: var(--color-text);
+  font-size: 0.82rem;
+  font-family: inherit;
+  width: 160px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.dv-search-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+.dv-search-input::placeholder { color: var(--color-text-muted); }
+
+/* ── Layout tabla + acciones ────────────────────────────── */
+.dv-content {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
 }
 
-.mat-header-cell, .mat-cell { padding: 10px; }
+/* ── Tabla ──────────────────────────────────────────────── */
+.dv-table-wrap {
+  flex: 1;
+  min-width: 0;        /* evita que flex-child empuje más allá del padre */
+  overflow-x: auto;   /* scroll horizontal solo en la tabla si es necesario */
+  overflow-y: auto;
+  max-height: 360px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
 
-.action-buttons {
+.dv-table { width: 100%; }
+
+.dv-table .mat-mdc-header-cell {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 10px 12px;
+}
+
+.dv-table .mat-mdc-cell {
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dv-table .mat-mdc-row:hover .mat-mdc-cell {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  cursor: pointer;
+}
+
+.dv-table .mat-mdc-row.dv-row--selected .mat-mdc-cell {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  font-weight: 600;
+}
+
+/* ── Botones de acción laterales ────────────────────────── */
+.dv-actions {
   display: flex;
   flex-direction: column;
-  margin-left: 20px;
-  width: 20%;
+  gap: 8px;
+  min-width: 160px;
 }
 
-.action-btn {
-  align-content: center;
-  text-align: center;
-  background-color: var(--color-success);
-  color: white;
-  margin-bottom: 10px;
-  border-radius: var(--radius-md);
-  height: 50px;
-  border: none;
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.action-btn:hover { filter: brightness(0.9); }
-
-.cancel-btn {
-  background-color: var(--color-warn);
-}
-
-.salir-btn {
-  background-color: var(--color-surface-warm);
-  color: var(--color-text);
-  border: 1px solid var(--color-border-strong);
-}
-
-.motivo-section {
-  margin-top: 20px;
+.dv-action-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.motivo-input {
-  padding: 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border-strong);
-  flex: 1;
-  color: var(--color-text);
-  background: var(--color-surface);
-}
-
-.close-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 1000;
-  background-color: transparent;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
   border: none;
-  cursor: pointer;
-}
-
-.virtual-keyboard-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background-color: var(--color-primary);
-  color: white;
+  border-radius: var(--radius-md);
+  background: var(--color-success);
+  color: var(--color-text-light);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: var(--transition-fast);
 }
 
-.virtual-keyboard-btn:hover { background-color: var(--color-primary-dark); }
+.dv-action-btn mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+}
+
+.dv-action-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.dv-action-btn--danger {
+  background: var(--color-warn);
+}
+
+/* ── Motivo de anulación ────────────────────────────────── */
+.dv-motivo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.dv-motivo__input {
+  flex: 1;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.88rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.dv-motivo__input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+.dv-motivo__input::placeholder { color: var(--color-text-muted); }
+
+.dv-motivo__kbd-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface-warm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.dv-motivo__kbd-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}

@@ -50,4 +50,19 @@ export class UsuarioService {
   deleteUsuario(id: string): Observable<void> {
     return this.http.delete<void>(`${this.basePath}/${id}`);
   }
+
+  /**
+   * POST /api/Usuario/forgot-password
+   * El backend debe:
+   *  1. Buscar el usuario en Keycloak: GET /admin/realms/{tenantId}/users?username={username}
+   *  2. Llamar: PUT /admin/realms/{tenantId}/users/{userId}/execute-actions-email
+   *     body: ["UPDATE_PASSWORD"]
+   * Siempre responde 200 (no confirmar si el usuario existe — seguridad).
+   */
+  forgotPassword(username: string, tenantId: string): Observable<void> {
+    return this.http.post<void>(`${this.basePath}/forgot-password`, {
+      Username: username,
+      TenantId: tenantId,
+    });
+  }
 }
