@@ -1,14 +1,53 @@
-<div class="m-cant-container">
-  <h1>{{title}}</h1>
-  <div class="display">
-    <input type="text" [value]="getMaskedPassword()" />
+<div class="mant-panel mc-panel">
+
+  <button mat-icon-button class="close-button" (click)="cancel()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2 *ngIf="title">{{ title }}</h2>
+
+  <!-- Display -->
+  <input class="mc-display" type="text" [value]="getMaskedPassword()" readonly placeholder="0" />
+
+  <!-- Toggle teclado -->
+  <div class="mc-toggle-row">
+    <button class="mc-toggle" (click)="toggleKeyboard()">
+      <mat-icon>{{ showAlpha ? 'dialpad' : 'abc' }}</mat-icon>
+      {{ showAlpha ? 'Cambiar a numérico' : 'Cambiar a letras' }}
+    </button>
   </div>
-  <div class="keypad">
-    <button *ngFor="let key of keys" (click)="onKeyClick(key)">{{key}}</button>
+
+  <!-- Teclado numérico -->
+  <div class="mc-keypad" *ngIf="!showAlpha">
+    <button class="mc-key" *ngFor="let key of numericKeys" (click)="onKeyClick(key)">
+      {{ key }}
+    </button>
   </div>
-  <div class="actions">
-    <button (click)="clear()">Borrar</button>
-    <button (click)="accept()">Aceptar</button>
-    <button (click)="cancel()">Salir</button>
+
+  <!-- Teclado alfanumérico -->
+  <div class="mc-alpha" *ngIf="showAlpha">
+    <div *ngFor="let row of alphaRows" class="mc-alpha__row">
+      <button
+        class="mc-key mc-key--alpha"
+        *ngFor="let key of row"
+        [class.mc-key--esc]="key === 'ESC'"
+        [class.mc-key--space]="key === 'Espacio'"
+        (click)="onKeyClick(key)">
+        {{ key }}
+      </button>
+    </div>
   </div>
+
+  <div class="mc-actions">
+    <button class="mc-btn mc-btn--warn" (click)="clear()">
+      <mat-icon>backspace</mat-icon> Borrar
+    </button>
+    <button class="mc-btn mc-btn--primary" (click)="accept()">
+      <mat-icon>check</mat-icon> Aceptar
+    </button>
+    <button class="mc-btn mc-btn--secondary" (click)="cancel()">
+      Salir
+    </button>
+  </div>
+
 </div>

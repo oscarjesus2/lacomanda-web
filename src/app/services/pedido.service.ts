@@ -10,6 +10,7 @@ import { AnularProductoYComplementoDTO } from '../interfaces/anularProductoYComp
 import { PedidoDeliveryDTO } from '../interfaces/pedidoDTO.interface';
 import { DividirCuentaDTO } from '../interfaces/dividircuentaDTO.interface';
 import { PedidoDescuentoDTO } from '../interfaces/pedidoDescuentoDTO.interface';
+import { TrasladarProductoDTO } from '../interfaces/trasladarProductoDTO.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -84,5 +85,9 @@ export class PedidoService {
 
     ImprimirPrecuenta(idPedido: number, nroCuenta: number): Observable<ApiResponse<ImpresionDTO[]>> {
         return this.http.get<ApiResponse<ImpresionDTO[]>>(`${this.basePath}/ImprimirPrecuenta/${idPedido}/${nroCuenta}`);
+    }
+
+    TrasladarProducto(dto: TrasladarProductoDTO): Observable<ApiResponse<string>> {
+        return this.http.post<ApiResponse<string>>(`${this.basePath}/TrasladarProducto`, dto);
     }
 }

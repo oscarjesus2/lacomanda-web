@@ -13,7 +13,7 @@ import { AdministracionComponent } from './pages/administracion/administracion.c
 // import { ClientesComponent } from './pages/ventas/clientes/clientes.component';
 import { DialogTurnoComponent } from '../app/components/dialog-turno/dialog-turno.component';
 import { QzTrayRequiredComponent } from './qz-tray-required/qz-tray-required.component';
-import { DigitacionMozoComponent } from './pages/digitacion-mozo/digitacion-mozo.component';
+// DigitacionMozoComponent reemplazado por VentaComponent con isModoMozo=true
 
 // Importa más componentes según sea necesario...
 
@@ -37,7 +37,7 @@ const routes: Routes = [
 },
 {
   path: 'mozo',
-  component: DigitacionMozoComponent,
+  component: VentaComponent,
   canActivate: [RoleGuard],
   data: { roles: ['admin', 'mozo'] }
 },

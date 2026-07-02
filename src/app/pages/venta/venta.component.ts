@@ -37,7 +37,7 @@ import { TurnoService } from '../../services/turno.service';
 import { EmpleadoService } from '../../services/empleado.service';
 import { SocioNegocioService } from '../../services/socionegocio.service';
 import { Turno } from 'src/app/models/turno.models';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { DialogEmitirComprobanteComponent } from 'src/app/components/dialog-emitir-comprobante/dialog-emitir-comprobante.component';
 import { HeaderService } from 'src/app/services/header.service';
 import { faFileInvoiceDollar, faFileInvoice, faPercentage, faFileAlt, faChartPie } from '@fortawesome/free-solid-svg-icons';
@@ -62,6 +62,7 @@ import { DialogDividirCuentaComponent } from 'src/app/components/dialog-dividir-
 import { EnumTipoDocumento, NivelUsuarioEnum } from 'src/app/enums/enum';
 import { DialogDescuentoComponent } from 'src/app/components/dialog-descuento/dialog-descuento.component';
 import { PedidoDescuentoDTO } from 'src/app/interfaces/pedidoDescuentoDTO.interface';
+import { TrasladarProductoDTO } from 'src/app/interfaces/trasladarProductoDTO.interface';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { Configuracion } from 'src/app/models/configuracion.models';
 import { CanalVentaService } from 'src/app/services/canal-venta.service';
@@ -134,6 +135,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   aplicarFiltroCambioEspacio: boolean = false;
   aplicarFiltroUnirEspacio: boolean = false;
+  aplicarFiltroTrasladoProducto: boolean = false;
+  productoParaTraslado: PedidoDet | null = null;
   ambienteActual: Ambiente | null = null;
   textDescuento: string ='Descuento';
   isBuscarProductoDisabled= false;
@@ -149,6 +152,10 @@ export class VentaComponent implements OnInit, AfterViewInit {
   isEnviarPedidoDisabled = false;
 
   isAnularPedidoDisabled = false;
+  isPrecuentaDisabled    = false;
+
+  /** true cuando la ruta activa es /mozo; false en /caja */
+  isModoMozo = false;
   isReImprimirDisabled = false;
   isBloquearDisabled = false;
   selectedRow: PedidoDet;
@@ -183,7 +190,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
     private familiaService: FamiliaService,
     private headerService: HeaderService,
     private usuarioService: UsuarioService,
-    private configuracionService: ConfiguracionService) {
+    private configuracionService: ConfiguracionService,
+    private activatedRoute: ActivatedRoute) {
 
 
     this.MostrarOcultarPanelEspacio = true;
@@ -197,6 +205,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
     const user = this.storageService.getCurrentUser?.();
     this.isAdmin = !!user && user.IdNivel === 1;
+    this.isModoMozo = this.router.url.startsWith('/mozo');
     console.log(user)
   }
 
@@ -535,6 +544,14 @@ export class VentaComponent implements OnInit, AfterViewInit {
           else {
             espacio.Visible = false;
           }
+          return espacio;
+        });
+    } else if (this.aplicarFiltroTrasladoProducto) {
+      // Mostrar todas las mesas excepto la actual
+      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
+        .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
+        .map(espacio => {
+          espacio.Visible = espacio.IdEspacio !== this.espacioSelected.IdEspacio;
           return espacio;
         });
     } else {
@@ -1096,6 +1113,12 @@ export class VentaComponent implements OnInit, AfterViewInit {
   async openDialogEspacio(espacio: Espacios) {
     this.spinnerService.show();
 
+    if (this.aplicarFiltroTrasladoProducto) {
+      await this.ejecutarTraslado(espacio);
+      this.spinnerService.hide();
+      return;
+    }
+
     if (espacio.Ocupado === 0 || espacio.Ocupado === 2) {
       await this.handleEspacioDisponible(espacio);
     } else if (espacio.Ocupado === 1 || espacio.Ocupado === 4) {
@@ -1106,6 +1129,50 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
     this.RehacerPantallaRefresh = 'RehacerPantalla';
     this.spinnerService.hide();
+  }
+
+  iniciarTraslado(producto: PedidoDet): void {
+    if (this.espacioSelected.IdEspacio == null) {
+      Swal.fire('Traslado Producto', 'Debe tener una mesa seleccionada.', 'info');
+      return;
+    }
+    this.productoParaTraslado = producto;
+    this.aplicarFiltroTrasladoProducto = true;
+    this.MostrarOcultarPanelEspacio = true;
+    this.MostrarOcultarPanelProducto = false;
+    if (this.ambienteActual) {
+      this.MostrarEspacios_x_Ambiente(this.ambienteActual);
+    }
+  }
+
+  cancelarTraslado(): void {
+    this.productoParaTraslado = null;
+    this.aplicarFiltroTrasladoProducto = false;
+    if (this.ambienteActual) {
+      this.MostrarEspacios_x_Ambiente(this.ambienteActual);
+    }
+  }
+
+  async ejecutarTraslado(espacioDestino: Espacios): Promise<void> {
+    const p = this.productoParaTraslado!;
+    const dto: TrasladarProductoDTO = {
+      IdPedido: p.IdPedido,
+      NroCuenta: p.NroCuenta,
+      Item: p.Item,
+      IdEspacioDestino: espacioDestino.IdEspacio
+    };
+    try {
+      const response = await lastValueFrom(this.pedidoService.TrasladarProducto(dto));
+      if (response.Success) {
+        this.productoParaTraslado = null;
+        this.aplicarFiltroTrasladoProducto = false;
+        this.RehacerPantalla();
+      } else {
+        Swal.fire('Traslado Producto', 'No se pudo realizar el traslado.', 'warning');
+      }
+    } catch (e) {
+      Swal.fire('Error', 'Ocurrió un error al trasladar el producto.', 'error');
+    }
   }
 
   async handleEspacioDisponible(espacio: Espacios) {
@@ -1888,6 +1955,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
       this.aplicarFiltroCambioEspacio = false;
       this.aplicarFiltroUnirEspacio = false;
+      this.aplicarFiltroTrasladoProducto = false;
+      this.productoParaTraslado = null;
       // Actualizar espacios
       lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos()).then(data => {
         this.listaEspaciosTotal = data.Data;

@@ -167,6 +167,11 @@
                     (click)="openDialoObservaciones(product)" disabled="{{product.Item > 0 ? 'true': 'false'}}">
                     <mat-icon>event_note</mat-icon>
                   </button>
+                  <button mat-icon-button color="primary" matTooltip="Trasladar a otra mesa"
+                    (click)="iniciarTraslado(product)"
+                    [disabled]="product.Item <= 0 || idCanalVentaSelected != canalVentaEnum.ESPACIO">
+                    <mat-icon>swap_horiz</mat-icon>
+                  </button>
                   <button mat-icon-button color="primary" matTooltip="Anfitriona"  (click)="ingresarCodigosAnfitrionas(product)"  [disabled]="!product.Producto.ExclusivoParaAnfitriona || product.Item > 0">
                     <mat-icon>woman</mat-icon>
                   </button>
@@ -206,51 +211,102 @@
       </div>
     </div>
 
-    <!-- Segunda fila: Combo, Ver Complemento, Priorizar Despacho, Enviar Pedido -->
-   <!-- Primera fila de botones -->
-<div class="button-row">
-  <button [disabled]="!procesarPedido" (click)="aplicarDescuento()">
-    <fa-icon [icon]="faPercentage"></fa-icon>{{textDescuento}} 
-  </button>
-  <button (click)="ImprimirPrecuenta()">
-    <fa-icon [icon]="faReceipt"></fa-icon> Precuenta
-  </button>
-  <button (click)="OpenDialogDocumentosEmitidos()" >
-    <fa-icon [icon]="faFileAlt"></fa-icon> Documentos Emitidos
-  </button>
-  <button>
-    <fa-icon [icon]="faChartPie"></fa-icon> Gastos/Reportes
-  </button>
-</div>
+  <!-- ══ Botones CAJA ══════════════════════════════════════ -->
+  <ng-container *ngIf="!isModoMozo">
 
-<!-- Segunda fila de botones -->
-<div class="button-row">
-  <button *ngIf="mostrarBoleta"
-          [disabled]="!procesarPedido"
-          (click)="OpenDialogEmitirComprobante(idTipoDocBoleta)">
-    <fa-icon [icon]="faFileInvoiceDollar"></fa-icon> {{ textoBoleta }}
-  </button>
-  <button *ngIf="mostrarFactura"
-          [disabled]="!procesarPedido"
-          (click)="OpenDialogEmitirComprobante(idTipoDocFactura)">
-    <fa-icon [icon]="faFileInvoice"></fa-icon> {{ textoFactura }}
-  </button>
-  <button [disabled]="!procesarPedido" (click)="OpenDialogEmitirComprobante(TipoDocumento.Express)">
-    <fa-icon [icon]="faReceipt"></fa-icon> Express
-  </button>
-  <button class="btn--primary-action" [disabled]="isEnviarPedidoDisabled" (click)="EnviarPedido()">
-    <fa-icon [icon]="faPaperPlane"></fa-icon> Enviar Pedido
-  </button>
-  <button [disabled]="isBloquearDisabled" (click)="toggleBloquear()">
-    <fa-icon [icon]="!procesarPedido ? faLock : faSync"></fa-icon> 
-    {{ !procesarPedido ? 'Bloquear' : 'Rehacer' }}
-  </button>
-</div>
+    <div class="button-row">
+      <button [disabled]="!procesarPedido" (click)="aplicarDescuento()">
+        <fa-icon [icon]="faPercentage"></fa-icon>{{textDescuento}}
+      </button>
+      <button (click)="ImprimirPrecuenta()">
+        <fa-icon [icon]="faReceipt"></fa-icon> Precuenta
+      </button>
+      <button (click)="OpenDialogDocumentosEmitidos()">
+        <fa-icon [icon]="faFileAlt"></fa-icon> Documentos Emitidos
+      </button>
+      <button>
+        <fa-icon [icon]="faChartPie"></fa-icon> Gastos/Reportes
+      </button>
+    </div>
+
+    <div class="button-row">
+      <button *ngIf="mostrarBoleta"
+              [disabled]="!procesarPedido"
+              (click)="OpenDialogEmitirComprobante(idTipoDocBoleta)">
+        <fa-icon [icon]="faFileInvoiceDollar"></fa-icon> {{ textoBoleta }}
+      </button>
+      <button *ngIf="mostrarFactura"
+              [disabled]="!procesarPedido"
+              (click)="OpenDialogEmitirComprobante(idTipoDocFactura)">
+        <fa-icon [icon]="faFileInvoice"></fa-icon> {{ textoFactura }}
+      </button>
+      <button [disabled]="!procesarPedido" (click)="OpenDialogEmitirComprobante(TipoDocumento.Express)">
+        <fa-icon [icon]="faReceipt"></fa-icon> Express
+      </button>
+      <button class="btn--primary-action" [disabled]="isEnviarPedidoDisabled" (click)="EnviarPedido()">
+        <fa-icon [icon]="faPaperPlane"></fa-icon> Enviar Pedido
+      </button>
+      <button [disabled]="isBloquearDisabled" (click)="toggleBloquear()">
+        <fa-icon [icon]="!procesarPedido ? faLock : faSync"></fa-icon>
+        {{ !procesarPedido ? 'Bloquear' : 'Rehacer' }}
+      </button>
+    </div>
+
+  </ng-container>
+
+  <!-- ══ Botones MOZO ══════════════════════════════════════ -->
+  <ng-container *ngIf="isModoMozo">
+
+    <div class="button-row">
+      <button [disabled]="isComboDisabled">
+        <fa-icon [icon]="faConciergeBell"></fa-icon> Combo
+      </button>
+      <button [disabled]="isVerComplementoDisabled" (click)="VerPedido()">
+        <fa-icon [icon]="faEye"></fa-icon> Ver Complemento
+      </button>
+      <button [disabled]="isPriorizarDespachoDisabled">
+        <fa-icon [icon]="faList"></fa-icon> Priorizar Despacho
+      </button>
+      <button class="btn--primary-action" [disabled]="isEnviarPedidoDisabled" (click)="EnviarPedido()">
+        <fa-icon [icon]="faPaperPlane"></fa-icon> Enviar Pedido
+      </button>
+    </div>
+
+    <div class="button-row">
+      <button [disabled]="isPrecuentaDisabled" (click)="ImprimirPrecuenta()">
+        <fa-icon [icon]="faReceipt"></fa-icon> Precuenta
+      </button>
+      <button [disabled]="isAnularPedidoDisabled" (click)="AnularPedido()">
+        <fa-icon [icon]="faTimes"></fa-icon> Anular Pedido
+      </button>
+      <button [disabled]="isReImprimirDisabled">
+        <fa-icon [icon]="faReceipt"></fa-icon> ReImprimir
+      </button>
+      <button [disabled]="isBloquearDisabled" (click)="toggleBloquear()">
+        <fa-icon [icon]="!procesarPedido ? faLock : faSync"></fa-icon>
+        {{ !procesarPedido ? 'Bloquear' : 'Rehacer' }}
+      </button>
+    </div>
+
+  </ng-container>
 
   </div>
 
   <!-- Segunda Columna -->
   <div class="column-right">
+
+    <!-- Banner de modo traslado -->
+    <div *ngIf="productoParaTraslado" class="traslado-banner">
+      <mat-icon class="traslado-banner__icon">swap_horiz</mat-icon>
+      <span class="traslado-banner__text">
+        Seleccione la mesa destino para
+        <strong>{{ productoParaTraslado.Producto?.NombreCorto }}</strong>
+      </span>
+      <button class="traslado-banner__cancel" (click)="cancelarTraslado()">
+        <mat-icon>close</mat-icon> Cancelar
+      </button>
+    </div>
+
     <!-- Alterna entre las espacios y los productos -->
     <div *ngIf="MostrarOcultarPanelEspacio && idCanalVentaSelected==canalVentaEnum.ESPACIO" class="tables-grid">
       <button *ngFor="let espacio of listaEspacios_x_Ambiente"
@@ -300,7 +356,6 @@
         <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO" (click)="CambiarEspacio()">Cambiar Espacio</button>
         <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO" (click)="UnirEspacio()">Unir Cuenta</button>
         <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO" (click)="dividirCuenta()">Dividir Cuenta</button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Limpiar Espacio</button>
         <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Activar Espacio</button>
       </div>
 
