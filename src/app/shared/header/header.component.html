@@ -83,16 +83,16 @@
 
 <!-- MENÚ PRINCIPAL -->
 <mat-menu #afterMenu="matMenu" xPosition="after">
-  <button mat-menu-item (click)="Dashboard()">
+  <button mat-menu-item *ngIf="showDashboard" (click)="Dashboard()">
     <mat-icon>dashboard</mat-icon><span>Dashboard</span>
   </button>
-  <button mat-menu-item (click)="Administracion()">
+  <button mat-menu-item *ngIf="showAdministracion" (click)="Administracion()">
     <mat-icon>settings</mat-icon><span>Administración</span>
   </button>
-  <button mat-menu-item (click)="Caja()">
+  <button mat-menu-item *ngIf="showCaja" (click)="Caja()">
     <mat-icon>point_of_sale</mat-icon><span>Caja</span>
   </button>
-  <button mat-menu-item (click)="Mozo()">
+  <button mat-menu-item *ngIf="showMozo" (click)="Mozo()">
     <mat-icon>restaurant</mat-icon><span>Mozo</span>
   </button>
 </mat-menu>

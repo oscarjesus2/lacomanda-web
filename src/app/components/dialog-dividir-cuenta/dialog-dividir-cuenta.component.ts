@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { NgxSpinnerService } from 'ngx-spinner';
@@ -6,6 +6,8 @@ import { DividirCuentaDTO } from 'src/app/interfaces/dividircuentaDTO.interface'
 import { PedidoEspacioDTO as PedidoEspacioDTO } from 'src/app/interfaces/pedidoespacioDTO.interface';
 import { Espacios } from 'src/app/models/espacios.models';
 import { PedidoService } from 'src/app/services/pedido.service';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { MonedaService } from 'src/app/services/moneda.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -13,9 +15,10 @@ import Swal from 'sweetalert2';
   templateUrl: './dialog-dividir-cuenta.component.html',
   styleUrls: ['./dialog-dividir-cuenta.component.css']
 })
-export class DialogDividirCuentaComponent {
+export class DialogDividirCuentaComponent implements OnInit {
 
   espacioSelected: Espacios;
+  monedaSimbolo: string = '';
   distinctPedidos = new MatTableDataSource<PedidoEspacioDTO>();
   productosPedido:  PedidoEspacioDTO[]=[];
   productosPedidoCuenta:  PedidoEspacioDTO[]=[];
@@ -29,14 +32,30 @@ export class DialogDividirCuentaComponent {
   idPedido: number;
   constructor(
     public dialogRef: MatDialogRef<DialogDividirCuentaComponent>,
-    @Inject(MAT_DIALOG_DATA) 
+    @Inject(MAT_DIALOG_DATA)
     public data: any,
     private pedidoService: PedidoService,
     private spinnerService: NgxSpinnerService,
-  ) 
-  {
+    private configuracionService: ConfiguracionService,
+    private monedaService: MonedaService,
+  ) {
     this.idPedido = this.data.idPedido;
     this.espacioSelected = this.data.espacioSelected;
+  }
+
+  private loadMoneda(): void {
+    this.configuracionService.get().subscribe({
+      next: (cfg) => {
+        const obs = cfg?.PaisISO2
+          ? this.monedaService.getMonedaPorPais(cfg.PaisISO2)
+          : this.monedaService.getMoneda();
+        obs.subscribe({
+          next: (resp) => { this.monedaSimbolo = resp?.Data?.[0]?.Simbolo ?? ''; },
+          error: ()    => {}
+        });
+      },
+      error: () => {}
+    });
   }
     
   displayedColumnsCuenta: string[] = ['NombreCuenta', 'NroCuenta', 'Actions'];
@@ -231,7 +250,7 @@ export class DialogDividirCuentaComponent {
 
 
   async ngOnInit() {
-
+    this.loadMoneda();
     this.spinnerService.show();
 
     try {

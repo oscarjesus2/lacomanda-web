@@ -19,21 +19,16 @@
           <mat-icon>receipt_long</mat-icon> Mostrar Pedido
         </button>
       </div>
-      <div class="dc-info">
-        <span class="dc-info__item">
-          <span class="dc-info__label">Mesa</span>
-          {{ espacioSelected.Descripcion + ' ' + espacioSelected.Numero }}
-        </span>
-        <span class="dc-info__sep">·</span>
-        <span class="dc-info__item">
-          <span class="dc-info__label">Total</span>
-          {{ sumaGranTotal | currency:'PEN' }}
-        </span>
-        <span class="dc-info__sep">·</span>
-        <span class="dc-info__item">
-          <span class="dc-info__label">ICBPER</span>
-          {{ sumaImpuestoBolsa | currency:'PEN' }}
-        </span>
+
+      <div class="dc-stats">
+        <div class="dc-stat">
+          <span class="dc-stat__label">Espacio</span>
+          <span class="dc-stat__value">{{ espacioSelected.Descripcion }} {{ espacioSelected.Numero }}</span>
+        </div>
+        <div class="dc-stat dc-stat--total">
+          <span class="dc-stat__label">Total</span>
+          <span class="dc-stat__value">{{ monedaSimbolo }} {{ sumaGranTotal | number:'1.2-2' }}</span>
+        </div>
       </div>
     </div>
 

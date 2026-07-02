@@ -12,6 +12,7 @@ import { DataService } from 'src/app/services/data.service';
 import { VentaService } from 'src/app/services/venta.service';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { Configuracion } from 'src/app/models/configuracion.models';
+import { EstacionTipoEnum, NivelUsuarioEnum } from 'src/app/enums/enum';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -45,6 +46,44 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   // ── Config (moneda) ────────────────────────────────────────
   config: Configuracion | null = null;
+
+  // ── Visibilidad del menú ───────────────────────────────────
+  showDashboard     = false;
+  showAdministracion = false;
+  showCaja          = false;
+  showMozo          = false;
+
+  private calcMenuVisibility(): void {
+    const user = this.storageService.getCurrentUser();
+    if (!user) return;
+
+    const nivel   = user.IdNivel   as NivelUsuarioEnum;
+    const estacion = user.TipoCompu as EstacionTipoEnum;
+
+    const isAdmin  = nivel   === NivelUsuarioEnum.Administrador;
+    const isCajero = nivel   === NivelUsuarioEnum.Cajero;
+    const isMozo   = nivel   === NivelUsuarioEnum.Mozo;
+    const esCaja   = estacion === EstacionTipoEnum.CAJA;
+    const esMozo   = estacion === EstacionTipoEnum.MOZO;
+    const sinConfig = !esCaja && !esMozo; // ADMINISTRADOR (0) o no definido
+
+    if (isAdmin) {
+      this.showDashboard      = true;
+      this.showAdministracion = true;
+      this.showCaja           = esCaja;
+      this.showMozo           = esMozo;
+    } else if (isCajero) {
+      this.showDashboard      = false;
+      this.showAdministracion = false;
+      this.showCaja           = esCaja;
+      this.showMozo           = false;
+    } else if (isMozo) {
+      this.showDashboard      = false;
+      this.showAdministracion = false;
+      this.showCaja           = false;
+      this.showMozo           = esMozo;
+    }
+  }
 
   // ── Stats del turno ────────────────────────────────────────
   totalVentaTurno = 0;
@@ -83,6 +122,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.userLoginOn   = true;
     }
     this.nombreSucursal = this.storageService.getCurrentNombreSucursal() || 'LaComanda';
+    this.calcMenuVisibility();
   }
 
   // ── Turno ──────────────────────────────────────────────────

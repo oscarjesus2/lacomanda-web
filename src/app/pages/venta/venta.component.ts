@@ -821,6 +821,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
         }
       } else {
         this.listaEspaciosTotal = (await lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos())).Data;
+        if (this.ambienteActual) {
+          await this.MostrarEspacios_x_Ambiente(this.ambienteActual);
+        }
       }
     });
   }
