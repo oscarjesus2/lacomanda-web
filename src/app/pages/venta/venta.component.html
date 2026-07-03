@@ -98,6 +98,13 @@
             <span class="table-info__value">{{ clienteSelected?.RazonSocial }}</span>
           </div>
         </div>
+        <div class="table-info__item" *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO && numeroPedido">
+          <span class="table-info__icon-wrap"><mat-icon>receipt_long</mat-icon></span>
+          <div class="table-info__text">
+            <span class="table-info__label">Pedido</span>
+            <span class="table-info__value">{{ numeroPedido }}</span>
+          </div>
+        </div>
         <div class="table-info__item" *ngIf="horaPedido">
           <span class="table-info__icon-wrap"><mat-icon>schedule</mat-icon></span>
           <div class="table-info__text">
@@ -351,12 +358,23 @@
       <div class="static-buttons-row static-buttons-row--acciones">
         <button *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO"
                 class="process-pedido" (click)="NuevoPedidoLlevar()">Nuevo Pedido</button>
-        <button class="process-pedido" (click)="processPedido(true)">Procesar Pedido</button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Cambiar Mozo</button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO" (click)="CambiarEspacio()">Cambiar Espacio</button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO" (click)="UnirEspacio()">Unir Cuenta</button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO" (click)="dividirCuenta()">Dividir Cuenta</button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">Activar Espacio</button>
+        <button class="process-pedido"
+                [disabled]="idCanalVentaSelected == canalVentaEnum.ESPACIO && !mesaSeleccionada"
+                (click)="processPedido(true)">Procesar Pedido</button>
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO && isAdmin"
+                [disabled]="!mesaSeleccionada"
+                (click)="CambiarMozo()">Cambiar Mozo</button>
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO"
+                [disabled]="!mesaSeleccionada"
+                (click)="CambiarEspacio()">Cambiar Espacio</button>
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO"
+                [disabled]="!mesaSeleccionada"
+                (click)="UnirEspacio()">Unir Cuenta</button>
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO"
+                [disabled]="!mesaSeleccionada"
+                (click)="dividirCuenta()">Dividir Cuenta</button>
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO"
+                [disabled]="!mesaSeleccionada">Activar Espacio</button>
       </div>
 
     </div>

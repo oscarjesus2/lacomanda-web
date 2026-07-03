@@ -90,4 +90,9 @@ export class PedidoService {
     TrasladarProducto(dto: TrasladarProductoDTO): Observable<ApiResponse<string>> {
         return this.http.post<ApiResponse<string>>(`${this.basePath}/TrasladarProducto`, dto);
     }
+
+    // TODO: backend debe implementar PUT /api/pedido/CambiarMozo/{idPedido}/{nroCuenta}/{idEmpleado}
+    CambiarMozo(idPedido: number, nroCuenta: number, idEmpleado: number): Observable<ApiResponse<boolean>> {
+        return this.http.put<ApiResponse<boolean>>(`${this.basePath}/CambiarMozo/${idPedido}/${nroCuenta}/${idEmpleado}`, {});
+    }
 }

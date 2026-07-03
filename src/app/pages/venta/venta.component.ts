@@ -579,6 +579,61 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.RehacerPantallaRefresh === 'RehacerPantalla';
   }
 
+  /** true cuando hay una mesa activa seleccionada */
+  get mesaSeleccionada(): boolean {
+    return !!this.espacioSelected?.IdEspacio;
+  }
+
+  async CambiarMozo(): Promise<void> {
+    if (!this.mesaSeleccionada) {
+      Swal.fire('Cambiar Mozo', 'Debe seleccionar un espacio.', 'info');
+      return;
+    }
+    if (!this.isAdmin) {
+      Swal.fire('Cambiar Mozo', 'Solo el administrador puede cambiar el mozo.', 'warning');
+      return;
+    }
+
+    const inputOptions: Record<string, string> = {};
+    (this.listEmpleados || []).forEach(emp => {
+      inputOptions[emp.IdEmpleado] = emp.Nombre;
+    });
+
+    const { value: idEmpleado } = await Swal.fire<string>({
+      title: 'Cambiar Mozo',
+      input: 'select',
+      inputOptions,
+      inputPlaceholder: 'Seleccione un mozo',
+      inputValue: this.mozoSelected?.IdEmpleado?.toString() ?? '',
+      showCancelButton: true,
+      confirmButtonText: 'Cambiar',
+      cancelButtonText: 'Cancelar',
+      inputValidator: (value) => {
+        if (!value) return 'Debe seleccionar un mozo.';
+        return null;
+      }
+    });
+
+    if (!idEmpleado) return;
+
+    try {
+      this.spinnerService.show();
+      const response = await lastValueFrom(
+        this.pedidoService.CambiarMozo(this.idPedidoCobrar, this.nroCuentaCobrar, Number(idEmpleado))
+      );
+      if (response.Success) {
+        this.mozoSelected = this.getMozoByMozoId(Number(idEmpleado));
+        this.RehacerPantalla();
+      } else {
+        Swal.fire('Error', 'No se pudo cambiar el mozo.', 'error');
+      }
+    } catch (e) {
+      Swal.fire('Error', 'Ocurrió un error al cambiar el mozo.', 'error');
+    } finally {
+      this.spinnerService.hide();
+    }
+  }
+
   async CambiarEspacio() {
 
     if (this.espacioSelected.IdEspacio == null) {
