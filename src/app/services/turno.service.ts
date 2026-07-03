@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { AbrirTurno, Turno } from '../models/turno.models';
 import { environment } from 'src/environments/environment';  // Importa el entorno correspondiente
 import { ApiResponse } from '../interfaces/apirResponse.interface';
+import { ResumenCobrosDTO } from '../interfaces/resumenCobrosDTO.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -24,5 +25,9 @@ export class TurnoService {
 
     ObtenerTurnoByIP(iP: string): Observable<ApiResponse<Turno>> {
         return this.http.get<ApiResponse<Turno>>(this.basePath + '/ObtenerTurnoByIp/' + iP);
+    }
+
+    GetResumenCobros(idTurno: number): Observable<ApiResponse<ResumenCobrosDTO>> {
+        return this.http.get<ApiResponse<ResumenCobrosDTO>>(`${this.basePath}/ResumenCobros/${idTurno}`);
     }
 }
