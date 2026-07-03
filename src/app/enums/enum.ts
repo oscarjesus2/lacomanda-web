@@ -40,3 +40,13 @@ export enum NivelUsuarioEnum {
   Cajero = 2,
   Mozo = 3
 }
+
+export enum TipoPagoEnum {
+  Efectivo = 1,
+  Vale = 2,
+  Tarjeta = 3,
+  Cortesia = 4,
+  Cheque = 5,
+  Deposito = 6,
+  Comision = 7,
+}

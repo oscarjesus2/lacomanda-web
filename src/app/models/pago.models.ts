@@ -11,7 +11,8 @@ export class Pago {
     Propina: number;
     MontoVenta: number;
     MontoPagado: number;
-    IdTipoPago: string;
+    IdTipoPago: number;
+    IdMoneda: string;
     IdVenta: number;
     
     constructor(init?: Partial<Pago>) {

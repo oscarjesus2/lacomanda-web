@@ -26,7 +26,7 @@ import { MonedaService } from 'src/app/services/moneda.service';
 import { Configuracion } from 'src/app/models/configuracion.models';
 import { Moneda } from 'src/app/models/moneda.models';
 
-import { EnumTipoDocumento, EnumTipoIdentidad } from 'src/app/enums/enum';
+import { EnumTipoDocumento, EnumTipoIdentidad, TipoPagoEnum } from 'src/app/enums/enum';
 
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
 import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
