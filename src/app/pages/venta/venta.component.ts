@@ -59,6 +59,7 @@ import { PedidoDeliveryDTO } from 'src/app/interfaces/pedidoDTO.interface';
 import { SocioNegocio } from 'src/app/models/socionegocio.models';
 import { Cliente } from 'src/app/models/cliente.models';
 import { DialogDividirCuentaComponent } from 'src/app/components/dialog-dividir-cuenta/dialog-dividir-cuenta.component';
+import { DialogReportesComponent } from 'src/app/components/dialog-reportes/dialog-reportes.component';
 import { EnumTipoDocumento, NivelUsuarioEnum } from 'src/app/enums/enum';
 import { DialogDescuentoComponent } from 'src/app/components/dialog-descuento/dialog-descuento.component';
 import { PedidoDescuentoDTO } from 'src/app/interfaces/pedidoDescuentoDTO.interface';
@@ -896,6 +897,19 @@ export class VentaComponent implements OnInit, AfterViewInit {
         if (this.ambienteActual) {
           await this.MostrarEspacios_x_Ambiente(this.ambienteActual);
         }
+      }
+    });
+  }
+
+  openDialogReportes(): void {
+    this.dialog.open(DialogReportesComponent, {
+      width: '700px',
+      maxWidth: '96vw',
+      maxHeight: '92vh',
+      data: {
+        idTurno: this.turnoAbierto?.IdTurno,
+        config: this.config,
+        isAdmin: this.isAdmin
       }
     });
   }

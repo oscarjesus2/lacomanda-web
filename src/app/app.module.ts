@@ -98,6 +98,7 @@ import { EstacionMantenimientoComponent } from './components/mantenimiento/estac
 import { ObservacionMantenimientoComponent } from './components/mantenimiento/observacion-mantenimiento/observacion-mantenimiento.component';
 import { ConfigurarOrdenadorComponent } from './components/configuracion-inicial/configurar-ordenador/configurar-ordenador.component';
 import { AreaImpresionMantenimientoComponent } from './components/mantenimiento/area-impresion-mantenimiento/area-impresion-mantenimiento.component';
+import { DialogReportesComponent } from './components/dialog-reportes/dialog-reportes.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -169,6 +170,7 @@ export const MY_DATE_FORMATS = {
     ObservacionMantenimientoComponent,
     ConfigurarOrdenadorComponent,
     AreaImpresionMantenimientoComponent,
+    DialogReportesComponent,
   ],
   imports: [
     CommonModule,
