@@ -48,8 +48,8 @@ export class VentaService {
         return this.http.get<InformeContableInterface[]>(this.basePath+ 'InformeContableVenta/' + fechaInicial + '/' + fechaFinal+ '/' + serie+ '/' + tipoDoc);
     }
 
-    anularDocumentoVenta(idVenta: number, motivo: string, usuAnula: number, anularPedido: boolean):  Observable<ApiResponse<ImpresionDTO[]>>  {
-        const url = `${this.basePath}anulardocumentoventa/${idVenta}/${encodeURIComponent(motivo)}/${usuAnula}/${anularPedido}`;
+    anularDocumentoVenta(idVenta: number, motivo: string, anularPedido: boolean):  Observable<ApiResponse<ImpresionDTO[]>>  {
+        const url = `${this.basePath}anulardocumentoventa/${idVenta}/${encodeURIComponent(motivo)}/${anularPedido}`;
         return this.http.put< ApiResponse<ImpresionDTO[]>>(url, null);
       }
       

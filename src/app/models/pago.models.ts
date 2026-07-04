@@ -8,6 +8,7 @@ export class Pago {
     Autorizacion: string;
     Tarjeta: Tarjeta;
     Vuelto: number;
+    IdTarjeta: number;
     Propina: number;
     MontoVenta: number;
     MontoPagado: number;

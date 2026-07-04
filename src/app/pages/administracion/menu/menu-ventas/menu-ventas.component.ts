@@ -25,6 +25,7 @@ import { ObservacionMantenimientoComponent } from 'src/app/components/mantenimie
 import { ConfiguracionInicialComponent } from 'src/app/components/configuracion-inicial/configuracion-inicial/configuracion-inicial.component';
 import { ConfigurarOrdenadorComponent } from 'src/app/components/configuracion-inicial/configurar-ordenador/configurar-ordenador.component';
 import { AreaImpresionMantenimientoComponent } from 'src/app/components/mantenimiento/area-impresion-mantenimiento/area-impresion-mantenimiento.component';
+import { DescuentoMantenimientoComponent } from 'src/app/components/mantenimiento/descuento-mantenimiento/descuento-mantenimiento.component';
 
 @Component({
   selector: 'app-menu-ventas',
@@ -168,9 +169,13 @@ export class MenuVentasComponent implements OnInit {
       this.OpenConfiguracionInicialComponent();
     }
 
-    if (item.title === 'Configurar esta estación') 
+    if (item.title === 'Configurar esta estación')
     {
       this.OpenConfigurarEstaEstacionComponent();
+    }
+    if (item.title === 'Descuentos')
+    {
+      this.OpenDescuentoMantenimientoComponent();
     }
   }
   OpenCajaMantenimientoComponent() {
@@ -344,6 +349,15 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '920px',
+    });
+  }
+
+  OpenDescuentoMantenimientoComponent(): void {
+    this.dialog.open(DescuentoMantenimientoComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: '900px',
+      maxWidth: '96vw',
     });
   }
 

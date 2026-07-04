@@ -188,12 +188,11 @@ export class DialogVentasgeneralesComponent implements OnInit {
         // Realiza la anulación de la venta
         const idVenta = this.ventaSeleccionada.IdVenta;
         const motivo = 'Anulado desde el módulo de integración.';
-        const usuAnula = this.storageService.getCurrentSession().User.IdUsuario; // Debes reemplazar esto con el usuario actual
         const anularPedido = true; // Reemplaza si es necesario
 
         this.spinnerService.show(); // Mostrar spinner mientras se realiza la operación
 
-        this.ventaService.anularDocumentoVenta(idVenta, motivo, usuAnula, anularPedido).subscribe(
+        this.ventaService.anularDocumentoVenta(idVenta, motivo, anularPedido).subscribe(
           (response: any) => {
             this.spinnerService.hide();
             Swal.fire('Anulado', 'El documento se anuló con éxito', 'success');

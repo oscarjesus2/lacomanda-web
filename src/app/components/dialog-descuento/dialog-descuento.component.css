@@ -1,117 +1,142 @@
-.descuento-container {
-  width: 700px;
-  margin: 20px auto;
+/* ── Panel raíz ──────────────────────────────────────────── */
+.dsc-panel {
+  min-width: 580px;
+}
+
+/* ── Toggle de tipo ──────────────────────────────────────── */
+.dsc-tipo-group {
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+::ng-deep .dsc-tipo-group .mat-button-toggle {
+  flex: 1;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+::ng-deep .dsc-tipo-group .mat-button-toggle-checked {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+}
+
+::ng-deep .dsc-tipo-group .mat-button-toggle-checked .mat-icon {
+  color: var(--color-text-light);
+}
+
+::ng-deep .dsc-tipo-group .mat-button-toggle .mat-button-toggle-label-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  padding: 0 14px;
+  line-height: 40px;
+}
+
+/* ── Chip de producto ────────────────────────────────────── */
+.dsc-producto-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  color: var(--color-primary-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.dsc-producto-chip mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+}
+
+/* ── Layout ──────────────────────────────────────────────── */
+.dsc-layout {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── Tabla ───────────────────────────────────────────────── */
+.dsc-table-card {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.dsc-row-selected {
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface)) !important;
+}
+
+.dsc-row-selected .mat-cell {
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+.dsc-na {
+  color: var(--color-text-muted);
+}
+
+.dsc-empty {
   padding: 20px;
-  background-color: var(--color-surface-warm);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-}
-
-.descuento-container h2 {
   text-align: center;
-  font-size: 1.5em;
-  margin-bottom: 20px;
-  color: var(--color-text);
+  color: var(--color-text-muted);
+  font-style: italic;
 }
 
-.descuento-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.descuento-btn {
-  background-color: var(--color-primary);
-  color: white;
-  padding: 10px 15px;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.descuento-btn:hover { background-color: var(--color-primary-dark); }
-
-.main-content {
-  display: flex;
-  justify-content: space-between;
-}
-
-.left-section { width: 65%; }
-
-.input-buscar {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  background: var(--color-surface);
-}
-
-.data-grid table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.data-grid th, .data-grid td {
-  padding: 10px;
-  border: 1px solid var(--color-border);
-}
-
-.data-grid th {
-  background-color: var(--color-primary);
-  color: white;
-}
-
-.data-grid td { color: var(--color-text); }
-
-.right-section {
-  width: 30%;
+/* ── Panel derecho ───────────────────────────────────────── */
+.dsc-right {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
-.input-dscto, .input-cupon {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  background: var(--color-surface);
-}
-
-.action-buttons {
+/* ── Preview del seleccionado ────────────────────────────── */
+.dsc-preview {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  margin-top: 4px;
 }
 
-.action-btn {
-  padding: 10px;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: var(--transition-fast);
+.dsc-preview__label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
 }
 
-.aceptar { background-color: var(--color-success); color: white; }
-.aceptar:hover { filter: brightness(0.9); }
-
-.cancelar {
-  background-color: var(--color-surface);
-  color: var(--color-text);
-  border: 1px solid var(--color-border-strong);
+.dsc-preview__desc {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  line-height: 1.3;
 }
-.cancelar:hover { background-color: var(--color-bg); }
 
-.salir { background-color: var(--color-warn); color: white; }
-.salir:hover { filter: brightness(0.9); }
+.dsc-preview__pct {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
 
-.selected-row {
-  background-color: rgba(0, 121, 107, 0.12);
-  color: var(--color-text);
+/* ── Botones de acción ───────────────────────────────────── */
+.dsc-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dsc-actions button {
+  width: 100%;
 }

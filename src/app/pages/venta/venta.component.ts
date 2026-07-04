@@ -922,8 +922,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
     var descuentoMaximo = itemPedidoDet.Subtotal;
 
     const dialogRef = this.dialog.open(DialogDescuentoComponent, {
-      width: '800px',
-      height: '500px',
+      width: '720px',
+      maxWidth: '96vw',
+      maxHeight: '90vh',
       data: { idProducto, nombreCorto, descuentoTotal, descuentoMaximo }
     });
 

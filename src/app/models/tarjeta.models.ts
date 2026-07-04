@@ -1,6 +1,6 @@
 export class Tarjeta {
 
-   public IdTarjeta: string;
+   public IdTarjeta: number;
    public Descripcion: string;
    
    constructor(init?: Partial<Tarjeta>) {

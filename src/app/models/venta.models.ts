@@ -13,7 +13,6 @@ export class Venta {
     NroCuenta: number;
     IdCaja: number;
     Impuesto1: number;
-    IdEmpleado: number;
     Total: number;
     Importe: number;
     Dscto: number;

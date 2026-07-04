@@ -37,7 +37,7 @@ export class DialogDescuentoComponent {
   descuentoMaximo: number;
   
   retornaTipoDescuento: string = 'P';
-  retornaIdDescuento: string = '';
+  retornaIdDescuento: number = 0;
   retornaPorcentaje: number = 0;
   retonaValorVale: number = 0;
   retornaNroCupon: string;
@@ -61,11 +61,23 @@ export class DialogDescuentoComponent {
     this.cargarDescuentos();
   }
 
+  /** Convierte el código de letra ('P','T','V') al número del enum backend */
+  private tipoLetraANumero(letra: string): number {
+    switch (letra) {
+      case 'P': return 1; // PorProducto
+      case 'T': return 2; // Total
+      case 'V': return 3; // Vale
+      default:  return -1;
+    }
+  }
+
   cargarDescuentos(): void {
     this.descuentoService.getDescuentos().subscribe((response) => {
-      this.descuentos = response.Data;
-      this.filteredDescuentos =  this.descuentos;
-      this.dataSource.data = this.filteredDescuentos.filter(x=> x.TipoDescuento === this.retornaTipoDescuento); 
+      this.descuentos = response.Data.map(d => ({ ...d, TipoDescuento: Number(d.TipoDescuento) }));
+      this.filteredDescuentos = this.descuentos;
+      this.dataSource.data = this.filteredDescuentos.filter(
+        x => x.TipoDescuento === this.tipoLetraANumero(this.retornaTipoDescuento)
+      );
     }, error => {
       console.error('Error al obtener descuentos:', error);
     });
@@ -79,8 +91,10 @@ export class DialogDescuentoComponent {
   descuentoPorTipo(tipodeso: string){
     this.selectedRow = null; 
     this.retornaTipoDescuento= tipodeso;
-    this.filteredDescuentos =  this.descuentos;
-    this.dataSource.data = this.filteredDescuentos.filter(x=> x.TipoDescuento === this.retornaTipoDescuento); 
+    this.filteredDescuentos = this.descuentos;
+    this.dataSource.data = this.filteredDescuentos.filter(
+      x => x.TipoDescuento === this.tipoLetraANumero(this.retornaTipoDescuento)
+    );
     if (tipodeso == "P"){
       this.lblproductoVisible = true;
       this.label10 = "Dscto";
@@ -126,7 +140,7 @@ export class DialogDescuentoComponent {
           this.showAlert("Ingrese un descuento para la venta", "warning");
           return;
         }else{
-          this.retornaIdDescuento = this.selectedRow.IdDescuento;
+          this.retornaIdDescuento = this.selectedRow.IdDescuento; // ya es number
         }
       }
 

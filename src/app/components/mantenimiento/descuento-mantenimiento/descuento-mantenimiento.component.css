@@ -1,0 +1,120 @@
+/* ── Búsqueda ─────────────────────────────────────────────── */
+.mant-search {
+  margin-top: 12px;
+}
+
+/* ── Título sección form ──────────────────────────────────── */
+.dsc-form-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 16px;
+}
+
+.dsc-form-title mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+}
+
+/* ── Chip de tipo ────────────────────────────────────────── */
+.dsc-tipo-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  color: var(--color-primary-dark);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+.dsc-tipo-chip.dsc-tipo--vale {
+  background: color-mix(in srgb, var(--color-success, #388e3c) 12%, var(--color-surface));
+  color: var(--color-success, #388e3c);
+  border-color: color-mix(in srgb, var(--color-success, #388e3c) 25%, transparent);
+}
+
+.dsc-tipo-chip.dsc-tipo--total {
+  background: color-mix(in srgb, var(--color-warn) 12%, var(--color-surface));
+  color: var(--color-warn);
+  border-color: color-mix(in srgb, var(--color-warn) 25%, transparent);
+}
+
+/* ── Porcentaje N/A ──────────────────────────────────────── */
+.dsc-na {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+/* ── Botón de estado (toggle inline) ────────────────────── */
+.dsc-estado-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid transparent;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.dsc-estado-btn mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+}
+
+.dsc-estado-btn.dsc-estado--activo {
+  background: color-mix(in srgb, var(--color-success, #388e3c) 10%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-success, #388e3c) 30%, transparent);
+  color: var(--color-success, #388e3c);
+}
+
+.dsc-estado-btn.dsc-estado--inactivo {
+  background: color-mix(in srgb, var(--color-warn) 8%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-warn) 25%, transparent);
+  color: var(--color-warn);
+}
+
+.dsc-estado-btn:hover {
+  filter: brightness(0.93);
+}
+
+/* ── Nota Vale ───────────────────────────────────────────── */
+.dsc-vale-nota {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-success, #388e3c) 8%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-success, #388e3c) 20%, transparent);
+  color: var(--color-success, #388e3c);
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.dsc-vale-nota mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  flex-shrink: 0;
+}
+
+/* ── Empty row ───────────────────────────────────────────── */
+.dsc-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-style: italic;
+}

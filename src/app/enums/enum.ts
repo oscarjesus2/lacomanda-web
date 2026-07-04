@@ -41,6 +41,12 @@ export enum NivelUsuarioEnum {
   Mozo = 3
 }
 
+export enum TipoDescuentoEnum {
+  PorProducto = 1,
+  Total = 2,
+  Vale = 3,
+}
+
 export enum TipoPagoEnum {
   Efectivo = 1,
   Vale = 2,

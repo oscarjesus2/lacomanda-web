@@ -192,11 +192,11 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
     if (this.storageService.getCurrentUser().IdNivel !== 1) {
       Swal.fire({ title: 'Anular', text: 'No tiene permiso. Ingresa la Clave del Administrador', icon: 'error', confirmButtonText: 'OK' })
         .then(async () => {
-          idUsuarioAnula = await this.abrirModalClaveAnula();
+          idUsuarioAnula = 0
           this.confirmarAnulacion(IntIdVenta, idTipoPedido, idUsuarioAnula);
         });
     } else {
-      idUsuarioAnula = this.storageService.getCurrentUser().IdUsuario;
+      idUsuarioAnula = 0
       this.confirmarAnulacion(IntIdVenta, idTipoPedido, idUsuarioAnula);
     }
   }
@@ -207,18 +207,18 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
     }).then((result) => {
       if (!result.isConfirmed) return;
       if (idTipoPedido === '004') {
-        this.anularDocumentoVenta(IntIdVenta, idUsuarioAnula, true);
+        this.anularDocumentoVenta(IntIdVenta, true);
       } else {
         Swal.fire({ title: 'Anular Pedido', text: '¿Anular también el Pedido?', icon: 'warning',
           showCancelButton: true, confirmButtonText: 'Sí', cancelButtonText: 'No'
-        }).then(r => this.anularDocumentoVenta(IntIdVenta, idUsuarioAnula, r.isConfirmed));
+        }).then(r => this.anularDocumentoVenta(IntIdVenta, r.isConfirmed));
       }
     });
   }
 
-  anularDocumentoVenta(IntIdVenta: number, idUsuarioAnula: number, anularPedido: boolean): void {
+  anularDocumentoVenta(IntIdVenta: number, anularPedido: boolean): void {
     this.spinnerService.show();
-    this.ventaService.anularDocumentoVenta(IntIdVenta, this.motivoAnulacion, idUsuarioAnula, anularPedido).subscribe({
+    this.ventaService.anularDocumentoVenta(IntIdVenta, this.motivoAnulacion, anularPedido).subscribe({
       next: (response: ApiResponse<ImpresionDTO[]>) => {
         if (response.Success) {
           Swal.fire('Anulado', 'El documento se anuló con éxito', 'success');
