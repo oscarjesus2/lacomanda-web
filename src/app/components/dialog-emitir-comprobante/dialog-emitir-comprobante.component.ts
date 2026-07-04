@@ -984,9 +984,9 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     if (this.solesValue > 0) {
 
       const pagoSoles: Pago = {
-
         IdVenta: 0,
-        IdTipoPago: '001',
+        IdTipoPago: TipoPagoEnum.Efectivo,
+        IdMoneda: this.monedaPrincipal?.IdMoneda ?? '',
         MontoPagado: this.solesValue,
         MontoVenta: parseFloat(this.lblmonto),
         Propina: 0,
@@ -1009,7 +1009,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
       const pagoDolares: Pago = {
         IdVenta: 0,
-        IdTipoPago: '002',
+        IdTipoPago: TipoPagoEnum.Efectivo,
+        IdMoneda: this.monedaAlternativa?.IdMoneda ?? '',
         MontoPagado: parseFloat(this.lblcal),
         MontoVenta: parseFloat(this.lblmonto),
         Propina: 0,
@@ -1026,7 +1027,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     this.dataSourcePago.data.forEach(row => {
       const pagoTable: Pago = {
         IdVenta: 0,
-        IdTipoPago: '004',
+        IdTipoPago: TipoPagoEnum.Tarjeta,
+        IdMoneda: this.monedaPrincipal?.IdMoneda ?? '',
         MontoPagado: row.MontoPagado,
         MontoVenta: parseFloat(this.lblmonto),
         Propina: row.Propina,
