@@ -302,7 +302,18 @@
   <!-- Segunda Columna -->
   <div class="column-right">
 
-    <!-- Banner de modo traslado -->
+    <!-- Banner de modo traslado de pedido a mesa -->
+    <div *ngIf="aplicarFiltroTrasladarAEspacio" class="traslado-banner">
+      <mat-icon class="traslado-banner__icon">table_restaurant</mat-icon>
+      <span class="traslado-banner__text">
+        Seleccione una <strong>mesa libre</strong> para trasladar el pedido
+      </span>
+      <button class="traslado-banner__cancel" (click)="cancelarTrasladarAEspacio()">
+        <mat-icon>close</mat-icon> Cancelar
+      </button>
+    </div>
+
+    <!-- Banner de modo traslado de producto -->
     <div *ngIf="productoParaTraslado" class="traslado-banner">
       <mat-icon class="traslado-banner__icon">swap_horiz</mat-icon>
       <span class="traslado-banner__text">
@@ -315,7 +326,7 @@
     </div>
 
     <!-- Alterna entre las espacios y los productos -->
-    <div *ngIf="MostrarOcultarPanelEspacio && idCanalVentaSelected==canalVentaEnum.ESPACIO" class="tables-grid">
+    <div *ngIf="MostrarOcultarPanelEspacio && (idCanalVentaSelected==canalVentaEnum.ESPACIO || aplicarFiltroTrasladarAEspacio)" class="tables-grid">
       <button *ngFor="let espacio of listaEspacios_x_Ambiente"
         [style.background]="espacio.Color" 
         (click)="openDialogEspacio(espacio)"
@@ -324,7 +335,7 @@
       </button>
     </div>
 
-    <div *ngIf="MostrarOcultarPanelEspacio && idCanalVentaSelected!=canalVentaEnum.ESPACIO" class="tables-grid">
+    <div *ngIf="MostrarOcultarPanelEspacio && idCanalVentaSelected!=canalVentaEnum.ESPACIO && !aplicarFiltroTrasladarAEspacio" class="tables-grid">
       <button *ngFor="let pedido of listaPedido_x_Canal"
         [style.background]="'LightCyan'"
         (click)="openPedido(pedido)"
@@ -346,7 +357,7 @@
 
       <!-- Ambientes (Salon, 2do Nivel, Barra...) -->
       <div class="static-buttons-row static-buttons-row--ambiente"
-           *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">
+           *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO || aplicarFiltroTrasladarAEspacio">
         <button *ngFor="let item of listAmbiente"
           [ngClass]="{'selected': selectedAmbiente === item}"
           (click)="MostrarEspacios_x_Ambiente(item)">
@@ -356,11 +367,14 @@
 
       <!-- Acciones de mesa -->
       <div class="static-buttons-row static-buttons-row--acciones">
-        <button *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO"
+        <button *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO && !aplicarFiltroTrasladarAEspacio"
                 class="process-pedido" (click)="NuevoPedidoLlevar()">Nuevo Pedido</button>
-        <button class="process-pedido"
+        <button *ngIf="!aplicarFiltroTrasladarAEspacio" class="process-pedido"
                 [disabled]="idCanalVentaSelected == canalVentaEnum.ESPACIO && !mesaSeleccionada"
                 (click)="processPedido(true)">Procesar Pedido</button>
+        <button *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO && !aplicarFiltroTrasladarAEspacio"
+                [disabled]="!pedidoLlevarSeleccionado"
+                (click)="iniciarTrasladarAEspacio()">Trasladar a Mesa</button>
         <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO && isAdmin"
                 [disabled]="!mesaSeleccionada"
                 (click)="CambiarMozo()">Cambiar Mozo</button>

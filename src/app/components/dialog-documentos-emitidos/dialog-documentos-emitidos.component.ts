@@ -40,9 +40,11 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
   motivoAnulacion: string = '';
 
   // ── Tabla ─────────────────────────────────────────────────────────────────
-  displayedColumns: string[] = ['tipo', 'serie', 'numDoc', 'fecha', 'monto', 'cliente', 'numeroDoi', 'forr'];
+  displayedColumns: string[] = ['tipo', 'serie', 'numDoc', 'fecha', 'monto', 'cliente', 'numeroDoi', 'forr', 'estado'];
   dataSource = new MatTableDataSource<VentasDTO>();
   selectedRow: VentasDTO | null = null;
+
+  get isAnulado(): boolean { return this.selectedRow?.Estado === 'Anulado'; }
   idTurno: number;
 
   constructor(

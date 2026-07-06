@@ -95,4 +95,10 @@ export class PedidoService {
     CambiarMozo(idPedido: number, nroCuenta: number, idEmpleado: number): Observable<ApiResponse<boolean>> {
         return this.http.put<ApiResponse<boolean>>(`${this.basePath}/CambiarMozo/${idPedido}/${nroCuenta}/${idEmpleado}`, {});
     }
+
+    /** Cambia el canal de venta del pedido a ESPACIO y le asigna el idEspacio dado.
+     *  PUT /api/pedido/TrasladarAEspacio/{idPedido}/{idEspacio} */
+    TrasladarAEspacio(idPedido: number, idEspacio: number): Observable<ApiResponse<boolean>> {
+        return this.http.put<ApiResponse<boolean>>(`${this.basePath}/TrasladarAEspacio/${idPedido}/${idEspacio}`, {});
+    }
 }

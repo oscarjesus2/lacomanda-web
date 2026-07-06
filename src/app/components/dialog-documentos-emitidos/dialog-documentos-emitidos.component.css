@@ -228,3 +228,44 @@
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
+
+/* ── Chip de estado ─────────────────────────────────────── */
+.dv-estado-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dv-estado-chip--generado {
+  background: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: var(--color-success);
+  border: 1px solid color-mix(in srgb, var(--color-success) 40%, transparent);
+}
+
+.dv-estado-chip--anulado {
+  background: color-mix(in srgb, var(--color-warn) 15%, transparent);
+  color: var(--color-warn);
+  border: 1px solid color-mix(in srgb, var(--color-warn) 40%, transparent);
+}
+
+/* ── Fila anulada ───────────────────────────────────────── */
+.dv-table .mat-mdc-row.dv-row--anulado .mat-mdc-cell {
+  opacity: 0.5;
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--color-warn) 60%, transparent);
+}
+
+/* ── Botones de acción deshabilitados ───────────────────── */
+.dv-action-btn:disabled {
+  background: var(--color-border);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+  opacity: 0.6;
+}

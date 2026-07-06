@@ -44,7 +44,7 @@ export class EspaciosService {
   }
 
   UnirEspacio(idEspacioOrigen: number, idEspacioDestino: number, idUsuario: number): Observable<ApiResponse<boolean>> {
-    return this.http.put<ApiResponse<boolean>>(`${this.basePathMesas}/UnirEspacio/${idEspacioOrigen}/${idEspacioDestino}/${idUsuario}`, {});
+    return this.http.put<ApiResponse<boolean>>(`${this.basePathMesas}/UnirEspacio/${idEspacioOrigen}/${idEspacioDestino}`, {});
   }
 
   ImprimirPrecuenta(idEspacio: number): Observable<any[]> {

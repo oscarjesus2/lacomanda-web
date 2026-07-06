@@ -137,6 +137,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   aplicarFiltroCambioEspacio: boolean = false;
   aplicarFiltroUnirEspacio: boolean = false;
   aplicarFiltroTrasladoProducto: boolean = false;
+  aplicarFiltroTrasladarAEspacio: boolean = false;
   productoParaTraslado: PedidoDet | null = null;
   ambienteActual: Ambiente | null = null;
   textDescuento: string ='Descuento';
@@ -548,11 +549,19 @@ export class VentaComponent implements OnInit, AfterViewInit {
           return espacio;
         });
     } else if (this.aplicarFiltroTrasladoProducto) {
-      // Mostrar todas las mesas excepto la actual
+      // Mostrar todas las mesas excepto la actual; fantasmas (Numero=0) permanecen ocultas
       this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
         .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
         .map(espacio => {
-          espacio.Visible = espacio.IdEspacio !== this.espacioSelected.IdEspacio;
+          espacio.Visible = espacio.Numero > 0 && espacio.IdEspacio !== this.espacioSelected.IdEspacio;
+          return espacio;
+        });
+    } else if (this.aplicarFiltroTrasladarAEspacio) {
+      // Solo mesas libres (Ocupado===0); fantasmas (Numero=0) permanecen ocultas
+      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
+        .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
+        .map(espacio => {
+          espacio.Visible = espacio.Numero > 0 && espacio.Ocupado === 0;
           return espacio;
         });
     } else {
@@ -583,6 +592,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
   /** true cuando hay una mesa activa seleccionada */
   get mesaSeleccionada(): boolean {
     return !!this.espacioSelected?.IdEspacio;
+  }
+
+  /** true cuando hay un pedido de llevar/delivery cargado */
+  get pedidoLlevarSeleccionado(): boolean {
+    return this.idPedidoCobrar > 0 && this.idCanalVentaSelected !== this.canalVentaEnum.ESPACIO;
   }
 
   async CambiarMozo(): Promise<void> {
@@ -1189,6 +1203,12 @@ export class VentaComponent implements OnInit, AfterViewInit {
       return;
     }
 
+    if (this.aplicarFiltroTrasladarAEspacio) {
+      await this.ejecutarTrasladarAEspacio(espacio);
+      this.spinnerService.hide();
+      return;
+    }
+
     if (espacio.Ocupado === 0 || espacio.Ocupado === 2) {
       await this.handleEspacioDisponible(espacio);
     } else if (espacio.Ocupado === 1 || espacio.Ocupado === 4) {
@@ -1220,6 +1240,41 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.aplicarFiltroTrasladoProducto = false;
     if (this.ambienteActual) {
       this.MostrarEspacios_x_Ambiente(this.ambienteActual);
+    }
+  }
+
+  iniciarTrasladarAEspacio(): void {
+    if (this.idPedidoCobrar <= 0) {
+      Swal.fire('Trasladar a Mesa', 'Debe seleccionar un pedido.', 'info');
+      return;
+    }
+    this.aplicarFiltroTrasladarAEspacio = true;
+    this.MostrarOcultarPanelEspacio = true;
+    this.MostrarOcultarPanelProducto = false;
+    const ambienteBase = this.ambienteActual
+      ?? this.listAmbiente?.find(a => a.Estado === 1)
+      ?? this.listAmbiente?.[0];
+    if (ambienteBase) this.MostrarEspacios_x_Ambiente(ambienteBase);
+  }
+
+  cancelarTrasladarAEspacio(): void {
+    this.aplicarFiltroTrasladarAEspacio = false;
+    if (this.ambienteActual) {
+      this.MostrarEspacios_x_Ambiente(this.ambienteActual);
+    }
+  }
+
+  async ejecutarTrasladarAEspacio(espacio: Espacios): Promise<void> {
+    try {
+      const response = await lastValueFrom(this.pedidoService.TrasladarAEspacio(this.idPedidoCobrar, espacio.IdEspacio));
+      if (response.Success) {
+        this.aplicarFiltroTrasladarAEspacio = false;
+        this.RehacerPantalla();
+      } else {
+        Swal.fire('Trasladar a Mesa', response.Message || 'No se pudo trasladar el pedido.', 'warning');
+      }
+    } catch {
+      Swal.fire('Error', 'Ocurrió un error al trasladar el pedido.', 'error');
     }
   }
 
@@ -2026,6 +2081,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       this.aplicarFiltroCambioEspacio = false;
       this.aplicarFiltroUnirEspacio = false;
       this.aplicarFiltroTrasladoProducto = false;
+      this.aplicarFiltroTrasladarAEspacio = false;
       this.productoParaTraslado = null;
       // Actualizar espacios
       lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos()).then(data => {

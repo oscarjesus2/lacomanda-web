@@ -113,33 +113,45 @@
           <mat-cell *matCellDef="let e">{{ e.FormaPago }}</mat-cell>
         </ng-container>
 
+        <ng-container matColumnDef="estado">
+          <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+          <mat-cell *matCellDef="let e">
+            <span class="dv-estado-chip"
+                  [class.dv-estado-chip--anulado]="e.Estado === 'Anulado'"
+                  [class.dv-estado-chip--generado]="e.Estado !== 'Anulado'">
+              {{ e.Estado ?? '—' }}
+            </span>
+          </mat-cell>
+        </ng-container>
+
         <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
         <mat-row *matRowDef="let row; columns: displayedColumns;"
                  (click)="selectRow(row)"
-                 [class.dv-row--selected]="selectedRow === row">
+                 [class.dv-row--selected]="selectedRow === row"
+                 [class.dv-row--anulado]="row.Estado === 'Anulado'">
         </mat-row>
       </mat-table>
     </div>
 
     <!-- Acciones laterales -->
     <div class="dv-actions">
-      <button class="dv-action-btn">
+      <button class="dv-action-btn" [disabled]="isAnulado">
         <mat-icon>picture_as_pdf</mat-icon>
         PDF y XML
       </button>
-      <button class="dv-action-btn" (click)="reImprimirDocumento()">
+      <button class="dv-action-btn" [disabled]="isAnulado" (click)="reImprimirDocumento()">
         <mat-icon>print</mat-icon>
         Reimprimir
       </button>
-      <button class="dv-action-btn">
+      <button class="dv-action-btn" [disabled]="isAnulado">
         <mat-icon>payment</mat-icon>
         Modificar Pago
       </button>
-      <button class="dv-action-btn">
+      <button class="dv-action-btn" [disabled]="isAnulado">
         <mat-icon>edit_document</mat-icon>
         Modificar Doc.
       </button>
-      <button class="dv-action-btn dv-action-btn--danger" (click)="anularDocumento()">
+      <button class="dv-action-btn dv-action-btn--danger" [disabled]="isAnulado" (click)="anularDocumento()">
         <mat-icon>cancel</mat-icon>
         Anular
       </button>

@@ -32,6 +32,7 @@ export interface VentasInterface {
     NumeroDoi: string;          // Número DOI (Documento de Identidad del cliente)
     NombreArchivo: string;      // Nombre del archivo generado
     FormaPago: string;          // Forma de pago utilizada
+    Estado?: string;            // Estado del documento ('Generado', 'Anulado')
     IdTipoPedido: string;       // Tipo de pedido
     IdTipoDocumento: string;         // Tipo de documento de la venta
     Importe: number;                 // Importe total de la venta
