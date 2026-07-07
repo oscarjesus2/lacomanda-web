@@ -540,7 +540,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
         .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
         .map(espacio => {
-          if ([1].includes(espacio.Ocupado) && this.espacioSelected.IdEspacio != espacio.IdEspacio) {
+          if ([1, 4].includes(espacio.Ocupado) && this.espacioSelected.IdEspacio != espacio.IdEspacio) {
             espacio.Visible = true;
           }
           else {

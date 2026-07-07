@@ -815,6 +815,15 @@
   background: color-mix(in srgb, var(--color-warn) 10%, transparent);
 }
 
+/* Variante azul para Unir Cuenta */
+.traslado-banner--unir {
+  background: color-mix(in srgb, var(--color-info, #1976d2) 12%, var(--color-surface));
+  border-color: var(--color-info, #1976d2);
+}
+.traslado-banner--unir .traslado-banner__icon {
+  color: var(--color-info, #1976d2);
+}
+
 /* ── Botón acción principal (Enviar Pedido) ────────────────── */
 .btn--primary-action {
   background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%) !important;

@@ -302,6 +302,18 @@
   <!-- Segunda Columna -->
   <div class="column-right">
 
+    <!-- Banner de modo Unir Cuenta -->
+    <div *ngIf="aplicarFiltroUnirEspacio" class="traslado-banner traslado-banner--unir">
+      <mat-icon class="traslado-banner__icon">merge</mat-icon>
+      <span class="traslado-banner__text">
+        <strong>{{ espacioSelected.Descripcion }} {{ espacioSelected.Numero }}</strong>
+        se unirá a la mesa que seleccione — solo se muestran mesas ocupadas
+      </span>
+      <button class="traslado-banner__cancel" (click)="RehacerPantalla()">
+        <mat-icon>close</mat-icon> Cancelar
+      </button>
+    </div>
+
     <!-- Banner de modo traslado de pedido a mesa -->
     <div *ngIf="aplicarFiltroTrasladarAEspacio" class="traslado-banner">
       <mat-icon class="traslado-banner__icon">table_restaurant</mat-icon>
