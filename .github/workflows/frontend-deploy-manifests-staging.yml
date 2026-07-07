@@ -54,9 +54,13 @@ jobs:
 
     - name: Install kustomize
       run: |
-        sudo apt-get update
-        curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash
+        KUSTOMIZE_VERSION=v5.4.3
+        curl -fsSL \
+          "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" \
+          -o kustomize.tar.gz
+        tar -xzf kustomize.tar.gz
         sudo mv kustomize /usr/local/bin/
+        rm kustomize.tar.gz
 
     - name: Save latest image tag and update overlay (staging)
       run: |
