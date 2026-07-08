@@ -378,6 +378,34 @@
   background: color-mix(in srgb, var(--color-primary-dark) 6%, transparent);
 }
 
+/* ── BANNER TOTAL A PAGAR ──────────────────────────────────── */
+.cobranza-panel__total-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  border-radius: var(--radius-md);
+}
+
+.cobranza-panel__total-banner-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.cobranza-panel__total-banner-value {
+  font-size: 1.75rem;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary);
+}
+
 /* ── HERO FALTA / VUELTO ───────────────────────────────────── */
 .cobranza-panel__hero {
   display: flex;

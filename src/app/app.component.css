@@ -1,0 +1,29 @@
+/* ── Banner: backend offline ──────────────────────────────────── */
+.backend-offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: #b71c1c;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  animation: banner-slide-in 0.3s ease;
+}
+
+.backend-offline-banner__icon {
+  font-size: 18px;
+}
+
+@keyframes banner-slide-in {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(0); }
+}

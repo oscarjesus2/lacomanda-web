@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: oscar020/frontend:latest  # el overlay ajusta el tag
+        image: oscar020/frontend:latest
         ports:
           - name: http
             containerPort: 80

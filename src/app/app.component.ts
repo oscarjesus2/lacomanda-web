@@ -1,11 +1,13 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
+import { Observable } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { StorageService } from 'src/app/services/storage.service';
 import { DataService } from '../app/services/data.service';
 import { HeaderService } from './services/header.service';
+import { BackendStatusService } from './services/backend-status.service';
 import { SwUpdate } from '@angular/service-worker';
-import { MatSnackBar } from '@angular/material/snack-bar';  // O puedes usar cualquier otra notificación
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-root',
@@ -16,17 +18,24 @@ export class AppComponent implements OnInit, OnDestroy {
 
   title = 'Jbs_Resta';
   headerVisible = true;
-  constructor(private swUpdate: SwUpdate, private snackBar: MatSnackBar,
-              private router: Router,
-              private storageService: StorageService,
-              private dataService: DataService,
-              private headerService: HeaderService) {
 
+  /** true cuando el backend no responde (status 0) */
+  backendDown$: Observable<boolean>;
+
+  constructor(
+    private swUpdate: SwUpdate,
+    private snackBar: MatSnackBar,
+    private router: Router,
+    private storageService: StorageService,
+    private dataService: DataService,
+    private headerService: HeaderService,
+    private backendStatusService: BackendStatusService,
+  ) {
+    this.backendDown$ = this.backendStatusService.isDown$;
     this.checkForUpdates();
     this.headerService.headerVisible$.subscribe(visible => {
       this.headerVisible = visible;
     });
-    
   }
 
   ngOnDestroy(): void {

@@ -138,6 +138,13 @@ export class VentaComponent implements OnInit, AfterViewInit {
   aplicarFiltroUnirEspacio: boolean = false;
   aplicarFiltroTrasladoProducto: boolean = false;
   aplicarFiltroTrasladarAEspacio: boolean = false;
+
+  /** true mientras los datos iniciales no han terminado de cargarse */
+  isLoadingEspacios: boolean = true;
+  /** Array de 21 items para skeleton grid (3 filas × 7 col) */
+  readonly skeletonItems = Array(21).fill(0);
+  /** true cuando la carga inicial falló (backend caído) */
+  errorCargaInicial: boolean = false;
   productoParaTraslado: PedidoDet | null = null;
   ambienteActual: Ambiente | null = null;
   textDescuento: string ='Descuento';
@@ -475,13 +482,14 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
             // Mostrar panel de espacio
             this.MostrarOcultarPanelEspacio = true;
-            console.log("aqui")
+            this.isLoadingEspacios = false;
             // Ocultar spinner
             this.spinnerService.hide();
-          }, error => {
-            // Manejo de errores en el subscribe
+          }, () => {
+            // Error en la carga inicial (generalmente backend caído)
             this.spinnerService.hide();
-            this.salir();
+            this.isLoadingEspacios = false;
+            this.errorCargaInicial = true;
           });
 
         } else {
@@ -2083,13 +2091,16 @@ export class VentaComponent implements OnInit, AfterViewInit {
       this.aplicarFiltroTrasladoProducto = false;
       this.aplicarFiltroTrasladarAEspacio = false;
       this.productoParaTraslado = null;
-      // Actualizar espacios
+      // Actualizar espacios (skeleton mientras recarga)
+      this.isLoadingEspacios = true;
       lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos()).then(data => {
         this.listaEspaciosTotal = data.Data;
         const result = this.listAmbiente.find(item => item.Estado == 1);
         if (result) this.MostrarEspacios_x_Ambiente(result);
+        this.isLoadingEspacios = false;
       }).catch(error => {
         console.error('Error al obtener espacios', error);
+        this.isLoadingEspacios = false;
       });
 
       // Actualizar pedidos
@@ -2191,7 +2202,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
             ExclusivoParaAnfitriona: data.ExclusivoParaAnfitriona,
             Qty: data.Qty,
             FactorComplemento: data.FactorComplemento,
-            PermitirParaTragoCortesia: data.PermitirParaTragoCortesia
+            PermitirParaTragoCortesia: data.PermitirParaTragoCortesia,
+            Tipo: data.Tipo,
+            IdClaseCombo: data.IdSeccionMenu
           }),
           Precio: data.Precio,
           Cantidad: data.Cantidad,
@@ -2220,6 +2233,15 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.nroCuentaCobrar = firstItem.NroCuenta;
     this.horaPedido = firstItem.HoraPedido;
     this.numeroPedido = firstItem.NroPedido;
+  }
+
+  /** Reintentar carga completa tras un error de backend en el inicio */
+  reintentarCargaInicial(): void {
+    const ruta = this.isModoMozo ? '/mozo' : '/caja';
+    // Navegar fuera y volver fuerza el re-init completo del componente
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+      this.router.navigate([ruta]);
+    });
   }
 
   async Refresh(): Promise<void> {

@@ -425,6 +425,62 @@
   box-shadow: none;
 }
 
+/* ── Estado de error de carga (backend caído) ──────────────── */
+.carga-error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.carga-error__icon {
+  font-size: 56px;
+  width: 56px;
+  height: 56px;
+  color: var(--color-warn);
+  opacity: 0.7;
+}
+
+.carga-error__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.carga-error__sub {
+  font-size: 13px;
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.carga-error__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 10px 20px;
+  background: var(--color-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+}
+
+.carga-error__btn:hover {
+  background: var(--color-primary-dark);
+  box-shadow: var(--shadow-md);
+}
+
 /* ══════════════════════════════════════════════════════════════
    COLUMNA DERECHA — GRID DE MESAS / PEDIDOS
 ══════════════════════════════════════════════════════════════ */
@@ -463,6 +519,25 @@
 
 .tables-grid button:active {
   transform: translateY(0);
+}
+
+/* ── Skeleton cards (mientras cargan los datos) ────────────── */
+@keyframes mesa-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.tables-grid__skeleton {
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--color-border)                                              25%,
+    color-mix(in srgb, var(--color-border) 40%, var(--color-surface)) 50%,
+    var(--color-border)                                              75%
+  );
+  background-size: 200% 100%;
+  animation: mesa-shimmer 1.4s ease-in-out infinite;
+  border: 1px solid var(--color-border);
 }
 
 /* ══════════════════════════════════════════════════════════════

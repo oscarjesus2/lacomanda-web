@@ -35,4 +35,6 @@ export interface PedidoEspacioDTO {
   MontoDescuento: number;
   Ip: string;
   PedidoComplemento: PedidoComplemento[];
+  Tipo: number;
+  IdSeccionMenu: number;
 }

@@ -233,6 +233,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.updateClock();
     this.clockInterval = setInterval(() => this.updateClock(), 1000);
 
+    // No cargar datos en la pantalla de login (evita 500 aunque haya token residual)
+    const esLogin = this.router.url.startsWith('/iniciar-sesion');
+    const sesionActiva = !!this.storageService.getCurrentSession();
+    if (esLogin || !sesionActiva) { this.spinnerService.hide(); return; }
+
     // Configuración (símbolo de moneda)
     this.configuracionService.get().subscribe(cfg => this.config = cfg);
 

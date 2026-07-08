@@ -119,6 +119,14 @@
     <!-- ══ COLUMNA DERECHA: PAGOS ═════════════════════════════════ -->
     <div class="cobranza-panel__col-pago">
 
+      <!-- TOTAL A PAGAR -->
+      <div class="cobranza-panel__total-banner">
+        <span class="cobranza-panel__total-banner-label">Total a pagar</span>
+        <span class="cobranza-panel__total-banner-value">
+          {{ config?.SimboloMoneda }} {{ (+lblmonto) | number:'1.2-2' }}
+        </span>
+      </div>
+
       <!-- HERO: FALTA / VUELTO -->
       <div class="cobranza-panel__hero"
            [class.cobranza-panel__hero--falta]="!pagoCompleto"

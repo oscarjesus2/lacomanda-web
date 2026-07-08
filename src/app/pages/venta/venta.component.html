@@ -236,6 +236,19 @@
       </button>
     </div>
 
+    <!-- Combo / Ver Complementos: visible solo si la fila seleccionada lo requiere -->
+    <div class="button-row"
+         *ngIf="selectedRow && (selectedRow.Producto?.Tipo === 1 || selectedRow.Producto?.Tipo === 2)">
+      <button *ngIf="selectedRow.Producto?.Tipo === 1"
+              [disabled]="isComboDisabled">
+        <fa-icon [icon]="faConciergeBell"></fa-icon> Combo
+      </button>
+      <button *ngIf="selectedRow.Producto?.Tipo === 2"
+              (click)="VerPedido()">
+        <fa-icon [icon]="faEye"></fa-icon> Ver Complementos
+      </button>
+    </div>
+
     <div class="button-row">
       <button *ngIf="mostrarBoleta"
               [disabled]="!procesarPedido"
@@ -337,17 +350,37 @@
       </button>
     </div>
 
-    <!-- Alterna entre las espacios y los productos -->
-    <div *ngIf="MostrarOcultarPanelEspacio && (idCanalVentaSelected==canalVentaEnum.ESPACIO || aplicarFiltroTrasladarAEspacio)" class="tables-grid">
-      <button *ngFor="let espacio of listaEspacios_x_Ambiente"
-        [style.background]="espacio.Color" 
-        (click)="openDialogEspacio(espacio)"
-        [style.visibility]="espacio.Visible === false ? 'hidden' : 'visible'">
-        <div style="text-align: center;">{{espacio.Descripcion}} {{espacio.Numero}} <br> {{config?.SimboloMoneda || '-'}}.{{espacio.Total}} <br> {{espacio.NombreEmpleado?.substring(0, 8)}}</div>
+    <!-- Error de carga inicial (backend caído) -->
+    <div *ngIf="errorCargaInicial" class="carga-error">
+      <mat-icon class="carga-error__icon">cloud_off</mat-icon>
+      <p class="carga-error__title">Sin conexión con el servidor</p>
+      <p class="carga-error__sub">Verifica que el backend esté activo y vuelve a intentarlo.</p>
+      <button class="carga-error__btn" (click)="reintentarCargaInicial()">
+        <mat-icon>refresh</mat-icon> Reintentar
       </button>
     </div>
 
-    <div *ngIf="MostrarOcultarPanelEspacio && idCanalVentaSelected!=canalVentaEnum.ESPACIO && !aplicarFiltroTrasladarAEspacio" class="tables-grid">
+    <!-- Alterna entre los espacios y los productos -->
+    <ng-container *ngIf="!errorCargaInicial && MostrarOcultarPanelEspacio && (idCanalVentaSelected==canalVentaEnum.ESPACIO || aplicarFiltroTrasladarAEspacio)">
+
+      <!-- Skeleton mientras carga -->
+      <div *ngIf="isLoadingEspacios" class="tables-grid">
+        <div *ngFor="let s of skeletonItems" class="tables-grid__skeleton"></div>
+      </div>
+
+      <!-- Grid real una vez cargado -->
+      <div *ngIf="!isLoadingEspacios" class="tables-grid">
+        <button *ngFor="let espacio of listaEspacios_x_Ambiente"
+          [style.background]="espacio.Color"
+          (click)="openDialogEspacio(espacio)"
+          [style.visibility]="espacio.Visible === false ? 'hidden' : 'visible'">
+          <div style="text-align: center;">{{espacio.Descripcion}} {{espacio.Numero}} <br> {{config?.SimboloMoneda || '-'}}.{{espacio.Total}} <br> {{espacio.NombreEmpleado?.substring(0, 8)}}</div>
+        </button>
+      </div>
+
+    </ng-container>
+
+    <div *ngIf="!errorCargaInicial && MostrarOcultarPanelEspacio && idCanalVentaSelected!=canalVentaEnum.ESPACIO && !aplicarFiltroTrasladarAEspacio" class="tables-grid">
       <button *ngFor="let pedido of listaPedido_x_Canal"
         [style.background]="'LightCyan'"
         (click)="openPedido(pedido)"

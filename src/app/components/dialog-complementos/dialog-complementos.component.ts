@@ -1,10 +1,10 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
+import { lastValueFrom } from 'rxjs';
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
 import { PedidoDet } from 'src/app/models/pedidodet.models';
 import { Producto } from 'src/app/models/product.models';
-import { ProductoService } from 'src/app/services/product.service';
 import Swal from 'sweetalert2';
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
 import { DialogDeleteProductComponent } from '../dialog-delete-product/dialog-product-delete.component';
@@ -15,15 +15,7 @@ import { DialogDeleteProductComponent } from '../dialog-delete-product/dialog-pr
   styleUrls: ['./dialog-complementos.component.css']
 })
 export class DialogComplementosComponent {
-  producto: string = '';
-  cantidad: number = 0;
-  complemento: string = '';
 
-  botones = Array.from({ length: 24 }, (_, i) => ({ label: `Btn ${i + 1}` }));
-  totalComplementos: number = 0;
-  totalQty: number = 0;
-
-  listProducts: Producto[];
   listProductosComplementos: Producto[];
   pedidodet: PedidoDet;
   cantidadComplementos: number;
@@ -32,230 +24,178 @@ export class DialogComplementosComponent {
   listPedidoComplemento: PedidoComplemento[] = [];
   gridListaPedidoComplemento = new MatTableDataSource<PedidoComplemento>();
   displayedColumns: string[] = ['nombre', 'qty', 'ft', 'actions'];
+
   constructor(
-    @Inject(MAT_DIALOG_DATA) 
-    public data: any,
+    @Inject(MAT_DIALOG_DATA) public data: any,
     private dialog: MatDialog,
     public dialogRef: MatDialogRef<DialogComplementosComponent>,
-  )
-  {
-    this.pedidodet = data.pedidodet;
-    this.listProducts = data.listProducts;
-    this.listProductosComplementos = this.listProducts.filter(x=> x.Tipo === 3 && x.Activo === true).sort(p => p.PosicionComplemento);
-    this.cantidadComplementos =  this.pedidodet.Producto.Qty;
+  ) {
+    this.pedidodet              = data.pedidodet;
+    const listProducts: Producto[] = data.listProducts;
+    this.listProductosComplementos = listProducts
+      .filter(x => x.Tipo === 3 && x.Activo === true)
+      .sort(p => p.PosicionComplemento);
+
+    this.cantidadComplementos = this.pedidodet.Producto.Qty;
     this.total = this.pedidodet.Cantidad * this.cantidadComplementos;
-    if (data.pedidodet.PedidoComplemento.length){
-      this.AgregarPedidoComplemento(data.pedidodet.PedidoComplemento);
+
+    if (data.pedidodet.PedidoComplemento.length) {
+      this.agregarPedidoComplemento(data.pedidodet.PedidoComplemento);
     }
   }
 
-  public validarCantTotal(intCant: number): number {
-    let intVal = 0;
+  // ── Validación ─────────────────────────────────────────────
 
-    if (this.totIngreso + intCant > this.total) {
-        intVal = 1;
-    }
+  private validarCantTotal(factor: number): boolean {
+    return (this.totIngreso + factor) <= this.total;
+  }
 
-    return intVal;
-}
+  private calcularTotal(): void {
+    this.totIngreso = this.gridListaPedidoComplemento.data
+      .reduce((sum, item) => sum + item.Cantidad * item.ProductoComplemento.FactorComplemento, 0);
+  }
 
- 
+  // ── Selección de complemento ────────────────────────────────
 
-calcularTotal(): void {
-  let intTot: number = 0;
-
-  this.gridListaPedidoComplemento.data.forEach((item: PedidoComplemento) => {
-    intTot += (item.Cantidad * item.ProductoComplemento.FactorComplemento);
-});
-
-
-  this.totIngreso = intTot;
-}
-
-
-  selectButton(btn: Producto) {
-    // Lógica para manejar la selección de botones
-
-    if (this.validarCantTotal(btn.FactorComplemento) == 0){
-      this.AgregarProducto(btn);
-    }else
-    {
+  selectButton(btn: Producto): void {
+    if (this.validarCantTotal(btn.FactorComplemento)) {
+      this.agregarProducto(btn);
+    } else {
       Swal.fire({
         title: 'Validación',
         text: 'El item seleccionado excede el límite de complementos',
         icon: 'info',
         confirmButtonText: 'OK',
-        customClass: {
-          confirmButton: 'swal-confirm-button',  // Puedes agregar clases personalizadas si quieres
-        }
       });
     }
-
-    console.log('Button selected:', btn);
   }
 
-  openDialogCant() {
-    const dialogRef = this.dialog.open(DialogMCantComponent, {
+  openDialogCant(): void {
+    const ref = this.dialog.open(DialogMCantComponent, {
       width: '350px',
-      data: {
-        title: 'Ingresar Cantidad',
-        hideNumber: false,
-        decimalActive: false
-      }
+      data: { title: 'Ingresar Cantidad', hideNumber: false, decimalActive: false }
     });
-  
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && result.value) {
-        this.pedidodet.Cantidad = result.value; // Asignar el valor seleccionado
-        this.total = (this.pedidodet.Cantidad * this.cantidadComplementos);
-
+    ref.afterClosed().subscribe(result => {
+      if (result?.value) {
+        this.pedidodet.Cantidad = result.value;
+        this.total = this.pedidodet.Cantidad * this.cantidadComplementos;
       }
     });
   }
-  
-  public AgregarPedidoComplemento(pedidoComplemento: PedidoComplemento[]): void {
-     this.listPedidoComplemento = pedidoComplemento;
-     this.gridListaPedidoComplemento.data = this.listPedidoComplemento;
-     this.calcularTotal();
-   }
 
-  public AgregarProducto(product: Producto): void {
-   var pedidoComplemento= new PedidoComplemento({
+  // ── CRUD complementos ────────────────────────────────────────
+
+  agregarPedidoComplemento(pedidoComplemento: PedidoComplemento[]): void {
+    this.listPedidoComplemento = pedidoComplemento;
+    this.gridListaPedidoComplemento.data = this.listPedidoComplemento;
+    this.calcularTotal();
+  }
+
+  agregarProducto(product: Producto): void {
+    const item = new PedidoComplemento({
       IdPedido: this.pedidodet.IdPedido,
       ItemComple: 0,
       ItemRef: this.pedidodet.Item,
       ProductoComplemento: new Producto({
         IdProducto: product.IdProducto,
-        NombreCorto:product.NombreCorto,
-        FactorComplemento: product.FactorComplemento
+        NombreCorto: product.NombreCorto,
+        FactorComplemento: product.FactorComplemento,
       }),
-      Cantidad: 1
-    }
-    )
-    this.listPedidoComplemento.push(pedidoComplemento);
+      Cantidad: 1,
+    });
+    this.listPedidoComplemento.push(item);
     this.gridListaPedidoComplemento.data = this.listPedidoComplemento;
     this.calcularTotal();
   }
 
-  
-  aumentarProductGrid(pedidoComplemento: PedidoComplemento) {
+  aumentarProductGrid(pedidoComplemento: PedidoComplemento): void {
+    const newQty      = pedidoComplemento.Cantidad + 1;
+    const valActual   = pedidoComplemento.Cantidad * pedidoComplemento.ProductoComplemento.FactorComplemento;
+    const valPosterior = newQty * pedidoComplemento.ProductoComplemento.FactorComplemento;
 
-    var intNewQty =  pedidoComplemento.Cantidad + 1;
-    var intValActual = pedidoComplemento.Cantidad * pedidoComplemento.ProductoComplemento.FactorComplemento;
-    var intValPosterior = intNewQty * pedidoComplemento.ProductoComplemento.FactorComplemento;
-
-    if (((this.totIngreso - intValActual) + intValPosterior) > this.total)
-    {
+    if ((this.totIngreso - valActual + valPosterior) > this.total) {
       Swal.fire({
         title: 'Validación',
         text: 'La cantidad excede el límite de complementos',
         icon: 'info',
         confirmButtonText: 'OK',
-        customClass: {
-          confirmButton: 'swal-confirm-button',  // Puedes agregar clases personalizadas si quieres
-        }
       });
-        return;
+      return;
     }
-    else
-    {
-      pedidoComplemento.Cantidad = intNewQty;
-    }
+    pedidoComplemento.Cantidad = newQty;
     this.calcularTotal();
   }
 
-  restarProductGrid(pedidoComplemento: PedidoComplemento) {
-
+  restarProductGrid(pedidoComplemento: PedidoComplemento): void {
     if (pedidoComplemento.Cantidad > 1) {
       pedidoComplemento.Cantidad -= 1;
+      this.calcularTotal();
     }
-    this.calcularTotal();
   }
-  async deleteProductGrid(pedidoComplemento: PedidoComplemento) {
 
-    var dataSet: any = {
-      nombreProducto: pedidoComplemento.ProductoComplemento.NombreCorto,
-      motivoAnulacion: '',
-      confirmacion: false
-    };
-
+  async deleteProductGrid(pedidoComplemento: PedidoComplemento): Promise<void> {
     if (pedidoComplemento.ItemComple > 0) {
-
-      const dialogDeleetProductRef = this.dialog.open(DialogDeleteProductComponent, {
+      const dataSet = {
+        nombreProducto: pedidoComplemento.ProductoComplemento.NombreCorto,
+        motivoAnulacion: '',
+        confirmacion: false,
+      };
+      const dialogRef = this.dialog.open(DialogDeleteProductComponent, {
         width: '350px',
         data: dataSet,
-        hasBackdrop: true
+        hasBackdrop: true,
       });
-      
-
-      var resultDialog: any = await dialogDeleetProductRef.afterClosed().toPromise();
-
-      // if (resultDialog.confirmacion) {
-
-      //   var pedidoDelete: PedidoDelete = new PedidoDelete(
-      //     this.storageService.getCurrentSession().User.IdUsuario,
-      //     resultDialog.motivoAnulacion,
-      //     oPedidoDet.IdPedido,
-      //     oPedidoDet.Producto.IdProducto,
-      //     oPedidoDet.Item);
-
-      //   this.spinnerService.show();
-      //   var responseService: ResponseService = await this.pedidoService.deletePedido(pedidoDelete).toPromise();
-      //   var cofigoOk: number = 200;
-
-      //   if (responseService.Codigo == cofigoOk) {
-      //     var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(oPedidoDet);
-      //     this.listProductGrid.splice(removeIndex, 1);
-      //     this.gridListaPedidoDetProducto.data = this.listProductGrid;
-      //     if (this.listProductGrid.length == 0) {
-      //       this.limpiarPedido();
-      //       this.MostrarOcultarPanelEspacio = true;
-      //       this.MostrarOcultarPanelProducto = false;
-      //       this.ListaEspaciosTotal = await this.espaciosService.getAllEspacios().toPromise();
-      //     }
-      //   }
-      //   this.spinnerService.hide();
-      // }
+      await lastValueFrom(dialogRef.afterClosed());
+      // La lógica de anulación remota se implementará cuando el endpoint esté disponible
     } else {
-      // var removeIndex = this.listProductGrid.map(function (item) { return item.IdProducto; }).indexOf(oPedidoDet.IdProducto);
-      var removeIndex = this.listPedidoComplemento.map(function (item) { return item }).indexOf(pedidoComplemento);
-      this.listPedidoComplemento.splice(removeIndex, 1);
-      this.gridListaPedidoComplemento.data = this.listPedidoComplemento;
+      const idx = this.listPedidoComplemento.indexOf(pedidoComplemento);
+      if (idx > -1) {
+        this.listPedidoComplemento.splice(idx, 1);
+        this.gridListaPedidoComplemento.data = [...this.listPedidoComplemento];
+      }
     }
     this.calcularTotal();
   }
 
-  aceptar() {
-    // Lógica para aceptar los complementos
+  // ── Aceptar / Cancelar ───────────────────────────────────────
 
-    if (this.total !== this.totIngreso) {
-      Swal.fire({
-        title: '¿Desea continuar de todas maneras?',
-        text: 'Faltan ingresar más complementos.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Sí',
-        cancelButtonText: 'No'
-      }).then((result) => {
-        if (result.isDismissed) {
-          return; // El usuario seleccionó "No", por lo tanto no continuar.
-        }
-        this.pedidodet.PedidoComplemento = this.listPedidoComplemento;
-        this.dialogRef.close({ pedidodet: this.pedidodet });
-        // Aquí puedes continuar con el resto de la lógica si seleccionó "Sí".
-      });
-    }else {
-      this.pedidodet.PedidoComplemento = this.listPedidoComplemento;
-
-      this.dialogRef.close({ pedidodet: this.pedidodet });
+  aceptar(): void {
+    if (this.totIngreso === this.total) {
+      this.cerrarConDatos();
+      return;
     }
- 
-    
-    console.log('Aceptado');
+
+    if (this.totIngreso > this.total) {
+      Swal.fire({
+        title: 'Límite superado',
+        text: 'Los complementos ingresados superan el límite. Elimine los excedentes antes de continuar.',
+        icon: 'error',
+        confirmButtonText: 'Entendido',
+      });
+      return;
+    }
+
+    // totIngreso < total: permite continuar con advertencia
+    Swal.fire({
+      title: '¿Desea continuar de todas maneras?',
+      text: 'Aún faltan complementos por ingresar.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí',
+      cancelButtonText: 'No',
+    }).then(result => {
+      if (result.isConfirmed) {
+        this.cerrarConDatos();
+      }
+    });
   }
 
-  cancelar() {
-    // Lógica para cancelar la operación
+  cancelar(): void {
     this.dialogRef.close();
+  }
+
+  private cerrarConDatos(): void {
+    this.pedidodet.PedidoComplemento = this.listPedidoComplemento;
+    this.dialogRef.close({ pedidodet: this.pedidodet });
   }
 }
