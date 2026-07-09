@@ -17,7 +17,7 @@ RUN echo "export const version = '${APP_VERSION}';" > src/environments/version.t
 
 # Usa configuración según ARG (staging|production)
 ARG BUILD_CONFIG=staging
-RUN ng build --configuration $BUILD_CONFIG
+RUN npm run build -- --configuration $BUILD_CONFIG
 
 # ---------- Runtime (NGINX) ----------
 FROM nginx:1.27-alpine AS runtime
