@@ -115,7 +115,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   public nroCuentaCobrar: number = 0;
 
   public numeroPedido: string = "";
-  public horaPedido: string = "";
+  public fechaApertura: Date | null = null;
   public userLoged: any = { id: "", username: "" };
 
   public listProductGrid: PedidoDet[] = [];
@@ -2177,7 +2177,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.procesarPedido = false;
     this.idPedidoCobrar = 0;
     this.nroCuentaCobrar = 0;
-    this.horaPedido = '';
+    this.fechaApertura = null;
     this.nombreCuenta = '';
     this.espacioSelected.NroPersonas = 0;
     this.clienteSelected = new Cliente;
@@ -2215,7 +2215,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
           MontoDescuento: data.MontoDescuento,
           NroCupon: data.NroCupon,
           Ip: data.Ip,
-          PedidoComplemento: data.PedidoComplemento
+          PedidoComplemento: data.PedidoComplemento,
+          FechaEnvio: data.FechaEnvio
         }
       );
       result.push(oPedidoDet);
@@ -2231,7 +2232,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.clienteSelected.RazonSocial = firstItem.Cliente;
     this.idPedidoCobrar = firstItem.IdPedido;
     this.nroCuentaCobrar = firstItem.NroCuenta;
-    this.horaPedido = firstItem.HoraPedido;
+    this.fechaApertura = firstItem.FechaApertura;
     this.numeroPedido = firstItem.NroPedido;
   }
 

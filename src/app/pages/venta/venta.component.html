@@ -105,12 +105,16 @@
             <span class="table-info__value">{{ numeroPedido }}</span>
           </div>
         </div>
-        <div class="table-info__item" *ngIf="horaPedido">
-          <span class="table-info__icon-wrap"><mat-icon>schedule</mat-icon></span>
-          <div class="table-info__text">
-            <span class="table-info__label">Hora</span>
-            <span class="table-info__value">{{ horaPedido }}</span>
-          </div>
+        <div class="tiempos-pedido" *ngIf="fechaApertura">
+          <span class="tiempos-pedido__chip">
+            <mat-icon>login</mat-icon>{{ fechaApertura | date:'HH:mm' }}
+          </span>
+          <ng-container *ngIf="selectedRow?.FechaEnvio">
+            <mat-icon class="tiempos-pedido__arrow">arrow_forward</mat-icon>
+            <span class="tiempos-pedido__chip tiempos-pedido__chip--envio">
+              <mat-icon>send</mat-icon>{{ selectedRow.FechaEnvio | date:'HH:mm' }}
+            </span>
+          </ng-container>
         </div>
       </div>
       <div #scrollContainer class="data-grid">

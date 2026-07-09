@@ -23,7 +23,7 @@ export class DialogVerPedidoComponent {
     public ListaProductosdisplayedColumns: string[] = ['nombrecorto', 'precio', 'cantidad', 'delete'];
     public GridListaPedidoDetProducto = new MatTableDataSource<PedidoDet>();
 
-    public HoraPedido: string = '';
+    public HoraPedido: Date | null = null;
     public IdPedido: string ='';
     public Mozo:string='';
     public Total: string='';
@@ -51,7 +51,7 @@ export class DialogVerPedidoComponent {
             var firstItem = data.oPedidoEspacio[0];
             this.Mozo = firstItem.Mozo;
             this.IdPedido = firstItem.IdPedido;
-            this.HoraPedido = firstItem.HoraPedido;
+            this.HoraPedido = firstItem.FechaApertura;
             this.Total= firstItem.Total;
             this.GridListaPedidoDetProducto.data= ListaPedidoDet;
         }

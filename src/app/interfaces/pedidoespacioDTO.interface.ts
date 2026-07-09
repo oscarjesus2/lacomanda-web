@@ -7,7 +7,8 @@ export interface PedidoEspacioDTO {
   IdEspacio: string;         // Identificador de la espacio
   Cliente: string;
   NroPedido: string;   // Número del pedido
-  FechaPedido: Date;      // Fecha del pedido
+  FechaApertura: Date;  // Fecha en que se registró la cabecera del pedido
+  FechaEnvio: Date | null; // Fecha en que el producto fue enviado a cocina (null si aún no fue)
   IdMozo: string;         // Identificador del mozo
   NombreMozo: string;     // Nombre del mozo
   IdAmbiente: string;     // Identificador del ambiente (si tu sistema tiene diferentes ambientes)
@@ -16,7 +17,6 @@ export interface PedidoEspacioDTO {
   Descuento: number;      
   Importe: number;        
   IdEmpleado: number;
-  HoraPedido: string;
   NombreCuenta: string;
   IdProducto: number;
   Item: number;

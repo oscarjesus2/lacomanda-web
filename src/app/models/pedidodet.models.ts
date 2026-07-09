@@ -28,6 +28,7 @@ export class PedidoDet {
     public NombreCuenta: string;
     public Division: number;
     public Impuesto1: number;
+    public FechaEnvio: Date | null;
     constructor(init?: Partial<PedidoDet>) {
         Object.assign(this, init);
     }

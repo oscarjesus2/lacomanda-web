@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HTTP_INTERCEPTORS, HttpErrorResponse } from '@angular/common/http';
+import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HTTP_INTERCEPTORS, HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
-import { catchError, filter, switchMap, take, tap } from 'rxjs/operators';
+import { catchError, filter, map, switchMap, take, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { StorageService } from '../services/storage.service';
@@ -48,6 +48,14 @@ export class ApiRequestInterceptor implements HttpInterceptor {
         return next.handle(request).pipe(
             // Cualquier respuesta exitosa → backend está vivo
             tap({ next: () => this.backendStatus.markUp() }),
+
+            // Convierte strings UTC ISO 8601 ("...Z") a Date objects en toda la respuesta
+            map(event => {
+                if (event instanceof HttpResponse && event.body) {
+                    return event.clone({ body: this.convertDates(event.body) });
+                }
+                return event;
+            }),
 
             catchError((error: HttpErrorResponse) => {
                 // ── Endpoints de auth: el componente maneja el error directamente ──
@@ -225,6 +233,32 @@ export class ApiRequestInterceptor implements HttpInterceptor {
 
     private isCustomErrorFormat(error: HttpErrorResponse): boolean {
         return error.error?.ErrorCode && error.error?.Message;
+    }
+
+    // Formato exacto que envía el backend: YYYY-MM-DDTHH:mm:ss[.sss]Z
+    private readonly UTC_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+
+    /**
+     * Recorre recursivamente el body de la respuesta y convierte
+     * cada string que coincida con el formato UTC ISO 8601 en un Date object.
+     * El navegador lo representará automáticamente en hora local.
+     */
+    private convertDates(value: any): any {
+        if (value === null || value === undefined) return value;
+        if (typeof value === 'string') {
+            return this.UTC_DATE_REGEX.test(value) ? new Date(value) : value;
+        }
+        if (Array.isArray(value)) {
+            return value.map(item => this.convertDates(item));
+        }
+        if (typeof value === 'object' && !(value instanceof Date)) {
+            const result: any = {};
+            for (const key of Object.keys(value)) {
+                result[key] = this.convertDates(value[key]);
+            }
+            return result;
+        }
+        return value;
     }
 }
 
