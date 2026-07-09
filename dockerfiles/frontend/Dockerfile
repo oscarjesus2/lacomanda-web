@@ -9,10 +9,15 @@ RUN npm ci
 # Copia el resto del código
 COPY . .
 
+# Tag de la imagen desplegada (ej: 20240115-abc1234-staging). Si no se pasa, usa 'dev'.
+ARG APP_VERSION=dev
+
+# Inyecta la versión directamente en version.ts antes de compilar
+RUN echo "export const version = '${APP_VERSION}';" > src/environments/version.ts
+
 # Usa configuración según ARG (staging|production)
 ARG BUILD_CONFIG=staging
-# Para Angular >= 16: ajusta el nombre del proyecto si no es "LaComanda"
-RUN npm run build -- --configuration $BUILD_CONFIG
+RUN ng build --configuration $BUILD_CONFIG
 
 # ---------- Runtime (NGINX) ----------
 FROM nginx:1.27-alpine AS runtime

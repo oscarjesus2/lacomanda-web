@@ -48,6 +48,7 @@ jobs:
       run: |
         docker build \
           --build-arg BUILD_CONFIG=staging \
+          --build-arg APP_VERSION=$STAGING_TAG \
           -t $IMAGE_NAME:$STAGING_TAG \
           -f ./dockerfiles/frontend/Dockerfile .
         docker push $IMAGE_NAME:$STAGING_TAG
