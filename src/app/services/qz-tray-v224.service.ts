@@ -162,7 +162,14 @@ export class QzTrayV224Service {
         const data = [{
           type: 'pdf',
           format: 'base64',
-          data: await blob.arrayBuffer().then(buffer => btoa(String.fromCharCode.apply(null, new Uint8Array(buffer))))
+          data: await blob.arrayBuffer().then(buffer => {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+              binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+          })
         }];
 
         await qz.print(config, data);
