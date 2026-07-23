@@ -20,6 +20,8 @@ import { EntradaDet } from 'src/app/models/entradadet.models';
 import { DescuentoCodigo } from 'src/app/models/descuentocodigo.models';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { MonedaService } from 'src/app/services/moneda.service';
 
 @Component({
   selector: 'app-dialog-pagar-taxista',
@@ -37,6 +39,7 @@ export class DialogPagarTaxistaComponent {
   telefono: string = '';
   color: string = 'rojo';
   totalPagar: number = 0;
+  monedaSimbolo: string = '';
 
   // Tabla de datos
   displayedColumns: string[] = ['tipoDoc', 'serie', 'numero', 'importe', 'dscto', 'total', 'codigoPromo', 'activo', 'fechaReg'];
@@ -52,12 +55,38 @@ export class DialogPagarTaxistaComponent {
     private router: Router,
     private empleadoService: EmpleadoService,
     private entradaCabService: EntradaCabService,
+    private configuracionService: ConfiguracionService,
+    private monedaService: MonedaService,
     private qzTrayService: QzTrayV224Service
   ) { }
+
+  /** Filtro local de la tabla por Código Promocional. */
+  filtrarPorCodigo(valor: string): void {
+    this.dataSource.filterPredicate = (data: VentasDTO, filter: string) =>
+      (data.CodigoPromocional ?? '').toLowerCase().includes(filter);
+    this.dataSource.filter = (valor ?? '').trim().toLowerCase();
+  }
+
+  /** Carga el símbolo de moneda desde la configuración central. */
+  private loadMoneda(): void {
+    this.configuracionService.get().subscribe({
+      next: (cfg) => {
+        const obs = cfg?.PaisISO2
+          ? this.monedaService.getMonedaPorPais(cfg.PaisISO2)
+          : this.monedaService.getMoneda();
+        obs.subscribe({
+          next: (resp) => { this.monedaSimbolo = resp?.Data?.[0]?.Simbolo ?? ''; },
+          error: ()    => {}
+        });
+      },
+      error: () => {}
+    });
+  }
 
 
   async ngOnInit() {
 
+    this.loadMoneda();
     this.spinnerService.show();
 
     try {

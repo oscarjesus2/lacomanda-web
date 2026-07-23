@@ -1,87 +1,165 @@
-<div class="ventas-de-entradas-container">
+<div class="mant-panel entradas-panel">
+
   <button mat-icon-button class="close-button" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
-  <br>
-    <h2>VENTAS DE ENTRADAS</h2>
-  
-    <!-- Primera fila de botones -->
-    <div class="buttons-row">
-      <button class="entry-button" (click)="selectAndIncrement('socios')" [ngClass]="{'selected': selectedButton === 'socios'}">
-        Entrada de Socios <br>
-        <span>({{entradaSocios}})</span>
-      </button>
-      <button class="entry-button" (click)="selectAndIncrement('invitados')" [ngClass]="{'selected': selectedButton === 'invitados'}">
-        Entrada de Invitados<br> <span>({{entradaInvitados}})</span>
-      </button>
-      <button class="entry-button-process" (click)="procesarEntradaGratis()">
-        Procesar Entrada Gratis
-      </button>
-      <button class="entry-button" (click)="selectAndIncrement('consumo')" [ngClass]="{'selected': selectedButton === 'consumo'}">
-        Entrada por Consumo <br><span>({{entradaConsumo}})</span>
-      </button>
-      <button class="entry-button-process" (click)="procesarEntradaXConsumo()">
-        Procesar Entrada xConsumo
-      </button>
-    </div>
-  
-    <!-- Sección: Entrada Nacional, Internacional y Tragos Gratis -->
-    <div class="entry-type-section">
-      <div class="entry-type" [ngClass]="{'selected': selectedButton === 'nacional'}" (click)="select('nacional')">
-        <h3>Entrada Nacional S/80 
-            <br><span>({{entradaNacional}})</span>
-        </h3>
-        <button (click)="selectAndIncrement('nacional')" class="sumar-button">+</button>
-        <button (click)="descontarEntrada('nacional')" class="descuento-button">Descuento</button>
-        <h3>
-            <br><span *ngIf="nuevoPrecioNacional>0">Nuevo Precio ({{nuevoPrecioNacional | currency:'PEN' }})</span>
-        </h3>
-      </div>
-  
-      <div class="entry-type" [ngClass]="{'selected': selectedButton === 'internacional'}" (click)="select('internacional')">
-        <h3>Entrada Internacional S/130 
-            <br><span>({{entradaInternacional}})</span>
-        </h3>
-        <button (click)="selectAndIncrement('internacional')" class="sumar-button">+</button>
-        <button (click)="descontarEntrada('internacional')" class="descuento-button">Descuento</button>
-        <h3>
-            <br><span *ngIf="nuevoPrecioInternacional>0">Nuevo Precio ({{nuevoPrecioInternacional | currency:'PEN' }})</span>
-        </h3>
-      </div>
-  
-      <div class="tragos-section">
-        <h3>Tragos Gratis</h3>
-        <input type="number" [(ngModel)]="tragosGratis" class="tragos-input">
-      </div>
-    </div>
-  
-    <!-- Botones de acciones -->
-    <div class="actions-section">
-      <button class="action-button" (click)="restarCantidad()">Restar Cantidad</button>
-      <button class="action-button" (click)="limpiar()">Limpiar</button>
-    
-      <!-- Checkbox agregado -->
-      <div class="checkbox-container">
-        <input type="checkbox" id="taxista" [(ngModel)]="vinoConTaxista" (change)="onTaxistaChange()">
-        <label for="taxista">Vino con taxista</label>
-        <br>
-        <p>{{ mensajeTaxista }}</p> 
-      </div>
-   
-    </div>
-  
-    <div class="total-section">
-        <label>Importe:</label><input type="text" readonly [value]="subTotal | currency:'PEN' " />
-        <label>Dscto:</label><input type="text" readonly  [value]="descuentoTotal | currency:'PEN' "/>
-        <label>Total:</label><input type="text" readonly  [value]="total | currency:'PEN' "/>
-      </div>
 
-    <!-- Botones de Pago y Salir -->
-    <div class="payment-section">
-      <button class="payment-button" (click)="aceptar(TipoDocumento.Express)">Express</button>
-      <button class="payment-button" (click)="aceptar(TipoDocumento.BoletaVenta)">Boleta</button>
-      <button class="payment-button" (click)="aceptar(TipoDocumento.FacturaVenta)">Factura</button>
-      <button class="payment-button" (click)="procesarPagoTaxista()">Pagar Taxista</button>
+  <h2>Ventas de Entradas</h2>
+
+  <!-- Selector de tipo de entrada -->
+  <div class="entradas-tabs">
+    <button type="button"
+            class="entradas-tab"
+            [ngClass]="{'entradas-tab--selected': selectedButton === 'socios'}"
+            (click)="selectAndIncrement('socios')">
+      <span class="entradas-tab__label">Entrada de Socios</span>
+      <span class="entradas-tab__count">{{ entradaSocios }}</span>
+    </button>
+
+    <button type="button"
+            class="entradas-tab"
+            [ngClass]="{'entradas-tab--selected': selectedButton === 'invitados'}"
+            (click)="selectAndIncrement('invitados')">
+      <span class="entradas-tab__label">Entrada de Invitados</span>
+      <span class="entradas-tab__count">{{ entradaInvitados }}</span>
+    </button>
+
+    <button type="button" class="entradas-tab entradas-tab--process" (click)="procesarEntradaGratis()">
+      <mat-icon>redeem</mat-icon>
+      <span class="entradas-tab__label">Procesar Entrada Gratis</span>
+    </button>
+
+    <button type="button"
+            class="entradas-tab"
+            [ngClass]="{'entradas-tab--selected': selectedButton === 'consumo'}"
+            (click)="selectAndIncrement('consumo')">
+      <span class="entradas-tab__label">Entrada por Consumo</span>
+      <span class="entradas-tab__count">{{ entradaConsumo }}</span>
+    </button>
+
+    <button type="button" class="entradas-tab entradas-tab--process" (click)="procesarEntradaXConsumo()">
+      <mat-icon>local_bar</mat-icon>
+      <span class="entradas-tab__label">Procesar Entrada xConsumo</span>
+    </button>
+  </div>
+
+  <!-- Tarjetas: Nacional, Internacional y Tragos Gratis -->
+  <div class="entradas-cards">
+
+    <div class="entradas-card"
+         [ngClass]="{'entradas-card--selected': selectedButton === 'nacional'}"
+         (click)="select('nacional')">
+      <div class="entradas-card__head">
+        <h3 class="entradas-card__title">{{ prodNacional?.Nombre || 'Entrada Nacional' }}</h3>
+        <span class="entradas-card__price">{{ monedaSimbolo }} {{ precioNacional | number:'1.2-2' }}</span>
+      </div>
+      <div class="entradas-card__count-box">
+        <span class="entradas-card__count">{{ entradaNacional }}</span>
+        <span class="entradas-card__count-label">entradas</span>
+      </div>
+      <div class="entradas-card__actions">
+        <button type="button" class="entradas-btn-add" aria-label="Sumar entrada nacional"
+                (click)="selectAndIncrement('nacional'); $event.stopPropagation()">
+          <mat-icon>add</mat-icon>
+        </button>
+        <button type="button" class="entradas-btn-discount"
+                (click)="descontarEntrada('nacional'); $event.stopPropagation()">
+          <mat-icon>sell</mat-icon> Descuento
+        </button>
+      </div>
+      <p class="entradas-card__newprice" *ngIf="nuevoPrecioNacional > 0">
+        Nuevo precio · {{ monedaSimbolo }} {{ nuevoPrecioNacional | number:'1.2-2' }}
+      </p>
+    </div>
+
+    <div class="entradas-card"
+         [ngClass]="{'entradas-card--selected': selectedButton === 'internacional'}"
+         (click)="select('internacional')">
+      <div class="entradas-card__head">
+        <h3 class="entradas-card__title">{{ prodInternacional?.Nombre || 'Entrada Internacional' }}</h3>
+        <span class="entradas-card__price">{{ monedaSimbolo }} {{ precioInternacional | number:'1.2-2' }}</span>
+      </div>
+      <div class="entradas-card__count-box">
+        <span class="entradas-card__count">{{ entradaInternacional }}</span>
+        <span class="entradas-card__count-label">entradas</span>
+      </div>
+      <div class="entradas-card__actions">
+        <button type="button" class="entradas-btn-add" aria-label="Sumar entrada internacional"
+                (click)="selectAndIncrement('internacional'); $event.stopPropagation()">
+          <mat-icon>add</mat-icon>
+        </button>
+        <button type="button" class="entradas-btn-discount"
+                (click)="descontarEntrada('internacional'); $event.stopPropagation()">
+          <mat-icon>sell</mat-icon> Descuento
+        </button>
+      </div>
+      <p class="entradas-card__newprice" *ngIf="nuevoPrecioInternacional > 0">
+        Nuevo precio · {{ monedaSimbolo }} {{ nuevoPrecioInternacional | number:'1.2-2' }}
+      </p>
+    </div>
+
+    <div class="entradas-card entradas-card--tragos">
+      <div class="entradas-card__head">
+        <h3 class="entradas-card__title">Tragos Gratis</h3>
+        <mat-icon class="entradas-card__head-icon">local_bar</mat-icon>
+      </div>
+      <div class="entradas-card__count-box">
+        <input type="number" min="0" [(ngModel)]="tragosGratis" class="entradas-tragos-input" aria-label="Tragos gratis">
+        <span class="entradas-card__count-label">tragos de cortesía</span>
+      </div>
     </div>
   </div>
-  
+
+  <!-- Acciones secundarias + taxista -->
+  <div class="entradas-secondary">
+    <div class="entradas-secondary__actions">
+      <button type="button" class="entradas-btn-ghost" (click)="restarCantidad()">
+        <mat-icon>remove</mat-icon> Restar
+      </button>
+      <button type="button" class="entradas-btn-ghost" (click)="limpiar()">
+        <mat-icon>refresh</mat-icon> Limpiar
+      </button>
+    </div>
+
+    <label class="entradas-taxista">
+      <input type="checkbox" id="taxista" [(ngModel)]="vinoConTaxista" (change)="onTaxistaChange()">
+      <span class="entradas-taxista__text">
+        <span class="entradas-taxista__title">Vino con taxista</span>
+        <span class="entradas-taxista__hint">{{ mensajeTaxista }}</span>
+      </span>
+    </label>
+  </div>
+
+  <!-- Totales -->
+  <div class="entradas-total">
+    <div class="entradas-total__item">
+      <label>Importe</label>
+      <span class="entradas-total__value">{{ monedaSimbolo }} {{ subTotal | number:'1.2-2' }}</span>
+    </div>
+    <div class="entradas-total__item">
+      <label>Descuento</label>
+      <span class="entradas-total__value">{{ monedaSimbolo }} {{ descuentoTotal | number:'1.2-2' }}</span>
+    </div>
+    <div class="entradas-total__item entradas-total__item--main">
+      <label>Total</label>
+      <span class="entradas-total__value">{{ monedaSimbolo }} {{ total | number:'1.2-2' }}</span>
+    </div>
+  </div>
+
+  <!-- Botones de pago -->
+  <div class="entradas-pay">
+    <button type="button" class="entradas-btn-pay" (click)="aceptar(TipoDocumento.Express)">
+      <mat-icon>bolt</mat-icon> Express
+    </button>
+    <button type="button" class="entradas-btn-pay" (click)="aceptar(TipoDocumento.BoletaVenta)">
+      <mat-icon>receipt_long</mat-icon> Boleta
+    </button>
+    <button type="button" class="entradas-btn-pay" (click)="aceptar(TipoDocumento.FacturaVenta)">
+      <mat-icon>description</mat-icon> Factura
+    </button>
+    <button type="button" class="entradas-btn-pay entradas-btn-pay--alt" (click)="procesarPagoTaxista()">
+      <mat-icon>local_taxi</mat-icon> Pagar Taxista
+    </button>
+  </div>
+
+</div>

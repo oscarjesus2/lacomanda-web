@@ -21,6 +21,10 @@ import { DescuentoCodigo } from 'src/app/models/descuentocodigo.models';
 import { DialogEmitirComprobanteComponent } from '../dialog-emitir-comprobante/dialog-emitir-comprobante.component';
 import { CanalVentaEnum, EnumTipoDocumento, NivelUsuarioEnum } from 'src/app/enums/enum';
 import { DialogPagarTaxistaComponent } from '../dialog-pagar-taxista/dialog-pagar-taxista.component';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { MonedaService } from 'src/app/services/moneda.service';
+import { ProductoService } from 'src/app/services/product.service';
+import { EntradaProducto } from 'src/app/interfaces/entradaProducto.interface';
 
 @Component({
   selector: 'app-dialog-entradas',
@@ -46,6 +50,17 @@ export class DialogEntradasComponent {
   total: number = 0;
   descuentoTotal: number = 0;
   subTotal: number = 0;
+  monedaSimbolo: string = '';
+
+  // Productos de entrada traídos del backend (ya no en duro).
+  prodNacional?: EntradaProducto;
+  prodInternacional?: EntradaProducto;
+
+  get precioNacional(): number { return this.prodNacional?.Precio ?? 0; }
+  get precioInternacional(): number { return this.prodInternacional?.Precio ?? 0; }
+  get idProductoNacional(): number { return Number(this.prodNacional?.IdProducto ?? 0); }
+  get idProductoInternacional(): number { return Number(this.prodInternacional?.IdProducto ?? 0); }
+
   iIdUsuarioNacionalAdmin: any;
   iIdUsuarioInterNacionalAdmin: any;
   vinoConTaxista: boolean = false;
@@ -59,8 +74,42 @@ export class DialogEntradasComponent {
     private dialog: MatDialog,
     private TurnoService: TurnoService,
     private spinnerService: NgxSpinnerService,
+    private configuracionService: ConfiguracionService,
+    private monedaService: MonedaService,
+    private productoService: ProductoService,
     private qzTrayService: QzTrayV224Service) {
 
+  }
+
+  /** Carga los productos de entrada (precio, id, nombre) desde el backend. */
+  private loadEntradas(): void {
+    this.productoService.getEntradas().subscribe({
+      next: (lista) => {
+        const arr = lista ?? [];
+        this.prodNacional = arr.find(e => e.TipoEntrada === 'NACIONAL');
+        this.prodInternacional = arr.find(e => e.TipoEntrada === 'INTERNACIONAL');
+        // El símbolo de estos productos manda para los importes mostrados.
+        const simbolo = this.prodNacional?.SimboloMoneda || this.prodInternacional?.SimboloMoneda;
+        if (simbolo) { this.monedaSimbolo = simbolo; }
+      },
+      error: () => {}
+    });
+  }
+
+  /** Carga el símbolo de moneda desde la configuración central. */
+  private loadMoneda(): void {
+    this.configuracionService.get().subscribe({
+      next: (cfg) => {
+        const obs = cfg?.PaisISO2
+          ? this.monedaService.getMonedaPorPais(cfg.PaisISO2)
+          : this.monedaService.getMoneda();
+        obs.subscribe({
+          next: (resp) => { this.monedaSimbolo = resp?.Data?.[0]?.Simbolo ?? ''; },
+          error: ()    => {}
+        });
+      },
+      error: () => {}
+    });
   }
 
   mensajeTaxista: string = "Usted esta indicando que el cliente NO vino con taxista"; // Mensaje inicial
@@ -74,6 +123,8 @@ export class DialogEntradasComponent {
   }
   async ngOnInit() {
 
+    this.loadMoneda();
+    this.loadEntradas();
     this.spinnerService.show();
 
     try {
@@ -169,7 +220,7 @@ export class DialogEntradasComponent {
         } else {
           this.iIdUsuarioNacionalAdmin = this.storageService.getCurrentUser().IdUsuario;
           this.descuentoNacional = result.value;
-          this.nuevoPrecioNacional = 80 - this.descuentoNacional;
+          this.nuevoPrecioNacional = this.precioNacional - this.descuentoNacional;
         }
         this.calcularTotal();
       } else {
@@ -195,7 +246,7 @@ export class DialogEntradasComponent {
         } else {
           this.iIdUsuarioInterNacionalAdmin = this.storageService.getCurrentUser().IdUsuario;
           this.descuentoInternacional = result.value;
-          this.nuevoPrecioInternacional = 130 - this.descuentoInternacional;
+          this.nuevoPrecioInternacional = this.precioInternacional - this.descuentoInternacional;
         }
 
 
@@ -347,7 +398,8 @@ export class DialogEntradasComponent {
       disableClose: true,
       hasBackdrop: true,
       width: '850px', // Establece el ancho del diálogo
-      height: '700px', // Establece la altura del diálogo
+      // Sin alto fijo: el diálogo se ajusta al contenido (el surface ya limita
+      // la altura al viewport) para que el botón "Pagar Taxista" siempre se vea.
     });
 
     dialogPagarTaxistaComponent.afterClosed().subscribe(Resultado => {
@@ -390,15 +442,15 @@ export class DialogEntradasComponent {
 
       oPedidoDetNacional.IdPedido = 0;
       oPedidoDetNacional.NroCuenta = 1;
-      oPedidoDetNacional.Producto = new Producto({ IdProducto: 1 });
+      oPedidoDetNacional.Producto = new Producto({ IdProducto: this.idProductoNacional });
       oPedidoDetNacional.Item = 1;
-      oPedidoDetNacional.Precio = 80;
+      oPedidoDetNacional.Precio = this.precioNacional;
       oPedidoDetNacional.Cantidad = this.entradaNacional;
-      oPedidoDetNacional.Subtotal = this.entradaNacional * 80;
+      oPedidoDetNacional.Subtotal = this.entradaNacional * this.precioNacional;
       oPedidoDetNacional.Enviado = true;
       oPedidoDetNacional.IdDescuento = this.nuevoPrecioNacional > 0 ? '002' : null;
       oPedidoDetNacional.UsuDescuento = this.nuevoPrecioNacional > 0 ? this.iIdUsuarioNacionalAdmin : null;
-      oPedidoDetNacional.MontoDescuento = this.nuevoPrecioNacional > 0 ? 80 * this.entradaNacional - this.nuevoPrecioNacional * this.entradaNacional : 0;
+      oPedidoDetNacional.MontoDescuento = this.nuevoPrecioNacional > 0 ? this.precioNacional * this.entradaNacional - this.nuevoPrecioNacional * this.entradaNacional : 0;
       oPedidoDetNacional.NroCupon = 'ENTRADA';
       oPedidoDetNacional.Estado = 2;
       oPedidoDetNacional.Ip = this.storageService.getCurrentIP()
@@ -410,15 +462,15 @@ export class DialogEntradasComponent {
 
       oPedidoDetInternacional.IdPedido = 0;
       oPedidoDetInternacional.NroCuenta = 1;
-      oPedidoDetInternacional.Producto = new Producto({ IdProducto: 2 });
+      oPedidoDetInternacional.Producto = new Producto({ IdProducto: this.idProductoInternacional });
       oPedidoDetInternacional.Item = 2;
-      oPedidoDetInternacional.Precio = 130;
+      oPedidoDetInternacional.Precio = this.precioInternacional;
       oPedidoDetInternacional.Cantidad = this.entradaInternacional;
-      oPedidoDetInternacional.Subtotal = this.entradaInternacional * 130;
+      oPedidoDetInternacional.Subtotal = this.entradaInternacional * this.precioInternacional;
       oPedidoDetInternacional.Enviado = true;
       oPedidoDetInternacional.IdDescuento = this.nuevoPrecioInternacional > 0 ? '002' : null;
       oPedidoDetInternacional.UsuDescuento = this.nuevoPrecioInternacional > 0 ? this.iIdUsuarioInterNacionalAdmin : null;
-      oPedidoDetInternacional.MontoDescuento = this.nuevoPrecioInternacional > 0 ? 130 * this.entradaInternacional - this.nuevoPrecioInternacional * this.entradaInternacional : 0;
+      oPedidoDetInternacional.MontoDescuento = this.nuevoPrecioInternacional > 0 ? this.precioInternacional * this.entradaInternacional - this.nuevoPrecioInternacional * this.entradaInternacional : 0;
       oPedidoDetInternacional.NroCupon = 'ENTRADA';
       oPedidoDetInternacional.Estado = 2;
       oPedidoDetInternacional.Ip = this.storageService.getCurrentIP()
@@ -437,7 +489,7 @@ export class DialogEntradasComponent {
         IdPedido: 0,
         IdVenta: 0,
         UsuReg: this.storageService.getCurrentUser().IdUsuario,
-        IdTaxista: this.vinoConTaxista ? '00000' : null,
+        VinoConTaxista: this.vinoConTaxista,
       });
     }
 
@@ -507,22 +559,22 @@ export class DialogEntradasComponent {
 
     // Cálculo para Nacional
     if (this.descuentoNacional === 0) {
-      dSubTotalNacional = 80 * this.entradaNacional;
+      dSubTotalNacional = this.precioNacional * this.entradaNacional;
       dDescuentoNacional = 0;
       dTotalNacional = dSubTotalNacional;
     } else {
-      dSubTotalNacional = 80 * this.entradaNacional;
+      dSubTotalNacional = this.precioNacional * this.entradaNacional;
       dDescuentoNacional = dSubTotalNacional - (this.nuevoPrecioNacional * this.entradaNacional);
       dTotalNacional = dSubTotalNacional - dDescuentoNacional;
     }
 
     // Cálculo para Internacional
     if (this.descuentoInternacional === 0) {
-      dSubTotalInternacional = 130 * this.entradaInternacional;
+      dSubTotalInternacional = this.precioInternacional * this.entradaInternacional;
       dDescuentoInternacional = 0;
       dTotalInternacional = dSubTotalInternacional;
     } else {
-      dSubTotalInternacional = 130 * this.entradaInternacional;
+      dSubTotalInternacional = this.precioInternacional * this.entradaInternacional;
       dDescuentoInternacional = dSubTotalInternacional - (this.nuevoPrecioInternacional * this.entradaInternacional);
       dTotalInternacional = dSubTotalInternacional - dDescuentoInternacional;
     }
@@ -553,14 +605,14 @@ export class DialogEntradasComponent {
       let impresiones: ImpresionDTO[] = [];
       // Procesar entrada nacional si existe
       if (entradaNacional > 0) {
-        let responseNacional: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(entradaNacional, 'NACIONAL', this.storageService.getCurrentUser().IdUsuario, idVenta).toPromise();
+        let responseNacional: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(entradaNacional, 'NACIONAL', idVenta).toPromise();
         impresiones = impresiones.concat(responseNacional.Data); // Agregar los resultados nacionales
         console.log('nacional ' + impresiones);
       }
 
       // Procesar entrada internacional si existe
       if (entradaInternacional > 0) {
-        let responseInternacional: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(entradaInternacional, 'INTERNACIONAL', this.storageService.getCurrentUser().IdUsuario, idVenta).toPromise();
+        let responseInternacional: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(entradaInternacional, 'INTERNACIONAL', idVenta).toPromise();
         impresiones = impresiones.concat(responseInternacional.Data); // Agregar los resultados internacionales
         console.log('Internacional ' + impresiones);
       }
@@ -606,10 +658,10 @@ export class DialogEntradasComponent {
         if (confirmResult.isDismissed) return;
 
 
-        var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaSocios, 'SOCIOS', this.storageService.getCurrentUser().IdUsuario, 0).toPromise();
+        var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaSocios, 'SOCIOS', 0).toPromise();
         this.imprimir(responseService.Data);
 
-        var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaInvitados, 'INVITADOS', this.storageService.getCurrentUser().IdUsuario, 0).toPromise();
+        var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaInvitados, 'INVITADOS', 0).toPromise();
         this.imprimir(responseService.Data);
       } else {
         await Swal.fire({
@@ -649,10 +701,10 @@ export class DialogEntradasComponent {
 
                   if (confirmResult.isDismissed) return;
 
-                  var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaSocios, 'SOCIOS', this.storageService.getCurrentUser().IdUsuario, null).toPromise();
+                  var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaSocios, 'SOCIOS', null).toPromise();
                   this.imprimir(responseService.Data);
 
-                  var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaInvitados, 'INVITADOS', this.storageService.getCurrentUser().IdUsuario, null).toPromise();
+                  var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaInvitados, 'INVITADOS', null).toPromise();
                   this.imprimir(responseService.Data);
                 } else {
 

@@ -14,7 +14,8 @@ export class EntradasEmitidasService {
 
   constructor(private http: HttpClient) {}
 
-  procesarEmisionEntradas(cantidadEntradas: number, tipoEntrada: string,usuarioLogeado: number, idVentaRef?: number): Observable<ApiResponse<ImpresionDTO[]>> {
-    return this.http.put<ApiResponse<ImpresionDTO[]>>(`${this.basePath }ProcesarEmisionEntradas/${cantidadEntradas}/${tipoEntrada}/${usuarioLogeado}/${idVentaRef}`, {});
+  // El usuario logeado ya no se envía: el backend lo obtiene del token autenticado.
+  procesarEmisionEntradas(cantidadEntradas: number, tipoEntrada: string, idVentaRef?: number): Observable<ApiResponse<ImpresionDTO[]>> {
+    return this.http.put<ApiResponse<ImpresionDTO[]>>(`${this.basePath }ProcesarEmisionEntradas/${cantidadEntradas}/${tipoEntrada}/${idVentaRef}`, {});
   }
 }

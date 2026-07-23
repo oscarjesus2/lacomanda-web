@@ -1,234 +1,509 @@
-.ventas-de-entradas-container {
-  max-width: 900px;
-  margin: auto;
-  padding: 20px;
-  background-color: var(--color-surface);
+/* ============================================================
+   VENTAS DE ENTRADAS
+   Estilos apoyados 100% en los design tokens globales
+   (ver styles.scss). El panel usa la base .mant-panel:
+   borde superior de acento, radio-xl, título sticky en
+   mayúsculas y .close-button global.
+   ============================================================ */
+
+/* El diálogo se abre con width:'800px' (ver venta.component.ts).
+   Hacemos que el panel llene exactamente ese ancho en vez del
+   width:fit-content del estándar global, para que los grids con
+   auto-fit no lo empujen más ancho que el pane y aparezca scroll. */
+.entradas-panel {
+  width: 100% !important;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Iconos Material a tamaño consistente dentro del diálogo */
+.entradas-panel mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+}
+
+/* ---------- Selector de tipo (tabs) ---------- */
+.entradas-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.entradas-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  min-height: 74px;
+  padding: 12px 10px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+  color: var(--color-text);
+
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+  text-align: center;
+  text-transform: uppercase;
+
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition-fast);
+}
+
+.entradas-tab:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--color-primary-light);
+}
+
+/* Contador en pill sobre cada tab */
+.entradas-tab__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+}
+
+/* Seleccionado — acento ámbar del sistema */
+.entradas-tab--selected {
+  background: var(--color-accent);
+  border-color: var(--color-accent-dark);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.entradas-tab--selected .entradas-tab__count {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: transparent;
+}
+
+/* Botones de "Procesar" — acción principal */
+.entradas-tab--process {
+  background: var(--color-primary);
+  border-color: transparent;
+  color: var(--color-text-light);
+}
+
+.entradas-tab--process mat-icon {
+  color: var(--color-text-light);
+}
+
+.entradas-tab--process:hover {
+  background: var(--color-primary-dark);
+  border-color: transparent;
+}
+
+/* ---------- Tarjetas: Nacional / Internacional / Tragos ---------- */
+.entradas-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.entradas-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  padding: 18px 18px 20px;
+
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.entradas-card:hover {
+  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
-h2 {
-  text-align: center;
-  color: var(--color-text);
-  font-size: 2rem;
-  margin-bottom: 20px;
-  font-weight: 600;
-  letter-spacing: 1px;
-}
-
-.buttons-row {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 20px;
-}
-
-.entry-button {
-  background-color: rgba(249, 168, 37, 0.15);
-  color: var(--color-text);
-  padding: 12px 20px;
-  border-radius: var(--radius-md);
-  font-size: 16px;
-  border: 1px solid var(--color-border);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  box-shadow: var(--shadow-xs);
-}
-
-.entry-button:hover {
-  background-color: rgba(249, 168, 37, 0.30);
-  transform: translateY(-2px);
-}
-
-.entry-button.selected {
-  background-color: var(--color-accent);
-  color: white;
-  border-color: var(--color-accent-dark);
-}
-
-.entry-type-section {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 30px;
-}
-
-.entry-type {
-  background-color: var(--color-surface);
-  padding: 25px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  width: 220px;
-  text-align: center;
-  transition: var(--transition-fast);
-  box-shadow: var(--shadow-sm);
-}
-
-.entry-type.selected {
-  box-shadow: 0 0 20px rgba(0, 121, 107, 0.30);
+.entradas-card--selected {
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(191, 54, 12, 0.15), var(--shadow-md);
 }
 
-.sumar-button {
-  background-color: var(--color-success);
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: var(--transition-fast);
+.entradas-card--tragos {
+  cursor: default;
+  background: var(--color-surface-warm);
 }
 
-.sumar-button:hover { filter: brightness(0.9); }
-
-.descuento-button {
-  background-color: var(--color-warn);
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.descuento-button:hover {
-  filter: brightness(0.9);
-  transform: translateY(-2px);
-}
-
-.tragos-section {
-  background-color: var(--color-surface);
-  padding: 20px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  width: 220px;
-  text-align: center;
+.entradas-card--tragos:hover {
+  transform: none;
   box-shadow: var(--shadow-sm);
 }
 
-.tragos-input {
-  width: 80px;
-  padding: 8px;
-  font-size: 18px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-md);
-  text-align: center;
-  color: var(--color-text);
-  background: var(--color-surface);
-}
-
-.actions-section {
+/* Cabecera de la card: nombre + precio base */
+.entradas-card__head {
   display: flex;
-  justify-content: space-around;
-  margin-bottom: 30px;
-}
-
-.action-button {
-  background-color: rgba(249, 168, 37, 0.15);
-  color: var(--color-text);
-  border: none;
-  padding: 12px 25px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  box-shadow: var(--shadow-xs);
-}
-
-.action-button:hover {
-  background-color: rgba(249, 168, 37, 0.30);
-  transform: translateY(-2px);
-}
-
-.payment-section {
-  display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  gap: 10px;
 }
 
-.payment-button {
+.entradas-card__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--color-text);
+}
+
+.entradas-card__price {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(191, 54, 12, 0.08);
+  border: 1px solid rgba(191, 54, 12, 0.18);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.entradas-card__head-icon {
+  flex-shrink: 0;
+  color: var(--color-accent-dark);
+}
+
+/* Bloque central: contador grande */
+.entradas-card__count-box {
+  flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 12px 20px;
-  background-color: var(--color-primary);
-  color: white;
-  border-radius: var(--radius-md);
-  border: 2px solid transparent;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition-fast);
+  gap: 2px;
+  min-height: 62px;
 }
 
-.payment-button:hover { background-color: var(--color-primary-dark); }
-
-.entry-button-process {
-  background-color: var(--color-primary);
-  color: white;
-  padding: 12px 20px;
-  border-radius: var(--radius-md);
-  font-size: 16px;
-  border: none;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  box-shadow: var(--shadow-sm);
+.entradas-card__count {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-primary-dark);
 }
 
-.entry-button-process:hover { background-color: var(--color-primary-dark); }
-
-.selected {
-  border: 2px solid var(--color-accent);
-  background-color: rgba(249, 168, 37, 0.08);
-}
-
-.total-section {
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
-  justify-content: space-between;
-  background-color: var(--color-surface-warm);
-  padding: 15px;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-xs);
-  font-size: 16px;
-  margin-bottom: 20px;
-}
-
-.total-section label {
-  font-weight: bold;
-  color: var(--color-text);
-}
-
-.total-section input {
-  padding: 10px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-strong);
-  font-size: 16px;
-  width: 100px;
-  color: var(--color-text);
-  background: var(--color-surface);
-}
-
-.checkbox-container {
-  display: inline-block;
-  margin-left: 20px;
-  vertical-align: middle;
-}
-
-.checkbox-container input[type="checkbox"] { margin-right: 10px; }
-
-.close-button {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 1000;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.close-button mat-icon {
-  font-size: 24px;
+.entradas-card__count-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--color-text-muted);
 }
 
-.close-button:hover mat-icon { color: var(--color-text); }
+/* Acciones dentro de la card */
+.entradas-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.entradas-card__newprice {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+/* Botón sumar (+) — acción primaria de la card */
+.entradas-btn-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-success);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition-fast);
+}
+
+.entradas-btn-add mat-icon {
+  color: #fff;
+}
+
+.entradas-btn-add:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Botón descuento — secundario, contorneado (menos ruido visual) */
+.entradas-btn-discount {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--color-warn);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-warn);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.entradas-btn-discount mat-icon {
+  color: var(--color-warn);
+}
+
+.entradas-btn-discount:hover {
+  background: var(--color-warn);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.entradas-btn-discount:hover mat-icon {
+  color: #fff;
+}
+
+.entradas-tragos-input {
+  width: 90px;
+  padding: 8px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--color-primary-dark);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+}
+
+.entradas-tragos-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(191, 54, 12, 0.15);
+}
+
+/* ---------- Acciones secundarias + taxista ---------- */
+.entradas-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 28px;
+  margin-bottom: 22px;
+}
+
+.entradas-secondary__actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Botón neutro / secundario (pill contorneado) */
+.entradas-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 20px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-warm);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.entradas-btn-ghost mat-icon {
+  color: var(--color-text-muted);
+}
+
+.entradas-btn-ghost:hover {
+  background: var(--color-bg);
+  border-color: var(--color-primary-light);
+  transform: translateY(-1px);
+}
+
+/* Taxista como control tipo tarjeta clickeable */
+.entradas-taxista {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-warm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.entradas-taxista:hover {
+  border-color: var(--color-primary-light);
+}
+
+.entradas-taxista input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.entradas-taxista__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.entradas-taxista__title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.entradas-taxista__hint {
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Totales ---------- */
+.entradas-total {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 20px;
+  align-items: stretch;
+
+  padding: 6px;
+  margin-bottom: 22px;
+
+  background: var(--color-surface-warm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+}
+
+.entradas-total__item {
+  flex: 1 1 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+}
+
+.entradas-total__item label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.entradas-total__value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+/* Total destacado como bloque primario */
+.entradas-total__item--main {
+  background: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.entradas-total__item--main label {
+  color: rgba(255, 248, 240, 0.85);
+}
+
+.entradas-total__item--main .entradas-total__value {
+  color: var(--color-text-light);
+  font-size: 1.35rem;
+}
+
+/* ---------- Botones de pago ---------- */
+.entradas-pay {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.entradas-btn-pay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+}
+
+.entradas-btn-pay mat-icon {
+  color: var(--color-text-light);
+}
+
+.entradas-btn-pay:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.entradas-btn-pay--alt {
+  background: var(--color-accent-dark);
+  color: var(--color-text);
+}
+
+.entradas-btn-pay--alt mat-icon {
+  color: var(--color-text);
+}
+
+.entradas-btn-pay--alt:hover {
+  background: var(--color-accent);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .entradas-secondary {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .entradas-total__item--main {
+    flex-basis: 100%;
+  }
+}
