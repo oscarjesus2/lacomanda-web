@@ -17,11 +17,14 @@ export class EntradaCabService {
 
   constructor(private http: HttpClient) {}
 
-  GrabarEgresoTaxista(empleado: Empleado, entradaCab: EntradaCab, idVentaRef: number): Observable<ApiResponse<ImpresionDTO[]>>{
+  GrabarEgresoTaxista(empleado: Empleado, idVentaRef: number, total: number, idCaja: number): Observable<ApiResponse<ImpresionDTO[]>>{
+    // El backend arma el Recibo Interno (RI) y su detalle; el front solo envía el taxista,
+    // la venta a la que aplican los cupones, el monto de la comisión y la caja del turno.
     const body = {
       Empleado: empleado,
-      EntradaCab: entradaCab,
-      IdVentaRef: idVentaRef
+      IdVentaRef: idVentaRef,
+      Total: total,
+      IdCaja: idCaja
   };
     return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + 'GrabarEgresoTaxista', body);
 }
