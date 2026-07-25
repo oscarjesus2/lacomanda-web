@@ -242,7 +242,7 @@
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field class="form-field" appearance="fill">
+        <mat-form-field *ngIf="mostrarAnfitriona" class="form-field" appearance="fill">
           <mat-label>Exclusivo Anfitriona</mat-label>
           <mat-select [(ngModel)]="p.ExclusivoParaAnfitriona" name="excanf" required>
             <mat-option [value]="true">Sí</mat-option>
@@ -251,7 +251,7 @@
         </mat-form-field>
       </div>
 
-      <div class="form-row">
+      <div class="form-row" *ngIf="mostrarTragoCortesia">
         <mat-form-field class="form-field form-field--grow" appearance="fill">
           <mat-label>Permite Trago Cortesía</mat-label>
           <mat-select [(ngModel)]="p.PermitirParaTragoCortesia" name="cortesia" required>

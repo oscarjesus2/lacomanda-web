@@ -87,6 +87,12 @@ export class VentaComponent implements OnInit, AfterViewInit {
   public turnoAbierto: Turno;
   public user: Usuario;
   public config: Configuracion | null = null;
+
+  /** Interruptor maestro: la cortesía solo aplica si está habilitada en la config global,
+   *  aunque un producto haya quedado configurado con PermitirParaTragoCortesia = true. */
+  get tragoCortesiaHabilitado(): boolean {
+    return !!this.config?.TieneDescuentoTragoCortesia;
+  }
   public displayedColumns: string[] = ['NombreProducto', 'Precio', 'Cantidad', 'actions'];
   public ListaProductosdisplayedColumns: string[] = ['icoObs', 'nombrecorto', 'precio', 'add', 'cantidad', 'remove', 'actions'];
   public DEFAULT_ID = 0;
@@ -1042,6 +1048,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
   ingresarCodigoCortesia(oPedidoDet: PedidoDet) {
+    // Respeta el interruptor maestro: si la cortesía está deshabilitada en la
+    // configuración, no se permite aunque el producto la tenga configurada.
+    if (!this.tragoCortesiaHabilitado) {
+      return;
+    }
     if (oPedidoDet.NroCupon) {
       // Si ya hay un código ingresado, mostrarlo en un SweetAlert con opción de eliminarlo
       Swal.fire({

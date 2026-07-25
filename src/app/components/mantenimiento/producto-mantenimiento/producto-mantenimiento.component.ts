@@ -25,6 +25,7 @@ import { ImpuestoPaisService } from 'src/app/services/impuestopais.service';
 import { ImpuestoPais } from 'src/app/models/impuestopais.models';
 import { AreaImpresionService } from 'src/app/services/area-impresion.service';
 import { AreaImpresion } from 'src/app/models/area-impresion.models';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
 
 @Component({
   selector: 'app-producto-mantenimiento',
@@ -54,6 +55,10 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
   areas: AreaImpresion[] = [];
   selectedAreas: number[] = [];
 
+  // Visibilidad de campos según la configuración del negocio
+  mostrarAnfitriona = false;       // config.Anfitrionas
+  mostrarTragoCortesia = false;    // config.TieneDescuentoTragoCortesia
+
   displayedColumns: string[] = ['nombre', 'descripcion', 'precio', 'tipo', 'visible', 'activo', 'posicion', 'actions'];
 
   // grids (parametrizable)
@@ -73,12 +78,25 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
     private grupoService: GrupoService,
     private impuestoPaisService: ImpuestoPaisService,
     private spinner: NgxSpinnerService,
-    private areaSrv: AreaImpresionService
+    private areaSrv: AreaImpresionService,
+    private configuracionService: ConfiguracionService
   ) {}
 
   ngOnInit(): void {
     this.cargarTodo();
     this.cargarAreasImpresion();
+    this.cargarConfiguracion();
+  }
+
+  /** Determina qué campos opcionales se muestran según la configuración. */
+  private cargarConfiguracion(): void {
+    this.configuracionService.get().subscribe({
+      next: (cfg) => {
+        this.mostrarAnfitriona = !!cfg?.Anfitrionas;
+        this.mostrarTragoCortesia = !!cfg?.TieneDescuentoTragoCortesia;
+      },
+      error: () => {}
+    });
   }
   ngAfterViewInit(): void { this.filtered.paginator = this.paginator; }
 
@@ -260,6 +278,9 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
   resetForm(): void {
     this.p = new Producto();
     this.p.Visible = true; this.p.Activo = true; this.p.IdImpuestoPais = 0; this.p.Tipo = 0;
+    // Valores por defecto para los campos condicionados por configuración
+    this.p.ExclusivoParaAnfitriona = false;
+    this.p.PermitirParaTragoCortesia = false;
     this.selectedAreas = [];
   }
 

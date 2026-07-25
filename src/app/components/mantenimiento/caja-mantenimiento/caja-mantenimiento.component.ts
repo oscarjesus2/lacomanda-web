@@ -8,6 +8,7 @@ import { CajaService } from 'src/app/services/caja.service';
 import { CanalVentaService } from 'src/app/services/canal-venta.service';
 import { CajaDocumentosDialogComponent } from './caja-documentos-dialog/caja-documentos-dialog.component';
 import { CanalVenta } from 'src/app/models/canalventa.models';
+import { CanalVentaEnum } from 'src/app/enums/enum';
 import { faL } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
@@ -32,6 +33,12 @@ export class CajaMantenimientoComponent implements OnInit {
     return this.canales.filter(c => this.canalesSeleccionados.includes(c.IdCanalVenta));
   }
 
+  /** True cuando el canal Entradas está habilitado para la caja.
+   *  Solo entonces tiene sentido "Permitir pago a taxistas". */
+  get entradaSeleccionada(): boolean {
+    return this.canalesSeleccionados.includes(CanalVentaEnum.ENTRADAS);
+  }
+
   displayedColumns: string[] = ['descripcion','activo','cajaDefault','canal','nroPedido','actions'];
 
   constructor(
@@ -52,7 +59,8 @@ export class CajaMantenimientoComponent implements OnInit {
       UsuRegistro: 0, FecRegistro: '', IdCanalVentaDefecto: 0, UsuModi: undefined, FecModi: undefined,
       IdCanalesVenta: [],
       EmitePrecuenta: true, EmiteComanda: true, EmiteDescuento: true, PermiteDividirPedido: true,
-      PermiteCierreParcial: false, EnvioElectronicoOnline: false, PrecuentaLlevarDeliveryAutomatica: false
+      PermiteCierreParcial: false, EnvioElectronicoOnline: false, PrecuentaLlevarDeliveryAutomatica: false,
+      PermitirPagoTaxistas: false
     };
   }
 
@@ -94,6 +102,10 @@ export class CajaMantenimientoComponent implements OnInit {
       // Si el canal desactivado era el default, limpiar
       if (this.m.IdCanalVentaDefecto === id) {
         this.m.IdCanalVentaDefecto = this.canalesSeleccionados[0] ?? 0;
+      }
+      // Si se quita el canal Entradas, no tiene sentido permitir pago a taxistas
+      if (id === CanalVentaEnum.ENTRADAS) {
+        this.m.PermitirPagoTaxistas = false;
       }
     }
   }
