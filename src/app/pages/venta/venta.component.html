@@ -445,7 +445,9 @@ iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
                 (click)="iniciarTrasladarAEspacio()">Trasladar a Mesa</button>
         <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO && isAdmin"
                 [disabled]="!mesaSeleccionada"
-                (click)="CambiarMozo()">Cambiar Mozo</button>
+                (click)="CambiarMozo()">
+          {{ 'changeOrderAttendant' | tenantText }}
+        </button>
         <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO"
                 [disabled]="!mesaSeleccionada"
                 (click)="CambiarEspacio()">Cambiar Espacio</button>

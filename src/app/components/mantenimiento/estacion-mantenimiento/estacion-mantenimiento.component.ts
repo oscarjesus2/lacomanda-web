@@ -11,6 +11,7 @@ import { CajaService } from 'src/app/services/caja.service';
 import { CajaDto } from 'src/app/models/caja.models';
 import { EstacionTipoEnum } from 'src/app/enums/enum';
 import { NgxSpinnerService } from 'ngx-spinner';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 
 @Component({
   selector: 'app-estacion-mantenimiento',
@@ -28,22 +29,34 @@ export class EstacionMantenimientoComponent implements OnInit {
   showForm: boolean = false;
 
   listCajas: CajaDto[] = [];
-  tipos = [
-    { value: EstacionTipoEnum.ADMINISTRADOR, label: 'Administrador' },
-    { value: EstacionTipoEnum.MOZO,          label: 'Mozo' },
-    { value: EstacionTipoEnum.CAJA,          label: 'Caja' }
-  ];
+  get tipos() {
+    return [
+      { value: EstacionTipoEnum.ADMINISTRADOR, label: 'Administrador' },
+      {
+        value: EstacionTipoEnum.MOZO,
+        label: this.textCatalog.get('orderAttendant'),
+      },
+      { value: EstacionTipoEnum.CAJA, label: 'Caja' },
+    ];
+  }
 
   displayedColumns: string[] = ['descripcion', 'identificadorUnico', 'caja', 'tipo', 'actions'];
 
   cajaMap: Record<number, string> = {};
-  tipoMap: Record<number, string> = { 0: 'Administrador', 1: 'Mozo', 2: 'Caja' };
+  get tipoMap(): Record<number, string> {
+    return {
+      0: 'Administrador',
+      1: this.textCatalog.get('orderAttendant'),
+      2: 'Caja',
+    };
+  }
 
   constructor(
     private dialogRef: MatDialogRef<EstacionMantenimientoComponent>,
     private estacionService: EstacionService,
     private cajaService: CajaService,
-    private spinner: NgxSpinnerService
+    private spinner: NgxSpinnerService,
+    private textCatalog: TenantTextCatalogService,
   ) {}
 
   ngOnInit(): void {

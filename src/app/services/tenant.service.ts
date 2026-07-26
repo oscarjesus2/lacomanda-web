@@ -22,4 +22,6 @@ export class TenantService {
 export interface Tenant {
     TenantId: string;
     Sucursal: string;
+    Cultura: string;
+    ZonaHorariaId: string;
   }

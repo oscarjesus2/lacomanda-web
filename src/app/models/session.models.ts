@@ -7,6 +7,10 @@ export class Session {
   public Ip:           string;
   public TenantID:     string;
   public nombresucursal: string;
+  /** Cultura predeterminada configurada para el tenant. */
+  public CulturaTenant: string;
+  /** Cultura efectiva: preferencia del usuario o fallback del tenant. */
+  public Cultura:       string;
   public boletaRapida:   boolean = false;
 
   constructor(
@@ -16,6 +20,7 @@ export class Session {
     ip:            string,
     tenantID:      string,
     nombresucursal: string,
+    culturaTenant: string,
   ) {
     this.Token         = token;
     this.RefreshToken  = refreshToken;
@@ -23,5 +28,7 @@ export class Session {
     this.Ip            = ip;
     this.TenantID      = tenantID;
     this.nombresucursal = nombresucursal;
+    this.CulturaTenant  = culturaTenant;
+    this.Cultura        = culturaTenant;
   }
 }

@@ -13,6 +13,8 @@ import { VentaService } from 'src/app/services/venta.service';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { Configuracion } from 'src/app/models/configuracion.models';
 import { EstacionTipoEnum, NivelUsuarioEnum } from 'src/app/enums/enum';
+import { UsuarioService } from 'src/app/services/usuario.service';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -103,13 +105,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private dataService: DataService,
     private ventaService: VentaService,
     private configuracionService: ConfiguracionService,
+    private usuarioService: UsuarioService,
+    public textCatalog: TenantTextCatalogService,
   ) { }
 
   // ── Reloj ──────────────────────────────────────────────────
   private updateClock(): void {
     const now = new Date();
-    this.currentTime = now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-    const raw = now.toLocaleDateString('es-PE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    const culture = this.textCatalog.culture;
+    this.currentTime = now.toLocaleTimeString(culture, { hour: '2-digit', minute: '2-digit' });
+    const raw = now.toLocaleDateString(culture, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
     this.currentDate = raw.charAt(0).toUpperCase() + raw.slice(1);
   }
 
@@ -191,7 +196,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
       if (data?.Data != null) {
         this.turnoAbierto = data.Data;
-        this.title = 'Mozo';
+        this.title = this.textCatalog.get('orderAttendant');
         this.router.navigateByUrl('/mozo');
       } else {
         Swal.fire({ icon: 'warning', title: 'No hay un turno abierto para esta estación', confirmButtonText: 'Aceptar' });
@@ -226,6 +231,41 @@ export class HeaderComponent implements OnInit, OnDestroy {
       hasBackdrop: true,
       width: '560px',
       maxWidth: '95vw'
+    });
+  }
+
+  public cambiarCultura(cultura: string | null): void {
+    const session = this.storageService.getCurrentSession();
+    if (!session) {
+      return;
+    }
+
+    this.usuarioService.actualizarCulturaPropia(cultura).subscribe({
+      next: response => {
+        const culturaPreferida = response?.Data?.Cultura ?? null;
+        session.User.Cultura = culturaPreferida;
+        session.Cultura =
+          culturaPreferida
+          || session.CulturaTenant
+          || session.Cultura
+          || 'en';
+
+        this.storageService.setCurrentSession(session);
+        this.textCatalog.setCulture(session.Cultura);
+        this.updateClock();
+        if (this.router.url.startsWith('/mozo')) {
+          const title = this.textCatalog.get('orderAttendant');
+          this.title = title;
+          this.dataService.updateVariable_TituloHeader(title);
+        }
+      },
+      error: () => {
+        Swal.fire(
+          'Error',
+          this.textCatalog.get('cultureChangeError'),
+          'error',
+        );
+      },
     });
   }
 

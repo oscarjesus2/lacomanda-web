@@ -75,6 +75,7 @@ import { DialogDocumentosEmitidosComponent } from 'src/app/components/dialog-doc
 import { CanalVentaEnum } from 'src/app/enums/enum';
 import { DialogDeliveryComponent } from 'src/app/components/dialog-delivery/dialog-delivery.component';
 import { DeliveryDialogResult } from 'src/app/models/delivery.models';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 
 @Component({
   selector: 'app-venta',
@@ -209,6 +210,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     private headerService: HeaderService,
     private usuarioService: UsuarioService,
     private configuracionService: ConfiguracionService,
+    private textCatalog: TenantTextCatalogService,
     private activatedRoute: ActivatedRoute) {
 
 
@@ -622,12 +624,18 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
   async CambiarMozo(): Promise<void> {
+    const title = this.textCatalog.get('changeOrderAttendant');
+
     if (!this.mesaSeleccionada) {
-      Swal.fire('Cambiar Mozo', 'Debe seleccionar un espacio.', 'info');
+      Swal.fire(title, 'Debe seleccionar un espacio.', 'info');
       return;
     }
     if (!this.isAdmin) {
-      Swal.fire('Cambiar Mozo', 'Solo el administrador puede cambiar el mozo.', 'warning');
+      Swal.fire(
+        title,
+        this.textCatalog.get('onlyAdminCanChangeOrderAttendant'),
+        'warning',
+      );
       return;
     }
 
@@ -637,16 +645,18 @@ export class VentaComponent implements OnInit, AfterViewInit {
     });
 
     const { value: idEmpleado } = await Swal.fire<string>({
-      title: 'Cambiar Mozo',
+      title,
       input: 'select',
       inputOptions,
-      inputPlaceholder: 'Seleccione un mozo',
+      inputPlaceholder: this.textCatalog.get('selectOrderAttendant'),
       inputValue: this.mozoSelected?.IdEmpleado?.toString() ?? '',
       showCancelButton: true,
       confirmButtonText: 'Cambiar',
       cancelButtonText: 'Cancelar',
       inputValidator: (value) => {
-        if (!value) return 'Debe seleccionar un mozo.';
+        if (!value) {
+          return this.textCatalog.get('orderAttendantRequired');
+        }
         return null;
       }
     });
@@ -662,10 +672,18 @@ export class VentaComponent implements OnInit, AfterViewInit {
         this.mozoSelected = this.getMozoByMozoId(Number(idEmpleado));
         this.RehacerPantalla();
       } else {
-        Swal.fire('Error', 'No se pudo cambiar el mozo.', 'error');
+        Swal.fire(
+          'Error',
+          this.textCatalog.get('couldNotChangeOrderAttendant'),
+          'error',
+        );
       }
     } catch (e) {
-      Swal.fire('Error', 'Ocurrió un error al cambiar el mozo.', 'error');
+      Swal.fire(
+        'Error',
+        this.textCatalog.get('unexpectedOrderAttendantChangeError'),
+        'error',
+      );
     } finally {
       this.spinnerService.hide();
     }

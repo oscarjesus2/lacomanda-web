@@ -22,6 +22,16 @@ export class UsuarioService {
     return this.http.get<ApiResponse<Usuario[]>>(this.basePath);
   }
 
+  getUsuarioActual(): Observable<ApiResponse<Usuario>> {
+    return this.http.get<ApiResponse<Usuario>>(`${this.basePath}/me`);
+  }
+
+  actualizarCulturaPropia(cultura: string | null): Observable<ApiResponse<Usuario>> {
+    return this.http.put<ApiResponse<Usuario>>(`${this.basePath}/me/cultura`, {
+      Cultura: cultura,
+    });
+  }
+
   getUsuario(id: string): Observable<Usuario> {
     return this.http.get<Usuario>(`${this.basePath}/${id}`);
   }

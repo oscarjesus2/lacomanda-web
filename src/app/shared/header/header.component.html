@@ -70,6 +70,12 @@
   <!-- DERECHA: home + salir -->
   <div class="app-header__right">
     <button mat-icon-button class="app-header__icon-btn"
+            [matTooltip]="'language' | tenantText"
+            [attr.aria-label]="'language' | tenantText"
+            [matMenuTriggerFor]="languageMenu">
+      <mat-icon>language</mat-icon>
+    </button>
+    <button mat-icon-button class="app-header__icon-btn"
             matTooltip="Inicio" (click)="reiniciar()">
       <mat-icon>home</mat-icon>
     </button>
@@ -93,6 +99,23 @@
     <mat-icon>point_of_sale</mat-icon><span>Caja</span>
   </button>
   <button mat-menu-item *ngIf="showMozo" (click)="Mozo()">
-    <mat-icon>restaurant</mat-icon><span>Mozo</span>
+    <mat-icon>restaurant</mat-icon>
+    <span>{{ 'orderAttendant' | tenantText }}</span>
+  </button>
+</mat-menu>
+
+<mat-menu #languageMenu="matMenu" xPosition="before">
+  <button mat-menu-item (click)="cambiarCultura(null)">
+    <mat-icon>business</mat-icon>
+    <span>{{ 'useTenantLanguage' | tenantText }}</span>
+  </button>
+  <button mat-menu-item (click)="cambiarCultura('es-PE')">
+    <mat-icon>translate</mat-icon><span>Español (Perú)</span>
+  </button>
+  <button mat-menu-item (click)="cambiarCultura('es-ES')">
+    <mat-icon>translate</mat-icon><span>Español (España)</span>
+  </button>
+  <button mat-menu-item (click)="cambiarCultura('en')">
+    <mat-icon>translate</mat-icon><span>English</span>
   </button>
 </mat-menu>

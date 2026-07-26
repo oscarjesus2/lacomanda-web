@@ -14,6 +14,8 @@ export class Usuario {
   public TipoCompu: number;
   public NivelDescripcion: string;
   public NombreEmpleado: string;
+  /** Preferencia opcional; null significa usar la cultura del tenant. */
+  public Cultura?: string | null;
 }
 
 /** DTO para PUT /api/Usuario/{id} — sin contraseña */

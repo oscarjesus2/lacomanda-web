@@ -448,12 +448,16 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       return request;
     }
 
-    return request.clone({
-      setHeaders: {
-        Authorization: `Bearer ${session.Token}`,
-        'Tenant-ID': session.TenantID
-      }
-    });
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${session.Token}`,
+      'Tenant-ID': session.TenantID
+    };
+
+    if (session.Cultura) {
+      headers['X-Culture'] = session.Cultura;
+    }
+
+    return request.clone({ setHeaders: headers });
   }
 
   private forceLogout(): void {

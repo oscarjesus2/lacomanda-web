@@ -18,6 +18,8 @@ import { ConfiguracionInicialComponent } from 'src/app/components/configuracion-
 import { HeaderService } from 'src/app/services/header.service';
 import { EstacionTipoEnum } from 'src/app/enums/enum';
 import { UsuarioService } from 'src/app/services/usuario.service';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { Usuario } from 'src/app/models/usuario.models';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -64,6 +66,7 @@ export class LoginComponent implements OnInit {
     private configService: ConfiguracionService,
     private headerService: HeaderService,
     private usuarioService: UsuarioService,
+    private textCatalog: TenantTextCatalogService,
   ) {}
 
   @HostListener('window:beforeinstallprompt', ['$event'])
@@ -90,6 +93,9 @@ export class LoginComponent implements OnInit {
 
     const currentSession = this.storageService.getCurrentSession();
     if (currentSession) {
+      this.textCatalog.setCulture(
+        currentSession.Cultura ?? currentSession.CulturaTenant,
+      );
       const route = this.keycloakAuth.getTargetRoute(currentSession.Token);
       this.router.navigateByUrl(route);
     }
@@ -155,8 +161,17 @@ export class LoginComponent implements OnInit {
         if (this.CurrentIP) {
           // Guardar sesión con token ANTES de llamar a la API,
           // para que el interceptor pueda adjuntar el Authorization header.
-          const session = new Session(token, tokenResp.refresh_token, usuario, this.CurrentIP, tenant.TenantId, tenant.Sucursal);
+          const session = new Session(
+            token,
+            tokenResp.refresh_token,
+            usuario,
+            this.CurrentIP,
+            tenant.TenantId,
+            tenant.Sucursal,
+            tenant.Cultura,
+          );
           this.storageService.setCurrentSession(session);
+          this.inicializarCulturaUsuario(session, usuario);
 
           // La estación manda sobre el rol para determinar la ruta
           this.estacionService.getAll().subscribe({
@@ -215,8 +230,17 @@ export class LoginComponent implements OnInit {
           }
 
           usuario.TipoCompu = EstacionTipoEnum.ADMINISTRADOR;
-          const session = new Session(token, tokenResp.refresh_token, usuario, this.CurrentIP, tenant.TenantId, tenant.Sucursal);
+          const session = new Session(
+            token,
+            tokenResp.refresh_token,
+            usuario,
+            this.CurrentIP,
+            tenant.TenantId,
+            tenant.Sucursal,
+            tenant.Cultura,
+          );
           this.storageService.setCurrentSession(session);
+          this.inicializarCulturaUsuario(session, usuario);
 
           this.isSubmitting = false;
           this.loginForm.enable();
@@ -231,6 +255,43 @@ export class LoginComponent implements OnInit {
         this.spinnerService.hide();
         this.loginValid = false;
       }
+    });
+  }
+
+  /**
+   * El tenant aporta la cultura inicial. La preferencia persistida del usuario,
+   * cuando existe, la reemplaza sin modificar el país ni sus reglas fiscales.
+   */
+  private inicializarCulturaUsuario(
+    session: Session,
+    usuario: Usuario,
+  ): void {
+    this.textCatalog.setCulture(session.Cultura);
+
+    this.usuarioService.getUsuarioActual().subscribe({
+      next: response => {
+        const perfil = response?.Data;
+        const activeSession = this.storageService.getCurrentSession();
+        if (!perfil || activeSession?.Token !== session.Token) {
+          return;
+        }
+
+        const token = usuario.Token;
+        const tipoCompu = usuario.TipoCompu;
+        Object.assign(usuario, perfil);
+        usuario.Token = token;
+        usuario.TipoCompu = tipoCompu;
+
+        session.User = usuario;
+        session.Cultura = perfil.Cultura || session.CulturaTenant;
+        this.storageService.setCurrentSession(session);
+        this.textCatalog.setCulture(session.Cultura);
+      },
+      error: () => {
+        // La preferencia es opcional. Ante un fallo se conserva el valor
+        // predeterminado del tenant y el inicio de sesión puede continuar.
+        this.textCatalog.setCulture(session.CulturaTenant);
+      },
     });
   }
 
@@ -368,4 +429,6 @@ export class LoginComponent implements OnInit {
 interface TenantDefault {
   TenantId:  string;
   Sucursal:  string;
+  Cultura: string;
+  ZonaHorariaId: string;
 }

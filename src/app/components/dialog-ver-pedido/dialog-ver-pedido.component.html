@@ -3,7 +3,7 @@
     <br>
     <div>
         - Nro Pedido : <strong>{{IdPedido}}</strong>
-        - Mozo : <strong>{{Mozo}}</strong>
+        - {{ 'orderAttendant' | tenantText }} : <strong>{{Mozo}}</strong>
         - Hora Pedido : <strong>{{ HoraPedido | date:'HH:mm' }}</strong>
     </div>
     

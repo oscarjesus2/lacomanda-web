@@ -102,6 +102,7 @@ import { DialogReportesComponent } from './components/dialog-reportes/dialog-rep
 import { DescuentoMantenimientoComponent } from './components/mantenimiento/descuento-mantenimiento/descuento-mantenimiento.component';
 import { DialogDeliveryComponent } from './components/dialog-delivery/dialog-delivery.component';
 import { SocioNegocioMantenimientoComponent } from './components/mantenimiento/socio-negocio-mantenimiento/socio-negocio-mantenimiento.component';
+import { TenantTextPipe } from './pipes/tenant-text.pipe';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -177,6 +178,7 @@ export const MY_DATE_FORMATS = {
     DescuentoMantenimientoComponent,
     DialogDeliveryComponent,
     SocioNegocioMantenimientoComponent,
+    TenantTextPipe,
   ],
   imports: [
     CommonModule,
