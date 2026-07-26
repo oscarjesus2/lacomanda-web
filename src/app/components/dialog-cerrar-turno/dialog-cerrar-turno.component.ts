@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { NgxSpinnerService } from 'ngx-spinner';
 import Swal from 'sweetalert2';
+import { finalize } from 'rxjs/operators';
 
 import { CajaDto } from 'src/app/models/caja.models';
 import { Turno } from 'src/app/models/turno.models';
@@ -110,26 +111,41 @@ export class DialogCerrarTurnoComponent implements OnInit {
 
   /** Ejecuta el cierre; si el backend pide confirmar ventas al crédito, reintenta. */
   private ejecutarCierre(confirmarCredito: boolean): void {
-    const request: CerrarTurnoRequest = {
-      IdCaja: this.idCajaSel!,
-      EsParcial: this.esParcial,
-      ConfirmarVentasSinPagoComoCredito: confirmarCredito,
-      TipoFormato: 0
-    };
+  const request: CerrarTurnoRequest = {
+    IdCaja: this.idCajaSel!,
+    EsParcial: this.esParcial,
+    ConfirmarVentasSinPagoComoCredito: confirmarCredito,
+    TipoFormato: 0
+  };
 
-    this.procesando = true;
-    this.spinner.show();
-    this.turnoService.CerrarTurno(request).subscribe({
-      next: (r) => {
+  this.procesando = true;
+  this.spinner.show();
+
+  this.turnoService.CerrarTurno(request)
+    .pipe(
+      finalize(() => {
+        // Se ejecuta tanto en respuestas correctas como en errores HTTP.
         this.spinner.hide();
         this.procesando = false;
-        const data = r?.Data;
-        if (!r?.Success || !data) {
-          Swal.fire('Error', r?.Message || 'No se pudo cerrar el turno.', 'error');
+      })
+    )
+    .subscribe({
+      next: (response) => {
+        const data = response?.Data;
+
+        if (!response?.Success || !data) {
+          Swal.fire(
+            'Error',
+            response?.Message || 'No se pudo cerrar el turno.',
+            'error'
+          );
           return;
         }
 
-        // El backend se detuvo esperando confirmación de ventas al crédito.
+        /*
+         * No es un error: el backend solicita una decisión del usuario.
+         * Por eso esta interacción pertenece al componente.
+         */
         if (data.RequiereConfirmacionCredito) {
           this.confirmarVentasCredito(data.VentasSinPago);
           return;
@@ -138,18 +154,35 @@ export class DialogCerrarTurnoComponent implements OnInit {
         if (data.Cerrado) {
           this.cerrado = true;
           this.imprimir(data.Impresiones);
-          Swal.fire('Cierre de turno', data.Mensaje || 'El turno se cerró correctamente.', 'success');
-        } else {
-          Swal.fire('Cierre de turno', data.Mensaje || 'No se pudo cerrar el turno.', 'warning');
+
+          Swal.fire(
+            'Cierre de turno',
+            data.Mensaje || 'El turno se cerró correctamente.',
+            'success'
+          );
+
+          return;
         }
+
+        /*
+         * Respuesta correcta técnicamente, pero el caso de uso no cerró
+         * el turno. Como no es un error HTTP, lo presenta el componente.
+         */
+        Swal.fire(
+          'Cierre de turno',
+          data.Mensaje || 'No se pudo cerrar el turno.',
+          'warning'
+        );
       },
-      error: (e) => {
-        this.spinner.hide();
-        this.procesando = false;
-        Swal.fire('Error', e?.error?.Message || 'Ocurrió un error al cerrar el turno.', 'error');
-      }
+
+      /*
+       * El interceptor ya clasificó y mostró el error HTTP.
+       * Se mantiene el callback para que RxJS no lo trate como un error
+       * sin controlar, pero aquí no se abre otro Swal.
+       */
+      error: () => {}
     });
-  }
+}
 
   private confirmarVentasCredito(ventas: VentaSinPago[]): void {
     const filas = (ventas ?? []).map(v => {
