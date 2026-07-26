@@ -73,7 +73,7 @@
           <table mat-table [dataSource]="dataSource" class="taxista-table">
             <ng-container matColumnDef="tipoDoc">
               <th mat-header-cell *matHeaderCellDef>Tipo Doc</th>
-              <td mat-cell *matCellDef="let element">{{ element.IdTipoDocumento }}</td>
+              <td mat-cell *matCellDef="let element">{{ element.TipoDocumento }}</td>
             </ng-container>
 
             <ng-container matColumnDef="serie">
@@ -109,7 +109,7 @@
             <ng-container matColumnDef="activo">
               <th mat-header-cell *matHeaderCellDef>Activo</th>
               <td mat-cell *matCellDef="let element">
-                <span class="taxista-badge" [class.taxista-badge--off]="element.Estado !== 'Si'">
+                <span class="taxista-badge" [class.taxista-badge--off]="element.Estado !== 'Activo'">
                   {{ element.Estado }}
                 </span>
               </td>
