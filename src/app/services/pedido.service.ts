@@ -47,8 +47,10 @@ export class PedidoService {
         return this.http.put<ApiResponse<boolean>>(`${this.basePath}/ActualizarEnviosDeImpresion/${idPedido}/${nroCuenta}`, {});
     }
     
-    ActualizarNumAnulaItemImpresion(idPedido: number, item: number): Observable<ApiResponse<boolean>> {
-        return this.http.put<ApiResponse<boolean>>(`${this.basePath}/ActualizarNumAnulaItemImpresion/${idPedido}/${item}`, {});
+    ActualizarNumAnulaItemImpresion(idPedido: number, nroCuenta: number, item: number): Observable<ApiResponse<boolean>> {
+        return this.http.put<ApiResponse<boolean>>(
+            `${this.basePath}/ActualizarNumAnulaItemImpresion/${idPedido}/${nroCuenta}/${item}`,
+            {});
     }
 
     AplicarDescuento(pedidoDescuentoDTO: PedidoDescuentoDTO): Observable<ApiResponse<boolean>> {

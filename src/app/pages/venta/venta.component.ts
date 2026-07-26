@@ -1542,9 +1542,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
     if (responseService.Success == true) {
       const contador = await this.imprimir(responseService.Data);
 
-      if (contador === responseService.Data.length) {
-        const pedido = responseService.Data[0];
-        this.pedidoService.ActualizarNumAnulaItemImpresion(pedido.IdPedido, pedido.Item).subscribe(response => {
+      if (responseService.Data.length > 0 && contador === responseService.Data.length) {
+        this.pedidoService.ActualizarNumAnulaItemImpresion(
+          pedidoDet.IdPedido,
+          pedidoDet.NroCuenta,
+          pedidoDet.Item).subscribe(response => {
           console.log('Envios actualizados correctamente', response);
         }, error => {
           console.error('Error al actualizar los envíos', error);
