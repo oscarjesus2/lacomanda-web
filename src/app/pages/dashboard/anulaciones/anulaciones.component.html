@@ -22,6 +22,10 @@
 
   <div class="report-panel__chart-container">
     <div class="report-panel__chart chart" #chart></div>
+
+    <div class="report-panel__empty" *ngIf="sinDatos">
+      Sin datos para el rango seleccionado.
+    </div>
   </div>
 
   <h4 class="report-panel__table-title">

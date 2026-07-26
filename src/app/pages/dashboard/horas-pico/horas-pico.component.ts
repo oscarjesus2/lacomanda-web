@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, Input, SimpleChanges, OnChanges } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, Input, SimpleChanges, OnChanges, OnDestroy } from '@angular/core';
 import { NgxSpinnerService } from 'ngx-spinner';
 import * as d3 from 'd3';
 import { VentaService } from 'src/app/services/venta.service';
@@ -10,15 +10,20 @@ import { StorageService } from 'src/app/services/storage.service';
   templateUrl: './horas-pico.component.html',
   styleUrls: ['./horas-pico.component.css']
 })
-export class HorasPicoComponent implements OnInit, OnChanges {
+export class HorasPicoComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('chart', { static: true }) private chartContainer: ElementRef;
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
   horaPico: string;
+  private svgRoot: any;
   private svg: any;
   private margin = { top: 20, right: 20, bottom: 30, left: 70 };
   private width: number;
   private height: number;
+  private lastData: any[] = [];
+  private resizeObserver?: ResizeObserver;
+  private resizePending = false;
+  sinDatos = false;
   loading: boolean = true;
 
   constructor(private spinnerService: NgxSpinnerService, private ventaService: VentaService, private storageService: StorageService) { }
@@ -28,6 +33,7 @@ export class HorasPicoComponent implements OnInit, OnChanges {
       this.width = 600 - this.margin.left - this.margin.right;
       this.height = 400 - this.margin.top - this.margin.bottom;
       this.createSvg();
+      this.observeResize();
 
       var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
       var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
@@ -62,6 +68,7 @@ export class HorasPicoComponent implements OnInit, OnChanges {
       }
     });
     this.loading = false;
+    this.sinDatos = !data || data.length === 0;
     this.spinnerService.hide('horasPicoSpinner');
     this.updateChart(data);
 
@@ -81,16 +88,46 @@ export class HorasPicoComponent implements OnInit, OnChanges {
     this.width = element.offsetWidth - this.margin.left - this.margin.right;
     this.height = element.offsetHeight - this.margin.top - this.margin.bottom;
 
-    this.svg = d3.select(element)
+    this.svgRoot = d3.select(element)
       .append('svg')
       .attr('width', element.offsetWidth)
-      .attr('height', element.offsetHeight)
+      .attr('height', element.offsetHeight);
+
+    this.svg = this.svgRoot
       .append('g')
       .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
   }
 
+  /** Redibuja al cambiar el ancho (columna completa ↔ media). El alto se mantiene. */
+  private observeResize(): void {
+    if (typeof ResizeObserver === 'undefined') { return; }
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.resizePending) { return; }
+      this.resizePending = true;
+      requestAnimationFrame(() => {
+        this.resizePending = false;
+        this.onResize();
+      });
+    });
+    this.resizeObserver.observe(this.chartContainer.nativeElement);
+  }
+
+  private onResize(): void {
+    const el = this.chartContainer.nativeElement;
+    const w = el.clientWidth - this.margin.left - this.margin.right;
+    if (w <= 0 || w === this.width) { return; }
+    this.width = w;
+    this.svgRoot.attr('width', el.clientWidth);
+    if (this.lastData?.length) { this.updateChart(this.lastData); }
+  }
+
+  ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
+  }
+
 
   private updateChart(data: any[]): void {
+    this.lastData = data;
     // Limpiar gráfico existente antes de actualizar
     this.svg.selectAll('*').remove();
 

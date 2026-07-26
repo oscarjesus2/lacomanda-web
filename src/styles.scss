@@ -505,6 +505,22 @@ body {
   transition: opacity 0.12s ease;
 }
 
+/* Estado vacío: se muestra centrado sobre el área del gráfico cuando no hay datos */
+.report-panel__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 1rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
 /* Spinner sobre el gráfico */
 .report-panel__spinner {
   position: absolute;

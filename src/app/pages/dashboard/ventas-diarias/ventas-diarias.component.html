@@ -35,7 +35,7 @@
   <section class="report-panel__summary" *ngIf="totalVenta != null">
     <span class="report-panel__summary-label">Total venta</span>
     <span class="report-panel__summary-value">
-      S/. {{ totalVenta }}
+      {{ monedaSimbolo }} {{ totalVenta | number:'1.2-2' }}
     </span>
   </section>
 
@@ -50,5 +50,9 @@
       id="tooltip"
       class="report-panel__tooltip"
     ></div>
+
+    <div class="report-panel__empty" *ngIf="sinDatos">
+      Sin datos para el rango seleccionado.
+    </div>
   </div>
 </div>

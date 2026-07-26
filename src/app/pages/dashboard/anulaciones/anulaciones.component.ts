@@ -1,5 +1,5 @@
 import { formatDate } from '@angular/common';
-import { Component, OnInit, ElementRef, ViewChild, Input, SimpleChanges } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, Input, SimpleChanges, OnDestroy } from '@angular/core';
 import * as d3 from 'd3';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { ventadiariasemanalmensual } from 'src/app/models/ventadiariasemanalmensual.models';
@@ -11,7 +11,7 @@ import { VentaService } from 'src/app/services/venta.service';
   templateUrl: './anulaciones.component.html',
   styleUrls: ['./anulaciones.component.css']
 })
-export class AnulacionesComponent implements OnInit {
+export class AnulacionesComponent implements OnInit, OnDestroy {
   @ViewChild('chart', { static: true }) private chartContainer: ElementRef;
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
@@ -23,11 +23,14 @@ export class AnulacionesComponent implements OnInit {
   data = [];
 
   selectedProducto: string | null = null;
+  sinDatos = false;
 
   private svg;
   private margin = { top: 20, right: 30, bottom: 50, left: 150 }; // Más espacio para nombres de productos
   private width: number;
   private height: number;
+  private resizeObserver?: ResizeObserver;
+  private resizePending = false;
 
   constructor(
     private spinnerService: NgxSpinnerService,
@@ -38,10 +41,36 @@ export class AnulacionesComponent implements OnInit {
   ngOnInit(): void {
     this.width = this.chartContainer.nativeElement.offsetWidth - this.margin.left - this.margin.right;
     this.height = 400 - this.margin.top - this.margin.bottom;
+    this.observeResize();
 
     const fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US');
     const fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US');
     this.getAnulaciones(fechaInicial, fechaFinal);
+  }
+
+  /** Redibuja al cambiar el ancho (columna completa ↔ media). El alto es fijo. */
+  private observeResize(): void {
+    if (typeof ResizeObserver === 'undefined') { return; }
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.resizePending) { return; }
+      this.resizePending = true;
+      requestAnimationFrame(() => {
+        this.resizePending = false;
+        this.onResize();
+      });
+    });
+    this.resizeObserver.observe(this.chartContainer.nativeElement);
+  }
+
+  private onResize(): void {
+    const w = this.chartContainer.nativeElement.clientWidth - this.margin.left - this.margin.right;
+    if (w <= 0 || w === this.width) { return; }
+    this.width = w;
+    if (this.data?.length) { this.createChart(); }
+  }
+
+  ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -134,6 +163,7 @@ export class AnulacionesComponent implements OnInit {
 
       // Transformar y actualizar el gráfico después de cargar los datos
       this.transformData();
+      this.sinDatos = !this.data || this.data.length === 0;
       this.createChart();
     } catch (error) {
       console.error('Error al cargar datos:', error);

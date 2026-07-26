@@ -45,5 +45,9 @@
       class="report-panel__chart"
       id="chart-ventas-diarias"
     ></div>
+
+    <div class="report-panel__empty" *ngIf="sinDatos">
+      Sin datos para el rango seleccionado.
+    </div>
   </div>
 </div>
