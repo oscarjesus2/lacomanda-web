@@ -222,7 +222,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   OpenDialogTurno(): void {
     this.dialogTurno.open(DialogTurnoComponent, {
-      disableClose: true, hasBackdrop: true, width: '600px', height: '400px'
+      disableClose: true,
+      hasBackdrop: true,
+      width: '560px',
+      maxWidth: '95vw'
     });
   }
 

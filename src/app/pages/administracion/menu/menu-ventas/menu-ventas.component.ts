@@ -343,7 +343,8 @@ export class MenuVentasComponent implements OnInit {
     const dialogTurno = this.dialog.open(DialogTurnoComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '600px', height: '400px'
+      width: '560px',
+      maxWidth: '95vw'
       // data: { oPedidoEspacio: listData, IdEspacio: IdEspacio, Espacio: this.espacioSelected.Descripcion + ' ' + this.espacioSelected.Numero}
     });
   }

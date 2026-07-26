@@ -70,6 +70,13 @@ export class DialogCerrarTurnoComponent implements OnInit {
     this.cajaService.getAllCaja(false).subscribe({
       next: (r) => {
         this.listCaja = r?.Data ?? [];
+        const cajaInicial =
+          this.listCaja.find(caja => caja.TurnoAbierto != null)
+          ?? this.listCaja[0];
+        if (cajaInicial) {
+          this.idCajaSel = cajaInicial.IdCaja;
+          this.onCajaChange();
+        }
         // Preseleccionar la caja del turno abierto de esta estación, si existe.
         this.preseleccionarCajaActual();
       },
@@ -98,6 +105,7 @@ export class DialogCerrarTurnoComponent implements OnInit {
     this.turno = null;
     this.esParcial = false;
     this.pedidosPendientes = [];
+    this.fechaCierre = new Date();
     if (this.idCajaSel == null) { return; }
 
     this.turnoService.ObtenerTurno(String(this.idCajaSel)).subscribe({
@@ -115,6 +123,7 @@ export class DialogCerrarTurnoComponent implements OnInit {
       Swal.fire('Validación', 'No hay un turno abierto para esta caja.', 'info');
       return;
     }
+    this.fechaCierre = new Date();
     this.ejecutarCierre(false);
   }
 
@@ -138,7 +147,7 @@ export class DialogCerrarTurnoComponent implements OnInit {
         })
       )
       .subscribe({
-        next: (response) => {
+        next: async (response) => {
           const data = response?.Data;
 
           if (!response?.Success || !data) {
@@ -168,7 +177,7 @@ export class DialogCerrarTurnoComponent implements OnInit {
 
           if (data.Cerrado) {
             this.cerrado = true;
-            this.imprimir(data.Impresiones);
+            await this.imprimir(data.Impresiones);
 
             Swal.fire(
               'Cierre de turno',
@@ -204,7 +213,9 @@ export class DialogCerrarTurnoComponent implements OnInit {
       showCancelButton: true,
       confirmButtonText: 'Anular pedido',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#c62828',
+      customClass: {
+        confirmButton: 'swal-button--danger'
+      },
       inputValidator: (valor) =>
         valor?.trim()
           ? null
@@ -266,15 +277,15 @@ export class DialogCerrarTurnoComponent implements OnInit {
     const filas = (ventas ?? []).map(v => {
       const doc = v.NumDocumento || [v.Serie, v.NroDoc].filter(Boolean).join('-') || `Venta ${v.IdVenta ?? ''}`;
       const total = v.Total != null ? v.Total.toFixed(2) : '';
-      return `<tr><td style="text-align:left;padding:2px 8px;">${doc}</td><td style="text-align:right;padding:2px 8px;">${total}</td></tr>`;
+      return `<tr><td>${this.escapeHtml(doc)}</td><td class="is-numeric">${total}</td></tr>`;
     }).join('');
 
     Swal.fire({
       title: 'Ventas sin pago registrado',
       html: `
         <p>Existen ventas sin pago registrado. ¿Son ventas al crédito?</p>
-        <table style="margin:8px auto;border-collapse:collapse;font-size:13px;">
-          <thead><tr><th style="text-align:left;padding:2px 8px;">Documento</th><th style="text-align:right;padding:2px 8px;">Total</th></tr></thead>
+        <table class="swal-data-table">
+          <thead><tr><th>Documento</th><th class="is-numeric">Total</th></tr></thead>
           <tbody>${filas}</tbody>
         </table>`,
       icon: 'question',
@@ -288,6 +299,17 @@ export class DialogCerrarTurnoComponent implements OnInit {
     });
   }
 
+  private escapeHtml(value: string): string {
+    const characters: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return value.replace(/[&<>"']/g, character => characters[character]);
+  }
+
   private async imprimir(impresiones: ImpresionDTO[]): Promise<void> {
     for (const element of impresiones ?? []) {
       await this.qzTrayService.printPDF(element.Documento, element.NombreImpresora);
@@ -295,6 +317,9 @@ export class DialogCerrarTurnoComponent implements OnInit {
   }
 
   salir(): void {
+    if (this.procesando) {
+      return;
+    }
     this.dialogRef.close();
   }
 }

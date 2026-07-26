@@ -15,7 +15,14 @@
   --color-accent:        #FFB300;   /* Amber 700 — dorado, seleccionado */
   --color-accent-dark:   #FF8F00;   /* Amber 800 */
   --color-success:       #2e7d32;   /* Green 800 — estado confirmado */
+  --color-warning:       #ed6c02;   /* Orange 800 — requiere atención */
   --color-warn:          #c62828;   /* Red 800 — advertencia/eliminar */
+  --color-success-soft:  rgba(46, 125, 50, 0.10);
+  --color-success-border: rgba(46, 125, 50, 0.28);
+  --color-warning-soft:  rgba(237, 108, 2, 0.09);
+  --color-warning-border: rgba(237, 108, 2, 0.35);
+  --color-warn-soft:     rgba(198, 40, 40, 0.10);
+  --color-warn-border:   rgba(198, 40, 40, 0.28);
 
   /* --- Superficies y fondos --- */
   --color-bg:            #FFF8F2;   /* Fondo general — crema cálida */
@@ -684,6 +691,283 @@ body {
 .full-width {
   width: 100%;
   margin-bottom: 16px;
+}
+
+/* =========================
+   DIÁLOGOS
+   Primitivas compartidas para formularios, estados, alertas y acciones.
+   ========================= */
+
+.dialog-panel {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+.dialog-panel--compact {
+  max-width: 520px !important;
+}
+
+.dialog-panel--wide {
+  max-width: 100% !important;
+}
+
+.dialog-panel mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  line-height: 18px;
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dialog-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 4px 0 18px;
+  padding: 16px 18px;
+  background: var(--color-surface-warm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.dialog-summary__item,
+.dialog-option__content,
+.dialog-notice__content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dialog-summary__label {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dialog-summary__value {
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.status-badge {
+  align-self: flex-start;
+  padding: 3px 12px;
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.status-badge--danger {
+  border-color: var(--color-warn-border);
+  background: var(--color-warn-soft);
+  color: var(--color-warn);
+}
+
+.dialog-empty-state,
+.dialog-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 4px 0 18px;
+  padding: 14px 16px;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.dialog-empty-state mat-icon {
+  flex: 0 0 auto;
+  color: var(--color-primary-light);
+}
+
+.dialog-notice {
+  border-style: solid;
+}
+
+.dialog-notice--success {
+  border-color: var(--color-success-border);
+  background: var(--color-success-soft);
+}
+
+.dialog-notice--success > mat-icon,
+.dialog-notice--success .dialog-notice__title {
+  color: var(--color-success);
+}
+
+.dialog-notice__title,
+.dialog-option__title {
+  color: var(--color-text);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.dialog-notice__text,
+.dialog-option__hint {
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+}
+
+.dialog-option {
+  display: block;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+  transition: var(--transition-fast);
+}
+
+.dialog-option:hover {
+  border-color: var(--color-primary-light);
+}
+
+.dialog-option .mdc-form-field {
+  align-items: flex-start;
+}
+
+.dialog-alert {
+  margin-bottom: 18px;
+  overflow: hidden;
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-md);
+  background: var(--color-warning-soft);
+}
+
+.dialog-alert__header {
+  display: flex;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--color-warning-soft);
+}
+
+.dialog-alert__header > mat-icon {
+  flex: 0 0 auto;
+  color: var(--color-warning);
+}
+
+.dialog-alert__header h3 {
+  margin: 0 0 3px;
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.dialog-alert__header p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.dialog-table-wrapper {
+  max-height: 280px;
+  overflow: auto;
+}
+
+.dialog-data-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  background: var(--color-surface);
+}
+
+.dialog-data-table th,
+.dialog-data-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.dialog-data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-surface-warm);
+  color: var(--color-text-muted);
+  font-size: 0.69rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dialog-data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.dialog-data-table .is-numeric {
+  text-align: right;
+}
+
+.dialog-data-table button {
+  min-width: 0;
+}
+
+.dialog-data-table .mat-mdc-outlined-button.mat-warn {
+  border-color: var(--color-warn-border) !important;
+  color: var(--color-warn) !important;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.dialog-actions button mat-icon {
+  margin-right: 4px;
+}
+
+/* Contenido tabular usado dentro de SweetAlert. */
+.swal-data-table {
+  width: 100%;
+  margin: 8px auto;
+  border-collapse: collapse;
+  color: var(--color-text);
+  font-size: 0.82rem;
+}
+
+.swal-data-table th,
+.swal-data-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.swal-data-table .is-numeric {
+  text-align: right;
+}
+
+.swal2-confirm.swal-button--danger {
+  background: var(--color-warn) !important;
+}
+
+@media (max-width: 768px) {
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+
+  .dialog-actions button {
+    width: 100%;
+  }
 }
 
 /* =========================

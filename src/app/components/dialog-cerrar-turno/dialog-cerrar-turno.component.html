@@ -1,6 +1,12 @@
-<div class="mant-panel cturno-panel">
+<div class="mant-panel dialog-panel dialog-panel--wide">
 
-  <button mat-icon-button class="close-button" (click)="salir()">
+  <button
+    mat-icon-button
+    class="close-button"
+    type="button"
+    aria-label="Cerrar diálogo"
+    (click)="salir()"
+    [disabled]="procesando">
     <mat-icon>close</mat-icon>
   </button>
 
@@ -10,7 +16,11 @@
   <div class="form-row">
     <mat-form-field class="form-field" appearance="fill">
       <mat-label>Caja</mat-label>
-      <mat-select [(ngModel)]="idCajaSel" name="caja" (ngModelChange)="onCajaChange()">
+      <mat-select
+        [(ngModel)]="idCajaSel"
+        name="caja"
+        (ngModelChange)="onCajaChange()"
+        [disabled]="procesando">
         <mat-option *ngFor="let item of listCaja" [value]="item.IdCaja">
           {{ item.Descripcion }}
         </mat-option>
@@ -19,52 +29,63 @@
   </div>
 
   <!-- Datos del turno -->
-  <div class="cturno-info" *ngIf="turno; else sinTurno">
-    <div class="cturno-info__item">
-      <span class="cturno-info__label">N° Turno</span>
-      <span class="cturno-info__value">{{ turno.NroTurno }}</span>
+  <div class="dialog-summary" *ngIf="turno; else sinTurno">
+    <div class="dialog-summary__item">
+      <span class="dialog-summary__label">N.º de turno</span>
+      <span class="dialog-summary__value">{{ turno.NroTurno }}</span>
     </div>
-    <div class="cturno-info__item">
-      <span class="cturno-info__label">Fecha Inicio</span>
-      <span class="cturno-info__value">{{ turno.FechaInicio || (turno.FechaTrabajo | date:'dd/MM/yyyy HH:mm') }}</span>
+    <div class="dialog-summary__item">
+      <span class="dialog-summary__label">Fecha de inicio</span>
+      <span class="dialog-summary__value">
+        {{ (turno.FechaInicio || turno.FechaTrabajo) | date:'dd/MM/yyyy HH:mm' }}
+      </span>
     </div>
-    <div class="cturno-info__item">
-      <span class="cturno-info__label">Fecha Cierre</span>
-      <span class="cturno-info__value">{{ fechaCierre | date:'dd/MM/yyyy HH:mm' }}</span>
+    <div class="dialog-summary__item">
+      <span class="dialog-summary__label">Fecha actual</span>
+      <span class="dialog-summary__value">{{ fechaCierre | date:'dd/MM/yyyy HH:mm' }}</span>
     </div>
-    <div class="cturno-info__item">
-      <span class="cturno-info__label">Tipo de Cambio</span>
-      <span class="cturno-info__value">{{ turno.TipoCambio || turno.TipoCambioVenta || '—' }}</span>
+    <div class="dialog-summary__item">
+      <span class="dialog-summary__label">Tipo de cambio</span>
+      <span class="dialog-summary__value">{{ turno.TipoCambio || turno.TipoCambioVenta || '—' }}</span>
     </div>
-    <div class="cturno-info__item">
-      <span class="cturno-info__label">Estado</span>
-      <span class="cturno-badge" [class.cturno-badge--closed]="cerrado || !turnoAbierto">
+    <div class="dialog-summary__item">
+      <span class="dialog-summary__label">Estado</span>
+      <span class="status-badge" [class.status-badge--danger]="cerrado || !turnoAbierto">
         {{ cerrado ? 'TURNO CERRADO' : (turnoAbierto ? 'ABIERTO' : 'CERRADO') }}
       </span>
     </div>
   </div>
 
   <ng-template #sinTurno>
-    <p class="cturno-empty">
+    <p class="dialog-empty-state" role="status">
       <mat-icon>info</mat-icon>
       Selecciona una caja con un turno abierto para cerrarlo.
     </p>
   </ng-template>
 
-  <!-- Cierre parcial (solo si la caja lo permite) -->
-  <label class="cturno-parcial" *ngIf="permiteParcial && turnoAbierto && !cerrado">
-    <input type="checkbox" [(ngModel)]="esParcial" name="parcial">
-    <span class="cturno-parcial__text">
-      <span class="cturno-parcial__title">Cierre parcial</span>
-      <span class="cturno-parcial__hint">Omite la validación de pedidos pendientes de cobrar.</span>
-    </span>
-  </label>
+  <div class="dialog-option" *ngIf="permiteParcial && turnoAbierto && !cerrado">
+    <mat-checkbox
+      [(ngModel)]="esParcial"
+      name="parcial"
+      [disabled]="procesando">
+      <span class="dialog-option__content">
+        <span class="dialog-option__title">Cierre parcial</span>
+        <span class="dialog-option__hint">
+          Omite la validación de pedidos pendientes de cobrar.
+        </span>
+      </span>
+    </mat-checkbox>
+  </div>
 
-  <section class="cturno-pendientes" *ngIf="pedidosPendientes.length > 0">
-    <div class="cturno-pendientes__encabezado">
+  <section
+    class="dialog-alert"
+    role="alert"
+    aria-live="polite"
+    *ngIf="pedidosPendientes.length > 0">
+    <div class="dialog-alert__header">
       <mat-icon>warning</mat-icon>
       <div>
-        <h3>Pedidos pendientes de cobrar</h3>
+        <h3>Pedidos pendientes de cobrar ({{ pedidosPendientes.length }})</h3>
         <p>
           Estos pedidos impiden cerrar el turno. Puedes anularlos aquí o salir
           para cobrarlos desde Ventas. Después vuelve a intentar el cierre.
@@ -72,8 +93,8 @@
       </div>
     </div>
 
-    <div class="cturno-pendientes__tabla">
-      <table>
+    <div class="dialog-table-wrapper">
+      <table class="dialog-data-table">
         <thead>
           <tr>
             <th>Pedido</th>
@@ -81,7 +102,7 @@
             <th>Espacio / canal</th>
             <th>Mozo</th>
             <th>Fecha</th>
-            <th class="cturno-numero">Importe</th>
+            <th class="is-numeric">Importe</th>
             <th></th>
           </tr>
         </thead>
@@ -92,7 +113,7 @@
             <td>{{ pedido.Espacio || pedido.CanalVenta || '—' }}</td>
             <td>{{ pedido.Empleado || '—' }}</td>
             <td>{{ pedido.FechaPedido | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td class="cturno-numero">
+            <td class="is-numeric">
               {{ pedido.MontoPendiente | number:'1.2-2' }}
             </td>
             <td>
@@ -113,17 +134,21 @@
   </section>
 
   <!-- Acciones -->
-  <div class="cturno-actions">
+  <div class="dialog-actions">
     <button mat-raised-button color="primary" type="button"
             (click)="cerrarTurno()"
             [disabled]="!turnoAbierto || cerrado || procesando">
       <mat-icon>{{ pedidosPendientes.length > 0 ? 'refresh' : 'lock' }}</mat-icon>
       <span>
-        {{ pedidosPendientes.length > 0 ? 'Volver a intentar' : 'Cerrar Turno' }}
+        {{ pedidosPendientes.length > 0 ? 'Revalidar cierre' : 'Cerrar turno' }}
       </span>
     </button>
 
-    <button mat-stroked-button type="button" (click)="salir()">
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="salir()"
+      [disabled]="procesando">
       <mat-icon>exit_to_app</mat-icon>
       <span>Salir</span>
     </button>
