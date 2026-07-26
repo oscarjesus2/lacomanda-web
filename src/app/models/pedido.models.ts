@@ -17,6 +17,10 @@ export class PedidoCab {
     TipoCambioCompra: number;
     FechaCambiada: Date;
     IdSocioNegocio: number;
+    IdClienteDelivery?: number | null;
+    ItemClienteDelivery?: number | null;
+    TelefonoDelivery?: string | null;
+    AnexoDelivery?: string | null;
     Importe: number;
     UsuReg: number;
     UsuMod: number;

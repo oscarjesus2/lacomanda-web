@@ -46,7 +46,7 @@
           <fa-icon [icon]="faShoppingBag"></fa-icon> CANAL LLEVAR
         </button>
         <button *ngIf="isDelivery && !isEntrada"
-                (click)="canalVenta(canalVentaEnum.DELIVERY)" [disabled]="isCanalVentaDisabled">
+                (click)="seleccionarCanalDelivery()" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faTruck"></fa-icon> CANAL DELIVERY
         </button>
         <button *ngIf="isEntrada"
@@ -75,6 +75,25 @@
           <div class="table-info__text">
             <span class="table-info__label">Pedido Nº</span>
             <span class="table-info__value table-info__value--primary">{{ numeroPedido }}</span>
+          </div>
+        </div>
+        <div class="table-info__item"
+             *ngIf="idCanalVentaSelected == canalVentaEnum.DELIVERY && clienteSelected?.DireccionDelivery">
+          <span class="table-info__icon-wrap"><mat-icon>location_on</mat-icon></span>
+          <div class="table-info__text">
+            <span class="table-info__label">Entrega</span>
+            <span class="table-info__value">{{ clienteSelected.DireccionDelivery }}</span>
+          </div>
+        </div>
+        <div class="table-info__item"
+             *ngIf="idCanalVentaSelected == canalVentaEnum.DELIVERY && clienteSelected?.Telefono">
+          <span class="table-info__icon-wrap"><mat-icon>phone</mat-icon></span>
+          <div class="table-info__text">
+            <span class="table-info__label">Teléfono</span>
+            <span class="table-info__value">
+              {{ clienteSelected.Telefono }}
+              <ng-container *ngIf="clienteSelected.AnexoDelivery"> · {{ clienteSelected.AnexoDelivery }}</ng-container>
+            </span>
           </div>
         </div>
         <div class="table-info__item" *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO">

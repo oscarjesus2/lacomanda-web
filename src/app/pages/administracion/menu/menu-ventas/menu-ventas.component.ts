@@ -27,6 +27,7 @@ import { ConfiguracionInicialComponent } from 'src/app/components/configuracion-
 import { ConfigurarOrdenadorComponent } from 'src/app/components/configuracion-inicial/configurar-ordenador/configurar-ordenador.component';
 import { AreaImpresionMantenimientoComponent } from 'src/app/components/mantenimiento/area-impresion-mantenimiento/area-impresion-mantenimiento.component';
 import { DescuentoMantenimientoComponent } from 'src/app/components/mantenimiento/descuento-mantenimiento/descuento-mantenimiento.component';
+import { SocioNegocioMantenimientoComponent } from 'src/app/components/mantenimiento/socio-negocio-mantenimiento/socio-negocio-mantenimiento.component';
 
 @Component({
   selector: 'app-menu-ventas',
@@ -124,6 +125,10 @@ export class MenuVentasComponent implements OnInit {
       {
         this.OpenProductoMantenimientoComponent();
       } 
+    if (item.title === 'Socios de Negocio')
+      {
+        this.OpenSocioNegocioMantenimientoComponent();
+      }
     if (item.title === 'Configuración de Espacios') 
       {
         this.OpenEspacioMantenimientoComponent();
@@ -268,6 +273,17 @@ export class MenuVentasComponent implements OnInit {
       hasBackdrop: true,
       width: '1100px',
       maxWidth: '96vw',
+    });
+  }
+
+  OpenSocioNegocioMantenimientoComponent(): void {
+    this.dialog.open(SocioNegocioMantenimientoComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'calc(100vw - 32px)',
+      height: 'calc(100vh - 32px)',
+      maxWidth: '1100px',
+      maxHeight: '820px',
     });
   }
 

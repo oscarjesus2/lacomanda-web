@@ -1,0 +1,340 @@
+<div class="mant-panel delivery-panel">
+  <button mat-icon-button class="close-button" aria-label="Cerrar" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <div class="delivery-heading">
+    <div>
+      <h2>Nuevo delivery</h2>
+      <p>Elige cómo se recibió el pedido antes de identificar al cliente.</p>
+    </div>
+    <span class="delivery-heading__status">
+      <mat-icon>two_wheeler</mat-icon>
+      {{ data.SociosNegocio.length }} socios de negocio
+    </span>
+  </div>
+
+  <div class="delivery-mode-selector" role="group" aria-label="Modalidad de delivery">
+    <button
+      type="button"
+      class="delivery-result delivery-mode"
+      [class.delivery-result--selected]="modalidad === 'TELEFONO'"
+      (click)="seleccionarModalidad('TELEFONO')">
+      <span class="delivery-result__icon"><mat-icon>phone_in_talk</mat-icon></span>
+      <span class="delivery-result__content">
+        <strong>Delivery por teléfono</strong>
+        <small>Busca o registra el teléfono y la dirección del cliente.</small>
+      </span>
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+
+    <button
+      type="button"
+      class="delivery-result delivery-mode"
+      [class.delivery-result--selected]="modalidad === 'SOCIO_NEGOCIO'"
+      [disabled]="data.SociosNegocio.length === 0"
+      (click)="seleccionarModalidad('SOCIO_NEGOCIO')">
+      <span class="delivery-result__icon"><mat-icon>storefront</mat-icon></span>
+      <span class="delivery-result__content">
+        <strong>Pedido de un socio de negocio</strong>
+        <small *ngIf="data.SociosNegocio.length > 0">
+          Glovo, Uber Eats u otra plataforma con precios propios.
+        </small>
+        <small *ngIf="data.SociosNegocio.length === 0">
+          No hay socios de negocio configurados.
+        </small>
+      </span>
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <div class="delivery-placeholder delivery-mode-empty" *ngIf="!modalidad">
+    <mat-icon>touch_app</mat-icon>
+    <strong>Selecciona una modalidad para continuar</strong>
+    <span>Así el pedido conservará correctamente su origen y sus reglas de precio.</span>
+  </div>
+
+  <section class="delivery-partner" *ngIf="modalidad === 'SOCIO_NEGOCIO'">
+    <div class="delivery-section-title">
+      <span>Datos del pedido externo</span>
+      <small>No se crea una ficha telefónica para este pedido</small>
+    </div>
+
+    <form [formGroup]="socioForm" novalidate>
+      <div class="delivery-partner__content">
+        <div>
+          <label class="delivery-control-label">Socio de negocio</label>
+          <div class="delivery-partner-options">
+            <button
+              *ngFor="let socio of data.SociosNegocio"
+              type="button"
+              class="delivery-partner-option"
+              [class.delivery-partner-option--selected]="
+                socioForm.get('IdSocioNegocio')?.value === socio.IdSocioNegocio"
+              (click)="socioForm.patchValue({ IdSocioNegocio: socio.IdSocioNegocio })">
+              <mat-icon>delivery_dining</mat-icon>
+              <span>{{ socio.Descripcion }}</span>
+            </button>
+          </div>
+          <p class="delivery-field-error"
+             *ngIf="socioForm.get('IdSocioNegocio')?.touched
+                    && socioForm.get('IdSocioNegocio')?.invalid">
+            Selecciona el socio de negocio que originó el pedido.
+          </p>
+        </div>
+
+        <div class="delivery-partner-customer">
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre del cliente</mat-label>
+            <input matInput formControlName="NombreCliente" autocomplete="name">
+            <mat-error>El nombre del cliente es obligatorio.</mat-error>
+          </mat-form-field>
+          <button mat-stroked-button type="button" (click)="usarClienteVarios()">
+            <mat-icon>person_off</mat-icon>
+            Sin nombre
+          </button>
+        </div>
+
+        <div class="delivery-partner-note">
+          <mat-icon>info</mat-icon>
+          <span>
+            Al continuar se aplicarán los precios configurados para el socio.
+            Si un producto no tiene precio especial, conservará su precio normal.
+          </span>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <ng-container *ngIf="modalidad === 'TELEFONO'">
+    <div class="delivery-search">
+      <mat-form-field appearance="outline">
+        <mat-label>Teléfono, cliente, documento o dirección</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          [(ngModel)]="termino"
+          [ngModelOptions]="{standalone: true}"
+          (keyup.enter)="buscar()"
+          autocomplete="off">
+        <button
+          *ngIf="termino"
+          mat-icon-button
+          matSuffix
+          type="button"
+          aria-label="Limpiar búsqueda"
+          (click)="limpiarBusqueda()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+      <button mat-stroked-button type="button" (click)="buscar()" [disabled]="cargando">
+        <mat-icon>search</mat-icon>
+        Buscar
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="nuevo()" [disabled]="cargando">
+        <mat-icon>person_add</mat-icon>
+        Nuevo destino
+      </button>
+    </div>
+
+    <div class="delivery-workspace">
+      <section class="delivery-results" aria-label="Destinos encontrados">
+        <div class="delivery-section-title">
+          <span>Destinos</span>
+          <small>{{ clientes.length }} encontrados</small>
+        </div>
+
+        <div class="delivery-loading" *ngIf="cargando">
+          <mat-icon>hourglass_top</mat-icon>
+          Consultando clientes…
+        </div>
+
+        <div class="delivery-empty" *ngIf="!cargando && clientes.length === 0">
+          <mat-icon>location_off</mat-icon>
+          <strong>No encontramos un destino</strong>
+          <span>Puedes registrarlo sin abandonar la venta.</span>
+          <button mat-stroked-button type="button" (click)="nuevo()" [disabled]="cargando">
+            Registrar destino
+          </button>
+        </div>
+
+        <div class="delivery-result-list" *ngIf="!cargando && clientes.length > 0">
+          <button
+            type="button"
+            class="delivery-result"
+            *ngFor="let cliente of clientes"
+            [class.delivery-result--selected]="
+              clienteSeleccionado?.IdCliente === cliente.IdCliente
+              && clienteSeleccionado?.Item === cliente.Item"
+            (click)="seleccionar(cliente)">
+            <span class="delivery-result__icon"><mat-icon>person_pin_circle</mat-icon></span>
+            <span class="delivery-result__content">
+              <strong>{{ cliente.NombresDelivery }}</strong>
+              <span>
+                {{ cliente.TelefonoDelivery }}
+                <ng-container *ngIf="cliente.AnexoDelivery"> · {{ cliente.AnexoDelivery }}</ng-container>
+              </span>
+              <span>{{ cliente.DireccionDelivery }}</span>
+            </span>
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      </section>
+
+      <section class="delivery-detail">
+        <div class="delivery-placeholder" *ngIf="!formularioActivo">
+          <mat-icon>touch_app</mat-icon>
+          <strong>Selecciona un destino</strong>
+          <span>También puedes crear uno nuevo para continuar con el pedido.</span>
+        </div>
+
+        <form [formGroup]="form" *ngIf="formularioActivo" novalidate>
+          <div class="delivery-section-title">
+            <span>
+              {{ clienteSeleccionado
+                ? 'Datos de entrega'
+                : (clienteOrigen ? 'Nueva dirección del cliente' : 'Nuevo destino') }}
+            </span>
+            <small *ngIf="clienteSeleccionado">
+              Cliente {{ clienteSeleccionado.IdCliente }} · Dirección {{ clienteSeleccionado.Item }}
+            </small>
+            <small *ngIf="clienteOrigen">
+              Cliente {{ clienteOrigen.IdCliente }} · {{ clienteOrigen.RazonSocial }}
+            </small>
+          </div>
+
+          <button
+            *ngIf="clienteSeleccionado"
+            mat-stroked-button
+            type="button"
+            class="delivery-new-address"
+            (click)="nuevaDireccionParaCliente()">
+            <mat-icon>add_location_alt</mat-icon>
+            Agregar otra dirección a este cliente
+          </button>
+
+          <div class="delivery-form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Teléfono</mat-label>
+              <input matInput formControlName="TelefonoDelivery" inputmode="tel" autocomplete="tel">
+              <mat-error>Ingresa un teléfono de 7 a 15 dígitos.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Anexo / indicación corta</mat-label>
+              <input matInput formControlName="AnexoDelivery">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="delivery-field--wide">
+              <mat-label>Nombre de quien recibe</mat-label>
+              <input matInput formControlName="NombresDelivery" autocomplete="name">
+              <mat-error>El nombre es obligatorio.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="delivery-field--wide">
+              <mat-label>Dirección de entrega</mat-label>
+              <input matInput formControlName="DireccionDelivery" autocomplete="street-address">
+              <mat-error>La dirección es obligatoria.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="delivery-field--wide">
+              <mat-label>Referencia</mat-label>
+              <input matInput formControlName="ReferenciaDelivery">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Precio del delivery</mat-label>
+              <input matInput type="number" min="0" step="0.01" formControlName="PrecioDelivery">
+              <mat-hint *ngIf="contexto.ProductoCargoDelivery">
+                Se agregará {{ contexto.ProductoCargoDelivery.NombreCorto }} al pedido.
+              </mat-hint>
+              <mat-error *ngIf="form.get('PrecioDelivery')?.hasError('productoNoConfigurado')">
+                Configura primero el producto de cargo por delivery.
+              </mat-error>
+              <mat-error *ngIf="form.get('PrecioDelivery')?.hasError('min')">
+                El precio no puede ser negativo.
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Tipo de identidad</mat-label>
+              <mat-select formControlName="IdTipoIdentidad">
+                <mat-option *ngFor="let tipo of tiposIdentidad" [value]="tipo.IdTipoIdentidad">
+                  {{ tipo.Descripcion }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Número de identidad</mat-label>
+              <input matInput formControlName="NumeroIdentificacion">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="delivery-field--wide">
+              <mat-label>Razón social / nombre del cliente</mat-label>
+              <input matInput formControlName="RazonSocial">
+              <mat-error>Este nombre es obligatorio.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="delivery-field--wide">
+              <mat-label>Correo</mat-label>
+              <input matInput formControlName="CorreoDelivery" type="email" autocomplete="email">
+              <mat-error>Ingresa un correo válido.</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="delivery-history" *ngIf="clienteSeleccionado">
+            <div class="delivery-section-title">
+              <span>Últimos pedidos</span>
+              <small>Historial de ventas delivery del cliente</small>
+            </div>
+
+            <div class="delivery-loading delivery-loading--compact" *ngIf="cargandoHistorial">
+              Consultando historial…
+            </div>
+            <div class="delivery-history__empty" *ngIf="!cargandoHistorial && historial.length === 0">
+              Aún no hay ventas delivery asociadas a este cliente.
+            </div>
+            <div class="delivery-history__list" *ngIf="!cargandoHistorial && historial.length > 0">
+              <article *ngFor="let venta of historial" class="delivery-history__item">
+                <div>
+                  <strong>{{ venta.Documento }}</strong>
+                  <span>{{ venta.Fecha | date:'dd/MM/yyyy':'UTC' }}</span>
+                </div>
+                <span>{{ venta.Detalles.length }} productos</span>
+                <strong>{{ venta.Total | number:'1.2-2' }}</strong>
+              </article>
+            </div>
+          </div>
+        </form>
+      </section>
+    </div>
+  </ng-container>
+
+  <div class="dialog-actions">
+    <button mat-stroked-button type="button" (click)="salir()">
+      <mat-icon>arrow_back</mat-icon>
+      Cancelar
+    </button>
+    <button
+      *ngIf="modalidad === 'TELEFONO'"
+      mat-flat-button
+      color="primary"
+      type="button"
+      [disabled]="!formularioActivo || guardando"
+      (click)="guardarYContinuar()">
+      <mat-icon>arrow_forward</mat-icon>
+      {{ guardando ? 'Guardando…' : 'Continuar al pedido' }}
+    </button>
+    <button
+      *ngIf="modalidad === 'SOCIO_NEGOCIO'"
+      mat-flat-button
+      color="primary"
+      type="button"
+      [disabled]="guardando"
+      (click)="continuarPorSocio()">
+      <mat-icon>arrow_forward</mat-icon>
+      {{ guardando ? 'Consultando precios…' : 'Continuar al pedido' }}
+    </button>
+  </div>
+</div>

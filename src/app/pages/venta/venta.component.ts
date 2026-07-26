@@ -73,6 +73,8 @@ import { CajaTipoDocumento } from 'src/app/models/caja-tipo-documento.model';
 import { DialogEntradasComponent } from 'src/app/components/dialog-entradas/dialog-entradas.component';
 import { DialogDocumentosEmitidosComponent } from 'src/app/components/dialog-documentos-emitidos/dialog-documentos-emitidos.component';
 import { CanalVentaEnum } from 'src/app/enums/enum';
+import { DialogDeliveryComponent } from 'src/app/components/dialog-delivery/dialog-delivery.component';
+import { DeliveryDialogResult } from 'src/app/models/delivery.models';
 
 @Component({
   selector: 'app-venta',
@@ -134,6 +136,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   public mozoSelected: Empleado | undefined;
   public clienteSelected: Cliente;
   public socioNegocioSelected: SocioNegocio;
+  private preciosSocioNegocio = new Map<number, number>();
   public espacioSelected: Espacios;
 
   public RehacerPantallaRefresh: string = "";
@@ -359,6 +362,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
     } else {
       this.listaPedido_x_Canal = this.listaPedidosPendientes.filter(x => x.Estado === 1 && x.IdCanalVenta === idCanalVenta);
     }
+  }
+
+  seleccionarCanalDelivery(): void {
+    this.canalVenta(this.canalVentaEnum.DELIVERY);
+    this.openDialogoDelivery();
   }
 
   scrollToBottom(): void {
@@ -681,206 +689,39 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.RehacerPantallaRefresh === 'RehacerPantalla';
   }
 
-  NuevoPedidoLlevar() {
+  NuevoPedidoLlevar(): void {
     this.limpiarPedido();
 
-    const maxBotones = 6;  // Máximo número de botones permitidos
-    let nombreCliente = '';  // Variable para almacenar el nombre ingresado
-    let socioNegocioSeleccionado: SocioNegocio | null = null;  // Variable para almacenar el SocioNegocio seleccionado
-
-    const estilos = `
-    .custom-deny-button {
-      background-color: #e0e0e0 !important;  /* Fondo gris claro */
-      color: black !important;  /* Texto negro */
-      border: 2px solid transparent !important;  /* Sin borde */
-      border-radius: 12px !important;  /* Bordes redondeados */
-      padding: 12px 24px !important;  /* Espaciado interno */
-      font-size: 16px !important;  /* Tamaño de texto */
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;  /* Sombra suave */
-      transition: background-color 0.3s ease !important;  /* Transición suave */
+    if (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) {
+      this.openDialogoDelivery();
+      return;
     }
 
-    .custom-deny-button:hover {
-      background-color: #b0b0b0 !important;  /* Color más oscuro al hacer hover */
-    }
-
-    .custom-confirm-button {
-      background-color: #4caf50 !important;  /* Fondo verde */
-      color: white !important;  /* Texto blanco */
-      border: 2px solid transparent !important;  /* Sin borde */
-      border-radius: 12px !important;  /* Bordes redondeados */
-      padding: 12px 24px !important;  /* Espaciado interno */
-      font-size: 16px !important;  /* Tamaño de texto */
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;  /* Sombra suave */
-      transition: background-color 0.3s ease !important;  /* Transición suave */
-    }
-
-    .custom-confirm-button:hover {
-      background-color: #43a047 !important;  /* Verde más oscuro al hacer hover */
-    }
-
-    .custom-cancel-button {
-      background-color: #f44336 !important;  /* Fondo rojo claro */
-      color: white !important;  /* Texto blanco */
-      border: 2px solid transparent !important;  /* Sin borde */
-      border-radius: 12px !important;  /* Bordes redondeados */
-      padding: 12px 24px !important;  /* Espaciado interno */
-      font-size: 16px !important;  /* Tamaño de texto */
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;  /* Sombra suave */
-      transition: background-color 0.3s ease !important;  /* Transición suave */
-    }
-
-    .custom-cancel-button:hover {
-      background-color: #e53935 !important;  /* Rojo más oscuro al hacer hover */
-    }
-  `;
-
-    const styleSheet = document.createElement("style");
-    styleSheet.type = "text/css";
-    styleSheet.innerText = estilos;
-    document.head.appendChild(styleSheet);
-
-    const buttonDelivery = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ?
-      `<button id="btn-custom" style="
-    display: inline-block;
-    height: 50px;
-    margin: 5px;
-    background-color: #26a69a;
-    color: white;
-    border: 2px solid transparent;
-    border-radius: 8px;
-    font-size: 13px;
-    text-align: center;
-    vertical-align: middle;
-    cursor: pointer;
-    transition: background-color 0.3s, border-color 0.3s;">
-      Delivery
-    </button>`: ``;
-
-    // Generar los botones dinámicamente
-    const buttonsHTML = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? this.listaSociosNegocio.map((boton, index) =>
-      `<button class="swal2-confirm swal2-styled dynamic-btn" id="boton-${index}" data-descripcion="${boton.Descripcion}"
-          style="
-          display: inline-block;
-          height: 50px;
-          margin: 5px;
-          background-color: #ff7043;
-          color: white;
-          border: 2px solid transparent;
-          border-radius: 8px;
-          font-size: 13px;
-          text-align: center;
-          vertical-align: middle;
-          cursor: pointer;
-          transition: background-color 0.3s, border-color 0.3s;">
-          ${boton.Descripcion}
-        </button>`
-    ).join('') : '';
-
-
-    // Llenar con botones vacíos si hay menos de 6 opciones
-    const emptyButtons = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? Array.from({ length: maxBotones - this.listaSociosNegocio.length })
-      .map(() => `<button class="swal2-confirm swal2-styled dynamic-btn" style="visibility: hidden;"></button>`)
-      .join('') : '';
-
-    const title = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? 'Seleccione una opción' : 'Nombre de Cliente';
-    const mostrarSwal = () => {
-      Swal.fire({
-        title: title,
-        html: `
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 5px;">
-            ${buttonDelivery + buttonsHTML + emptyButtons}
-          </div>
-          <br>
-          <input type="text" id="nombreCliente" class="swal2-input" placeholder="Ingrese el nombre del cliente"  value="${nombreCliente}" style="font-size: 14px;">
-          <br>
-          <button id="abrirTecladoDigital" class="swal2-confirm swal2-styled dynamic-btn" 
-            style="
-            font-size: 12px; 
-            height: 50px; 
-            background-color: #ff7043; 
-            color: white; 
-            border: 2px solid transparent; 
-            border-radius: 8px; 
-            text-align: center;">
-            Teclado Digital
-          </button>
-        `,
+    void Swal.fire({
+        title: 'Nombre del cliente',
+        input: 'text',
+        inputPlaceholder: 'Ingrese el nombre del cliente',
         showCancelButton: true,
-        showLoaderOnConfirm: true,
+        showDenyButton: true,
         cancelButtonText: 'Cancelar',
         confirmButtonText: 'Aceptar',
-        showDenyButton: true,
-        denyButtonText: 'Sin Nombre',
-        customClass: {
-          denyButton: 'custom-deny-button',  // Clase personalizada para el botón "Sin Nombre"
-          confirmButton: 'custom-confirm-button',  // Clase personalizada para el botón "Aceptar"
-          cancelButton: 'custom-cancel-button'  // Clase personalizada para el botón "Cancelar"
-        },
-        preConfirm: () => {
-          const nombreClienteInput = (Swal.getPopup()?.querySelector('#nombreCliente') as HTMLInputElement)?.value;
-          if (!nombreClienteInput.trim()) {
-            Swal.showValidationMessage('Debe ingresar el nombre del cliente');
-          }
-          if (!socioNegocioSeleccionado && (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY)) {
-            Swal.showValidationMessage('Debe seleccionar una opción');
-          }
-          return { nombreCliente: nombreClienteInput, socioNegocioSeleccionado };
+        denyButtonText: 'Sin nombre',
+        inputValidator: value => {
+          return value?.trim()
+            ? undefined
+            : 'Debe ingresar el nombre del cliente.';
         }
-      }).then((result) => {
-        if (result.isConfirmed) {
-          console.log('isConfirmed');
-          this.espacioSelected.NroPersonas = 0;
-          if (this.idCanalVentaSelected === this.canalVentaEnum.PARA_LLEVAR){
-            this.clienteSelected.RazonSocial = result.value.nombreCliente;
-          }
-          if (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY){
-            this.clienteSelected.RazonSocial = result.value.socioNegocioSeleccionado.Descripcion + "-" + result.value.nombreCliente;
-            this.socioNegocioSelected = result.value.socioNegocioSeleccionado;
-          }
-
-          this.processPedido(true);
-          console.log('Botón seleccionado:', result.value.botonSeleccionado);
-        } else if (result.isDenied) {
-          console.log('isDenied');
-          this.clienteSelected.RazonSocial = "Sin nombre";
-          this.processPedido(true);
-          console.log('Nombre del cliente: (sin nombre)');
+      }).then(result => {
+        if (!result.isConfirmed && !result.isDenied) {
+          return;
         }
+
+        this.espacioSelected.NroPersonas = 0;
+        this.clienteSelected.RazonSocial = result.isDenied
+          ? 'Sin nombre'
+          : String(result.value).trim();
+        void this.processPedido(true);
       });
-
-      document.getElementById('abrirTecladoDigital')?.addEventListener('click', () => {
-        Swal.close();
-        this.abrirTecladoDigital();
-      });
-
-      document.getElementById('btn-custom')?.addEventListener('click', () => {
-        Swal.close();
-        this.openDialogoDelivery();
-      });
-
-      // Asignar comportamiento a los botones dinámicos
-      this.listaSociosNegocio.forEach((boton, index) => {
-        const botonElement = document.getElementById(`boton-${index}`);
-        botonElement?.addEventListener('click', () => {
-          // Limpiar la selección previa, asegurarse de que los elementos existen
-          document.querySelectorAll('.dynamic-btn').forEach(btn => {
-            if (btn instanceof HTMLElement) {
-              btn.style.backgroundColor = '#ff7043';
-              btn.style.borderColor = 'transparent';
-            }
-          });
-
-          // Marcar el botón como seleccionado
-          botonElement.style.backgroundColor = '#e64a19'; // Cambiar color de fondo al ser seleccionado
-          botonElement.style.borderColor = '#fbc531'; // Cambiar color del borde al ser seleccionado
-          socioNegocioSeleccionado = boton;    // Almacenar el botón seleccionado
-          console.log(`Botón seleccionado: ${socioNegocioSeleccionado.Descripcion}`);
-        });
-      });
-    };
-
-    mostrarSwal();  // Mostrar el Swal al iniciar
   }
 
   dividirCuenta(): void {
@@ -991,27 +832,70 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
   openDialogoDelivery(): void {
-
-  }
-  
-  abrirTecladoDigital() {
-    const dialogRef = this.dialog.open(DialogMTextComponent, {
-      width: '800px',
-      data: { title: 'Ingrese el nombre del cliente' }
+    const dialogRef = this.dialog.open(DialogDeliveryComponent, {
+      width: 'calc(100vw - 32px)',
+      maxWidth: '1180px',
+      height: 'calc(100vh - 32px)',
+      maxHeight: '820px',
+      panelClass: 'delivery-dialog-container',
+      disableClose: true,
+      data: {
+        SociosNegocio: this.listaSociosNegocio ?? []
+      }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        // Almacenar el nombre ingresado
-        const nombreIngresado = result.value;
-        if (nombreIngresado) {
-          this.NuevoPedidoLlevar();  // Reabrir el Swal con el valor ingresado
-          const inputNombreCliente = Swal.getPopup()?.querySelector('#nombreCliente') as HTMLInputElement | null;
-          if (inputNombreCliente) inputNombreCliente.value = nombreIngresado;
-        }
+    dialogRef.afterClosed().subscribe((result?: DeliveryDialogResult) => {
+      if (!result) {
+        return;
+      }
+
+      const destino = result.Cliente;
+      if (result.Modalidad === 'TELEFONO' && destino) {
+        this.clienteSelected = new Cliente({
+          IdCliente: String(destino.IdCliente),
+          ItemDelivery: destino.Item,
+          RazonSocial: destino.NombresDelivery,
+          Direccion: destino.DireccionDelivery,
+          DireccionDelivery: destino.DireccionDelivery,
+          Referencia: destino.ReferenciaDelivery,
+          ReferenciaDelivery: destino.ReferenciaDelivery,
+          NumeroIdentificacion: destino.NumeroIdentificacion,
+          IdTipoIdentidad: destino.IdTipoIdentidad,
+          Correo: destino.CorreoDelivery,
+          CorreoDelivery: destino.CorreoDelivery,
+          Telefono: destino.TelefonoDelivery,
+          AnexoDelivery: destino.AnexoDelivery,
+          PrecioDelivery: destino.PrecioDelivery
+        });
+        this.socioNegocioSelected = new SocioNegocio();
       } else {
-        // Si se cancela el teclado, vuelve a abrir el Swal sin cambios
-        this.NuevoPedidoLlevar();
+        this.clienteSelected = new Cliente({
+          IdCliente: '',
+          ItemDelivery: 0,
+          RazonSocial: result.NombreCliente,
+          Direccion: '',
+          DireccionDelivery: '',
+          Referencia: '',
+          ReferenciaDelivery: '',
+          Telefono: '',
+          AnexoDelivery: '',
+          PrecioDelivery: 0
+        });
+        this.socioNegocioSelected = result.SocioNegocio
+          ? new SocioNegocio(result.SocioNegocio)
+          : new SocioNegocio();
+      }
+      this.preciosSocioNegocio = new Map(
+        result.PreciosSocioNegocio.map(item => [item.IdProducto, item.Precio])
+      );
+      this.espacioSelected.NroPersonas = 0;
+      void this.processPedido(true);
+
+      if (destino?.PrecioDelivery > 0 && result.ProductoCargoDelivery) {
+        this.procesarAgregarProducto(new Producto({
+          ...result.ProductoCargoDelivery,
+          Precio: destino.PrecioDelivery
+        }));
       }
     });
   }
@@ -1637,6 +1521,13 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
 
   public AgregarProducto(product: Producto): void {
+    const precioSocio = this.preciosSocioNegocio.get(product.IdProducto);
+    if (precioSocio !== undefined) {
+      product = new Producto({
+        ...product,
+        Precio: precioSocio
+      });
+    }
 
     // Verificar si el producto tiene el flag SinPrecio
     if (product.SinPrecio == 1) {
@@ -1999,7 +1890,23 @@ export class VentaComponent implements OnInit, AfterViewInit {
           IdCaja: this.turnoAbierto.IdCaja,
           IdTurno: this.turnoAbierto.IdTurno,
           Moneda: this.config?.IdMoneda ?? 'SOL',
-          IdSocioNegocio: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY ) ? this.socioNegocioSelected.IdSocioNegocio : 0,
+          IdSocioNegocio: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY)
+            ? (this.socioNegocioSelected.IdSocioNegocio ?? 0)
+            : 0,
+          IdClienteDelivery: (
+            this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY
+            && Number(this.clienteSelected.IdCliente) > 0
+          ) ? Number(this.clienteSelected.IdCliente) : null,
+          ItemClienteDelivery: (
+            this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY
+            && this.clienteSelected.ItemDelivery > 0
+          ) ? this.clienteSelected.ItemDelivery : null,
+          TelefonoDelivery: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY)
+            ? this.clienteSelected.Telefono
+            : null,
+          AnexoDelivery: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY)
+            ? this.clienteSelected.AnexoDelivery
+            : null,
           Cliente: (this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) ? this.listProductGrid[0]?.Anfitriona : this.clienteSelected.RazonSocial, /*solo para trago gratis */
           Direccion: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? this.clienteSelected.DireccionDelivery : '', /*solo para delivery*/
           Referencia: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? this.clienteSelected.ReferenciaDelivery : '', /*solo para delivery*/
@@ -2195,6 +2102,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.espacioSelected.NroPersonas = 0;
     this.clienteSelected = new Cliente;
     this.socioNegocioSelected = new SocioNegocio;
+    this.preciosSocioNegocio.clear();
   }
 
 
@@ -2242,7 +2150,20 @@ export class VentaComponent implements OnInit, AfterViewInit {
     var firstItem = listData[0];
     this.espacioSelected.NroPersonas = firstItem.NroPax;
     this.mozoSelected = this.getMozoByMozoId(firstItem.IdEmpleado);
-    this.clienteSelected.RazonSocial = firstItem.Cliente;
+    this.clienteSelected = new Cliente({
+      IdCliente: firstItem.IdClienteDelivery?.toString() ?? '',
+      ItemDelivery: firstItem.ItemClienteDelivery ?? 0,
+      RazonSocial: firstItem.Cliente,
+      Direccion: firstItem.Direccion,
+      DireccionDelivery: firstItem.Direccion,
+      Referencia: firstItem.Referencia,
+      ReferenciaDelivery: firstItem.Referencia,
+      Telefono: firstItem.TelefonoDelivery,
+      AnexoDelivery: firstItem.AnexoDelivery
+    });
+    this.socioNegocioSelected = this.listaSociosNegocio?.find(
+      socio => socio.IdSocioNegocio === firstItem.IdSocioNegocio
+    ) ?? new SocioNegocio();
     this.idPedidoCobrar = firstItem.IdPedido;
     this.nroCuentaCobrar = firstItem.NroCuenta;
     this.fechaApertura = firstItem.FechaApertura;

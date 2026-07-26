@@ -1,0 +1,228 @@
+<div class="mant-panel socio-panel">
+  <button
+    mat-icon-button
+    class="close-button"
+    aria-label="Cerrar"
+    (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>Mantenimiento de Socios de Negocio</h2>
+
+  <ng-container *ngIf="!showForm">
+    <div class="socio-toolbar">
+      <button mat-raised-button color="primary" type="button" (click)="nuevo()">
+        <mat-icon>add</mat-icon>
+        Nuevo socio
+      </button>
+
+      <mat-form-field appearance="fill" class="mant-search">
+        <mat-label>Buscar socio</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          [(ngModel)]="filtro"
+          (ngModelChange)="aplicarFiltro()"
+          autocomplete="off">
+      </mat-form-field>
+    </div>
+
+    <div class="mant-table-card socio-table">
+      <mat-table [dataSource]="dataSource">
+        <ng-container matColumnDef="descripcion">
+          <mat-header-cell *matHeaderCellDef>Socio de negocio</mat-header-cell>
+          <mat-cell *matCellDef="let row">
+            <span class="socio-name">
+              <mat-icon>storefront</mat-icon>
+              {{ row.Descripcion }}
+            </span>
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="comision">
+          <mat-header-cell *matHeaderCellDef>Comisión</mat-header-cell>
+          <mat-cell *matCellDef="let row">
+            {{ row.PorcentajeComision }}%
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="precios">
+          <mat-header-cell *matHeaderCellDef>Precios configurados</mat-header-cell>
+          <mat-cell *matCellDef="let row">
+            {{ contarPrecios(row) }}
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="estado">
+          <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+          <mat-cell *matCellDef="let row">
+            <span
+              class="status-badge"
+              [class.status-badge--danger]="!row.Activo">
+              {{ row.Activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+          <mat-cell *matCellDef="let row">
+            <button
+              mat-icon-button
+              color="primary"
+              matTooltip="Editar socio y precios"
+              (click)="editar(row)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="warn"
+              matTooltip="Eliminar socio"
+              (click)="eliminar(row)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell socio-empty" [attr.colspan]="displayedColumns.length">
+            {{ cargando ? 'Cargando socios…' : 'No hay socios registrados.' }}
+          </td>
+        </tr>
+      </mat-table>
+
+      <mat-paginator
+        [pageSize]="10"
+        [pageSizeOptions]="[10, 20, 50]">
+      </mat-paginator>
+    </div>
+  </ng-container>
+
+  <form
+    *ngIf="showForm"
+    #form="ngForm"
+    class="socio-form"
+    (ngSubmit)="guardar()">
+    <div class="form-row">
+      <mat-form-field appearance="fill" class="form-field form-field--grow">
+        <mat-label>Nombre del socio de negocio</mat-label>
+        <input
+          matInput
+          [(ngModel)]="socio.Descripcion"
+          name="descripcion"
+          required
+          maxlength="100"
+          autocomplete="organization">
+        <mat-error>El nombre del socio es obligatorio.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="form-field">
+        <mat-label>Comisión</mat-label>
+        <input
+          matInput
+          type="number"
+          [(ngModel)]="socio.PorcentajeComision"
+          name="porcentajeComision"
+          required
+          min="0"
+          max="100"
+          step="1">
+        <span matSuffix>%</span>
+        <mat-error>Debe estar entre 0 y 100.</mat-error>
+      </mat-form-field>
+
+      <mat-slide-toggle
+        [(ngModel)]="socio.Activo"
+        name="activo"
+        color="primary">
+        Socio activo para delivery
+      </mat-slide-toggle>
+    </div>
+
+    <section class="socio-prices">
+      <div class="socio-prices__heading">
+        <div>
+          <h3>Precios especiales por producto</h3>
+          <p>
+            Si dejas un precio vacío, el pedido conservará el precio normal
+            del producto.
+          </p>
+        </div>
+        <mat-form-field appearance="fill" class="socio-product-search">
+          <mat-label>Buscar producto</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            matInput
+            [(ngModel)]="filtroProducto"
+            name="filtroProducto"
+            (ngModelChange)="aplicarFiltroProducto()"
+            autocomplete="off">
+        </mat-form-field>
+      </div>
+
+      <div class="socio-price-list">
+        <div class="socio-price-row socio-price-row--header">
+          <span>Producto</span>
+          <span>Precio normal</span>
+          <span>Precio del socio</span>
+          <span></span>
+        </div>
+
+        <div class="socio-price-row" *ngFor="let producto of productosFiltrados">
+          <div class="socio-product">
+            <strong>{{ producto.NombreCorto || producto.Descripcion }}</strong>
+            <small *ngIf="producto.NombreCorto !== producto.Descripcion">
+              {{ producto.Descripcion }}
+            </small>
+          </div>
+          <span>{{ producto.Precio | number:'1.2-2' }}</span>
+          <mat-form-field appearance="outline">
+            <mat-label>Precio</mat-label>
+            <input
+              matInput
+              type="number"
+              min="0.01"
+              step="0.01"
+              [ngModel]="precios[producto.IdProducto]"
+              (ngModelChange)="asignarPrecio(producto.IdProducto, $event)"
+              name="precio_{{ producto.IdProducto }}">
+          </mat-form-field>
+          <button
+            mat-icon-button
+            type="button"
+            matTooltip="Usar precio normal"
+            [disabled]="!precios[producto.IdProducto]"
+            (click)="quitarPrecio(producto.IdProducto)">
+            <mat-icon>restart_alt</mat-icon>
+          </button>
+        </div>
+
+        <div class="socio-empty" *ngIf="productosFiltrados.length === 0">
+          No hay productos que coincidan con la búsqueda.
+        </div>
+      </div>
+    </section>
+
+    <div class="mant-form-actions">
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        [disabled]="guardando">
+        <mat-icon>save</mat-icon>
+        {{ guardando ? 'Guardando…' : 'Guardar socio' }}
+      </button>
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="guardando"
+        (click)="cancelar()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver al listado
+      </button>
+    </div>
+  </form>
+</div>

@@ -12,6 +12,10 @@ export class Cliente {
     public Telefono: string;
     public DireccionDelivery: string;
     public ReferenciaDelivery: string;
+    public ItemDelivery: number;
+    public AnexoDelivery: string;
+    public CorreoDelivery: string;
+    public PrecioDelivery: number;
     constructor(init?: Partial<Cliente>) {
         Object.assign(this, init);
     }

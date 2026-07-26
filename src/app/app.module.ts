@@ -100,6 +100,8 @@ import { ConfigurarOrdenadorComponent } from './components/configuracion-inicial
 import { AreaImpresionMantenimientoComponent } from './components/mantenimiento/area-impresion-mantenimiento/area-impresion-mantenimiento.component';
 import { DialogReportesComponent } from './components/dialog-reportes/dialog-reportes.component';
 import { DescuentoMantenimientoComponent } from './components/mantenimiento/descuento-mantenimiento/descuento-mantenimiento.component';
+import { DialogDeliveryComponent } from './components/dialog-delivery/dialog-delivery.component';
+import { SocioNegocioMantenimientoComponent } from './components/mantenimiento/socio-negocio-mantenimiento/socio-negocio-mantenimiento.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -173,6 +175,8 @@ export const MY_DATE_FORMATS = {
     AreaImpresionMantenimientoComponent,
     DialogReportesComponent,
     DescuentoMantenimientoComponent,
+    DialogDeliveryComponent,
+    SocioNegocioMantenimientoComponent,
   ],
   imports: [
     CommonModule,
