@@ -1,122 +1,131 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { VentaService } from '../../services/venta.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import Swal from 'sweetalert2';
 import { VentasInterface } from 'src/app/interfaces/ventas.interface';
-import { CajaService } from 'src/app/services/caja.service';
-import { CajaDto } from 'src/app/models/caja.models';
 import { DialogEmitirVentaComponent } from '../dialog-emitir-venta/dialog-emitir-venta.component';
 import { MatPaginator } from '@angular/material/paginator';
-import { StorageService } from 'src/app/services/storage.service';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
+import { EnumTipoDocumento } from 'src/app/enums/enum';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-dialog-ventasgenerales',
   templateUrl: './dialog-ventasgenerales.component.html',
   styleUrls: ['./dialog-ventasgenerales.component.css']
 })
-export class DialogVentasgeneralesComponent implements OnInit {
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  listCaja: CajaDto[];
+export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
   ventas: VentasInterface[] = [];
   dataSource = new MatTableDataSource<VentasInterface>([]);
   columnDefs = [
-    { key: 'Caja',              label: 'Caja' },
-    { key: 'TipoDocumento',     label: 'Tipo Doc.' },
-    { key: 'Documento',         label: 'Nº Doc.' },
-    { key: 'Cliente',           label: 'Cliente' },
-    { key: 'FechaVenta',        label: 'Fecha' },
-    { key: 'Moneda',            label: 'Moneda' },
-    { key: 'Dscto',             label: 'Dscto' },
-    { key: 'Inafecto',          label: 'Inafecto' },
-    { key: 'ValorVenta',        label: 'Valor Venta' },
-    { key: 'IGV',               label: 'IGV' },
-    { key: 'Servicio',          label: 'Servicio' },
-    { key: 'ICBPER',            label: 'ICBPER' },
-    { key: 'Total',             label: 'Total' },
-    { key: 'EstadoDescripcion', label: 'Estado Desc.' },
-    { key: 'EstadoPago',        label: 'Estado Pago' },
-    { key: 'acciones',          label: 'Opciones' }
+    { key: 'Caja',              label: 'Caja',       width: 100 },
+    { key: 'TipoDocumento',     label: 'Tipo doc.',  width: 130 },
+    { key: 'Documento',         label: 'N.º doc.',   width: 130 },
+    { key: 'Cliente',           label: 'Cliente',    width: 230 },
+    { key: 'FechaVenta',        label: 'Fecha',      width: 110 },
+    { key: 'Moneda',            label: 'Moneda',     width: 80 },
+    { key: 'Dscto',             label: 'Descuento',  width: 100, numeric: true },
+    { key: 'Total',             label: 'Total',      width: 110, numeric: true },
+    { key: 'EstadoDescripcion', label: 'Estado',     width: 120 },
+    { key: 'acciones',          label: 'Opciones',   width: 80 }
   ];
 
   displayedColumns: string[] = this.columnDefs.map(c => c.key);
   ventaSeleccionada: VentasInterface | null = null;
-  listarTodosLosTurnos: boolean = false;
-  listarDI: boolean = false;
-  textoFiltro: string = '';
-  campoSeleccionado: string = 'TipoDocumento';
+  listarTodosLosTurnos = false;
+  incluirVentasExpress = false;
+  textoFiltro = '';
+  campoSeleccionado = 'TipoDocumento';
+  procesando = false;
 
   constructor(
     public dialogRef: MatDialogRef<DialogVentasgeneralesComponent>,
     private ventaService: VentaService,
     private spinnerService: NgxSpinnerService,
-    private storageService: StorageService,
-    public dialog: MatDialog
+    private dialog: MatDialog
   ) { }
 
   ngOnInit(): void {
     this.loadVentas();
   }
 
-  ngAfterViewInit() {
+  ngAfterViewInit(): void {
     this.dataSource.paginator = this.paginator;
   }
-  loadVentas() {
-    const turno = this.listarTodosLosTurnos ? 0 : 1;
-    const di = this.listarDI ? 1 : 0;
-    this.getListadoVentas(turno, di);
-  }
 
-  handleNoTurnoAbiertoError() {
-    this.spinnerService.hide();
-    Swal.fire('Error', 'No se encontró la caja 001 o no tiene turno abierto', 'error');
+  loadVentas(): void {
+    const soloTurnoAbierto = this.listarTodosLosTurnos ? 0 : 1;
+    const incluirExpress = this.incluirVentasExpress
+      ? EnumTipoDocumento.Express
+      : 0;
+    this.getListadoVentas(soloTurnoAbierto, incluirExpress);
   }
   
-  getListadoVentas(soloTurnoAbierto: number, incluirDI: number) {
-    this.ventaService.getListadoVentas(soloTurnoAbierto, incluirDI).subscribe(
-      data => {
-        console.log('Datos recibidos:', data); // Agrega esto para verificar la estructura de los datos
-        this.ventas = data;
-        this.dataSource.data = data;
-        this.dataSource.paginator = this.paginator; 
+  private getListadoVentas(
+    soloTurnoAbierto: number,
+    incluirExpress: number
+  ): void {
+    this.procesando = true;
+    this.spinnerService.show();
+
+    this.ventaService.getListadoVentas(soloTurnoAbierto, incluirExpress)
+      .pipe(
+        finalize(() => {
+          this.procesando = false;
+          this.spinnerService.hide();
+        })
+      )
+      .subscribe({
+      next: (data) => {
+        this.ventas = data ?? [];
+        this.ventaSeleccionada = null;
         this.aplicarFiltro();
-        this.spinnerService.hide();
       },
-      error => {
-        console.error('Error al cargar ventas:', error);
-        Swal.fire('Algo anda mal', 'Error al cargar ventas', 'error');
-        this.spinnerService.hide();
-      }
-    );
+      // El interceptor global muestra los errores HTTP.
+      error: () => {}
+    });
   }
 
-  aplicarFiltro() {
+  aplicarFiltro(): void {
     if (!this.textoFiltro || !this.campoSeleccionado) {
       this.dataSource.data = this.ventas;
-      this.dataSource.paginator = this.paginator; 
     } else {
-      this.dataSource.data = this.ventas.filter(venta =>
-        venta[this.campoSeleccionado].toString().toLowerCase().includes(this.textoFiltro.toLowerCase())
-      );
-      this.dataSource.paginator = this.paginator; 
+      const filtro = this.textoFiltro.trim().toLocaleLowerCase();
+      this.dataSource.data = this.ventas.filter(venta => {
+        const valor = venta[this.campoSeleccionado];
+        return String(valor ?? '').toLocaleLowerCase().includes(filtro);
+      });
     }
+
+    this.dataSource.paginator = this.paginator;
+    this.paginator?.firstPage();
   }
 
+  limpiarFiltro(): void {
+    this.textoFiltro = '';
+    this.aplicarFiltro();
+  }
+
+  trackVenta(_: number, venta: VentasInterface): number {
+    return venta.IdVenta;
+  }
 
   actualizarLista(): void {
-    this.spinnerService.show(); 
     this.loadVentas();
   }
 
   seleccionarVenta(row: VentasInterface): void {
     this.ventaSeleccionada = row;
-    console.log('Fila seleccionada: ', row);
   }
 
   onNoClick(): void {
+    if (this.procesando) {
+      return;
+    }
     this.dialogRef.close();
   }
 
@@ -130,12 +139,8 @@ export class DialogVentasgeneralesComponent implements OnInit {
     const dialogEmitirVentaComponent = this.dialog.open(DialogEmitirVentaComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '900px', // Establece el ancho del diálogo
-      //  // Establece la altura del diálogo
-      // minWidth: '300px', // Establece el ancho mínimo del diálogo
-      // minHeight: '300px', // Establece la altura mínima del diálogo
-      // maxWidth: '80vw', // Establece el ancho máximo del diálogo en porcentaje de la ventana
-      // maxHeight: '80vh' // Establece la altura máxima del diálogo en porcentaje de la ventana
+      width: '900px',
+      maxWidth: '95vw'
     });
   }
 

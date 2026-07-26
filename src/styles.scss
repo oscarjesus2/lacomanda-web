@@ -936,6 +936,95 @@ body {
   margin-right: 4px;
 }
 
+.dialog-panel--workspace {
+  display: flex;
+  flex-direction: column;
+  width: 100% !important;
+  height: 100%;
+  min-height: 0;
+  max-width: none !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+.dialog-toolbar {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.dialog-toolbar__options,
+.dialog-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.dialog-toolbar__filters {
+  display: grid;
+  grid-template-columns: minmax(190px, 240px) minmax(280px, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.dialog-toolbar__filters .mat-mdc-form-field {
+  margin-bottom: -1.25em;
+}
+
+.dialog-toolbar__actions {
+  justify-content: flex-end;
+}
+
+.dialog-toolbar__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dialog-toolbar__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.dialog-toolbar__status mat-icon {
+  color: var(--color-primary);
+}
+
+.dialog-workspace-content {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dialog-table-card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.dialog-table-wrapper--fill {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
 /* Contenido tabular usado dentro de SweetAlert. */
 .swal-data-table {
   width: 100%;
@@ -961,6 +1050,24 @@ body {
 }
 
 @media (max-width: 768px) {
+  .dialog-toolbar__filters {
+    grid-template-columns: 1fr;
+  }
+
+  .dialog-toolbar__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dialog-toolbar__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dialog-toolbar__actions button {
+    width: 100%;
+  }
+
   .dialog-actions {
     flex-direction: column-reverse;
   }
@@ -1461,4 +1568,29 @@ mat-row:hover mat-cell {
   margin: 16px auto;
   max-height: none;
   overflow: visible;
+}
+
+/* Diálogos de consulta que necesitan una mesa de trabajo amplia.
+   El desplazamiento queda contenido en la tabla, nunca en la página. */
+.cdk-overlay-pane.dialog-window--workspace {
+  width: min(1400px, calc(100vw - 32px)) !important;
+  height: min(900px, calc(100vh - 32px)) !important;
+  max-width: calc(100vw - 32px) !important;
+  max-height: calc(100vh - 32px) !important;
+}
+
+.dialog-window--workspace .mat-mdc-dialog-surface {
+  overflow: hidden !important;
+}
+
+.cdk-global-overlay-wrapper .dialog-panel--workspace {
+  width: 100% !important;
+  height: 100%;
+  max-width: none !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+.cdk-global-overlay-wrapper .dialog-panel--workspace > h2 {
+  top: 0;
 }

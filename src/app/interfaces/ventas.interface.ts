@@ -5,14 +5,9 @@ export interface VentasInterface {
     TipoDocumento: string;
     Documento: string;
     Cliente: string;
-    FechaVenta: string; // Suponiendo que la fecha viene en formato de cadena
+    FechaVenta: string;
     Moneda: string;
     Dscto: number;
-    Inafecto: number;
-    ValorVenta: number;
-    IGV: number;
-    Servicio: number;
-    ICBPER: number;
     Total: number;
     IdTurno: number;
     EstadoDescripcion: string;

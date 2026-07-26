@@ -221,10 +221,13 @@ export class MenuVentasComponent implements OnInit {
   OpenDialogVentasGeneralesTurno(): void {
 
     const dialog = this.dialog.open(DialogVentasgeneralesComponent, {
-       disableClose: true,
-        hasBackdrop: true,
-        width: '100vw',
-        height: '100vh',
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'calc(100vw - 32px)',
+      height: 'calc(100vh - 32px)',
+      maxWidth: '1400px',
+      maxHeight: '900px',
+      panelClass: 'dialog-window--workspace'
     });
   }
 
