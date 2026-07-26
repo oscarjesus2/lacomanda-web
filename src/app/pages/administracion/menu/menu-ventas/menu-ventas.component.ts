@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { DialogTurnoComponent } from 'src/app/components/dialog-turno/dialog-turno.component';
+import { DialogCerrarTurnoComponent } from 'src/app/components/dialog-cerrar-turno/dialog-cerrar-turno.component';
 import { DialogVentasgeneralesComponent } from 'src/app/components/dialog-ventasgenerales/dialog-ventasgenerales.component';
 import { MatDialog } from '@angular/material/dialog';
 import { NgxSpinnerService } from 'ngx-spinner';
@@ -151,10 +152,14 @@ export class MenuVentasComponent implements OnInit {
     {
       this.OpenObservacionesMantenimientoComponent();
     }
-    if (item.title === 'Abrir Turno') 
+    if (item.title === 'Abrir Turno')
     {
       this.OpenDialogTurno();
-    } 
+    }
+    if (item.title === 'Cerrar Turno')
+    {
+      this.OpenDialogCerrarTurno();
+    }
     if (item.title === 'Listado de Ventas') 
     {
       this.OpenDialogVentasGeneralesTurno();
@@ -340,6 +345,14 @@ export class MenuVentasComponent implements OnInit {
       hasBackdrop: true,
       width: '600px', height: '400px'
       // data: { oPedidoEspacio: listData, IdEspacio: IdEspacio, Espacio: this.espacioSelected.Descripcion + ' ' + this.espacioSelected.Numero}
+    });
+  }
+
+  OpenDialogCerrarTurno(): void {
+    this.dialog.open(DialogCerrarTurnoComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: '640px',
     });
   }
 

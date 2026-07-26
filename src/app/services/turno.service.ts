@@ -5,6 +5,7 @@ import { AbrirTurno, Turno } from '../models/turno.models';
 import { environment } from 'src/environments/environment';  // Importa el entorno correspondiente
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { ResumenCobrosDTO } from '../interfaces/resumenCobrosDTO.interface';
+import { CerrarTurnoRequest, CerrarTurnoResult } from '../interfaces/cerrarTurno.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -42,5 +43,10 @@ export class TurnoService {
 
     GetResumenVenta(idTurno: number): Observable<ApiResponse<string>> {
         return this.http.get<ApiResponse<string>>(`${this.basePath}/ResumenVenta/${idTurno}`);
+    }
+
+    // Cierra el turno abierto de la caja. El backend resuelve el turno y ejecuta todo el flujo.
+    CerrarTurno(request: CerrarTurnoRequest): Observable<ApiResponse<CerrarTurnoResult>> {
+        return this.http.post<ApiResponse<CerrarTurnoResult>>(`${this.basePath}/Cerrar`, request);
     }
 }

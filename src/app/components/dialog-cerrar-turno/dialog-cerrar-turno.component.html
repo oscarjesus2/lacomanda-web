@@ -1,0 +1,78 @@
+<div class="mant-panel cturno-panel">
+
+  <button mat-icon-button class="close-button" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>Cerrar Turno</h2>
+
+  <!-- Caja -->
+  <div class="form-row">
+    <mat-form-field class="form-field" appearance="fill">
+      <mat-label>Caja</mat-label>
+      <mat-select [(ngModel)]="idCajaSel" name="caja" (ngModelChange)="onCajaChange()">
+        <mat-option *ngFor="let item of listCaja" [value]="item.IdCaja">
+          {{ item.Descripcion }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Datos del turno -->
+  <div class="cturno-info" *ngIf="turno; else sinTurno">
+    <div class="cturno-info__item">
+      <span class="cturno-info__label">N° Turno</span>
+      <span class="cturno-info__value">{{ turno.NroTurno }}</span>
+    </div>
+    <div class="cturno-info__item">
+      <span class="cturno-info__label">Fecha Inicio</span>
+      <span class="cturno-info__value">{{ turno.FechaInicio || (turno.FechaTrabajo | date:'dd/MM/yyyy HH:mm') }}</span>
+    </div>
+    <div class="cturno-info__item">
+      <span class="cturno-info__label">Fecha Cierre</span>
+      <span class="cturno-info__value">{{ fechaCierre | date:'dd/MM/yyyy HH:mm' }}</span>
+    </div>
+    <div class="cturno-info__item">
+      <span class="cturno-info__label">Tipo de Cambio</span>
+      <span class="cturno-info__value">{{ turno.TipoCambio || turno.TipoCambioVenta || '—' }}</span>
+    </div>
+    <div class="cturno-info__item">
+      <span class="cturno-info__label">Estado</span>
+      <span class="cturno-badge" [class.cturno-badge--closed]="cerrado || !turnoAbierto">
+        {{ cerrado ? 'TURNO CERRADO' : (turnoAbierto ? 'ABIERTO' : 'CERRADO') }}
+      </span>
+    </div>
+  </div>
+
+  <ng-template #sinTurno>
+    <p class="cturno-empty">
+      <mat-icon>info</mat-icon>
+      Selecciona una caja con un turno abierto para cerrarlo.
+    </p>
+  </ng-template>
+
+  <!-- Cierre parcial (solo si la caja lo permite) -->
+  <label class="cturno-parcial" *ngIf="permiteParcial && turnoAbierto && !cerrado">
+    <input type="checkbox" [(ngModel)]="esParcial" name="parcial">
+    <span class="cturno-parcial__text">
+      <span class="cturno-parcial__title">Cierre parcial</span>
+      <span class="cturno-parcial__hint">Omite la validación de pedidos pendientes de cobrar.</span>
+    </span>
+  </label>
+
+  <!-- Acciones -->
+  <div class="cturno-actions">
+    <button mat-raised-button color="primary" type="button"
+            (click)="cerrarTurno()"
+            [disabled]="!turnoAbierto || cerrado || procesando">
+      <mat-icon>lock</mat-icon>
+      <span>Cerrar Turno</span>
+    </button>
+
+    <button mat-stroked-button type="button" (click)="salir()">
+      <mat-icon>exit_to_app</mat-icon>
+      <span>Salir</span>
+    </button>
+  </div>
+
+</div>
