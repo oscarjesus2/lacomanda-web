@@ -10,7 +10,13 @@ import { CajaService } from 'src/app/services/caja.service';
 import { TurnoService } from 'src/app/services/turno.service';
 import { StorageService } from 'src/app/services/storage.service';
 import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
-import { CerrarTurnoRequest, CerrarTurnoResult, VentaSinPago } from 'src/app/interfaces/cerrarTurno.interface';
+import { PedidoService } from 'src/app/services/pedido.service';
+import {
+  AnularPedidoPendienteRequest,
+  CerrarTurnoRequest,
+  PedidoPendienteCierre,
+  VentaSinPago
+} from 'src/app/interfaces/cerrarTurno.interface';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 
 @Component({
@@ -29,6 +35,7 @@ export class DialogCerrarTurnoComponent implements OnInit {
   esParcial = false;
   cerrado = false;
   procesando = false;
+  pedidosPendientes: PedidoPendienteCierre[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<DialogCerrarTurnoComponent>,
@@ -36,7 +43,8 @@ export class DialogCerrarTurnoComponent implements OnInit {
     private turnoService: TurnoService,
     private storageService: StorageService,
     private spinner: NgxSpinnerService,
-    private qzTrayService: QzTrayV224Service
+    private qzTrayService: QzTrayV224Service,
+    private pedidoService: PedidoService
   ) {}
 
   ngOnInit(): void {
@@ -89,6 +97,7 @@ export class DialogCerrarTurnoComponent implements OnInit {
     this.cerrado = false;
     this.turno = null;
     this.esParcial = false;
+    this.pedidosPendientes = [];
     if (this.idCajaSel == null) { return; }
 
     this.turnoService.ObtenerTurno(String(this.idCajaSel)).subscribe({
@@ -111,78 +120,147 @@ export class DialogCerrarTurnoComponent implements OnInit {
 
   /** Ejecuta el cierre; si el backend pide confirmar ventas al crédito, reintenta. */
   private ejecutarCierre(confirmarCredito: boolean): void {
-  const request: CerrarTurnoRequest = {
-    IdCaja: this.idCajaSel!,
-    EsParcial: this.esParcial,
-    ConfirmarVentasSinPagoComoCredito: confirmarCredito,
-    TipoFormato: 0
-  };
+    const request: CerrarTurnoRequest = {
+      IdCaja: this.idCajaSel!,
+      EsParcial: this.esParcial,
+      ConfirmarVentasSinPagoComoCredito: confirmarCredito,
+      TipoFormato: 0
+    };
 
-  this.procesando = true;
-  this.spinner.show();
+    this.procesando = true;
+    this.spinner.show();
 
-  this.turnoService.CerrarTurno(request)
-    .pipe(
-      finalize(() => {
-        // Se ejecuta tanto en respuestas correctas como en errores HTTP.
-        this.spinner.hide();
-        this.procesando = false;
-      })
-    )
-    .subscribe({
-      next: (response) => {
-        const data = response?.Data;
+    this.turnoService.CerrarTurno(request)
+      .pipe(
+        finalize(() => {
+          this.spinner.hide();
+          this.procesando = false;
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          const data = response?.Data;
 
-        if (!response?.Success || !data) {
-          Swal.fire(
-            'Error',
-            response?.Message || 'No se pudo cerrar el turno.',
-            'error'
-          );
-          return;
-        }
+          if (!response?.Success || !data) {
+            Swal.fire(
+              'Error',
+              response?.Message || 'No se pudo cerrar el turno.',
+              'error'
+            );
+            return;
+          }
 
-        /*
-         * No es un error: el backend solicita una decisión del usuario.
-         * Por eso esta interacción pertenece al componente.
-         */
-        if (data.RequiereConfirmacionCredito) {
-          this.confirmarVentasCredito(data.VentasSinPago);
-          return;
-        }
+          /*
+           * No es una excepción: el backend devuelve la información necesaria
+           * para que el usuario resuelva los pedidos y después reintente.
+           */
+          if (data.RequiereResolverPedidosPendientes) {
+            this.pedidosPendientes = data.PedidosPendientes ?? [];
+            return;
+          }
 
-        if (data.Cerrado) {
-          this.cerrado = true;
-          this.imprimir(data.Impresiones);
+          this.pedidosPendientes = [];
+
+          if (data.RequiereConfirmacionCredito) {
+            this.confirmarVentasCredito(data.VentasSinPago);
+            return;
+          }
+
+          if (data.Cerrado) {
+            this.cerrado = true;
+            this.imprimir(data.Impresiones);
+
+            Swal.fire(
+              'Cierre de turno',
+              data.Mensaje || 'El turno se cerró correctamente.',
+              'success'
+            );
+            return;
+          }
 
           Swal.fire(
             'Cierre de turno',
-            data.Mensaje || 'El turno se cerró correctamente.',
-            'success'
+            data.Mensaje || 'No se pudo cerrar el turno.',
+            'warning'
+          );
+        },
+
+        // El interceptor ya clasificó y mostró los errores HTTP.
+        error: () => {}
+      });
+  }
+
+  async anularPedidoPendiente(pedido: PedidoPendienteCierre): Promise<void> {
+    const confirmacion = await Swal.fire({
+      title: `Anular pedido N.º ${pedido.NroPedido}`,
+      text: 'Esta operación anulará el pedido completo y no puede deshacerse.',
+      icon: 'warning',
+      input: 'textarea',
+      inputLabel: 'Motivo de la anulación',
+      inputPlaceholder: 'Ingrese el motivo...',
+      inputAttributes: {
+        maxlength: '120'
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Anular pedido',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#c62828',
+      inputValidator: (valor) =>
+        valor?.trim()
+          ? null
+          : 'Debe ingresar el motivo de la anulación.'
+    });
+
+    if (!confirmacion.isConfirmed) {
+      return;
+    }
+
+    const request: AnularPedidoPendienteRequest = {
+      IdPedido: pedido.IdPedido,
+      NroCuenta: pedido.NroCuenta,
+      MotivoAnula: String(confirmacion.value).trim(),
+      Ip: this.storageService.getCurrentIP()
+    };
+
+    this.procesando = true;
+    this.spinner.show();
+
+    this.pedidoService.AnularPedidoPendiente(request)
+      .pipe(
+        finalize(() => {
+          this.spinner.hide();
+          this.procesando = false;
+        })
+      )
+      .subscribe({
+        next: async (response) => {
+          if (!response?.Success) {
+            Swal.fire(
+              'Error',
+              response?.Message || 'No se pudo anular el pedido.',
+              'error'
+            );
+            return;
+          }
+
+          await this.imprimir(response.Data ?? []);
+          this.pedidosPendientes = this.pedidosPendientes.filter(
+            item =>
+              item.IdPedido !== pedido.IdPedido
+              || item.NroCuenta !== pedido.NroCuenta
           );
 
-          return;
-        }
+          Swal.fire(
+            'Pedido anulado',
+            response.Message || 'El pedido se anuló correctamente.',
+            'success'
+          );
+        },
 
-        /*
-         * Respuesta correcta técnicamente, pero el caso de uso no cerró
-         * el turno. Como no es un error HTTP, lo presenta el componente.
-         */
-        Swal.fire(
-          'Cierre de turno',
-          data.Mensaje || 'No se pudo cerrar el turno.',
-          'warning'
-        );
-      },
-
-      /*
-       * El interceptor ya clasificó y mostró el error HTTP.
-       * Se mantiene el callback para que RxJS no lo trate como un error
-       * sin controlar, pero aquí no se abre otro Swal.
-       */
-      error: () => {}
-    });
-}
+        // El interceptor ya clasificó y mostró los errores HTTP.
+        error: () => {}
+      });
+  }
 
   private confirmarVentasCredito(ventas: VentaSinPago[]): void {
     const filas = (ventas ?? []).map(v => {

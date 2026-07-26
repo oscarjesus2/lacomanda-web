@@ -18,12 +18,37 @@ export interface VentaSinPago {
   Cliente?: string;
 }
 
+export interface PedidoPendienteCierre {
+  IdPedido: number;
+  NroCuenta: number;
+  NroPedido: number;
+  IdTurno: number;
+  IdEspacio?: number | null;
+  Espacio: string;
+  IdEmpleado: number;
+  Empleado: string;
+  IdCanalVenta: number;
+  CanalVenta: string;
+  Cliente: string;
+  MontoPendiente: number;
+  FechaPedido: Date | string;
+}
+
+export interface AnularPedidoPendienteRequest {
+  IdPedido: number;
+  NroCuenta: number;
+  MotivoAnula: string;
+  Ip?: string | null;
+}
+
 // Refleja Application.Dto.Turno.CerrarTurnoResultDto.
 export interface CerrarTurnoResult {
   IdTurno: number;
   Cerrado: boolean;
   RequiereConfirmacionCredito: boolean;
   VentasSinPago: VentaSinPago[];
+  RequiereResolverPedidosPendientes: boolean;
+  PedidosPendientes: PedidoPendienteCierre[];
   Impresiones: ImpresionDTO[];
   Mensaje: string;
 }

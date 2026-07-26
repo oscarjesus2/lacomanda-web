@@ -131,6 +131,84 @@
   color: var(--color-text-muted);
 }
 
+/* ---------- Pedidos pendientes ---------- */
+.cturno-pendientes {
+  margin-bottom: 18px;
+  border: 1px solid rgba(237, 108, 2, 0.35);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: rgba(237, 108, 2, 0.04);
+}
+
+.cturno-pendientes__encabezado {
+  display: flex;
+  gap: 10px;
+  padding: 14px 16px;
+  background: rgba(237, 108, 2, 0.09);
+}
+
+.cturno-pendientes__encabezado > mat-icon {
+  flex: 0 0 auto;
+  color: #ed6c02;
+}
+
+.cturno-pendientes__encabezado h3 {
+  margin: 0 0 3px;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.cturno-pendientes__encabezado p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
+.cturno-pendientes__tabla {
+  max-height: 280px;
+  overflow: auto;
+}
+
+.cturno-pendientes table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  background: var(--color-surface);
+}
+
+.cturno-pendientes th,
+.cturno-pendientes td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.cturno-pendientes th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  font-size: 0.69rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  background: var(--color-surface-warm);
+}
+
+.cturno-pendientes tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.cturno-pendientes .cturno-numero {
+  text-align: right;
+}
+
+.cturno-pendientes button {
+  min-width: 0;
+}
+
 /* ---------- Acciones ---------- */
 .cturno-actions {
   display: flex;

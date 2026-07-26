@@ -11,6 +11,7 @@ import { PedidoDeliveryDTO } from '../interfaces/pedidoDTO.interface';
 import { DividirCuentaDTO } from '../interfaces/dividircuentaDTO.interface';
 import { PedidoDescuentoDTO } from '../interfaces/pedidoDescuentoDTO.interface';
 import { TrasladarProductoDTO } from '../interfaces/trasladarProductoDTO.interface';
+import { AnularPedidoPendienteRequest } from '../interfaces/cerrarTurno.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -81,6 +82,13 @@ export class PedidoService {
 
     AnularPedido(idEspacio: number, usuAnula: number, motivoAnula: string, ip: string): Observable<ApiResponse<ImpresionDTO[]>> {
         return this.http.post<ApiResponse<ImpresionDTO[]>>(`${this.basePath}/AnularPedido/${idEspacio}/${usuAnula}/${motivoAnula}/${ip}`, {});
+    }
+
+    AnularPedidoPendiente(request: AnularPedidoPendienteRequest): Observable<ApiResponse<ImpresionDTO[]>> {
+        return this.http.post<ApiResponse<ImpresionDTO[]>>(
+            `${this.basePath}/AnularPedidoPendiente`,
+            request
+        );
     }
 
     ImprimirPrecuenta(idPedido: number, nroCuenta: number): Observable<ApiResponse<ImpresionDTO[]>> {

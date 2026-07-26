@@ -352,7 +352,8 @@ export class MenuVentasComponent implements OnInit {
     this.dialog.open(DialogCerrarTurnoComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '640px',
+      width: '920px',
+      maxWidth: '95vw',
     });
   }
 
