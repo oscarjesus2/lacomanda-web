@@ -192,8 +192,7 @@ export class MenuVentasComponent implements OnInit {
      const dialog = this.dialog.open(CajaMantenimientoComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '900px', 
-      height: '500px', 
+      width: '900px',
     });
   }
 
@@ -209,8 +208,9 @@ export class MenuVentasComponent implements OnInit {
      const dialog = this.dialog.open(AreaImpresionMantenimientoComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '900px', 
-      height: '500px', 
+      width: '900px',
+      // Sin alto fijo: el diálogo se ajusta al contenido (el surface ya limita
+      // la altura al viewport) para evitar el scroll vertical innecesario.
     });
   }
 
@@ -218,8 +218,7 @@ export class MenuVentasComponent implements OnInit {
      const dialog = this.dialog.open(ObservacionMantenimientoComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '900px', 
-      height: '500px', 
+      width: '900px',
     });
   }
 
@@ -302,8 +301,7 @@ export class MenuVentasComponent implements OnInit {
     const dialog = this.dialog.open(UsuariosMantenimientoComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '900px', 
-      height: '700px', 
+      width: '900px',
     });
   }
 
@@ -312,8 +310,7 @@ export class MenuVentasComponent implements OnInit {
     const dialog = this.dialog.open(ColorMantenimientoComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '900px', 
-      height: '700px', 
+      width: '900px',
     });
   }
 
@@ -323,8 +320,7 @@ export class MenuVentasComponent implements OnInit {
     const dialog = this.dialog.open(EspaciosMantenimientoComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '900px', 
-      height: '700px', 
+      width: '900px',
     });
   }
 
@@ -333,8 +329,7 @@ export class MenuVentasComponent implements OnInit {
     const dialog = this.dialog.open(AmbienteMantenimientoComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '900px', 
-      height: '700px', 
+      width: '900px',
     });
   }
 
@@ -343,8 +338,7 @@ export class MenuVentasComponent implements OnInit {
     const dialog = this.dialog.open(FamiliaMantenimientoComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '600px', 
-      height: '700px', 
+      width: '600px',
     });
   }
 

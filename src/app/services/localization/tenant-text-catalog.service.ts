@@ -2,64 +2,25 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 import { StorageService } from '../storage.service';
+import {
+  EN_TEXTS,
+  TenantTextKey,
+  TenantTextParams,
+} from './tenant-texts.en';
+import {
+  ES_ES_OVERRIDES,
+  ES_PE_OVERRIDES,
+  ES_TEXTS,
+} from './tenant-texts.es';
 
-export type TenantTextKey =
-  | 'orderAttendant'
-  | 'changeOrderAttendant'
-  | 'selectOrderAttendant'
-  | 'orderAttendantRequired'
-  | 'onlyAdminCanChangeOrderAttendant'
-  | 'couldNotChangeOrderAttendant'
-  | 'unexpectedOrderAttendantChangeError'
-  | 'language'
-  | 'useTenantLanguage'
-  | 'cultureChangeError';
+export type { TenantTextKey, TenantTextParams } from './tenant-texts.en';
 
 type TextCatalog = Record<TenantTextKey, string>;
 
 const CATALOGS: Record<string, TextCatalog> = {
-  en: {
-    orderAttendant: 'Waiter',
-    changeOrderAttendant: 'Change waiter',
-    selectOrderAttendant: 'Select a waiter',
-    orderAttendantRequired: 'You must select a waiter.',
-    onlyAdminCanChangeOrderAttendant:
-      'Only an administrator can change the waiter.',
-    couldNotChangeOrderAttendant: 'The waiter could not be changed.',
-    unexpectedOrderAttendantChangeError:
-      'An error occurred while changing the waiter.',
-    language: 'Language',
-    useTenantLanguage: 'Use business language',
-    cultureChangeError: 'The language preference could not be changed.',
-  },
-  'es-ES': {
-    orderAttendant: 'Camarero',
-    changeOrderAttendant: 'Cambiar camarero',
-    selectOrderAttendant: 'Seleccione un camarero',
-    orderAttendantRequired: 'Debe seleccionar un camarero.',
-    onlyAdminCanChangeOrderAttendant:
-      'Solo el administrador puede cambiar el camarero.',
-    couldNotChangeOrderAttendant: 'No se pudo cambiar el camarero.',
-    unexpectedOrderAttendantChangeError:
-      'Ocurrió un error al cambiar el camarero.',
-    language: 'Idioma',
-    useTenantLanguage: 'Usar idioma del negocio',
-    cultureChangeError: 'No se pudo cambiar la preferencia de idioma.',
-  },
-  'es-PE': {
-    orderAttendant: 'Mozo',
-    changeOrderAttendant: 'Cambiar mozo',
-    selectOrderAttendant: 'Seleccione un mozo',
-    orderAttendantRequired: 'Debe seleccionar un mozo.',
-    onlyAdminCanChangeOrderAttendant:
-      'Solo el administrador puede cambiar el mozo.',
-    couldNotChangeOrderAttendant: 'No se pudo cambiar el mozo.',
-    unexpectedOrderAttendantChangeError:
-      'Ocurrió un error al cambiar el mozo.',
-    language: 'Idioma',
-    useTenantLanguage: 'Usar idioma del negocio',
-    cultureChangeError: 'No se pudo cambiar la preferencia de idioma.',
-  },
+  en: { ...EN_TEXTS },
+  'es-ES': { ...ES_TEXTS, ...ES_ES_OVERRIDES },
+  'es-PE': { ...ES_TEXTS, ...ES_PE_OVERRIDES },
 };
 
 @Injectable({ providedIn: 'root' })
@@ -89,8 +50,22 @@ export class TenantTextCatalogService {
     }
   }
 
-  get(key: TenantTextKey): string {
-    return this.getCatalog(this.culture)[key] ?? CATALOGS.en[key];
+  get(key: TenantTextKey, params?: TenantTextParams): string {
+    const template =
+      this.getCatalog(this.culture)[key] ?? CATALOGS.en[key];
+
+    if (!params) {
+      return template;
+    }
+
+    return Object.entries(params).reduce(
+      (text, [name, value]) =>
+        text.replace(
+          new RegExp(`{{${name}}}`, 'g'),
+          value === null || value === undefined ? '' : String(value),
+        ),
+      template,
+    );
   }
 
   private getCatalog(culture: string): TextCatalog {

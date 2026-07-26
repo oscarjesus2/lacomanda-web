@@ -157,7 +157,13 @@ export class VentaComponent implements OnInit, AfterViewInit {
   errorCargaInicial: boolean = false;
   productoParaTraslado: PedidoDet | null = null;
   ambienteActual: Ambiente | null = null;
-  textDescuento: string ='Descuento';
+  private descuentoAplicado = false;
+
+  get textDescuento(): string {
+    return this.textCatalog.get(
+      this.descuentoAplicado ? 'removeDiscount' : 'discount',
+    );
+  }
   isBuscarProductoDisabled= false;
   isEntrada    = false;
   isEspacio    = false;  // ocultos hasta que se cargue la configuración de la caja
@@ -513,9 +519,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
           this.spinnerService.hide();
           Swal.fire({
             icon: 'warning',
-            title: 'No hay un turno abierto para esta estación.',
-            text: 'El componente se cerrará.',
-            confirmButtonText: 'Aceptar'
+            title: this.textCatalog.get('noOpenShiftForStation'),
+            text: this.textCatalog.get('componentWillClose'),
+            confirmButtonText: this.textCatalog.get('accept')
           }).then(() => {
             if (this.storageService.getCurrentUser().IdNivel == 1) {
               this.router.navigate(['/dashboard']);
@@ -599,8 +605,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
     if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
-        'Unir Espacio',
-        'Debe seleccionar una espacio.',
+        this.textCatalog.get('mergeSpace'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
@@ -627,7 +633,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     const title = this.textCatalog.get('changeOrderAttendant');
 
     if (!this.mesaSeleccionada) {
-      Swal.fire(title, 'Debe seleccionar un espacio.', 'info');
+      Swal.fire(title, this.textCatalog.get('selectSpace'), 'info');
       return;
     }
     if (!this.isAdmin) {
@@ -651,8 +657,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
       inputPlaceholder: this.textCatalog.get('selectOrderAttendant'),
       inputValue: this.mozoSelected?.IdEmpleado?.toString() ?? '',
       showCancelButton: true,
-      confirmButtonText: 'Cambiar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.textCatalog.get('change'),
+      cancelButtonText: this.textCatalog.get('cancel'),
       inputValidator: (value) => {
         if (!value) {
           return this.textCatalog.get('orderAttendantRequired');
@@ -673,14 +679,14 @@ export class VentaComponent implements OnInit, AfterViewInit {
         this.RehacerPantalla();
       } else {
         Swal.fire(
-          'Error',
+          this.textCatalog.get('error'),
           this.textCatalog.get('couldNotChangeOrderAttendant'),
           'error',
         );
       }
     } catch (e) {
       Swal.fire(
-        'Error',
+        this.textCatalog.get('error'),
         this.textCatalog.get('unexpectedOrderAttendantChangeError'),
         'error',
       );
@@ -693,8 +699,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
     if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
-        'Cambiar Espacio',
-        'Debe seleccionar una espacio.',
+        this.textCatalog.get('changeSpaceTitle'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
@@ -716,18 +722,18 @@ export class VentaComponent implements OnInit, AfterViewInit {
     }
 
     void Swal.fire({
-        title: 'Nombre del cliente',
+        title: this.textCatalog.get('customerName'),
         input: 'text',
-        inputPlaceholder: 'Ingrese el nombre del cliente',
+        inputPlaceholder: this.textCatalog.get('customerNamePlaceholder'),
         showCancelButton: true,
         showDenyButton: true,
-        cancelButtonText: 'Cancelar',
-        confirmButtonText: 'Aceptar',
-        denyButtonText: 'Sin nombre',
+        cancelButtonText: this.textCatalog.get('cancel'),
+        confirmButtonText: this.textCatalog.get('accept'),
+        denyButtonText: this.textCatalog.get('unnamedCustomer'),
         inputValidator: value => {
           return value?.trim()
             ? undefined
-            : 'Debe ingresar el nombre del cliente.';
+            : this.textCatalog.get('customerNameRequired');
         }
       }).then(result => {
         if (!result.isConfirmed && !result.isDenied) {
@@ -746,8 +752,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
     if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
-        'Cambiar Espacio',
-        'Debe seleccionar una espacio.',
+        this.textCatalog.get('changeSpaceTitle'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
@@ -837,7 +843,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
             this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
             this.actualizarDatosGrilla();
             this.isPanelProductoDisabled = true;
-            this.textDescuento = 'Quitar Descuento';
+            this.descuentoAplicado = true;
           } else {
             await this.showWarningAndReloadEspacios('No existe el pedido en la cuenta.');
           }
@@ -958,19 +964,19 @@ export class VentaComponent implements OnInit, AfterViewInit {
     if (oPedidoDet.NroCupon) {
       // Si ya hay un código ingresado, mostrarlo en un SweetAlert con opción de eliminarlo
       Swal.fire({
-        title: 'Código de cortesía ingresado',
-        text: `El código ingresado es: ${oPedidoDet.NroCupon}`,
+        title: this.textCatalog.get('courtesyCodeEntered'),
+        text: this.textCatalog.get('enteredCode', { code: oPedidoDet.NroCupon }),
         showCancelButton: true,
-        confirmButtonText: 'Eliminar código',
-        cancelButtonText: 'Mantener código'
+        confirmButtonText: this.textCatalog.get('deleteCode'),
+        cancelButtonText: this.textCatalog.get('keepCode')
       }).then((result) => {
         if (result.isConfirmed) {
           // Eliminar el código
           oPedidoDet.NroCupon = "";
           Swal.fire({
-            title: 'Código eliminado',
+            title: this.textCatalog.get('codeDeleted'),
             icon: 'success',
-            confirmButtonText: 'OK'
+            confirmButtonText: this.textCatalog.get('accept')
           });
         }
       });
@@ -979,7 +985,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       const dialogRef = this.dialog.open(DialogMCantComponent, {
         width: '350px',
         data: {
-          title: 'Ingresar Código de Cortesía',
+          title: this.textCatalog.get('enterCourtesyCode'),
           hideNumber: false, // Mostrar los números
           decimalActive: false, // Desactivar el punto decimal si solo se permiten enteros
         }
@@ -1000,15 +1006,15 @@ export class VentaComponent implements OnInit, AfterViewInit {
     const codigosAnfitriona: string[] = [];  // Almacena los códigos ingresados
 
     Swal.fire({
-      title: 'Ingresar códigos de Anfitrionas',
+      title: this.textCatalog.get('enterHostessCodes'),
       html: `
         <div id="inputs-container">
           <div id="codigo-div1">
-            <input type="text" id="codigo1" class="swal2-input" placeholder="Código 1" readonly>
-            <button type="button" class="remove-btn" id="remove1">Eliminar</button>
+            <input type="text" id="codigo1" class="swal2-input" placeholder="${this.textCatalog.get('codeLabel', { number: 1 })}" readonly>
+            <button type="button" class="remove-btn" id="remove1">${this.textCatalog.get('delete')}</button>
           </div>
         </div>
-        <button id="add-more" type="button" class="swal2-confirm swal2-styled" style="margin-top: 10px;">Agregar más</button>
+        <button id="add-more" type="button" class="swal2-confirm swal2-styled" style="margin-top: 10px;">${this.textCatalog.get('addMore')}</button>
       `,
       focusConfirm: false,
       preConfirm: () => {
@@ -1035,8 +1041,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
             const newDiv = document.createElement('div');
             newDiv.id = `codigo-div${codigoCounter}`;
             newDiv.innerHTML = `
-              <input type="text" id="codigo${codigoCounter}" class="swal2-input" placeholder="Código ${codigoCounter}" readonly>
-              <button type="button" class="remove-btn" id="remove${codigoCounter}">Eliminar</button>
+              <input type="text" id="codigo${codigoCounter}" class="swal2-input" placeholder="${this.textCatalog.get('codeLabel', { number: codigoCounter })}" readonly>
+              <button type="button" class="remove-btn" id="remove${codigoCounter}">${this.textCatalog.get('delete')}</button>
             `;
             inputsContainer.appendChild(newDiv);
 
@@ -1074,7 +1080,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     const dialogRef = this.dialog.open(DialogMCantComponent, {
       width: '350px',
       data: {
-        title: `Ingresar Código de Anfitriona ${codigoIndex}`,
+        title: this.textCatalog.get('enterHostessCode', { number: codigoIndex }),
         hideNumber: false,
         decimalActive: false
       }
@@ -1107,8 +1113,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
 
       Swal.fire(
-        'Ups.!',
-        'No existe el pedido.',
+        this.textCatalog.get('error'),
+        this.textCatalog.get('orderNotFound'),
         'warning'
       );
       lastValueFrom(this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno));
@@ -1144,7 +1150,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   iniciarTraslado(producto: PedidoDet): void {
     if (this.espacioSelected.IdEspacio == null) {
-      Swal.fire('Traslado Producto', 'Debe tener una mesa seleccionada.', 'info');
+      Swal.fire(
+        this.textCatalog.get('productTransfer'),
+        this.textCatalog.get('selectTable'),
+        'info'
+      );
       return;
     }
     this.productoParaTraslado = producto;
@@ -1166,7 +1176,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   iniciarTrasladarAEspacio(): void {
     if (this.idPedidoCobrar <= 0) {
-      Swal.fire('Trasladar a Mesa', 'Debe seleccionar un pedido.', 'info');
+      Swal.fire(
+        this.textCatalog.get('transferToTable'),
+        this.textCatalog.get('selectOrder'),
+        'info'
+      );
       return;
     }
     this.aplicarFiltroTrasladarAEspacio = true;
@@ -1192,10 +1206,18 @@ export class VentaComponent implements OnInit, AfterViewInit {
         this.aplicarFiltroTrasladarAEspacio = false;
         this.RehacerPantalla();
       } else {
-        Swal.fire('Trasladar a Mesa', response.Message || 'No se pudo trasladar el pedido.', 'warning');
+        Swal.fire(
+          this.textCatalog.get('transferToTable'),
+          response.Message || this.textCatalog.get('couldNotMoveOrder'),
+          'warning'
+        );
       }
     } catch {
-      Swal.fire('Error', 'Ocurrió un error al trasladar el pedido.', 'error');
+      Swal.fire(
+        this.textCatalog.get('error'),
+        this.textCatalog.get('errorMovingOrder'),
+        'error'
+      );
     }
   }
 
@@ -1214,10 +1236,18 @@ export class VentaComponent implements OnInit, AfterViewInit {
         this.aplicarFiltroTrasladoProducto = false;
         this.RehacerPantalla();
       } else {
-        Swal.fire('Traslado Producto', 'No se pudo realizar el traslado.', 'warning');
+        Swal.fire(
+          this.textCatalog.get('productTransfer'),
+          this.textCatalog.get('couldNotTransferProduct'),
+          'warning'
+        );
       }
     } catch (e) {
-      Swal.fire('Error', 'Ocurrió un error al trasladar el producto.', 'error');
+      Swal.fire(
+        this.textCatalog.get('error'),
+        this.textCatalog.get('errorMovingProduct'),
+        'error'
+      );
     }
   }
 
@@ -1232,7 +1262,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
       const dialogRef = this.dialog.open(DialogMCantComponent, {
         width: '350px',
-        data: { title: 'Ingrese Nro Pax', hideNumber: false, decimalActive: false }
+        data: {
+          title: this.textCatalog.get('enterGuestCount'),
+          hideNumber: false,
+          decimalActive: false
+        }
       });
 
       dialogRef.afterClosed().subscribe((result) => {
@@ -1240,7 +1274,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
           this.espacioSelected.NroPersonas = result.value;
           this.processPedido(true);
         } else {
-          return 'Debe ingresar un número válido mayor que 0';
+          return this.textCatalog.get('positiveNumberRequired');
         }
       });
     }
@@ -1259,7 +1293,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
         this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
         this.actualizarDatosGrilla();
       } else {
-        await this.showWarningAndReloadEspacios('No existe el pedido en la espacio.');
+        await this.showWarningAndReloadEspacios(
+          this.textCatalog.get('orderNotFoundInSpace')
+        );
       }
     }
   }
@@ -1270,12 +1306,14 @@ export class VentaComponent implements OnInit, AfterViewInit {
     if (listData.Data.length > 0) {
       this.openDialogoDividirCuenta(espacio, listData.Data[0].IdPedido);
     } else {
-      await this.showWarningAndReloadEspacios('No existe el pedido en la espacio.');
+      await this.showWarningAndReloadEspacios(
+        this.textCatalog.get('orderNotFoundInSpace')
+      );
     }
   }
 
   async showWarningAndReloadEspacios(message: string) {
-    Swal.fire('Ups.!', message, 'warning');
+    Swal.fire(this.textCatalog.get('validation'), message, 'warning');
     this.listaEspaciosTotal = (await lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos())).Data;
   }
 
@@ -1324,8 +1362,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
       } else {
 
         Swal.fire(
-          'Ups.!',
-          'No existe el pedido en la espacio.',
+          this.textCatalog.get('validation'),
+          this.textCatalog.get('orderNotFoundInSpace'),
           'warning'
         );
         this.listaEspaciosTotal = (await lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos())).Data;
@@ -1334,7 +1372,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
     } catch (e) {
       Swal.fire(
-        'Algo anda mal',
+        this.textCatalog.get('unexpectedError'),
         e.error,
         'error'
       )
@@ -1350,8 +1388,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
     try {
       if (oPedidoDet.Cantidad == 0) {
         Swal.fire(
-          'Ups.!',
-          'Agregue primero la cantidad.',
+          this.textCatalog.get('validation'),
+          this.textCatalog.get('addQuantityFirst'),
           'warning'
         );
       } else {
@@ -1370,7 +1408,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       }
     } catch (e) {
       Swal.fire(
-        'Algo anda mal',
+        this.textCatalog.get('unexpectedError'),
         e.error,
         'error'
       )
@@ -1473,7 +1511,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
         // Usar DialogMTextTouchComponent para el motivo de anulación
         const dialogRef = this.dialog.open(DialogMTextComponent, {
           width: '800px',
-          data: { title: `¿Está seguro de eliminar el producto ${pedidoDet.Producto.NombreCorto}?` }
+          data: {
+            title: this.textCatalog.get('confirmDeleteProduct', {
+              product: pedidoDet.Producto.NombreCorto
+            })
+          }
         });
 
         dialogRef.afterClosed().subscribe(result => {
@@ -1488,7 +1530,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
         const dialogRef = this.dialog.open(DialogMCantComponent, {
           width: '350px',
           data: {
-            title: 'Ingresar Código de Administrador',
+            title: this.textCatalog.get('enterAdministratorCode'),
             hideNumber: true,
             decimalActive: false
           }
@@ -1504,7 +1546,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
                   // Mostrar el DialogMTextTouchComponent para el motivo de anulación
                   const motivoRef = this.dialog.open(DialogMTextComponent, {
                     width: '800px',
-                    data: { title: `¿Está seguro de eliminar el producto ${pedidoDet.Producto.NombreCorto}?` }
+                    data: {
+                      title: this.textCatalog.get('confirmDeleteProduct', {
+                        product: pedidoDet.Producto.NombreCorto
+                      })
+                    }
                   });
 
                   motivoRef.afterClosed().subscribe(result => {
@@ -1518,10 +1564,10 @@ export class VentaComponent implements OnInit, AfterViewInit {
                 } else {
 
                   Swal.fire({
-                    title: 'Código inválido',
-                    text: 'El código ingresado no es correcto.',
+                    title: this.textCatalog.get('invalidCode'),
+                    text: this.textCatalog.get('incorrectCode'),
                     icon: 'error',
-                    confirmButtonText: 'OK'
+                    confirmButtonText: this.textCatalog.get('accept')
                   });
                 }
               }
@@ -1552,7 +1598,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       const dialogRef = this.dialog.open(DialogMCantComponent, {
         width: '350px',
         data: {
-          title: 'Ingresar Precio',
+          title: this.textCatalog.get('enterPrice'),
           hideNumber: false, // Mostrar los números
           decimalActive: true // Activar el punto decimal si el precio permite decimales
         }
@@ -1653,8 +1699,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
     if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
-        'Anular Pedido',
-        'Debe seleccionar una espacio.',
+        this.textCatalog.get('cancelOrder'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
@@ -1666,7 +1712,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
       // Usar DialogMTextTouchComponent para el motivo de anulación
       const dialogRef = this.dialog.open(DialogMTextComponent, {
         width: '800px',
-        data: { title: `¿Está seguro de anular el pedido de ${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}?` }
+        data: {
+          title: this.textCatalog.get('confirmVoidSpaceOrder', {
+            space: `${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}`
+          })
+        }
       });
 
       dialogRef.afterClosed().subscribe(result => {
@@ -1681,7 +1731,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       const dialogRef = this.dialog.open(DialogMCantComponent, {
         width: '350px',
         data: {
-          title: 'Ingresar Código de Administrador',
+          title: this.textCatalog.get('enterAdministratorCode'),
           hideNumber: true,
           decimalActive: false
         }
@@ -1697,7 +1747,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
                 // Mostrar el DialogMTextTouchComponent para el motivo de anulación
                 const motivoRef = this.dialog.open(DialogMTextComponent, {
                   width: '800px',
-                  data: { title: `¿Está seguro de anulado el pedido de ${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}?` }
+                  data: {
+                    title: this.textCatalog.get('confirmVoidSpaceOrder', {
+                      space: `${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}`
+                    })
+                  }
                 });
 
                 motivoRef.afterClosed().subscribe(result => {
@@ -1711,10 +1765,10 @@ export class VentaComponent implements OnInit, AfterViewInit {
               } else {
 
                 Swal.fire({
-                  title: 'Código inválido',
-                  text: 'El código ingresado no es correcto.',
+                  title: this.textCatalog.get('invalidCode'),
+                  text: this.textCatalog.get('incorrectCode'),
                   icon: 'error',
-                  confirmButtonText: 'OK'
+                  confirmButtonText: this.textCatalog.get('accept')
                 });
               }
             }
@@ -1760,8 +1814,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
     if (this.espacioSelected.IdEspacio == null && this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) {
       Swal.fire(
-        'Procesar Pedido',
-        'Debe seleccionar una espacio.',
+        this.textCatalog.get('processOrderTitle'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
@@ -1777,10 +1831,10 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
     if (this.sumaDscto > 0) {
       this.isPanelProductoDisabled = true;
-      this.textDescuento = 'Quitar Descuento';
+      this.descuentoAplicado = true;
     } else {
       this.isPanelProductoDisabled = false;
-      this.textDescuento = 'Descuento';
+      this.descuentoAplicado = false;
     }
 
     let oFamilia = this.listFamilia[0];
@@ -1797,7 +1851,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
    aplicarDescuento(){
-    if (this.textDescuento === "Quitar Descuento") {
+    if (this.descuentoAplicado) {
       this.quitarDescuento();
     }else{
       this.openDialogoDescuento(this.selectedRow);
@@ -1807,11 +1861,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
    quitarDescuento() {
     
       Swal.fire({
-        title: '¿Está seguro de quitar el descuento?',
+        title: this.textCatalog.get('confirmRemoveDiscount'),
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Sí',
-        cancelButtonText: 'No'
+        confirmButtonText: this.textCatalog.get('yes'),
+        cancelButtonText: this.textCatalog.get('no')
       }).then((result) => {
         if (result.isConfirmed) {
             this.pedidoService.QuitarDescuento(this.idPedidoCobrar, this.nroCuentaCobrar).subscribe(async () => {
@@ -1822,11 +1876,13 @@ export class VentaComponent implements OnInit, AfterViewInit {
                 this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
                 this.actualizarDatosGrilla();
               } else {
-                await this.showWarningAndReloadEspacios('No existe el pedido en la cuenta.');
+                await this.showWarningAndReloadEspacios(
+                  this.textCatalog.get('orderNotFoundInAccount')
+                );
               }
             });
   
-          this.textDescuento = "Descuento"; // Restablecer el texto del combo
+          this.descuentoAplicado = false;
           this.isPanelProductoDisabled = false;
         } else {
           return; 
@@ -1838,8 +1894,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
   async ImprimirPrecuenta() {
     if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
-        'Imprimir Precuenta',
-        'Debe seleccionar una espacio.',
+        this.textCatalog.get('printPreBill'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
@@ -1856,8 +1912,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
   async EnviarPedido() {
     if (this.espacioSelected.IdEspacio == null && this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) {
       Swal.fire(
-        'Enviar Pedido',
-        'Debe seleccionar una espacio.',
+        this.textCatalog.get('sendOrder'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
@@ -1948,7 +2004,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
       }
       this.spinnerService.hide();
     } else {
-      Swal.fire('Oops...', 'No ha ingresado ningun producto.', 'error')
+      Swal.fire(
+        this.textCatalog.get('error'),
+        this.textCatalog.get('noProductsEntered'),
+        'error'
+      );
       this.spinnerService.hide();
     }
 
@@ -2012,10 +2072,10 @@ export class VentaComponent implements OnInit, AfterViewInit {
         this.MostrarOcultarPanelEspacio = true;
         this.MostrarOcultarPanelProducto = false;
       } else {
-        alert('No guardo todos los productos de la grilla.')
+        alert(this.textCatalog.get('allProductsMustBeSaved'));
       }
     } else {
-      alert('Debe tener todo el pedido guardado.')
+      alert(this.textCatalog.get('orderMustBeSaved'));
     }
   }
 
@@ -2059,8 +2119,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
       this.isCanalVentaDisabled = false;
     } catch (error) {
       Swal.fire(
-        'Good job!',
-        'Error interno, actualice.',
+        this.textCatalog.get('error'),
+        this.textCatalog.get('internalErrorRefresh'),
         'error'
       );
     } finally {

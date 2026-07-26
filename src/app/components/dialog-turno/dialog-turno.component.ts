@@ -11,6 +11,7 @@ import { AbrirTurno } from 'src/app/models/turno.models';
 import { TurnoService } from '../../services/turno.service';
 import Swal from 'sweetalert2';
 import { firstValueFrom } from 'rxjs';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 
 @Component({
   selector: 'app-dialog-turno',
@@ -31,6 +32,7 @@ export class DialogTurnoComponent implements OnInit {
     private spinnerService: NgxSpinnerService,
     private cajaService: CajaService,
     private turnoService: TurnoService,
+    private texts: TenantTextCatalogService,
   ) {
     this.myForm = this.fb.group({
       fecha: [new Date(), [Validators.required]],
@@ -139,8 +141,8 @@ export class DialogTurnoComponent implements OnInit {
       if (responseAbrirTurno) {
         await this.listarCajas(responseAbrirTurno.IdCaja);
         await Swal.fire(
-          'Turno aperturado',
-          'La caja ya está disponible para registrar operaciones.',
+          this.texts.get('shiftOpenedTitle'),
+          this.texts.get('registerAvailableForOperations'),
           'success'
         );
       }

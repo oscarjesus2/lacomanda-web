@@ -18,6 +18,7 @@ import {
   VentaSinPago
 } from 'src/app/interfaces/cerrarTurno.interface';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 
 @Component({
   selector: 'app-dialog-cerrar-turno',
@@ -44,7 +45,8 @@ export class DialogCerrarTurnoComponent implements OnInit {
     private storageService: StorageService,
     private spinner: NgxSpinnerService,
     private qzTrayService: QzTrayV224Service,
-    private pedidoService: PedidoService
+    private pedidoService: PedidoService,
+    private texts: TenantTextCatalogService
   ) {}
 
   ngOnInit(): void {
@@ -116,11 +118,19 @@ export class DialogCerrarTurnoComponent implements OnInit {
 
   cerrarTurno(): void {
     if (this.idCajaSel == null) {
-      Swal.fire('Validación', 'Seleccione una caja.', 'warning');
+      Swal.fire(
+        this.texts.get('validation'),
+        this.texts.get('selectRegister'),
+        'warning'
+      );
       return;
     }
     if (!this.turnoAbierto) {
-      Swal.fire('Validación', 'No hay un turno abierto para esta caja.', 'info');
+      Swal.fire(
+        this.texts.get('validation'),
+        this.texts.get('noOpenShiftForRegister'),
+        'info'
+      );
       return;
     }
     this.fechaCierre = new Date();
@@ -152,8 +162,8 @@ export class DialogCerrarTurnoComponent implements OnInit {
 
           if (!response?.Success || !data) {
             Swal.fire(
-              'Error',
-              response?.Message || 'No se pudo cerrar el turno.',
+              this.texts.get('error'),
+              response?.Message || this.texts.get('couldNotCloseShift'),
               'error'
             );
             return;
@@ -180,16 +190,16 @@ export class DialogCerrarTurnoComponent implements OnInit {
             await this.imprimir(data.Impresiones);
 
             Swal.fire(
-              'Cierre de turno',
-              data.Mensaje || 'El turno se cerró correctamente.',
+              this.texts.get('shiftCloseTitle'),
+              data.Mensaje || this.texts.get('shiftClosedSuccessfully'),
               'success'
             );
             return;
           }
 
           Swal.fire(
-            'Cierre de turno',
-            data.Mensaje || 'No se pudo cerrar el turno.',
+            this.texts.get('shiftCloseTitle'),
+            data.Mensaje || this.texts.get('couldNotCloseShift'),
             'warning'
           );
         },
@@ -201,25 +211,25 @@ export class DialogCerrarTurnoComponent implements OnInit {
 
   async anularPedidoPendiente(pedido: PedidoPendienteCierre): Promise<void> {
     const confirmacion = await Swal.fire({
-      title: `Anular pedido N.º ${pedido.NroPedido}`,
-      text: 'Esta operación anulará el pedido completo y no puede deshacerse.',
+      title: this.texts.get('voidOrderTitle', { number: pedido.NroPedido }),
+      text: this.texts.get('voidOrderWarning'),
       icon: 'warning',
       input: 'textarea',
-      inputLabel: 'Motivo de la anulación',
-      inputPlaceholder: 'Ingrese el motivo...',
+      inputLabel: this.texts.get('voidReason'),
+      inputPlaceholder: this.texts.get('enterVoidReason'),
       inputAttributes: {
         maxlength: '120'
       },
       showCancelButton: true,
-      confirmButtonText: 'Anular pedido',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.texts.get('voidOrder'),
+      cancelButtonText: this.texts.get('cancel'),
       customClass: {
         confirmButton: 'swal-button--danger'
       },
       inputValidator: (valor) =>
         valor?.trim()
           ? null
-          : 'Debe ingresar el motivo de la anulación.'
+          : this.texts.get('voidReasonRequired')
     });
 
     if (!confirmacion.isConfirmed) {
@@ -247,8 +257,8 @@ export class DialogCerrarTurnoComponent implements OnInit {
         next: async (response) => {
           if (!response?.Success) {
             Swal.fire(
-              'Error',
-              response?.Message || 'No se pudo anular el pedido.',
+              this.texts.get('error'),
+              response?.Message || this.texts.get('couldNotVoidOrder'),
               'error'
             );
             return;
@@ -262,8 +272,8 @@ export class DialogCerrarTurnoComponent implements OnInit {
           );
 
           Swal.fire(
-            'Pedido anulado',
-            response.Message || 'El pedido se anuló correctamente.',
+            this.texts.get('orderVoided'),
+            response.Message || this.texts.get('orderVoidedSuccessfully'),
             'success'
           );
         },
@@ -281,17 +291,17 @@ export class DialogCerrarTurnoComponent implements OnInit {
     }).join('');
 
     Swal.fire({
-      title: 'Ventas sin pago registrado',
+      title: this.texts.get('unpaidSalesTitle'),
       html: `
-        <p>Existen ventas sin pago registrado. ¿Son ventas al crédito?</p>
+        <p>${this.escapeHtml(this.texts.get('unpaidSalesQuestion'))}</p>
         <table class="swal-data-table">
-          <thead><tr><th>Documento</th><th class="is-numeric">Total</th></tr></thead>
+          <thead><tr><th>${this.escapeHtml(this.texts.get('document'))}</th><th class="is-numeric">${this.escapeHtml(this.texts.get('total'))}</th></tr></thead>
           <tbody>${filas}</tbody>
         </table>`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Sí, son al crédito',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: this.texts.get('confirmCreditSales'),
+      cancelButtonText: this.texts.get('cancel')
     }).then(res => {
       if (res.isConfirmed) {
         this.ejecutarCierre(true);

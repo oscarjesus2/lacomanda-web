@@ -4,18 +4,18 @@
     mat-icon-button
     class="close-button"
     type="button"
-    aria-label="Cerrar diálogo"
+    [attr.aria-label]="'closeDialog' | tenantText"
     (click)="salir()"
     [disabled]="procesando">
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Cerrar Turno</h2>
+  <h2>{{ 'closeShift' | tenantText }}</h2>
 
   <!-- Caja -->
   <div class="form-row">
     <mat-form-field class="form-field" appearance="fill">
-      <mat-label>Caja</mat-label>
+      <mat-label>{{ 'register' | tenantText }}</mat-label>
       <mat-select
         [(ngModel)]="idCajaSel"
         name="caja"
@@ -31,27 +31,31 @@
   <!-- Datos del turno -->
   <div class="dialog-summary" *ngIf="turno; else sinTurno">
     <div class="dialog-summary__item">
-      <span class="dialog-summary__label">N.º de turno</span>
+      <span class="dialog-summary__label">{{ 'shiftNumber' | tenantText }}</span>
       <span class="dialog-summary__value">{{ turno.NroTurno }}</span>
     </div>
     <div class="dialog-summary__item">
-      <span class="dialog-summary__label">Fecha de inicio</span>
+      <span class="dialog-summary__label">{{ 'startDate' | tenantText }}</span>
       <span class="dialog-summary__value">
         {{ (turno.FechaInicio || turno.FechaTrabajo) | date:'dd/MM/yyyy HH:mm' }}
       </span>
     </div>
     <div class="dialog-summary__item">
-      <span class="dialog-summary__label">Fecha actual</span>
+      <span class="dialog-summary__label">{{ 'currentDate' | tenantText }}</span>
       <span class="dialog-summary__value">{{ fechaCierre | date:'dd/MM/yyyy HH:mm' }}</span>
     </div>
     <div class="dialog-summary__item">
-      <span class="dialog-summary__label">Tipo de cambio</span>
+      <span class="dialog-summary__label">{{ 'exchangeRate' | tenantText }}</span>
       <span class="dialog-summary__value">{{ turno.TipoCambio || turno.TipoCambioVenta || '—' }}</span>
     </div>
     <div class="dialog-summary__item">
-      <span class="dialog-summary__label">Estado</span>
+      <span class="dialog-summary__label">{{ 'status' | tenantText }}</span>
       <span class="status-badge" [class.status-badge--danger]="cerrado || !turnoAbierto">
-        {{ cerrado ? 'TURNO CERRADO' : (turnoAbierto ? 'ABIERTO' : 'CERRADO') }}
+        {{
+          (cerrado
+            ? 'shiftClosed'
+            : (turnoAbierto ? 'openStatus' : 'closedStatus')) | tenantText
+        }}
       </span>
     </div>
   </div>
@@ -59,7 +63,7 @@
   <ng-template #sinTurno>
     <p class="dialog-empty-state" role="status">
       <mat-icon>info</mat-icon>
-      Selecciona una caja con un turno abierto para cerrarlo.
+      {{ 'selectOpenShiftRegister' | tenantText }}
     </p>
   </ng-template>
 
@@ -69,9 +73,9 @@
       name="parcial"
       [disabled]="procesando">
       <span class="dialog-option__content">
-        <span class="dialog-option__title">Cierre parcial</span>
+        <span class="dialog-option__title">{{ 'partialClose' | tenantText }}</span>
         <span class="dialog-option__hint">
-          Omite la validación de pedidos pendientes de cobrar.
+          {{ 'partialCloseHint' | tenantText }}
         </span>
       </span>
     </mat-checkbox>
@@ -85,10 +89,14 @@
     <div class="dialog-alert__header">
       <mat-icon>warning</mat-icon>
       <div>
-        <h3>Pedidos pendientes de cobrar ({{ pedidosPendientes.length }})</h3>
+        <h3>
+          {{
+            'pendingOrdersTitle'
+              | tenantText:{ count: pedidosPendientes.length }
+          }}
+        </h3>
         <p>
-          Estos pedidos impiden cerrar el turno. Puedes anularlos aquí o salir
-          para cobrarlos desde Ventas. Después vuelve a intentar el cierre.
+          {{ 'pendingOrdersExplanation' | tenantText }}
         </p>
       </div>
     </div>
@@ -97,12 +105,12 @@
       <table class="dialog-data-table">
         <thead>
           <tr>
-            <th>Pedido</th>
-            <th>Cuenta</th>
-            <th>Espacio / canal</th>
+            <th>{{ 'order' | tenantText }}</th>
+            <th>{{ 'account' | tenantText }}</th>
+            <th>{{ 'spaceOrChannel' | tenantText }}</th>
             <th>{{ 'orderAttendant' | tenantText }}</th>
-            <th>Fecha</th>
-            <th class="is-numeric">Importe</th>
+            <th>{{ 'date' | tenantText }}</th>
+            <th class="is-numeric">{{ 'amount' | tenantText }}</th>
             <th></th>
           </tr>
         </thead>
@@ -124,7 +132,7 @@
                 (click)="anularPedidoPendiente(pedido)"
                 [disabled]="procesando">
                 <mat-icon>delete_outline</mat-icon>
-                Anular
+                {{ 'void' | tenantText }}
               </button>
             </td>
           </tr>
@@ -140,7 +148,11 @@
             [disabled]="!turnoAbierto || cerrado || procesando">
       <mat-icon>{{ pedidosPendientes.length > 0 ? 'refresh' : 'lock' }}</mat-icon>
       <span>
-        {{ pedidosPendientes.length > 0 ? 'Revalidar cierre' : 'Cerrar turno' }}
+        {{
+          (pedidosPendientes.length > 0
+            ? 'revalidateClose'
+            : 'closeShift') | tenantText
+        }}
       </span>
     </button>
 
@@ -150,7 +162,7 @@
       (click)="salir()"
       [disabled]="procesando">
       <mat-icon>exit_to_app</mat-icon>
-      <span>Salir</span>
+      <span>{{ 'exit' | tenantText }}</span>
     </button>
   </div>
 

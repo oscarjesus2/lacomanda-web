@@ -117,7 +117,11 @@ export class LoginComponent implements OnInit {
     if (this.isSubmitting) return;
     const dialogRef = this.dialog.open(DialogMCantComponent, {
       width: '350px',
-      data: { title: 'Ingresar Contraseña', hideNumber: true, decimalActive: false }
+      data: {
+        title: this.textCatalog.get('enterPassword'),
+        hideNumber: true,
+        decimalActive: false
+      }
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result?.value) {
@@ -154,7 +158,9 @@ export class LoginComponent implements OnInit {
           this.isSubmitting = false;
           this.loginForm.enable();
           this.spinnerService.hide();
-          this.notificationService.showWarning('El usuario no tiene un rol de negocio asignado en Keycloak.');
+          this.notificationService.showWarning(
+            this.textCatalog.get('noBusinessRole')
+          );
           return;
         }
 
@@ -210,7 +216,9 @@ export class LoginComponent implements OnInit {
               this.loginForm.enable();
               this.spinnerService.hide();
               this.storageService.removeCurrentSession();
-              this.notificationService.showError('No se pudo obtener la lista de estaciones.');
+              this.notificationService.showError(
+                this.textCatalog.get('couldNotLoadStations')
+              );
             }
           });
 
@@ -221,10 +229,10 @@ export class LoginComponent implements OnInit {
             this.loginForm.enable();
             this.spinnerService.hide();
             Swal.fire({
-              title: 'Estación no configurada',
-              text: 'Este dispositivo no tiene un identificador de estación. Contactá al administrador.',
+              title: this.textCatalog.get('stationNotConfigured'),
+              text: this.textCatalog.get('stationIdentifierMissing'),
               icon: 'warning',
-              confirmButtonText: 'OK'
+              confirmButtonText: this.textCatalog.get('accept')
             });
             return;
           }
@@ -357,7 +365,7 @@ export class LoginComponent implements OnInit {
     const tenant   = this.loginForm?.controls['tenant']?.value;
 
     if (!username || !tenant?.TenantId) {
-      this.forgotError = 'Seleccioná una sucursal e ingresá tu usuario.';
+      this.forgotError = this.textCatalog.get('selectBranchAndUser');
       return;
     }
 
@@ -384,7 +392,7 @@ export class LoginComponent implements OnInit {
     this.isiOS = /iphone|ipad|ipod/.test(ua);
     if (this.isiOS && !window.navigator['standalone']) {
       this.showInstallButton = false;
-      alert('Para instalar la aplicación en iOS, abre el menú de compartir y selecciona "Agregar a la pantalla de inicio".');
+      alert(this.textCatalog.get('iosInstallHint'));
     }
   }
 
@@ -402,12 +410,16 @@ export class LoginComponent implements OnInit {
       const tenants = resp?.Data ?? [];
 
       if (!resp || resp.Success === false) {
-        this.notificationService.showError(resp?.Message || 'No se pudo obtener la lista de tenants.');
+        this.notificationService.showError(
+          resp?.Message || this.textCatalog.get('couldNotLoadTenants')
+        );
         this.loginForm?.get('tenant')?.disable();
         return;
       }
       if (tenants.length === 0) {
-        this.notificationService.showWarning('No hay tenants disponibles. Contacta al administrador.');
+        this.notificationService.showWarning(
+          this.textCatalog.get('noTenantsAvailable')
+        );
         this.loginForm?.get('tenant')?.disable();
         return;
       }
@@ -418,7 +430,9 @@ export class LoginComponent implements OnInit {
         setTimeout(() => (document.getElementById('username') as HTMLInputElement)?.focus(), 120);
       }
     } catch {
-      this.notificationService.showError('No se pudieron cargar los tenants. Inténtalo nuevamente.');
+      this.notificationService.showError(
+        this.textCatalog.get('couldNotLoadTenantsRetry')
+      );
       this.loginForm?.get('tenant')?.disable();
     } finally {
       this.spinnerService.hide();

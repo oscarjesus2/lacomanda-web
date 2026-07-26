@@ -2,7 +2,6 @@ import { formatDate } from '@angular/common';
 import { Component, ViewChild } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
-import { NgxSpinnerService } from 'ngx-spinner';
 import { InformeContableInterface as InformeContableVentaInterface } from 'src/app/interfaces/ventas.interface';
 import { InformeContableCompra } from 'src/app/interfaces/compras.interface';
 import { TipoDocumentoPais } from 'src/app/models/tipodocumentopais.models';
@@ -11,6 +10,7 @@ import { VentaService } from 'src/app/services/venta.service';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import { NgModel } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
 import { CompraService } from 'src/app/services/compra.service';
 import { TipoDocumentoPaisService } from 'src/app/services/tipo-documento-pais.service';
 
@@ -31,13 +31,13 @@ export class DialogReportecontableComponent {
 
   fechaInicial: string;
   fechaFinal: string;
+  exportando = false;
 
   constructor(
     public dialogRef: MatDialogRef<DialogReportecontableComponent>,
     public tipoDocumentoService: TipoDocumentoPaisService,
     public ventaService: VentaService,
     public compraService: CompraService,
-    private spinnerService: NgxSpinnerService,
   ) { }
 
   onNoClick(): void {
@@ -45,10 +45,25 @@ export class DialogReportecontableComponent {
   }
 
   ngOnInit() {
+    // Rango por defecto: el día de hoy (facilita el caso más común).
+    const hoy = formatDate(new Date(), 'yyyy-MM-dd', 'en-US');
+    this.fechaInicial = hoy;
+    this.fechaFinal = hoy;
+
     if (this.tipoInformeSeleccionado === 'Ventas') {
       this.initializeTipoDocumento();
       this.initializeSeries();
     }
+  }
+
+  /** El filtro por Serie solo aplica al informe de Ventas. */
+  get mostrarSerie(): boolean {
+    return this.tipoInformeSeleccionado === 'Ventas';
+  }
+
+  /** Rango de fechas válido: ambas presentes y final >= inicial. */
+  get rangoValido(): boolean {
+    return !!this.fechaInicial && !!this.fechaFinal && this.fechaInicial <= this.fechaFinal;
   }
   exportToExcel(informeContableInterface: any): void {
     // Nombre de la hoja de cálculo
@@ -84,6 +99,19 @@ export class DialogReportecontableComponent {
     this.listSeries = await this.tipoDocumentoService.GetTiposDocumentos().toPromise();
   }
 
+  /** Valida el rango y dispara la exportación del informe correspondiente. */
+  validarFormularioExport(): void {
+    if (!this.rangoValido) {
+      Swal.fire('Validación', 'Seleccione un rango de fechas válido.', 'warning');
+      return;
+    }
+    if (this.tipoInformeSeleccionado === 'Ventas') {
+      this.getInformeContableVentas();
+    } else if (this.tipoInformeSeleccionado === 'Compras') {
+      this.getInformeContableCompras();
+    }
+  }
+
   validarFormulario(fechaInicialInput: NgModel, fechaFinalInput: NgModel, tipoInformeInput: NgModel): void {
     if (!this.fechaInicial) {
       fechaInicialInput.control.markAsTouched();
@@ -113,29 +141,30 @@ export class DialogReportecontableComponent {
   }
 
 
-  onTipoInformeChange(event: any): void {
-    const selectedValue = event.target.value;
+  onTipoInformeChange(): void {
+    // Reiniciar filtros al cambiar de tipo de informe.
+    this.tipoDocumentoSeleccionado = '0';
+    this.serieSeleccionada = '0';
 
-    if (selectedValue === 'Ventas') {
+    if (this.tipoInformeSeleccionado === 'Ventas') {
       this.initializeTipoDocumento();
       this.initializeSeries();
-    } else if (selectedValue === 'Compras') {
+    } else if (this.tipoInformeSeleccionado === 'Compras') {
       this.initializeTipoDocumentoCompras();
       this.initializeSeriesCompras();
     }
   }
 
   getInformeContableVentas() {
-    this.spinnerService.show();
+    this.exportando = true;
     const fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
     const fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
 
-    this.ventaService.getInformeContable(fechaInicial, fechaFinal, this.serieSeleccionada, this.tipoDocumentoSeleccionado).subscribe(
-      data => {
-        console.log('Datos recibidos:', data); // Agrega esto para verificar la estructura de los datos
+    this.ventaService.getInformeContable(fechaInicial, fechaFinal, this.serieSeleccionada, this.tipoDocumentoSeleccionado)
+      .pipe(finalize(() => this.exportando = false))
+      .subscribe(data => {
         this.informeContableVentaInterface = data;
         if (this.informeContableVentaInterface.length === 0) {
-          this.spinnerService.hide();
           Swal.fire({
             icon: 'warning',
             title: 'Sin registros',
@@ -145,22 +174,19 @@ export class DialogReportecontableComponent {
         }
 
         this.exportToExcel(this.informeContableVentaInterface);
-        this.spinnerService.hide();
-      }
-    );
+      });
   }
 
   getInformeContableCompras() {
-    this.spinnerService.show();
+    this.exportando = true;
     const fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
     const fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
 
-    this.compraService.getInformeContable(fechaInicial, fechaFinal, this.tipoDocumentoSeleccionado).subscribe(
-      data => {
-        console.log('Datos recibidos:', data); // Agrega esto para verificar la estructura de los datos
+    this.compraService.getInformeContable(fechaInicial, fechaFinal, this.tipoDocumentoSeleccionado)
+      .pipe(finalize(() => this.exportando = false))
+      .subscribe(data => {
         this.informeContableCompraInterface = data;
         if (this.informeContableCompraInterface.length === 0) {
-          this.spinnerService.hide();
           Swal.fire({
             icon: 'warning',
             title: 'Sin registros',
@@ -170,8 +196,6 @@ export class DialogReportecontableComponent {
         }
 
         this.exportToExcel(this.informeContableCompraInterface);
-        this.spinnerService.hide();
-      }
-    );
+      });
   }
 }

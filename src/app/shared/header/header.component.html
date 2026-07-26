@@ -3,12 +3,15 @@
   <!-- IZQUIERDA: menú + marca -->
   <div class="app-header__left">
     <button mat-icon-button class="app-header__menu-btn"
-            aria-label="Abrir menú" [matMenuTriggerFor]="afterMenu">
+            [attr.aria-label]="'openMenu' | tenantText"
+            [matMenuTriggerFor]="afterMenu">
       <mat-icon>menu</mat-icon>
     </button>
     <div class="app-header__brand">
       <div class="app-header__brand-title">{{ nombreSucursal }}</div>
-      <div class="app-header__brand-subtitle">LaComanda · Restaurante</div>
+      <div class="app-header__brand-subtitle">
+        LaComanda · {{ 'restaurant' | tenantText }}
+      </div>
     </div>
   </div>
 
@@ -22,13 +25,13 @@
     <div class="app-header__chip app-header__chip--turno" *ngIf="turnoActivo">
       <span class="app-header__chip-dot"></span>
       <mat-icon class="app-header__chip-icon">schedule</mat-icon>
-      <span>Turno #{{ turnoNumero }}</span>
+      <span>{{ 'shift' | tenantText }} #{{ turnoNumero }}</span>
     </div>
 
     <!-- Sin turno -->
     <div class="app-header__chip app-header__chip--inactive" *ngIf="!turnoActivo">
       <mat-icon class="app-header__chip-icon">schedule</mat-icon>
-      <span>Sin turno</span>
+      <span>{{ 'noShift' | tenantText }}</span>
     </div>
 
     <!-- Stats (solo cuando hay turno) -->
@@ -37,17 +40,17 @@
 
       <div class="app-header__stat">
         <span class="app-header__stat-value">{{ config?.SimboloMoneda }} {{ totalVentaTurno | number:'1.0-0' }}</span>
-        <span class="app-header__stat-label">Venta turno</span>
+        <span class="app-header__stat-label">{{ 'shiftSales' | tenantText }}</span>
       </div>
 
       <div class="app-header__stat">
         <span class="app-header__stat-value">{{ nroPedidos }}</span>
-        <span class="app-header__stat-label">Pedidos</span>
+        <span class="app-header__stat-label">{{ 'orders' | tenantText }}</span>
       </div>
 
       <div class="app-header__stat">
         <span class="app-header__stat-value">{{ config?.SimboloMoneda }} {{ ticketMedio | number:'1.1-1' }}</span>
-        <span class="app-header__stat-label">Ticket medio</span>
+        <span class="app-header__stat-label">{{ 'averageTicket' | tenantText }}</span>
       </div>
 
       <div class="app-header__stat-sep"></div>
@@ -76,12 +79,14 @@
       <mat-icon>language</mat-icon>
     </button>
     <button mat-icon-button class="app-header__icon-btn"
-            matTooltip="Inicio" (click)="reiniciar()">
+            [matTooltip]="'home' | tenantText" (click)="reiniciar()">
       <mat-icon>home</mat-icon>
     </button>
-    <button class="app-header__logout-btn" matTooltip="Salir" (click)="onLogout()">
+    <button class="app-header__logout-btn"
+            [matTooltip]="'logout' | tenantText"
+            (click)="onLogout()">
       <mat-icon class="app-header__logout-icon">exit_to_app</mat-icon>
-      <span>Salir</span>
+      <span>{{ 'logout' | tenantText }}</span>
     </button>
   </div>
 
@@ -90,13 +95,13 @@
 <!-- MENÚ PRINCIPAL -->
 <mat-menu #afterMenu="matMenu" xPosition="after">
   <button mat-menu-item *ngIf="showDashboard" (click)="Dashboard()">
-    <mat-icon>dashboard</mat-icon><span>Dashboard</span>
+    <mat-icon>dashboard</mat-icon><span>{{ 'dashboard' | tenantText }}</span>
   </button>
   <button mat-menu-item *ngIf="showAdministracion" (click)="Administracion()">
-    <mat-icon>settings</mat-icon><span>Administración</span>
+    <mat-icon>settings</mat-icon><span>{{ 'administration' | tenantText }}</span>
   </button>
   <button mat-menu-item *ngIf="showCaja" (click)="Caja()">
-    <mat-icon>point_of_sale</mat-icon><span>Caja</span>
+    <mat-icon>point_of_sale</mat-icon><span>{{ 'register' | tenantText }}</span>
   </button>
   <button mat-menu-item *ngIf="showMozo" (click)="Mozo()">
     <mat-icon>restaurant</mat-icon>

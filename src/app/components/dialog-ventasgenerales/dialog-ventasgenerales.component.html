@@ -3,13 +3,13 @@
     mat-icon-button
     class="close-button"
     type="button"
-    aria-label="Cerrar diálogo"
+    [attr.aria-label]="'closeDialog' | tenantText"
     (click)="onNoClick()"
     [disabled]="procesando">
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Listado de ventas generales</h2>
+  <h2>{{ 'generalSales' | tenantText }}</h2>
 
   <div class="dialog-toolbar">
     <div class="dialog-toolbar__options">
@@ -17,37 +17,37 @@
         [(ngModel)]="listarTodosLosTurnos"
         (change)="loadVentas()"
         [disabled]="procesando">
-        Todos los turnos y cajas
+        {{ 'allShiftsAndRegisters' | tenantText }}
       </mat-checkbox>
 
       <mat-checkbox
         [(ngModel)]="incluirVentasExpress"
         (change)="loadVentas()"
         [disabled]="procesando">
-        Incluir ventas express
+        {{ 'includeExpressSales' | tenantText }}
       </mat-checkbox>
     </div>
 
     <div class="dialog-toolbar__filters">
       <mat-form-field appearance="fill">
-        <mat-label>Buscar por</mat-label>
+        <mat-label>{{ 'searchBy' | tenantText }}</mat-label>
         <mat-select
           [(ngModel)]="campoSeleccionado"
           (selectionChange)="aplicarFiltro()">
-          <mat-option value="Caja">Caja</mat-option>
-          <mat-option value="TipoDocumento">Tipo de documento</mat-option>
-          <mat-option value="Documento">Documento</mat-option>
-          <mat-option value="Cliente">Cliente</mat-option>
-          <mat-option value="FechaVenta">Fecha</mat-option>
-          <mat-option value="Moneda">Moneda</mat-option>
-          <mat-option value="Dscto">Descuento</mat-option>
-          <mat-option value="Total">Total</mat-option>
-          <mat-option value="EstadoDescripcion">Estado</mat-option>
+          <mat-option value="Caja">{{ 'register' | tenantText }}</mat-option>
+          <mat-option value="TipoDocumento">{{ 'documentType' | tenantText }}</mat-option>
+          <mat-option value="Documento">{{ 'document' | tenantText }}</mat-option>
+          <mat-option value="Cliente">{{ 'customer' | tenantText }}</mat-option>
+          <mat-option value="FechaVenta">{{ 'date' | tenantText }}</mat-option>
+          <mat-option value="Moneda">{{ 'currency' | tenantText }}</mat-option>
+          <mat-option value="Dscto">{{ 'discount' | tenantText }}</mat-option>
+          <mat-option value="Total">{{ 'total' | tenantText }}</mat-option>
+          <mat-option value="EstadoDescripcion">{{ 'state' | tenantText }}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="fill">
-        <mat-label>Buscar</mat-label>
+        <mat-label>{{ 'search' | tenantText }}</mat-label>
         <input
           matInput
           [(ngModel)]="textoFiltro"
@@ -58,7 +58,7 @@
           matSuffix
           mat-icon-button
           type="button"
-          aria-label="Limpiar búsqueda"
+          [attr.aria-label]="'clearSearch' | tenantText"
           (click)="limpiarFiltro()">
           <mat-icon>close</mat-icon>
         </button>
@@ -69,10 +69,12 @@
       <div class="dialog-toolbar__status" role="status" aria-live="polite">
         <mat-icon>receipt_long</mat-icon>
         <span>
-          {{ dataSource.data.length }}
-          {{ dataSource.data.length === 1 ? 'venta encontrada' : 'ventas encontradas' }}
+          {{
+            (dataSource.data.length === 1 ? 'saleFound' : 'salesFound')
+              | tenantText:{ count: dataSource.data.length }
+          }}
           <ng-container *ngIf="textoFiltro">
-            de {{ ventas.length }}
+            {{ 'fromTotal' | tenantText:{ count: ventas.length } }}
           </ng-container>
         </span>
       </div>
@@ -84,7 +86,7 @@
           (click)="actualizarLista()"
           [disabled]="procesando">
           <mat-icon>refresh</mat-icon>
-          Actualizar
+          {{ 'update' | tenantText }}
         </button>
 
         <button
@@ -94,17 +96,17 @@
           (click)="OpenDialogEmitirVenta()"
           [disabled]="procesando">
           <mat-icon>receipt_long</mat-icon>
-          Nueva venta
+          {{ 'newSale' | tenantText }}
         </button>
 
         <button
           mat-raised-button
           color="primary"
           type="button"
-          title="Caso de uso pendiente de implementar"
+          [attr.title]="'pendingUseCase' | tenantText"
           disabled>
           <mat-icon>note_add</mat-icon>
-          Emitir nota de crédito
+          {{ 'issueCreditNote' | tenantText }}
         </button>
       </div>
     </div>
@@ -136,7 +138,7 @@
                 <ng-container *ngSwitchCase="'acciones'">
                   <button
                     mat-icon-button
-                    aria-label="Acciones de la venta"
+                    [attr.aria-label]="'saleActions' | tenantText"
                     [matMenuTriggerFor]="menuAcciones"
                     (click)="seleccionarVenta(row); $event.stopPropagation()">
                     <mat-icon>more_vert</mat-icon>
@@ -179,7 +181,7 @@
             <td class="mat-cell" [attr.colspan]="displayedColumns.length">
               <div class="dialog-empty-state">
                 <mat-icon>search_off</mat-icon>
-                No se encontraron ventas con los criterios seleccionados.
+                {{ 'noSalesFound' | tenantText }}
               </div>
             </td>
           </tr>
@@ -187,27 +189,27 @@
         <mat-menu #menuAcciones="matMenu">
           <button mat-menu-item disabled>
             <mat-icon>edit</mat-icon>
-            <span>Modificar Documento</span>
+            <span>{{ 'modifyDocument' | tenantText }}</span>
           </button>
 
           <button mat-menu-item disabled>
             <mat-icon>payments</mat-icon>
-            <span>Modificación de Pagos</span>
+            <span>{{ 'modifyPayments' | tenantText }}</span>
           </button>
 
           <button mat-menu-item disabled>
             <mat-icon>picture_as_pdf</mat-icon>
-            <span>Obtener PDF y XML</span>
+            <span>{{ 'getPdfAndXml' | tenantText }}</span>
           </button>
 
           <button mat-menu-item (click)="reImprimirDocumento()">
             <mat-icon>print</mat-icon>
-            <span>Reimprimir Documento</span>
+            <span>{{ 'reprintDocument' | tenantText }}</span>
           </button>
 
           <button mat-menu-item (click)="anularDocumento()">
             <mat-icon>cancel</mat-icon>
-            <span>Anular</span>
+            <span>{{ 'void' | tenantText }}</span>
           </button>
         </mat-menu>
 
@@ -217,7 +219,7 @@
         [length]="dataSource.filteredData.length"
         [pageSize]="10"
         [pageSizeOptions]="[5, 10, 20]"
-        aria-label="Paginación de ventas">
+        [attr.aria-label]="'salesPagination' | tenantText">
       </mat-paginator>
     </div>
   </div>

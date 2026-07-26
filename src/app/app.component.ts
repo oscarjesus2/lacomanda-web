@@ -82,15 +82,15 @@ export class AppComponent implements OnInit, OnDestroy {
       case '/dashboard':
         return this.storageService.getCurrentNombreSucursal();
       case '/caja':
-        return 'caja';
+        return this.textCatalog.get('register');
       case '/mozo':
         return this.textCatalog.get('orderAttendant');
       case '/administracion':
-        return 'Administración';
+        return this.textCatalog.get('administration');
       case '/iniciar-sesion':
-        return 'Iniciar Sesión';
+        return this.textCatalog.get('signIn');
       default:
-        return 'Iniciar Sesión';
+        return this.textCatalog.get('signIn');
     }
   }
 }

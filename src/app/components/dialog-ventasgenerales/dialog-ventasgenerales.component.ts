@@ -11,6 +11,7 @@ import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 import { EnumTipoDocumento } from 'src/app/enums/enum';
 import { finalize } from 'rxjs/operators';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 
 @Component({
   selector: 'app-dialog-ventasgenerales',
@@ -21,20 +22,14 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   ventas: VentasInterface[] = [];
   dataSource = new MatTableDataSource<VentasInterface>([]);
-  columnDefs = [
-    { key: 'Caja',              label: 'Caja',       width: 100 },
-    { key: 'TipoDocumento',     label: 'Tipo doc.',  width: 130 },
-    { key: 'Documento',         label: 'N.º doc.',   width: 130 },
-    { key: 'Cliente',           label: 'Cliente',    width: 230 },
-    { key: 'FechaVenta',        label: 'Fecha',      width: 110 },
-    { key: 'Moneda',            label: 'Moneda',     width: 80 },
-    { key: 'Dscto',             label: 'Descuento',  width: 100, numeric: true },
-    { key: 'Total',             label: 'Total',      width: 110, numeric: true },
-    { key: 'EstadoDescripcion', label: 'Estado',     width: 120 },
-    { key: 'acciones',          label: 'Opciones',   width: 80 }
-  ];
+  columnDefs: Array<{
+    key: string;
+    label: string;
+    width: number;
+    numeric?: boolean;
+  }> = [];
 
-  displayedColumns: string[] = this.columnDefs.map(c => c.key);
+  displayedColumns: string[] = [];
   ventaSeleccionada: VentasInterface | null = null;
   listarTodosLosTurnos = false;
   incluirVentasExpress = false;
@@ -46,10 +41,24 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
     public dialogRef: MatDialogRef<DialogVentasgeneralesComponent>,
     private ventaService: VentaService,
     private spinnerService: NgxSpinnerService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private texts: TenantTextCatalogService
   ) { }
 
   ngOnInit(): void {
+    this.columnDefs = [
+      { key: 'Caja', label: this.texts.get('register'), width: 100 },
+      { key: 'TipoDocumento', label: this.texts.get('documentType'), width: 130 },
+      { key: 'Documento', label: this.texts.get('documentNumber'), width: 130 },
+      { key: 'Cliente', label: this.texts.get('customer'), width: 230 },
+      { key: 'FechaVenta', label: this.texts.get('date'), width: 110 },
+      { key: 'Moneda', label: this.texts.get('currency'), width: 80 },
+      { key: 'Dscto', label: this.texts.get('discount'), width: 100, numeric: true },
+      { key: 'Total', label: this.texts.get('total'), width: 110, numeric: true },
+      { key: 'EstadoDescripcion', label: this.texts.get('state'), width: 120 },
+      { key: 'acciones', label: this.texts.get('options'), width: 80 }
+    ];
+    this.displayedColumns = this.columnDefs.map(column => column.key);
     this.loadVentas();
   }
 
@@ -147,10 +156,10 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
   reImprimirDocumento() {
     if (!this.ventaSeleccionada) {
       Swal.fire({
-        title: 'ReImprimir',
-        text: 'Seleccione un documento',
+        title: this.texts.get('reprint'),
+        text: this.texts.get('selectDocument'),
         icon: 'warning',
-        confirmButtonText: 'OK'
+        confirmButtonText: this.texts.get('accept')
       });
       return;
     }
@@ -176,18 +185,24 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
 
   anularDocumento(): void {
     if (!this.ventaSeleccionada) {
-      Swal.fire('Error', 'Debe seleccionar una venta para anular', 'error');
+      Swal.fire(
+        this.texts.get('error'),
+        this.texts.get('selectSaleToVoid'),
+        'error'
+      );
       return;
     }
 
     // Confirmación de la anulación
     Swal.fire({
-      title: '¿Está seguro de anular el documento seleccionado ' + this.ventaSeleccionada.Documento +  '?',
-      text: 'Esta acción no se puede deshacer.',
+      title: this.texts.get('confirmVoidDocument', {
+        document: this.ventaSeleccionada.Documento
+      }),
+      text: this.texts.get('actionCannotBeUndone'),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Sí, anular',
-      cancelButtonText: 'No, cancelar'
+      confirmButtonText: this.texts.get('yesVoid'),
+      cancelButtonText: this.texts.get('noCancel')
     }).then((result) => {
       if (result.isConfirmed) {
         // Realiza la anulación de la venta
@@ -200,12 +215,20 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
         this.ventaService.anularDocumentoVenta(idVenta, motivo, anularPedido).subscribe(
           (response: any) => {
             this.spinnerService.hide();
-            Swal.fire('Anulado', 'El documento se anuló con éxito', 'success');
+            Swal.fire(
+              this.texts.get('voided'),
+              this.texts.get('documentVoidedSuccessfully'),
+              'success'
+            );
             this.actualizarLista(); // Actualiza la lista después de la anulación
           },
           (error: any) => {
             this.spinnerService.hide();
-            Swal.fire('Error', 'No se pudo anular el documento', 'error');
+            Swal.fire(
+              this.texts.get('error'),
+              this.texts.get('couldNotVoidDocument'),
+              'error'
+            );
           }
         );
       }

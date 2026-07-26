@@ -513,6 +513,14 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 5;
+  /* El host del spinner cubre todo el panel; sin esto captura los clics
+     (aunque esté oculto) y bloquea controles como el combo "Periodo".
+     Solo el overlay real de ngx-spinner (cuando carga) recibe eventos. */
+  pointer-events: none;
+}
+
+.report-panel__spinner .ngx-spinner-overlay {
+  pointer-events: auto;
 }
 
 .report-panel__spinner p {

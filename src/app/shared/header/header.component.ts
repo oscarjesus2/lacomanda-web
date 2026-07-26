@@ -184,10 +184,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
       if (data?.Data != null) {
         this.turnoAbierto = data.Data;
-        this.title = 'Caja';
+        this.title = this.textCatalog.get('register');
         this.router.navigateByUrl('/caja');
       } else {
-        Swal.fire({ icon: 'warning', title: 'No hay un turno abierto para esta estación', confirmButtonText: 'Aceptar' });
+        Swal.fire({
+          icon: 'warning',
+          title: this.textCatalog.get('noOpenShiftForStation'),
+          confirmButtonText: this.textCatalog.get('accept'),
+        });
       }
     });
   }
@@ -199,7 +203,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.title = this.textCatalog.get('orderAttendant');
         this.router.navigateByUrl('/mozo');
       } else {
-        Swal.fire({ icon: 'warning', title: 'No hay un turno abierto para esta estación', confirmButtonText: 'Aceptar' });
+        Swal.fire({
+          icon: 'warning',
+          title: this.textCatalog.get('noOpenShiftForStation'),
+          confirmButtonText: this.textCatalog.get('accept'),
+        });
       }
     });
   }
@@ -261,7 +269,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       },
       error: () => {
         Swal.fire(
-          'Error',
+          this.textCatalog.get('error'),
           this.textCatalog.get('cultureChangeError'),
           'error',
         );

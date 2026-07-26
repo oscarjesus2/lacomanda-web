@@ -1,130 +1,138 @@
-.container {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 20px;
-  background-color: var(--color-surface-warm);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+/* ============================================================
+   INFORME CONTABLE
+   Sobre los design tokens globales (styles.scss) y la base
+   .mant-panel (borde de acento, radio-xl, título sticky,
+   .close-button global).
+   ============================================================ */
+
+.rcont-panel {
+  width: min(560px, calc(100vw - 32px)) !important;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-.close-button {
-  float: right;
-  color: var(--color-text-muted);
+.rcont-panel mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
 }
 
-.header {
-  font-size: 24px;
-  color: var(--color-text);
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.date-container {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.date-input {
+/* ---------- Campos ---------- */
+.rcont-field {
   display: flex;
   flex-direction: column;
-  width: 48%;
+  gap: 6px;
+  margin-bottom: 18px;
 }
 
-.date-input label {
-  font-size: 14px;
-  margin-bottom: 5px;
+.rcont-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--color-text-muted);
 }
 
-.date-input input {
-  padding: 8px;
+/* Toggle Ventas / Compras */
+.rcont-toggle {
+  border-radius: var(--radius-pill) !important;
+  overflow: hidden;
   border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  color: var(--color-text);
+  width: fit-content;
+}
+
+.rcont-toggle .mat-button-toggle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.rcont-toggle .mat-button-toggle-checked {
+  background: var(--color-primary);
+}
+
+.rcont-toggle .mat-button-toggle-checked .mat-button-toggle-label-content,
+.rcont-toggle .mat-button-toggle-checked mat-icon {
+  color: var(--color-text-light) !important;
+}
+
+/* ---------- Grid de dos columnas ---------- */
+.rcont-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px 18px;
+  margin-bottom: 18px;
+}
+
+.rcont-grid .rcont-field {
+  margin-bottom: 0;
+}
+
+/* Inputs de fecha nativos, tokenizados */
+.rcont-input {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
   background: var(--color-surface);
-}
-
-.select-container {
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.select-basic {
-  padding: 10px;
-  font-size: 16px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border-strong);
-  width: 100%;
-  max-width: 300px;
-  margin: 0 auto;
-  background-color: var(--color-surface);
   color: var(--color-text);
-  box-shadow: var(--shadow-xs);
-}
-
-.filter-container {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.select-filter {
-  padding: 10px;
-  font-size: 16px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border-strong);
-  width: 48%;
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
-.export-button-container { text-align: center; }
-
-.export-button {
-  background-color: var(--color-success);
-  color: white;
-  font-weight: bold;
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: none;
-  cursor: pointer;
+  font-size: 0.95rem;
   transition: var(--transition-fast);
 }
 
-.export-button mat-icon { font-size: 20px; }
-
-.export-button:hover { filter: brightness(0.9); }
-
-.select-label {
-  font-size: 16px;
-  color: var(--color-text-muted);
-  margin-bottom: 10px;
-  display: block;
-  font-weight: bold;
+.rcont-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(191, 54, 12, 0.15);
 }
 
-.select-container {
-  margin: 20px 0;
+/* ---------- Error de rango ---------- */
+.rcont-error {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  margin: -6px 0 16px;
+  font-size: 0.8rem;
+  color: var(--color-warn);
 }
 
+/* ---------- Acción ---------- */
+.rcont-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Botón de exportar — verde éxito (acción de descarga) */
+.rcont-export.mat-mdc-raised-button {
+  background: var(--color-success) !important;
+  color: #fff !important;
+}
+
+.rcont-export.mat-mdc-raised-button mat-icon {
+  color: #fff;
+  margin-right: 4px;
+}
+
+/* Ícono girando mientras se genera el Excel */
+.rcont-spin {
+  animation: rcont-spin 1s linear infinite;
+}
+
+@keyframes rcont-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- Responsive ---------- */
 @media (max-width: 600px) {
-  .date-container, .filter-container {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    flex-direction: column;
+  .rcont-actions {
+    justify-content: stretch;
   }
-  .date-input, .select-filter {
+
+  .rcont-actions button {
     width: 100%;
-    margin-bottom: 15px;
   }
 }

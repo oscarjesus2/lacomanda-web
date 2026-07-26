@@ -38,6 +38,7 @@ import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 import { TipoDocumentoPaisService } from 'src/app/services/tipo-documento-pais.service';
 import { CajaTipoDocumento } from 'src/app/models/caja-tipo-documento.model';
 import { CajaTipoDocumentoService } from 'src/app/services/caja-tipo-documento.service';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 
 
 @Component({
@@ -69,7 +70,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   lbltotal: string = '0.00';
   lblvuelto: string = '0.00';
   lblpropinas: string = '0.00';
-  Label14: string = 'Vuelto';
+  private faltaPago = false;
+  get Label14(): string {
+    return this.texts.get(this.faltaPago ? 'remaining' : 'changeDue');
+  }
   lblmontotarjeta: string = '0.00';
   etiquetaCliente: string = '';
 
@@ -126,6 +130,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     private router: Router,
     private configuracionService: ConfiguracionService,
     private monedaService: MonedaService,
+    private texts: TenantTextCatalogService,
   ) {
     this.dataSourcePago = new MatTableDataSource([]);
     this.nuevoRegistro.Tarjeta = new Tarjeta();
@@ -377,10 +382,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
             if (dblPedTot > 0 && dblGranTotal !== dblPedTot) {
               Swal.fire({
-                title: 'Validación',
-                text: `El monto calculado no está igual al que muestra la pantalla de caja. Por favor vuelva a intentarlo..`,
+                title: this.texts.get('validation'),
+                text: this.texts.get('calculatedTotalMismatch'),
                 icon: 'warning',
-                confirmButtonText: 'OK'
+                confirmButtonText: this.texts.get('accept')
               });
 
               this.dialogRef.close();
@@ -391,10 +396,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
             }
           } else {
             Swal.fire({
-              title: 'Validación',
-              text: `No se pudo obtener el Total a Pagar. Tiempo de espera agotado.`,
+              title: this.texts.get('validation'),
+              text: this.texts.get('totalTimeout'),
               icon: 'warning',
-              confirmButtonText: 'OK'
+              confirmButtonText: this.texts.get('accept')
             });
             this.dialogRef.close();
           }
@@ -402,10 +407,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         (error: any) => {
           console.error('Error:', error);
           Swal.fire({
-            title: 'Validación',
+            title: this.texts.get('validation'),
             text: error,
             icon: 'error',
-            confirmButtonText: 'OK'
+            confirmButtonText: this.texts.get('accept')
           });
           this.dialogRef.close();
         }
@@ -422,14 +427,24 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       next: ({ Data }) => {
         const caja = Data;
         if (!caja || caja.IdCaja <= 0) {
-          Swal.fire({ title: 'Sistema', text: 'No se encontró información de CAJA.', icon: 'warning', confirmButtonText: 'OK' });
+          Swal.fire({
+            title: this.texts.get('system'),
+            text: this.texts.get('registerInfoNotFound'),
+            icon: 'warning',
+            confirmButtonText: this.texts.get('accept')
+          });
           this.dialogRef.close();
           return;
         }
 
         const tipo = this.listTipoDocumento.find(z => z.IdTipoDocumento === this.tipoDocumento?.IdTipoDocumento);
         if (!tipo) {
-          Swal.fire({ title: 'Sistema', text: 'No se encontró el tipo de documento seleccionado.', icon: 'warning', confirmButtonText: 'OK' });
+          Swal.fire({
+            title: this.texts.get('system'),
+            text: this.texts.get('selectedDocumentTypeNotFound'),
+            icon: 'warning',
+            confirmButtonText: this.texts.get('accept')
+          });
           this.dialogRef.close();
           return;
         }
@@ -444,7 +459,12 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error:', error);
-        Swal.fire({ title: 'Error', text: error?.message ?? 'Error al obtener caja.', icon: 'error', confirmButtonText: 'OK' });
+        Swal.fire({
+          title: this.texts.get('error'),
+          text: error?.message ?? this.texts.get('getRegisterError'),
+          icon: 'error',
+          confirmButtonText: this.texts.get('accept')
+        });
         this.dialogRef.close();
       }
     });
@@ -638,7 +658,11 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         monto1 += nuevoRegistro.MontoPagado;
 
         if (monto1 > parseFloat(this.lblmonto)) {
-          Swal.fire('Monto de tarjeta sobrepasa el monto a pagar', 'Monto', 'info');
+          Swal.fire(
+            this.texts.get('validation'),
+            this.texts.get('cardAmountExceedsTotal'),
+            'info'
+          );
           // Focus on txtmontarjeta
         } else {
           this.lblmontotarjeta = monto1.toFixed(2);
@@ -650,11 +674,15 @@ export class DialogEmitirComprobanteComponent implements OnInit {
           }
         }
       } else {
-        Swal.fire('Ingresar el monto pagado con Tarjeta', '', 'warning');
+        Swal.fire(
+          this.texts.get('validation'),
+          this.texts.get('enterCardPaymentAmount'),
+          'warning'
+        );
         // Focus on txtmontarjeta
       }
     } catch (ex) {
-      Swal.fire(ex.message, 'AgregarDatos', 'warning');
+      Swal.fire(this.texts.get('error'), ex.message, 'warning');
     }
   }
 
@@ -698,7 +726,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   obtenerSoles(): void {
-    const titulo = this.monedaPrincipal?.Descripcion ?? 'Moneda principal';
+    const titulo =
+      this.monedaPrincipal?.Descripcion ?? this.texts.get('mainCurrency');
     this.ComponenteCantidad(titulo).then(valor => {
       this.solesValue = Number(valor);
       this.calcularMonto();
@@ -767,15 +796,27 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
       // ── Validar campos obligatorios del cliente ──────────────────────
       if (!tipoIdentidadId) {
-        Swal.fire('Validación', 'Seleccione el tipo de documento del cliente.', 'warning');
+        Swal.fire(
+          this.texts.get('validation'),
+          this.texts.get('selectCustomerIdentityType'),
+          'warning'
+        );
         return;
       }
       if (!rucForm) {
-        Swal.fire('Validación', 'Ingrese el número de identificación del cliente.', 'warning');
+        Swal.fire(
+          this.texts.get('validation'),
+          this.texts.get('enterCustomerIdentityNumber'),
+          'warning'
+        );
         return;
       }
       if (!this.cliente.RazonSocial) {
-        Swal.fire('Validación', 'Ingrese el nombre o razón social del cliente.', 'warning');
+        Swal.fire(
+          this.texts.get('validation'),
+          this.texts.get('enterCustomerBusinessName'),
+          'warning'
+        );
         return;
       }
 
@@ -786,49 +827,73 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
       const formatError = this.validarNumeroIdentificacion(this.cliente.NumeroIdentificacion, tipoIdentidadObj);
       if (formatError) {
-        Swal.fire('Validación', formatError, 'warning');
+        Swal.fire(this.texts.get('validation'), formatError, 'warning');
         return;
       }
 
       // ── Validaciones de negocio ──────────────────────────────────────
       if (tipoDoc === E.FacturaVenta) {
         if (!this.cliente.NumeroIdentificacion || this.cliente.NumeroIdentificacion === '99999999999') {
-          Swal.fire('Validación', 'Ingrese el número de identificación del cliente correctamente.', 'warning');
+          Swal.fire(
+            this.texts.get('validation'),
+            this.texts.get('enterValidCustomerIdentity'),
+            'warning'
+          );
           return;
         }
         if (!this.cliente.Direccion) {
-          Swal.fire('Validación', 'Ingrese la dirección del cliente.', 'warning');
+          Swal.fire(
+            this.texts.get('validation'),
+            this.texts.get('enterCustomerAddress'),
+            'warning'
+          );
           return;
         }
       } else {
         // Regla "Cliente Varios" / "00000001" solo aplica para DNI en Boleta
         if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.DNI) {
           if (this.cliente.NumeroIdentificacion === '00000001' && this.cliente.RazonSocial !== 'Cliente Varios') {
-            Swal.fire('Validación', 'Si el DNI es 00000001, el nombre del cliente debe ser "Cliente Varios".', 'warning');
+            Swal.fire(
+              this.texts.get('validation'),
+              this.texts.get('genericIdentityNameRule'),
+              'warning'
+            );
             return;
           }
           if (this.cliente.NumeroIdentificacion !== '00000001' && this.cliente.RazonSocial === 'Cliente Varios') {
-            Swal.fire('Validación', 'Si el cliente es "Cliente Varios", el DNI debe ser 00000001.', 'warning');
+            Swal.fire(
+              this.texts.get('validation'),
+              this.texts.get('genericCustomerIdentityRule'),
+              'warning'
+            );
             return;
           }
         }
         // Monto ≥ 700: no permitir "00000001" en Boleta
         if (parseFloat(this.lblmonto) >= 700 && (tipoDoc === E.BoletaVenta || tipoDoc === E.BoletaManual)) {
           if (this.cliente.NumeroIdentificacion === '00000001') {
-            Swal.fire('Validación', 'La cuenta es igual o superior a 700, debe ingresar el documento de identidad del cliente.', 'warning');
+            Swal.fire(
+              this.texts.get('validation'),
+              this.texts.get('amountRequiresCustomerIdentity'),
+              'warning'
+            );
             return;
           }
         }
       }
 
       if (this.cliente.Correo && !this.isValidEmail(this.cliente.Correo)) {
-        Swal.fire('Validación', 'El correo electrónico está mal ingresado.', 'warning');
+        Swal.fire(
+          this.texts.get('validation'),
+          this.texts.get('invalidCustomerEmail'),
+          'warning'
+        );
         return;
       }
 
       this.cobrar(false);
     } catch (error) {
-      Swal.fire('Error', error.message, 'error');
+      Swal.fire(this.texts.get('error'), error.message, 'error');
     }
   }
 
@@ -838,9 +903,9 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   cobrar(alCredito: boolean): void {
-    let mensaje = "¿Está Seguro de Cobrar la Cuenta?";
+    let mensaje = this.texts.get('confirmChargeAccount');
     if (this.ChkVentaAlCredito) {
-      mensaje = "¿Está Seguro de Registrar la Venta al Crédito?";
+      mensaje = this.texts.get('confirmCreditSale');
     }
 
     if (!((this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta || this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaManual) && this.storageService.getCurrentSession().boletaRapida)) {
@@ -848,8 +913,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         title: mensaje,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Sí',
-        cancelButtonText: 'No'
+        confirmButtonText: this.texts.get('yes'),
+        cancelButtonText: this.texts.get('no')
       }).then((result) => {
         if (result.isConfirmed) {
           this.procesarCobro(alCredito);
@@ -859,7 +924,11 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       if (parseFloat(this.lbltotal) >= parseFloat(this.lblmonto)) {
         this.procesarCobro(alCredito);
       } else {
-        Swal.fire('Mensaje', 'El Total de Pago es menor que el Monto a Pagar', 'warning');
+        Swal.fire(
+          this.texts.get('message'),
+          this.texts.get('paymentBelowTotal'),
+          'warning'
+        );
       }
     }
   }
@@ -880,7 +949,11 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   async procesarCobro(alCredito: boolean): Promise<void> {
     if (!this.ChkVentaAlCredito && parseFloat(this.lbltotal) < parseFloat(this.lblmonto)) {
-      Swal.fire('Mensaje', 'El Total de Pago es menor que el Monto a Pagar', 'warning');
+      Swal.fire(
+        this.texts.get('message'),
+        this.texts.get('paymentBelowTotal'),
+        'warning'
+      );
       return;
     }
     const listaImpresionDTO: ImpresionDTO[] = await this.grabarDocumento();
@@ -888,12 +961,12 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       if (this.idTipoPedido === '005') {
 
         Swal.fire({
-          title: '¿Qué formato prefieres?',
-          text: "Elige una opción",
+          title: this.texts.get('preferredFormat'),
+          text: this.texts.get('chooseOption'),
           icon: 'question',
           showCancelButton: true,
           confirmButtonText: 'A4',
-          cancelButtonText: 'Ticket'
+          cancelButtonText: this.texts.get('ticket')
         }).then((result) => {
           if (result.isConfirmed) {
             this.descargarA4PDF();
@@ -1088,7 +1161,12 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
     const formatError = this.validarNumeroIdentificacion(ruc, tipoIdentidadObj);
     if (formatError) {
-      Swal.fire({ title: 'Validación', text: formatError, icon: 'warning', confirmButtonText: 'OK' });
+      Swal.fire({
+        title: this.texts.get('validation'),
+        text: formatError,
+        icon: 'warning',
+        confirmButtonText: this.texts.get('accept')
+      });
       return;
     }
 
@@ -1112,10 +1190,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
           } else {
             Swal.fire({
-              title: 'Validación',
-              text: `No se encontró el Cliente .`,
+              title: this.texts.get('validation'),
+              text: this.texts.get('customerNotFound'),
               icon: 'warning',
-              confirmButtonText: 'OK'
+              confirmButtonText: this.texts.get('accept')
             });
             this.cliente.IdCliente = '';
             const clienteFormGroup = this.form.get('cliente') as FormGroup;
@@ -1128,20 +1206,20 @@ export class DialogEmitirComprobanteComponent implements OnInit {
           }
         } else {
           Swal.fire({
-            title: 'Validación',
-            text: `Vuelve a realizar la búsqueda. Tiempo de espera agotado.`,
+            title: this.texts.get('validation'),
+            text: this.texts.get('retrySearchTimeout'),
             icon: 'warning',
-            confirmButtonText: 'OK'
+            confirmButtonText: this.texts.get('accept')
           });
         }
       },
       (error: any) => {
         console.error('Error:', error);
         Swal.fire({
-          title: 'Validación',
+          title: this.texts.get('validation'),
           text: error,
           icon: 'error',
-          confirmButtonText: 'OK'
+          confirmButtonText: this.texts.get('accept')
         });
       }
     );
@@ -1166,18 +1244,18 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       const montoLbl = parseFloat(this.lblmonto);
 
       if (total - montoLbl < 0) {
-        this.Label14 = 'Falta';
+        this.faltaPago = true;
         this.lblvuelto = Math.abs(total - montoLbl).toFixed(2);
       } else {
-        this.Label14 = 'Vuelto';
+        this.faltaPago = false;
         this.lblvuelto = (total - montoLbl).toFixed(2);
       }
     } catch (error) {
       Swal.fire({
-        title: 'Error',
-        text: error + 'Ocurrió un error al calcular los montos',
+        title: this.texts.get('error'),
+        text: `${error ?? ''} ${this.texts.get('amountCalculationError')}`.trim(),
         icon: 'error',
-        confirmButtonText: 'OK'
+        confirmButtonText: this.texts.get('accept')
       });
     }
   }
@@ -1194,10 +1272,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     const difference = total - parseFloat(this.lblmonto);
 
     if (difference < 0) {
-      this.Label14 = 'Falta';
+      this.faltaPago = true;
       this.lblvuelto = (Math.abs(difference)).toFixed(2);
     } else {
-      this.Label14 = 'Vuelto';
+      this.faltaPago = false;
       this.lblvuelto = difference.toFixed(2);
     }
   }
