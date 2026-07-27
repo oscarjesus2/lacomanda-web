@@ -9,16 +9,53 @@
 
   <div class="delivery-heading">
     <div>
-      <h2>{{ 'newDelivery' | tenantText }}</h2>
-      <p>{{ 'chooseDeliveryOrigin' | tenantText }}</p>
+      <h2>
+        {{
+          (vista === 'NUEVO' ? 'newDelivery' : 'deliveryOperationsTitle')
+            | tenantText
+        }}
+      </h2>
+      <p>
+        {{
+          (vista === 'NUEVO' ? 'chooseDeliveryOrigin' : 'deliveryOperationsHint')
+            | tenantText
+        }}
+      </p>
     </div>
     <span class="delivery-heading__status">
       <mat-icon>two_wheeler</mat-icon>
-      {{ 'businessPartnersCount' | tenantText:{ count: data.SociosNegocio.length } }}
+      <ng-container *ngIf="vista === 'NUEVO'; else pendingCount">
+        {{ 'businessPartnersCount' | tenantText:{ count: data.SociosNegocio.length } }}
+      </ng-container>
+      <ng-template #pendingCount>
+        {{ 'pendingOwnDeliveries' | tenantText:{ count: pedidosPendientes.length } }}
+      </ng-template>
     </span>
   </div>
 
+  <div class="delivery-view-selector" role="tablist">
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="vista === 'NUEVO'"
+      [class.delivery-view-selector__button--active]="vista === 'NUEVO'"
+      (click)="seleccionarVista('NUEVO')">
+      <mat-icon>add_shopping_cart</mat-icon>
+      {{ 'newDeliveryOrderTab' | tenantText }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="vista === 'OPERACION'"
+      [class.delivery-view-selector__button--active]="vista === 'OPERACION'"
+      (click)="seleccionarVista('OPERACION')">
+      <mat-icon>delivery_dining</mat-icon>
+      {{ 'deliveryOperationsTab' | tenantText }}
+    </button>
+  </div>
+
   <div
+    *ngIf="vista === 'NUEVO'"
     class="delivery-mode-selector"
     role="group"
     [attr.aria-label]="'deliveryMode' | tenantText">
@@ -55,13 +92,17 @@
     </button>
   </div>
 
-  <div class="delivery-placeholder delivery-mode-empty" *ngIf="!modalidad">
+  <div
+    class="delivery-placeholder delivery-mode-empty"
+    *ngIf="vista === 'NUEVO' && !modalidad">
     <mat-icon>touch_app</mat-icon>
     <strong>{{ 'selectDeliveryMode' | tenantText }}</strong>
     <span>{{ 'selectDeliveryModeHint' | tenantText }}</span>
   </div>
 
-  <section class="delivery-partner" *ngIf="modalidad === 'SOCIO_NEGOCIO'">
+  <section
+    class="delivery-partner"
+    *ngIf="vista === 'NUEVO' && modalidad === 'SOCIO_NEGOCIO'">
     <div class="delivery-section-title">
       <span>{{ 'externalOrderData' | tenantText }}</span>
       <small>{{ 'noPhoneRecordForExternalOrder' | tenantText }}</small>
@@ -112,7 +153,7 @@
     </form>
   </section>
 
-  <ng-container *ngIf="modalidad === 'TELEFONO'">
+  <ng-container *ngIf="vista === 'NUEVO' && modalidad === 'TELEFONO'">
     <div class="delivery-search">
       <mat-form-field appearance="outline">
         <mat-label>{{ 'deliverySearchLabel' | tenantText }}</mat-label>
@@ -339,13 +380,136 @@
     </div>
   </ng-container>
 
+  <section class="delivery-operations" *ngIf="vista === 'OPERACION'">
+    <div class="delivery-operations__toolbar">
+      <div>
+        <strong>{{ 'pendingDeliveryOrders' | tenantText }}</strong>
+        <span>{{ 'pendingDeliveryOrdersHint' | tenantText }}</span>
+      </div>
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="cargandoOperacion || !!asignandoPedido"
+        (click)="cargarOperacion()">
+        <mat-icon>refresh</mat-icon>
+        {{ 'refresh' | tenantText }}
+      </button>
+    </div>
+
+    <div class="delivery-loading" *ngIf="cargandoOperacion">
+      <mat-icon>hourglass_top</mat-icon>
+      {{ 'loadingPendingDeliveries' | tenantText }}
+    </div>
+
+    <div
+      class="delivery-empty"
+      *ngIf="!cargandoOperacion && pedidosPendientes.length === 0">
+      <mat-icon>task_alt</mat-icon>
+      <strong>{{ 'noPendingDeliveries' | tenantText }}</strong>
+      <span>{{ 'noPendingDeliveriesHint' | tenantText }}</span>
+    </div>
+
+    <div
+      class="delivery-operation-list"
+      *ngIf="!cargandoOperacion && pedidosPendientes.length > 0">
+      <article
+        class="delivery-operation-card"
+        *ngFor="let pedido of pedidosPendientes">
+        <header>
+          <div class="delivery-operation-card__order">
+            <span>{{ 'order' | tenantText }} #{{ pedido.NroPedido }}</span>
+            <strong>{{ pedido.Cliente }}</strong>
+          </div>
+          <strong class="delivery-operation-card__total">
+            {{ pedido.Total | number:'1.2-2' }}
+          </strong>
+        </header>
+
+        <div class="delivery-operation-card__destination">
+          <span>
+            <mat-icon>location_on</mat-icon>
+            {{ pedido.Direccion || ('noAddress' | tenantText) }}
+          </span>
+          <span *ngIf="pedido.Telefono">
+            <mat-icon>phone</mat-icon>
+            {{ pedido.Telefono }}
+          </span>
+        </div>
+
+        <div class="delivery-operation-card__assignment">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'ownDriver' | tenantText }}</mat-label>
+            <mat-select
+              [ngModel]="motorizadoSeleccionado[clavePedido(pedido)]"
+              [ngModelOptions]="{standalone: true}"
+              (ngModelChange)="motorizadoCambio(pedido, $event)">
+              <mat-option
+                *ngFor="let motorizado of motorizados"
+                [value]="motorizado.IdEmpleado">
+                {{ motorizado.Nombre }}
+              </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="motorizados.length === 0">
+              {{ 'noDriversAvailable' | tenantText }}
+            </mat-hint>
+          </mat-form-field>
+
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="
+              !motorizadoSeleccionado[clavePedido(pedido)]
+              || asignacionSinCambios(pedido)
+              || !!asignandoPedido"
+            (click)="asignarMotorizado(pedido)">
+            <mat-icon>two_wheeler</mat-icon>
+            {{
+              (asignandoPedido === clavePedido(pedido)
+                ? 'assigningDriver'
+                : 'assignDriver') | tenantText
+            }}
+          </button>
+        </div>
+
+        <div
+          class="delivery-operation-card__assigned"
+          *ngIf="pedido.IdMotorizado">
+          <mat-icon>check_circle</mat-icon>
+          <span>
+            {{ 'assignedDriver' | tenantText }}:
+            <strong>{{ pedido.Motorizado }}</strong>
+          </span>
+        </div>
+
+        <div
+          class="delivery-operation-card__paid"
+          *ngIf="pedido.PagoRegistrado">
+          <mat-icon>paid</mat-icon>
+          <span>{{ 'deliveryPaymentAlreadyRegistered' | tenantText }}</span>
+        </div>
+
+        <button
+          *ngIf="!pedido.PagoRegistrado"
+          mat-flat-button
+          color="primary"
+          type="button"
+          class="delivery-operation-card__confirm"
+          [disabled]="!pedido.IdMotorizado || !!asignandoPedido"
+          (click)="confirmarEntrega(pedido)">
+          <mat-icon>payments</mat-icon>
+          {{ 'confirmDeliveryAndCharge' | tenantText }}
+        </button>
+      </article>
+    </div>
+  </section>
+
   <div class="dialog-actions">
     <button mat-stroked-button type="button" (click)="salir()">
       <mat-icon>arrow_back</mat-icon>
-      {{ 'cancel' | tenantText }}
+      {{ (vista === 'OPERACION' ? 'close' : 'cancel') | tenantText }}
     </button>
     <button
-      *ngIf="modalidad === 'TELEFONO'"
+      *ngIf="vista === 'NUEVO' && modalidad === 'TELEFONO'"
       mat-flat-button
       color="primary"
       type="button"
@@ -355,7 +519,7 @@
       {{ (guardando ? 'saving' : 'continueToOrder') | tenantText }}
     </button>
     <button
-      *ngIf="modalidad === 'SOCIO_NEGOCIO'"
+      *ngIf="vista === 'NUEVO' && modalidad === 'SOCIO_NEGOCIO'"
       mat-flat-button
       color="primary"
       type="button"

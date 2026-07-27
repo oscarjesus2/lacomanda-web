@@ -52,6 +52,7 @@ export interface DeliveryHistorial {
 
 export interface DeliveryDialogData {
   SociosNegocio: SocioNegocio[];
+  IdTurno: number;
 }
 
 export type DeliveryModalidad = 'SOCIO_NEGOCIO' | 'TELEFONO';
@@ -61,11 +62,38 @@ export interface ProductoPrecioSocioNegocio {
   Precio: number;
 }
 
+export interface DeliveryMotorizado {
+  IdEmpleado: number;
+  Nombre: string;
+  Telefono: string;
+}
+
+export interface DeliveryPedidoPendiente {
+  IdPedido: number;
+  NroCuenta: number;
+  NroPedido: number;
+  Cliente: string;
+  Direccion: string;
+  Telefono: string;
+  Total: number;
+  PagoRegistrado: boolean;
+  IdMotorizado: number | null;
+  Motorizado: string | null;
+  FechaAsignacionMotorizado: string | null;
+}
+
+export interface DeliveryOperacion {
+  Pedidos: DeliveryPedidoPendiente[];
+  Motorizados: DeliveryMotorizado[];
+}
+
 export interface DeliveryDialogResult {
+  Accion: 'CREAR_PEDIDO' | 'COBRAR_ENTREGA';
   Modalidad: DeliveryModalidad;
   NombreCliente: string;
   Cliente: DeliveryCliente | null;
   SocioNegocio: SocioNegocio | null;
   ProductoCargoDelivery: Producto | null;
   PreciosSocioNegocio: ProductoPrecioSocioNegocio[];
+  Pedido?: DeliveryPedidoPendiente;
 }

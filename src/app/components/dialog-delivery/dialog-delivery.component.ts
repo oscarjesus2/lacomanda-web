@@ -9,7 +9,9 @@ import {
   DeliveryDialogData,
   DeliveryDialogResult,
   DeliveryHistorial,
+  DeliveryMotorizado,
   DeliveryModalidad,
+  DeliveryPedidoPendiente,
   GuardarDeliveryCliente
 } from 'src/app/models/delivery.models';
 import { SocioNegocio } from 'src/app/models/socionegocio.models';
@@ -25,16 +27,22 @@ export class DialogDeliveryComponent implements OnInit {
   readonly form: FormGroup;
   readonly socioForm: FormGroup;
   modalidad: DeliveryModalidad | null = null;
+  vista: 'NUEVO' | 'OPERACION' = 'NUEVO';
   termino = '';
   clientes: DeliveryCliente[] = [];
   historial: DeliveryHistorial[] = [];
+  pedidosPendientes: DeliveryPedidoPendiente[] = [];
+  motorizados: DeliveryMotorizado[] = [];
+  motorizadoSeleccionado: Record<string, number | null> = {};
   tiposIdentidad: TipoIdentidad[] = [];
   contexto: DeliveryContexto = { ProductoCargoDelivery: null };
   clienteSeleccionado: DeliveryCliente | null = null;
   clienteOrigen: DeliveryCliente | null = null;
   cargando = false;
   cargandoHistorial = false;
+  cargandoOperacion = false;
   guardando = false;
+  asignandoPedido: string | null = null;
   formularioActivo = false;
   private telefonoInicializado = false;
 
@@ -181,6 +189,7 @@ export class DialogDeliveryComponent implements OnInit {
       );
 
       const result: DeliveryDialogResult = {
+        Accion: 'CREAR_PEDIDO',
         Modalidad: 'TELEFONO',
         NombreCliente: response.Data.NombresDelivery,
         Cliente: response.Data,
@@ -262,6 +271,7 @@ export class DialogDeliveryComponent implements OnInit {
       ).trim().toUpperCase();
 
       this.dialogRef.close({
+        Accion: 'CREAR_PEDIDO',
         Modalidad: 'SOCIO_NEGOCIO',
         NombreCliente: `${socio.Descripcion} - ${nombreCliente}`,
         Cliente: null,
@@ -272,6 +282,95 @@ export class DialogDeliveryComponent implements OnInit {
     } finally {
       this.guardando = false;
     }
+  }
+
+  async seleccionarVista(vista: 'NUEVO' | 'OPERACION'): Promise<void> {
+    this.vista = vista;
+    if (vista === 'OPERACION') {
+      await this.cargarOperacion();
+    }
+  }
+
+  async cargarOperacion(): Promise<void> {
+    if (!this.data.IdTurno || this.cargandoOperacion) {
+      return;
+    }
+
+    this.cargandoOperacion = true;
+    try {
+      const response = await lastValueFrom(
+        this.deliveryService.obtenerOperacion(this.data.IdTurno)
+      );
+      this.pedidosPendientes = response.Data?.Pedidos ?? [];
+      this.motorizados = response.Data?.Motorizados ?? [];
+      this.motorizadoSeleccionado = {};
+      this.pedidosPendientes.forEach(pedido => {
+        this.motorizadoSeleccionado[this.clavePedido(pedido)] =
+          pedido.IdMotorizado;
+      });
+    } finally {
+      this.cargandoOperacion = false;
+    }
+  }
+
+  async asignarMotorizado(pedido: DeliveryPedidoPendiente): Promise<void> {
+    const clave = this.clavePedido(pedido);
+    const idMotorizado = Number(this.motorizadoSeleccionado[clave]);
+    if (!idMotorizado || this.asignandoPedido) {
+      return;
+    }
+
+    this.asignandoPedido = clave;
+    try {
+      const response = await lastValueFrom(
+        this.deliveryService.asignarMotorizado(pedido, idMotorizado)
+      );
+      const actualizado = response.Data;
+      this.pedidosPendientes = actualizado.PagoRegistrado
+        ? this.pedidosPendientes.filter(
+            item => this.clavePedido(item) !== clave
+          )
+        : this.pedidosPendientes.map(item =>
+            this.clavePedido(item) === clave ? actualizado : item
+          );
+      this.motorizadoSeleccionado[clave] = actualizado.IdMotorizado;
+    } finally {
+      this.asignandoPedido = null;
+    }
+  }
+
+  confirmarEntrega(pedido: DeliveryPedidoPendiente): void {
+    if (!pedido.IdMotorizado) {
+      return;
+    }
+
+    this.dialogRef.close({
+      Accion: 'COBRAR_ENTREGA',
+      Modalidad: 'TELEFONO',
+      NombreCliente: pedido.Cliente,
+      Cliente: null,
+      SocioNegocio: null,
+      ProductoCargoDelivery: null,
+      PreciosSocioNegocio: [],
+      Pedido: pedido
+    } as DeliveryDialogResult);
+  }
+
+  motorizadoCambio(
+    pedido: DeliveryPedidoPendiente,
+    idMotorizado: number
+  ): void {
+    this.motorizadoSeleccionado[this.clavePedido(pedido)] =
+      Number(idMotorizado);
+  }
+
+  asignacionSinCambios(pedido: DeliveryPedidoPendiente): boolean {
+    return pedido.IdMotorizado ===
+      Number(this.motorizadoSeleccionado[this.clavePedido(pedido)]);
+  }
+
+  clavePedido(pedido: DeliveryPedidoPendiente): string {
+    return `${pedido.IdPedido}-${pedido.NroCuenta}`;
   }
 
   salir(): void {

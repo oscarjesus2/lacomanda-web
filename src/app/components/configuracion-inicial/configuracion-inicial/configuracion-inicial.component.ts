@@ -8,6 +8,7 @@ import { MonedaService } from 'src/app/services/moneda.service';
 import { Moneda } from 'src/app/models/moneda.models';
 import { MatDialogRef } from '@angular/material/dialog';
 import { distinctUntilChanged } from 'rxjs/operators';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 
 @Component({
   selector: 'app-configuracion-inicial',
@@ -64,7 +65,8 @@ export class ConfiguracionInicialComponent implements OnInit {
     private configSrv: ConfiguracionService,
     private tipIdPaisSrv: TipoIdentidadPaisService,
     private monedaSrv: MonedaService,
-    private dialogRef: MatDialogRef<ConfiguracionInicialComponent>
+    private dialogRef: MatDialogRef<ConfiguracionInicialComponent>,
+    private texts: TenantTextCatalogService
   ) {}
 
   ngOnInit(): void {
@@ -173,18 +175,18 @@ export class ConfiguracionInicialComponent implements OnInit {
   guardar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.snack.open('Revisa los campos requeridos', 'OK', { duration: 3000 });
+      this.snack.open(this.texts.get('checkRequiredFields'), this.texts.get('ok'), { duration: 3000 });
       return;
     }
     const payload = this.form.getRawValue() as Configuracion;
     console.log(payload);
     this.configSrv.save(payload).subscribe({
       next: () => {
-      this.snack.open('Configuración guardada', 'OK', { duration: 2500 });
+      this.snack.open(this.texts.get('configSaved'), this.texts.get('ok'), { duration: 2500 });
       // ← importante: cerrar con 'true' para que el login sepa que ya está configurado
       this.dialogRef.close(true);
     },
-      error: (e) => this.snack.open(e?.error?.Message || 'No se pudo guardar', 'OK', { duration: 3000 })
+      error: (e) => this.snack.open(e?.error?.Message || this.texts.get('couldNotSave'), this.texts.get('ok'), { duration: 3000 })
     });
   }
 }

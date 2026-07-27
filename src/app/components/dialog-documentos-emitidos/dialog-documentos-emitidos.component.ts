@@ -19,6 +19,7 @@ import { Usuario } from 'src/app/models/usuario.models';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { DialogMTextComponent } from '../dialog-mtext/dialog-mtext.component';
 import { NivelUsuarioEnum } from 'src/app/enums/enum';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 
 @Component({
   selector: 'app-dialog-documentos-emitidos',
@@ -58,6 +59,7 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
     public dialog: MatDialog,
     public dialogRef: MatDialogRef<DialogDocumentosEmitidosComponent>,
     private qzTrayService: QzTrayV224Service,
+    private texts: TenantTextCatalogService,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.idTurno = data.idTurno;
@@ -183,7 +185,7 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
   anularDocumento(): void {
     if (!this.selectedRow) { this.alertSeleccione(); return; }
     if (!this.motivoAnulacion) {
-      Swal.fire({ title: 'Anular', text: 'Ingrese el Motivo de Anulación', icon: 'warning', confirmButtonText: 'OK' });
+      Swal.fire({ title: this.texts.get('void'), text: this.texts.get('enterVoidReasonMsg'), icon: 'warning', confirmButtonText: this.texts.get('ok') });
       return;
     }
 
@@ -192,7 +194,7 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
     let   idUsuarioAnula = 0;
 
     if (this.storageService.getCurrentUser().IdNivel !== 1) {
-      Swal.fire({ title: 'Anular', text: 'No tiene permiso. Ingresa la Clave del Administrador', icon: 'error', confirmButtonText: 'OK' })
+      Swal.fire({ title: this.texts.get('void'), text: this.texts.get('noPermissionEnterAdminKey'), icon: 'error', confirmButtonText: this.texts.get('ok') })
         .then(async () => {
           idUsuarioAnula = 0
           this.confirmarAnulacion(IntIdVenta, idTipoPedido, idUsuarioAnula);
@@ -204,15 +206,15 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
   }
 
   confirmarAnulacion(IntIdVenta: number, idTipoPedido: string, idUsuarioAnula: number): void {
-    Swal.fire({ title: 'Anulación', text: '¿Está seguro de Anular el Documento?', icon: 'question',
-      showCancelButton: true, confirmButtonText: 'Sí', cancelButtonText: 'No'
+    Swal.fire({ title: this.texts.get('void'), text: this.texts.get('confirmVoidThisDocument'), icon: 'question',
+      showCancelButton: true, confirmButtonText: this.texts.get('yes'), cancelButtonText: this.texts.get('no')
     }).then((result) => {
       if (!result.isConfirmed) return;
       if (idTipoPedido === '004') {
         this.anularDocumentoVenta(IntIdVenta, true);
       } else {
-        Swal.fire({ title: 'Anular Pedido', text: '¿Anular también el Pedido?', icon: 'warning',
-          showCancelButton: true, confirmButtonText: 'Sí', cancelButtonText: 'No'
+        Swal.fire({ title: this.texts.get('voidOrderTitleSimple'), text: this.texts.get('alsoVoidOrder'), icon: 'warning',
+          showCancelButton: true, confirmButtonText: this.texts.get('yes'), cancelButtonText: this.texts.get('no')
         }).then(r => this.anularDocumentoVenta(IntIdVenta, r.isConfirmed));
       }
     });
@@ -223,7 +225,7 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
     this.ventaService.anularDocumentoVenta(IntIdVenta, this.motivoAnulacion, anularPedido).subscribe({
       next: (response: ApiResponse<ImpresionDTO[]>) => {
         if (response.Success) {
-          Swal.fire('Anulado', 'El documento se anuló con éxito', 'success');
+          Swal.fire(this.texts.get('voided'), this.texts.get('documentVoidedSuccessfully'), 'success');
           this.getVentasPorTurno(this.idTurno);
           this.motivoAnulacion = '';
           this.selectedRow = null;
@@ -243,18 +245,18 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
     return new Promise((resolve) => {
       const dialogRef = this.dialog.open(DialogMCantComponent, {
         width: '350px',
-        data: { title: 'Código de Administrador', hideNumber: true, decimalActive: false }
+        data: { title: this.texts.get('administratorCode'), hideNumber: true, decimalActive: false }
       });
       dialogRef.afterClosed().subscribe(result => {
         if (result?.value) {
           this.usuarioService.getUsuarioAuth(NivelUsuarioEnum.Administrador, result.value).subscribe({
             next: (response: ApiResponse<Usuario>) => {
               if (response.Success && response.Data) resolve(response.Data.IdUsuario);
-              else { Swal.fire('Código inválido', '', 'error'); resolve(-1); }
+              else { Swal.fire(this.texts.get('invalidCode'), '', 'error'); resolve(-1); }
             }
           });
         } else {
-          Swal.fire('Operación cancelada', '', 'info');
+          Swal.fire(this.texts.get('operationCancelled'), '', 'info');
           resolve(-1);
         }
       });
@@ -262,7 +264,7 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
   }
 
   private alertSeleccione(): void {
-    Swal.fire({ title: 'Atención', text: 'Seleccione un documento de la tabla', icon: 'warning', confirmButtonText: 'OK' });
+    Swal.fire({ title: this.texts.get('attention'), text: this.texts.get('selectDocument'), icon: 'warning', confirmButtonText: this.texts.get('ok') });
   }
 
   salir(): void { this.dialogRef.close(); }

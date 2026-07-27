@@ -7,6 +7,8 @@ import {
   DeliveryCliente,
   DeliveryContexto,
   DeliveryHistorial,
+  DeliveryOperacion,
+  DeliveryPedidoPendiente,
   GuardarDeliveryCliente,
   ProductoPrecioSocioNegocio
 } from '../models/delivery.models';
@@ -59,6 +61,24 @@ export class DeliveryService {
     return this.http.post<ApiResponse<DeliveryCliente>>(
       `${this.basePath}/clientes`,
       dto
+    );
+  }
+
+  obtenerOperacion(
+    idTurno: number
+  ): Observable<ApiResponse<DeliveryOperacion>> {
+    return this.http.get<ApiResponse<DeliveryOperacion>>(
+      `${this.basePath}/turnos/${idTurno}/operacion`
+    );
+  }
+
+  asignarMotorizado(
+    pedido: DeliveryPedidoPendiente,
+    idMotorizado: number
+  ): Observable<ApiResponse<DeliveryPedidoPendiente>> {
+    return this.http.put<ApiResponse<DeliveryPedidoPendiente>>(
+      `${this.basePath}/pedidos/${pedido.IdPedido}/${pedido.NroCuenta}/motorizado`,
+      { IdMotorizado: idMotorizado }
     );
   }
 }

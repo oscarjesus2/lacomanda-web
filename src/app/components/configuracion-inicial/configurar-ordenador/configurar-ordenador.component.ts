@@ -4,6 +4,7 @@ import { CookieService } from 'ngx-cookie-service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { StorageService } from 'src/app/services/storage.service';
 import { MatDialogRef } from '@angular/material/dialog';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 
 @Component({
   selector: 'app-configurar-ordenador',
@@ -32,7 +33,8 @@ export class ConfigurarOrdenadorComponent implements OnInit {
     private cookie: CookieService,
     private snack: MatSnackBar,
     private storage: StorageService,
-    private dialogRef: MatDialogRef<ConfigurarOrdenadorComponent>
+    private dialogRef: MatDialogRef<ConfigurarOrdenadorComponent>,
+    private texts: TenantTextCatalogService
   ) {}
 
   ngOnInit(): void {
@@ -55,7 +57,7 @@ export class ConfigurarOrdenadorComponent implements OnInit {
       id = `${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
     }
     this.form.patchValue({ identifier: id });
-    this.snack.open('Identificador generado', 'OK', { duration: 2000 });
+    this.snack.open(this.texts.get('identifierGenerated'), this.texts.get('ok'), { duration: 2000 });
   }
  salir() {
     this.dialogRef.close();
@@ -68,13 +70,13 @@ export class ConfigurarOrdenadorComponent implements OnInit {
  save(): void {
   if (this.form.invalid) {
     this.form.markAllAsTouched();
-    this.snack.open('Revisa el identificador', 'OK', { duration: 2500 });
+    this.snack.open(this.texts.get('checkIdentifier'), this.texts.get('ok'), { duration: 2500 });
     return;
   }
 
   const value = this.form.value.identifier!.trim();
   if (!value) {
-    this.snack.open('El identificador no puede estar vacío', 'OK', { duration: 2500 });
+    this.snack.open(this.texts.get('identifierCannotBeEmpty'), this.texts.get('ok'), { duration: 2500 });
     return;
   }
 
@@ -90,14 +92,14 @@ export class ConfigurarOrdenadorComponent implements OnInit {
     }
   } catch { /* no-op */ }
 
-  this.snack.open('Identificador guardado en este ordenador', 'OK', { duration: 2500 });
+  this.snack.open(this.texts.get('identifierSavedOnComputer'), this.texts.get('ok'), { duration: 2500 });
 }
 
 
   deleteCookie(): void {
     const prev = this.currentCookie;
     if (!prev) {
-      this.snack.open('No hay identificador para eliminar', 'OK', { duration: 2000 });
+      this.snack.open(this.texts.get('noIdentifierToDelete'), this.texts.get('ok'), { duration: 2000 });
       return;
     }
     this.cookie.delete(this.COOKIE_NAME, '/');
@@ -112,7 +114,7 @@ export class ConfigurarOrdenadorComponent implements OnInit {
       }
     } catch {}
 
-    this.snack.open('Identificador eliminado', 'OK', { duration: 2000 });
+    this.snack.open(this.texts.get('identifierDeleted'), this.texts.get('ok'), { duration: 2000 });
     this.form.patchValue({ identifier: '' });
   }
 }

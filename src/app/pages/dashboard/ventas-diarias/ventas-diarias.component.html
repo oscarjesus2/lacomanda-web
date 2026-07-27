@@ -8,32 +8,32 @@
     name="ventaDiariaSpinner"
     class="report-panel__spinner"
   >
-    <p>Cargando ventas...</p>
+    <p>{{ 'loadingSales' | tenantText }}</p>
   </ngx-spinner>
 
   <header class="report-panel__header">
     <div>
-      <h3 class="report-panel__title">Ventas</h3>
+      <h3 class="report-panel__title">{{ 'sales' | tenantText }}</h3>
       <p class="report-panel__subtitle">
-        Diarias · Semanales · Mensuales
+        {{ 'dailyWeeklyMonthly' | tenantText }}
       </p>
     </div>
 
     <label class="report-panel__control">
-      <span>Periodo</span>
+      <span>{{ 'period' | tenantText }}</span>
       <select
         class="report-panel__select"
         (change)="onReportTypeChange($event)"
       >
-        <option value="diarias">Diarias</option>
-        <option value="semanales">Semanales</option>
-        <option value="mensuales">Mensuales</option>
+        <option value="diarias">{{ 'daily' | tenantText }}</option>
+        <option value="semanales">{{ 'weekly' | tenantText }}</option>
+        <option value="mensuales">{{ 'monthly' | tenantText }}</option>
       </select>
     </label>
   </header>
 
   <section class="report-panel__summary" *ngIf="totalVenta != null">
-    <span class="report-panel__summary-label">Total venta</span>
+    <span class="report-panel__summary-label">{{ 'totalSale' | tenantText }}</span>
     <span class="report-panel__summary-value">
       {{ monedaSimbolo }} {{ totalVenta | number:'1.2-2' }}
     </span>
@@ -52,7 +52,7 @@
     ></div>
 
     <div class="report-panel__empty" *ngIf="sinDatos">
-      Sin datos para el rango seleccionado.
+      {{ 'noDataForRange' | tenantText }}
     </div>
   </div>
 </div>

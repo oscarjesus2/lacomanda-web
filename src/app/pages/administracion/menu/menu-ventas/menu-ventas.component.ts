@@ -38,51 +38,51 @@ export class MenuVentasComponent implements OnInit {
 
   ventasMenu = [
     {
-      title: 'Maestros',
+      title: 'Maestros', titleKey: 'menuMasters',
       children: [
-        { title: 'Configuración de Ambientes', route: '/ventas/configuracion-ambientes', icon: 'meeting_room',     label: 'Ambientes'    },
-        { title: 'Configuración de Espacios',  route: '/ventas/configuracion-espacios',  icon: 'table_restaurant', label: 'Espacios'     },
-        { title: 'Familia de Productos',        route: '/ventas/familia-productos',        icon: 'category',         label: 'Familias'     },
-        { title: 'Sub Familia de Productos',    route: '/ventas/subfamilia-productos',     icon: 'account_tree',     label: 'Sub familias' },
-        { title: 'Grupos de Productos',         route: '/ventas/grupos',                   icon: 'inventory_2',      label: 'Grupos'       },
-        { title: 'Colores',                     route: '/ventas/colores',                  icon: 'palette',          label: 'Colores'      },
-        { title: 'Areas de Impresión',          route: '/ventas/area-impresion',           icon: 'print',            label: 'Impresión'    },
-        { title: 'Productos',                   route: '/ventas/productos',                icon: 'restaurant_menu',  label: 'Productos'    },
-        { title: 'Socios de Negocio',           route: '/ventas/socios-negocio',           icon: 'handshake',        label: 'Socios'       },
-        { title: 'Configuración de Combos',     route: '/ventas/configuracion-combos',     icon: 'tune',             label: 'Combos'       },
-        { title: 'Observaciones',               route: '/ventas/observaciones',            icon: 'sticky_note_2',    label: 'Observac.'    },
-        { title: 'Empleados',                   route: '/ventas/empleados',                icon: 'badge',            label: 'Empleados'    },
-        { title: 'Usuarios',                    route: '/ventas/usuarios',                 icon: 'manage_accounts',  label: 'Usuarios'     },
-        { title: 'Caja',                        route: '/ventas/caja',                     icon: 'point_of_sale',    label: 'Caja'         },
-        { title: 'Estacion',                    route: '/ventas/estacion',                 icon: 'computer',         label: 'Estación'     },
-        { title: 'Descuentos',                  route: '/ventas/descuentos',               icon: 'local_offer',      label: 'Descuentos'   },
-        { title: 'Tarjetas',                    route: '/ventas/tarjetas',                 icon: 'credit_card',      label: 'Tarjetas'     },
-        { title: 'Promociones',                 route: '/ventas/promociones',              icon: 'campaign',         label: 'Promociones'  },
-        { title: 'Clientes',                    route: '/ventas/clientes',                 icon: 'people',           label: 'Clientes'     },
+        { title: 'Configuración de Ambientes', route: '/ventas/configuracion-ambientes', icon: 'meeting_room',     label: 'Ambientes',    titleKey: 'zonesConfig',        labelKey: 'zones'              },
+        { title: 'Configuración de Espacios',  route: '/ventas/configuracion-espacios',  icon: 'table_restaurant', label: 'Espacios',     titleKey: 'spacesConfig',       labelKey: 'spaces'             },
+        { title: 'Familia de Productos',        route: '/ventas/familia-productos',        icon: 'category',         label: 'Familias',     titleKey: 'productFamilies',    labelKey: 'families'           },
+        { title: 'Sub Familia de Productos',    route: '/ventas/subfamilia-productos',     icon: 'account_tree',     label: 'Sub familias', titleKey: 'productSubfamilies', labelKey: 'subfamiliesShort'   },
+        { title: 'Grupos de Productos',         route: '/ventas/grupos',                   icon: 'inventory_2',      label: 'Grupos',       titleKey: 'productGroups',      labelKey: 'groups'             },
+        { title: 'Colores',                     route: '/ventas/colores',                  icon: 'palette',          label: 'Colores',      titleKey: 'colors',             labelKey: 'colors'             },
+        { title: 'Areas de Impresión',          route: '/ventas/area-impresion',           icon: 'print',            label: 'Impresión',    titleKey: 'printAreas',         labelKey: 'printing'           },
+        { title: 'Productos',                   route: '/ventas/productos',                icon: 'restaurant_menu',  label: 'Productos',    titleKey: 'products',           labelKey: 'products'           },
+        { title: 'Socios de Negocio',           route: '/ventas/socios-negocio',           icon: 'handshake',        label: 'Socios',       titleKey: 'businessPartners',   labelKey: 'partners'           },
+        { title: 'Configuración de Combos',     route: '/ventas/configuracion-combos',     icon: 'tune',             label: 'Combos',       titleKey: 'combosConfig',       labelKey: 'combos'             },
+        { title: 'Observaciones',               route: '/ventas/observaciones',            icon: 'sticky_note_2',    label: 'Observac.',    titleKey: 'observations',       labelKey: 'observations'       },
+        { title: 'Empleados',                   route: '/ventas/empleados',                icon: 'badge',            label: 'Empleados',    titleKey: 'employees',          labelKey: 'employees'          },
+        { title: 'Usuarios',                    route: '/ventas/usuarios',                 icon: 'manage_accounts',  label: 'Usuarios',     titleKey: 'users',              labelKey: 'users'              },
+        { title: 'Caja',                        route: '/ventas/caja',                     icon: 'point_of_sale',    label: 'Caja',         titleKey: 'register',           labelKey: 'register'           },
+        { title: 'Estacion',                    route: '/ventas/estacion',                 icon: 'computer',         label: 'Estación',     titleKey: 'station',            labelKey: 'station'            },
+        { title: 'Descuentos',                  route: '/ventas/descuentos',               icon: 'local_offer',      label: 'Descuentos',   titleKey: 'discounts',          labelKey: 'discounts'          },
+        { title: 'Tarjetas',                    route: '/ventas/tarjetas',                 icon: 'credit_card',      label: 'Tarjetas',     titleKey: 'cards',              labelKey: 'cards'              },
+        { title: 'Promociones',                 route: '/ventas/promociones',              icon: 'campaign',         label: 'Promociones',  titleKey: 'promotions',         labelKey: 'promotions'         },
+        { title: 'Clientes',                    route: '/ventas/clientes',                 icon: 'people',           label: 'Clientes',     titleKey: 'customers',          labelKey: 'customers'          },
       ]
     },
     {
-      title: 'Operaciones',
+      title: 'Operaciones', titleKey: 'menuOperations',
       children: [
-        { title: 'Abrir Turno',      route: '/ventas/abrir-turno',        icon: 'lock_open',    label: 'Abrir turno'  },
-        { title: 'Cerrar Turno',     route: '/ventas/cerrar-turno',       icon: 'lock',         label: 'Cerrar turno' },
-        { title: 'Listado de Ventas',route: '/ventas/cerrar-turno',       icon: 'receipt_long', label: 'Ventas'       }
+        { title: 'Abrir Turno',      route: '/ventas/abrir-turno',        icon: 'lock_open',    label: 'Abrir turno',  titleKey: 'openShift',  labelKey: 'openShift'  },
+        { title: 'Cerrar Turno',     route: '/ventas/cerrar-turno',       icon: 'lock',         label: 'Cerrar turno', titleKey: 'closeShift', labelKey: 'closeShift' },
+        { title: 'Listado de Ventas',route: '/ventas/cerrar-turno',       icon: 'receipt_long', label: 'Ventas',       titleKey: 'salesList',  labelKey: 'sales'      }
       ]
     },
     {
-      title: 'Reportes',
+      title: 'Reportes', titleKey: 'menuReports',
       children: [
-        { title: 'Contable',           route: '/ventas/contable',           icon: 'calculate',  label: 'Contable'    },
-        { title: 'Ventas por Producto',route: '/ventas/ventas-por-producto',icon: 'bar_chart',  label: 'Por producto'},
-        { title: 'Resumen de Ventas',  route: '/ventas/resumen-ventas',     icon: 'summarize',  label: 'Resumen'     },
-        { title: 'Liquidación',        route: '/ventas/liquidacion',        icon: 'payments',   label: 'Liquidación' }
+        { title: 'Contable',           route: '/ventas/contable',           icon: 'calculate',  label: 'Contable',     titleKey: 'accounting',     labelKey: 'accounting'          },
+        { title: 'Ventas por Producto',route: '/ventas/ventas-por-producto',icon: 'bar_chart',  label: 'Por producto', titleKey: 'salesByProduct', labelKey: 'salesByProductShort' },
+        { title: 'Resumen de Ventas',  route: '/ventas/resumen-ventas',     icon: 'summarize',  label: 'Resumen',      titleKey: 'salesSummary',   labelKey: 'summary'             },
+        { title: 'Liquidación',        route: '/ventas/liquidacion',        icon: 'payments',   label: 'Liquidación',  titleKey: 'settlement',     labelKey: 'settlement'          }
       ]
     },
     {
-      title: 'Configuracion',
+      title: 'Configuracion', titleKey: 'menuConfiguration',
       children: [
-        { title: 'Configuración Inicial',      route: '/ventas/config-inicial',  icon: 'settings',  label: 'Config. inicial' },
-        { title: 'Configurar esta estación',   route: '/ventas/config-estacion', icon: 'computer',  label: 'Esta estación'   }
+        { title: 'Configuración Inicial',      route: '/ventas/config-inicial',  icon: 'settings',  label: 'Config. inicial', titleKey: 'initialSetup',          labelKey: 'initialSetupShort' },
+        { title: 'Configurar esta estación',   route: '/ventas/config-estacion', icon: 'computer',  label: 'Esta estación',   titleKey: 'configureThisStation',  labelKey: 'thisStation'       }
       ]
     }
   ];

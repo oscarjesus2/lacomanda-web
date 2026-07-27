@@ -8,27 +8,27 @@
     name="canalVentaSpinner"
     class="report-panel__spinner"
   >
-    <p>Cargando canales...</p>
+    <p>{{ 'loadingChannels' | tenantText }}</p>
   </ngx-spinner>
 
   <header class="report-panel__header">
     <div>
-      <h3 class="report-panel__title">Ventas por canal</h3>
+      <h3 class="report-panel__title">{{ 'salesByChannel' | tenantText }}</h3>
       <p class="report-panel__subtitle">
-        Espacio · Llevar · Delivery
+        {{ 'spaceTakeawayDelivery' | tenantText }}
       </p>
     </div>
   </header>
 
   <section class="report-panel__summary-group">
     <div class="report-panel__summary-chip">
-      Espacio: {{ monedaSimbolo }} {{ totalVentaEspacio | number:'1.2-2' }}
+      {{ 'space' | tenantText }}: {{ monedaSimbolo }} {{ totalVentaEspacio | number:'1.2-2' }}
     </div>
     <div class="report-panel__summary-chip">
-      Llevar: {{ monedaSimbolo }} {{ totalVentaLlevar | number:'1.2-2' }}
+      {{ 'takeaway' | tenantText }}: {{ monedaSimbolo }} {{ totalVentaLlevar | number:'1.2-2' }}
     </div>
     <div class="report-panel__summary-chip">
-      Delivery: {{ monedaSimbolo }} {{ totalVentaDelivery | number:'1.2-2' }}
+      {{ 'delivery' | tenantText }}: {{ monedaSimbolo }} {{ totalVentaDelivery | number:'1.2-2' }}
     </div>
   </section>
 
@@ -40,7 +40,7 @@
     ></div>
 
     <div class="report-panel__empty" *ngIf="sinDatos">
-      Sin datos para el rango seleccionado.
+      {{ 'noDataForRange' | tenantText }}
     </div>
   </div>
 </div>

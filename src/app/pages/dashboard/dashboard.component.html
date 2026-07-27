@@ -5,8 +5,8 @@
   <header class="dashboard__header">
     <div class="dashboard__header-accent"></div>
     <div>
-      <h1 class="dashboard__title">Dashboard de reportes</h1>
-      <p class="dashboard__subtitle">Analiza ventas, popularidad de platos y rendimiento por rango de fechas.</p>
+      <h1 class="dashboard__title">{{ 'reportsDashboard' | tenantText }}</h1>
+      <p class="dashboard__subtitle">{{ 'dashboardSubtitle' | tenantText }}</p>
     </div>
   </header>
 
@@ -16,7 +16,7 @@
     <div class="dashboard__controls">
 
       <div class="dashboard__field">
-        <label for="fecha-inicial" class="dashboard__label">Fecha inicial</label>
+        <label for="fecha-inicial" class="dashboard__label">{{ 'initialDate' | tenantText }}</label>
         <input
           type="date"
           id="fecha-inicial"
@@ -28,7 +28,7 @@
       </div>
 
       <div class="dashboard__field">
-        <label for="fecha-final" class="dashboard__label">Fecha final</label>
+        <label for="fecha-final" class="dashboard__label">{{ 'finalDate' | tenantText }}</label>
         <input
           type="date"
           id="fecha-final"
@@ -51,7 +51,7 @@
           (change)="updateVisibleReportes()"
         />
         <span class="dash-toggle__slider"></span>
-        <span class="dash-toggle__label">{{ rep.titulo }}</span>
+        <span class="dash-toggle__label">{{ rep.tituloKey | tenantText }}</span>
       </label>
     </div>
 
@@ -103,6 +103,6 @@
   
 </div>
   <footer class="dashboard__footer">
-    <p>© 2024 LaComanda · Dashboard de Restaurantes.</p>
+    <p>{{ 'dashboardFooter' | tenantText }}</p>
   </footer>
 </div>

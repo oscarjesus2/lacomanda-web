@@ -2,27 +2,27 @@
 
   <header class="report-panel__header">
     <div>
-      <h3 class="report-panel__title">Transacciones</h3>
+      <h3 class="report-panel__title">{{ 'transactions' | tenantText }}</h3>
       <p class="report-panel__subtitle">
-        Diarias · Semanales · Mensuales
+        {{ 'dailyWeeklyMonthly' | tenantText }}
       </p>
     </div>
 
     <label class="report-panel__control">
-      <span>Periodo</span>
+      <span>{{ 'period' | tenantText }}</span>
       <select
         class="report-panel__select"
         (change)="onReportTypeChange($event)"
       >
-        <option value="diarias">Diarias</option>
-        <option value="semanales">Semanales</option>
-        <option value="mensuales">Mensuales</option>
+        <option value="diarias">{{ 'daily' | tenantText }}</option>
+        <option value="semanales">{{ 'weekly' | tenantText }}</option>
+        <option value="mensuales">{{ 'monthly' | tenantText }}</option>
       </select>
     </label>
   </header>
 
   <section class="report-panel__summary" *ngIf="totalTransaccion != null">
-    <span class="report-panel__summary-label">Total transacciones</span>
+    <span class="report-panel__summary-label">{{ 'totalTransactions' | tenantText }}</span>
     <span class="report-panel__summary-value">
       {{ totalTransaccion }}
     </span>
@@ -41,7 +41,7 @@
     ></div>
 
     <div class="report-panel__empty" *ngIf="sinDatos">
-      Sin datos para el rango seleccionado.
+      {{ 'noDataForRange' | tenantText }}
     </div>
   </div>
 </div>

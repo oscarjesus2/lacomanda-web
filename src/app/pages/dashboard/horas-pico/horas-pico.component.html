@@ -8,32 +8,32 @@
     name="horasPicoSpinner"
     class="report-panel__spinner"
   >
-    <p>Cargando horas pico...</p>
+    <p>{{ 'loadingPeakHours' | tenantText }}</p>
   </ngx-spinner>
 
   <header class="report-panel__header">
     <div>
-      <h3 class="report-panel__title">Horas pico</h3>
+      <h3 class="report-panel__title">{{ 'peakHours' | tenantText }}</h3>
       <p class="report-panel__subtitle">
-        Segmentos del día
+        {{ 'daySegments' | tenantText }}
       </p>
     </div>
 
     <label class="report-panel__control">
-      <span>Franja</span>
+      <span>{{ 'timeSlot' | tenantText }}</span>
       <select
         class="report-panel__select"
         (change)="onReportTypeChange($event)"
       >
-        <option value="1">Tarde</option>
-        <option value="2">Noche</option>
-        <option value="3">Madrugada</option>
+        <option value="1">{{ 'afternoon' | tenantText }}</option>
+        <option value="2">{{ 'night' | tenantText }}</option>
+        <option value="3">{{ 'lateNight' | tenantText }}</option>
       </select>
     </label>
   </header>
 
   <section class="report-panel__summary" *ngIf="horaPico">
-    <span class="report-panel__summary-label">Hora pico</span>
+    <span class="report-panel__summary-label">{{ 'peakHour' | tenantText }}</span>
     <span class="report-panel__summary-value">
       {{ horaPico }}
     </span>
@@ -47,7 +47,7 @@
     ></div>
 
     <div class="report-panel__empty" *ngIf="sinDatos">
-      Sin datos para el rango seleccionado.
+      {{ 'noDataForRange' | tenantText }}
     </div>
   </div>
 </div>

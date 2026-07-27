@@ -21,13 +21,13 @@ export class DashboardComponent implements OnInit {
   userData?: Usuario;
 
   reportes = [
-    { titulo: 'Ventas Diarias', componente: 'ventas-diarias', visible: false },
-    { titulo: 'Popularidad de Platos', componente: 'popularidad-platos', visible: false },
-    { titulo: 'Horas Pico', componente: 'horas-pico', visible: false },
-    { titulo: 'Canal de Venta', componente: 'canal-venta', visible: false },
-    { titulo: 'Anulaciones', componente: 'anulaciones', visible: false }
+    { tituloKey: 'dailySales', componente: 'ventas-diarias', visible: false },
+    { tituloKey: 'dishPopularity', componente: 'popularidad-platos', visible: false },
+    { tituloKey: 'peakHours', componente: 'horas-pico', visible: false },
+    { tituloKey: 'salesChannel', componente: 'canal-venta', visible: false },
+    { tituloKey: 'voids', componente: 'anulaciones', visible: false }
     // Puedes agregar más reportes aquí:
-    // { titulo: 'Nuevo Reporte', componente: 'nuevo-reporte', visible: false }
+    // { tituloKey: 'nuevoReporte', componente: 'nuevo-reporte', visible: false }
   ];
 
   constructor(

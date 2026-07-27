@@ -8,14 +8,14 @@
     name="anulacionesSpinner"
     class="report-panel__spinner"
   >
-    <p>Cargando anulaciones...</p>
+    <p>{{ 'loadingVoids' | tenantText }}</p>
   </ngx-spinner>
 
   <header class="report-panel__header">
     <div>
-      <h3 class="report-panel__title">Anulaciones</h3>
+      <h3 class="report-panel__title">{{ 'voids' | tenantText }}</h3>
       <p class="report-panel__subtitle">
-        Por producto y motivo
+        {{ 'byProductAndReason' | tenantText }}
       </p>
     </div>
   </header>
@@ -24,7 +24,7 @@
     <div class="report-panel__chart chart" #chart></div>
 
     <div class="report-panel__empty" *ngIf="sinDatos">
-      Sin datos para el rango seleccionado.
+      {{ 'noDataForRange' | tenantText }}
     </div>
   </div>
 
@@ -36,11 +36,11 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Motivo</th>
-          <th>Documento</th>
-          <th>Cantidad</th>
-          <th>Precio</th>
-          <th>Autoriza</th>
+          <th>{{ 'reason' | tenantText }}</th>
+          <th>{{ 'document' | tenantText }}</th>
+          <th>{{ 'quantityFull' | tenantText }}</th>
+          <th>{{ 'price' | tenantText }}</th>
+          <th>{{ 'authorizedBy' | tenantText }}</th>
         </tr>
       </thead>
       <tbody>

@@ -4,24 +4,24 @@
     <header class="admin-page__header">
       <div class="admin-page__header-accent"></div>
       <div>
-        <h1 class="admin-page__title">Administración</h1>
-        <p class="admin-page__subtitle">Configura ventas, almacén y parámetros del sistema.</p>
+        <h1 class="admin-page__title">{{ 'administration' | tenantText }}</h1>
+        <p class="admin-page__subtitle">{{ 'adminSubtitle' | tenantText }}</p>
       </div>
     </header>
 
     <section class="admin-page__columns">
       <article class="admin-card">
-        <h2 class="admin-card__title">Ventas</h2>
+        <h2 class="admin-card__title">{{ 'sales' | tenantText }}</h2>
         <p class="admin-card__subtitle">
-          Operaciones, cierres y reportes
+          {{ 'salesCardSubtitle' | tenantText }}
         </p>
         <app-menu-ventas></app-menu-ventas>
       </article>
 
       <article class="admin-card">
-        <h2 class="admin-card__title">Almacén</h2>
+        <h2 class="admin-card__title">{{ 'warehouse' | tenantText }}</h2>
         <p class="admin-card__subtitle">
-          Productos, stock y compras
+          {{ 'warehouseCardSubtitle' | tenantText }}
         </p>
         <app-menu-almacen></app-menu-almacen>
       </article>

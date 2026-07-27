@@ -864,12 +864,28 @@ export class VentaComponent implements OnInit, AfterViewInit {
       panelClass: 'delivery-dialog-container',
       disableClose: true,
       data: {
-        SociosNegocio: this.listaSociosNegocio ?? []
+        SociosNegocio: this.listaSociosNegocio ?? [],
+        IdTurno: this.turnoAbierto?.IdTurno ?? 0
       }
     });
 
-    dialogRef.afterClosed().subscribe((result?: DeliveryDialogResult) => {
+    dialogRef.afterClosed().subscribe(async (result?: DeliveryDialogResult) => {
       if (!result) {
+        return;
+      }
+
+      if (result.Accion === 'COBRAR_ENTREGA' && result.Pedido) {
+        await this.openPedido(result.Pedido);
+        if (this.idPedidoCobrar <= 0) {
+          return;
+        }
+
+        const idTipoDocumento = this.mostrarBoleta
+          ? this.idTipoDocBoleta
+          : (this.mostrarFactura
+              ? this.idTipoDocFactura
+              : EnumTipoDocumento.Express);
+        this.OpenDialogEmitirComprobante(idTipoDocumento);
         return;
       }
 
@@ -1102,7 +1118,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
 
-  async openPedido(pedido: PedidoDeliveryDTO) {
+  async openPedido(
+    pedido: Pick<PedidoDeliveryDTO, 'IdPedido' | 'NroCuenta'>
+  ) {
     this.limpiarPedido();
     const listData: ApiResponse<PedidoEspacioDTO[]> = await lastValueFrom(this.pedidoService.FindPedidoByIdPedidoNroCuenta(pedido.IdPedido, pedido.NroCuenta));
     if (listData.Data.length > 0) {

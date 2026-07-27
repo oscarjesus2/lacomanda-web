@@ -19,6 +19,7 @@ import { PedidoCab } from 'src/app/models/pedido.models';
 import { PedidoDet } from 'src/app/models/pedidodet.models';
 import { StorageService } from 'src/app/services/storage.service';
 import { Turno } from 'src/app/models/turno.models';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 
 export interface ProductElement {
   IdProducto: number;
@@ -79,6 +80,7 @@ export class DialogEmitirVentaComponent implements OnInit {
     private cajaService: CajaService,
     private productoService: ProductoService,
     private spinnerService: NgxSpinnerService,
+    private texts: TenantTextCatalogService,
   ) {}
 
   private async initializeCaja(): Promise<void> {
@@ -116,7 +118,7 @@ export class DialogEmitirVentaComponent implements OnInit {
       await this.initializeCaja();
       await this.initializeProductos();
     } catch (e) {
-      Swal.fire('Algo anda mal', e.error, 'error');
+      Swal.fire(this.texts.get('unexpectedError'), e.error, 'error');
       console.log(e);
     } finally {
       this.spinnerService.hide();
@@ -147,10 +149,10 @@ export class DialogEmitirVentaComponent implements OnInit {
         this.VentaEnabled = false;
       } else {
         Swal.fire({
-          title: 'Validación',
-          text: `Debe aperturar un turno de la ${oCaja.Descripcion} para poder emitir un comprobante de venta.`,
+          title: this.texts.get('validation'),
+          text: this.texts.get('mustOpenShiftToIssue', { register: oCaja.Descripcion }),
           icon: 'warning',
-          confirmButtonText: 'OK'
+          confirmButtonText: this.texts.get('ok')
         });
         this.cajaSeleccionada = 0;
         this.visibleInfoTurno = false;
@@ -262,10 +264,10 @@ export class DialogEmitirVentaComponent implements OnInit {
     if (selectedProduct.Tipo === 1)
       {
         Swal.fire({
-          title: 'Validación',
-          text: `No se puede agregar una Cantidad desde esta opcion para un Producto Combo.`,
+          title: this.texts.get('validation'),
+          text: this.texts.get('cannotAddQtyCombo'),
           icon: 'warning',
-          confirmButtonText: 'OK'
+          confirmButtonText: this.texts.get('ok')
         });
         return;
       }
@@ -273,42 +275,42 @@ export class DialogEmitirVentaComponent implements OnInit {
       if (selectedProduct.Tipo === 2)
       {
         Swal.fire({
-          title: 'Validación',
-          text: `No se puede agregar una Cantidad desde esta opcion para un Producto que tiene Complementos.`,
+          title: this.texts.get('validation'),
+          text: this.texts.get('cannotAddQtyComplements'),
           icon: 'warning',
-          confirmButtonText: 'OK'
+          confirmButtonText: this.texts.get('ok')
         });
         return;
       }
 
     if (selectedProduct.IdMoneda === 'SOL' && this.monedaSeleccionada === 'DOLARES' && parseFloat(this.tipoCambioCompra) === 0) {
       Swal.fire({
-        title: 'Validación',
-        text: `El producto ${selectedProduct.NombreCorto} está en SOLES. Para realizar la venta en DOLARES es necesario ingresar el Tipo de Cambio COMPRA.`,
+        title: this.texts.get('validation'),
+        text: this.texts.get('productInSolesNeedBuyRate', { product: selectedProduct.NombreCorto }),
         icon: 'warning',
-        confirmButtonText: 'OK'
+        confirmButtonText: this.texts.get('ok')
       });
       return;
     }
 
     if (selectedProduct.IdMoneda === 'DOL' && this.monedaSeleccionada === 'SOLES' && parseFloat(this.tipoCambioVenta) === 0) {
       Swal.fire({
-        title: 'Validación',
-        text: `El producto ${selectedProduct.NombreCorto} está en DOLARES. Para realizar la venta en SOLES es necesario ingresar el Tipo de Cambio VENTA.`,
+        title: this.texts.get('validation'),
+        text: this.texts.get('productInDollarsNeedSellRate', { product: selectedProduct.NombreCorto }),
         icon: 'warning',
-        confirmButtonText: 'OK'
+        confirmButtonText: this.texts.get('ok')
       });
       return;
     }
 
     if (!selectedProduct.EsServicio && selectedProduct.Stock === 0) {
       Swal.fire({
-        title: 'Validación',
-        text: 'El producto no tiene Stock. ¿Desea continuar de todas formas?',
+        title: this.texts.get('validation'),
+        text: this.texts.get('productNoStockContinue'),
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Sí',
-        cancelButtonText: 'No'
+        confirmButtonText: this.texts.get('yes'),
+        cancelButtonText: this.texts.get('no')
       }).then(result => {
         if (result.isConfirmed) {
           this.AgregarItemGrid(selectedProduct);
@@ -461,10 +463,10 @@ export class DialogEmitirVentaComponent implements OnInit {
     if (this.form.valid) {
       if (this.dataSource.data.length <= 0) {
         Swal.fire({
-          title: 'Validación',
-          text: `No ha ingresado ningún producto de venta.`,
+          title: this.texts.get('validation'),
+          text: this.texts.get('noSaleProductEntered'),
           icon: 'warning',
-          confirmButtonText: 'OK'
+          confirmButtonText: this.texts.get('ok')
         });
         return;
       }

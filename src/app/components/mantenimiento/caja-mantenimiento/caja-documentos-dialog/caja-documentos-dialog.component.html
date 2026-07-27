@@ -5,20 +5,20 @@
   </button>
 
   <h2 class="docs-panel__title">
-    Documentos por Caja: {{ nombreCaja }}
+    {{ 'documentsByRegister' | tenantText }}: {{ nombreCaja }}
   </h2>
 
   <div *ngIf="loading" class="docs-panel__loading">
-    Cargando...
+    {{ 'loading' | tenantText }}
   </div>
 
   <div *ngIf="!loading" class="docs-panel__body">
     <div class="docs-panel__toolbar">
       <button mat-button class="docs-panel__toolbar-btn" (click)="toggleAll(true)">
-        Activar todos
+        {{ 'enableAll' | tenantText }}
       </button>
       <button mat-button class="docs-panel__toolbar-btn" (click)="toggleAll(false)">
-        Desactivar todos
+        {{ 'disableAll' | tenantText }}
       </button>
     </div>
 
@@ -26,14 +26,14 @@
       <table class="docs-table">
         <thead>
           <tr>
-            <th>Activo</th>
-            <th>Documento</th>
-            <th>Serie</th>
-            <th># Actual</th>
-            <th>Copias</th>
-            <th>Items x Doc</th>
-            <th>Preguntar al imprimir</th>
-            <th>Mascara</th>
+            <th>{{ 'active' | tenantText }}</th>
+            <th>{{ 'document' | tenantText }}</th>
+            <th>{{ 'series' | tenantText }}</th>
+            <th>{{ 'currentNumber' | tenantText }}</th>
+            <th>{{ 'copies' | tenantText }}</th>
+            <th>{{ 'itemsPerDoc' | tenantText }}</th>
+            <th>{{ 'askWhenPrinting' | tenantText }}</th>
+            <th>{{ 'mask' | tenantText }}</th>
           </tr>
         </thead>
         <tbody>
@@ -98,10 +98,10 @@
 
   <div class="docs-panel__actions">
     <button mat-raised-button color="primary" (click)="guardar()">
-      Guardar
+      {{ 'save' | tenantText }}
     </button>
     <button mat-stroked-button (click)="cerrar()">
-      Cerrar
+      {{ 'close' | tenantText }}
     </button>
   </div>
 </div>

@@ -4,18 +4,18 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Gastos &amp; Reportes</h2>
+  <h2>{{ 'expensesReports' | tenantText }}</h2>
 
   <!-- ══ VISTA PREVIA PDF (ocupa todo el panel cuando está activa) ══ -->
   <div class="rpt-pdf-viewer" *ngIf="pdfUrl">
     <div class="rpt-pdf-toolbar">
       <mat-icon class="rpt-pdf-toolbar__icon">picture_as_pdf</mat-icon>
-      <span class="rpt-pdf-toolbar__title">{{ pdfTitulo }} — Turno {{ idTurno }}</span>
-      <button class="rpt-pdf-btn rpt-pdf-btn--print" (click)="imprimirPdf()" matTooltip="Abrir / Imprimir">
-        <mat-icon>print</mat-icon> Imprimir
+      <span class="rpt-pdf-toolbar__title">{{ pdfTitulo }} — {{ 'shift' | tenantText }} {{ idTurno }}</span>
+      <button class="rpt-pdf-btn rpt-pdf-btn--print" (click)="imprimirPdf()" [matTooltip]="'openPrint' | tenantText">
+        <mat-icon>print</mat-icon> {{ 'print' | tenantText }}
       </button>
       <button class="rpt-pdf-btn rpt-pdf-btn--close" (click)="cerrarPdf()">
-        <mat-icon>close</mat-icon> Cerrar vista
+        <mat-icon>close</mat-icon> {{ 'closeView' | tenantText }}
       </button>
     </div>
     <iframe class="rpt-pdf-frame" [src]="pdfUrl" type="application/pdf"></iframe>
@@ -25,34 +25,34 @@
   <mat-tab-group class="rpt-tabs" animationDuration="150ms" *ngIf="!pdfUrl">
 
     <!-- ── TAB 1 — VENTAS ──────────────────────────────── -->
-    <mat-tab label="VENTAS">
+    <mat-tab [label]="'sales' | tenantText">
       <div class="rpt-tab-content">
 
         <!-- Resumen de cobros -->
         <div class="rpt-section">
           <div class="rpt-section__header">
             <mat-icon>summarize</mat-icon>
-            <span>Resumen de Cobros — Turno {{ idTurno }}</span>
-            <button class="rpt-refresh" (click)="loadResumen()" [disabled]="loadingResumen" matTooltip="Actualizar">
+            <span>{{ 'collectionsSummary' | tenantText }} — {{ 'shift' | tenantText }} {{ idTurno }}</span>
+            <button class="rpt-refresh" (click)="loadResumen()" [disabled]="loadingResumen" [matTooltip]="'update' | tenantText">
               <mat-icon>refresh</mat-icon>
             </button>
           </div>
 
           <div class="rpt-stats" *ngIf="!loadingResumen; else loadingTpl">
             <div class="rpt-stat">
-              <span class="rpt-stat__label">Cobrado</span>
+              <span class="rpt-stat__label">{{ 'collected' | tenantText }}</span>
               <span class="rpt-stat__value rpt-stat__value--ok">
                 {{ simbolo }} {{ (resumen?.TotalCobrado ?? 0) | number:'1.2-2' }}
               </span>
             </div>
             <div class="rpt-stat">
-              <span class="rpt-stat__label">Por Cobrar</span>
+              <span class="rpt-stat__label">{{ 'pendingCollection' | tenantText }}</span>
               <span class="rpt-stat__value rpt-stat__value--warn">
                 {{ simbolo }} {{ (resumen?.TotalPorCobrar ?? 0) | number:'1.2-2' }}
               </span>
             </div>
             <div class="rpt-stat rpt-stat--total">
-              <span class="rpt-stat__label">Total</span>
+              <span class="rpt-stat__label">{{ 'total' | tenantText }}</span>
               <span class="rpt-stat__value rpt-stat__value--total">
                 {{ simbolo }} {{ (resumen?.Total ?? 0) | number:'1.2-2' }}
               </span>
@@ -62,7 +62,7 @@
           <ng-template #loadingTpl>
             <div class="rpt-loading">
               <mat-icon class="rpt-loading__icon">hourglass_empty</mat-icon>
-              <span>Cargando...</span>
+              <span>{{ 'loading' | tenantText }}</span>
             </div>
           </ng-template>
         </div>
@@ -71,34 +71,34 @@
         <div class="rpt-section">
           <div class="rpt-section__header">
             <mat-icon>bar_chart</mat-icon>
-            <span>Reportes de Ventas</span>
+            <span>{{ 'salesReports' | tenantText }}</span>
           </div>
           <div class="rpt-actions">
             <button class="rpt-action-btn"
                     [disabled]="!!loadingPdf || !isAdmin"
                     (click)="verVentasPorProducto()"
-                    [matTooltip]="!isAdmin ? 'Solo administradores' : 'Ver PDF'">
+                    [matTooltip]="(!isAdmin ? 'adminsOnly' : 'viewPdf') | tenantText">
               <mat-icon>{{ loadingPdf === 'ventas-producto' ? 'hourglass_empty' : 'inventory_2' }}</mat-icon>
-              <span>{{ loadingPdf === 'ventas-producto' ? 'Generando...' : 'Ventas por Producto' }}</span>
+              <span>{{ (loadingPdf === 'ventas-producto' ? 'generating' : 'salesByProduct') | tenantText }}</span>
             </button>
             <button class="rpt-action-btn"
                     [disabled]="!!loadingPdf || !isAdmin"
                     (click)="verResumenVenta()"
-                    [matTooltip]="!isAdmin ? 'Solo administradores' : 'Ver PDF'">
+                    [matTooltip]="(!isAdmin ? 'adminsOnly' : 'viewPdf') | tenantText">
               <mat-icon>{{ loadingPdf === 'resumen-venta' ? 'hourglass_empty' : 'receipt' }}</mat-icon>
-              <span>{{ loadingPdf === 'resumen-venta' ? 'Generando...' : 'Resumen de Ventas' }}</span>
+              <span>{{ (loadingPdf === 'resumen-venta' ? 'generating' : 'salesSummary') | tenantText }}</span>
             </button>
             <button class="rpt-action-btn"
                     [disabled]="!!loadingPdf || !isAdmin"
                     (click)="verResuDocumentos()"
-                    [matTooltip]="!isAdmin ? 'Solo administradores' : 'Ver PDF'">
+                    [matTooltip]="(!isAdmin ? 'adminsOnly' : 'viewPdf') | tenantText">
               <mat-icon>{{ loadingPdf === 'resu-documentos' ? 'hourglass_empty' : 'description' }}</mat-icon>
-              <span>{{ loadingPdf === 'resu-documentos' ? 'Generando...' : 'Resumen de Documentos' }}</span>
+              <span>{{ (loadingPdf === 'resu-documentos' ? 'generating' : 'documentsSummary') | tenantText }}</span>
             </button>
           </div>
           <div class="rpt-filter-row">
-            <mat-checkbox disabled>Solo Doc. Electrónicos</mat-checkbox>
-            <mat-checkbox disabled>Solo Express</mat-checkbox>
+            <mat-checkbox disabled>{{ 'onlyElectronicDocs' | tenantText }}</mat-checkbox>
+            <mat-checkbox disabled>{{ 'onlyExpress' | tenantText }}</mat-checkbox>
           </div>
         </div>
 
@@ -106,25 +106,25 @@
     </mat-tab>
 
     <!-- ── TAB 2 — EGRESOS ─────────────────────────────── -->
-    <mat-tab label="EGRESOS">
+    <mat-tab [label]="'expenses' | tenantText">
       <div class="rpt-tab-content">
         <div class="rpt-section">
           <div class="rpt-section__header">
             <mat-icon>payments</mat-icon>
-            <span>Egresos del Turno</span>
+            <span>{{ 'shiftExpenses' | tenantText }}</span>
           </div>
           <div class="rpt-actions">
             <button class="rpt-action-btn" disabled>
               <mat-icon>edit_note</mat-icon>
-              <span>Registro de Egresos</span>
+              <span>{{ 'expenseEntry' | tenantText }}</span>
             </button>
             <button class="rpt-action-btn" disabled>
               <mat-icon>list_alt</mat-icon>
-              <span>Reporte Detallado</span>
+              <span>{{ 'detailedReport' | tenantText }}</span>
             </button>
             <button class="rpt-action-btn" disabled>
               <mat-icon>segment</mat-icon>
-              <span>Reporte Resumido</span>
+              <span>{{ 'summaryReport' | tenantText }}</span>
             </button>
           </div>
         </div>
@@ -132,21 +132,21 @@
     </mat-tab>
 
     <!-- ── TAB 3 — SEGUIMIENTO ─────────────────────────── -->
-    <mat-tab label="SEGUIMIENTO">
+    <mat-tab [label]="'tracking' | tenantText">
       <div class="rpt-tab-content">
         <div class="rpt-section">
           <div class="rpt-section__header">
             <mat-icon>track_changes</mat-icon>
-            <span>Seguimiento de Comandas</span>
+            <span>{{ 'orderTracking' | tenantText }}</span>
           </div>
           <div class="rpt-actions">
             <button class="rpt-action-btn" disabled>
               <mat-icon>assignment</mat-icon>
-              <span>Seguimiento de Comandas</span>
+              <span>{{ 'orderTracking' | tenantText }}</span>
             </button>
             <button class="rpt-action-btn" disabled>
               <mat-icon>woman</mat-icon>
-              <span>Comisión Anfitriona</span>
+              <span>{{ 'hostessCommission' | tenantText }}</span>
             </button>
           </div>
         </div>
