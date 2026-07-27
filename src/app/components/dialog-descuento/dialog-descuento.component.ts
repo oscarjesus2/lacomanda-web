@@ -5,6 +5,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { isDuration } from 'moment';
 import { Descuento } from 'src/app/models/descuento.models';
 import { DescuentoService } from 'src/app/services/descuento.service';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -27,9 +28,6 @@ export class DialogDescuentoComponent {
   lblproductoVisible: boolean = false;
   txtValor: number = 0;
   txtCupon: string = '';
-  label10: string = 'Dscto';
-  label2: string = '%';
-  label3: string = 'Nº Cupón';
   descuentos: Descuento[] = [];
   filteredDescuentos: Descuento[] = [];
   selectedRow: Descuento;
@@ -48,6 +46,7 @@ export class DialogDescuentoComponent {
     private dialog: MatDialog,
     public dialogRef: MatDialogRef<DialogDescuentoComponent>,
     private descuentoService: DescuentoService,
+    private texts: TenantTextCatalogService,
   )
   {
     this.idProducto = data.idProducto;
@@ -59,6 +58,13 @@ export class DialogDescuentoComponent {
 
   ngOnInit(): void {
     this.cargarDescuentos();
+  }
+
+  /** El valor se expresa como monto (no como %) en Vale, Abono y Reserva. */
+  get usaMonto(): boolean {
+    return this.retornaTipoDescuento === 'V'
+      || this.retornaTipoDescuento === 'A'
+      || this.retornaTipoDescuento === 'R';
   }
 
   /** Convierte el código de letra ('P','T','V') al número del enum backend */
@@ -95,36 +101,8 @@ export class DialogDescuentoComponent {
     this.dataSource.data = this.filteredDescuentos.filter(
       x => x.TipoDescuento === this.tipoLetraANumero(this.retornaTipoDescuento)
     );
-    if (tipodeso == "P"){
-      this.lblproductoVisible = true;
-      this.label10 = "Dscto";
-      this.label2 = "%";
-      this.label3 = "Nº Cupón";
-    }
-    if (tipodeso == "T"){
-      this.lblproductoVisible = false;
-      this.label10 = "Dscto";
-      this.label2 = "%";
-      this.label3 = "Nº Cupón";
-    }
-    if (tipodeso == "V"){
-      this.lblproductoVisible = false;
-      this.label10 = "Monto";
-      this.label2 = "$";
-      this.label3 = "Nº Cupón";
-    }
-    if (tipodeso == "A"){
-      this.lblproductoVisible = false;
-      this.label10 = "Monto";
-      this.label2 = "$";
-      this.label3 = "Numero";
-    }
-    if (tipodeso == "R"){
-      this.lblproductoVisible = false;
-      this.label10 = "Monto";
-      this.label2 = "$";
-      this.label3 = "N° Reserva";
-    }
+    // Solo el descuento por producto muestra el chip del producto seleccionado.
+    this.lblproductoVisible = (tipodeso === 'P');
   }
   
   selectRow(row: any) {
@@ -137,7 +115,7 @@ export class DialogDescuentoComponent {
 
       if (this.retornaTipoDescuento !== "R") {
         if (!this.selectedRow) {
-          this.showAlert("Ingrese un descuento para la venta", "warning");
+          this.showAlert(this.texts.get('enterDiscountForSale'), "warning");
           return;
         }else{
           this.retornaIdDescuento = this.selectedRow.IdDescuento; // ya es number
@@ -146,14 +124,14 @@ export class DialogDescuentoComponent {
 
       if (this.retornaTipoDescuento === "V") {
         if (this.descuentoTotal < Number(this.txtValor)) {
-          this.showAlert(`El descuento por Vale máximo debe ser ${this.descuentoMaximo}.`, "warning");
+          this.showAlert(this.texts.get('maxVoucherDiscount', { max: this.descuentoMaximo }), "warning");
           return;
         }
         this.retornaPorcentaje = (Number(this.txtValor) / this.descuentoTotal) * 100;
       }
 
       if (!this.txtCupon) {
-        this.showAlert("Ingrese el número del Cupón, Vale o Reserva", "warning");
+        this.showAlert(this.texts.get('enterCouponVoucherReservation'), "warning");
         return;
       }
 
@@ -163,18 +141,18 @@ export class DialogDescuentoComponent {
 
       if (this.retornaTipoDescuento === "V" || this.retornaTipoDescuento === "R" || this.retornaTipoDescuento === "A") {
         if (isNaN(Number(this.txtValor))) {
-          this.showAlert("Ingrese el Valor del Vale", "warning");
+          this.showAlert(this.texts.get('enterVoucherValue'), "warning");
           return;
         }
         this.retonaValorVale = Number(this.txtValor);
       }
 
       Swal.fire({
-        title: '¿Está seguro de ejecutar el descuento?',
+        title: this.texts.get('confirmExecuteDiscount'),
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Sí',
-        cancelButtonText: 'No'
+        confirmButtonText: this.texts.get('yes'),
+        cancelButtonText: this.texts.get('no')
       }).then((result) => {
         if (result.isConfirmed) {
           this.retornaNroCupon = this.txtCupon;  
@@ -190,7 +168,7 @@ export class DialogDescuentoComponent {
     Swal.fire({
       text: message,
       icon: icon,
-      confirmButtonText: 'Aceptar'
+      confirmButtonText: this.texts.get('accept')
     });
   }
 }

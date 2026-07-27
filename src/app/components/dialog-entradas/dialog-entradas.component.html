@@ -4,7 +4,7 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Ventas de Entradas</h2>
+  <h2>{{ 'admissionSales' | tenantText }}</h2>
 
   <!-- Selector de tipo de entrada -->
   <div class="entradas-tabs">
@@ -12,7 +12,7 @@
             class="entradas-tab"
             [ngClass]="{'entradas-tab--selected': selectedButton === 'socios'}"
             (click)="selectAndIncrement('socios')">
-      <span class="entradas-tab__label">Entrada de Socios</span>
+      <span class="entradas-tab__label">{{ 'memberAdmission' | tenantText }}</span>
       <span class="entradas-tab__count">{{ entradaSocios }}</span>
     </button>
 
@@ -20,26 +20,26 @@
             class="entradas-tab"
             [ngClass]="{'entradas-tab--selected': selectedButton === 'invitados'}"
             (click)="selectAndIncrement('invitados')">
-      <span class="entradas-tab__label">Entrada de Invitados</span>
+      <span class="entradas-tab__label">{{ 'guestAdmission' | tenantText }}</span>
       <span class="entradas-tab__count">{{ entradaInvitados }}</span>
     </button>
 
     <button type="button" class="entradas-tab entradas-tab--process" (click)="procesarEntradaGratis()">
       <mat-icon>redeem</mat-icon>
-      <span class="entradas-tab__label">Procesar Entrada Gratis</span>
+      <span class="entradas-tab__label">{{ 'processFreeAdmission' | tenantText }}</span>
     </button>
 
     <button type="button"
             class="entradas-tab"
             [ngClass]="{'entradas-tab--selected': selectedButton === 'consumo'}"
             (click)="selectAndIncrement('consumo')">
-      <span class="entradas-tab__label">Entrada por Consumo</span>
+      <span class="entradas-tab__label">{{ 'consumptionAdmission' | tenantText }}</span>
       <span class="entradas-tab__count">{{ entradaConsumo }}</span>
     </button>
 
     <button type="button" class="entradas-tab entradas-tab--process" (click)="procesarEntradaXConsumo()">
       <mat-icon>local_bar</mat-icon>
-      <span class="entradas-tab__label">Procesar Entrada xConsumo</span>
+      <span class="entradas-tab__label">{{ 'processConsumptionAdmission' | tenantText }}</span>
     </button>
   </div>
 
@@ -50,25 +50,25 @@
          [ngClass]="{'entradas-card--selected': selectedButton === 'nacional'}"
          (click)="select('nacional')">
       <div class="entradas-card__head">
-        <h3 class="entradas-card__title">{{ prodNacional?.Nombre || 'Entrada Nacional' }}</h3>
+        <h3 class="entradas-card__title">{{ prodNacional?.Nombre || ('nationalAdmission' | tenantText) }}</h3>
         <span class="entradas-card__price">{{ monedaSimbolo }} {{ precioNacional | number:'1.2-2' }}</span>
       </div>
       <div class="entradas-card__count-box">
         <span class="entradas-card__count">{{ entradaNacional }}</span>
-        <span class="entradas-card__count-label">entradas</span>
+        <span class="entradas-card__count-label">{{ 'admissionsLower' | tenantText }}</span>
       </div>
       <div class="entradas-card__actions">
-        <button type="button" class="entradas-btn-add" aria-label="Sumar entrada nacional"
+        <button type="button" class="entradas-btn-add" [attr.aria-label]="'addNationalAdmission' | tenantText"
                 (click)="selectAndIncrement('nacional'); $event.stopPropagation()">
           <mat-icon>add</mat-icon>
         </button>
         <button type="button" class="entradas-btn-discount"
                 (click)="descontarEntrada('nacional'); $event.stopPropagation()">
-          <mat-icon>sell</mat-icon> Descuento
+          <mat-icon>sell</mat-icon> {{ 'discount' | tenantText }}
         </button>
       </div>
       <p class="entradas-card__newprice" *ngIf="nuevoPrecioNacional > 0">
-        Nuevo precio · {{ monedaSimbolo }} {{ nuevoPrecioNacional | number:'1.2-2' }}
+        {{ 'newPrice' | tenantText }} · {{ monedaSimbolo }} {{ nuevoPrecioNacional | number:'1.2-2' }}
       </p>
     </div>
 
@@ -76,36 +76,36 @@
          [ngClass]="{'entradas-card--selected': selectedButton === 'internacional'}"
          (click)="select('internacional')">
       <div class="entradas-card__head">
-        <h3 class="entradas-card__title">{{ prodInternacional?.Nombre || 'Entrada Internacional' }}</h3>
+        <h3 class="entradas-card__title">{{ prodInternacional?.Nombre || ('internationalAdmission' | tenantText) }}</h3>
         <span class="entradas-card__price">{{ monedaSimbolo }} {{ precioInternacional | number:'1.2-2' }}</span>
       </div>
       <div class="entradas-card__count-box">
         <span class="entradas-card__count">{{ entradaInternacional }}</span>
-        <span class="entradas-card__count-label">entradas</span>
+        <span class="entradas-card__count-label">{{ 'admissionsLower' | tenantText }}</span>
       </div>
       <div class="entradas-card__actions">
-        <button type="button" class="entradas-btn-add" aria-label="Sumar entrada internacional"
+        <button type="button" class="entradas-btn-add" [attr.aria-label]="'addInternationalAdmission' | tenantText"
                 (click)="selectAndIncrement('internacional'); $event.stopPropagation()">
           <mat-icon>add</mat-icon>
         </button>
         <button type="button" class="entradas-btn-discount"
                 (click)="descontarEntrada('internacional'); $event.stopPropagation()">
-          <mat-icon>sell</mat-icon> Descuento
+          <mat-icon>sell</mat-icon> {{ 'discount' | tenantText }}
         </button>
       </div>
       <p class="entradas-card__newprice" *ngIf="nuevoPrecioInternacional > 0">
-        Nuevo precio · {{ monedaSimbolo }} {{ nuevoPrecioInternacional | number:'1.2-2' }}
+        {{ 'newPrice' | tenantText }} · {{ monedaSimbolo }} {{ nuevoPrecioInternacional | number:'1.2-2' }}
       </p>
     </div>
 
     <div class="entradas-card entradas-card--tragos">
       <div class="entradas-card__head">
-        <h3 class="entradas-card__title">Tragos Gratis</h3>
+        <h3 class="entradas-card__title">{{ 'freeDrinks' | tenantText }}</h3>
         <mat-icon class="entradas-card__head-icon">local_bar</mat-icon>
       </div>
       <div class="entradas-card__count-box">
-        <input type="number" min="0" [(ngModel)]="tragosGratis" class="entradas-tragos-input" aria-label="Tragos gratis">
-        <span class="entradas-card__count-label">tragos de cortesía</span>
+        <input type="number" min="0" [(ngModel)]="tragosGratis" class="entradas-tragos-input" [attr.aria-label]="'freeDrinks' | tenantText">
+        <span class="entradas-card__count-label">{{ 'courtesyDrinksLower' | tenantText }}</span>
       </div>
     </div>
   </div>
@@ -114,17 +114,17 @@
   <div class="entradas-secondary">
     <div class="entradas-secondary__actions">
       <button type="button" class="entradas-btn-ghost" (click)="restarCantidad()">
-        <mat-icon>remove</mat-icon> Restar
+        <mat-icon>remove</mat-icon> {{ 'subtract' | tenantText }}
       </button>
       <button type="button" class="entradas-btn-ghost" (click)="limpiar()">
-        <mat-icon>refresh</mat-icon> Limpiar
+        <mat-icon>refresh</mat-icon> {{ 'clear' | tenantText }}
       </button>
     </div>
 
     <label class="entradas-taxista">
       <input type="checkbox" id="taxista" [(ngModel)]="vinoConTaxista" (change)="onTaxistaChange()">
       <span class="entradas-taxista__text">
-        <span class="entradas-taxista__title">Vino con taxista</span>
+        <span class="entradas-taxista__title">{{ 'cameWithTaxiDriver' | tenantText }}</span>
         <span class="entradas-taxista__hint">{{ mensajeTaxista }}</span>
       </span>
     </label>
@@ -133,15 +133,15 @@
   <!-- Totales -->
   <div class="entradas-total">
     <div class="entradas-total__item">
-      <label>Importe</label>
+      <label>{{ 'amount' | tenantText }}</label>
       <span class="entradas-total__value">{{ monedaSimbolo }} {{ subTotal | number:'1.2-2' }}</span>
     </div>
     <div class="entradas-total__item">
-      <label>Descuento</label>
+      <label>{{ 'discount' | tenantText }}</label>
       <span class="entradas-total__value">{{ monedaSimbolo }} {{ descuentoTotal | number:'1.2-2' }}</span>
     </div>
     <div class="entradas-total__item entradas-total__item--main">
-      <label>Total</label>
+      <label>{{ 'total' | tenantText }}</label>
       <span class="entradas-total__value">{{ monedaSimbolo }} {{ total | number:'1.2-2' }}</span>
     </div>
   </div>
@@ -149,16 +149,16 @@
   <!-- Botones de pago -->
   <div class="entradas-pay">
     <button type="button" class="entradas-btn-pay" (click)="aceptar(TipoDocumento.Express)">
-      <mat-icon>bolt</mat-icon> Express
+      <mat-icon>bolt</mat-icon> {{ 'express' | tenantText }}
     </button>
     <button type="button" class="entradas-btn-pay" (click)="aceptar(TipoDocumento.BoletaVenta)">
-      <mat-icon>receipt_long</mat-icon> Boleta
+      <mat-icon>receipt_long</mat-icon> {{ 'salesReceipt' | tenantText }}
     </button>
     <button type="button" class="entradas-btn-pay" (click)="aceptar(TipoDocumento.FacturaVenta)">
-      <mat-icon>description</mat-icon> Factura
+      <mat-icon>description</mat-icon> {{ 'invoice' | tenantText }}
     </button>
     <button type="button" class="entradas-btn-pay entradas-btn-pay--alt" (click)="procesarPagoTaxista()">
-      <mat-icon>local_taxi</mat-icon> Pagar Taxista
+      <mat-icon>local_taxi</mat-icon> {{ 'payTaxiDriver' | tenantText }}
     </button>
   </div>
 

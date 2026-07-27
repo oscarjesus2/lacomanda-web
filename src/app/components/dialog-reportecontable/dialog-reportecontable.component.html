@@ -4,20 +4,20 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Informe Contable</h2>
+  <h2>{{ 'accountingReport' | tenantText }}</h2>
 
   <!-- Tipo de informe (segmentado) -->
   <div class="rcont-field">
-    <span class="rcont-label">Tipo de informe</span>
+    <span class="rcont-label">{{ 'reportType' | tenantText }}</span>
     <mat-button-toggle-group class="rcont-toggle"
                              [(ngModel)]="tipoInformeSeleccionado"
                              name="tipoInforme"
                              (change)="onTipoInformeChange()">
       <mat-button-toggle value="Ventas">
-        <mat-icon>point_of_sale</mat-icon> Ventas
+        <mat-icon>point_of_sale</mat-icon> {{ 'sales' | tenantText }}
       </mat-button-toggle>
       <mat-button-toggle value="Compras">
-        <mat-icon>shopping_cart</mat-icon> Compras
+        <mat-icon>shopping_cart</mat-icon> {{ 'purchases' | tenantText }}
       </mat-button-toggle>
     </mat-button-toggle-group>
   </div>
@@ -25,12 +25,12 @@
   <!-- Rango de fechas -->
   <div class="rcont-grid">
     <div class="rcont-field">
-      <label for="fecha-inicial" class="rcont-label">Fecha inicial</label>
+      <label for="fecha-inicial" class="rcont-label">{{ 'initialDate' | tenantText }}</label>
       <input id="fecha-inicial" type="date" class="rcont-input"
              [(ngModel)]="fechaInicial" [max]="fechaFinal">
     </div>
     <div class="rcont-field">
-      <label for="fecha-final" class="rcont-label">Fecha final</label>
+      <label for="fecha-final" class="rcont-label">{{ 'finalDate' | tenantText }}</label>
       <input id="fecha-final" type="date" class="rcont-input"
              [(ngModel)]="fechaFinal" [min]="fechaInicial">
     </div>
@@ -38,15 +38,15 @@
 
   <p class="rcont-error" *ngIf="fechaInicial && fechaFinal && !rangoValido">
     <mat-icon>error_outline</mat-icon>
-    La fecha final no puede ser anterior a la inicial.
+    {{ 'endDateBeforeStart' | tenantText }}
   </p>
 
   <!-- Filtros -->
   <div class="rcont-grid">
     <mat-form-field class="form-field" appearance="fill">
-      <mat-label>Tipo de documento</mat-label>
+      <mat-label>{{ 'documentType' | tenantText }}</mat-label>
       <mat-select [(ngModel)]="tipoDocumentoSeleccionado" name="tipoDoc">
-        <mat-option value="0">Todos</mat-option>
+        <mat-option value="0">{{ 'allMasculine' | tenantText }}</mat-option>
         <mat-option *ngFor="let opcion of listTipoDocumentoVentas" [value]="opcion.IdTipoDoc">
           {{ opcion.Descripcion }}
         </mat-option>
@@ -54,9 +54,9 @@
     </mat-form-field>
 
     <mat-form-field class="form-field" appearance="fill" *ngIf="mostrarSerie">
-      <mat-label>Serie</mat-label>
+      <mat-label>{{ 'series' | tenantText }}</mat-label>
       <mat-select [(ngModel)]="serieSeleccionada" name="serie">
-        <mat-option value="0">Todas</mat-option>
+        <mat-option value="0">{{ 'allFeminine' | tenantText }}</mat-option>
         <mat-option *ngFor="let opcion of listSeries" [value]="opcion.Serie">
           {{ opcion.Descripcion }}
         </mat-option>
@@ -70,7 +70,7 @@
             (click)="validarFormularioExport()"
             [disabled]="!rangoValido || exportando">
       <mat-icon [class.rcont-spin]="exportando">{{ exportando ? 'sync' : 'download' }}</mat-icon>
-      {{ exportando ? 'Exportando…' : 'Exportar a Excel' }}
+      {{ (exportando ? 'exporting' : 'exportToExcel') | tenantText }}
     </button>
   </div>
 

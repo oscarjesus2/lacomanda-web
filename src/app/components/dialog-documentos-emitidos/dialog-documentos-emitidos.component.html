@@ -5,7 +5,7 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Documentos de Ventas</h2>
+  <h2>{{ 'salesDocuments' | tenantText }}</h2>
 
   <!-- ── Fila 1: Tipos de documento (dinámico por país) ──────────────── -->
   <div class="dv-toolbar">
@@ -20,7 +20,7 @@
     <button class="dv-filter-btn"
             [class.dv-filter-btn--active]="filterTipoId === ''"
             (click)="selectTipoDoc(null)">
-      Todos
+      {{ 'allMasculine' | tenantText }}
     </button>
 
     <div class="dv-toolbar__spacer"></div>
@@ -28,7 +28,7 @@
     <button class="dv-filter-btn dv-filter-btn--credito"
             [class.dv-filter-btn--active]="filterTipoId === 'credito'"
             (click)="selectCredito()">
-      Al Crédito
+      {{ 'onCredit' | tenantText }}
     </button>
   </div>
 
@@ -49,20 +49,20 @@
             [class.dv-filter-btn--active]="filterFormaPago === 'Tarjeta'"
             (click)="selectFormaPago('Tarjeta')">
       <mat-icon style="font-size:14px;width:14px;height:14px;line-height:14px;vertical-align:middle">credit_card</mat-icon>
-      Tarjeta
+      {{ 'card' | tenantText }}
     </button>
     <button class="dv-filter-btn dv-filter-btn--sm"
             [class.dv-filter-btn--active]="filterFormaPago === 'Mixto'"
-            (click)="selectFormaPago('Mixto')">Mixto</button>
+            (click)="selectFormaPago('Mixto')">{{ 'mixed' | tenantText }}</button>
 
     <!-- Todos -->
     <button class="dv-filter-btn dv-filter-btn--sm"
             [class.dv-filter-btn--active]="filterFormaPago === ''"
-            (click)="selectFormaPago('todos')">Todos</button>
+            (click)="selectFormaPago('todos')">{{ 'allMasculine' | tenantText }}</button>
 
     <div class="dv-toolbar__spacer"></div>
 
-    <input type="text" placeholder="N° Documento" class="dv-search-input"
+    <input type="text" [placeholder]="'documentNumber' | tenantText" class="dv-search-input"
            [(ngModel)]="nroDocumento" (keyup)="onNroDocumentoChange()" />
   </div>
 
@@ -74,47 +74,47 @@
       <mat-table [dataSource]="dataSource" class="dv-table">
 
         <ng-container matColumnDef="tipo">
-          <mat-header-cell *matHeaderCellDef>Tipo</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'type' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let e">{{ e.Tipo }}</mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="serie">
-          <mat-header-cell *matHeaderCellDef>Serie</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'series' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let e">{{ e.Serie }}</mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="numDoc">
-          <mat-header-cell *matHeaderCellDef>N° Doc</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'documentNumber' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let e">{{ e.NroDoc }}</mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="fecha">
-          <mat-header-cell *matHeaderCellDef>Fecha</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'date' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let e">{{ e.Fecha | date:'dd/MM/yyyy' }}</mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="monto">
-          <mat-header-cell *matHeaderCellDef>Monto</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'amountLabel' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let e">{{ e.Monto | number:'1.2-2' }}</mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="cliente">
-          <mat-header-cell *matHeaderCellDef>Cliente</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'customer' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let e">{{ e.Cliente }}</mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="numeroDoi">
-          <mat-header-cell *matHeaderCellDef>N° DOI</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'doiNumber' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let e">{{ e.NumeroDoi }}</mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="forr">
-          <mat-header-cell *matHeaderCellDef>F. Pago</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'paymentMethodShort' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let e">{{ e.FormaPago }}</mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="estado">
-          <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'state' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let e">
             <span class="dv-estado-chip"
                   [class.dv-estado-chip--anulado]="e.Estado === 'Anulado'"
@@ -137,23 +137,23 @@
     <div class="dv-actions">
       <button class="dv-action-btn" [disabled]="isAnulado">
         <mat-icon>picture_as_pdf</mat-icon>
-        PDF y XML
+        {{ 'pdfAndXml' | tenantText }}
       </button>
       <button class="dv-action-btn" [disabled]="isAnulado" (click)="reImprimirDocumento()">
         <mat-icon>print</mat-icon>
-        Reimprimir
+        {{ 'reprint' | tenantText }}
       </button>
       <button class="dv-action-btn" [disabled]="isAnulado">
         <mat-icon>payment</mat-icon>
-        Modificar Pago
+        {{ 'modifyPayments' | tenantText }}
       </button>
       <button class="dv-action-btn" [disabled]="isAnulado">
         <mat-icon>edit_document</mat-icon>
-        Modificar Doc.
+        {{ 'modifyDocument' | tenantText }}
       </button>
       <button class="dv-action-btn dv-action-btn--danger" [disabled]="isAnulado" (click)="anularDocumento()">
         <mat-icon>cancel</mat-icon>
-        Anular
+        {{ 'void' | tenantText }}
       </button>
     </div>
 
@@ -162,9 +162,9 @@
   <!-- ── Motivo de anulación ──────────────────────────────────────────── -->
   <div class="dv-motivo">
     <input type="text" class="dv-motivo__input"
-           placeholder="Motivo de anulación (requerido para anular)"
+           [placeholder]="'voidReasonPlaceholder' | tenantText"
            [(ngModel)]="motivoAnulacion" />
-    <button class="dv-motivo__kbd-btn" (click)="abrirTeclado()" title="Teclado virtual">
+    <button class="dv-motivo__kbd-btn" (click)="abrirTeclado()" [title]="'virtualKeyboard' | tenantText">
       <mat-icon>keyboard</mat-icon>
     </button>
   </div>

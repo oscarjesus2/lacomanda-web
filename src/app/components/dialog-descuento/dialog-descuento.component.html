@@ -4,20 +4,20 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Descuento por Venta</h2>
+  <h2>{{ 'discountBySale' | tenantText }}</h2>
 
   <!-- ── Selector de tipo ──────────────────────────────────── -->
   <mat-button-toggle-group class="dsc-tipo-group"
     [value]="retornaTipoDescuento"
     (change)="descuentoPorTipo($event.value)">
     <mat-button-toggle value="P">
-      <mat-icon>percent</mat-icon> Por Producto
+      <mat-icon>percent</mat-icon> {{ 'byProduct' | tenantText }}
     </mat-button-toggle>
     <mat-button-toggle value="T">
-      <mat-icon>receipt_long</mat-icon> Total
+      <mat-icon>receipt_long</mat-icon> {{ 'total' | tenantText }}
     </mat-button-toggle>
     <mat-button-toggle value="V">
-      <mat-icon>confirmation_number</mat-icon> Vale
+      <mat-icon>confirmation_number</mat-icon> {{ 'voucher' | tenantText }}
     </mat-button-toggle>
   </mat-button-toggle-group>
 
@@ -33,17 +33,17 @@
     <!-- Izquierda: búsqueda + tabla -->
     <div class="dsc-left">
       <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Buscar descuento</mat-label>
+        <mat-label>{{ 'searchDiscountLabel' | tenantText }}</mat-label>
         <mat-icon matPrefix>search</mat-icon>
         <input matInput [(ngModel)]="txtBuscaDscto" (input)="buscarDescuentos()"
-               placeholder="Descripción...">
+               [placeholder]="'descriptionEllipsis' | tenantText">
       </mat-form-field>
 
       <div class="mant-table-card dsc-table-card">
         <mat-table [dataSource]="dataSource">
 
           <ng-container matColumnDef="Descripcion">
-            <mat-header-cell *matHeaderCellDef>Descuento</mat-header-cell>
+            <mat-header-cell *matHeaderCellDef>{{ 'discount' | tenantText }}</mat-header-cell>
             <mat-cell *matCellDef="let row">{{ row.Descripcion }}</mat-cell>
           </ng-container>
 
@@ -62,7 +62,7 @@
           </mat-row>
 
           <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell dsc-empty" colspan="2">Sin descuentos para este tipo.</td>
+            <td class="mat-cell dsc-empty" colspan="2">{{ 'noDiscountsForType' | tenantText }}</td>
           </tr>
         </mat-table>
       </div>
@@ -72,20 +72,29 @@
     <div class="dsc-right">
 
       <mat-form-field appearance="fill" class="full-width">
-        <mat-label>{{ label10 }} {{ label2 }}</mat-label>
+        <mat-label>
+          <ng-container *ngIf="!usaMonto">{{ 'discount' | tenantText }} %</ng-container>
+          <ng-container *ngIf="usaMonto">{{ 'amountLabel' | tenantText }} $</ng-container>
+        </mat-label>
         <input matInput type="number" [(ngModel)]="txtValor" min="0">
-        <span matSuffix>{{ label2 }}</span>
+        <span matSuffix>{{ usaMonto ? '$' : '%' }}</span>
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="full-width">
-        <mat-label>{{ label3 }}</mat-label>
+        <mat-label>
+          <ng-container *ngIf="retornaTipoDescuento !== 'A' && retornaTipoDescuento !== 'R'">
+            {{ 'couponNumber' | tenantText }}
+          </ng-container>
+          <ng-container *ngIf="retornaTipoDescuento === 'A'">{{ 'numberLabel' | tenantText }}</ng-container>
+          <ng-container *ngIf="retornaTipoDescuento === 'R'">{{ 'reservationNumber' | tenantText }}</ng-container>
+        </mat-label>
         <mat-icon matPrefix>confirmation_number</mat-icon>
         <input matInput type="text" [(ngModel)]="txtCupon">
       </mat-form-field>
 
       <!-- Descuento seleccionado preview -->
       <div class="dsc-preview" *ngIf="selectedRow">
-        <span class="dsc-preview__label">Seleccionado</span>
+        <span class="dsc-preview__label">{{ 'selected' | tenantText }}</span>
         <span class="dsc-preview__desc">{{ selectedRow.Descripcion }}</span>
         <span class="dsc-preview__pct" *ngIf="retornaTipoDescuento !== 'V'">
           {{ selectedRow.Porcentaje }}%
@@ -94,10 +103,10 @@
 
       <div class="dsc-actions">
         <button mat-raised-button color="primary" (click)="cmdAceptar()">
-          <mat-icon>check_circle</mat-icon> Aceptar
+          <mat-icon>check_circle</mat-icon> {{ 'accept' | tenantText }}
         </button>
         <button mat-stroked-button (click)="dialogRef.close()">
-          <mat-icon>close</mat-icon> Salir
+          <mat-icon>close</mat-icon> {{ 'exit' | tenantText }}
         </button>
       </div>
     </div>

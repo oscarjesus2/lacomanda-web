@@ -5,13 +5,13 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Complementos</h2>
+  <h2>{{ 'complements' | tenantText }}</h2>
 
   <div class="columnas">
 
     <!-- Columna izquierda: botones de complementos configurados -->
     <div class="complementos-configurados">
-      <p class="col-header">Seleccionar complemento</p>
+      <p class="col-header">{{ 'selectComplement' | tenantText }}</p>
       <div class="grid-buttons">
         <button *ngFor="let btn of listProductosComplementos"
                 mat-button
@@ -26,14 +26,14 @@
 
       <!-- Nombre del producto -->
       <div class="producto-linea">
-        <label>Producto</label>
+        <label>{{ 'product' | tenantText }}</label>
         <span class="producto-nombre">{{ pedidodet.Producto.NombreCorto }}</span>
       </div>
 
       <!-- Qty + Cant. Complementos -->
       <div class="producto-cantidad-linea">
         <div class="qty-container">
-          <label>Qty</label>
+          <label>{{ 'quantity' | tenantText }}</label>
           <input matInput [(ngModel)]="pedidodet.Cantidad" />
           <button mat-icon-button
                   color="primary"
@@ -43,7 +43,7 @@
           </button>
         </div>
         <div class="complementos1-container">
-          <label>Cant. Complem.</label>
+          <label>{{ 'addOnsQty' | tenantText }}</label>
           <input matInput [(ngModel)]="cantidadComplementos" readonly />
         </div>
       </div>
@@ -53,19 +53,19 @@
         <mat-table [dataSource]="gridListaPedidoComplemento" class="mat-elevation-z8">
 
           <ng-container matColumnDef="nombre">
-            <mat-header-cell *matHeaderCellDef class="ancho-producto">Producto</mat-header-cell>
+            <mat-header-cell *matHeaderCellDef class="ancho-producto">{{ 'product' | tenantText }}</mat-header-cell>
             <mat-cell *matCellDef="let element" class="ancho-producto">
               {{ element.ProductoComplemento.NombreCorto }}
             </mat-cell>
           </ng-container>
 
           <ng-container matColumnDef="qty">
-            <mat-header-cell *matHeaderCellDef>Qty</mat-header-cell>
+            <mat-header-cell *matHeaderCellDef>{{ 'quantity' | tenantText }}</mat-header-cell>
             <mat-cell *matCellDef="let element">{{ element.Cantidad }}</mat-cell>
           </ng-container>
 
           <ng-container matColumnDef="ft">
-            <mat-header-cell *matHeaderCellDef>Ft</mat-header-cell>
+            <mat-header-cell *matHeaderCellDef>{{ 'factorShort' | tenantText }}</mat-header-cell>
             <mat-cell *matCellDef="let element">
               {{ element.ProductoComplemento.FactorComplemento }}
             </mat-cell>
@@ -76,7 +76,7 @@
             <td mat-cell *matCellDef="let element">
               <button mat-icon-button
                       color="primary"
-                      matTooltip="Más opciones"
+                      [matTooltip]="'moreOptions' | tenantText"
                       [matMenuTriggerFor]="MasOpciones">
                 <mat-icon>more_horiz</mat-icon>
               </button>
@@ -84,15 +84,15 @@
                 <button mat-menu-item
                         (click)="aumentarProductGrid(element)"
                         [disabled]="element.ItemComple > 0">
-                  <mat-icon>add</mat-icon> Aumentar
+                  <mat-icon>add</mat-icon> {{ 'increase' | tenantText }}
                 </button>
                 <button mat-menu-item
                         (click)="restarProductGrid(element)"
                         [disabled]="element.ItemComple > 0">
-                  <mat-icon>remove</mat-icon> Restar
+                  <mat-icon>remove</mat-icon> {{ 'subtract' | tenantText }}
                 </button>
                 <button mat-menu-item (click)="deleteProductGrid(element)">
-                  <mat-icon color="warn">delete</mat-icon> Eliminar
+                  <mat-icon color="warn">delete</mat-icon> {{ 'delete' | tenantText }}
                 </button>
               </mat-menu>
             </td>
@@ -110,19 +110,19 @@
                'total-card--ok':   total > 0 && totIngreso <= total,
                'total-card--over': total > 0 && totIngreso > total
              }">
-          <span class="total-card__label">Ingresados</span>
+          <span class="total-card__label">{{ 'entered' | tenantText }}</span>
           <span class="total-card__value">{{ totIngreso }}</span>
         </div>
         <div class="total-card total-card--neutral">
-          <span class="total-card__label">Límite</span>
+          <span class="total-card__label">{{ 'limit' | tenantText }}</span>
           <span class="total-card__value">{{ total }}</span>
         </div>
       </div>
 
       <!-- Botones de acción -->
       <div class="botones-accion">
-        <button class="aceptar" (click)="aceptar()">Aceptar</button>
-        <button class="cancelar" (click)="cancelar()">Cancelar</button>
+        <button class="aceptar" (click)="aceptar()">{{ 'accept' | tenantText }}</button>
+        <button class="cancelar" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
       </div>
 
     </div>

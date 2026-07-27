@@ -4,13 +4,13 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Registro de Venta Rápida</h2>
+  <h2>{{ 'quickSaleRecord' | tenantText }}</h2>
 
   <form #form="ngForm">
     <!-- Fila: Caja / Fecha / Moneda -->
     <div class="form-row">
       <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Caja</mat-label>
+        <mat-label>{{ 'register' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="cajaSeleccionada"
                     name="caja"
                     [disabled]="!CajaEnabled"
@@ -23,12 +23,12 @@
           </mat-option>
         </mat-select>
         <mat-error *ngIf="caja.invalid && (caja.dirty || caja.touched)">
-          El campo es requerido.
+          {{ 'fieldRequired' | tenantText }}
         </mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Fecha Documento</mat-label>
+        <mat-label>{{ 'documentDate' | tenantText }}</mat-label>
         <input matInput
                [matDatepicker]="picker"
                [(ngModel)]="fechaDocumento"
@@ -38,17 +38,17 @@
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
         <mat-error *ngIf="fechaDoc.invalid && (fechaDoc.dirty || fechaDoc.touched)">
-          El campo es requerido.
+          {{ 'fieldRequired' | tenantText }}
         </mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Moneda</mat-label>
+        <mat-label>{{ 'currency' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="monedaSeleccionada"
                     name="moneda"
                     [disabled]="!MonedaEnabled">
-          <mat-option value="SOLES">SOLES</mat-option>
-          <mat-option value="DOLARES">DÓLARES</mat-option>
+          <mat-option value="SOLES">{{ 'currencySoles' | tenantText }}</mat-option>
+          <mat-option value="DOLARES">{{ 'currencyDollars' | tenantText }}</mat-option>
         </mat-select>
       </mat-form-field>
     </div>
@@ -56,12 +56,12 @@
     <!-- Fila: info de turno -->
     <div class="form-row" *ngIf="visibleInfoTurno">
       <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Turno</mat-label>
+        <mat-label>{{ 'shift' | tenantText }}</mat-label>
         <input matInput type="text" [(ngModel)]="turnoAbierto.NroTurno" name="turno" readonly>
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Fecha Turno</mat-label>
+        <mat-label>{{ 'shiftDate' | tenantText }}</mat-label>
         <input matInput type="text" [(ngModel)]="fechaTurnoAbierto" name="fechaTurno" readonly>
       </mat-form-field>
     </div>
@@ -69,7 +69,7 @@
     <!-- Fila: Venta / Compra -->
     <div class="form-row">
       <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Venta</mat-label>
+        <mat-label>{{ 'sell' | tenantText }}</mat-label>
         <input matInput type="text"
                [(ngModel)]="tipoCambioVenta"
                name="venta"
@@ -78,12 +78,12 @@
                pattern="^[0-9]+(\.[0-9]*)?$"
                [disabled]="!VentaEnabled">
         <mat-error *ngIf="venta.invalid && (venta.dirty || venta.touched)">
-          Debe ingresar solo valores numéricos.
+          {{ 'onlyNumericValues' | tenantText }}
         </mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Compra</mat-label>
+        <mat-label>{{ 'buy' | tenantText }}</mat-label>
         <input matInput type="text"
                [(ngModel)]="tipoCambioCompra"
                name="compra"
@@ -92,14 +92,14 @@
                pattern="^[0-9]+(\.[0-9]*)?$"
                [disabled]="!CompraEnabled">
         <mat-error *ngIf="compra.invalid && (compra.dirty || compra.touched)">
-          Debe ingresar solo valores numéricos.
+          {{ 'onlyNumericValues' | tenantText }}
         </mat-error>
       </mat-form-field>
     </div>
 
     <!-- Observación a lo ancho -->
     <mat-form-field appearance="fill" class="form-field form-field--grow">
-      <mat-label>Observación</mat-label>
+      <mat-label>{{ 'observation' | tenantText }}</mat-label>
       <input matInput type="text" [(ngModel)]="observacionValue" name="observacion">
     </mat-form-field>
   </form>
@@ -111,13 +111,13 @@
 
         <!-- Producto -->
         <ng-container matColumnDef="Producto">
-          <mat-header-cell *matHeaderCellDef class="product-column">PRODUCTO</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef class="product-column">{{ 'product' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let element" class="product-column">
             {{ element.Producto }}
           </mat-cell>
           <mat-footer-cell *matFooterCellDef class="product-column">
             <mat-form-field appearance="fill">
-              <mat-label>Buscar Producto</mat-label>
+              <mat-label>{{ 'searchByProduct' | tenantText }}</mat-label>
               <input type="text"
                      matInput
                      [formControl]="productCtrl"
@@ -136,21 +136,21 @@
 
         <!-- Cantidad -->
         <ng-container matColumnDef="Qty">
-          <mat-header-cell *matHeaderCellDef style="width: 70px;">CANT</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef style="width: 70px;">{{ 'quantity' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let element" style="width: 70px;">{{ element.Qty }}</mat-cell>
           <mat-footer-cell *matFooterCellDef></mat-footer-cell>
         </ng-container>
 
         <!-- Precio -->
         <ng-container matColumnDef="Precio">
-          <mat-header-cell *matHeaderCellDef>PRECIO</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'price' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let element">{{ element.Precio }}</mat-cell>
           <mat-footer-cell *matFooterCellDef></mat-footer-cell>
         </ng-container>
 
         <!-- Total -->
         <ng-container matColumnDef="Total">
-          <mat-header-cell *matHeaderCellDef>TOTAL</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'total' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let element">{{ element.Total }}</mat-cell>
           <mat-footer-cell *matFooterCellDef></mat-footer-cell>
         </ng-container>
@@ -160,11 +160,11 @@
           <mat-header-cell *matHeaderCellDef class="actions-header"></mat-header-cell>
 
           <mat-cell *matCellDef="let product" class="actions-cell">
-            <button mat-icon-button color="primary" matTooltip="Aumentar Cantidad"
+            <button mat-icon-button color="primary" [matTooltip]="'increaseQuantity' | tenantText"
                     (click)="aumentarProductGrid(product)">
               <mat-icon>add</mat-icon>
             </button>
-            <button mat-icon-button color="warn" matTooltip="Restar Cantidad"
+            <button mat-icon-button color="warn" [matTooltip]="'decreaseQuantity' | tenantText"
                     (click)="restarProductGrid(product)">
               <mat-icon>remove</mat-icon>
             </button>
@@ -182,17 +182,17 @@
     <!-- Botones principales -->
     <div class="invoice-actions">
       <button mat-raised-button color="primary">
-        Descuento
+        {{ 'discount' | tenantText }}
       </button>
 
       <button mat-raised-button color="primary"
               (click)="OpenDialogEmitirComprobante(TipoDocumento.BoletaVenta)">
-        Boleta
+        {{ 'salesReceipt' | tenantText }}
       </button>
 
       <button mat-raised-button color="primary"
               (click)="OpenDialogEmitirComprobante(TipoDocumento.FacturaVenta)">
-        Factura
+        {{ 'invoice' | tenantText }}
       </button>
     </div>
   </div>
@@ -200,15 +200,15 @@
   <!-- Totales -->
   <div class="invoice-totals">
     <div class="invoice-totals__item">
-      <span class="invoice-totals__label">Importe</span>
+      <span class="invoice-totals__label">{{ 'amount' | tenantText }}</span>
       <span class="invoice-totals__value">{{ sumaImporte }}</span>
     </div>
     <div class="invoice-totals__item">
-      <span class="invoice-totals__label">Dscto</span>
+      <span class="invoice-totals__label">{{ 'discount' | tenantText }}</span>
       <span class="invoice-totals__value">{{ sumaDscto }}</span>
     </div>
     <div class="invoice-totals__item">
-      <span class="invoice-totals__label">Total</span>
+      <span class="invoice-totals__label">{{ 'total' | tenantText }}</span>
       <span class="invoice-totals__value">{{ sumaTotal }}</span>
     </div>
     <div class="invoice-totals__item">
@@ -216,7 +216,7 @@
       <span class="invoice-totals__value">{{ sumaImpuestoBolsa }}</span>
     </div>
     <div class="invoice-totals__item invoice-totals__item--strong">
-      <span class="invoice-totals__label">Gran Total</span>
+      <span class="invoice-totals__label">{{ 'grandTotal' | tenantText }}</span>
       <span class="invoice-totals__value">{{ sumaGranTotal }}</span>
     </div>
   </div>
