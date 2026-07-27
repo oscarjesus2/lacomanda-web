@@ -2,20 +2,20 @@
 
 <mat-dialog-content>
   <mat-form-field class="example-full-width" appearance="fill">
-    <mat-label>Observaciones</mat-label>
+    <mat-label>{{ 'observations' | tenantText }}</mat-label>
     <textarea matInput [(ngModel)]="data.Observaciones"></textarea>
   </mat-form-field>
   <div class="actions">
-    <button (click)="abrirTeclado()">Escribir observación manual</button>
-    <button (click)="onBorrarobservacion()">Borrar</button>
-    <button (click)="onAgregarClick()">Agregar</button>
-    <button (click)="onNoClick()">Cancelar</button>
+    <button (click)="abrirTeclado()">{{ 'writeManualObservation' | tenantText }}</button>
+    <button (click)="onBorrarobservacion()">{{ 'clear' | tenantText }}</button>
+    <button (click)="onAgregarClick()">{{ 'add' | tenantText }}</button>
+    <button (click)="onNoClick()">{{ 'cancel' | tenantText }}</button>
   </div>
   <!-- Botón para abrir el teclado virtual -->
 
 
   <mat-tab-group mat-align-tabs="start">
-    <mat-tab label="COMIDAS">
+    <mat-tab [label]="'food' | tenantText">
       <mat-card-content>
         <div class="main-group">
           <ng-template ngFor let-item [ngForOf]="ListaObservacionComida">
@@ -29,7 +29,7 @@
       </mat-card-content>
     </mat-tab>
 
-    <mat-tab label="BEBIDAS">
+    <mat-tab [label]="'drinks' | tenantText">
       <mat-card-content>
         <div class="main-group">
           <ng-template ngFor let-item [ngForOf]="ListaObservacionBebida">

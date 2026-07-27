@@ -13,7 +13,7 @@
   <div class="mc-toggle-row">
     <button class="mc-toggle" (click)="toggleKeyboard()">
       <mat-icon>{{ showAlpha ? 'dialpad' : 'abc' }}</mat-icon>
-      {{ showAlpha ? 'Cambiar a numérico' : 'Cambiar a letras' }}
+      {{ (showAlpha ? 'switchToNumeric' : 'switchToLetters') | tenantText }}
     </button>
   </div>
 
@@ -40,13 +40,13 @@
 
   <div class="mc-actions">
     <button class="mc-btn mc-btn--warn" (click)="clear()">
-      <mat-icon>backspace</mat-icon> Borrar
+      <mat-icon>backspace</mat-icon> {{ 'clear' | tenantText }}
     </button>
     <button class="mc-btn mc-btn--primary" (click)="accept()">
-      <mat-icon>check</mat-icon> Aceptar
+      <mat-icon>check</mat-icon> {{ 'accept' | tenantText }}
     </button>
     <button class="mc-btn mc-btn--secondary" (click)="cancel()">
-      Salir
+      {{ 'exit' | tenantText }}
     </button>
   </div>
 

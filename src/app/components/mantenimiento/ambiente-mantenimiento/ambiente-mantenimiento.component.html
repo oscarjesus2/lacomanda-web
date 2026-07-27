@@ -1,46 +1,46 @@
 <div class="mant-panel">
-  <button mat-icon-button class="close-button" (click)="salir()">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
-  
-  <h2>Mantenimiento de Ambientes</h2>
+
+  <h2>{{ 'maintenanceEnvironments' | tenantText }}</h2>
 
   <!-- LISTA -->
   <div *ngIf="!showForm">
-    <button mat-raised-button color="primary" (click)="nuevo()">Nuevo Ambiente</button>
+    <button mat-raised-button color="primary" (click)="nuevo()">{{ 'newEnvironment' | tenantText }}</button>
 
     <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Buscar</mat-label>
-      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Buscar por descripción, estado o posición">
+      <mat-label>{{ 'search' | tenantText }}</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" [placeholder]="'searchEnvironment' | tenantText">
     </mat-form-field>
     <div class="mant-table-card">  
       <mat-table [dataSource]="filteredAmbientes" class="mat-elevation-z8">
         <!-- Descripción -->
         <ng-container matColumnDef="descripcion">
-          <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'description' | tenantText }} </mat-header-cell>
           <mat-cell *matCellDef="let a"> {{ a.Descripcion }} </mat-cell>
         </ng-container>
 
         <!-- Estado -->
         <ng-container matColumnDef="estado">
-          <mat-header-cell *matHeaderCellDef> Estado </mat-header-cell>
-          <mat-cell *matCellDef="let a"> {{ a.Estado === 1 ? 'Activo' : 'Inactivo' }} </mat-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'status' | tenantText }} </mat-header-cell>
+          <mat-cell *matCellDef="let a"> {{ (a.Estado === 1 ? 'active' : 'inactive') | tenantText }} </mat-cell>
         </ng-container>
 
         <!-- Posición -->
         <ng-container matColumnDef="posicion">
-          <mat-header-cell *matHeaderCellDef> Posición </mat-header-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'position' | tenantText }} </mat-header-cell>
           <mat-cell *matCellDef="let a"> {{ a.Posicion }} </mat-cell>
         </ng-container>
 
         <!-- Acciones -->
         <ng-container matColumnDef="actions">
-          <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'actions' | tenantText }} </mat-header-cell>
           <mat-cell *matCellDef="let a">
-            <button mat-icon-button color="primary" (click)="onEdit(a)" matTooltip="Editar">
+            <button mat-icon-button color="primary" (click)="onEdit(a)" [matTooltip]="'edit' | tenantText">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button color="warn" (click)="onDelete(a.IdAmbiente)" matTooltip="Eliminar">
+            <button mat-icon-button color="warn" (click)="onDelete(a.IdAmbiente)" [matTooltip]="'delete' | tenantText">
               <mat-icon>delete</mat-icon>
             </button>
           </mat-cell>
@@ -58,43 +58,42 @@
   <form *ngIf="showForm" #ambienteForm="ngForm" (ngSubmit)="onSubmit()">
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Descripción</mat-label>
+        <mat-label>{{ 'description' | tenantText }}</mat-label>
         <input matInput [(ngModel)]="ambiente.Descripcion" [matAutocomplete]="auto" name="descripcion" required #descripcion="ngModel">
-        <!-- <input type="text" matInput [(ngModel)]="ambiente.Descripcion" [matAutocomplete]="auto" name="descripcion" required> -->
         <mat-autocomplete #auto="matAutocomplete">
           <mat-option *ngFor="let opt of descripcionesEjemplo" [value]="opt">{{ opt }}</mat-option>
         </mat-autocomplete>
         <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">
-          La descripción es requerida.
+          {{ 'descriptionRequired' | tenantText }}
         </mat-error>
       </mat-form-field>
 
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Estado</mat-label>
+        <mat-label>{{ 'status' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="ambiente.Estado" name="estado" required #estado="ngModel">
-          <mat-option [value]="1">Activo</mat-option>
-          <mat-option [value]="0">Inactivo</mat-option>
+          <mat-option [value]="1">{{ 'active' | tenantText }}</mat-option>
+          <mat-option [value]="0">{{ 'inactive' | tenantText }}</mat-option>
         </mat-select>
         <mat-error *ngIf="estado.invalid && (estado.dirty || estado.touched)">
-          Seleccione un estado.
+          {{ 'selectState' | tenantText }}
         </mat-error>
       </mat-form-field>
     </div>
 
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Posición</mat-label>
-        <input matInput [value]="ambiente.Posicion || ''" name="posicion" readonly placeholder="Seleccione una posición (1 a 10)">
+        <mat-label>{{ 'position' | tenantText }}</mat-label>
+        <input matInput [value]="ambiente.Posicion || ''" name="posicion" readonly [placeholder]="'selectPosition' | tenantText">
       </mat-form-field>
 
       <button mat-raised-button color="primary" type="button" (click)="abrirSelectorPosicion()">
-        Elegir posición (1 × 10)
+        {{ 'choosePosition' | tenantText }}
       </button>
     </div>
 
     <button mat-raised-button color="primary">
-      {{ ambiente.IdAmbiente ? 'Actualizar' : 'Guardar' }}
+      {{ (ambiente.IdAmbiente ? 'updateAction' : 'save') | tenantText }}
     </button>
-    <button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>
+    <button mat-stroked-button type="button" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
   </form>
 </div>

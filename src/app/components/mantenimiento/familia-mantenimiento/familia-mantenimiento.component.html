@@ -1,29 +1,29 @@
 <div class="mant-panel">
-  <button mat-icon-button class="close-button" (click)="salir()">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
   
-  <h2>Mantenimiento de Familias</h2>
+  <h2>{{ 'maintenanceFamilies' | tenantText }}</h2>
 
   <!-- Listado -->
   <div *ngIf="!showForm">
     <button mat-raised-button color="primary" (click)="nuevaFamilia()">
-      Nueva Familia
+      {{ 'newFamily' | tenantText }}
     </button>
 
     <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Buscar</mat-label>
-      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Buscar por descripción">
+      <mat-label>{{ 'search' | tenantText }}</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" [placeholder]="'searchByDescription' | tenantText">
     </mat-form-field>
     <div class="mant-table-card">
         <mat-table [dataSource]="filtered" class="mat-elevation-z8">
           <ng-container matColumnDef="descripcion">
-            <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+            <mat-header-cell *matHeaderCellDef>{{ 'description' | tenantText }}</mat-header-cell>
             <mat-cell *matCellDef="let fam"> {{fam.Descripcion}} </mat-cell>
           </ng-container>
 
           <ng-container matColumnDef="actions">
-            <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+            <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
             <mat-cell *matCellDef="let fam">
               <button mat-icon-button color="primary" (click)="onEdit(fam)">
                 <mat-icon>edit</mat-icon>
@@ -42,16 +42,16 @@
   <!-- Formulario -->
   <form *ngIf="showForm" #familiaForm="ngForm" (ngSubmit)="onSubmit()">
     <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Descripción</mat-label>
+      <mat-label>{{ 'description' | tenantText }}</mat-label>
       <input matInput [(ngModel)]="familia.Descripcion" name="descripcion" required #descripcion="ngModel">
       <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">
-        La descripción es requerida.
+        {{ 'descriptionRequired' | tenantText }}
       </mat-error>
     </mat-form-field>
 
     <button mat-raised-button color="primary">
-      {{ familia.IdFamilia ? 'Actualizar' : 'Guardar' }}
+      {{ (familia.IdFamilia ? 'updateAction' : 'save') | tenantText }}
     </button>
-    <button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>
+    <button mat-stroked-button type="button" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
   </form>
 </div>

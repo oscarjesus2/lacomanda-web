@@ -1,33 +1,33 @@
 <div class="mant-panel">
-  <button mat-icon-button class="close-button" (click)="salir()">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Mantenimiento de Descuentos</h2>
+  <h2>{{ 'maintenanceDiscounts' | tenantText }}</h2>
 
   <!-- ══ LISTA ══════════════════════════════════════════════ -->
   <div *ngIf="!showForm">
     <button mat-raised-button color="primary" (click)="nuevo()">
-      <mat-icon>add</mat-icon> Nuevo Descuento
+      <mat-icon>add</mat-icon> {{ 'newDiscount' | tenantText }}
     </button>
 
     <mat-form-field appearance="fill" class="full-width mant-search">
-      <mat-label>Buscar</mat-label>
+      <mat-label>{{ 'search' | tenantText }}</mat-label>
       <mat-icon matPrefix>search</mat-icon>
       <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()"
-             placeholder="Descripción, tipo...">
+             [placeholder]="'searchDiscount' | tenantText">
     </mat-form-field>
 
     <div class="mant-table-card">
       <mat-table [dataSource]="data">
 
         <ng-container matColumnDef="descripcion">
-          <mat-header-cell *matHeaderCellDef>Descripción</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'description' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let r">{{ r.Descripcion }}</mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="tipo">
-          <mat-header-cell *matHeaderCellDef>Tipo</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'type' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let r">
             <span class="dsc-tipo-chip" [class.dsc-tipo--vale]="r.TipoDescuento == tipoDescuentoEnum.Vale"
                                         [class.dsc-tipo--total]="r.TipoDescuento == tipoDescuentoEnum.Total">
@@ -37,7 +37,7 @@
         </ng-container>
 
         <ng-container matColumnDef="porcentaje">
-          <mat-header-cell *matHeaderCellDef>Porcentaje</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'percentage' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let r">
             <span *ngIf="r.TipoDescuento != tipoDescuentoEnum.Vale; else guion">
               {{ r.Porcentaje }}%
@@ -47,26 +47,26 @@
         </ng-container>
 
         <ng-container matColumnDef="activo">
-          <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'status' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let r">
             <button class="dsc-estado-btn"
                     [class.dsc-estado--activo]="r.Activo"
                     [class.dsc-estado--inactivo]="!r.Activo"
                     (click)="onToggleActivo(r)"
-                    matTooltip="{{ r.Activo ? 'Clic para desactivar' : 'Clic para activar' }}">
+                    [matTooltip]="(r.Activo ? 'clickToDeactivate' : 'clickToActivate') | tenantText">
               <mat-icon>{{ r.Activo ? 'check_circle' : 'cancel' }}</mat-icon>
-              {{ r.Activo ? 'Activo' : 'Inactivo' }}
+              {{ (r.Activo ? 'active' : 'inactive') | tenantText }}
             </button>
           </mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="actions">
-          <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let r">
-            <button mat-icon-button color="primary" (click)="onEdit(r)" matTooltip="Editar">
+            <button mat-icon-button color="primary" (click)="onEdit(r)" [matTooltip]="'edit' | tenantText">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button color="warn" (click)="onDelete(r.IdDescuento)" matTooltip="Eliminar">
+            <button mat-icon-button color="warn" (click)="onDelete(r.IdDescuento)" [matTooltip]="'delete' | tenantText">
               <mat-icon>delete</mat-icon>
             </button>
           </mat-cell>
@@ -77,7 +77,7 @@
 
         <tr class="mat-row" *matNoDataRow>
           <td class="mat-cell dsc-empty" [attr.colspan]="displayedColumns.length">
-            Sin descuentos registrados.
+            {{ 'noDiscountsRegistered' | tenantText }}
           </td>
         </tr>
       </mat-table>
@@ -90,23 +90,23 @@
   <form *ngIf="showForm" #form="ngForm" (ngSubmit)="onSubmit()">
     <h3 class="dsc-form-title">
       <mat-icon>{{ descuento.IdDescuento ? 'edit' : 'add_circle' }}</mat-icon>
-      {{ descuento.IdDescuento ? 'Editar Descuento' : 'Nuevo Descuento' }}
+      {{ (descuento.IdDescuento ? 'editDiscount' : 'newDiscount') | tenantText }}
     </h3>
 
     <!-- Descripción -->
     <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Descripción</mat-label>
+      <mat-label>{{ 'description' | tenantText }}</mat-label>
       <input matInput [(ngModel)]="descuento.Descripcion" name="descripcion"
              required maxlength="100" #desc="ngModel">
       <mat-error *ngIf="desc.invalid && (desc.dirty || desc.touched)">
-        La descripción es requerida.
+        {{ 'descriptionRequired' | tenantText }}
       </mat-error>
     </mat-form-field>
 
     <div class="form-row">
       <!-- Tipo de descuento -->
       <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Tipo de Descuento</mat-label>
+        <mat-label>{{ 'discountType' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="descuento.TipoDescuento" name="tipo" required
                     (selectionChange)="onTipoChange()" #tipo="ngModel">
           <mat-option *ngFor="let t of tiposDescuento" [value]="t.value">
@@ -114,30 +114,30 @@
           </mat-option>
         </mat-select>
         <mat-error *ngIf="tipo.invalid && (tipo.dirty || tipo.touched)">
-          Seleccione un tipo.
+          {{ 'selectType' | tenantText }}
         </mat-error>
       </mat-form-field>
 
       <!-- Porcentaje — oculto para Vale -->
       <mat-form-field appearance="fill" class="form-field" *ngIf="!esVale">
-        <mat-label>Porcentaje</mat-label>
+        <mat-label>{{ 'percentage' | tenantText }}</mat-label>
         <input matInput type="number" [(ngModel)]="descuento.Porcentaje" name="porcentaje"
                [required]="!esVale" min="1" max="100" #porcentaje="ngModel">
         <span matSuffix>%</span>
         <mat-error *ngIf="porcentaje.invalid && (porcentaje.dirty || porcentaje.touched)">
-          Ingresa un porcentaje mayor a 0.
+          {{ 'enterPercentageGreaterThanZero' | tenantText }}
         </mat-error>
       </mat-form-field>
 
       <!-- Activo -->
       <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Estado</mat-label>
+        <mat-label>{{ 'status' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="descuento.Activo" name="activo" required #activo="ngModel">
-          <mat-option [value]="true">Activo</mat-option>
-          <mat-option [value]="false">Inactivo</mat-option>
+          <mat-option [value]="true">{{ 'active' | tenantText }}</mat-option>
+          <mat-option [value]="false">{{ 'inactive' | tenantText }}</mat-option>
         </mat-select>
         <mat-error *ngIf="activo.invalid && (activo.dirty || activo.touched)">
-          Seleccione un estado.
+          {{ 'selectState' | tenantText }}
         </mat-error>
       </mat-form-field>
     </div>
@@ -145,16 +145,16 @@
     <!-- Nota Vale -->
     <div class="dsc-vale-nota" *ngIf="esVale">
       <mat-icon>info</mat-icon>
-      <span>El tipo <strong>Vale</strong> no requiere porcentaje.</span>
+      <span>{{ 'valeTypeNoPercentage' | tenantText }}</span>
     </div>
 
     <div class="mant-form-actions">
       <button mat-raised-button color="primary" type="submit">
         <mat-icon>save</mat-icon>
-        {{ descuento.IdDescuento ? 'Actualizar' : 'Guardar' }}
+        {{ (descuento.IdDescuento ? 'updateAction' : 'save') | tenantText }}
       </button>
       <button mat-stroked-button type="button" (click)="cancelar()">
-        <mat-icon>close</mat-icon> Cancelar
+        <mat-icon>close</mat-icon> {{ 'cancel' | tenantText }}
       </button>
     </div>
   </form>

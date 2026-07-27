@@ -2,22 +2,22 @@
   <button
     mat-icon-button
     class="close-button"
-    aria-label="Cerrar"
+    [attr.aria-label]="'closeDialog' | tenantText"
     (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Mantenimiento de Socios de Negocio</h2>
+  <h2>{{ 'maintenanceBusinessPartners' | tenantText }}</h2>
 
   <ng-container *ngIf="!showForm">
     <div class="socio-toolbar">
       <button mat-raised-button color="primary" type="button" (click)="nuevo()">
         <mat-icon>add</mat-icon>
-        Nuevo socio
+        {{ 'newBusinessPartner' | tenantText }}
       </button>
 
       <mat-form-field appearance="fill" class="mant-search">
-        <mat-label>Buscar socio</mat-label>
+        <mat-label>{{ 'searchBusinessPartner' | tenantText }}</mat-label>
         <mat-icon matPrefix>search</mat-icon>
         <input
           matInput
@@ -30,7 +30,7 @@
     <div class="mant-table-card socio-table">
       <mat-table [dataSource]="dataSource">
         <ng-container matColumnDef="descripcion">
-          <mat-header-cell *matHeaderCellDef>Socio de negocio</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'businessPartner' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let row">
             <span class="socio-name">
               <mat-icon>storefront</mat-icon>
@@ -40,44 +40,44 @@
         </ng-container>
 
         <ng-container matColumnDef="comision">
-          <mat-header-cell *matHeaderCellDef>Comisión</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'commission' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let row">
             {{ row.PorcentajeComision }}%
           </mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="precios">
-          <mat-header-cell *matHeaderCellDef>Precios configurados</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'configuredPrices' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let row">
             {{ contarPrecios(row) }}
           </mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="estado">
-          <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'status' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let row">
             <span
               class="status-badge"
               [class.status-badge--danger]="!row.Activo">
-              {{ row.Activo ? 'Activo' : 'Inactivo' }}
+              {{ (row.Activo ? 'active' : 'inactive') | tenantText }}
             </span>
           </mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="actions">
-          <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let row">
             <button
               mat-icon-button
               color="primary"
-              matTooltip="Editar socio y precios"
+              [matTooltip]="'editPartnerAndPrices' | tenantText"
               (click)="editar(row)">
               <mat-icon>edit</mat-icon>
             </button>
             <button
               mat-icon-button
               color="warn"
-              matTooltip="Eliminar socio"
+              [matTooltip]="'deleteBusinessPartner' | tenantText"
               (click)="eliminar(row)">
               <mat-icon>delete</mat-icon>
             </button>
@@ -89,7 +89,7 @@
 
         <tr class="mat-row" *matNoDataRow>
           <td class="mat-cell socio-empty" [attr.colspan]="displayedColumns.length">
-            {{ cargando ? 'Cargando socios…' : 'No hay socios registrados.' }}
+            {{ (cargando ? 'loadingBusinessPartners' : 'noBusinessPartners') | tenantText }}
           </td>
         </tr>
       </mat-table>
@@ -108,7 +108,7 @@
     (ngSubmit)="guardar()">
     <div class="form-row">
       <mat-form-field appearance="fill" class="form-field form-field--grow">
-        <mat-label>Nombre del socio de negocio</mat-label>
+        <mat-label>{{ 'businessPartnerName' | tenantText }}</mat-label>
         <input
           matInput
           [(ngModel)]="socio.Descripcion"
@@ -116,11 +116,11 @@
           required
           maxlength="100"
           autocomplete="organization">
-        <mat-error>El nombre del socio es obligatorio.</mat-error>
+        <mat-error>{{ 'businessPartnerNameRequired' | tenantText }}</mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Comisión</mat-label>
+        <mat-label>{{ 'commission' | tenantText }}</mat-label>
         <input
           matInput
           type="number"
@@ -131,28 +131,27 @@
           max="100"
           step="1">
         <span matSuffix>%</span>
-        <mat-error>Debe estar entre 0 y 100.</mat-error>
+        <mat-error>{{ 'mustBeBetween0And100' | tenantText }}</mat-error>
       </mat-form-field>
 
       <mat-slide-toggle
         [(ngModel)]="socio.Activo"
         name="activo"
         color="primary">
-        Socio activo para delivery
+        {{ 'partnerActiveForDelivery' | tenantText }}
       </mat-slide-toggle>
     </div>
 
     <section class="socio-prices">
       <div class="socio-prices__heading">
         <div>
-          <h3>Precios especiales por producto</h3>
+          <h3>{{ 'specialProductPrices' | tenantText }}</h3>
           <p>
-            Si dejas un precio vacío, el pedido conservará el precio normal
-            del producto.
+            {{ 'businessPartnerPricesHint' | tenantText }}
           </p>
         </div>
         <mat-form-field appearance="fill" class="socio-product-search">
-          <mat-label>Buscar producto</mat-label>
+          <mat-label>{{ 'searchProducts' | tenantText }}</mat-label>
           <mat-icon matPrefix>search</mat-icon>
           <input
             matInput
@@ -165,9 +164,9 @@
 
       <div class="socio-price-list">
         <div class="socio-price-row socio-price-row--header">
-          <span>Producto</span>
-          <span>Precio normal</span>
-          <span>Precio del socio</span>
+          <span>{{ 'product' | tenantText }}</span>
+          <span>{{ 'normalPrice' | tenantText }}</span>
+          <span>{{ 'partnerPrice' | tenantText }}</span>
           <span></span>
         </div>
 
@@ -180,7 +179,7 @@
           </div>
           <span>{{ producto.Precio | number:'1.2-2' }}</span>
           <mat-form-field appearance="outline">
-            <mat-label>Precio</mat-label>
+            <mat-label>{{ 'price' | tenantText }}</mat-label>
             <input
               matInput
               type="number"
@@ -193,7 +192,7 @@
           <button
             mat-icon-button
             type="button"
-            matTooltip="Usar precio normal"
+            [matTooltip]="'useNormalPrice' | tenantText"
             [disabled]="!precios[producto.IdProducto]"
             (click)="quitarPrecio(producto.IdProducto)">
             <mat-icon>restart_alt</mat-icon>
@@ -201,7 +200,7 @@
         </div>
 
         <div class="socio-empty" *ngIf="productosFiltrados.length === 0">
-          No hay productos que coincidan con la búsqueda.
+          {{ 'noProductsMatchSearch' | tenantText }}
         </div>
       </div>
     </section>
@@ -213,7 +212,7 @@
         type="submit"
         [disabled]="guardando">
         <mat-icon>save</mat-icon>
-        {{ guardando ? 'Guardando…' : 'Guardar socio' }}
+        {{ (guardando ? 'saving' : 'saveBusinessPartner') | tenantText }}
       </button>
       <button
         mat-stroked-button
@@ -221,7 +220,7 @@
         [disabled]="guardando"
         (click)="cancelar()">
         <mat-icon>arrow_back</mat-icon>
-        Volver al listado
+        {{ 'backToList' | tenantText }}
       </button>
     </div>
   </form>

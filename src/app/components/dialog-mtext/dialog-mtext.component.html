@@ -26,13 +26,13 @@
 
   <div class="mt-actions">
     <button class="mt-btn mt-btn--warn" (click)="clear()">
-      <mat-icon>backspace</mat-icon> Borrar
+      <mat-icon>backspace</mat-icon> {{ 'clear' | tenantText }}
     </button>
     <button class="mt-btn mt-btn--primary" (click)="accept()">
-      <mat-icon>check</mat-icon> Aceptar
+      <mat-icon>check</mat-icon> {{ 'accept' | tenantText }}
     </button>
     <button class="mt-btn mt-btn--secondary" (click)="cancel()">
-      Salir
+      {{ 'exit' | tenantText }}
     </button>
   </div>
 

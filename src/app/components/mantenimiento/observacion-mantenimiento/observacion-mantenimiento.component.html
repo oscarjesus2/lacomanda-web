@@ -1,43 +1,43 @@
 <div class="mant-panel">
-  <button mat-icon-button class="close-button" (click)="salir()">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Mantenimiento de Observaciones</h2>
+  <h2>{{ 'maintenanceObservations' | tenantText }}</h2>
 
   <!-- Lista -->
   <div *ngIf="!showForm">
-    <button mat-raised-button color="primary" (click)="nuevo()">Nueva Observación</button>
+    <button mat-raised-button color="primary" (click)="nuevo()">{{ 'newObservation' | tenantText }}</button>
 
     <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Buscar</mat-label>
-      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Descripción, tipo, posición...">
+      <mat-label>{{ 'search' | tenantText }}</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" [placeholder]="'descriptionTypePosition' | tenantText">
     </mat-form-field>
 
     <div class="mant-table-card">
       <mat-table [dataSource]="data" class="mat-elevation-z8">
         <ng-container matColumnDef="descripcion">
-          <mat-header-cell *matHeaderCellDef>Descripción</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'description' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let r">{{ r.Descripcion }}</mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="tipo">
-          <mat-header-cell *matHeaderCellDef>Tipo</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'type' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let r">{{ tipoLabel(r.Tipo) }}</mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="posicion">
-          <mat-header-cell *matHeaderCellDef>Posición</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'position' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let r">{{ r.Posicion }}</mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="activo">
-          <mat-header-cell *matHeaderCellDef>Activo</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'active' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let r">{{ estadoLabel(r.Activo) }}</mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="actions">
-          <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let r">
             <button mat-icon-button color="primary" (click)="onEdit(r)">
               <mat-icon>edit</mat-icon>
@@ -64,30 +64,30 @@
   <form *ngIf="showForm" #form="ngForm" (ngSubmit)="onSubmit()">
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Descripción</mat-label>
+        <mat-label>{{ 'description' | tenantText }}</mat-label>
         <input matInput [(ngModel)]="obs.Descripcion" name="descripcion" required>
-        <mat-hint>Ej: BIEN CALIENTE, SALSA APARTE, ...</mat-hint>
+        <mat-hint>{{ 'observationExample' | tenantText }}</mat-hint>
       </mat-form-field>
 
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Tipo</mat-label>
+        <mat-label>{{ 'type' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="obs.Tipo" name="tipo" required (selectionChange)="onTipoChange()">
           <mat-option *ngFor="let t of tipos" [value]="t.value">{{ t.label }}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Activo</mat-label>
+        <mat-label>{{ 'active' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="obs.Activo" name="activo" required>
-          <mat-option [value]="1">Sí</mat-option>
-          <mat-option [value]="0">No</mat-option>
+          <mat-option [value]="1">{{ 'yes' | tenantText }}</mat-option>
+          <mat-option [value]="0">{{ 'no' | tenantText }}</mat-option>
         </mat-select>
       </mat-form-field>
     </div>
 
     <div class="grid-card">
       <div class="grid-title">
-        Selecciona la posición ({{ ROWS }} x {{ COLS }}) — Tipo: {{ tipoLabel(obs.Tipo) }}
+        {{ 'selectGridPosition' | tenantText }} ({{ ROWS }} x {{ COLS }}) — {{ 'type' | tenantText }}: {{ tipoLabel(obs.Tipo) }}
       </div>
 
       <div class="grid" [style.gridTemplateColumns]="'repeat(' + COLS + ', 1fr)'">
@@ -103,15 +103,15 @@
       </div>
 
       <div class="grid-legend">
-        <span class="dot selected"></span> Seleccionada
-        <span class="dot occupied"></span> Ocupada
-        <span class="dot free"></span> Libre
+        <span class="dot selected"></span> {{ 'selected' | tenantText }}
+        <span class="dot occupied"></span> {{ 'occupied' | tenantText }}
+        <span class="dot free"></span> {{ 'free' | tenantText }}
       </div>
     </div>
 
     <button mat-raised-button color="primary">
-      {{ obs.IdObservacion ? 'Actualizar' : 'Guardar' }}
+      {{ (obs.IdObservacion ? 'updateAction' : 'save') | tenantText }}
     </button>
-    <button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>
+    <button mat-stroked-button type="button" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
   </form>
 </div>

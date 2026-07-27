@@ -1,46 +1,46 @@
 <div class="mant-panel">
-  <button mat-icon-button class="close-button" (click)="salir()">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
-  
-  <h2>Mantenimiento de Estaciones</h2>
+
+  <h2>{{ 'maintenanceStations' | tenantText }}</h2>
 
   <!-- Lista -->
   <div *ngIf="!showForm" class="empleados-list">
-    <button mat-raised-button color="primary" (click)="nuevo()">Nueva Estación</button>
+    <button mat-raised-button color="primary" (click)="nuevo()">{{ 'newStation' | tenantText }}</button>
 
     <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Buscar</mat-label>
-      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Buscar por nombre o IdentificadorUnico">
+      <mat-label>{{ 'search' | tenantText }}</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" [placeholder]="'searchStation' | tenantText">
     </mat-form-field>
 <div class="mant-table-card">
     <mat-table [dataSource]="filteredEstaciones" class="mat-elevation-z8">
       <ng-container matColumnDef="descripcion">
-        <mat-header-cell *matHeaderCellDef>Descripción</mat-header-cell>
+        <mat-header-cell *matHeaderCellDef>{{ 'description' | tenantText }}</mat-header-cell>
         <mat-cell *matCellDef="let r">{{ r.Descripcion }}</mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="identificadorUnico">
-        <mat-header-cell *matHeaderCellDef>Identificador Único</mat-header-cell>
+        <mat-header-cell *matHeaderCellDef>{{ 'uniqueIdentifier' | tenantText }}</mat-header-cell>
         <mat-cell *matCellDef="let r">{{ r.IdentificadorUnico }}</mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="caja">
-        <mat-header-cell *matHeaderCellDef>Caja</mat-header-cell>
+        <mat-header-cell *matHeaderCellDef>{{ 'register' | tenantText }}</mat-header-cell>
         <mat-cell *matCellDef="let r">
            {{ cajaMap[r.IdCaja] || r.IdCaja }}
         </mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="tipo">
-        <mat-header-cell *matHeaderCellDef>Tipo</mat-header-cell>
+        <mat-header-cell *matHeaderCellDef>{{ 'type' | tenantText }}</mat-header-cell>
         <mat-cell *matCellDef="let r">
           {{ tipoMap[r.Tipo] || r.Tipo }}
         </mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+        <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
         <mat-cell *matCellDef="let r">
           <button mat-icon-button color="primary" (click)="onEdit(r)">
             <mat-icon>edit</mat-icon>
@@ -62,14 +62,14 @@
   <form *ngIf="showForm" #estacionForm="ngForm" (ngSubmit)="onSubmit()">
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Tipo Estación</mat-label>
+        <mat-label>{{ 'stationType' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="estacion.Tipo" name="tipo" required>
           <mat-option *ngFor="let t of tipos" [value]="t.value">{{ t.label }}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Caja Asignada</mat-label>
+        <mat-label>{{ 'assignedRegister' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="estacion.IdCaja" name="idCaja" required>
           <mat-option *ngFor="let c of listCajas" [value]="c.IdCaja">{{ c.Descripcion }}</mat-option>
         </mat-select>
@@ -78,17 +78,17 @@
 
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Descripción</mat-label>
+        <mat-label>{{ 'description' | tenantText }}</mat-label>
         <input matInput [(ngModel)]="estacion.Descripcion" name="descripcion" required>
       </mat-form-field>
 
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>IdentificadorUnico</mat-label>
+        <mat-label>{{ 'uniqueIdentifier' | tenantText }}</mat-label>
         <input matInput [(ngModel)]="estacion.IdentificadorUnico" name="hostname" required>
       </mat-form-field>
     </div>
 
-    <button mat-raised-button color="primary">{{ estacion.IdEstacion ? 'Actualizar' : 'Guardar' }}</button>
-    <button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>
+    <button mat-raised-button color="primary">{{ (estacion.IdEstacion ? 'updateAction' : 'save') | tenantText }}</button>
+    <button mat-stroked-button type="button" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
   </form>
 </div>

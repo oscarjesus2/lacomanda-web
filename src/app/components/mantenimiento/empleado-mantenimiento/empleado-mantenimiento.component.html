@@ -1,49 +1,49 @@
 <div class="mant-panel">
-  <button mat-icon-button class="close-button" (click)="salir()">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
-  
-  <h2>Mantenimiento de Empleados</h2>
+
+  <h2>{{ 'maintenanceEmployees' | tenantText }}</h2>
 
   <!-- Lista de Empleados, visible por defecto -->
   <div class="empleados-list" *ngIf="!showForm">
     <button mat-raised-button color="primary" (click)="nuevoEmpleado()">
-      Nuevo Empleado
+      {{ 'newEmployee' | tenantText }}
     </button>
     <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Buscar</mat-label>
+      <mat-label>{{ 'search' | tenantText }}</mat-label>
       <input matInput [(ngModel)]="filtroEmpleado" (ngModelChange)="applyFilter()"
-        placeholder="Buscar por nombre, RUC, etc.">
+        [placeholder]="'searchEmployee' | tenantText">
     </mat-form-field>
     <div class="mant-table-card">
     <mat-table [dataSource]="filteredEmpleados" class="mat-elevation-z8">
       <!-- RUC Column -->
       <ng-container matColumnDef="nombre">
-        <mat-header-cell *matHeaderCellDef> Nombre </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'name' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let empleado"> {{empleado.Nombre}} </mat-cell>
       </ng-container>
 
       <!-- Razon Social Column -->
       <ng-container matColumnDef="dni">
-        <mat-header-cell *matHeaderCellDef> DNI </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'identityDocument' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let empleado"> {{empleado.Dni}} </mat-cell>
       </ng-container>
 
       <!-- Direccion Column -->
       <ng-container matColumnDef="direccion">
-        <mat-header-cell *matHeaderCellDef> Dirección </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'address' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let empleado"> {{empleado.Direccion}} </mat-cell>
       </ng-container>
 
       <!-- Estado Column -->
       <ng-container matColumnDef="telefono">
-        <mat-header-cell *matHeaderCellDef> Telefono </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'telephone' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let empleado"> {{empleado.Telefono}} </mat-cell>
       </ng-container>
 
       <!-- Actions Column -->
       <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'actions' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let empleado">
           <button mat-icon-button color="primary" (click)="onEdit(empleado)">
             <mat-icon>edit</mat-icon>
@@ -66,57 +66,57 @@
     <!-- Primera línea: Tipo Identidad y RUC -->
     <div class="form-row">
       <mat-form-field  appearance="fill">
-        <mat-label>DNI</mat-label>
+        <mat-label>{{ 'identityDocument' | tenantText }}</mat-label>
         <input matInput [(ngModel)]="empleado.Dni" name="dni" [required]="true" [attr.maxLength]="maxLength"
           [pattern]="pattern" #dni="ngModel">
         <mat-error *ngIf="dni.invalid && (dni.dirty || dni.touched)">
-          El DNI es requerido.
+          {{ 'identityRequired' | tenantText }}
         </mat-error>
 
       </mat-form-field>
 
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Nombre</mat-label>
+        <mat-label>{{ 'name' | tenantText }}</mat-label>
         <input matInput [(ngModel)]="empleado.Nombre" name="nombre" required #nombre="ngModel">
         <mat-error *ngIf="nombre.invalid && (nombre.dirty || nombre.touched)">
-          El nombre es requerido.
+          {{ 'nameRequiredField' | tenantText }}
         </mat-error>
       </mat-form-field>
     </div>
 
     <!-- Tercera línea: Direccion -->
     <mat-form-field class="full-width" appearance="fill">
-      <mat-label>Dirección</mat-label>
+      <mat-label>{{ 'address' | tenantText }}</mat-label>
       <input matInput [(ngModel)]="empleado.Direccion" name="direccion" required #direccion="ngModel">
       <mat-error *ngIf="direccion.invalid && (direccion.dirty || direccion.touched)">
-        La dirección es requerida.
+        {{ 'addressRequiredField' | tenantText }}
       </mat-error>
     </mat-form-field>
 
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Telefono</mat-label>
+        <mat-label>{{ 'telephone' | tenantText }}</mat-label>
         <input matInput [(ngModel)]="empleado.Telefono" name="telefono" required phone #telefono="ngModel">
         <mat-error *ngIf="telefono.invalid && (telefono.dirty || telefono.touched)">
-          Introduzca un telefono válido.
+          {{ 'validPhoneRequired' | tenantText }}
         </mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="fill">
-        <mat-label>Estado</mat-label>
+        <mat-label>{{ 'status' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="empleado.Activo" name="estado" required #estado="ngModel">
-          <mat-option [value]="1">Activo</mat-option>
-          <mat-option [value]="0">Inactivo</mat-option>
+          <mat-option [value]="1">{{ 'active' | tenantText }}</mat-option>
+          <mat-option [value]="0">{{ 'inactive' | tenantText }}</mat-option>
         </mat-select>
         <mat-error *ngIf="estado.invalid && (estado.dirty || estado.touched)">
-          Seleccione un estado.
+          {{ 'selectState' | tenantText }}
         </mat-error>
       </mat-form-field>
     </div>
 
     <button mat-raised-button color="primary">
-      {{ empleado.IdEmpleado ? 'Actualizar' : 'Guardar' }}
+      {{ (empleado.IdEmpleado ? 'updateAction' : 'save') | tenantText }}
     </button>
-    <button mat-stroked-button (click)="cancelar()">Cancelar</button>
+    <button mat-stroked-button (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
   </form>
 </div>

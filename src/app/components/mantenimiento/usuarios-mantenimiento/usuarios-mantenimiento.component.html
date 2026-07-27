@@ -1,41 +1,41 @@
 <div class="mant-panel">
-  <button mat-icon-button class="close-button" (click)="salir()">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
-  
-    <h2>Mantenimiento de usuarios</h2>
+
+    <h2>{{ 'maintenanceUsers' | tenantText }}</h2>
 
     <!-- Lista de usuarios, visible por defecto -->
     <div class="usuarios-list" *ngIf="!showForm">
       <button mat-raised-button color="primary" (click)="nuevousuario()">
-        Nuevo usuario
+        {{ 'newUser' | tenantText }}
       </button>
       <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Buscar</mat-label>
+        <mat-label>{{ 'search' | tenantText }}</mat-label>
         <input matInput [(ngModel)]="filtrousuario" (ngModelChange)="applyFilter()"
-          placeholder="Buscar por nombre de usuario, nivel de usuario, etc.">
+          [placeholder]="'searchUser' | tenantText">
       </mat-form-field>
       <div class="mant-table-card">
       <mat-table [dataSource]="filteredusuarios" class="mat-elevation-z8">
         <!-- RUC Column -->
         <ng-container matColumnDef="username">
-          <mat-header-cell *matHeaderCellDef> Nombre de Usuario</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'username' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let usuario"> {{usuario.NombreUsuario}} </mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="niveldescripcion">
-          <mat-header-cell *matHeaderCellDef> Nivel </mat-header-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'level' | tenantText }} </mat-header-cell>
           <mat-cell *matCellDef="let usuario"> {{usuario.NivelDescripcion}} </mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="activo">
-          <mat-header-cell *matHeaderCellDef> Activo </mat-header-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'active' | tenantText }} </mat-header-cell>
           <mat-cell *matCellDef="let usuario"> {{usuario.Activo}} </mat-cell>
         </ng-container>
 
         <!-- Actions Column -->
         <ng-container matColumnDef="actions">
-          <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'actions' | tenantText }} </mat-header-cell>
           <mat-cell *matCellDef="let usuario">
             <button mat-icon-button color="primary" (click)="onEdit(usuario)">
               <mat-icon>edit</mat-icon>
@@ -59,56 +59,56 @@
       <!-- Primera línea: Tipo Identidad y RUC -->
       <div class="form-row">
         <mat-form-field appearance="fill">
-          <mat-label>Nombre de Usuario</mat-label>
+          <mat-label>{{ 'username' | tenantText }}</mat-label>
           <input matInput [(ngModel)]="usuario.NombreUsuario" name="username" required #username="ngModel">
           <mat-error *ngIf="username.invalid && (username.dirty || username.touched)">
-            El nombre de Usuario es requerido.
+            {{ 'usernameRequired' | tenantText }}
           </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
-          <mat-label>Email</mat-label>
+          <mat-label>{{ 'email' | tenantText }}</mat-label>
           <input matInput type="email" [(ngModel)]="usuario.Email" name="email" #email="ngModel"
             pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$">
           <mat-icon matSuffix>email</mat-icon>
           <mat-error *ngIf="email.invalid && (email.dirty || email.touched)">
-            Ingrese un email válido.
+            {{ 'validEmailRequired' | tenantText }}
           </mat-error>
         </mat-form-field>
 
         <!-- Contraseña solo al crear un usuario nuevo -->
         <mat-form-field *ngIf="!usuario.IdUsuario" appearance="fill">
-          <mat-label>Contraseña</mat-label>
+          <mat-label>{{ 'password' | tenantText }}</mat-label>
           <input matInput [type]="hide() ? 'password' : 'text'" [(ngModel)]="usuario.Contrasenia" name="password"
             required #password="ngModel">
           <button mat-icon-button matSuffix type="button" (click)="clickEvent($event)">
             <mat-icon>{{hide() ? 'visibility_off' : 'visibility'}}</mat-icon>
           </button>
           <mat-error *ngIf="password.invalid && (password.dirty || password.touched)">
-            La contraseña es requerida.
+            {{ 'passwordRequired' | tenantText }}
           </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
-          <mat-label>Estado</mat-label>
+          <mat-label>{{ 'status' | tenantText }}</mat-label>
           <mat-select [(ngModel)]="usuario.Activo" name="estado" required #estado="ngModel">
-            <mat-option [value]=true>Activo</mat-option>
-            <mat-option [value]=false>Inactivo</mat-option>
+            <mat-option [value]=true>{{ 'active' | tenantText }}</mat-option>
+            <mat-option [value]=false>{{ 'inactive' | tenantText }}</mat-option>
           </mat-select>
           <mat-error *ngIf="estado.invalid && (estado.dirty || estado.touched)">
-            Seleccione un estado.
+            {{ 'selectState' | tenantText }}
           </mat-error>
         </mat-form-field>
       </div>
 
       <div class="form-row">
         <mat-form-field class="form-field" appearance="fill">
-          <mat-label>Empleado</mat-label>
-          <input 
-            type="text" 
-            matInput 
-            [matAutocomplete]="auto" 
-            [(ngModel)]="usuario.IdEmpleado" 
+          <mat-label>{{ 'employee' | tenantText }}</mat-label>
+          <input
+            type="text"
+            matInput
+            [matAutocomplete]="auto"
+            [(ngModel)]="usuario.IdEmpleado"
             (input)="onInputChange($event.target.value)"
             required
             name="empleado">
@@ -118,12 +118,12 @@
             </mat-option>
           </mat-autocomplete>
           <mat-error *ngIf="!usuario.IdEmpleado">
-            Seleccione un empleado válido.
+            {{ 'selectValidEmployee' | tenantText }}
           </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
-          <mat-label>Nivel</mat-label>
+          <mat-label>{{ 'level' | tenantText }}</mat-label>
           <mat-select [(ngModel)]="usuario.IdNivel" name="nivelusuario" required #nivelusuario="ngModel"
             [compareWith]="compareNivel">
             <mat-option *ngFor="let tipo of listNivelUsuario" [value]="tipo.IdNivel">
@@ -131,33 +131,33 @@
             </mat-option>
           </mat-select>
           <mat-error *ngIf="nivelusuario.invalid && (nivelusuario.dirty || nivelusuario.touched)">
-            Seleccione un cargo.
+            {{ 'selectRole' | tenantText }}
           </mat-error>
         </mat-form-field>
       </div>
 
       <div class="form-actions">
         <button mat-raised-button color="primary">
-          {{ usuario.IdUsuario ? 'Actualizar' : 'Guardar' }}
+          {{ (usuario.IdUsuario ? 'updateAction' : 'save') | tenantText }}
         </button>
-        <button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>
+        <button mat-stroked-button type="button" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
 
         <!-- Botón cambiar contraseña solo en edición -->
         <button *ngIf="usuario.IdUsuario" mat-stroked-button type="button"
                 class="usr-pwd-toggle-btn"
                 (click)="toggleCambiarPassword()">
           <mat-icon>key</mat-icon>
-          {{ showCambiarPassword ? 'Cancelar cambio' : 'Cambiar contraseña' }}
+          {{ (showCambiarPassword ? 'cancelChange' : 'changePassword') | tenantText }}
         </button>
       </div>
 
       <!-- Sección inline para cambiar contraseña -->
       <div *ngIf="usuario.IdUsuario && showCambiarPassword" class="usr-pwd-section">
-        <p class="usr-pwd-section__title">Cambiar contraseña</p>
+        <p class="usr-pwd-section__title">{{ 'changePassword' | tenantText }}</p>
 
         <div class="form-row">
           <mat-form-field appearance="fill">
-            <mat-label>Contraseña actual</mat-label>
+            <mat-label>{{ 'currentPassword' | tenantText }}</mat-label>
             <input matInput [type]="hideActual() ? 'password' : 'text'"
                    [(ngModel)]="pwd.PasswordActual" name="pwdActual">
             <button mat-icon-button matSuffix type="button" (click)="hideActual.set(!hideActual())">
@@ -166,7 +166,7 @@
           </mat-form-field>
 
           <mat-form-field appearance="fill">
-            <mat-label>Nueva contraseña</mat-label>
+            <mat-label>{{ 'newPassword' | tenantText }}</mat-label>
             <input matInput [type]="hideNueva() ? 'password' : 'text'"
                    [(ngModel)]="pwd.PasswordNueva" name="pwdNueva">
             <button mat-icon-button matSuffix type="button" (click)="hideNueva.set(!hideNueva())">
@@ -175,7 +175,7 @@
           </mat-form-field>
 
           <mat-form-field appearance="fill">
-            <mat-label>Confirmar contraseña</mat-label>
+            <mat-label>{{ 'confirmPassword' | tenantText }}</mat-label>
             <input matInput [type]="hideConfirmar() ? 'password' : 'text'"
                    [(ngModel)]="pwd.PasswordConfirmar" name="pwdConfirmar">
             <button mat-icon-button matSuffix type="button" (click)="hideConfirmar.set(!hideConfirmar())">
@@ -183,14 +183,14 @@
             </button>
             <mat-hint *ngIf="pwd.PasswordNueva && pwd.PasswordConfirmar && pwd.PasswordNueva !== pwd.PasswordConfirmar"
                       class="usr-pwd-mismatch">
-              Las contraseñas no coinciden
+              {{ 'passwordsDoNotMatch' | tenantText }}
             </mat-hint>
           </mat-form-field>
         </div>
 
         <button mat-raised-button color="primary" type="button" (click)="guardarPassword()">
           <mat-icon>save</mat-icon>
-          Guardar contraseña
+          {{ 'savePassword' | tenantText }}
         </button>
       </div>
     </form>

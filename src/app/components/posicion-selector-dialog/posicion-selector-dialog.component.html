@@ -1,15 +1,15 @@
 <div class="mant-panel pos-panel">
   <!-- CERRAR -->
-  <button mat-icon-button class="close-button" (click)="cancel()">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="cancel()">
     <mat-icon>close</mat-icon>
   </button>
 
-  <h3 class="pos-panel__title">Seleccionar posición</h3>
+  <h3 class="pos-panel__title">{{ 'selectPositionTitle' | tenantText }}</h3>
 
   <div class="pos-panel__legend">
-    <span class="pos-badge pos-badge--free"></span> Libre
-    <span class="pos-badge pos-badge--taken"></span> Ocupada
-    <span class="pos-badge pos-badge--selected"></span> Elegida
+    <span class="pos-badge pos-badge--free"></span> {{ 'free' | tenantText }}
+    <span class="pos-badge pos-badge--taken"></span> {{ 'occupied' | tenantText }}
+    <span class="pos-badge pos-badge--selected"></span> {{ 'selected' | tenantText }}
   </div>
 
   <div
@@ -24,7 +24,7 @@
       [class.pos-cell--selected]="selected === n"
       (click)="pick(n)"
       [disabled]="isTaken(n)"
-      [matTooltip]="'Posición ' + n"
+      [matTooltip]="('position' | tenantText) + ' ' + n"
     >
       {{ n }}
     </button>
@@ -37,10 +37,10 @@
       (click)="confirm()"
       [disabled]="!selected"
     >
-      Aceptar
+      {{ 'accept' | tenantText }}
     </button>
     <button mat-stroked-button (click)="cancel()">
-      Cancelar
+      {{ 'cancel' | tenantText }}
     </button>
   </div>
 </div>

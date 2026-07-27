@@ -1,29 +1,29 @@
 <div class="mant-panel">
-  <button mat-icon-button class="close-button" (click)="salir()">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
-  
-  <h2>Mantenimiento de Colores</h2>
+
+  <h2>{{ 'maintenanceColors' | tenantText }}</h2>
 
   <!-- LISTA -->
   <div *ngIf="!showForm">
-    <button mat-raised-button color="primary" (click)="nuevo()">Nuevo Color</button>
+    <button mat-raised-button color="primary" (click)="nuevo()">{{ 'newColor' | tenantText }}</button>
 
     <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Buscar</mat-label>
-      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Descripción o RGB">
+      <mat-label>{{ 'search' | tenantText }}</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" [placeholder]="'descriptionOrRgb' | tenantText">
     </mat-form-field>
  <div class="mant-table-card">
     <mat-table [dataSource]="filtered" class="mat-elevation-z8">
       <ng-container matColumnDef="preview">
-        <mat-header-cell *matHeaderCellDef> Color </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'color' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let r">
           <span class="chip" [ngStyle]="swatchStyle(r)"></span>
         </mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="descripcion">
-        <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'description' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let r">{{ r.Descripcion }}</mat-cell>
       </ng-container>
 
@@ -33,7 +33,7 @@
       </ng-container>
 
       <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'actions' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let r">
           <button mat-icon-button color="primary" (click)="onEdit(r)"><mat-icon>edit</mat-icon></button>
           <button mat-icon-button color="warn" (click)="onDelete(r.IdColor)"><mat-icon>delete</mat-icon></button>
@@ -51,7 +51,7 @@
     <div class="palette-row">
       <div class="preview" [ngStyle]="previewStyle()"></div>
       <div class="picker">
-        <label>Elegir color</label>
+        <label>{{ 'chooseColor' | tenantText }}</label>
         <input type="color" [(ngModel)]="hex" name="hex" (change)="onHexChange()">
       </div>
     </div>
@@ -66,9 +66,9 @@
 
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Descripción</mat-label>
+        <mat-label>{{ 'description' | tenantText }}</mat-label>
         <input matInput [(ngModel)]="c.Descripcion" name="descripcion" required #descripcion="ngModel">
-        <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">Requerido.</mat-error>
+        <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">{{ 'required' | tenantText }}</mat-error>
       </mat-form-field>
 
       <mat-form-field class="form-field" appearance="fill">
@@ -87,7 +87,7 @@
       </mat-form-field>
     </div>
 
-    <button mat-raised-button color="primary">{{ c.IdColor ? 'Actualizar' : 'Guardar' }}</button>
-    <button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>
+    <button mat-raised-button color="primary">{{ (c.IdColor ? 'updateAction' : 'save') | tenantText }}</button>
+    <button mat-stroked-button type="button" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
   </form>
 </div>

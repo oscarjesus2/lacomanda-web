@@ -1,65 +1,65 @@
 <div class="mant-panel">
-  <button mat-icon-button class="close-button" (click)="salir()">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
-  
-  <h2>Mantenimiento de Espacios</h2>
+
+  <h2>{{ 'maintenanceSpaces' | tenantText }}</h2>
 
   <!-- Lista de Mesas -->
   <div class="empleados-list" *ngIf="!showForm">
-    <button mat-raised-button color="primary" (click)="nuevaEspacio()">Nuevo Espacios</button>
+    <button mat-raised-button color="primary" (click)="nuevaEspacio()">{{ 'newSpace' | tenantText }}</button>
 
     <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Buscar</mat-label>
+      <mat-label>{{ 'search' | tenantText }}</mat-label>
       <input matInput [(ngModel)]="filtroEspacio" (ngModelChange)="applyFilter()"
-        placeholder="Buscar por descripción, número, posición o ambiente">
+        [placeholder]="'searchSpace' | tenantText">
     </mat-form-field>
 <div class="mant-table-card">
     <mat-table [dataSource]="filteredEspacios" class="mat-elevation-z8">
       <!-- Descripcion -->
       <ng-container matColumnDef="descripcion">
-        <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'description' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let espacio"> {{ espacio.Descripcion }} </mat-cell>
       </ng-container>
 
       <!-- Numero -->
       <ng-container matColumnDef="numero">
-        <mat-header-cell *matHeaderCellDef> Número </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'number' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let espacio"> {{ espacio.Numero }} </mat-cell>
       </ng-container>
 
       <!-- Posicion -->
       <ng-container matColumnDef="posicion">
-        <mat-header-cell *matHeaderCellDef> Posición </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'position' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let espacio"> {{ espacio.Posicion }} </mat-cell>
       </ng-container>
 
       <!-- Ambiente -->
       <ng-container matColumnDef="ambiente">
-        <mat-header-cell *matHeaderCellDef> Ambiente </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'environment' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let espacio"> {{ getAmbienteDescripcion(espacio.IdAmbiente) }} </mat-cell>
       </ng-container>
 
       <!-- Activo -->
       <ng-container matColumnDef="activo">
-        <mat-header-cell *matHeaderCellDef> Activo </mat-header-cell>
-        <mat-cell *matCellDef="let espacio"> {{ espacio.Activo ? 'Sí' : 'No' }} </mat-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'active' | tenantText }} </mat-header-cell>
+        <mat-cell *matCellDef="let espacio"> {{ (espacio.Activo ? 'yes' : 'no') | tenantText }} </mat-cell>
       </ng-container>
 
       <!-- Visible -->
       <ng-container matColumnDef="visible">
-        <mat-header-cell *matHeaderCellDef> Visible </mat-header-cell>
-        <mat-cell *matCellDef="let espacio"> {{ espacio.Visible ? 'Sí' : 'No' }} </mat-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'visible' | tenantText }} </mat-header-cell>
+        <mat-cell *matCellDef="let espacio"> {{ (espacio.Visible ? 'yes' : 'no') | tenantText }} </mat-cell>
       </ng-container>
 
       <!-- Acciones -->
       <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'actions' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let espacio">
-          <button mat-icon-button color="primary" (click)="onEdit(espacio)" matTooltip="Editar">
+          <button mat-icon-button color="primary" (click)="onEdit(espacio)" [matTooltip]="'edit' | tenantText">
             <mat-icon>edit</mat-icon>
           </button>
-          <button mat-icon-button color="warn" (click)="onDelete(espacio.IdEspacio)" matTooltip="Eliminar">
+          <button mat-icon-button color="warn" (click)="onDelete(espacio.IdEspacio)" [matTooltip]="'delete' | tenantText">
             <mat-icon>delete</mat-icon>
           </button>
         </mat-cell>
@@ -76,7 +76,7 @@
   <form *ngIf="showForm" #mesaForm="ngForm" (ngSubmit)="onSubmit()">
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Descripción</mat-label>
+        <mat-label>{{ 'description' | tenantText }}</mat-label>
         <input type="text" matInput [(ngModel)]="espacio.Descripcion" [matAutocomplete]="auto" name="descripcion" required>
         <mat-autocomplete #auto="matAutocomplete">
           <mat-option *ngFor="let opt of descripcionesEjemplo" [value]="opt">{{ opt }}</mat-option>
@@ -85,17 +85,17 @@
 
 
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Número</mat-label>
+        <mat-label>{{ 'number' | tenantText }}</mat-label>
         <input matInput type="number" [(ngModel)]="espacio.Numero" name="numero" required min="1" #numero="ngModel">
         <mat-error *ngIf="numero.invalid && (numero.dirty || numero.touched)">
-          El número es requerido y debe ser mayor a 0.
+          {{ 'numberRequiredGreaterThanZero' | tenantText }}
         </mat-error>
       </mat-form-field>
     </div>
 
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Ambiente</mat-label>
+        <mat-label>{{ 'environment' | tenantText }}</mat-label>
         <mat-select
           [(ngModel)]="selectedAmbiente"
           name="ambiente"
@@ -108,47 +108,47 @@
           </mat-option>
         </mat-select>
         <mat-error *ngIf="ambiente.invalid && (ambiente.dirty || ambiente.touched)">
-          Seleccione un ambiente.
+          {{ 'selectEnvironment' | tenantText }}
         </mat-error>
       </mat-form-field>
 
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Posición</mat-label>
-        <input matInput [value]="espacio.Posicion || ''" name="posicion" readonly placeholder="Seleccione una posición">
+        <mat-label>{{ 'position' | tenantText }}</mat-label>
+        <input matInput [value]="espacio.Posicion || ''" name="posicion" readonly [placeholder]="'selectPositionSimple' | tenantText">
       </mat-form-field>
 
       <button mat-raised-button color="primary" type="button" (click)="abrirSelectorPosicion()" [disabled]="!selectedAmbiente">
-        Elegir posición
+        {{ 'choosePositionSimple' | tenantText }}
       </button>
     </div>
 
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Activo</mat-label>
+        <mat-label>{{ 'active' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="espacio.Activo" name="activo" required #activo="ngModel">
-          <mat-option [value]="true">Sí</mat-option>
-          <mat-option [value]="false">No</mat-option>
+          <mat-option [value]="true">{{ 'yes' | tenantText }}</mat-option>
+          <mat-option [value]="false">{{ 'no' | tenantText }}</mat-option>
         </mat-select>
         <mat-error *ngIf="activo.invalid && (activo.dirty || activo.touched)">
-          Seleccione si está activo.
+          {{ 'selectIfActive' | tenantText }}
         </mat-error>
       </mat-form-field>
 
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Visible</mat-label>
+        <mat-label>{{ 'visible' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="espacio.Visible" name="visible" required #visible="ngModel">
-          <mat-option [value]="true">Sí</mat-option>
-          <mat-option [value]="false">No</mat-option>
+          <mat-option [value]="true">{{ 'yes' | tenantText }}</mat-option>
+          <mat-option [value]="false">{{ 'no' | tenantText }}</mat-option>
         </mat-select>
         <mat-error *ngIf="visible.invalid && (visible.dirty || visible.touched)">
-          Seleccione si es visible.
+          {{ 'selectIfVisible' | tenantText }}
         </mat-error>
       </mat-form-field>
     </div>
 
     <button mat-raised-button color="primary">
-      {{ espacio.IdEspacio ? 'Actualizar' : 'Guardar' }}
+      {{ (espacio.IdEspacio ? 'updateAction' : 'save') | tenantText }}
     </button>
-    <button mat-stroked-button (click)="cancelar()" type="button">Cancelar</button>
+    <button mat-stroked-button (click)="cancelar()" type="button">{{ 'cancel' | tenantText }}</button>
   </form>
 </div>
