@@ -6,7 +6,7 @@ export class Cliente {
     public Direccion: string;
     public NumeroIdentificacion: string;
     public Referencia: string;
-    public Correo: string;
+    public Email: string;
     public IdTipoIdentidad: string;
     public TipoIdentidad: TipoIdentidad;
     public Telefono: string;

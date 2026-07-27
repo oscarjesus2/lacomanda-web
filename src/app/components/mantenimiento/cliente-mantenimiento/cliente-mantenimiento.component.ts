@@ -150,7 +150,7 @@ buscarCliente(): void {
             this.cliente.NumeroIdentificacion = clienteBuscar.Ruc;
             this.cliente.RazonSocial = clienteBuscar.RazonSocial;
             this.cliente.Direccion = clienteBuscar.Direccion;
-            this.cliente.Correo = clienteBuscar.Correo;
+            this.cliente.Email = clienteBuscar.Correo;
         } else {
           Swal.fire({
             title: 'Validación',
@@ -162,7 +162,7 @@ buscarCliente(): void {
           this.cliente.NumeroIdentificacion = '';
             this.cliente.RazonSocial = '';
             this.cliente.Direccion = '';
-            this.cliente.Correo = '';
+            this.cliente.Email = '';
     
         }
       } else {

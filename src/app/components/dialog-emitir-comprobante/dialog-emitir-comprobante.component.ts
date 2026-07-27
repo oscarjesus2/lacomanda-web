@@ -149,7 +149,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         this.cliente.IdCliente = data.idClienteDelivery;
         this.cliente.RazonSocial = data.clienteDelivery
         this.cliente.Direccion = data.direccion;
-        this.cliente.Correo = data.correo;
+        this.cliente.Email = data.correo;
       }
     }
 
@@ -172,7 +172,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         ruc: [this.cliente.NumeroIdentificacion, [Validators.required]],
         razonSocial: [this.cliente.RazonSocial, [Validators.required, this.razonSocialValidator()]],
         direccion: [this.cliente.Direccion],
-        correo: [this.cliente.Correo, [Validators.pattern(this.emailPattern)]]
+        correo: [this.cliente.Email, [Validators.pattern(this.emailPattern)]]
       })
     });
   }
@@ -792,7 +792,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       this.cliente.NumeroIdentificacion = rucForm;
       this.cliente.RazonSocial          = this.form.get('cliente.razonSocial')?.value;
       this.cliente.Direccion            = this.form.get('cliente.direccion')?.value;
-      this.cliente.Correo               = this.form.get('cliente.correo')?.value;
+      this.cliente.Email               = this.form.get('cliente.correo')?.value;
 
       // ── Validar campos obligatorios del cliente ──────────────────────
       if (!tipoIdentidadId) {
@@ -882,7 +882,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         }
       }
 
-      if (this.cliente.Correo && !this.isValidEmail(this.cliente.Correo)) {
+      if (this.cliente.Email && !this.isValidEmail(this.cliente.Email)) {
         Swal.fire(
           this.texts.get('validation'),
           this.texts.get('invalidCustomerEmail'),

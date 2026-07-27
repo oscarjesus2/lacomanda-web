@@ -37,7 +37,7 @@
         <!-- Estado Column -->
         <ng-container matColumnDef="correo">
           <mat-header-cell *matHeaderCellDef> {{ 'email' | tenantText }} </mat-header-cell>
-          <mat-cell *matCellDef="let cliente"> {{cliente.Correo}} </mat-cell>
+          <mat-cell *matCellDef="let cliente"> {{cliente.Email}} </mat-cell>
         </ng-container>
 
         <!-- Actions Column -->
@@ -126,7 +126,7 @@
     <!-- Quinta línea: Correo y Telefono -->
       <mat-form-field class="full-width" appearance="fill">
         <mat-label>{{ 'email' | tenantText }}</mat-label>
-        <input matInput [(ngModel)]="cliente.Correo" name="correo" required email #correo="ngModel">
+        <input matInput [(ngModel)]="cliente.Email" name="correo" required email #correo="ngModel">
         <mat-error *ngIf="correo.invalid && (correo.dirty || correo.touched)">
           {{ 'validEmailRequired' | tenantText }}
         </mat-error>

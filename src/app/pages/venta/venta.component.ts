@@ -901,7 +901,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
           ReferenciaDelivery: destino.ReferenciaDelivery,
           NumeroIdentificacion: destino.NumeroIdentificacion,
           IdTipoIdentidad: destino.IdTipoIdentidad,
-          Correo: destino.CorreoDelivery,
+          Email: destino.CorreoDelivery,
           CorreoDelivery: destino.CorreoDelivery,
           Telefono: destino.TelefonoDelivery,
           AnexoDelivery: destino.AnexoDelivery,
