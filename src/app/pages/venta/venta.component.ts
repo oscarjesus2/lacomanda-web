@@ -46,6 +46,7 @@ import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import { PedidoEspacioDTO } from 'src/app/interfaces/pedidoespacioDTO.interface';
 import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mcant.component';
 import { DialogComplementosComponent } from 'src/app/components/dialog-complementos/dialog-complementos.component';
+import { DialogMenuComponent } from 'src/app/components/dialog-menu/dialog-menu.component';
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 // import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
@@ -1442,6 +1443,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async aumentarProductGrid(oPedidoDet: PedidoDet) {
 
+    if (oPedidoDet.Producto.Tipo === 1 || oPedidoDet.Producto.Tipo === 2) {
+      return;
+    }
 
     oPedidoDet.Cantidad += 1;
 
@@ -1456,6 +1460,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async restarProductGrid(pedidoDet: PedidoDet) {
 
+    if (pedidoDet.Producto.Tipo === 1 || pedidoDet.Producto.Tipo === 2) {
+      return;
+    }
 
     if (pedidoDet.Cantidad > 1) {
       pedidoDet.Cantidad -= 1;
@@ -1647,6 +1654,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       NombreCuenta: "Pedido Inicial",
       Producto: new Producto(product),
       PedidoComplemento: [],
+      PedidoMenu: [],
       Precio: product.Precio,
       Cantidad: 1,
       Subtotal: 1 * product.Precio,
@@ -1656,14 +1664,40 @@ export class VentaComponent implements OnInit, AfterViewInit {
       Ip: this.storageService.getCurrentIP()
     });
 
-    // Verificar si el producto tiene complementos
-    if (product.Tipo == 2) {
+    if (product.Tipo == 1) {
+      this.AgregarProductoMenu(pedidoDet);
+    } else if (product.Tipo == 2) {
       this.AgregarProductoComplemento(pedidoDet);
     }
 
     // Agregar el producto al grid de productos
     this.listProductGrid.push(pedidoDet);
     this.actualizarDatosGrilla();
+  }
+
+  AgregarProductoMenu(pedidodet: PedidoDet): void {
+    const dialogRef = this.dialog.open(DialogMenuComponent, {
+      hasBackdrop: true,
+      panelClass: 'dialog-window--workspace',
+      data: { pedidodet },
+    });
+
+    dialogRef.afterClosed().subscribe(item => {
+      if (item?.pedidodet) {
+        item.pedidodet.Subtotal =
+          item.pedidodet.Cantidad * item.pedidodet.Precio;
+        this.actualizarDatosGrilla();
+        return;
+      }
+
+      if (pedidodet.Item === 0) {
+        const removeIndex = this.listProductGrid.indexOf(pedidodet);
+        if (removeIndex >= 0) {
+          this.listProductGrid.splice(removeIndex, 1);
+          this.actualizarDatosGrilla();
+        }
+      }
+    });
   }
 
   AgregarProductoComplemento(pedidodet: PedidoDet) {
@@ -1868,6 +1902,14 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.AgregarProductoComplemento(this.selectedRow);
   }
 
+  VerMenu(): void {
+    if (!this.selectedRow || this.selectedRow.Producto?.Tipo !== 1) {
+      return;
+    }
+
+    this.AgregarProductoMenu(this.selectedRow);
+  }
+
    aplicarDescuento(){
     if (this.descuentoAplicado) {
       this.quitarDescuento();
@@ -1960,6 +2002,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
             Ip: this.storageService.getCurrentIP(),
             NombreCuenta: itemGrid.NombreCuenta,
             PedidoComplemento: itemGrid.PedidoComplemento,
+            PedidoMenu: itemGrid.PedidoMenu,
             Estado:1
           }
         );
@@ -2232,7 +2275,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
           MontoDescuento: data.MontoDescuento,
           NroCupon: data.NroCupon,
           Ip: data.Ip,
-          PedidoComplemento: data.PedidoComplemento,
+          PedidoComplemento: data.PedidoComplemento ?? [],
+          PedidoMenu: data.PedidoMenu ?? [],
           FechaEnvio: data.FechaEnvio
         }
       );

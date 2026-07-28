@@ -1,10 +1,12 @@
 import { PedidoComplemento } from "./pedidocomplemento.models";
+import { PedidoMenu } from "./pedidomenu.models";
 import { Producto } from "./product.models";
 
 export class PedidoDet {
 
     public Producto: Producto;
     public PedidoComplemento: PedidoComplemento[];
+    public PedidoMenu: PedidoMenu[];
     public IdPedido: number;
     public Item: number;
     public Precio: number;

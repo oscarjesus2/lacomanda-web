@@ -50,7 +50,7 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Areas de Impresión',          route: '/ventas/area-impresion',           icon: 'print',            label: 'Impresión',    titleKey: 'printAreas',         labelKey: 'printing'           },
         { title: 'Productos',                   route: '/ventas/productos',                icon: 'restaurant_menu',  label: 'Productos',    titleKey: 'products',           labelKey: 'products'           },
         { title: 'Socios de Negocio',           route: '/ventas/socios-negocio',           icon: 'handshake',        label: 'Socios',       titleKey: 'businessPartners',   labelKey: 'partners'           },
-        { title: 'Configuración de Combos',     route: '/ventas/configuracion-combos',     icon: 'tune',             label: 'Combos',       titleKey: 'combosConfig',       labelKey: 'combos'             },
+        { title: 'Configuración de menús',      route: '/ventas/configuracion-combos',     icon: 'tune',             label: 'Menús',        titleKey: 'combosConfig',       labelKey: 'combos'             },
         { title: 'Observaciones',               route: '/ventas/observaciones',            icon: 'sticky_note_2',    label: 'Observac.',    titleKey: 'observations',       labelKey: 'observations'       },
         { title: 'Empleados',                   route: '/ventas/empleados',                icon: 'badge',            label: 'Empleados',    titleKey: 'employees',          labelKey: 'employees'          },
         { title: 'Usuarios',                    route: '/ventas/usuarios',                 icon: 'manage_accounts',  label: 'Usuarios',     titleKey: 'users',              labelKey: 'users'              },
@@ -126,7 +126,7 @@ export class MenuVentasComponent implements OnInit {
       {
         this.OpenProductoMantenimientoComponent();
       } 
-    if (item.title === 'Configuración de Combos')
+    if (item.route === '/ventas/configuracion-combos')
       {
         this.OpenProductoComboMantenimientoComponent();
       }

@@ -1,4 +1,5 @@
 import { PedidoComplemento } from "../models/pedidocomplemento.models";
+import { PedidoMenu } from "../models/pedidomenu.models";
 
 export interface PedidoEspacioDTO {
   IdPedido: number;       // Identificador del pedido
@@ -42,6 +43,7 @@ export interface PedidoEspacioDTO {
   MontoDescuento: number;
   Ip: string;
   PedidoComplemento: PedidoComplemento[];
+  PedidoMenu: PedidoMenu[];
   Tipo: number;
   IdSeccionMenu: number;
 }

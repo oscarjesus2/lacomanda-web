@@ -163,6 +163,16 @@
                   <tr *ngIf="product.PedidoComplemento?.length" style="font-style: italic; font-size: small;">
                     {{ 'withComplement' | tenantText }}
                   </tr>
+                  <tr *ngIf="product.PedidoMenu?.length" style="font-style: italic; font-size: small;">
+                    {{ 'menuConfigured' | tenantText }}
+                  </tr>
+                  <tr
+                    *ngFor="let menuItem of product.PedidoMenu"
+                    style="font-style: italic; font-size: small;">
+                    {{ menuItem.SeccionMenu }}:
+                    {{ menuItem.ProductoSeccionMenu?.NombreCorto }}
+                    x{{ menuItem.Cantidad }}
+                  </tr>
                 </table>
               </td>
             </ng-container>
@@ -186,13 +196,14 @@
                 <!-- <mat-icon>add</mat-icon>  -->
                 <button mat-icon-button color="primary"
                   [matTooltip]="'increaseQuantity' | tenantText"
-                  (click)="aumentarProductGrid(product)" disabled="{{product.Item > 0 ? 'true': 'false'}}">
+                  (click)="aumentarProductGrid(product)"
+                  [disabled]="product.Item > 0 || product.Producto?.Tipo === 1 || product.Producto?.Tipo === 2">
                   <mat-icon>add</mat-icon>
                 </button>
                 <button mat-icon-button color="warn"
                   [matTooltip]="'decreaseQuantity' | tenantText"
                   (click)="restarProductGrid(product)"
-                  disabled="{{product.Item > 0 ? 'true': 'false'}}">
+                  [disabled]="product.Item > 0 || product.Producto?.Tipo === 1 || product.Producto?.Tipo === 2">
                   <mat-icon>remove</mat-icon>
                 </button>
                 <button mat-icon-button color="primary"
@@ -285,8 +296,9 @@
     <div class="button-row"
          *ngIf="selectedRow && (selectedRow.Producto?.Tipo === 1 || selectedRow.Producto?.Tipo === 2)">
       <button *ngIf="selectedRow.Producto?.Tipo === 1"
-              [disabled]="isComboDisabled">
-        <fa-icon [icon]="faConciergeBell"></fa-icon> {{ 'combo' | tenantText }}
+              [disabled]="isComboDisabled"
+              (click)="VerMenu()">
+        <fa-icon [icon]="faConciergeBell"></fa-icon> {{ 'viewMenu' | tenantText }}
       </button>
       <button *ngIf="selectedRow.Producto?.Tipo === 2"
               (click)="VerPedido()">
@@ -323,8 +335,10 @@
   <ng-container *ngIf="isModoMozo">
 
     <div class="button-row">
-      <button [disabled]="isComboDisabled">
-        <fa-icon [icon]="faConciergeBell"></fa-icon> {{ 'combo' | tenantText }}
+      <button
+        [disabled]="isComboDisabled || !selectedRow || selectedRow.Producto?.Tipo !== 1"
+        (click)="VerMenu()">
+        <fa-icon [icon]="faConciergeBell"></fa-icon> {{ 'viewMenu' | tenantText }}
       </button>
       <button [disabled]="isVerComplementoDisabled" (click)="VerPedido()">
         <fa-icon [icon]="faEye"></fa-icon> {{ 'viewComplement' | tenantText }}
