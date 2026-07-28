@@ -1,12 +1,20 @@
+import { formatDate } from '@angular/common';
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { lastValueFrom } from 'rxjs';
 import { ResumenCobrosDTO } from 'src/app/interfaces/resumenCobrosDTO.interface';
+import {
+  ComisionAnfitrionaReporte,
+  SeguimientoComandaFiltro,
+  SeguimientoComandaReporte,
+} from 'src/app/interfaces/seguimiento-comanda.interface';
 import { Configuracion } from 'src/app/models/configuracion.models';
+import { SeguimientoComandaService } from 'src/app/services/seguimiento-comanda.service';
 import { TurnoService } from 'src/app/services/turno.service';
 import Swal from 'sweetalert2';
+import * as XLSX from 'xlsx';
 
 export interface DialogReportesData {
   idTurno: number;
@@ -33,10 +41,38 @@ export class DialogReportesComponent implements OnInit, OnDestroy {
   pdfTitulo = '';
   loadingPdf: string | null = null;   // clave del botón que está cargando, null = ninguno
 
+  vistaReporte: 'comandas' | 'anfitriona' | null = null;
+  modoFiltro: 'turno' | 'fechas' = 'turno';
+  fechaDesde = formatDate(new Date(), 'yyyy-MM-dd', 'en-US');
+  fechaHasta = this.fechaDesde;
+  loadingReporte = false;
+  seguimiento: SeguimientoComandaReporte | null = null;
+  comisionAnfitriona: ComisionAnfitrionaReporte | null = null;
+
+  columnasComandas = [
+    'IdTurno', 'FechaTrabajo', 'TipoPedido', 'NroPedido', 'NroCuenta',
+    'Mesa', 'NroPax', 'Mozo', 'Descuento', 'Total', 'Estado', 'UsuarioRegistra',
+  ];
+  columnasAnulados = [
+    'IdTurno', 'FechaTrabajo', 'TipoPedido', 'NroPedido', 'NroCuenta',
+    'Producto', 'Cantidad', 'Subtotal', 'UsuarioAnula', 'FechaAnula', 'MotivoAnula',
+  ];
+  columnasDescuentos = [
+    'IdTurno', 'FechaTrabajo', 'TipoPedido', 'NroPedido', 'TipoDescuento',
+    'Producto', 'Cantidad', 'Subtotal', 'MontoDescuento', 'Estado',
+    'UsuarioDescuento', 'FechaDescuento',
+  ];
+  columnasAnfitriona = [
+    'IdTurno', 'FechaTrabajo', 'NroPedido', 'NroCuenta', 'Anfitrionas',
+    'CantidadAnfitrionas', 'Producto', 'Precio', 'Cantidad', 'ImporteNeto',
+    'ImportePorAnfitriona', 'NumeroReimpresiones', 'TipoIngreso',
+  ];
+
   constructor(
     public dialogRef: MatDialogRef<DialogReportesComponent>,
     @Inject(MAT_DIALOG_DATA) public data: DialogReportesData,
     private turnoService: TurnoService,
+    private seguimientoComandaService: SeguimientoComandaService,
     private spinnerService: NgxSpinnerService,
     private sanitizer: DomSanitizer
   ) {
@@ -46,7 +82,9 @@ export class DialogReportesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadResumen();
+    if (this.isAdmin) {
+      this.loadResumen();
+    }
   }
 
   ngOnDestroy(): void {
@@ -101,7 +139,7 @@ export class DialogReportesComponent implements OnInit, OnDestroy {
         this.pdfBlobUrl = URL.createObjectURL(blob);
         this.pdfUrl     = this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfBlobUrl);
         this.pdfTitulo  = titulo;
-        this.dialogRef.updateSize('92vw', '92vh');
+        this.activarVistaAmplia();
       } else {
         Swal.fire('Reporte', 'No se pudo generar el reporte.', 'warning');
       }
@@ -116,7 +154,7 @@ export class DialogReportesComponent implements OnInit, OnDestroy {
     this.revokePdf();
     this.pdfUrl    = null;
     this.pdfTitulo = '';
-    this.dialogRef.updateSize('700px', '');
+    this.desactivarVistaAmplia();
   }
 
   private revokePdf(): void {
@@ -133,7 +171,135 @@ export class DialogReportesComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ── Seguimiento de comandas y comisión anfitriona ──────
+
+  abrirSeguimientoComandas(): void {
+    this.vistaReporte = 'comandas';
+    this.activarVistaAmplia();
+    this.consultarReporte();
+  }
+
+  abrirComisionAnfitriona(): void {
+    if (!this.config?.Anfitrionas) {
+      return;
+    }
+
+    this.vistaReporte = 'anfitriona';
+    this.activarVistaAmplia();
+    this.consultarReporte();
+  }
+
+  volverAReportes(): void {
+    this.vistaReporte = null;
+    this.seguimiento = null;
+    this.comisionAnfitriona = null;
+    this.desactivarVistaAmplia();
+  }
+
+  cambiarModoFiltro(modo: 'turno' | 'fechas'): void {
+    this.modoFiltro = modo;
+  }
+
+  get rangoValido(): boolean {
+    return !!this.fechaDesde &&
+      !!this.fechaHasta &&
+      this.fechaDesde <= this.fechaHasta;
+  }
+
+  async consultarReporte(): Promise<void> {
+    if (this.modoFiltro === 'fechas' && !this.rangoValido) {
+      Swal.fire('Validación', 'Seleccione un rango de fechas válido.', 'warning');
+      return;
+    }
+
+    const filtro = this.crearFiltro();
+    this.loadingReporte = true;
+
+    try {
+      if (this.vistaReporte === 'comandas') {
+        const response = await lastValueFrom(
+          this.seguimientoComandaService.obtenerSeguimiento(filtro),
+        );
+        this.seguimiento = response.Success ? response.Data : null;
+      } else if (this.vistaReporte === 'anfitriona') {
+        const response = await lastValueFrom(
+          this.seguimientoComandaService.obtenerComisionAnfitriona(filtro),
+        );
+        this.comisionAnfitriona = response.Success ? response.Data : null;
+      }
+    } catch (error) {
+      console.error('Error al consultar el reporte de seguimiento', error);
+      Swal.fire('Error', 'No se pudo consultar el reporte.', 'error');
+    } finally {
+      this.loadingReporte = false;
+    }
+  }
+
+  exportarReporte(): void {
+    if (this.vistaReporte === 'comandas' && this.seguimiento) {
+      const workbook = XLSX.utils.book_new();
+      this.agregarHoja(
+        workbook,
+        'Comandas',
+        this.seguimiento.Comandas,
+      );
+      this.agregarHoja(
+        workbook,
+        'Productos anulados',
+        this.seguimiento.ProductosAnulados,
+      );
+      this.agregarHoja(
+        workbook,
+        'Descuentos',
+        this.seguimiento.Descuentos,
+      );
+      XLSX.writeFile(
+        workbook,
+        `SeguimientoComandas_${formatDate(new Date(), 'yyyyMMdd', 'en-US')}.xlsx`,
+      );
+      return;
+    }
+
+    if (this.vistaReporte === 'anfitriona' && this.comisionAnfitriona) {
+      const workbook = XLSX.utils.book_new();
+      this.agregarHoja(
+        workbook,
+        'Comision anfitriona',
+        this.comisionAnfitriona.Detalles,
+      );
+      XLSX.writeFile(
+        workbook,
+        `ComisionAnfitriona_${formatDate(new Date(), 'yyyyMMdd', 'en-US')}.xlsx`,
+      );
+    }
+  }
+
   // ── Helpers ──────────────────────────────────────────────
+
+  private crearFiltro(): SeguimientoComandaFiltro {
+    return this.modoFiltro === 'turno'
+      ? { IdTurno: this.idTurno }
+      : { Desde: this.fechaDesde, Hasta: this.fechaHasta };
+  }
+
+  private agregarHoja(
+    workbook: XLSX.WorkBook,
+    nombre: string,
+    datos: object[],
+  ): void {
+    const worksheet = XLSX.utils.json_to_sheet(datos);
+    XLSX.utils.book_append_sheet(workbook, worksheet, nombre.slice(0, 31));
+  }
+
+  private activarVistaAmplia(): void {
+    this.dialogRef.addPanelClass('dialog-window--workspace');
+    this.dialogRef.updateSize();
+  }
+
+  private desactivarVistaAmplia(): void {
+    this.dialogRef.removePanelClass('dialog-window--workspace');
+    this.dialogRef.updateSize('700px', '');
+  }
 
   private base64ToBlob(base64: string, mimeType: string): Blob {
     const byteCharacters = atob(base64);

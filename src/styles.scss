@@ -564,6 +564,212 @@ body {
   color: var(--color-text-muted);
 }
 
+/* ====== REPORTES DE DATOS EN DIÁLOGO (COMÚN) ====== */
+
+.rpt-data-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 620px;
+}
+
+/* En la vista amplia el diálogo permanece fijo y el desplazamiento se
+   concentra en la tabla de resultados. */
+.rpt-panel.dialog-panel--workspace {
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-panel--workspace .rpt-data-view {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dialog-panel--workspace .rpt-data-toolbar,
+.dialog-panel--workspace .rpt-report-filters,
+.dialog-panel--workspace .rpt-stats {
+  flex-shrink: 0;
+}
+
+.dialog-panel--workspace .rpt-data-toolbar {
+  padding-top: 10px;
+}
+
+.rpt-data-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rpt-data-toolbar span {
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+}
+
+.rpt-data-toolbar__period {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-left: 1px solid var(--color-border);
+}
+
+.rpt-data-toolbar__period mat-icon {
+  width: 17px;
+  height: 17px;
+  color: var(--color-primary);
+  font-size: 17px;
+  line-height: 17px;
+}
+
+.rpt-data-toolbar__period span {
+  font-weight: 700;
+}
+
+.rpt-data-toolbar__spacer {
+  flex: 1;
+}
+
+.rpt-report-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+}
+
+.rpt-date-filter {
+  display: flex;
+  gap: 10px;
+}
+
+.rpt-date-filter label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.rpt-date-filter input {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.rpt-stats--tracking {
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+}
+
+.rpt-result-tabs {
+  min-height: 430px;
+}
+
+.dialog-panel--workspace .rpt-result-tabs {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.dialog-panel--workspace .rpt-result-tabs .mat-mdc-tab-body-wrapper,
+.dialog-panel--workspace .rpt-result-tabs .mat-mdc-tab-body {
+  flex: 1;
+  min-height: 0;
+}
+
+.dialog-panel--workspace .rpt-result-tabs .mat-mdc-tab-body-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rpt-table-card {
+  margin-top: 12px;
+}
+
+.dialog-panel--workspace .rpt-table-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.rpt-table-scroll {
+  max-height: 430px;
+  overflow: auto;
+}
+
+.dialog-panel--workspace .rpt-table-scroll {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
+.rpt-table-scroll mat-table {
+  min-width: 1450px;
+}
+
+.rpt-table-scroll mat-header-cell,
+.rpt-table-scroll mat-cell {
+  min-width: 105px;
+  padding: 0 10px;
+}
+
+.rpt-table-scroll mat-header-cell {
+  color: var(--color-primary-dark);
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rpt-table-scroll mat-cell {
+  color: var(--color-text);
+  font-size: 0.78rem;
+}
+
+.rpt-empty {
+  padding: 30px 16px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.rpt-loading--center {
+  justify-content: center;
+  min-height: 240px;
+}
+
+@media (max-width: 800px) {
+  .rpt-data-toolbar,
+  .rpt-report-filters,
+  .rpt-date-filter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .rpt-data-toolbar__spacer {
+    display: none;
+  }
+
+  .rpt-stats--tracking {
+    grid-template-columns: repeat(2, minmax(130px, 1fr));
+  }
+}
+
 /* responsive header controls */
 @media (max-width: 768px) {
   .report-panel__header {
