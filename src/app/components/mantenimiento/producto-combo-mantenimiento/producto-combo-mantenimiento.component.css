@@ -1,0 +1,52 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.combo-sections {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.combo-workspace {
+  gap: 18px;
+}
+
+.combo-column {
+  flex: 1 1 0;
+}
+
+.combo-column__header {
+  flex: 0 0 auto;
+  padding: 16px 16px 0;
+}
+
+.combo-column__header .form-row {
+  margin-bottom: 0;
+}
+
+.combo-column__table {
+  max-height: none;
+}
+
+.combo-column__actions {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 16px;
+}
+
+.combo-check-column {
+  width: 48px;
+}
+
+@media (max-width: 800px) {
+  .combo-workspace {
+    flex-direction: column;
+  }
+
+  .combo-column {
+    min-height: 0;
+  }
+}

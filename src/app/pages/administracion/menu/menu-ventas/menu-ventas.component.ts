@@ -16,6 +16,7 @@ import { UsuariosMantenimientoComponent } from 'src/app/components/mantenimiento
 import { EspaciosMantenimientoComponent } from 'src/app/components/mantenimiento/espacios-mantenimiento/espacios-mantenimiento.component';
 import { AmbienteMantenimientoComponent } from 'src/app/components/mantenimiento/ambiente-mantenimiento/ambiente-mantenimiento.component';
 import { ProductoMantenimientoComponent } from 'src/app/components/mantenimiento/producto-mantenimiento/producto-mantenimiento.component';
+import { ProductoComboMantenimientoComponent } from 'src/app/components/mantenimiento/producto-combo-mantenimiento/producto-combo-mantenimiento.component';
 import { FamiliaMantenimientoComponent } from 'src/app/components/mantenimiento/familia-mantenimiento/familia-mantenimiento.component';
 import { SubFamiliaMantenimientoComponent } from 'src/app/components/mantenimiento/subfamilia-mantenimiento/subfamilia-mantenimiento.component';
 import { ColorMantenimientoComponent } from 'src/app/components/mantenimiento/color-mantenimiento/color-mantenimiento.component';
@@ -125,6 +126,10 @@ export class MenuVentasComponent implements OnInit {
       {
         this.OpenProductoMantenimientoComponent();
       } 
+    if (item.title === 'Configuración de Combos')
+      {
+        this.OpenProductoComboMantenimientoComponent();
+      }
     if (item.title === 'Socios de Negocio')
       {
         this.OpenSocioNegocioMantenimientoComponent();
@@ -272,6 +277,18 @@ export class MenuVentasComponent implements OnInit {
       hasBackdrop: true,
       width: '1100px',
       maxWidth: '96vw',
+    });
+  }
+
+  OpenProductoComboMantenimientoComponent(): void {
+    this.dialog.open(ProductoComboMantenimientoComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'calc(100vw - 32px)',
+      height: 'calc(100vh - 32px)',
+      maxWidth: '1180px',
+      maxHeight: '860px',
+      panelClass: 'dialog-window--workspace'
     });
   }
 

@@ -149,7 +149,8 @@
 
         <mat-form-field class="form-field" appearance="fill" *ngIf="p.Tipo === 1">
           <mat-label>{{ 'menuSection' | tenantText }}</mat-label>
-          <mat-select [(ngModel)]="p.IdSeccionMenu" name="clasecombo" required #clasecombo="ngModel">
+          <mat-select [(ngModel)]="p.IdClaseCombo" name="clasecombo" required #clasecombo="ngModel">
+            <mat-option [value]="0">{{ 'mainCombo' | tenantText }}</mat-option>
             <mat-option *ngFor="let cc of seccionMenu" [value]="cc.IdSeccionMenu">{{ cc.Descripcion }}</mat-option>
           </mat-select>
           <mat-error *ngIf="clasecombo.invalid && (clasecombo.dirty || clasecombo.touched)">{{ 'requiredForMenu' | tenantText }}</mat-error>

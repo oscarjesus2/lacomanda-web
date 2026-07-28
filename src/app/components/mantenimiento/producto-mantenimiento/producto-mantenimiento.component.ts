@@ -240,8 +240,8 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
     }
 
     if (this.p.Tipo === 1) {
-      if (!this.p.IdClaseCombo || this.p.IdClaseCombo <= 0) {
-        Swal.fire('Validación', 'Para Tipo=1 (Menú) debe seleccionar Clase de Combo.', 'info'); return;
+      if (this.p.IdClaseCombo === undefined || this.p.IdClaseCombo === null) {
+        Swal.fire('Validación', 'Seleccione Combo principal o una sección del menú.', 'info'); return;
       }
     } else if (this.p.Tipo === 2) {
       if (!this.p.Qty || this.p.Qty <= 0) {
@@ -259,7 +259,11 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
     if (this.productoForm.invalid) { this.markTouched(this.productoForm); return; }
     this.p.InsumoProducto='P';
 
-    const payload: any = { ...this.p, AreasImpresionIds: this.selectedAreas };
+    const payload: any = {
+      ...this.p,
+      IdSeccionMenu: this.p.IdClaseCombo ?? 0,
+      AreasImpresionIds: this.selectedAreas
+    };
 
 
     const obs = this.p.IdProducto ? this.productoService.actualizar(payload) : this.productoService.crear(payload);
