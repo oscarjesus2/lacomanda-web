@@ -292,10 +292,22 @@ export class DialogCorregirVentaComponent implements OnInit {
       return;
     }
 
+    if (this.tipoCorreccion !== TipoCorreccionVenta.Pagos
+        && this.errorIdentificacionCliente) {
+      Swal.fire(
+        this.texts.get('validation'),
+        this.errorIdentificacionCliente,
+        'warning',
+      );
+      return;
+    }
+
     if (!this.puedeRevisar || !this.preparacion) {
       Swal.fire(
         this.texts.get('validation'),
-        this.texts.get('correctionCompleteRequiredFields'),
+        this.tipoCorreccion === TipoCorreccionVenta.Pagos
+          ? this.texts.get('correctionCompleteRequiredFields')
+          : this.texts.get('correctionCustomerRequiredFields'),
         'warning',
       );
       return;

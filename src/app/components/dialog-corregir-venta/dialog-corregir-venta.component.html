@@ -1,4 +1,6 @@
-<div class="mant-panel dialog-panel dialog-panel--wide">
+<div
+  class="mant-panel dialog-panel dialog-panel--wide"
+  [class.dialog-panel--dense]="tipoCorreccion !== tipoPagos">
   <button
     mat-icon-button
     class="close-button"
@@ -290,7 +292,7 @@
         <mat-label>{{ 'reason' | tenantText }}</mat-label>
         <textarea
           matInput
-          rows="3"
+          [rows]="tipoCorreccion === tipoPagos ? 3 : 2"
           minlength="3"
           required
           [(ngModel)]="motivo"

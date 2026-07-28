@@ -735,6 +735,36 @@ body {
   max-width: 100% !important;
 }
 
+/* Variante global para formularios largos que deben aprovechar mejor el alto
+   disponible sin perder la separación visual del sistema. */
+.dialog-panel--dense .dialog-summary {
+  margin-bottom: 12px;
+  padding: 12px 16px;
+}
+
+.dialog-panel--dense .dialog-notice {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+}
+
+.dialog-panel--dense .dialog-option {
+  margin-bottom: 8px;
+  padding-block: 8px;
+}
+
+.dialog-panel--dense .form-row {
+  gap: 10px 18px;
+  margin-bottom: 4px;
+}
+
+.dialog-panel--dense .full-width {
+  margin-bottom: 8px;
+}
+
+.dialog-panel--dense .dialog-actions {
+  padding-top: 12px;
+}
+
 .dialog-panel mat-icon {
   width: 18px;
   height: 18px;

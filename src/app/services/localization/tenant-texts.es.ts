@@ -808,6 +808,8 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   correctionApplied: 'Corrección registrada',
   correctionCompleteRequiredFields:
     'Complete los datos obligatorios y verifique que el pago neto coincida con el total de la venta.',
+  correctionCustomerRequiredFields:
+    'Complete los datos obligatorios del cliente y del documento.',
   correctionIdentityTypeRequired:
     'Seleccione el tipo de identificación del cliente.',
   correctionIdentityTypeNotValidForInvoice:

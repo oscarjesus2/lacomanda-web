@@ -804,6 +804,8 @@ export const EN_TEXTS = {
   correctionApplied: 'Correction recorded',
   correctionCompleteRequiredFields:
     'Complete the required fields and make sure the net payment matches the sale total.',
+  correctionCustomerRequiredFields:
+    'Complete the required customer and document details.',
   correctionIdentityTypeRequired: 'Select the customer identity type.',
   correctionIdentityTypeNotValidForInvoice:
     'Select an identity type allowed for invoices.',
