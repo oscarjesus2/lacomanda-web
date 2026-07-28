@@ -413,6 +413,7 @@ export const EN_TEXTS = {
   charge: 'Charge',
   remaining: 'Remaining',
   changeDue: 'Change',
+  paymentExcess: 'Excess',
   calculatedTotalMismatch:
     'The calculated amount does not match the register screen. Please try again.',
   totalTimeout: 'The total to pay could not be obtained. The request timed out.',
@@ -767,6 +768,49 @@ export const EN_TEXTS = {
   pdfAndXml: 'PDF and XML',
   voidReasonPlaceholder: 'Void reason (required to void)',
   virtualKeyboard: 'Virtual keyboard',
+  correctIssuedSale: 'Correct issued sale',
+  correctIssuedSaleHint: 'Choose what needs to be corrected',
+  correctionKeepsAuditTrail:
+    'The original document is never overwritten. The system will show the applicable fiscal treatment before making changes.',
+  loadingDocumentCorrection: 'Loading document data...',
+  correctionPayments: 'Payment methods',
+  correctionPaymentsHint: 'Change cash, card or split payment without changing fiscal sale terms.',
+  correctionCustomer: 'Customer details',
+  correctionCustomerHint: 'Correct the identity, legal name, address or email printed on the document.',
+  correctionDocumentType: 'Document type',
+  correctionDocumentTypeHint: 'Replace the receipt or invoice with the required document type.',
+  cash: 'Cash',
+  courtesy: 'Courtesy',
+  cheque: 'Cheque',
+  deposit: 'Deposit',
+  addPaymentMethod: 'Add payment method',
+  paymentNetTotal: 'Net payment total',
+  targetDocumentType: 'New document type',
+  documentGivenToCustomer: 'The original document was given to the customer',
+  documentGivenToCustomerHint:
+    'For SUNAT this determines whether a cancellation notice can be used or a credit note is required.',
+  correctionReasonPlaceholder: 'Explain why this correction is required',
+  correctionReasonRequired: 'Enter a reason of at least 3 characters.',
+  confirmPaymentChange: 'Confirm payment change',
+  confirmPaymentChangeHint: 'The new payment methods will be saved. Do you want to continue?',
+  applyPaymentChange: 'Apply change',
+  confirmCustomerCorrection: 'Confirm customer correction',
+  confirmCustomerCorrectionHint: 'A new receipt will be issued with the corrected customer details. Do you want to continue?',
+  confirmDocumentChange: 'Confirm document change',
+  confirmDocumentChangeHint: 'A new receipt of the selected type will be issued. Do you want to continue?',
+  applyCorrection: 'Apply correction',
+  reviewCorrection: 'Review correction',
+  correctionConfirm: 'Confirm and apply',
+  correctionApplied: 'Correction recorded',
+  correctionCompleteRequiredFields:
+    'Complete the required fields and make sure the net payment matches the sale total.',
+  correctionIdentityTypeRequired: 'Select the customer identity type.',
+  correctionIdentityTypeNotValidForInvoice:
+    'Select an identity type allowed for invoices.',
+  correctionIdentityNumberRequired:
+    'Enter the customer identity number.',
+  correctionIdentityNumberInvalid:
+    'The number does not have a valid {{type}} format.',
 
   // Issued-documents dialog logic (dialog-documentos-emitidos .ts)
   ok: 'OK',

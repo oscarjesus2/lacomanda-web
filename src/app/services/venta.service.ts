@@ -12,6 +12,12 @@ import { Pago } from '../models/pago.models';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { DescuentoCodigo } from '../models/descuentocodigo.models';
 import { ImpresionDTO } from '../interfaces/impresionDTO.interface';
+import {
+    PlanCorreccionVenta,
+    PreparacionCorreccionVenta,
+    ResultadoCorreccionVenta,
+    SolicitudCorreccionVenta
+} from '../interfaces/correccion-venta.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -92,6 +98,32 @@ export class VentaService {
     getImpresionComprobanteVenta(idventa: number, tipoFormato: number): Observable<ApiResponse<ImpresionDTO[]>> 
     {
         return this.http.get<ApiResponse<ImpresionDTO[]>>(`${this.basePath}ImpresionComprobanteVenta/${idventa}/${tipoFormato}`);
+    }
+
+    prepararCorreccionVenta(idVenta: number): Observable<ApiResponse<PreparacionCorreccionVenta>> {
+        return this.http.get<ApiResponse<PreparacionCorreccionVenta>>(
+            `${this.basePath}correccion/${idVenta}`
+        );
+    }
+
+    planificarCorreccionVenta(
+        idVenta: number,
+        solicitud: SolicitudCorreccionVenta
+    ): Observable<ApiResponse<PlanCorreccionVenta>> {
+        return this.http.post<ApiResponse<PlanCorreccionVenta>>(
+            `${this.basePath}correccion/${idVenta}/plan`,
+            solicitud
+        );
+    }
+
+    aplicarCorreccionVenta(
+        idVenta: number,
+        solicitud: SolicitudCorreccionVenta
+    ): Observable<ApiResponse<ResultadoCorreccionVenta>> {
+        return this.http.post<ApiResponse<ResultadoCorreccionVenta>>(
+            `${this.basePath}correccion/${idVenta}`,
+            solicitud
+        );
     }
 
     private isBase64(str: string): boolean {

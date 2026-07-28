@@ -20,6 +20,7 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { DialogMTextComponent } from '../dialog-mtext/dialog-mtext.component';
 import { NivelUsuarioEnum } from 'src/app/enums/enum';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { DialogCorregirVentaComponent } from '../dialog-corregir-venta/dialog-corregir-venta.component';
 
 @Component({
   selector: 'app-dialog-documentos-emitidos',
@@ -45,7 +46,9 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
   dataSource = new MatTableDataSource<VentasDTO>();
   selectedRow: VentasDTO | null = null;
 
-  get isAnulado(): boolean { return this.selectedRow?.Estado === 'Anulado'; }
+  get isDocumentoInactivo(): boolean {
+    return !!this.selectedRow && this.selectedRow.Estado !== 'Generado';
+  }
   idTurno: number;
 
   constructor(
@@ -178,6 +181,37 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
     this.ventaService.getImpresionComprobanteVenta(this.selectedRow.IdVenta, 1).subscribe({
       next: (response: ApiResponse<ImpresionDTO[]>) => {
         if (response.Success) this.imprimir(response.Data);
+      }
+    });
+  }
+
+  corregirVenta(): void {
+    if (!this.selectedRow) {
+      this.alertSeleccione();
+      return;
+    }
+
+    if (this.storageService.getCurrentUser().IdNivel
+        !== NivelUsuarioEnum.Administrador) {
+      Swal.fire({
+        title: this.texts.get('attention'),
+        text: this.texts.get('noPermissionEnterAdminKey'),
+        icon: 'error',
+        confirmButtonText: this.texts.get('ok'),
+      });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(DialogCorregirVentaComponent, {
+      width: '92vw',
+      maxWidth: '1120px',
+      data: { idVenta: this.selectedRow.IdVenta },
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.actualizado) {
+        this.getVentasPorTurno(this.idTurno);
+        this.selectedRow = null;
       }
     });
   }

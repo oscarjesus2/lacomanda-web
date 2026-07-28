@@ -416,6 +416,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   charge: 'Cobrar',
   remaining: 'Falta',
   changeDue: 'Vuelto',
+  paymentExcess: 'Exceso',
   calculatedTotalMismatch:
     'El monto calculado no coincide con el que muestra la pantalla de caja. Vuelva a intentarlo.',
   totalTimeout:
@@ -771,6 +772,50 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   pdfAndXml: 'PDF y XML',
   voidReasonPlaceholder: 'Motivo de anulación (requerido para anular)',
   virtualKeyboard: 'Teclado virtual',
+  correctIssuedSale: 'Corregir venta emitida',
+  correctIssuedSaleHint: 'Seleccione qué necesita corregir',
+  correctionKeepsAuditTrail:
+    'El documento original nunca se sobrescribe. Antes de aplicar cambios, el sistema mostrará el tratamiento fiscal correspondiente.',
+  loadingDocumentCorrection: 'Cargando los datos del documento...',
+  correctionPayments: 'Formas de pago',
+  correctionPaymentsHint: 'Cambie efectivo, tarjeta o pago mixto sin alterar la condición fiscal de la venta.',
+  correctionCustomer: 'Datos del cliente',
+  correctionCustomerHint: 'Corrija identificación, razón social, dirección o correo impresos.',
+  correctionDocumentType: 'Tipo de documento',
+  correctionDocumentTypeHint: 'Sustituya la boleta, factura o factura simplificada por el tipo solicitado.',
+  cash: 'Efectivo',
+  courtesy: 'Cortesía',
+  cheque: 'Cheque',
+  deposit: 'Depósito',
+  addPaymentMethod: 'Agregar forma de pago',
+  paymentNetTotal: 'Total neto pagado',
+  targetDocumentType: 'Nuevo tipo de documento',
+  documentGivenToCustomer: 'El documento original fue entregado al cliente',
+  documentGivenToCustomerHint:
+    'Para SUNAT, este dato determina si corresponde comunicar una baja o emitir una nota de crédito.',
+  correctionReasonPlaceholder: 'Explique por qué se requiere esta corrección',
+  correctionReasonRequired: 'Ingrese un motivo de al menos 3 caracteres.',
+  confirmPaymentChange: 'Confirmar cambio de pago',
+  confirmPaymentChangeHint: 'Se guardarán las nuevas formas de pago. ¿Desea continuar?',
+  applyPaymentChange: 'Aplicar cambio',
+  confirmCustomerCorrection: 'Confirmar corrección del cliente',
+  confirmCustomerCorrectionHint: 'Se emitirá un nuevo comprobante con los datos corregidos. ¿Desea continuar?',
+  confirmDocumentChange: 'Confirmar cambio de documento',
+  confirmDocumentChangeHint: 'Se emitirá un nuevo comprobante del tipo seleccionado. ¿Desea continuar?',
+  applyCorrection: 'Aplicar corrección',
+  reviewCorrection: 'Revisar corrección',
+  correctionConfirm: 'Confirmar y aplicar',
+  correctionApplied: 'Corrección registrada',
+  correctionCompleteRequiredFields:
+    'Complete los datos obligatorios y verifique que el pago neto coincida con el total de la venta.',
+  correctionIdentityTypeRequired:
+    'Seleccione el tipo de identificación del cliente.',
+  correctionIdentityTypeNotValidForInvoice:
+    'Seleccione un tipo de identificación permitido para facturas.',
+  correctionIdentityNumberRequired:
+    'Ingrese el número de identificación del cliente.',
+  correctionIdentityNumberInvalid:
+    'El número no tiene un formato válido de {{type}}.',
 
   // Lógica del diálogo de documentos emitidos (dialog-documentos-emitidos .ts)
   ok: 'OK',

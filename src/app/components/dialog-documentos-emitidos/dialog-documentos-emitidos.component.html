@@ -117,8 +117,8 @@
           <mat-header-cell *matHeaderCellDef>{{ 'state' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let e">
             <span class="dv-estado-chip"
-                  [class.dv-estado-chip--anulado]="e.Estado === 'Anulado'"
-                  [class.dv-estado-chip--generado]="e.Estado !== 'Anulado'">
+                  [class.dv-estado-chip--anulado]="e.Estado !== 'Generado'"
+                  [class.dv-estado-chip--generado]="e.Estado === 'Generado'">
               {{ e.Estado ?? '—' }}
             </span>
           </mat-cell>
@@ -128,30 +128,26 @@
         <mat-row *matRowDef="let row; columns: displayedColumns;"
                  (click)="selectRow(row)"
                  [class.dv-row--selected]="selectedRow === row"
-                 [class.dv-row--anulado]="row.Estado === 'Anulado'">
+                 [class.dv-row--anulado]="row.Estado !== 'Generado'">
         </mat-row>
       </mat-table>
     </div>
 
     <!-- Acciones laterales -->
     <div class="dv-actions">
-      <button class="dv-action-btn" [disabled]="isAnulado">
+      <button class="dv-action-btn" [disabled]="isDocumentoInactivo">
         <mat-icon>picture_as_pdf</mat-icon>
         {{ 'pdfAndXml' | tenantText }}
       </button>
-      <button class="dv-action-btn" [disabled]="isAnulado" (click)="reImprimirDocumento()">
+      <button class="dv-action-btn" [disabled]="isDocumentoInactivo" (click)="reImprimirDocumento()">
         <mat-icon>print</mat-icon>
         {{ 'reprint' | tenantText }}
       </button>
-      <button class="dv-action-btn" [disabled]="isAnulado">
-        <mat-icon>payment</mat-icon>
-        {{ 'modifyPayments' | tenantText }}
+      <button class="dv-action-btn" [disabled]="isDocumentoInactivo" (click)="corregirVenta()">
+        <mat-icon>fact_check</mat-icon>
+        {{ 'correctIssuedSale' | tenantText }}
       </button>
-      <button class="dv-action-btn" [disabled]="isAnulado">
-        <mat-icon>edit_document</mat-icon>
-        {{ 'modifyDocument' | tenantText }}
-      </button>
-      <button class="dv-action-btn dv-action-btn--danger" [disabled]="isAnulado" (click)="anularDocumento()">
+      <button class="dv-action-btn dv-action-btn--danger" [disabled]="isDocumentoInactivo" (click)="anularDocumento()">
         <mat-icon>cancel</mat-icon>
         {{ 'void' | tenantText }}
       </button>

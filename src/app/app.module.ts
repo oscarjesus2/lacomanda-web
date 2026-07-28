@@ -81,6 +81,7 @@ import { DialogDescuentoComponent } from './components/dialog-descuento/dialog-d
 import { DialogEntradasComponent } from './components/dialog-entradas/dialog-entradas.component';
 import { DialogPagarTaxistaComponent } from './components/dialog-pagar-taxista/dialog-pagar-taxista.component';
 import { DialogDocumentosEmitidosComponent } from './components/dialog-documentos-emitidos/dialog-documentos-emitidos.component';
+import { DialogCorregirVentaComponent } from './components/dialog-corregir-venta/dialog-corregir-venta.component';
 import { UsuariosMantenimientoComponent } from './components/mantenimiento/usuarios-mantenimiento/usuarios-mantenimiento.component';
 import { AnulacionesComponent } from './pages/dashboard/anulaciones/anulaciones.component';
 import { EspaciosMantenimientoComponent } from './components/mantenimiento/espacios-mantenimiento/espacios-mantenimiento.component';
@@ -159,6 +160,7 @@ export const MY_DATE_FORMATS = {
     DialogEntradasComponent,
     DialogPagarTaxistaComponent,
     DialogDocumentosEmitidosComponent,
+    DialogCorregirVentaComponent,
     UsuariosMantenimientoComponent,
     AnulacionesComponent,
     EspaciosMantenimientoComponent,
