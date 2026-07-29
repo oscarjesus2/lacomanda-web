@@ -88,6 +88,7 @@ import { EspaciosMantenimientoComponent } from './components/mantenimiento/espac
 import { PosicionSelectorDialogComponent } from './components/posicion-selector-dialog/posicion-selector-dialog.component';
 import { AmbienteMantenimientoComponent } from './components/mantenimiento/ambiente-mantenimiento/ambiente-mantenimiento.component';
 import { ProductoMantenimientoComponent } from './components/mantenimiento/producto-mantenimiento/producto-mantenimiento.component';
+import { ArticuloMantenimientoComponent } from './components/mantenimiento/articulo-mantenimiento/articulo-mantenimiento.component';
 import { ProductoComboMantenimientoComponent } from './components/mantenimiento/producto-combo-mantenimiento/producto-combo-mantenimiento.component';
 import { FamiliaMantenimientoComponent } from './components/mantenimiento/familia-mantenimiento/familia-mantenimiento.component';
 import { SubFamiliaMantenimientoComponent } from './components/mantenimiento/subfamilia-mantenimiento/subfamilia-mantenimiento.component';
@@ -167,6 +168,7 @@ export const MY_DATE_FORMATS = {
     PosicionSelectorDialogComponent,
     AmbienteMantenimientoComponent,
     ProductoMantenimientoComponent,
+    ArticuloMantenimientoComponent,
     ProductoComboMantenimientoComponent,
     FamiliaMantenimientoComponent,
     SubFamiliaMantenimientoComponent,

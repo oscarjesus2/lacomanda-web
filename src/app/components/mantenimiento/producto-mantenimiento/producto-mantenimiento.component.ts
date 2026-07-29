@@ -281,7 +281,7 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
 
   resetForm(): void {
     this.p = new Producto();
-    this.p.Visible = true; this.p.Activo = true; this.p.IdImpuestoPais = 0; this.p.Tipo = 0;
+    this.p.Visible = true; this.p.Activo = true; this.p.IdImpuestoPais = ''; this.p.Tipo = 0;
     // Valores por defecto para los campos condicionados por configuración
     this.p.ExclusivoParaAnfitriona = false;
     this.p.PermitirParaTragoCortesia = false;

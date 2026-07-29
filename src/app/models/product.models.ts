@@ -32,7 +32,7 @@ export class Producto {
     public FactorComplemento: number;
     public PrecioMinimo: number;
     public IdClaseCombo: number;
-    public IdImpuestoPais: number;
+    public IdImpuestoPais: string;
     public InsumoProducto: string;
       ProductoAreaImpresion?: ProductoAreaImpresion[];
 

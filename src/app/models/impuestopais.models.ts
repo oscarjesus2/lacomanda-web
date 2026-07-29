@@ -1,7 +1,10 @@
 export class ImpuestoPais {
-  IdImpuestoPais: number;
-  Codigo: string;a
+  IdImpuestoPais: string;
+  Codigo: string;
   Descripcion: string;
   Tasa: number;
   Activo: boolean;
+  PaisISO2?: string;
+  ImpuestoGeneral?: boolean;
+  FijoPorUnidad?: boolean;
 }

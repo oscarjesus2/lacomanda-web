@@ -6,15 +6,18 @@
     <div class="admin-menu__section" *ngIf="section.children.length > 0">
       <h4 class="admin-menu__subtitle">{{ section.titleKey | tenantText }}</h4>
       <div class="tiles-grid">
-        <a
+        <button
+          type="button"
           class="tile"
+          [class.tile--disabled]="item.disabled"
           *ngFor="let item of section.children"
-          [routerLink]="item.route"
+          [disabled]="item.disabled"
+          (click)="openDialog(item)"
           [title]="item.titleKey | tenantText"
         >
           <mat-icon class="tile__icon">{{ item.icon }}</mat-icon>
           <span class="tile__label">{{ item.labelKey | tenantText }}</span>
-        </a>
+        </button>
       </div>
     </div>
 

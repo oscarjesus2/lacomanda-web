@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { ArticuloMantenimientoComponent } from 'src/app/components/mantenimiento/articulo-mantenimiento/articulo-mantenimiento.component';
 
 @Component({
   selector: 'app-menu-almacen',
@@ -12,8 +14,8 @@ export class MenuAlmacenComponent implements OnInit {
       title: 'Maestros', titleKey: 'menuMasters', labelKey: 'menuMasters',
       icon: 'inventory',
       children: [
-        { title: 'Artículos', route: '/almacen/articulos', icon: 'inventory',  label: 'Artículos', titleKey: 'items',   labelKey: 'items'   },
-        { title: 'Recetas',   route: '/almacen/recetas',   icon: 'menu_book',  label: 'Recetas',   titleKey: 'recipes', labelKey: 'recipes' }
+        { title: 'Artículos', action: 'articulos', icon: 'inventory', label: 'Artículos', titleKey: 'items', labelKey: 'items', disabled: false },
+        { title: 'Recetas', action: '', icon: 'menu_book', label: 'Recetas', titleKey: 'recipes', labelKey: 'recipes', disabled: true }
       ]
     },
     { title: 'Ingresos',        icon: 'move_to_inbox',           label: 'Ingresos',        titleKey: 'stockIn',      labelKey: 'stockIn',      children: [] },
@@ -24,7 +26,23 @@ export class MenuAlmacenComponent implements OnInit {
     { title: 'Producción',      icon: 'precision_manufacturing', label: 'Producción',      titleKey: 'production',   labelKey: 'production',   children: [] }
   ];
 
-  constructor() { }
+  constructor(private readonly dialog: MatDialog) { }
+
+  openDialog(item: any): void {
+    if (item.action !== 'articulos') {
+      return;
+    }
+
+    this.dialog.open(ArticuloMantenimientoComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'calc(100vw - 32px)',
+      height: 'calc(100vh - 32px)',
+      maxWidth: '1240px',
+      maxHeight: '880px',
+      panelClass: 'dialog-window--workspace'
+    });
+  }
 
   ngOnInit(): void {
   }
