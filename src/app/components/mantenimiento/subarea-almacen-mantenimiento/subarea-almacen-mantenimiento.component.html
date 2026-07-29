@@ -1,0 +1,174 @@
+<div class="mant-panel dialog-panel--workspace">
+  <button mat-icon-button class="close-button" aria-label="Cerrar" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>Mantenimiento de subáreas de almacén</h2>
+
+  <ng-container *ngIf="!showForm">
+    <div class="dialog-toolbar">
+      <div class="dialog-toolbar__filters dialog-toolbar__filters--single">
+        <mat-form-field appearance="fill">
+          <mat-label>Buscar subárea</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            matInput
+            [(ngModel)]="filtro"
+            (ngModelChange)="aplicarFiltro()"
+            placeholder="Área, subárea, control de inventario o estado"
+          >
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-toolbar__actions">
+        <button mat-raised-button color="primary" type="button" (click)="nuevo()">
+          <mat-icon>add</mat-icon>
+          Nueva subárea
+        </button>
+      </div>
+    </div>
+
+    <div class="dialog-workspace-content">
+      <div class="dialog-table-card">
+        <div class="dialog-table-wrapper--fill">
+          <mat-table [dataSource]="dataSource">
+            <ng-container matColumnDef="area">
+              <mat-header-cell *matHeaderCellDef>Área</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.Area }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="descripcion">
+              <mat-header-cell *matHeaderCellDef>Subárea</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.Descripcion }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="cuadrable">
+              <mat-header-cell *matHeaderCellDef>Inventariable</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <span class="status-pill" [class.status-pill--inactive]="!row.Cuadrable">
+                  {{ row.Cuadrable ? 'Sí' : 'No' }}
+                </span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="estado">
+              <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <span class="status-pill" [class.status-pill--inactive]="!row.Activo">
+                  {{ row.Activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+              <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  aria-label="Editar subárea"
+                  (click)="editar(row)"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+          </mat-table>
+
+          <div class="dialog-empty-state" *ngIf="!cargando && dataSource.data.length === 0">
+            <mat-icon>account_tree</mat-icon>
+            <span>No se encontraron subáreas de almacén.</span>
+          </div>
+        </div>
+
+        <mat-paginator
+          [length]="dataSource.data.length"
+          [pageSize]="10"
+          [pageSizeOptions]="[10, 20, 50]"
+          showFirstLastButtons
+        ></mat-paginator>
+      </div>
+    </div>
+  </ng-container>
+
+  <form
+    *ngIf="showForm"
+    #subAreaForm="ngForm"
+    class="dialog-form dialog-form--workspace"
+    (ngSubmit)="guardar()"
+  >
+    <div class="dialog-form-scroll">
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>account_tree</mat-icon>
+          Ubicación de almacén
+        </h3>
+        <p class="dialog-form-section__hint">
+          Una subárea representa la ubicación física donde se controla el stock.
+          Active “Incluir en inventarios” solo cuando deba realizarse conteo.
+        </p>
+
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Área de almacén</mat-label>
+            <mat-select
+              name="idAreaAlmacen"
+              [(ngModel)]="subArea.IdAreaAlmacen"
+              required
+            >
+              <mat-option
+                *ngFor="let area of areas"
+                [value]="area.IdArea"
+                [disabled]="areaDeshabilitada(area)"
+              >
+                {{ area.Descripcion }}{{ area.Activo ? '' : ' (inactiva)' }}
+              </mat-option>
+            </mat-select>
+            <mat-error>Seleccione el área a la que pertenece.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+            <mat-label>Descripción de la subárea</mat-label>
+            <input
+              matInput
+              name="descripcion"
+              [(ngModel)]="subArea.Descripcion"
+              maxlength="250"
+              required
+            >
+            <mat-error>La descripción es obligatoria.</mat-error>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>fact_check</mat-icon>
+          Comportamiento
+        </h3>
+        <div class="dialog-toggle-grid">
+          <mat-checkbox name="cuadrable" [(ngModel)]="subArea.Cuadrable">
+            Incluir en inventarios
+          </mat-checkbox>
+          <mat-checkbox name="activo" [(ngModel)]="subArea.Activo">
+            Subárea activa
+          </mat-checkbox>
+        </div>
+      </section>
+    </div>
+
+    <div class="dialog-actions">
+      <button mat-stroked-button type="button" (click)="cancelar()" [disabled]="guardando">
+        Cancelar
+      </button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="guardando">
+        <mat-icon>save</mat-icon>
+        {{ idSubAreaEditando ? 'Actualizar' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+</div>

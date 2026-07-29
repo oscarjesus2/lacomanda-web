@@ -34,7 +34,18 @@ export class Producto {
     public IdClaseCombo: number;
     public IdImpuestoPais: string;
     public InsumoProducto: string;
-      ProductoAreaImpresion?: ProductoAreaImpresion[];
+    public TieneReceta: boolean;
+    public IdUnidadStock: number | null;
+    public IdUnidadReceta: number | null;
+    public FactorReceta: number;
+    public IdGrupoCompra: number | null;
+    public IdAreaAlmacen: number | null;
+    public DescripcionCompra: string;
+    public PrecioCompra: number;
+    public StockMinimo: number;
+    public StockMaximo: number;
+    public Inventario: boolean;
+    ProductoAreaImpresion?: ProductoAreaImpresion[];
 
     constructor(init?: Partial<Producto>) {
         Object.assign(this, init);

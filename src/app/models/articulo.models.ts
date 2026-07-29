@@ -15,6 +15,7 @@ export interface Articulo {
   StockMinimo: number;
   StockMaximo: number;
   Precio: number;
+  PrecioCompra: number;
   Porcionable: boolean;
   Porcionado: boolean;
   AutoPorcion: boolean;

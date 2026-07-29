@@ -1,6 +1,6 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, Inject, OnInit, Optional, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { forkJoin } from 'rxjs';
@@ -12,6 +12,10 @@ import { ArticuloService } from 'src/app/services/articulo.service';
 import { GrupoService } from 'src/app/services/grupo.service';
 import { ImpuestoPaisService } from 'src/app/services/impuestopais.service';
 import { UnidadMedidaService } from 'src/app/services/unidad-medida.service';
+
+export interface ArticuloMantenimientoData {
+  creacionRapida?: boolean;
+}
 
 @Component({
   selector: 'app-articulo-mantenimiento',
@@ -41,14 +45,20 @@ export class ArticuloMantenimientoComponent implements OnInit {
   guardando = false;
   stockActual = 0;
   articulo = new ArticuloGuardar();
+  readonly creacionRapida: boolean;
 
   constructor(
     private readonly dialogRef: MatDialogRef<ArticuloMantenimientoComponent>,
     private readonly articuloService: ArticuloService,
     private readonly unidadMedidaService: UnidadMedidaService,
     private readonly grupoService: GrupoService,
-    private readonly impuestoPaisService: ImpuestoPaisService
-  ) {}
+    private readonly impuestoPaisService: ImpuestoPaisService,
+    @Optional()
+    @Inject(MAT_DIALOG_DATA)
+    data: ArticuloMantenimientoData | null
+  ) {
+    this.creacionRapida = !!data?.creacionRapida;
+  }
 
   ngOnInit(): void {
     this.cargarInicial();
@@ -78,6 +88,9 @@ export class ArticuloMantenimientoComponent implements OnInit {
         this.impuestos = (response.impuestos.Data || []).filter(i => i.Activo);
         this.grupos = (response.gruposArticulo.Data || []).filter(g => g.Activo);
         this.cargando = false;
+        if (this.creacionRapida) {
+          this.nuevo();
+        }
       },
       error: error => {
         this.cargando = false;
@@ -120,7 +133,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
       IdGrupoCompra: row.IdGrupoCompra,
       StockMinimo: row.StockMinimo,
       StockMaximo: row.StockMaximo,
-      Precio: row.Precio,
+      Precio: row.PrecioCompra ?? row.Precio,
       Porcionable: row.Porcionable,
       Porcionado: row.Porcionado,
       AutoPorcion: row.AutoPorcion,
@@ -186,6 +199,10 @@ export class ArticuloMantenimientoComponent implements OnInit {
           return;
         }
         Swal.fire(esEdicion ? 'Artículo actualizado' : 'Artículo creado', '', 'success');
+        if (this.creacionRapida && !esEdicion) {
+          this.dialogRef.close(response.Data);
+          return;
+        }
         this.showForm = false;
         this.cargarArticulos();
       },
@@ -197,6 +214,10 @@ export class ArticuloMantenimientoComponent implements OnInit {
   }
 
   cancelar(): void {
+    if (this.creacionRapida) {
+      this.dialogRef.close();
+      return;
+    }
     this.showForm = false;
   }
 

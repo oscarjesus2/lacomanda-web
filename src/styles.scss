@@ -1285,6 +1285,94 @@ body {
   overflow: auto;
 }
 
+.dialog-summary-grid {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.dialog-summary-card {
+  display: flex;
+  min-height: 58px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+}
+
+.dialog-summary-card__label {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dialog-inline-actions {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.dialog-inline-actions .mat-mdc-form-field {
+  margin-bottom: -1.25em;
+}
+
+.dialog-table-input {
+  box-sizing: border-box;
+  width: 112px;
+  min-height: 34px;
+  padding: 6px 9px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: right;
+}
+
+.dialog-table-input:focus {
+  border-color: var(--color-primary);
+  outline: 2px solid color-mix(
+    in srgb,
+    var(--color-primary) 18%,
+    transparent
+  );
+}
+
+.dialog-table-input[readonly] {
+  border-color: transparent;
+  background: transparent;
+}
+
+.dialog-data-table .is-positive {
+  color: var(--color-success);
+  font-weight: 700;
+}
+
+.dialog-data-table .is-negative {
+  color: var(--color-warn);
+  font-weight: 700;
+}
+
+.dialog-option mat-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+
+.status-pill--warning {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
 /* Composición común para formularios amplios dentro de diálogos.
    Los mantenimientos reutilizan estas reglas y evitan estilos aislados. */
 .dialog-toolbar__filters--single {
@@ -1316,13 +1404,33 @@ body {
   background: var(--color-surface-warm);
 }
 
+.dialog-form-section--full {
+  grid-column: 1 / -1;
+}
+
 .dialog-form-section__title {
-  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
   color: var(--color-primary-dark);
   font-size: 0.92rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.dialog-form-section__title .mat-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+}
+
+.dialog-form-section__hint {
+  margin: 0 0 12px;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .dialog-form-grid {
@@ -1359,6 +1467,14 @@ body {
 }
 
 @media (max-width: 900px) {
+  .dialog-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dialog-inline-actions {
+    grid-template-columns: 1fr;
+  }
+
   .dialog-form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1369,6 +1485,10 @@ body {
 }
 
 @media (max-width: 600px) {
+  .dialog-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
   .dialog-form-grid,
   .dialog-toggle-grid {
     grid-template-columns: 1fr;
@@ -1934,6 +2054,12 @@ mat-row:hover mat-cell {
 }
 
 .dialog-window--workspace .mat-mdc-dialog-surface {
+  overflow: hidden !important;
+}
+
+/* Mantenimientos breves: conservan la mesa de trabajo interna sin ocupar
+   innecesariamente casi toda la pantalla. */
+.dialog-window--compact .mat-mdc-dialog-surface {
   overflow: hidden !important;
 }
 

@@ -3,7 +3,7 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Mantenimiento de artículos</h2>
+  <h2>{{ creacionRapida ? 'Nuevo artículo o insumo' : 'Mantenimiento de artículos' }}</h2>
 
   <ng-container *ngIf="!showForm">
     <div class="dialog-toolbar">
@@ -149,7 +149,7 @@
           </mat-form-field>
 
           <mat-form-field appearance="fill">
-            <mat-label>Precio</mat-label>
+            <mat-label>Precio de compra</mat-label>
             <input
               matInput
               name="precio"

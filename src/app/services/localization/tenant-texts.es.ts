@@ -1092,6 +1092,8 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   configureThisStation: 'Configurar esta estación',
   items: 'Artículos',
   recipes: 'Recetas',
+  warehouseAreas: 'Áreas de almacén',
+  warehouseSubareas: 'Subáreas de almacén',
   stockIn: 'Ingresos',
   stockOut: 'Salidas',
   transfers: 'Transferencias',

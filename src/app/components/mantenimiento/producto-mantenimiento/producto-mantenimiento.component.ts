@@ -26,6 +26,10 @@ import { ImpuestoPais } from 'src/app/models/impuestopais.models';
 import { AreaImpresionService } from 'src/app/services/area-impresion.service';
 import { AreaImpresion } from 'src/app/models/area-impresion.models';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { AreaAlmacen } from 'src/app/models/receta.models';
+import { UnidadMedida } from 'src/app/models/articulo.models';
+import { AreaAlmacenService } from 'src/app/services/area-almacen.service';
+import { UnidadMedidaService } from 'src/app/services/unidad-medida.service';
 
 @Component({
   selector: 'app-producto-mantenimiento',
@@ -47,6 +51,9 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
   familias: Familia[] = [];
   subfamilias: SubFamilia[] = [];
   grupos: Grupo[] = [];
+  gruposAlmacen: Grupo[] = [];
+  unidadesMedida: UnidadMedida[] = [];
+  areasAlmacen: AreaAlmacen[] = [];
   impuestoPais: ImpuestoPais[] = [];
   seccionMenu: SeccionMenu[] = [];
 
@@ -79,7 +86,9 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
     private impuestoPaisService: ImpuestoPaisService,
     private spinner: NgxSpinnerService,
     private areaSrv: AreaImpresionService,
-    private configuracionService: ConfiguracionService
+    private configuracionService: ConfiguracionService,
+    private areaAlmacenService: AreaAlmacenService,
+    private unidadMedidaService: UnidadMedidaService
   ) {}
 
   ngOnInit(): void {
@@ -118,6 +127,9 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
     this.monedaService.getMoneda().subscribe(r => { if (r.Success) this.monedas = r.Data; });
     this.familiaService.getFamilias().subscribe(r => { if (r.Success) this.familias = r.Data; });
     this.grupoService.getGrupos('P').subscribe(r => { if (r.Success) this.grupos = r.Data; });
+    this.grupoService.getGrupos('A').subscribe(r => { if (r.Success) this.gruposAlmacen = r.Data; });
+    this.unidadMedidaService.listar().subscribe(r => { if (r.Success) this.unidadesMedida = r.Data || []; });
+    this.areaAlmacenService.listarActivas().subscribe(r => { if (r.Success) this.areasAlmacen = r.Data || []; });
     this.impuestoPaisService.getImpuestoPais().subscribe(r => { if (r.Success) this.impuestoPais = r.Data; });
     this.claseComboService.getSeccionMenu().subscribe(r => { if (r.Success) this.seccionMenu = r.Data; });
   }
@@ -141,6 +153,37 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
     this.subfamilias = [];
   }
 }
+
+  cambiarServicio(): void {
+    if (this.p.EsServicio) {
+      this.p.TieneReceta = false;
+      this.limpiarAlmacenDirecto();
+    }
+  }
+
+  cambiarControlReceta(): void {
+    if (this.p.TieneReceta) {
+      this.limpiarAlmacenDirecto();
+    }
+  }
+
+  cambiarUnidadStock(): void {
+    if (this.p.IdUnidadReceta === this.p.IdUnidadStock) {
+      this.p.IdUnidadReceta = null;
+      this.p.FactorReceta = 1;
+    }
+  }
+
+  cambiarUnidadConsumo(): void {
+    if (!this.usaConversionUnidad()) {
+      this.p.FactorReceta = 1;
+    }
+  }
+
+  usaConversionUnidad(): boolean {
+    return !!this.p.IdUnidadReceta &&
+      this.p.IdUnidadReceta !== this.p.IdUnidadStock;
+  }
 
   applyFilter(): void {
     const f = (this.filtro || '').toLowerCase();
@@ -256,6 +299,49 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
       }
     }
 
+    if (!this.p.EsServicio && !this.p.TieneReceta) {
+      if (!this.p.IdGrupoCompra ||
+          !this.p.IdAreaAlmacen ||
+          !this.p.IdUnidadStock) {
+        Swal.fire(
+          'Validación',
+          'Los productos sin receta necesitan grupo de almacén, área de salida y unidad de compra/stock.',
+          'info'
+        );
+        return;
+      }
+
+      if ((this.p.PrecioCompra || 0) < 0 ||
+          (this.p.StockMinimo || 0) < 0 ||
+          (this.p.StockMaximo || 0) < 0) {
+        Swal.fire(
+          'Validación',
+          'El precio de compra y los límites de stock no pueden ser negativos.',
+          'info'
+        );
+        return;
+      }
+
+      if ((this.p.StockMaximo || 0) < (this.p.StockMinimo || 0)) {
+        Swal.fire(
+          'Validación',
+          'El stock máximo no puede ser menor que el stock mínimo.',
+          'info'
+        );
+        return;
+      }
+
+      if (this.usaConversionUnidad() &&
+          (!this.p.FactorReceta || this.p.FactorReceta <= 0)) {
+        Swal.fire(
+          'Validación',
+          'Indique cuántas unidades de consumo contiene cada unidad de compra.',
+          'info'
+        );
+        return;
+      }
+    }
+
     if (this.productoForm.invalid) { this.markTouched(this.productoForm); return; }
     this.p.InsumoProducto='P';
 
@@ -282,10 +368,36 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
   resetForm(): void {
     this.p = new Producto();
     this.p.Visible = true; this.p.Activo = true; this.p.IdImpuestoPais = ''; this.p.Tipo = 0;
+    this.p.EsServicio = false;
+    this.p.InsumoProducto = 'P';
     // Valores por defecto para los campos condicionados por configuración
     this.p.ExclusivoParaAnfitriona = false;
     this.p.PermitirParaTragoCortesia = false;
+    this.p.TieneReceta = false;
+    this.p.IdUnidadStock = null;
+    this.p.IdUnidadReceta = null;
+    this.p.FactorReceta = 1;
+    this.p.IdGrupoCompra = null;
+    this.p.IdAreaAlmacen = null;
+    this.p.DescripcionCompra = '';
+    this.p.PrecioCompra = 0;
+    this.p.StockMinimo = 0;
+    this.p.StockMaximo = 0;
+    this.p.Inventario = false;
     this.selectedAreas = [];
+  }
+
+  private limpiarAlmacenDirecto(): void {
+    this.p.IdUnidadStock = null;
+    this.p.IdUnidadReceta = null;
+    this.p.FactorReceta = 1;
+    this.p.IdGrupoCompra = null;
+    this.p.IdAreaAlmacen = null;
+    this.p.DescripcionCompra = '';
+    this.p.PrecioCompra = 0;
+    this.p.StockMinimo = 0;
+    this.p.StockMaximo = 0;
+    this.p.Inventario = false;
   }
 
   salir(): void { this.dialogRef.close(); }

@@ -22,10 +22,18 @@
     </div>
 
     <!-- Sección sin ítems → tile deshabilitado (próximamente) -->
-    <div class="tile tile--disabled" *ngIf="section.children.length === 0" [title]="section.titleKey | tenantText">
+    <button
+      type="button"
+      class="tile"
+      [class.tile--disabled]="!section.action"
+      *ngIf="section.children.length === 0"
+      [disabled]="!section.action"
+      [title]="section.titleKey | tenantText"
+      (click)="openDialog(section)"
+    >
       <mat-icon class="tile__icon">{{ section.icon }}</mat-icon>
       <span class="tile__label">{{ section.labelKey | tenantText }}</span>
-    </div>
+    </button>
 
   </ng-container>
 

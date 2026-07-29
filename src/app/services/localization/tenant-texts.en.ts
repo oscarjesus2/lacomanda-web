@@ -1087,6 +1087,8 @@ export const EN_TEXTS = {
   configureThisStation: 'Configure this station',
   items: 'Items',
   recipes: 'Recipes',
+  warehouseAreas: 'Warehouse areas',
+  warehouseSubareas: 'Warehouse subareas',
   stockIn: 'Stock in',
   stockOut: 'Stock out',
   transfers: 'Transfers',

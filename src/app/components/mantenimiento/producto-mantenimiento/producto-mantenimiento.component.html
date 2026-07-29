@@ -236,11 +236,42 @@
 
       <div class="form-row">
         <mat-form-field class="form-field" appearance="fill">
+          <mat-label>Clase</mat-label>
+          <mat-select
+            [(ngModel)]="p.EsServicio"
+            name="esServicio"
+            (selectionChange)="cambiarServicio()"
+            required
+          >
+            <mat-option [value]="false">Producto</mat-option>
+            <mat-option [value]="true">Servicio</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="fill">
           <mat-label>{{ 'noPrice' | tenantText }}</mat-label>
           <mat-select [(ngModel)]="p.SinPrecio" name="sinprecio" required #sinprecio="ngModel">
             <mat-option [value]="true">{{ 'yes' | tenantText }}</mat-option>
             <mat-option [value]="false">{{ 'no' | tenantText }}</mat-option>
           </mat-select>
+        </mat-form-field>
+
+        <mat-form-field
+          class="form-field"
+          appearance="fill"
+          *ngIf="!p.EsServicio"
+        >
+          <mat-label>Controla receta</mat-label>
+          <mat-select
+            [(ngModel)]="p.TieneReceta"
+            name="tieneReceta"
+            (selectionChange)="cambiarControlReceta()"
+            required
+          >
+            <mat-option [value]="true">Sí</mat-option>
+            <mat-option [value]="false">No</mat-option>
+          </mat-select>
+          <mat-hint>Permite configurar sus artículos y costes en Recetas.</mat-hint>
         </mat-form-field>
 
         <mat-form-field *ngIf="mostrarAnfitriona" class="form-field" appearance="fill">
@@ -278,6 +309,173 @@
         <p class="prod-areas-hint">{{ 'printAreasHint' | tenantText }}</p>
       </div>
     </div>
+
+    <section
+      *ngIf="!p.EsServicio && !p.TieneReceta"
+      class="dialog-form-section dialog-form-section--full"
+    >
+      <h3 class="dialog-form-section__title">
+        <mat-icon>inventory_2</mat-icon>
+        Control directo de stock
+      </h3>
+      <p class="dialog-form-section__hint">
+        Al vender este producto se descontará directamente su propio stock.
+        El área de salida determina de qué almacén se realiza el descuento.
+      </p>
+
+      <div class="dialog-form-grid">
+        <mat-form-field
+          appearance="fill"
+          class="dialog-form-grid__wide"
+        >
+          <mat-label>Descripción de compra</mat-label>
+          <input
+            matInput
+            [(ngModel)]="p.DescripcionCompra"
+            name="descripcionCompra"
+            maxlength="100"
+            [placeholder]="p.Descripcion || 'Descripción para almacén'"
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Precio de compra</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="p.PrecioCompra"
+            name="precioCompra"
+            required
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Grupo de almacén</mat-label>
+          <mat-select
+            [(ngModel)]="p.IdGrupoCompra"
+            name="grupoCompra"
+            required
+          >
+            <mat-option
+              *ngFor="let grupoAlmacen of gruposAlmacen"
+              [value]="grupoAlmacen.IdGrupo"
+            >
+              {{ grupoAlmacen.Descripcion }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>Clasificación usada en compras e inventario.</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Área de salida</mat-label>
+          <mat-select
+            [(ngModel)]="p.IdAreaAlmacen"
+            name="areaAlmacen"
+            required
+          >
+            <mat-option
+              *ngFor="let areaAlmacen of areasAlmacen"
+              [value]="areaAlmacen.IdArea"
+            >
+              {{ areaAlmacen.Descripcion }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>Almacén del que se descontará al vender.</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Unidad de compra/stock</mat-label>
+          <mat-select
+            [(ngModel)]="p.IdUnidadStock"
+            name="unidadStock"
+            (selectionChange)="cambiarUnidadStock()"
+            required
+          >
+            <mat-option
+              *ngFor="let unidad of unidadesMedida"
+              [value]="unidad.IdUnidad"
+            >
+              {{ unidad.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Unidad de venta/consumo</mat-label>
+          <mat-select
+            [(ngModel)]="p.IdUnidadReceta"
+            name="unidadConsumo"
+            (selectionChange)="cambiarUnidadConsumo()"
+          >
+            <mat-option [value]="null">
+              Igual que la unidad de stock
+            </mat-option>
+            <mat-option
+              *ngFor="let unidad of unidadesMedida"
+              [value]="unidad.IdUnidad"
+            >
+              {{ unidad.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" *ngIf="usaConversionUnidad()">
+          <mat-label>Unidades por compra</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0.0001"
+            step="0.0001"
+            [(ngModel)]="p.FactorReceta"
+            name="factorReceta"
+            required
+          >
+          <mat-hint>
+            Cuántas unidades de venta contiene una unidad de compra.
+          </mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Stock mínimo</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="p.StockMinimo"
+            name="stockMinimo"
+            required
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Stock máximo</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="p.StockMaximo"
+            name="stockMaximo"
+            required
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Incluir en inventario</mat-label>
+          <mat-select
+            [(ngModel)]="p.Inventario"
+            name="inventario"
+            required
+          >
+            <mat-option [value]="true">Sí</mat-option>
+            <mat-option [value]="false">No</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </section>
 
     <!-- ── Acciones (span full width) ────────────────────────────────── -->
     <div class="prod-actions">
