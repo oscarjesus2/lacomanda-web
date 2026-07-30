@@ -1193,7 +1193,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
               ruc: clienteBuscar.NumeroIdentificacion,
               razonSocial: clienteBuscar.RazonSocial,
               direccion: clienteBuscar.Direccion,
-              correo: clienteBuscar.Correo
+              correo: clienteBuscar.Email
             });
 
 

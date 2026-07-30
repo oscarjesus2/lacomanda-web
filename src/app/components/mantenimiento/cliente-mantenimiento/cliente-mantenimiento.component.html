@@ -67,16 +67,25 @@
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>{{ 'identityType' | tenantText }}</mat-label>
-        <mat-select [(ngModel)]="cliente.IdTipoIdentidad"
-        name="tipoIdentidad"
-        required #tipoIdentidad="ngModel"
-        [compareWith]="compareTiposDocCliente"
-        (ngModelChange)="onTipoIdentidadChange($event)">
-          <mat-option *ngFor="let tipo of tiposDocCliente" [value]="tipo">
+
+        <mat-select
+          [(ngModel)]="cliente.IdTipoIdentidad"
+          name="tipoIdentidad"
+          required
+          #tipoIdentidad="ngModel"
+          (ngModelChange)="onTipoIdentidadChange($event)">
+
+          <mat-option
+            *ngFor="let tipo of tiposDocCliente"
+            [value]="tipo.IdTipoIdentidad">
+
             {{ tipo.Abreviatura || tipo.Descripcion }}
           </mat-option>
         </mat-select>
-        <mat-error *ngIf="tipoIdentidad.invalid && (tipoIdentidad.dirty || tipoIdentidad.touched)">
+
+        <mat-error
+          *ngIf="tipoIdentidad.invalid &&
+                (tipoIdentidad.dirty || tipoIdentidad.touched)">
           {{ 'selectCustomerIdentityType' | tenantText }}
         </mat-error>
       </mat-form-field>
@@ -137,6 +146,12 @@
     <button mat-raised-button color="primary">
       {{ (cliente.IdCliente ? 'updateAction' : 'save') | tenantText }}
     </button>
-    <button mat-stroked-button (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="cancelar()">
+
+      {{ 'cancel' | tenantText }}
+    </button>
   </form>
 </div>
