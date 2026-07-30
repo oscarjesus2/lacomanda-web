@@ -3,7 +3,7 @@ export interface Articulo {
   Codigo: string;
   Descripcion: string;
   DescripcionCompra: string;
-  InsumoProducto: 'A' | 'I';
+  InsumoProducto: 'A' | 'I' | 'P';
   IdUnidadStock: number | null;
   UnidadStock: string;
   IdUnidadReceta: number | null;
@@ -30,7 +30,8 @@ export interface Articulo {
 export class ArticuloGuardar {
   IdProducto = 0;
   Descripcion = '';
-  InsumoProducto: 'A' | 'I' = 'A';
+  DescripcionCompra = '';
+  InsumoProducto: 'A' | 'I' | 'P' = 'A';
   IdUnidadStock: number | null = null;
   IdUnidadReceta: number | null = null;
   FactorReceta = 1;

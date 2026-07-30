@@ -47,6 +47,11 @@ export class ArticuloMantenimientoComponent implements OnInit {
   articulo = new ArticuloGuardar();
   readonly creacionRapida: boolean;
 
+  get esProductoVentaEditado(): boolean {
+    return this.articulo.IdProducto > 0 &&
+      this.articulo.InsumoProducto === 'P';
+  }
+
   constructor(
     private readonly dialogRef: MatDialogRef<ArticuloMantenimientoComponent>,
     private readonly articuloService: ArticuloService,
@@ -125,7 +130,8 @@ export class ArticuloMantenimientoComponent implements OnInit {
     this.stockActual = row.Stock;
     this.articulo = new ArticuloGuardar({
       IdProducto: row.IdProducto,
-      Descripcion: row.DescripcionCompra || row.Descripcion,
+      Descripcion: row.Descripcion,
+      DescripcionCompra: row.DescripcionCompra || row.Descripcion,
       InsumoProducto: row.InsumoProducto,
       IdUnidadStock: row.IdUnidadStock,
       IdUnidadReceta: row.IdUnidadReceta,
@@ -147,6 +153,10 @@ export class ArticuloMantenimientoComponent implements OnInit {
   }
 
   cambiarTipo(): void {
+    if (this.esProductoVentaEditado) {
+      return;
+    }
+
     this.articulo.IdGrupoCompra = null;
     this.cargarGrupos(this.articulo.InsumoProducto === 'I' ? 'I' : 'A');
   }
@@ -186,6 +196,10 @@ export class ArticuloMantenimientoComponent implements OnInit {
     }
 
     const esEdicion = this.articulo.IdProducto > 0;
+    if (!this.esProductoVentaEditado) {
+      this.articulo.DescripcionCompra = this.articulo.Descripcion;
+    }
+
     this.guardando = true;
     const request = esEdicion
       ? this.articuloService.actualizar(this.articulo)
@@ -226,7 +240,16 @@ export class ArticuloMantenimientoComponent implements OnInit {
   }
 
   descripcionTipo(tipo: string): string {
-    return tipo === 'I' ? 'Insumo' : 'Artículo';
+    switch (tipo) {
+      case 'A':
+        return 'Artículo';
+      case 'I':
+        return 'Insumo';
+      case 'P':
+        return 'Producto de venta';
+      default:
+        return 'Tipo no reconocido';
+    }
   }
 
   private cargarArticulos(): void {

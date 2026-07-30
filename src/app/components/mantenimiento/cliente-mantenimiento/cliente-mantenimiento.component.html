@@ -73,7 +73,7 @@
         [compareWith]="compareTiposDocCliente"
         (ngModelChange)="onTipoIdentidadChange($event)">
           <mat-option *ngFor="let tipo of tiposDocCliente" [value]="tipo">
-            {{tipo.Descripcion}}
+            {{ tipo.Abreviatura || tipo.Descripcion }}
           </mat-option>
         </mat-select>
         <mat-error *ngIf="tipoIdentidad.invalid && (tipoIdentidad.dirty || tipoIdentidad.touched)">

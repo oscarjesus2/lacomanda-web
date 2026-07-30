@@ -2,6 +2,7 @@ export class TipoIdentidad {
 
    public IdTipoIdentidad: string;
    public Descripcion: string;
+   public Abreviatura?: string;
    public CodigoTributario?: string;
    public RequiereParaFactura?: boolean;
    public RegexValidacion?: string;

@@ -12,7 +12,8 @@ export interface TipoIdentidadPaisVM {
   Mascara?: string;
   RequiereParaFactura: boolean;
   CodigoTributario?: string;
-  Descripcion: string; 
+  Descripcion: string;
+  Abreviatura: string;
 }
 
 @Injectable({ providedIn: 'root' })

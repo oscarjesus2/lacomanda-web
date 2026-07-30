@@ -1,0 +1,1068 @@
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
+import { forkJoin } from 'rxjs';
+import Swal from 'sweetalert2';
+import {
+  EntradaCompra,
+  EntradaCompraArticulo,
+  EntradaCompraCatalogos,
+  EntradaCompraGuardar,
+  EntradaCompraImpuesto,
+  EntradaCompraLineaGuardar,
+  EntradaCompraPago,
+  EntradaCompraPagoGuardar,
+  EntradaCompraResumen,
+  EntradaCompraSubMovimiento
+} from 'src/app/models/entrada-compra.models';
+import { EntradaCompraService } from 'src/app/services/entrada-compra.service';
+
+interface LineaCompraEdicion extends EntradaCompraLineaGuardar {
+  Producto: string;
+  UnidadMedida: string;
+  Inventariable: boolean;
+}
+
+@Component({
+  selector: 'app-entrada-compra-mantenimiento',
+  templateUrl: './entrada-compra-mantenimiento.component.html'
+})
+export class EntradaCompraMantenimientoComponent implements OnInit {
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.dataSource.paginator = value;
+    }
+  }
+
+  readonly displayedColumns = [
+    'seleccion',
+    'documento',
+    'recepcion',
+    'proveedor',
+    'movimiento',
+    'total',
+    'estadoPago',
+    'estado',
+    'acciones'
+  ];
+  readonly detalleColumns = [
+    'producto',
+    'cantidad',
+    'unidad',
+    'subarea',
+    'impuestos',
+    'base',
+    'tributos',
+    'total',
+    'acciones'
+  ];
+
+  dataSource = new MatTableDataSource<EntradaCompraResumen>([]);
+  catalogos: EntradaCompraCatalogos | null = null;
+  compra: EntradaCompra | null = null;
+  formulario: EntradaCompraGuardar = this.formularioInicial();
+  lineas: LineaCompraEdicion[] = [];
+  filtro = {
+    FechaInicio: this.inicioMes(),
+    FechaFin: new Date(),
+    CampoFecha: 'recepcion',
+    Estado: null as number | null,
+    Buscar: ''
+  };
+
+  idArticuloAgregar: number | null = null;
+  cantidadAgregar = 1;
+  importeAgregar = 0;
+  idSubAreaAgregar: number | null = null;
+  impuestosAgregar: string[] = [];
+  pago: EntradaCompraPagoGuardar = this.pagoInicial();
+  fechaPagoProgramada: Date | null = null;
+  idsGuiasSeleccionadas = new Set<number>();
+  notaOrigen: EntradaCompra | null = null;
+  tipoNotaCreacion: 1 | 2 = 1;
+  tipoAjusteNota: 1 | 2 = 1;
+  cargando = false;
+  guardando = false;
+  showForm = false;
+  soloLectura = false;
+
+  constructor(
+    private readonly dialogRef:
+      MatDialogRef<EntradaCompraMantenimientoComponent>,
+    private readonly entradaCompraService: EntradaCompraService
+  ) {}
+
+  ngOnInit(): void {
+    this.cargarInicial();
+  }
+
+  cargarInicial(): void {
+    this.cargando = true;
+    forkJoin({
+      catalogos: this.entradaCompraService.catalogos(),
+      compras: this.entradaCompraService.listar(this.filtro)
+    }).subscribe({
+      next: response => {
+        this.cargando = false;
+        if (!response.catalogos.Success || !response.compras.Success) {
+          Swal.fire(
+            'No se pudo iniciar',
+            response.catalogos.Message ||
+              response.compras.Message ||
+              'No se pudieron cargar los ingresos de compras.',
+            'error'
+          );
+          return;
+        }
+
+        this.catalogos = response.catalogos.Data;
+        this.dataSource.data = response.compras.Data || [];
+      },
+      error: error => {
+        this.cargando = false;
+        this.mostrarError(
+          error,
+          'No se pudieron cargar los ingresos de compras.'
+        );
+      }
+    });
+  }
+
+  buscar(): void {
+    this.cargando = true;
+    this.entradaCompraService.listar(this.filtro).subscribe({
+      next: response => {
+        this.cargando = false;
+        if (!response.Success) {
+          Swal.fire(
+            'Error',
+            response.Message || 'No se pudo realizar la búsqueda.',
+            'error'
+          );
+          return;
+        }
+        this.dataSource.data = response.Data || [];
+        this.dataSource.paginator?.firstPage();
+      },
+      error: error => {
+        this.cargando = false;
+        this.mostrarError(error, 'No se pudo realizar la búsqueda.');
+      }
+    });
+  }
+
+  nuevo(): void {
+    if (!this.catalogos) {
+      return;
+    }
+
+    this.compra = null;
+    this.notaOrigen = null;
+    this.formulario = this.formularioInicial();
+    this.formulario.IdMoneda =
+      this.catalogos.IdMonedaPredeterminada ||
+      this.catalogos.Monedas[0]?.Id ||
+      '';
+    this.formulario.IdTipoDocumento =
+      this.tiposDocumentoDisponibles[0]?.Id || '';
+    const movimiento = this.catalogos.TiposMovimiento[0];
+    this.formulario.IdTipoMovimiento =
+      movimiento?.IdTipoMovimiento ?? null;
+    this.formulario.IdSubTipoMovimiento =
+      movimiento?.SubTipos[0]?.IdSubTipoMovimiento ?? null;
+    this.lineas = [];
+    this.limpiarLinea();
+    this.soloLectura = false;
+    this.showForm = true;
+  }
+
+  editar(row: EntradaCompraResumen): void {
+    this.abrir(row.IdEntrada, false);
+  }
+
+  ver(row: EntradaCompraResumen): void {
+    this.abrir(row.IdEntrada, true);
+  }
+
+  abrir(idEntrada: number, soloLectura: boolean): void {
+    this.cargando = true;
+    this.entradaCompraService.obtener(idEntrada).subscribe({
+      next: response => {
+        this.cargando = false;
+        if (!response.Success || !response.Data) {
+          Swal.fire(
+            'Error',
+            response.Message || 'No se pudo abrir la compra.',
+            'error'
+          );
+          return;
+        }
+        this.cargarFormulario(response.Data);
+        this.soloLectura = soloLectura || response.Data.Estado !== 1;
+        this.showForm = true;
+      },
+      error: error => {
+        this.cargando = false;
+        this.mostrarError(error, 'No se pudo abrir la compra.');
+      }
+    });
+  }
+
+  cambiarMovimiento(): void {
+    this.formulario.IdSubTipoMovimiento =
+      this.subTiposMovimiento[0]?.IdSubTipoMovimiento ?? null;
+  }
+
+  seleccionarArticulo(): void {
+    const articulo = this.articuloAgregar;
+    if (!articulo) {
+      this.importeAgregar = 0;
+      this.idSubAreaAgregar = null;
+      this.impuestosAgregar = [];
+      return;
+    }
+
+    this.importeAgregar = Number(
+      (articulo.PrecioCompra * this.cantidadAgregar).toFixed(2)
+    );
+    const detalleOrigen = this.notaOrigen?.Detalles.find(
+      detalle => detalle.IdProducto === articulo.IdProducto
+    );
+    this.impuestosAgregar = detalleOrigen
+      ? [...detalleOrigen.Impuestos]
+      : [...articulo.Impuestos];
+    if (detalleOrigen) {
+      this.idSubAreaAgregar =
+        detalleOrigen.IdSubAreaAlmacen;
+    }
+    if (!articulo.Inventariable) {
+      this.idSubAreaAgregar = null;
+    }
+  }
+
+  actualizarImporteSugerido(): void {
+    const articulo = this.articuloAgregar;
+    if (!articulo || this.cantidadAgregar <= 0) {
+      return;
+    }
+    this.importeAgregar = Number(
+      (articulo.PrecioCompra * this.cantidadAgregar).toFixed(2)
+    );
+  }
+
+  agregarLinea(): void {
+    const articulo = this.articuloAgregar;
+    if (!articulo) {
+      Swal.fire(
+        'Falta el artículo',
+        'Seleccione el artículo que está ingresando.',
+        'info'
+      );
+      return;
+    }
+    if (this.lineas.some(l => l.IdProducto === articulo.IdProducto)) {
+      Swal.fire(
+        'Artículo repetido',
+        'El artículo ya está incluido en el documento.',
+        'info'
+      );
+      return;
+    }
+    if (this.cantidadAgregar <= 0 || this.importeAgregar < 0) {
+      Swal.fire(
+        'Revise la línea',
+        'La cantidad debe ser mayor que cero y el importe no puede ser negativo.',
+        'info'
+      );
+      return;
+    }
+    if (articulo.Inventariable && !this.idSubAreaAgregar) {
+      Swal.fire(
+        'Falta el destino',
+        'Seleccione la subárea donde ingresará el artículo.',
+        'info'
+      );
+      return;
+    }
+
+    this.lineas.push({
+      IdProducto: articulo.IdProducto,
+      Producto: articulo.Descripcion,
+      UnidadMedida: articulo.UnidadMedida,
+      Inventariable: articulo.Inventariable,
+      Cantidad: this.cantidadAgregar,
+      Importe: this.importeAgregar,
+      IdSubAreaAlmacen: articulo.Inventariable
+        ? this.idSubAreaAgregar
+        : null,
+      Impuestos: [...this.impuestosAgregar]
+    });
+    this.lineas = [...this.lineas];
+    this.limpiarLinea();
+  }
+
+  quitarLinea(index: number): void {
+    this.lineas.splice(index, 1);
+    this.lineas = [...this.lineas];
+  }
+
+  guardar(): void {
+    if (!this.formularioValido()) {
+      return;
+    }
+
+    const dto: EntradaCompraGuardar = {
+      ...this.formulario,
+      IdProveedor: Number(this.formulario.IdProveedor),
+      IdTipoMovimiento: Number(this.formulario.IdTipoMovimiento),
+      IdSubTipoMovimiento: Number(
+        this.formulario.IdSubTipoMovimiento
+      ),
+      Detalles: this.lineas.map(linea => ({
+        IdProducto: linea.IdProducto,
+        Cantidad: Number(linea.Cantidad),
+        Importe: Number(linea.Importe),
+        IdSubAreaAlmacen: linea.IdSubAreaAlmacen,
+        Impuestos: [...linea.Impuestos]
+      }))
+    };
+
+    this.guardando = true;
+    const request = this.notaOrigen
+      ? this.entradaCompraService.crearNota({
+          IdEntradaOrigen: this.notaOrigen.IdEntrada,
+          TipoNota: this.tipoNotaCreacion,
+          TipoAjuste: this.tipoAjusteNota,
+          Documento: dto
+        })
+      : this.compra
+      ? this.entradaCompraService.actualizar(
+          this.compra.IdEntrada,
+          dto
+        )
+      : this.entradaCompraService.crear(dto);
+
+    request.subscribe({
+      next: response => {
+        this.guardando = false;
+        if (!response.Success || !response.Data) {
+          Swal.fire(
+            'No se pudo guardar',
+            response.Message || 'Revise los datos del documento.',
+            'error'
+          );
+          return;
+        }
+
+        this.cargarFormulario(response.Data);
+        const eraNota = !!this.notaOrigen;
+        this.notaOrigen = null;
+        this.soloLectura = false;
+        Swal.fire(
+          eraNota ? 'Nota guardada' : 'Compra guardada',
+          'El documento quedó generado. Revíselo para aplicar sus movimientos.',
+          'success'
+        );
+      },
+      error: error => {
+        this.guardando = false;
+        this.mostrarError(error, 'No se pudo guardar la compra.');
+      }
+    });
+  }
+
+  revisar(): void {
+    if (!this.compra || this.compra.Estado !== 1) {
+      return;
+    }
+
+    Swal.fire({
+      title: 'Revisar ingreso de compra',
+      text: 'Se actualizarán las existencias, el precio de compra y el coste de las recetas afectadas.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Revisar y aplicar',
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (!result.isConfirmed || !this.compra) {
+        return;
+      }
+      this.guardando = true;
+      this.entradaCompraService.revisar(this.compra.IdEntrada).subscribe({
+        next: response => {
+          this.guardando = false;
+          if (!response.Success || !response.Data) {
+            Swal.fire(
+              'No se pudo revisar',
+              response.Message || 'Revise la información de la compra.',
+              'error'
+            );
+            return;
+          }
+          this.cargarFormulario(response.Data);
+          this.soloLectura = true;
+          Swal.fire(
+            'Compra revisada',
+            'Las existencias y costes quedaron actualizados.',
+            'success'
+          );
+        },
+        error: error => {
+          this.guardando = false;
+          this.mostrarError(error, 'No se pudo revisar la compra.');
+        }
+      });
+    });
+  }
+
+  anular(): void {
+    if (!this.compra || ![1, 2].includes(this.compra.Estado)) {
+      return;
+    }
+
+    const afectoStock = this.compra.Estado === 2;
+    Swal.fire({
+      title: 'Anular ingreso de compra',
+      text: afectoStock
+        ? 'Se revertirán las existencias y el movimiento de almacén generado por esta compra.'
+        : 'El documento generado quedará anulado.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, anular',
+      cancelButtonText: 'Cancelar',
+      customClass: { confirmButton: 'swal-button--danger' }
+    }).then(result => {
+      if (!result.isConfirmed || !this.compra) {
+        return;
+      }
+      this.guardando = true;
+      this.entradaCompraService.anular(this.compra.IdEntrada).subscribe({
+        next: response => {
+          this.guardando = false;
+          if (!response.Success || !response.Data) {
+            Swal.fire(
+              'No se pudo anular',
+              response.Message || 'No se pudo anular la compra.',
+              'error'
+            );
+            return;
+          }
+          this.cargarFormulario(response.Data);
+          this.soloLectura = true;
+          Swal.fire('Compra anulada', '', 'success');
+        },
+        error: error => {
+          this.guardando = false;
+          this.mostrarError(error, 'No se pudo anular la compra.');
+        }
+      });
+    });
+  }
+
+  registrarPago(): void {
+    if (!this.compra || !this.pago.IdTipoPago ||
+        this.pago.MontoPagado <= 0) {
+      Swal.fire(
+        'Faltan datos',
+        'Seleccione la forma de pago e indique un importe.',
+        'info'
+      );
+      return;
+    }
+
+    this.guardando = true;
+    this.entradaCompraService.registrarPago(
+      this.compra.IdEntrada,
+      this.pago
+    ).subscribe({
+      next: response => {
+        this.guardando = false;
+        if (!response.Success || !response.Data) {
+          Swal.fire(
+            'No se pudo registrar el pago',
+            response.Message || 'Revise los datos indicados.',
+            'error'
+          );
+          return;
+        }
+        this.cargarFormulario(response.Data);
+        Swal.fire('Pago registrado', '', 'success');
+      },
+      error: error => {
+        this.guardando = false;
+        this.mostrarError(error, 'No se pudo registrar el pago.');
+      }
+    });
+  }
+
+  eliminarPago(pago: EntradaCompraPago): void {
+    if (!this.compra) {
+      return;
+    }
+
+    Swal.fire({
+      title: 'Eliminar pago',
+      text: 'El saldo y el estado de pago se recalcularán automáticamente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+      customClass: { confirmButton: 'swal-button--danger' }
+    }).then(result => {
+      if (!result.isConfirmed || !this.compra) {
+        return;
+      }
+      this.guardando = true;
+      this.entradaCompraService.eliminarPago(
+        this.compra.IdEntrada,
+        pago.IdPagoEntrada
+      ).subscribe({
+        next: response => {
+          this.guardando = false;
+          if (!response.Success || !response.Data) {
+            Swal.fire(
+              'No se pudo eliminar',
+              response.Message || 'No se pudo eliminar el pago.',
+              'error'
+            );
+            return;
+          }
+          this.cargarFormulario(response.Data);
+        },
+        error: error => {
+          this.guardando = false;
+          this.mostrarError(error, 'No se pudo eliminar el pago.');
+        }
+      });
+    });
+  }
+
+  reprogramarPago(): void {
+    if (!this.compra || !this.fechaPagoProgramada) {
+      return;
+    }
+    this.guardando = true;
+    this.entradaCompraService.reprogramarPago(
+      this.compra.IdEntrada,
+      this.fechaPagoProgramada
+    ).subscribe({
+      next: response => {
+        this.guardando = false;
+        if (!response.Success || !response.Data) {
+          Swal.fire(
+            'No se pudo actualizar',
+            response.Message || 'Revise la fecha indicada.',
+            'error'
+          );
+          return;
+        }
+        this.cargarFormulario(response.Data);
+        Swal.fire('Fecha de pago actualizada', '', 'success');
+      },
+      error: error => {
+        this.guardando = false;
+        this.mostrarError(error, 'No se pudo actualizar la fecha.');
+      }
+    });
+  }
+
+  volver(): void {
+    this.showForm = false;
+    this.compra = null;
+    this.notaOrigen = null;
+    this.buscar();
+  }
+
+  cerrar(): void {
+    if (this.showForm) {
+      this.volver();
+      return;
+    }
+    this.dialogRef.close();
+  }
+
+  descripcionSubArea(id: number | null): string {
+    const subArea = this.catalogos?.SubAreas.find(
+      s => s.IdSubAreaAlmacen === id
+    );
+    return subArea
+      ? `${subArea.AreaAlmacen} · ${subArea.Descripcion}`
+      : '—';
+  }
+
+  descripcionTipoDocumento(id: string): string {
+    return this.catalogos?.TiposDocumento.find(
+      tipo => tipo.Id === id
+    )?.Descripcion ?? id;
+  }
+
+  descripcionImpuestos(ids: string[]): string {
+    if (!ids.length) {
+      return 'Sin impuesto';
+    }
+    return ids
+      .map(id => this.impuesto(id)?.Descripcion || id)
+      .join(', ');
+  }
+
+  baseLinea(linea: LineaCompraEdicion): number {
+    const totalTasa = linea.Impuestos.reduce(
+      (total, id) => total + this.tasaNormalizada(this.impuesto(id)),
+      0
+    );
+    const fijo = linea.Impuestos.reduce(
+      (total, id) =>
+        total +
+        (this.impuesto(id)?.FijoPorUnidad || 0) * linea.Cantidad,
+      0
+    );
+    const base = this.formulario.PreciosIncluyenImpuestos
+      ? (linea.Importe - fijo) / (1 + totalTasa)
+      : linea.Importe;
+    return Math.max(0, this.redondear(base));
+  }
+
+  impuestosLinea(linea: LineaCompraEdicion): number {
+    const base = this.baseLinea(linea);
+    return this.redondear(
+      linea.Impuestos.reduce((total, id) => {
+        const impuesto = this.impuesto(id);
+        return total +
+          base * this.tasaNormalizada(impuesto) +
+          (impuesto?.FijoPorUnidad || 0) * linea.Cantidad;
+      }, 0)
+    );
+  }
+
+  totalLinea(linea: LineaCompraEdicion): number {
+    return this.redondear(
+      this.baseLinea(linea) + this.impuestosLinea(linea)
+    );
+  }
+
+  get subtotalDocumento(): number {
+    return this.redondear(
+      this.lineas.reduce(
+        (total, linea) => total + this.baseLinea(linea),
+        0
+      )
+    );
+  }
+
+  get impuestosDocumento(): number {
+    return this.redondear(
+      this.lineas.reduce(
+        (total, linea) => total + this.impuestosLinea(linea),
+        0
+      )
+    );
+  }
+
+  get totalDocumento(): number {
+    return this.redondear(
+      this.subtotalDocumento + this.impuestosDocumento
+    );
+  }
+
+  get totalPagado(): number {
+    return this.redondear(
+      (this.compra?.Pagos || []).reduce(
+        (total, pago) => total + pago.MontoPagado,
+        0
+      )
+    );
+  }
+
+  get saldoPendiente(): number {
+    return this.redondear(
+      Math.max(0, (this.compra?.TotalCompra || 0) - this.totalPagado)
+    );
+  }
+
+  get articuloAgregar(): EntradaCompraArticulo | undefined {
+    return this.catalogos?.Articulos.find(
+      a => a.IdProducto === this.idArticuloAgregar
+    );
+  }
+
+  get articulosParaAgregar(): EntradaCompraArticulo[] {
+    const articulos = this.catalogos?.Articulos || [];
+    if (!this.notaOrigen) {
+      return articulos;
+    }
+    const permitidos = new Set(
+      this.notaOrigen.Detalles.map(d => d.IdProducto)
+    );
+    return articulos.filter(a => permitidos.has(a.IdProducto));
+  }
+
+  get tiposDocumentoDisponibles() {
+    const tipos = this.catalogos?.TiposDocumento || [];
+    if (!this.notaOrigen) {
+      return tipos.filter(tipo =>
+        [1, 2, 3].includes(tipo.Naturaleza)
+      );
+    }
+
+    return tipos.filter(tipo =>
+      tipo.Naturaleza ===
+        (this.tipoNotaCreacion === 1 ? 4 : 5) ||
+      tipo.Naturaleza === 6
+    );
+  }
+
+  get puedeCrearNota(): boolean {
+    if (!this.compra ||
+        this.compra.Estado !== 2 ||
+        this.compra.Pagos.length > 0) {
+      return false;
+    }
+    return this.naturalezaDocumento(
+      this.compra.IdTipoDocumento
+    ) === 1;
+  }
+
+  get subTiposMovimiento(): EntradaCompraSubMovimiento[] {
+    return this.catalogos?.TiposMovimiento.find(
+      m => m.IdTipoMovimiento === this.formulario.IdTipoMovimiento
+    )?.SubTipos || [];
+  }
+
+  get monedaEsPredeterminada(): boolean {
+    return this.formulario.IdMoneda ===
+      this.catalogos?.IdMonedaPredeterminada;
+  }
+
+  private cargarFormulario(compra: EntradaCompra): void {
+    this.compra = compra;
+    this.fechaPagoProgramada = compra.FechaPagoProgramada
+      ? new Date(compra.FechaPagoProgramada)
+      : null;
+    this.formulario = {
+      IdTipoDocumento: compra.IdTipoDocumento,
+      NumDocumento: compra.NumDocumento,
+      FechaEmision: new Date(compra.FechaEmision),
+      FechaRecepcion: new Date(compra.FechaRecepcion),
+      IdProveedor: compra.IdProveedor,
+      IdTipoMovimiento: compra.IdTipoMovimiento,
+      IdSubTipoMovimiento: compra.IdSubTipoMovimiento,
+      IdMoneda: compra.IdMoneda,
+      TasaCambio: compra.TasaCambio,
+      Observacion: compra.Observacion,
+      PreciosIncluyenImpuestos: compra.PreciosIncluyenImpuestos,
+      Detalles: []
+    };
+    this.lineas = compra.Detalles.map(detalle => {
+      const articulo = this.catalogos?.Articulos.find(
+        a => a.IdProducto === detalle.IdProducto
+      );
+      return {
+        IdProducto: detalle.IdProducto,
+        Producto: detalle.Producto,
+        UnidadMedida: detalle.UnidadMedida,
+        Inventariable:
+          articulo?.Inventariable ??
+          detalle.IdSubAreaAlmacen !== null,
+        Cantidad: detalle.Cantidad,
+        Importe: compra.PreciosIncluyenImpuestos
+          ? detalle.Subtotal
+          : detalle.ValorCompra,
+        IdSubAreaAlmacen: detalle.IdSubAreaAlmacen,
+        Impuestos: [...detalle.Impuestos]
+      };
+    });
+    this.pago = this.pagoInicial();
+    this.pago.IdMoneda = compra.IdMoneda;
+    this.pago.MontoPagado = this.saldoPendiente;
+    this.pago.IdTipoPago =
+      this.catalogos?.FormasPago[0]?.Id ?? null;
+    this.limpiarLinea();
+  }
+
+  puedeCanjear(row: EntradaCompraResumen): boolean {
+    return row.Estado === 2 &&
+      this.naturalezaDocumento(row.IdTipoDocumento) === 3 &&
+      (row.EstadoPago === 0 || row.EstadoPago === 1);
+  }
+
+  guiaSeleccionada(row: EntradaCompraResumen): boolean {
+    return this.idsGuiasSeleccionadas.has(row.IdEntrada);
+  }
+
+  seleccionarGuia(
+    row: EntradaCompraResumen,
+    seleccionada: boolean
+  ): void {
+    if (!this.puedeCanjear(row)) {
+      return;
+    }
+    if (seleccionada) {
+      this.idsGuiasSeleccionadas.add(row.IdEntrada);
+    } else {
+      this.idsGuiasSeleccionadas.delete(row.IdEntrada);
+    }
+  }
+
+  async canjearGuias(): Promise<void> {
+    if (!this.catalogos || this.idsGuiasSeleccionadas.size === 0) {
+      Swal.fire(
+        'Seleccione las guías',
+        'Marque una o más guías revisadas del mismo proveedor.',
+        'info'
+      );
+      return;
+    }
+
+    const hoy = this.fechaInput(new Date());
+    const tipos = this.catalogos.TiposDocumento
+      .filter(t => t.Naturaleza === 1)
+      .map(t => `<option value="${t.Id}">${t.Descripcion}</option>`)
+      .join('');
+    const monedas = this.catalogos.Monedas
+      .map(m =>
+        `<option value="${m.Id}" ${
+          m.Id === this.catalogos?.IdMonedaPredeterminada
+            ? 'selected'
+            : ''
+        }>${m.Descripcion}</option>`)
+      .join('');
+    const result = await Swal.fire({
+      title: 'Canjear guías por factura',
+      html: `
+        <div class="swal-form-grid">
+          <select id="canje-tipo" class="swal2-input">${tipos}</select>
+          <input id="canje-numero" class="swal2-input" placeholder="Número de factura">
+          <input id="canje-emision" class="swal2-input" type="date" value="${hoy}">
+          <input id="canje-recepcion" class="swal2-input" type="date" value="${hoy}">
+          <select id="canje-moneda" class="swal2-input">${monedas}</select>
+          <input id="canje-cambio" class="swal2-input" type="number" min="0.0001" step="0.0001" value="1" placeholder="Tipo de cambio">
+          <input id="canje-observacion" class="swal2-input" placeholder="Observación">
+        </div>`,
+      showCancelButton: true,
+      confirmButtonText: 'Crear factura',
+      cancelButtonText: 'Cancelar',
+      focusConfirm: false,
+      preConfirm: () => {
+        const value = (id: string) =>
+          (document.getElementById(id) as HTMLInputElement)?.value;
+        if (!value('canje-numero')) {
+          Swal.showValidationMessage(
+            'Ingrese el número de la factura.'
+          );
+          return false;
+        }
+        return {
+          IdTipoDocumento: value('canje-tipo'),
+          NumDocumento: value('canje-numero'),
+          FechaEmision: value('canje-emision'),
+          FechaRecepcion: value('canje-recepcion'),
+          IdMoneda: value('canje-moneda'),
+          TasaCambio: Number(value('canje-cambio')),
+          Observacion: value('canje-observacion')
+        };
+      }
+    });
+    if (!result.isConfirmed || !result.value) {
+      return;
+    }
+
+    this.guardando = true;
+    this.entradaCompraService.canjearGuias({
+      IdsGuias: [...this.idsGuiasSeleccionadas],
+      ...result.value
+    }).subscribe({
+      next: response => {
+        this.guardando = false;
+        if (!response.Success || !response.Data) {
+          Swal.fire(
+            'No se pudo realizar el canje',
+            response.Message || 'Revise las guías seleccionadas.',
+            'error'
+          );
+          return;
+        }
+        this.idsGuiasSeleccionadas.clear();
+        this.cargarFormulario(response.Data);
+        this.soloLectura = true;
+        this.showForm = true;
+        Swal.fire(
+          'Canje realizado',
+          'La factura quedó vinculada y las guías fueron marcadas como canjeadas.',
+          'success'
+        );
+      },
+      error: error => {
+        this.guardando = false;
+        this.mostrarError(error, 'No se pudo realizar el canje.');
+      }
+    });
+  }
+
+  iniciarNota(tipo: 1 | 2): void {
+    if (!this.compra || this.compra.Estado !== 2 ||
+        this.compra.Pagos.length > 0) {
+      Swal.fire(
+        'Acción no disponible',
+        'La compra debe estar revisada y no tener pagos.',
+        'info'
+      );
+      return;
+    }
+
+    const origen = this.compra;
+    this.notaOrigen = origen;
+    this.compra = null;
+    this.tipoNotaCreacion = tipo;
+    this.tipoAjusteNota = 1;
+    this.formulario = this.formularioInicial();
+    this.formulario.IdProveedor = origen.IdProveedor;
+    this.formulario.IdMoneda = origen.IdMoneda;
+    this.formulario.TasaCambio = origen.TasaCambio;
+    this.formulario.IdTipoMovimiento = origen.IdTipoMovimiento;
+    this.formulario.IdSubTipoMovimiento =
+      origen.IdSubTipoMovimiento;
+    this.formulario.PreciosIncluyenImpuestos =
+      origen.PreciosIncluyenImpuestos;
+    this.formulario.IdTipoDocumento =
+      this.tiposDocumentoDisponibles[0]?.Id || '';
+    this.formulario.Observacion =
+      `${tipo === 1 ? 'NOTA DE CRÉDITO' : 'NOTA DE DÉBITO'} DE ` +
+      `${origen.TipoDocumento} ${origen.NumDocumento}`;
+    this.lineas = [];
+    this.soloLectura = false;
+    this.limpiarLinea();
+  }
+
+  private formularioValido(): boolean {
+    if (!this.formulario.IdTipoDocumento ||
+        !this.formulario.NumDocumento.trim() ||
+        !this.formulario.IdProveedor ||
+        !this.formulario.IdTipoMovimiento ||
+        !this.formulario.IdSubTipoMovimiento ||
+        !this.formulario.IdMoneda) {
+      Swal.fire(
+        'Faltan datos',
+        'Complete el proveedor, documento, movimiento y moneda.',
+        'info'
+      );
+      return false;
+    }
+    if (!this.formulario.FechaEmision ||
+        !this.formulario.FechaRecepcion) {
+      Swal.fire(
+        'Faltan fechas',
+        'Indique las fechas de emisión y recepción.',
+        'info'
+      );
+      return false;
+    }
+    if (!this.monedaEsPredeterminada &&
+        this.formulario.TasaCambio <= 0) {
+      Swal.fire(
+        'Falta el tipo de cambio',
+        'Indique un tipo de cambio mayor que cero.',
+        'info'
+      );
+      return false;
+    }
+    if (!this.lineas.length) {
+      Swal.fire(
+        'Documento sin artículos',
+        'Agregue al menos un artículo al ingreso.',
+        'info'
+      );
+      return false;
+    }
+    return true;
+  }
+
+  private limpiarLinea(): void {
+    this.idArticuloAgregar = null;
+    this.cantidadAgregar = 1;
+    this.importeAgregar = 0;
+    this.idSubAreaAgregar = null;
+    this.impuestosAgregar = [];
+  }
+
+  private formularioInicial(): EntradaCompraGuardar {
+    const hoy = new Date();
+    return {
+      IdTipoDocumento: '',
+      NumDocumento: '',
+      FechaEmision: hoy,
+      FechaRecepcion: hoy,
+      IdProveedor: null,
+      IdTipoMovimiento: null,
+      IdSubTipoMovimiento: null,
+      IdMoneda: '',
+      TasaCambio: 1,
+      Observacion: '',
+      PreciosIncluyenImpuestos: true,
+      Detalles: []
+    };
+  }
+
+  private pagoInicial(): EntradaCompraPagoGuardar {
+    return {
+      FechaPago: new Date(),
+      IdTipoPago: null,
+      IdMoneda: this.compra?.IdMoneda || '',
+      IdBancoOrigen: null,
+      IdBancoDestino: null,
+      MontoPagado: 0,
+      Referencia: '',
+      Observacion: ''
+    };
+  }
+
+  private inicioMes(): Date {
+    const hoy = new Date();
+    return new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  }
+
+  private impuesto(id: string): EntradaCompraImpuesto | undefined {
+    return this.catalogos?.Impuestos.find(
+      impuesto => impuesto.IdImpuestoPais === id
+    );
+  }
+
+  private naturalezaDocumento(id: string): number | null {
+    return this.catalogos?.TiposDocumento.find(
+      tipo => tipo.Id === id
+    )?.Naturaleza ?? null;
+  }
+
+  private tasaNormalizada(
+    impuesto: EntradaCompraImpuesto | undefined
+  ): number {
+    if (!impuesto) {
+      return 0;
+    }
+    return impuesto.Tasa > 1
+      ? impuesto.Tasa / 100
+      : impuesto.Tasa;
+  }
+
+  private redondear(value: number): number {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
+  }
+
+  private fechaInput(fecha: Date): string {
+    const year = fecha.getFullYear();
+    const month = `${fecha.getMonth() + 1}`.padStart(2, '0');
+    const day = `${fecha.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private mostrarError(error: any, fallback: string): void {
+    Swal.fire(
+      'Error',
+      error?.error?.Message ||
+        error?.error?.message ||
+        error?.message ||
+        fallback,
+      'error'
+    );
+  }
+}

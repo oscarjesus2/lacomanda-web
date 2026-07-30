@@ -1089,6 +1089,7 @@ export const EN_TEXTS = {
   recipes: 'Recipes',
   warehouseAreas: 'Warehouse areas',
   warehouseSubareas: 'Warehouse subareas',
+  suppliers: 'Suppliers',
   stockIn: 'Stock in',
   stockOut: 'Stock out',
   transfers: 'Transfers',

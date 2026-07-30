@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -12,13 +12,14 @@ import { CajaDto } from 'src/app/models/caja.models';
 import { EstacionTipoEnum } from 'src/app/enums/enum';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-estacion-mantenimiento',
   templateUrl: './estacion-mantenimiento.component.html',
   styleUrls: ['./estacion-mantenimiento.component.css']
 })
-export class EstacionMantenimientoComponent implements OnInit {
+export class EstacionMantenimientoComponent implements OnInit, AfterViewInit {
   @ViewChild('estacionForm') estacionForm: NgForm;
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
@@ -29,27 +30,12 @@ export class EstacionMantenimientoComponent implements OnInit {
   showForm: boolean = false;
 
   listCajas: CajaDto[] = [];
-  get tipos() {
-    return [
-      { value: EstacionTipoEnum.ADMINISTRADOR, label: 'Administrador' },
-      {
-        value: EstacionTipoEnum.MOZO,
-        label: this.textCatalog.get('orderAttendant'),
-      },
-      { value: EstacionTipoEnum.CAJA, label: 'Caja' },
-    ];
-  }
+  tipos: ReadonlyArray<{ value: EstacionTipoEnum; label: string }> = [];
 
   displayedColumns: string[] = ['descripcion', 'identificadorUnico', 'caja', 'tipo', 'actions'];
 
   cajaMap: Record<number, string> = {};
-  get tipoMap(): Record<number, string> {
-    return {
-      0: 'Administrador',
-      1: this.textCatalog.get('orderAttendant'),
-      2: 'Caja',
-    };
-  }
+  tipoMap: Record<number, string> = {};
 
   constructor(
     private dialogRef: MatDialogRef<EstacionMantenimientoComponent>,
@@ -60,44 +46,52 @@ export class EstacionMantenimientoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.inicializarTipos();
     this.cargarEstaciones();
     this.cargarCajas();
   }
 
-  ngAfterViewInit() {
+  ngAfterViewInit(): void {
     this.filteredEstaciones.paginator = this.paginator;
   }
 
   cargarEstaciones(): void {
     this.spinner.show();
-    this.estacionService.getAll().subscribe({
+    this.estacionService.getAll()
+      .pipe(finalize(() => this.spinner.hide()))
+      .subscribe({
       next: resp => {
         if (resp.Success) {
-          this.estaciones = resp.Data;
-          this.filteredEstaciones.data = resp.Data;
+          this.estaciones = resp.Data ?? [];
+          this.filteredEstaciones.data = this.estaciones;
         } else {
           Swal.fire('Error', resp.Message || 'Error al cargar estaciones', 'error');
         }
-        this.spinner.hide();
       },
       error: _ => {
-        this.spinner.hide();
         Swal.fire('Error', 'No se pudieron cargar las estaciones', 'error');
       }
     });
   }
 
   cargarCajas(): void {
-  this.cajaService.getAllCaja(false).subscribe(resp => {
-    if (resp.Success) {
-      this.listCajas = resp.Data;
-      this.cajaMap = this.listCajas.reduce((acc, c) => {
-        acc[c.IdCaja] = c.Descripcion;
-        return acc;
-      }, {} as Record<number, string>);
-    }
-  });
-}
+    this.cajaService.getAllCaja(false).subscribe({
+      next: resp => {
+        if (resp.Success) {
+          this.listCajas = resp.Data ?? [];
+          this.cajaMap = this.listCajas.reduce((acc, c) => {
+            acc[c.IdCaja] = c.Descripcion;
+            return acc;
+          }, {} as Record<number, string>);
+        } else {
+          Swal.fire('Error', resp.Message || 'No se pudieron cargar las cajas', 'error');
+        }
+      },
+      error: _ => {
+        Swal.fire('Error', 'No se pudieron cargar las cajas', 'error');
+      }
+    });
+  }
 
   nuevo(): void {
     this.resetForm();
@@ -145,7 +139,12 @@ export class EstacionMantenimientoComponent implements OnInit {
   }
 
   onEdit(row: Estacion): void {
-    this.estacion = { ...row };
+    this.estacion = Object.assign(new Estacion(), {
+      ...row,
+      IdEstacion: Number(row.IdEstacion),
+      IdCaja: Number(row.IdCaja),
+      Tipo: Number(row.Tipo) as EstacionTipoEnum,
+    });
     this.showForm = true;
   }
 
@@ -177,5 +176,21 @@ export class EstacionMantenimientoComponent implements OnInit {
 
   salir(): void {
     this.dialogRef.close();
+  }
+
+  private inicializarTipos(): void {
+    const mozo = this.textCatalog.get('orderAttendant');
+
+    this.tipos = [
+      { value: EstacionTipoEnum.ADMINISTRADOR, label: 'Administrador' },
+      { value: EstacionTipoEnum.MOZO, label: mozo },
+      { value: EstacionTipoEnum.CAJA, label: 'Caja' },
+    ];
+
+    this.tipoMap = {
+      [EstacionTipoEnum.ADMINISTRADOR]: 'Administrador',
+      [EstacionTipoEnum.MOZO]: mozo,
+      [EstacionTipoEnum.CAJA]: 'Caja',
+    };
   }
 }

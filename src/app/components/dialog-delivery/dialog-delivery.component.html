@@ -327,7 +327,7 @@
               <mat-label>{{ 'identityType' | tenantText }}</mat-label>
               <mat-select formControlName="IdTipoIdentidad">
                 <mat-option *ngFor="let tipo of tiposIdentidad" [value]="tipo.IdTipoIdentidad">
-                  {{ tipo.Descripcion }}
+                  {{ tipo.Abreviatura || tipo.Descripcion }}
                 </mat-option>
               </mat-select>
             </mat-form-field>

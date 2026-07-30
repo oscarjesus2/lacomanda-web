@@ -43,7 +43,7 @@
             <mat-option
               *ngFor="let t of tiposIdentidadPais"
               [value]="t.IdTipoIdentidad">
-              {{ t.Descripcion }}
+              {{ t.Abreviatura || t.Descripcion }}
             </mat-option>
           </mat-select>
         </mat-form-field>

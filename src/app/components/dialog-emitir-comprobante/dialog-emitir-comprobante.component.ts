@@ -159,7 +159,11 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     this.lblmonto = parseFloat(data.dblGranTotal).toFixed(2);
     this.idPedidoCobrar = data.idPedidoCobrar;
     this.nroCuentaCobrar = data.nroCuentaCobrar
-    this.cliente.TipoIdentidad = new TipoIdentidad({ IdTipoIdentidad: EnumTipoIdentidad.RUC, Descripcion: 'RUC' });
+    this.cliente.TipoIdentidad = new TipoIdentidad({
+      IdTipoIdentidad: EnumTipoIdentidad.RUC,
+      Descripcion: 'Registro Único de Contribuyentes',
+      Abreviatura: 'RUC',
+    });
 
     this.form = this.fb.group({
       idTipoDoc: [this.tipoDocumento.IdTipoDocumento, Validators.required],
@@ -280,7 +284,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       try {
         if (!new RegExp(regexStr).test(value)) {
           const hint = tipoIdentidad.Mascara ? ` (esperado: ${tipoIdentidad.Mascara})` : '';
-          return `Formato de ${tipoIdentidad.Descripcion} inválido${hint}.`;
+          const etiqueta = tipoIdentidad.Abreviatura || tipoIdentidad.Descripcion;
+          return `Formato de ${etiqueta} inválido${hint}.`;
         }
       } catch {
         console.warn('RegexValidacion inválido desde backend:', regexStr);
@@ -785,7 +790,11 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       const tipoIdentidadId: string = this.form.get('cliente.tipoIdentidad')?.value;
       const tipoIdentidadCompleto = this.listTipoDocumentoCliente.find(
         t => t.IdTipoIdentidad === tipoIdentidadId
-      ) ?? new TipoIdentidad({ IdTipoIdentidad: tipoIdentidadId, Descripcion: '' });
+      ) ?? new TipoIdentidad({
+        IdTipoIdentidad: tipoIdentidadId,
+        Descripcion: tipoIdentidadId,
+        Abreviatura: tipoIdentidadId,
+      });
 
       this.cliente.TipoIdentidad       = tipoIdentidadCompleto;
       this.cliente.IdTipoIdentidad      = tipoIdentidadId;

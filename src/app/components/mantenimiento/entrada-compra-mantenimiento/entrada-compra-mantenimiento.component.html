@@ -1,0 +1,801 @@
+<div class="mant-panel dialog-panel--workspace">
+  <button mat-icon-button class="close-button" aria-label="Cerrar" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>
+    {{ showForm
+      ? (notaOrigen
+          ? (tipoNotaCreacion === 1 ? 'Nueva nota de crédito' : 'Nueva nota de débito')
+          : (compra ? 'Ingreso de compra N.º ' + compra.IdEntrada : 'Nuevo ingreso de compra'))
+      : 'Ingreso de compras' }}
+  </h2>
+
+  <ng-container *ngIf="!showForm">
+    <div class="dialog-toolbar">
+      <div class="dialog-toolbar__filters">
+        <mat-form-field appearance="fill">
+          <mat-label>Buscar compra</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            matInput
+            [(ngModel)]="filtro.Buscar"
+            (keyup.enter)="buscar()"
+            placeholder="Documento, proveedor o identificación"
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Estado</mat-label>
+          <mat-select [(ngModel)]="filtro.Estado">
+            <mat-option [value]="null">Todos</mat-option>
+            <mat-option [value]="1">Generado</mat-option>
+            <mat-option [value]="2">Revisado</mat-option>
+            <mat-option [value]="3">Canjeado</mat-option>
+            <mat-option [value]="4">Anulado</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-toolbar__options">
+        <mat-button-toggle-group [(ngModel)]="filtro.CampoFecha">
+          <mat-button-toggle value="emision">Emisión</mat-button-toggle>
+          <mat-button-toggle value="recepcion">Recepción</mat-button-toggle>
+          <mat-button-toggle value="registro">Registro</mat-button-toggle>
+        </mat-button-toggle-group>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Desde</mat-label>
+          <input matInput [matDatepicker]="fechaInicio" [(ngModel)]="filtro.FechaInicio">
+          <mat-datepicker-toggle matSuffix [for]="fechaInicio"></mat-datepicker-toggle>
+          <mat-datepicker #fechaInicio></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Hasta</mat-label>
+          <input matInput [matDatepicker]="fechaFin" [(ngModel)]="filtro.FechaFin">
+          <mat-datepicker-toggle matSuffix [for]="fechaFin"></mat-datepicker-toggle>
+          <mat-datepicker #fechaFin></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-toolbar__footer">
+        <span class="dialog-toolbar__status">
+          <mat-icon>receipt_long</mat-icon>
+          {{ dataSource.data.length }} documentos encontrados
+        </span>
+        <div class="dialog-toolbar__actions">
+          <button mat-stroked-button color="primary" type="button" (click)="buscar()" [disabled]="cargando">
+            <mat-icon>search</mat-icon>
+            Buscar
+          </button>
+          <button
+            mat-stroked-button
+            color="primary"
+            type="button"
+            (click)="canjearGuias()"
+            [disabled]="idsGuiasSeleccionadas.size === 0 || guardando"
+          >
+            <mat-icon>published_with_changes</mat-icon>
+            Canjear guías ({{ idsGuiasSeleccionadas.size }})
+          </button>
+          <button mat-raised-button color="primary" type="button" (click)="nuevo()" [disabled]="!catalogos">
+            <mat-icon>add</mat-icon>
+            Nueva compra
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-workspace-content">
+      <div class="dialog-table-card">
+        <div class="dialog-table-wrapper--fill">
+          <mat-table [dataSource]="dataSource" class="dialog-table--wide">
+            <ng-container matColumnDef="seleccion">
+              <mat-header-cell *matHeaderCellDef></mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <mat-checkbox
+                  [checked]="guiaSeleccionada(row)"
+                  [disabled]="!puedeCanjear(row)"
+                  (change)="seleccionarGuia(row, $event.checked)"
+                  aria-label="Seleccionar para canje"
+                ></mat-checkbox>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="documento">
+              <mat-header-cell *matHeaderCellDef>Documento</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                {{ descripcionTipoDocumento(row.IdTipoDocumento) }}
+                {{ row.NumDocumento }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="recepcion">
+              <mat-header-cell *matHeaderCellDef>Recepción</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.FechaRecepcion | date:'dd/MM/yyyy' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="proveedor">
+              <mat-header-cell *matHeaderCellDef>Proveedor</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.Proveedor }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="movimiento">
+              <mat-header-cell *matHeaderCellDef>Movimiento</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.SubTipoMovimiento || row.TipoMovimiento }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="total">
+              <mat-header-cell *matHeaderCellDef>Total</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                {{ row.IdMoneda }} {{ row.TotalCompra | number:'1.2-2' }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="estadoPago">
+              <mat-header-cell *matHeaderCellDef>Pago</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <span class="status-pill" [class.status-pill--warning]="row.EstadoPago !== 2">
+                  {{ row.EstadoPagoDescripcion }}
+                </span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="estado">
+              <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <span
+                  class="status-pill"
+                  [class.status-pill--warning]="row.Estado === 1"
+                  [class.status-pill--inactive]="row.Estado === 4"
+                >
+                  {{ row.EstadoDescripcion }}
+                </span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+              <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  [attr.aria-label]="row.Estado === 1 ? 'Editar compra' : 'Ver compra'"
+                  (click)="row.Estado === 1 ? editar(row) : ver(row)"
+                >
+                  <mat-icon>{{ row.Estado === 1 ? 'edit' : 'visibility' }}</mat-icon>
+                </button>
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+          </mat-table>
+
+          <div class="dialog-empty-state" *ngIf="!cargando && dataSource.data.length === 0">
+            <mat-icon>inventory_2</mat-icon>
+            <span>No existen compras para los filtros indicados.</span>
+          </div>
+        </div>
+
+        <mat-paginator
+          [length]="dataSource.data.length"
+          [pageSize]="10"
+          [pageSizeOptions]="[10, 20, 50]"
+          showFirstLastButtons
+        ></mat-paginator>
+      </div>
+    </div>
+  </ng-container>
+
+  <form
+    *ngIf="showForm"
+    class="dialog-form dialog-form--workspace"
+    (ngSubmit)="guardar()"
+  >
+    <div class="dialog-form-scroll">
+      <div class="dialog-toolbar">
+        <div class="dialog-toolbar__footer">
+          <button mat-stroked-button type="button" (click)="volver()">
+            <mat-icon>arrow_back</mat-icon>
+            Volver
+          </button>
+          <span
+            class="status-pill"
+            [class.status-pill--warning]="compra?.Estado === 1"
+            [class.status-pill--inactive]="compra?.Estado === 4"
+            *ngIf="compra"
+          >
+            {{ compra.EstadoDescripcion }}
+          </span>
+        </div>
+      </div>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>description</mat-icon>
+          Documento y proveedor
+        </h3>
+        <p class="dialog-form-section__hint" *ngIf="notaOrigen">
+          Documento afectado:
+          {{ descripcionTipoDocumento(notaOrigen.IdTipoDocumento) }}
+          {{ notaOrigen.NumDocumento }} · {{ notaOrigen.Proveedor }}
+        </p>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+            <mat-label>Proveedor</mat-label>
+            <mat-select
+              name="proveedor"
+              [(ngModel)]="formulario.IdProveedor"
+              required
+              [disabled]="soloLectura"
+            >
+              <mat-option *ngFor="let proveedor of catalogos?.Proveedores" [value]="proveedor.IdProveedor">
+                {{ proveedor.NumeroIdentificacion }} · {{ proveedor.RazonSocial }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Tipo de documento</mat-label>
+            <mat-select
+              name="tipoDocumento"
+              [(ngModel)]="formulario.IdTipoDocumento"
+              required
+              [disabled]="soloLectura"
+            >
+              <mat-option *ngFor="let tipo of tiposDocumentoDisponibles" [value]="tipo.Id">
+                {{ tipo.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" *ngIf="notaOrigen">
+            <mat-label>Tipo de ajuste</mat-label>
+            <mat-select
+              name="tipoAjusteNota"
+              [(ngModel)]="tipoAjusteNota"
+            >
+              <mat-option [value]="1">Por artículos</mat-option>
+              <mat-option [value]="2">Por diferencia de precio</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Número de documento</mat-label>
+            <input
+              matInput
+              name="numeroDocumento"
+              maxlength="20"
+              [(ngModel)]="formulario.NumDocumento"
+              required
+              [readonly]="soloLectura"
+            >
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Fecha de emisión</mat-label>
+            <input
+              matInput
+              name="fechaEmision"
+              [matDatepicker]="emision"
+              [(ngModel)]="formulario.FechaEmision"
+              required
+              [disabled]="soloLectura"
+            >
+            <mat-datepicker-toggle matSuffix [for]="emision"></mat-datepicker-toggle>
+            <mat-datepicker #emision></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Fecha de recepción</mat-label>
+            <input
+              matInput
+              name="fechaRecepcion"
+              [matDatepicker]="recepcion"
+              [(ngModel)]="formulario.FechaRecepcion"
+              required
+              [disabled]="soloLectura"
+            >
+            <mat-datepicker-toggle matSuffix [for]="recepcion"></mat-datepicker-toggle>
+            <mat-datepicker #recepcion></mat-datepicker>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>move_to_inbox</mat-icon>
+          Movimiento y valoración
+        </h3>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Tipo de movimiento</mat-label>
+            <mat-select
+              name="movimiento"
+              [(ngModel)]="formulario.IdTipoMovimiento"
+              (selectionChange)="cambiarMovimiento()"
+              required
+              [disabled]="soloLectura"
+            >
+              <mat-option
+                *ngFor="let movimiento of catalogos?.TiposMovimiento"
+                [value]="movimiento.IdTipoMovimiento"
+              >
+                {{ movimiento.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Subtipo</mat-label>
+            <mat-select
+              name="subtipoMovimiento"
+              [(ngModel)]="formulario.IdSubTipoMovimiento"
+              required
+              [disabled]="soloLectura"
+            >
+              <mat-option *ngFor="let subtipo of subTiposMovimiento" [value]="subtipo.IdSubTipoMovimiento">
+                {{ subtipo.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Moneda</mat-label>
+            <mat-select
+              name="moneda"
+              [(ngModel)]="formulario.IdMoneda"
+              required
+              [disabled]="soloLectura"
+            >
+              <mat-option *ngFor="let moneda of catalogos?.Monedas" [value]="moneda.Id">
+                {{ moneda.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" *ngIf="!monedaEsPredeterminada">
+            <mat-label>Tipo de cambio</mat-label>
+            <input
+              matInput
+              name="tipoCambio"
+              type="number"
+              min="0.0001"
+              step="0.0001"
+              [(ngModel)]="formulario.TasaCambio"
+              [readonly]="soloLectura"
+            >
+          </mat-form-field>
+
+          <mat-checkbox
+            name="preciosConImpuesto"
+            [(ngModel)]="formulario.PreciosIncluyenImpuestos"
+            [disabled]="soloLectura || lineas.length > 0"
+          >
+            Los importes ingresados incluyen impuestos
+          </mat-checkbox>
+        </div>
+      </section>
+
+      <section class="dialog-form-section" *ngIf="!soloLectura">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>add_shopping_cart</mat-icon>
+          Agregar artículo
+        </h3>
+        <p class="dialog-form-section__hint">
+          Solo se solicita una subárea cuando el artículo controla existencias.
+          Los impuestos se toman de su configuración.
+        </p>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+            <mat-label>Artículo o insumo</mat-label>
+            <mat-select
+              name="articuloAgregar"
+              [(ngModel)]="idArticuloAgregar"
+              (selectionChange)="seleccionarArticulo()"
+            >
+              <mat-option *ngFor="let articulo of articulosParaAgregar" [value]="articulo.IdProducto">
+                {{ articulo.Descripcion }} · {{ articulo.UnidadMedida }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Cantidad</mat-label>
+            <input
+              matInput
+              name="cantidadAgregar"
+              type="number"
+              min="0.001"
+              step="0.001"
+              [(ngModel)]="cantidadAgregar"
+              (change)="actualizarImporteSugerido()"
+            >
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>
+              {{ formulario.PreciosIncluyenImpuestos ? 'Importe total' : 'Base imponible' }}
+            </mat-label>
+            <input
+              matInput
+              name="importeAgregar"
+              type="number"
+              min="0"
+              step="0.01"
+              [(ngModel)]="importeAgregar"
+            >
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" *ngIf="articuloAgregar?.Inventariable">
+            <mat-label>Subárea de ingreso</mat-label>
+            <mat-select name="subAreaAgregar" [(ngModel)]="idSubAreaAgregar">
+              <mat-option *ngFor="let subarea of catalogos?.SubAreas" [value]="subarea.IdSubAreaAlmacen">
+                {{ subarea.AreaAlmacen }} · {{ subarea.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Impuestos</mat-label>
+            <mat-select name="impuestosAgregar" [(ngModel)]="impuestosAgregar" multiple>
+              <mat-option
+                *ngFor="let impuesto of catalogos?.Impuestos"
+                [value]="impuesto.IdImpuestoPais"
+                [disabled]="articuloAgregar && !articuloAgregar.Impuestos.includes(impuesto.IdImpuestoPais)"
+              >
+                {{ impuesto.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="dialog-toolbar__actions">
+          <button mat-stroked-button color="primary" type="button" (click)="agregarLinea()">
+            <mat-icon>add</mat-icon>
+            Agregar al documento
+          </button>
+        </div>
+      </section>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>format_list_bulleted</mat-icon>
+          Detalle del ingreso
+        </h3>
+        <div class="dialog-table-card">
+          <div class="dialog-table-wrapper--fill">
+            <mat-table [dataSource]="lineas" class="dialog-table--wide">
+              <ng-container matColumnDef="producto">
+                <mat-header-cell *matHeaderCellDef>Artículo</mat-header-cell>
+                <mat-cell *matCellDef="let linea">{{ linea.Producto }}</mat-cell>
+              </ng-container>
+              <ng-container matColumnDef="cantidad">
+                <mat-header-cell *matHeaderCellDef>Cant.</mat-header-cell>
+                <mat-cell *matCellDef="let linea">{{ linea.Cantidad | number:'1.0-3' }}</mat-cell>
+              </ng-container>
+              <ng-container matColumnDef="unidad">
+                <mat-header-cell *matHeaderCellDef>Unidad</mat-header-cell>
+                <mat-cell *matCellDef="let linea">{{ linea.UnidadMedida }}</mat-cell>
+              </ng-container>
+              <ng-container matColumnDef="subarea">
+                <mat-header-cell *matHeaderCellDef>Subárea</mat-header-cell>
+                <mat-cell *matCellDef="let linea">{{ descripcionSubArea(linea.IdSubAreaAlmacen) }}</mat-cell>
+              </ng-container>
+              <ng-container matColumnDef="impuestos">
+                <mat-header-cell *matHeaderCellDef>Impuestos</mat-header-cell>
+                <mat-cell *matCellDef="let linea">{{ descripcionImpuestos(linea.Impuestos) }}</mat-cell>
+              </ng-container>
+              <ng-container matColumnDef="base">
+                <mat-header-cell *matHeaderCellDef>Base</mat-header-cell>
+                <mat-cell *matCellDef="let linea">{{ baseLinea(linea) | number:'1.2-2' }}</mat-cell>
+              </ng-container>
+              <ng-container matColumnDef="tributos">
+                <mat-header-cell *matHeaderCellDef>Tributos</mat-header-cell>
+                <mat-cell *matCellDef="let linea">{{ impuestosLinea(linea) | number:'1.2-2' }}</mat-cell>
+              </ng-container>
+              <ng-container matColumnDef="total">
+                <mat-header-cell *matHeaderCellDef>Total</mat-header-cell>
+                <mat-cell *matCellDef="let linea">{{ totalLinea(linea) | number:'1.2-2' }}</mat-cell>
+              </ng-container>
+              <ng-container matColumnDef="acciones">
+                <mat-header-cell *matHeaderCellDef></mat-header-cell>
+                <mat-cell *matCellDef="let linea; let index = index">
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    type="button"
+                    aria-label="Quitar artículo"
+                    (click)="quitarLinea(index)"
+                    *ngIf="!soloLectura"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </mat-cell>
+              </ng-container>
+
+              <mat-header-row *matHeaderRowDef="detalleColumns"></mat-header-row>
+              <mat-row *matRowDef="let row; columns: detalleColumns"></mat-row>
+            </mat-table>
+
+            <div class="dialog-empty-state" *ngIf="lineas.length === 0">
+              <mat-icon>shopping_cart</mat-icon>
+              <span>Agregue los artículos del documento.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="dialog-summary-grid">
+        <div class="dialog-summary-card">
+          <span class="dialog-summary-card__label">Valor de compra</span>
+          <strong>{{ formulario.IdMoneda }} {{ subtotalDocumento | number:'1.2-2' }}</strong>
+        </div>
+        <div class="dialog-summary-card">
+          <span class="dialog-summary-card__label">Impuestos</span>
+          <strong>{{ formulario.IdMoneda }} {{ impuestosDocumento | number:'1.2-2' }}</strong>
+        </div>
+        <div class="dialog-summary-card">
+          <span class="dialog-summary-card__label">Total documento</span>
+          <strong>{{ formulario.IdMoneda }} {{ totalDocumento | number:'1.2-2' }}</strong>
+        </div>
+        <div class="dialog-summary-card" *ngIf="compra">
+          <span class="dialog-summary-card__label">Pago</span>
+          <strong>{{ compra.EstadoPagoDescripcion }}</strong>
+        </div>
+      </div>
+
+      <section class="dialog-form-section" *ngIf="compra">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>payments</mat-icon>
+          Pagos del documento
+        </h3>
+        <p class="dialog-form-section__hint" *ngIf="compra.Estado === 1">
+          Revise primero el ingreso para habilitar el registro de pagos.
+        </p>
+        <div class="dialog-form-grid" *ngIf="compra.Estado !== 4 && compra.Estado !== 3">
+          <mat-form-field appearance="fill">
+            <mat-label>Pago previsto</mat-label>
+            <input
+              matInput
+              name="fechaPagoProgramada"
+              [matDatepicker]="pagoProgramado"
+              [(ngModel)]="fechaPagoProgramada"
+            >
+            <mat-datepicker-toggle matSuffix [for]="pagoProgramado"></mat-datepicker-toggle>
+            <mat-datepicker #pagoProgramado></mat-datepicker>
+          </mat-form-field>
+
+          <div class="dialog-toolbar__actions">
+            <button
+              mat-stroked-button
+              color="primary"
+              type="button"
+              (click)="reprogramarPago()"
+              [disabled]="guardando || !fechaPagoProgramada"
+            >
+              <mat-icon>event</mat-icon>
+              Actualizar fecha
+            </button>
+          </div>
+        </div>
+
+        <div class="dialog-summary-grid">
+          <div class="dialog-summary-card">
+            <span class="dialog-summary-card__label">Total</span>
+            <strong>{{ compra.IdMoneda }} {{ compra.TotalCompra | number:'1.2-2' }}</strong>
+          </div>
+          <div class="dialog-summary-card">
+            <span class="dialog-summary-card__label">Pagado</span>
+            <strong>{{ compra.IdMoneda }} {{ totalPagado | number:'1.2-2' }}</strong>
+          </div>
+          <div class="dialog-summary-card">
+            <span class="dialog-summary-card__label">Pendiente</span>
+            <strong>{{ compra.IdMoneda }} {{ saldoPendiente | number:'1.2-2' }}</strong>
+          </div>
+        </div>
+
+        <div
+          class="dialog-form-grid"
+          *ngIf="saldoPendiente > 0 && compra.Estado === 2"
+        >
+          <mat-form-field appearance="fill">
+            <mat-label>Forma de pago</mat-label>
+            <mat-select name="formaPago" [(ngModel)]="pago.IdTipoPago">
+              <mat-option *ngFor="let forma of catalogos?.FormasPago" [value]="forma.Id">
+                {{ forma.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Fecha del pago</mat-label>
+            <input
+              matInput
+              name="fechaPagoReal"
+              [matDatepicker]="fechaPagoReal"
+              [(ngModel)]="pago.FechaPago"
+            >
+            <mat-datepicker-toggle matSuffix [for]="fechaPagoReal"></mat-datepicker-toggle>
+            <mat-datepicker #fechaPagoReal></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Importe</mat-label>
+            <input
+              matInput
+              name="montoPago"
+              type="number"
+              min="0.01"
+              step="0.01"
+              [max]="saldoPendiente"
+              [(ngModel)]="pago.MontoPagado"
+            >
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Referencia</mat-label>
+            <input
+              matInput
+              name="referenciaPago"
+              maxlength="200"
+              [(ngModel)]="pago.Referencia"
+            >
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+            <mat-label>Observación del pago</mat-label>
+            <input
+              matInput
+              name="observacionPago"
+              maxlength="150"
+              [(ngModel)]="pago.Observacion"
+            >
+          </mat-form-field>
+
+          <div class="dialog-toolbar__actions">
+            <button
+              mat-stroked-button
+              color="primary"
+              type="button"
+              (click)="registrarPago()"
+              [disabled]="guardando"
+            >
+              <mat-icon>add_card</mat-icon>
+              Registrar pago
+            </button>
+          </div>
+        </div>
+
+        <div class="dialog-table-card" *ngIf="compra.Pagos.length > 0">
+          <div class="dialog-table-wrapper--fill">
+            <table class="swal-data-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Forma</th>
+                  <th>Referencia</th>
+                  <th>Observación</th>
+                  <th class="is-numeric">Importe</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let pagoRegistrado of compra.Pagos">
+                  <td>{{ pagoRegistrado.FechaPago | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ pagoRegistrado.FormaPago }}</td>
+                  <td>{{ pagoRegistrado.Referencia || '—' }}</td>
+                  <td>{{ pagoRegistrado.Observacion || '—' }}</td>
+                  <td class="is-numeric">
+                    {{ pagoRegistrado.IdMoneda }}
+                    {{ pagoRegistrado.MontoPagado | number:'1.2-2' }}
+                  </td>
+                  <td>
+                    <button
+                      mat-icon-button
+                      color="warn"
+                      type="button"
+                      aria-label="Eliminar pago"
+                      (click)="eliminarPago(pagoRegistrado)"
+                      *ngIf="compra.Estado === 2"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="dialog-form-section"
+        *ngIf="puedeCrearNota"
+      >
+        <h3 class="dialog-form-section__title">
+          <mat-icon>post_add</mat-icon>
+          Documentos relacionados
+        </h3>
+        <p class="dialog-form-section__hint">
+          Cree una nota vinculada a esta compra. El documento original se conserva.
+        </p>
+        <div class="dialog-toolbar__actions">
+          <button
+            mat-stroked-button
+            color="primary"
+            type="button"
+            (click)="iniciarNota(1)"
+          >
+            Nota de crédito
+          </button>
+          <button
+            mat-stroked-button
+            color="primary"
+            type="button"
+            (click)="iniciarNota(2)"
+          >
+            Nota de débito
+          </button>
+        </div>
+      </section>
+
+      <section class="dialog-form-section">
+        <mat-form-field appearance="fill" class="dialog-form-section--full">
+          <mat-label>Observación</mat-label>
+          <textarea
+            matInput
+            name="observacion"
+            rows="2"
+            maxlength="300"
+            [(ngModel)]="formulario.Observacion"
+            [readonly]="soloLectura"
+          ></textarea>
+        </mat-form-field>
+      </section>
+    </div>
+
+    <div class="dialog-actions">
+      <button mat-stroked-button type="button" (click)="volver()">Volver</button>
+      <button
+        mat-stroked-button
+        color="warn"
+        type="button"
+        (click)="anular()"
+        *ngIf="
+          compra &&
+          (compra.Estado === 1 || compra.Estado === 2) &&
+          compra.Pagos.length === 0
+        "
+        [disabled]="guardando"
+      >
+        <mat-icon>block</mat-icon>
+        Anular
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        *ngIf="!soloLectura"
+        [disabled]="guardando"
+      >
+        <mat-icon>save</mat-icon>
+        Guardar
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="revisar()"
+        *ngIf="compra?.Estado === 1"
+        [disabled]="guardando"
+      >
+        <mat-icon>task_alt</mat-icon>
+        Revisar ingreso
+      </button>
+    </div>
+  </form>
+</div>

@@ -234,7 +234,7 @@
               <mat-option
                 *ngFor="let tipo of tiposIdentidadDisponibles"
                 [value]="tipo.IdTipoIdentidad">
-                {{ tipo.Descripcion }}
+                {{ tipo.Abreviatura || tipo.Descripcion }}
               </mat-option>
             </mat-select>
           </mat-form-field>

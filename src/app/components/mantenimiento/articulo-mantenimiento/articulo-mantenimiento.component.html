@@ -39,7 +39,16 @@
 
             <ng-container matColumnDef="descripcion">
               <mat-header-cell *matHeaderCellDef>Descripción</mat-header-cell>
-              <mat-cell *matCellDef="let row">{{ row.DescripcionCompra || row.Descripcion }}</mat-cell>
+              <mat-cell *matCellDef="let row">
+                <span>{{ row.Descripcion }}</span>
+                <small
+                  *ngIf="row.InsumoProducto === 'P' &&
+                         row.DescripcionCompra &&
+                         row.DescripcionCompra !== row.Descripcion"
+                >
+                  Compra: {{ row.DescripcionCompra }}
+                </small>
+              </mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="tipo">
@@ -122,17 +131,46 @@
     <div class="dialog-form-scroll">
       <section class="dialog-form-section">
         <h3 class="dialog-form-section__title">Datos generales</h3>
+        <div class="dialog-notice" *ngIf="esProductoVentaEditado">
+          <mat-icon>info</mat-icon>
+          <div class="dialog-notice__content">
+            <strong class="dialog-notice__title">Configuración de almacén</strong>
+            <span class="dialog-notice__text">
+              Este producto se vende directamente. Aquí solo se modifican sus datos de almacén;
+              el nombre, precio de venta, impuesto y estado se conservan.
+            </span>
+          </div>
+        </div>
         <div class="dialog-form-grid">
           <mat-form-field appearance="fill" class="dialog-form-grid__wide">
-            <mat-label>Descripción</mat-label>
+            <mat-label>
+              {{ esProductoVentaEditado ? 'Nombre en ventas' : 'Descripción' }}
+            </mat-label>
             <input
               matInput
               name="descripcion"
               [(ngModel)]="articulo.Descripcion"
               maxlength="100"
               required
+              [readonly]="esProductoVentaEditado"
             >
             <mat-error>La descripción es obligatoria.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field
+            appearance="fill"
+            class="dialog-form-grid__wide"
+            *ngIf="esProductoVentaEditado"
+          >
+            <mat-label>Descripción para compras y almacén</mat-label>
+            <input
+              matInput
+              name="descripcionCompra"
+              [(ngModel)]="articulo.DescripcionCompra"
+              maxlength="100"
+              required
+            >
+            <mat-error>La descripción de compra es obligatoria.</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="fill">
@@ -141,15 +179,21 @@
               name="tipo"
               [(ngModel)]="articulo.InsumoProducto"
               (selectionChange)="cambiarTipo()"
+              [disabled]="esProductoVentaEditado"
               required
             >
               <mat-option value="A">Artículo</mat-option>
               <mat-option value="I">Insumo</mat-option>
+              <mat-option value="P" *ngIf="esProductoVentaEditado">
+                Producto de venta
+              </mat-option>
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="fill">
-            <mat-label>Precio de compra</mat-label>
+            <mat-label>
+              {{ articulo.Produccion ? 'Costo unitario' : 'Precio de compra' }}
+            </mat-label>
             <input
               matInput
               name="precio"
@@ -161,7 +205,7 @@
             >
           </mat-form-field>
 
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="fill" *ngIf="!esProductoVentaEditado">
             <mat-label>Impuesto del país</mat-label>
             <mat-select name="impuesto" [(ngModel)]="articulo.IdImpuestoPais" required>
               <mat-option
@@ -174,7 +218,7 @@
             <mat-error>Seleccione el impuesto aplicable.</mat-error>
           </mat-form-field>
 
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="fill" *ngIf="!esProductoVentaEditado">
             <mat-label>Estado</mat-label>
             <mat-select name="activo" [(ngModel)]="articulo.Activo" required>
               <mat-option [value]="true">Activo</mat-option>
@@ -185,10 +229,10 @@
       </section>
 
       <section class="dialog-form-section">
-        <h3 class="dialog-form-section__title">Stock y compras</h3>
+        <h3 class="dialog-form-section__title">Stock y abastecimiento</h3>
         <div class="dialog-form-grid">
           <mat-form-field appearance="fill">
-            <mat-label>Unidad de compra / stock</mat-label>
+            <mat-label>Unidad de stock</mat-label>
             <mat-select
               name="unidadStock"
               [(ngModel)]="articulo.IdUnidadStock"
@@ -203,7 +247,7 @@
           </mat-form-field>
 
           <mat-form-field appearance="fill">
-            <mat-label>Grupo de compra</mat-label>
+            <mat-label>Grupo de almacén</mat-label>
             <mat-select name="grupoCompra" [(ngModel)]="articulo.IdGrupoCompra" required>
               <mat-option *ngFor="let grupo of grupos" [value]="grupo.IdGrupo">
                 {{ grupo.Descripcion }}
@@ -215,7 +259,11 @@
           <mat-form-field appearance="fill">
             <mat-label>Stock actual</mat-label>
             <input matInput [value]="stockActual | number:'1.0-4'" readonly>
-            <mat-hint>Se modifica mediante movimientos de almacén.</mat-hint>
+            <mat-hint>
+              {{ articulo.Produccion
+                ? 'Se incrementa mediante operaciones de producción.'
+                : 'Se modifica mediante movimientos de almacén.' }}
+            </mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="fill">

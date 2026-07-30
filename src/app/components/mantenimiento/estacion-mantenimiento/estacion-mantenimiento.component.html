@@ -1,5 +1,5 @@
 <div class="mant-panel">
-  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
+  <button mat-icon-button type="button" class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
 
@@ -7,7 +7,7 @@
 
   <!-- Lista -->
   <div *ngIf="!showForm" class="empleados-list">
-    <button mat-raised-button color="primary" (click)="nuevo()">{{ 'newStation' | tenantText }}</button>
+    <button mat-raised-button type="button" color="primary" (click)="nuevo()">{{ 'newStation' | tenantText }}</button>
 
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>{{ 'search' | tenantText }}</mat-label>
@@ -42,10 +42,10 @@
       <ng-container matColumnDef="actions">
         <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
         <mat-cell *matCellDef="let r">
-          <button mat-icon-button color="primary" (click)="onEdit(r)">
+          <button mat-icon-button type="button" color="primary" (click)="onEdit(r)">
             <mat-icon>edit</mat-icon>
           </button>
-          <button mat-icon-button color="warn" (click)="onDelete(r.IdEstacion)">
+          <button mat-icon-button type="button" color="warn" (click)="onDelete(r.IdEstacion)">
             <mat-icon>delete</mat-icon>
           </button>
         </mat-cell>
@@ -88,7 +88,7 @@
       </mat-form-field>
     </div>
 
-    <button mat-raised-button color="primary">{{ (estacion.IdEstacion ? 'updateAction' : 'save') | tenantText }}</button>
+    <button mat-raised-button type="submit" color="primary">{{ (estacion.IdEstacion ? 'updateAction' : 'save') | tenantText }}</button>
     <button mat-stroked-button type="button" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
   </form>
 </div>

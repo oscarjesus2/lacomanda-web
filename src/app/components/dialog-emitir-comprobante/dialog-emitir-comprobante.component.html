@@ -61,7 +61,7 @@
               <mat-select formControlName="tipoIdentidad" name="tipoDocumentoCliente"
                 (selectionChange)="tipoDocumentoClienteChange()">
                 <mat-option *ngFor="let item of listTipoDocumentoCliente" [value]="item.IdTipoIdentidad">
-                  {{ item.Descripcion }}
+                  {{ item.Abreviatura || item.Descripcion }}
                 </mat-option>
               </mat-select>
             </mat-form-field>

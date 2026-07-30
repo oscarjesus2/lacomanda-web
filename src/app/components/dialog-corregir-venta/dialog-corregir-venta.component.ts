@@ -110,7 +110,7 @@ export class DialogCorregirVentaComponent implements OnInit {
         ? null
         : this.texts.get(
           'correctionIdentityNumberInvalid',
-          { type: tipo.Descripcion },
+          { type: tipo.Abreviatura || tipo.Descripcion },
         );
     } catch {
       return null;

@@ -6,6 +6,8 @@ import { ArticuloMantenimientoComponent } from 'src/app/components/mantenimiento
 import { InventarioMantenimientoComponent } from 'src/app/components/mantenimiento/inventario-mantenimiento/inventario-mantenimiento.component';
 import { RecetaMantenimientoComponent } from 'src/app/components/mantenimiento/receta-mantenimiento/receta-mantenimiento.component';
 import { SubAreaAlmacenMantenimientoComponent } from 'src/app/components/mantenimiento/subarea-almacen-mantenimiento/subarea-almacen-mantenimiento.component';
+import { EntradaCompraMantenimientoComponent } from 'src/app/components/mantenimiento/entrada-compra-mantenimiento/entrada-compra-mantenimiento.component';
+import { ProveedorMantenimientoComponent } from 'src/app/components/mantenimiento/proveedor-mantenimiento/proveedor-mantenimiento.component';
 
 @Component({
   selector: 'app-menu-almacen',
@@ -55,11 +57,21 @@ export class MenuAlmacenComponent implements OnInit {
           titleKey: 'warehouseSubareas',
           labelKey: 'warehouseSubareas',
           disabled: false
+        },
+        {
+          title: 'Proveedores',
+          action: 'proveedores',
+          icon: 'local_shipping',
+          label: 'Proveedores',
+          titleKey: 'suppliers',
+          labelKey: 'suppliers',
+          disabled: false
         }
       ]
     },
     {
       title: 'Ingresos',
+      action: 'ingresosCompra',
       icon: 'move_to_inbox',
       label: 'Ingresos',
       titleKey: 'stockIn',
@@ -117,7 +129,9 @@ export class MenuAlmacenComponent implements OnInit {
       recetas: RecetaMantenimientoComponent,
       inventarios: InventarioMantenimientoComponent,
       areasAlmacen: AreaAlmacenMantenimientoComponent,
-      subareasAlmacen: SubAreaAlmacenMantenimientoComponent
+      subareasAlmacen: SubAreaAlmacenMantenimientoComponent,
+      proveedores: ProveedorMantenimientoComponent,
+      ingresosCompra: EntradaCompraMantenimientoComponent
     };
     const component = components[item.action];
     if (!component) {
@@ -126,14 +140,15 @@ export class MenuAlmacenComponent implements OnInit {
 
     const esMaestroCompacto = [
       'areasAlmacen',
-      'subareasAlmacen'
+      'subareasAlmacen',
+      'proveedores'
     ].includes(item.action);
     const configuracion = esMaestroCompacto
       ? {
           disableClose: true,
           hasBackdrop: true,
           width: item.action === 'areasAlmacen' ? '760px' : '980px',
-          height: item.action === 'areasAlmacen' ? '520px' : '560px',
+          height: item.action === 'areasAlmacen' ? '520px' : '680px',
           maxWidth: 'calc(100vw - 32px)',
           maxHeight: 'calc(100vh - 32px)',
           panelClass: 'dialog-window--compact'
