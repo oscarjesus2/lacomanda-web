@@ -191,7 +191,8 @@ export const EN_TEXTS = {
   printPreBill: 'Print pre-bill',
   noProductsEntered: 'No products have been entered.',
   allProductsMustBeSaved: 'Not all products in the list were saved.',
-  orderMustBeSaved: 'The entire order must be saved.',
+  orderMustBeSaved: 'Send the order before issuing the receipt.',
+  savedOrderRequiredForOperation: 'Send the order before performing this operation.',
   internalErrorRefresh: 'Internal error. Please refresh.',
 
   // Shift dialogs

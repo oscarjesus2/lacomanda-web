@@ -127,6 +127,17 @@
             <span class="table-info__value">{{ numeroPedido }}</span>
           </div>
         </div>
+        <div class="table-info__item" *ngIf="pedidoPersistido">
+          <span class="table-info__icon-wrap"><mat-icon>tag</mat-icon></span>
+          <div class="table-info__text">
+            <span class="table-info__label">
+              {{ 'order' | tenantText }} ID · {{ 'account' | tenantText }}
+            </span>
+            <span class="table-info__value">
+              {{ idPedidoCobrar }} · {{ nroCuentaCobrar }}
+            </span>
+          </div>
+        </div>
         <div class="tiempos-pedido" *ngIf="fechaApertura">
           <span class="tiempos-pedido__chip">
             <mat-icon>login</mat-icon>{{ fechaApertura | date:'HH:mm' }}
@@ -278,10 +289,10 @@
   <ng-container *ngIf="!isModoMozo">
 
     <div class="button-row">
-      <button [disabled]="!procesarPedido" (click)="aplicarDescuento()">
+      <button [disabled]="!puedeOperarPedidoPersistido" (click)="aplicarDescuento()">
         <fa-icon [icon]="faPercentage"></fa-icon>{{textDescuento}}
       </button>
-      <button (click)="ImprimirPrecuenta()">
+      <button [disabled]="!puedeOperarPedidoPersistido" (click)="ImprimirPrecuenta()">
         <fa-icon [icon]="faReceipt"></fa-icon> {{ 'preBill' | tenantText }}
       </button>
       <button (click)="OpenDialogDocumentosEmitidos()">
@@ -308,16 +319,16 @@
 
     <div class="button-row">
       <button *ngIf="mostrarBoleta"
-              [disabled]="!procesarPedido"
+              [disabled]="!puedeOperarPedidoPersistido"
               (click)="OpenDialogEmitirComprobante(idTipoDocBoleta)">
         <fa-icon [icon]="faFileInvoiceDollar"></fa-icon> {{ textoBoleta }}
       </button>
       <button *ngIf="mostrarFactura"
-              [disabled]="!procesarPedido"
+              [disabled]="!puedeOperarPedidoPersistido"
               (click)="OpenDialogEmitirComprobante(idTipoDocFactura)">
         <fa-icon [icon]="faFileInvoice"></fa-icon> {{ textoFactura }}
       </button>
-      <button [disabled]="!procesarPedido" (click)="OpenDialogEmitirComprobante(TipoDocumento.Express)">
+      <button [disabled]="!puedeOperarPedidoPersistido" (click)="OpenDialogEmitirComprobante(TipoDocumento.Express)">
         <fa-icon [icon]="faReceipt"></fa-icon> {{ 'express' | tenantText }}
       </button>
       <button class="btn--primary-action" [disabled]="isEnviarPedidoDisabled" (click)="EnviarPedido()">
@@ -352,7 +363,7 @@
     </div>
 
     <div class="button-row">
-      <button [disabled]="isPrecuentaDisabled" (click)="ImprimirPrecuenta()">
+      <button [disabled]="isPrecuentaDisabled || !puedeOperarPedidoPersistido" (click)="ImprimirPrecuenta()">
         <fa-icon [icon]="faReceipt"></fa-icon> {{ 'preBill' | tenantText }}
       </button>
       <button [disabled]="isAnularPedidoDisabled" (click)="AnularPedido()">

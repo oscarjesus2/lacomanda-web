@@ -196,7 +196,9 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   noProductsEntered: 'No ha ingresado ningún producto.',
   allProductsMustBeSaved:
     'No se guardaron todos los productos de la lista.',
-  orderMustBeSaved: 'Debe tener todo el pedido guardado.',
+  orderMustBeSaved: 'Envíe primero el pedido antes de emitir el comprobante.',
+  savedOrderRequiredForOperation:
+    'Envíe primero el pedido antes de realizar esta operación.',
   internalErrorRefresh: 'Error interno. Actualice la pantalla.',
 
   closeShift: 'Cerrar turno',

@@ -625,6 +625,16 @@ export class VentaComponent implements OnInit, AfterViewInit {
     return !!this.espacioSelected?.IdEspacio;
   }
 
+  /** El pedido ya existe en el backend y tiene una cuenta válida. */
+  get pedidoPersistido(): boolean {
+    return Number(this.idPedidoCobrar) > 0 && Number(this.nroCuentaCobrar) > 0;
+  }
+
+  /** Las operaciones comerciales requieren un pedido ya guardado y en procesamiento. */
+  get puedeOperarPedidoPersistido(): boolean {
+    return this.procesarPedido && this.pedidoPersistido;
+  }
+
   /** true cuando hay un pedido de llevar/delivery cargado */
   get pedidoLlevarSeleccionado(): boolean {
     return this.idPedidoCobrar > 0 && this.idCanalVentaSelected !== this.canalVentaEnum.ESPACIO;
@@ -1910,7 +1920,12 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.AgregarProductoMenu(this.selectedRow);
   }
 
-   aplicarDescuento(){
+   aplicarDescuento(): void {
+    if (!this.puedeOperarPedidoPersistido) {
+      this.informarPedidoRequerido();
+      return;
+    }
+
     if (this.descuentoAplicado) {
       this.quitarDescuento();
     }else{
@@ -1952,6 +1967,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
   
 
   async ImprimirPrecuenta() {
+    if (!this.puedeOperarPedidoPersistido) {
+      this.informarPedidoRequerido();
+      return;
+    }
+
     if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
         this.textCatalog.get('printPreBill'),
@@ -1967,6 +1987,14 @@ export class VentaComponent implements OnInit, AfterViewInit {
       this.imprimir(responseRegisterPedido.Data);
       this.RehacerPantalla(); // Llamar a la función Rehacer si está visible el botón Rehacer
     }
+  }
+
+  private informarPedidoRequerido(): void {
+    Swal.fire(
+      this.textCatalog.get('validation'),
+      this.textCatalog.get('savedOrderRequiredForOperation'),
+      'info'
+    );
   }
 
   async EnviarPedido() {
@@ -2388,7 +2416,17 @@ export class VentaComponent implements OnInit, AfterViewInit {
 }
 
   OpenDialogEmitirComprobante(idTipoDoc: EnumTipoDocumento): void {
-    
+    // Algunos flujos válidos (por ejemplo, cobrar una entrega) abren el diálogo
+    // directamente; en todos los casos la condición indispensable es que el
+    // pedido y su cuenta ya existan en el backend.
+    if (!this.pedidoPersistido) {
+      Swal.fire(
+        this.textCatalog.get('validation'),
+        this.textCatalog.get('orderMustBeSaved'),
+        'info'
+      );
+      return;
+    }
 
        const dialogEmitirComprobanteComponent = this.dialog.open(DialogEmitirComprobanteComponent, {
          disableClose: true,
