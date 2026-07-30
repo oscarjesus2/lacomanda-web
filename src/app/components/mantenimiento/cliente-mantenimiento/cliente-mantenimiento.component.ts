@@ -247,7 +247,7 @@ buscarCliente(): void {
     numeroIdentificacion;
 
   this.clienteService
-    .ServicioBuscarCliente(
+    .buscarPorIdentidad(
       numeroIdentificacion,
       idTipoIdentidad
     )

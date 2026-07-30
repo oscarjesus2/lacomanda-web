@@ -1184,7 +1184,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       return;
     }
 
-    this.clienteService.ServicioBuscarCliente(ruc, this.cliente.TipoIdentidad.IdTipoIdentidad).subscribe(
+    this.clienteService.buscarPorIdentidad(ruc, this.cliente.TipoIdentidad.IdTipoIdentidad).subscribe(
       (clienteBuscar: any) => {
         if (clienteBuscar) {
           if (clienteBuscar.RazonSocial) {
@@ -1216,7 +1216,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         } else {
           Swal.fire({
             title: this.texts.get('validation'),
-            text: this.texts.get('retrySearchTimeout'),
+            text: this.texts.get('customerNotFound'),
             icon: 'warning',
             confirmButtonText: this.texts.get('accept')
           });

@@ -13,8 +13,10 @@ export class ClienteService {
 
   constructor(private http: HttpClient) { }
 
-  ServicioBuscarCliente(numeroRuc: string, idTipoEntidad: string): Observable<Cliente[]> {
-    return this.http.get<[Cliente]>(this.basePath + '/servicio/' + numeroRuc + '/' + idTipoEntidad);
+  buscarPorIdentidad(numeroIdentificacion: string, idTipoIdentidad: string): Observable<Cliente | null> {
+    return this.http.get<Cliente | null>(
+      this.basePath + '/identidad/' + numeroIdentificacion + '/' + idTipoIdentidad
+    );
   }
 
   getClientes(): Observable<ApiResponse<Cliente[]>> {
