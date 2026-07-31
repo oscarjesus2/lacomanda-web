@@ -64,6 +64,27 @@
   <!-- ══ FORM: layout 2 columnas ════════════════════════════════════════ -->
   <form *ngIf="showForm" #productoForm="ngForm" (ngSubmit)="onSubmit()" class="prod-form-grid">
 
+    <div class="prod-advanced-toggle">
+      <div>
+        <p class="prod-advanced-toggle__title">
+          {{ 'advancedConfiguration' | tenantText }}
+        </p>
+        <p class="prod-advanced-toggle__hint">
+          {{ 'advancedConfigurationHint' | tenantText }}
+        </p>
+      </div>
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="toggleConfiguracionAvanzada()"
+      >
+        <mat-icon>{{ mostrarConfiguracionAvanzada ? 'expand_less' : 'tune' }}</mat-icon>
+        {{ (mostrarConfiguracionAvanzada
+          ? 'hideAdvancedConfiguration'
+          : 'showAdvancedConfiguration') | tenantText }}
+      </button>
+    </div>
+
     <!-- ── Columna izquierda: identificación y clasificación ──────────── -->
     <div class="prod-col prod-col--left">
       <p class="prod-col-label">{{ 'idAndClassification' | tenantText }}</p>
@@ -193,19 +214,18 @@
           {{ 'choosePosition8x9' | tenantText }}
         </button>
 
-        <mat-form-field class="form-field" appearance="fill">
-          <mat-label>{{ 'minimumPrice' | tenantText }}</mat-label>
-          <input matInput type="number" step="0.01" [(ngModel)]="p.PrecioMinimo"
-                 name="preciomin" [required]="p.SinPrecio" #preciomin="ngModel">
-          <mat-error *ngIf="preciomin.invalid && (preciomin.dirty || preciomin.touched)">{{ 'requiredIfNoPrice' | tenantText }}</mat-error>
-        </mat-form-field>
       </div>
     </div>
 
     <!-- ── Columna derecha: configuración y áreas ─────────────────────── -->
     <div class="prod-col prod-col--right">
-      <p class="prod-col-label">{{ 'configAndPrintAreas' | tenantText }}</p>
+      <p class="prod-col-label">
+        {{ (mostrarConfiguracionAvanzada
+          ? 'configAndPrintAreas'
+          : 'printAreas') | tenantText }}
+      </p>
 
+      <ng-container *ngIf="mostrarConfiguracionAvanzada">
       <div class="form-row">
         <mat-form-field class="form-field" appearance="fill">
           <mat-label>{{ 'visible' | tenantText }}</mat-label>
@@ -257,6 +277,28 @@
         </mat-form-field>
 
         <mat-form-field
+          *ngIf="p.SinPrecio"
+          class="form-field"
+          appearance="fill"
+        >
+          <mat-label>{{ 'minimumPrice' | tenantText }}</mat-label>
+          <input
+            matInput
+            type="number"
+            step="0.01"
+            [(ngModel)]="p.PrecioMinimo"
+            name="preciomin"
+            required
+            #preciomin="ngModel"
+          >
+          <mat-error
+            *ngIf="preciomin.invalid && (preciomin.dirty || preciomin.touched)"
+          >
+            {{ 'requiredIfNoPrice' | tenantText }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field
           class="form-field"
           appearance="fill"
           *ngIf="!p.EsServicio"
@@ -272,6 +314,24 @@
             <mat-option [value]="false">No</mat-option>
           </mat-select>
           <mat-hint>Permite configurar sus artículos y costes en Recetas.</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field
+          *ngIf="!p.EsServicio && !p.TieneReceta"
+          class="form-field"
+          appearance="fill"
+        >
+          <mat-label>{{ 'directStockControl' | tenantText }}</mat-label>
+          <mat-select
+            [(ngModel)]="p.ControlDirectoStock"
+            name="controlDirectoStock"
+            (selectionChange)="cambiarControlDirectoStock()"
+            required
+          >
+            <mat-option [value]="true">{{ 'yes' | tenantText }}</mat-option>
+            <mat-option [value]="false">{{ 'no' | tenantText }}</mat-option>
+          </mat-select>
+          <mat-hint>{{ 'directStockControlHint' | tenantText }}</mat-hint>
         </mat-form-field>
 
         <mat-form-field *ngIf="mostrarAnfitriona" class="form-field" appearance="fill">
@@ -294,6 +354,8 @@
       </div>
 
       <!-- Áreas de impresión -->
+      </ng-container>
+
       <div class="prod-areas-card">
         <p class="prod-areas-title">{{ 'printAreas' | tenantText }}</p>
         <mat-selection-list
@@ -311,7 +373,7 @@
     </div>
 
     <section
-      *ngIf="!p.EsServicio && !p.TieneReceta"
+      *ngIf="mostrarConfiguracionAvanzada && p.ControlDirectoStock"
       class="dialog-form-section dialog-form-section--full"
     >
       <h3 class="dialog-form-section__title">

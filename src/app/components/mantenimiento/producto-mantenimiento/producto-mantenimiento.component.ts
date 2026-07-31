@@ -41,6 +41,8 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
   showForm = false;
+  mostrarConfiguracionAvanzada = false;
+  private configuracionAvanzadaHabilitada = false;
   productos: Producto[] = [];
   filtered = new MatTableDataSource<Producto>([]);
   filtro = '';
@@ -130,7 +132,12 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
     this.grupoService.getGrupos('A').subscribe(r => { if (r.Success) this.gruposAlmacen = r.Data; });
     this.unidadMedidaService.listar().subscribe(r => { if (r.Success) this.unidadesMedida = r.Data || []; });
     this.areaAlmacenService.listarActivas().subscribe(r => { if (r.Success) this.areasAlmacen = r.Data || []; });
-    this.impuestoPaisService.getImpuestoPais().subscribe(r => { if (r.Success) this.impuestoPais = r.Data; });
+    this.impuestoPaisService.getImpuestoPais().subscribe(r => {
+      if (r.Success) {
+        this.impuestoPais = r.Data || [];
+        this.seleccionarImpuestoGeneralSiCorresponde();
+      }
+    });
     this.claseComboService.getSeccionMenu().subscribe(r => { if (r.Success) this.seccionMenu = r.Data; });
   }
 
@@ -157,13 +164,31 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
   cambiarServicio(): void {
     if (this.p.EsServicio) {
       this.p.TieneReceta = false;
+      this.p.ControlDirectoStock = false;
       this.limpiarAlmacenDirecto();
     }
   }
 
   cambiarControlReceta(): void {
     if (this.p.TieneReceta) {
+      this.p.ControlDirectoStock = false;
       this.limpiarAlmacenDirecto();
+    }
+  }
+
+  cambiarControlDirectoStock(): void {
+    if (!this.p.ControlDirectoStock) {
+      this.limpiarAlmacenDirecto();
+    }
+  }
+
+  toggleConfiguracionAvanzada(): void {
+    this.mostrarConfiguracionAvanzada =
+      !this.mostrarConfiguracionAvanzada;
+
+    if (this.mostrarConfiguracionAvanzada) {
+      this.configuracionAvanzadaHabilitada = true;
+      this.seleccionarImpuestoGeneralSiCorresponde();
     }
   }
 
@@ -198,12 +223,22 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
 
   nuevo(): void {
     this.resetForm();
-     this.selectedAreas = []; 
+    this.selectedAreas = [];
     this.showForm = true;
   }
 
   onEdit(row: Producto): void {
-    this.p = { ...row };
+    this.p = {
+      ...row,
+      ControlDirectoStock:
+        row.ControlDirectoStock ??
+        !!(row.IdUnidadStock ||
+           row.IdGrupoCompra ||
+           row.IdAreaAlmacen)
+    };
+    // El panel es solo visual: editar con él plegado conserva los datos.
+    this.configuracionAvanzadaHabilitada = true;
+    this.mostrarConfiguracionAvanzada = false;
     // cargar subfamilias del valor actual
     if (this.p.IdFamilia) {
       this.familiaService.getSubFamilias()
@@ -278,7 +313,9 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
     // Validaciones condicionales (front). El back valida también.
     if (!this.p.Posicion) { Swal.fire('Validación', 'Debe elegir la Posición (8×9).', 'info'); return; }
 
-    if (this.p.SinPrecio && (!this.p.PrecioMinimo || this.p.PrecioMinimo <= 0)) {
+    if (this.configuracionAvanzadaHabilitada &&
+        this.p.SinPrecio &&
+        (!this.p.PrecioMinimo || this.p.PrecioMinimo <= 0)) {
       Swal.fire('Validación', 'Cuando “SinPrecio” es verdadero, PrecioMinimo es obligatorio y > 0.', 'info'); return;
     }
 
@@ -299,7 +336,8 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
       }
     }
 
-    if (!this.p.EsServicio && !this.p.TieneReceta) {
+    if (this.configuracionAvanzadaHabilitada &&
+        this.p.ControlDirectoStock) {
       if (!this.p.IdGrupoCompra ||
           !this.p.IdAreaAlmacen ||
           !this.p.IdUnidadStock) {
@@ -348,6 +386,9 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
     const payload: any = {
       ...this.p,
       IdSeccionMenu: this.p.IdClaseCombo ?? 0,
+      ConfiguracionAvanzada:
+        this.configuracionAvanzadaHabilitada,
+      ControlDirectoStock: !!this.p.ControlDirectoStock,
       AreasImpresionIds: this.selectedAreas
     };
 
@@ -367,8 +408,11 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
 
   resetForm(): void {
     this.p = new Producto();
+    this.mostrarConfiguracionAvanzada = false;
+    this.configuracionAvanzadaHabilitada = false;
     this.p.Visible = true; this.p.Activo = true; this.p.IdImpuestoPais = ''; this.p.Tipo = 0;
     this.p.EsServicio = false;
+    this.p.SinPrecio = false;
     this.p.InsumoProducto = 'P';
     // Valores por defecto para los campos condicionados por configuración
     this.p.ExclusivoParaAnfitriona = false;
@@ -384,7 +428,9 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
     this.p.StockMinimo = 0;
     this.p.StockMaximo = 0;
     this.p.Inventario = false;
+    this.p.ControlDirectoStock = false;
     this.selectedAreas = [];
+    this.seleccionarImpuestoGeneralSiCorresponde();
   }
 
   private limpiarAlmacenDirecto(): void {
@@ -398,6 +444,19 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
     this.p.StockMinimo = 0;
     this.p.StockMaximo = 0;
     this.p.Inventario = false;
+  }
+
+  private seleccionarImpuestoGeneralSiCorresponde(): void {
+    if (this.p?.IdImpuestoPais) {
+      return;
+    }
+
+    const impuestoGeneral = this.impuestoPais.find(
+      impuesto => impuesto.Activo && impuesto.ImpuestoGeneral
+    );
+    if (impuestoGeneral) {
+      this.p.IdImpuestoPais = impuestoGeneral.IdImpuestoPais;
+    }
   }
 
   salir(): void { this.dialogRef.close(); }

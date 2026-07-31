@@ -1629,7 +1629,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     }
 
     // Verificar si el producto tiene el flag SinPrecio
-    if (product.SinPrecio == 1) {
+    if (product.SinPrecio) {
       const dialogRef = this.dialog.open(DialogMCantComponent, {
         width: '350px',
         data: {

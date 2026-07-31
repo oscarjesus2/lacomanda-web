@@ -176,7 +176,7 @@ export class DialogEmitirVentaComponent implements OnInit {
   AgregarItemGrid(product: Producto): void {
     let bSinPrecio = product.SinPrecio;
   
-    if (bSinPrecio === 1) {
+    if (bSinPrecio) {
       this.abrirDialogoCantidad(product).then(result => {
         if (result) {
           this.actualizarPrecioProducto(product, result);

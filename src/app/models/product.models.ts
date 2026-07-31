@@ -19,7 +19,7 @@ export class Producto {
     public rows: number;
     public Visible: boolean;
     public EsServicio: boolean;
-    public SinPrecio: number;
+    public SinPrecio: boolean;
     public Stock: number;
     public IdGrupoVenta: number;
     public IdMoneda: string;
@@ -45,6 +45,7 @@ export class Producto {
     public StockMinimo: number;
     public StockMaximo: number;
     public Inventario: boolean;
+    public ControlDirectoStock: boolean;
     ProductoAreaImpresion?: ProductoAreaImpresion[];
 
     constructor(init?: Partial<Producto>) {
