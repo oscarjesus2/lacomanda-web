@@ -14,7 +14,11 @@ import { MatPaginator } from '@angular/material/paginator';
 })
 export class GrupoMantenimientoComponent implements OnInit {
   @ViewChild('form') form: NgForm;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.data.paginator = value;
+    }
+  }
 
   rows: Grupo[] = [];
   data = new MatTableDataSource<Grupo>([]);
@@ -32,14 +36,11 @@ export class GrupoMantenimientoComponent implements OnInit {
 
   ngOnInit(): void { this.cargar(); }
 
-  ngAfterViewInit() { this.data.paginator = this.paginator; }
-
   cargar(): void {
     this.service.getGrupos('P').subscribe(r => {
       if (r.Success) {
         this.rows = r.Data || [];
         this.data.data = this.rows;
-        this.data.paginator = this.paginator; 
       } else {
         Swal.fire('Error', r.Message || 'No se pudo cargar', 'error');
       }

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -19,9 +19,13 @@ import { finalize } from 'rxjs/operators';
   templateUrl: './estacion-mantenimiento.component.html',
   styleUrls: ['./estacion-mantenimiento.component.css']
 })
-export class EstacionMantenimientoComponent implements OnInit, AfterViewInit {
+export class EstacionMantenimientoComponent implements OnInit {
   @ViewChild('estacionForm') estacionForm: NgForm;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.filteredEstaciones.paginator = value;
+    }
+  }
 
   estacion: Estacion = new Estacion();
   estaciones: Estacion[] = [];
@@ -49,10 +53,6 @@ export class EstacionMantenimientoComponent implements OnInit, AfterViewInit {
     this.inicializarTipos();
     this.cargarEstaciones();
     this.cargarCajas();
-  }
-
-  ngAfterViewInit(): void {
-    this.filteredEstaciones.paginator = this.paginator;
   }
 
   cargarEstaciones(): void {

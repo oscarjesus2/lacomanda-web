@@ -14,7 +14,11 @@ import { MatPaginator } from '@angular/material/paginator';
 })
 export class ColorMantenimientoComponent implements OnInit {
   @ViewChild('form') form: NgForm;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.filtered.paginator = value;
+    }
+  }
   
   colores: Color[] = [];
   filtered = new MatTableDataSource<Color>([]);
@@ -40,13 +44,11 @@ export class ColorMantenimientoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void { this.cargar(); }
-  ngAfterViewInit() { this.filtered.paginator = this.paginator; }
   cargar(): void {
     this.service.getColores().subscribe(r => {
       if (r.Success) {
         this.colores = r.Data || [];
         this.filtered.data = this.colores;
-        this.filtered.paginator = this.paginator; 
       } else {
         Swal.fire('Error', r.Message || 'No se pudo cargar colores', 'error');
       }

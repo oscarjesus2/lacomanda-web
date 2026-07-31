@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -14,9 +14,13 @@ import { TipoDescuentoEnum } from 'src/app/enums/enum';
   templateUrl: './descuento-mantenimiento.component.html',
   styleUrls: ['./descuento-mantenimiento.component.css']
 })
-export class DescuentoMantenimientoComponent implements OnInit, AfterViewInit {
+export class DescuentoMantenimientoComponent implements OnInit {
   @ViewChild('form') form: NgForm;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.data.paginator = value;
+    }
+  }
 
   readonly tipoDescuentoEnum = TipoDescuentoEnum;
 
@@ -41,10 +45,6 @@ export class DescuentoMantenimientoComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.cargar();
-  }
-
-  ngAfterViewInit(): void {
-    this.data.paginator = this.paginator;
   }
 
   private blank(): Descuento {
@@ -72,7 +72,6 @@ export class DescuentoMantenimientoComponent implements OnInit, AfterViewInit {
             TipoDescuento: Number(d.TipoDescuento),
           }));
           this.data.data = this.rows;
-          this.data.paginator = this.paginator;
         } else {
           Swal.fire('Error', r.Message || 'No se pudo cargar', 'error');
         }

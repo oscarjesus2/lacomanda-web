@@ -36,7 +36,11 @@ export class UsuariosMantenimientoComponent implements OnInit {
     private spinnerService: NgxSpinnerService,
     private empleadoService: EmpleadoService,
     private nivelUsuarioService: Nivel_UsuarioService) {}
-    @ViewChild(MatPaginator) paginator: MatPaginator;
+    @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+      if (value) {
+        this.filteredusuarios.paginator = value;
+      }
+    }
 
   
   // ── Visibilidad de passwords (solo para nuevo usuario y cambio de password) ──
@@ -83,10 +87,6 @@ export class UsuariosMantenimientoComponent implements OnInit {
     this.cargarNivelUsuario();
   }
 
-  ngAfterViewInit() {
-    this.filteredusuarios.paginator = this.paginator;
-  }
-
   cargarusuarios(): void {
   this.spinnerService.show(); 
   this.usuarioService.getAllUsuarios().subscribe(response => {
@@ -101,7 +101,6 @@ export class UsuariosMantenimientoComponent implements OnInit {
       Swal.fire('Error', response.Message || 'Error al cargar los usuarios', 'error');
     }
     this.spinnerService.hide();
-    this.filteredusuarios.paginator = this.paginator;
   });
 }
 

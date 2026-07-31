@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -14,9 +14,13 @@ import { AreaImpresionService } from 'src/app/services/area-impresion.service';
   templateUrl: './area-impresion-mantenimiento.component.html',
   styleUrls: ['./area-impresion-mantenimiento.component.css']
 })
-export class AreaImpresionMantenimientoComponent implements OnInit, AfterViewInit {
+export class AreaImpresionMantenimientoComponent implements OnInit {
   @ViewChild('areaForm') areaForm!: NgForm;
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.filtered.paginator = value;
+    }
+  }
 
   showForm = false;
 
@@ -35,8 +39,6 @@ export class AreaImpresionMantenimientoComponent implements OnInit, AfterViewIni
   ) {}
 
   ngOnInit(): void { this.cargar(); }
-  ngAfterViewInit(): void { this.filtered.paginator = this.paginator; }
-
   cargar(): void {
     this.spinner.show();
     this.areaSrv.listar().subscribe({

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -36,9 +36,13 @@ import { UnidadMedidaService } from 'src/app/services/unidad-medida.service';
   templateUrl: './producto-mantenimiento.component.html',
   styleUrls: ['./producto-mantenimiento.component.css']
 })
-export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
+export class ProductoMantenimientoComponent implements OnInit {
   @ViewChild('productoForm') productoForm: NgForm;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.filtered.paginator = value;
+    }
+  }
 
   showForm = false;
   mostrarConfiguracionAvanzada = false;
@@ -109,8 +113,6 @@ export class ProductoMantenimientoComponent implements OnInit, AfterViewInit {
       error: () => {}
     });
   }
-  ngAfterViewInit(): void { this.filtered.paginator = this.paginator; }
-
   cargarTodo(): void {
     this.spinner.show();
     this.productoService.getAllProductos().subscribe({

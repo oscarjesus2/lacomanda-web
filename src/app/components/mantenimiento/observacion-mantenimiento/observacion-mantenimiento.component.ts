@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -12,9 +12,13 @@ import { MatDialogRef } from '@angular/material/dialog';
   templateUrl: './observacion-mantenimiento.component.html',
   styleUrls: ['./observacion-mantenimiento.component.css']
 })
-export class ObservacionMantenimientoComponent implements OnInit, AfterViewInit {
+export class ObservacionMantenimientoComponent implements OnInit {
   @ViewChild('form') form: NgForm;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.data.paginator = value;
+    }
+  }
 
   // Tamaño de la botonera
   ROWS = 4;
@@ -43,10 +47,6 @@ export class ObservacionMantenimientoComponent implements OnInit, AfterViewInit 
 
   ngOnInit(): void {
     this.cargar();
-  }
-
-  ngAfterViewInit(): void {
-    this.data.paginator = this.paginator;
   }
 
   private blank(): Observacion {

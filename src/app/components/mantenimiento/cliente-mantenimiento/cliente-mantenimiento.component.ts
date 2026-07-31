@@ -33,16 +33,16 @@ export class ClienteMantenimientoComponent implements OnInit {
     private clienteService: ClienteService,
     private spinnerService: NgxSpinnerService,
     private tipoDocClienteService: TipoDocClienteService) {}
-    @ViewChild(MatPaginator) paginator: MatPaginator;
+    @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+      if (value) {
+        this.filteredClientes.paginator = value;
+      }
+    }
 
     
   ngOnInit(): void {
     this.cargarClientes();
     this.cargarTiposDocCliente();
-  }
-
-  ngAfterViewInit() {
-    this.filteredClientes.paginator = this.paginator;
   }
 
   cargarClientes(): void {

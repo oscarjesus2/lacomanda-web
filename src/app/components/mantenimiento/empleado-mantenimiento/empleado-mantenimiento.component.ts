@@ -29,16 +29,16 @@ export class EmpleadoMantenimientoComponent implements OnInit {
     private dialogRef: MatDialogRef<EmpleadoMantenimientoComponent >,
     private empleadoService: EmpleadoService,
     private spinnerService: NgxSpinnerService) {}
-    @ViewChild(MatPaginator) paginator: MatPaginator;
+    @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+      if (value) {
+        this.filteredEmpleados.paginator = value;
+      }
+    }
 
     
   ngOnInit(): void {
     this.cargarEmpleados();
 
-  }
-
-  ngAfterViewInit() {
-    this.filteredEmpleados.paginator = this.paginator;
   }
 
   cargarEmpleados(): void {
@@ -51,7 +51,6 @@ export class EmpleadoMantenimientoComponent implements OnInit {
             Swal.fire('Error', response.Message || 'Error al cargar los empleados', 'error');
         }
         this.spinnerService.hide();
-        this.filteredEmpleados.paginator = this.paginator; // Reasigna el paginador
     });
 }
 

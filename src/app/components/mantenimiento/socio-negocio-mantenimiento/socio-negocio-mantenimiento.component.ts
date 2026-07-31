@@ -1,5 +1,4 @@
 import {
-  AfterViewInit,
   Component,
   OnInit,
   ViewChild
@@ -25,9 +24,13 @@ import { SocioNegocioService } from 'src/app/services/socionegocio.service';
   styleUrls: ['./socio-negocio-mantenimiento.component.css']
 })
 export class SocioNegocioMantenimientoComponent
-  implements OnInit, AfterViewInit {
+  implements OnInit {
   @ViewChild('form') form: NgForm;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.dataSource.paginator = value;
+    }
+  }
 
   readonly displayedColumns = [
     'descripcion',
@@ -60,10 +63,6 @@ export class SocioNegocioMantenimientoComponent
     this.cargar();
   }
 
-  ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
-  }
-
   cargar(): void {
     this.cargando = true;
     forkJoin({
@@ -80,7 +79,6 @@ export class SocioNegocioMantenimientoComponent
           );
         this.productosFiltrados = this.productos;
         this.dataSource.data = this.socios;
-        this.dataSource.paginator = this.paginator;
         this.cargando = false;
       },
       error: error => {

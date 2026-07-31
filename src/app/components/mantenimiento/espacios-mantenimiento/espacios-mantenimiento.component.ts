@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -18,9 +18,13 @@ import { PosicionSelectorDialogComponent, PosicionSelectorData } from '../../pos
   templateUrl: './espacios-mantenimiento.component.html',
   styleUrls: ['./espacios-mantenimiento.component.css']
 })
-export class EspaciosMantenimientoComponent implements OnInit, AfterViewInit {
+export class EspaciosMantenimientoComponent implements OnInit {
   @ViewChild('espacioForm') espacioForm: NgForm;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.filteredEspacios.paginator = value;
+    }
+  }
 
   // Estado UI
   showForm = false;
@@ -56,10 +60,6 @@ export class EspaciosMantenimientoComponent implements OnInit, AfterViewInit {
     this.cargarAmbientes();
   }
 
-  ngAfterViewInit(): void {
-    this.filteredEspacios.paginator = this.paginator;
-  }
-
   // ---------- CARGAS ----------
   cargarEspacios(): void {
     this.spinnerService.show();
@@ -72,7 +72,6 @@ export class EspaciosMantenimientoComponent implements OnInit, AfterViewInit {
           Swal.fire('Error', res.Message || 'Error al cargar las espacios', 'error');
         }
         this.spinnerService.hide();
-        this.filteredEspacios.paginator = this.paginator;
       },
       error: () => {
         this.spinnerService.hide();

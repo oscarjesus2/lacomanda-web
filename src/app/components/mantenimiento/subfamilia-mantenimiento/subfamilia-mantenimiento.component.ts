@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
@@ -13,9 +13,13 @@ import { MatDialogRef } from '@angular/material/dialog';
   templateUrl: './subfamilia-mantenimiento.component.html',
   styleUrls: ['./subfamilia-mantenimiento.component.css']
 })
-export class SubFamiliaMantenimientoComponent implements OnInit, AfterViewInit {
+export class SubFamiliaMantenimientoComponent implements OnInit {
   @ViewChild('form') form: NgForm;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.filtered.paginator = value;
+    }
+  }
   subfamilia: SubFamilia = new SubFamilia();
   subfamilias: SubFamilia[] = [];
   familias: Familia[] = [];
@@ -33,10 +37,6 @@ export class SubFamiliaMantenimientoComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.cargarFamilias();
     this.cargarSubFamilias();
-  }
-
-  ngAfterViewInit(): void {
-    this.filtered.paginator = this.paginator;
   }
 
   cargarFamilias(): void {
