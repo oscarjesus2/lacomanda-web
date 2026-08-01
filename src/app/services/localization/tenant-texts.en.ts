@@ -339,6 +339,7 @@ export const EN_TEXTS = {
   noDeliverySales: 'There are no delivery sales for this customer yet.',
   productsCount: '{{count}} products',
   continueToOrder: 'Continue to order',
+  continue: 'Continue',
   checkingPrices: 'Checking prices…',
   // General sales tray
   generalSales: 'General sales list',

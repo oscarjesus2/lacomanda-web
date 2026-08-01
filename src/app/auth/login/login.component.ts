@@ -39,6 +39,13 @@ export class LoginComponent implements OnInit {
   loginValid  = true;
   loginError  = '';
 
+  /**
+   * Solo se muestra el selector de sucursal cuando de verdad hace falta.
+   * Mientras se decide o se redirige a Keycloak permanece oculto, para no
+   * mostrar el selector por un instante (p. ej. al cerrar sesión).
+   */
+  showSelector = false;
+
   /** true si ya existe la cookie clientUUID → no se pide identificador */
   identifierExists = false;
 
@@ -445,6 +452,8 @@ export class LoginComponent implements OnInit {
   // ── Tenants ───────────────────────────────────────────────────────────────
 
   private async loadTenants(): Promise<void> {
+    // A partir de aquí sí queremos mostrar el selector de sucursal.
+    this.showSelector = true;
     this.spinnerService.show();
     try {
       const resp    = await this.tenantService.getTenant().toPromise();

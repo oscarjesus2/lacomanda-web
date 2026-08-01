@@ -345,6 +345,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
     'Aún no hay ventas delivery asociadas a este cliente.',
   productsCount: '{{count}} productos',
   continueToOrder: 'Continuar al pedido',
+  continue: 'Continuar',
   checkingPrices: 'Consultando precios…',
   generalSales: 'Listado de ventas generales',
   allShiftsAndRegisters: 'Todos los turnos y cajas',

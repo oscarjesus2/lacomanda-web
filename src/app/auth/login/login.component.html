@@ -10,8 +10,9 @@
       </button>
     </div>
 
-    <!-- Card del formulario -->
-    <div class="login-card">
+    <!-- Card del formulario (oculta mientras se decide/redirige, para no
+         mostrar el selector por un instante al cerrar sesión) -->
+    <div class="login-card" *ngIf="showSelector">
 
       <!-- ── Vista: Selección de sucursal (paso 1) ───────────────────────── -->
       <form [formGroup]="loginForm" (ngSubmit)="login()">
@@ -40,7 +41,7 @@
           class="login-button"
           [disabled]="isSubmitting || loginForm.invalid">
           <ng-container *ngIf="!isSubmitting; else loadingTpl">
-            {{ 'signIn' | tenantText }}
+            {{ 'continue' | tenantText }}
           </ng-container>
           <ng-template #loadingTpl>
             <span aria-busy="true">{{ 'signingIn' | tenantText }}</span>
