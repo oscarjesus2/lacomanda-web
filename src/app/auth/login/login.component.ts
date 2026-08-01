@@ -42,13 +42,6 @@ export class LoginComponent implements OnInit {
   /** true si ya existe la cookie clientUUID → no se pide identificador */
   identifierExists = false;
 
-  // ── Forgot password ───────────────────────────────────────────────────────
-  showForgotPassword    = false;
-  forgotUsername        = '';
-  forgotSending         = false;
-  forgotSent            = false;
-  forgotError           = '';
-
   tenantDefault: TenantDefault[] = [];
   loginForm: FormGroup;
   CurrentIP: string;
@@ -57,8 +50,14 @@ export class LoginComponent implements OnInit {
   showInstallButton = false;
   isiOS = false;
 
-  /** Clave donde se guarda el tenant elegido mientras dura el redirect a Keycloak. */
+  /** Tenant elegido, persistido mientras dura el redirect a Keycloak. */
   private static readonly PENDING_LOGIN_KEY = 'pendingLogin';
+  /**
+   * Sucursal recordada entre sesiones. Se guarda como cookie en el dominio
+   * padre (.lacomanda.store) para que la página de Keycloak (otro subdominio)
+   * también pueda leerla y mostrar la sucursal.
+   */
+  private static readonly SUCURSAL_COOKIE = 'lc_sucursal';
 
   constructor(
     private dialog: MatDialog,
@@ -99,12 +98,20 @@ export class LoginComponent implements OnInit {
 
     this.initForm();
 
-    // ¿Volvemos del redirect de Keycloak? Completar el login antes de nada.
+    // 1. ¿Volvemos del redirect de Keycloak? Completar el login antes de nada.
     if (await this.tryCompleteRedirectLogin()) {
       return;
     }
 
-    // Sesión ya activa → navegar directo.
+    // 2. ¿Piden cambiar de sucursal? (enlace "Cambiar sucursal" del login de Keycloak)
+    //    Se olvida la sucursal recordada y se muestra el selector.
+    if (new URLSearchParams(window.location.search).has('cambiar')) {
+      this.clearSucursal();
+      this.loadTenants();
+      return;
+    }
+
+    // 3. Sesión ya activa → navegar directo.
     const currentSession = this.storageService.getCurrentSession();
     if (currentSession) {
       this.textCatalog.setCulture(
@@ -115,6 +122,15 @@ export class LoginComponent implements OnInit {
       return;
     }
 
+    // 4. ¿Hay una sucursal recordada? → ir DIRECTO al login de Keycloak, sin pedirla.
+    const recordada = this.readSucursal();
+    if (recordada) {
+      this.spinnerService.show();
+      await this.loginWithTenant(recordada);
+      return;
+    }
+
+    // 5. Primera vez → mostrar el selector de sucursal.
     this.loadTenants();
   }
 
@@ -133,27 +149,64 @@ export class LoginComponent implements OnInit {
     if (this.loginForm.invalid || this.isSubmitting) return;
 
     const { tenant } = this.loginForm.getRawValue();
-    this.isSubmitting = true;
-    this.loginValid   = true;
-    this.spinnerService.show();
-
-    // Se persiste el tenant elegido para reconstruir la sesión al volver del redirect.
     const pending: PendingLogin = {
       TenantId: tenant.TenantId,
       Sucursal: tenant.Sucursal,
       Cultura:  tenant.Cultura,
     };
-    localStorage.setItem(LoginComponent.PENDING_LOGIN_KEY, JSON.stringify(pending));
 
+    // Recordar la sucursal para las próximas visitas (y para que Keycloak la lea).
+    this.saveSucursal(pending);
+
+    this.isSubmitting = true;
+    this.loginValid   = true;
+    this.spinnerService.show();
+    await this.loginWithTenant(pending);
+  }
+
+  /** Persiste el tenant y redirige el navegador al login de Keycloak de ese realm. */
+  private async loginWithTenant(pending: PendingLogin): Promise<void> {
+    localStorage.setItem(LoginComponent.PENDING_LOGIN_KEY, JSON.stringify(pending));
     try {
-      // Redirige el navegador a la página de login de Keycloak del realm del tenant.
-      await this.keycloak.login(tenant.TenantId);
+      await this.keycloak.login(pending.TenantId);
     } catch {
       localStorage.removeItem(LoginComponent.PENDING_LOGIN_KEY);
       this.isSubmitting = false;
       this.spinnerService.hide();
       this.loginValid = false;
+      // Si falla el redirect con la sucursal recordada, se muestra el selector.
+      if (!this.tenantDefault.length) this.loadTenants();
     }
+  }
+
+  // ── Sucursal recordada (cookie compartida con Keycloak) ─────────────────────
+
+  private cookieDomain(): string | undefined {
+    const host = window.location.hostname;
+    return host.endsWith('lacomanda.store') ? '.lacomanda.store' : undefined;
+  }
+
+  private saveSucursal(pending: PendingLogin): void {
+    this.cookieService.set(
+      LoginComponent.SUCURSAL_COOKIE,
+      JSON.stringify({ TenantId: pending.TenantId, Sucursal: pending.Sucursal, Cultura: pending.Cultura }),
+      { expires: 365, path: '/', domain: this.cookieDomain(), sameSite: 'Lax' },
+    );
+  }
+
+  private readSucursal(): PendingLogin | null {
+    const raw = this.cookieService.get(LoginComponent.SUCURSAL_COOKIE);
+    if (!raw) return null;
+    try {
+      const s = JSON.parse(raw);
+      return s?.TenantId ? { TenantId: s.TenantId, Sucursal: s.Sucursal ?? '', Cultura: s.Cultura ?? '' } : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private clearSucursal(): void {
+    this.cookieService.delete(LoginComponent.SUCURSAL_COOKIE, '/', this.cookieDomain());
   }
 
   /**
@@ -198,8 +251,7 @@ export class LoginComponent implements OnInit {
 
   /**
    * Construye la sesión con los tokens de Keycloak y ejecuta la orquestación
-   * post-login (roles, estación, cultura, config y navegación). Es la misma
-   * lógica que antes seguía al ROPC, ahora alimentada por el redirect flow.
+   * post-login (roles, estación, cultura, config y navegación).
    */
   private completarSesion(
     token: string,
@@ -222,8 +274,6 @@ export class LoginComponent implements OnInit {
     }
 
     if (this.CurrentIP) {
-      // Guardar sesión con token ANTES de llamar a la API,
-      // para que el interceptor pueda adjuntar el Authorization header.
       const session = new Session(
         token,
         refreshToken,
@@ -236,7 +286,6 @@ export class LoginComponent implements OnInit {
       this.storageService.setCurrentSession(session);
       this.inicializarCulturaUsuario(session, usuario);
 
-      // La estación manda sobre el rol para determinar la ruta.
       this.estacionService.getAll().subscribe({
         next: (estResp) => {
           this.spinnerService.hide();
@@ -270,7 +319,6 @@ export class LoginComponent implements OnInit {
       });
 
     } else {
-      // Sin cookie de estación: solo admin puede continuar (hacia dashboard).
       if (!isAdmin) {
         this.spinnerService.hide();
         Swal.fire({
@@ -331,8 +379,6 @@ export class LoginComponent implements OnInit {
         this.textCatalog.setCulture(session.Cultura);
       },
       error: () => {
-        // La preferencia es opcional. Ante un fallo se conserva el valor
-        // predeterminado del tenant y el inicio de sesión puede continuar.
         this.textCatalog.setCulture(session.CulturaTenant);
       },
     });
@@ -378,46 +424,6 @@ export class LoginComponent implements OnInit {
   private logoutAndReturnToLogin(): void {
     try { this.storageService.logout?.(); } catch {}
     this.router.navigateByUrl('/iniciar-sesion');
-  }
-
-  // ── Forgot password ───────────────────────────────────────────────────────
-
-  openForgotPassword(): void {
-    this.forgotUsername = '';
-    this.forgotSent     = false;
-    this.forgotError    = '';
-    this.showForgotPassword = true;
-  }
-
-  closeForgotPassword(): void {
-    this.showForgotPassword = false;
-    this.forgotSent  = false;
-    this.forgotError = '';
-  }
-
-  sendForgotPassword(): void {
-    const username = this.forgotUsername.trim();
-    const tenant   = this.loginForm?.controls['tenant']?.value;
-
-    if (!username || !tenant?.TenantId) {
-      this.forgotError = this.textCatalog.get('selectBranchAndUser');
-      return;
-    }
-
-    this.forgotSending = true;
-    this.forgotError   = '';
-
-    this.usuarioService.forgotPassword(username, tenant.TenantId).subscribe({
-      next: () => {
-        this.forgotSending = false;
-        this.forgotSent    = true;
-      },
-      error: () => {
-        this.forgotSending = false;
-        // Siempre mostramos éxito (no revelar si el usuario existe)
-        this.forgotSent = true;
-      },
-    });
   }
 
   // ── PWA ───────────────────────────────────────────────────────────────────

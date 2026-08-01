@@ -13,118 +13,40 @@
     <!-- Card del formulario -->
     <div class="login-card">
 
-      <!-- ── Vista: Login normal ─────────────────────────────────────────── -->
-      <ng-container *ngIf="!showForgotPassword">
-        <form [formGroup]="loginForm" (ngSubmit)="login()">
-          <div *ngIf="!loginValid" class="error-banner">
-            {{ 'invalidCredentials' | tenantText }}
-          </div>
+      <!-- ── Vista: Selección de sucursal (paso 1) ───────────────────────── -->
+      <form [formGroup]="loginForm" (ngSubmit)="login()">
+        <h2 class="step-title">Selecciona tu sucursal</h2>
+        <p class="step-subtitle">Elige el local y continúa para iniciar sesión.</p>
 
-          <!-- Selector de sucursal -->
-          <div class="form-group">
-            <label for="tenant">{{ 'branch' | tenantText }}</label>
-            <div class="custom-select">
-              <select id="tenant" formControlName="tenant" required>
-                <option *ngFor="let t of tenantDefault" [ngValue]="t">{{ t.Sucursal }}</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Usuario y contraseña se ingresan en la página segura de Keycloak (redirect flow). -->
-
-          <!-- Botón principal -->
-          <button
-            type="submit"
-            class="login-button"
-            [disabled]="isSubmitting || loginForm.invalid">
-            <ng-container *ngIf="!isSubmitting; else loadingTpl">
-              {{ 'signIn' | tenantText }}
-            </ng-container>
-            <ng-template #loadingTpl>
-              <span aria-busy="true">{{ 'signingIn' | tenantText }}</span>
-            </ng-template>
-          </button>
-
-          <!-- Link olvidé contraseña -->
-          <div class="forgot-link-row">
-            <button type="button" class="forgot-link" (click)="openForgotPassword()">
-              {{ 'forgotPassword' | tenantText }}
-            </button>
-          </div>
-        </form>
-      </ng-container>
-
-      <!-- ── Vista: Recuperar contraseña ────────────────────────────────── -->
-      <ng-container *ngIf="showForgotPassword">
-        <div class="forgot-view">
-
-          <!-- Éxito -->
-          <ng-container *ngIf="forgotSent">
-            <div class="forgot-success">
-              <div class="forgot-success__icon">✉</div>
-              <h2 class="forgot-success__title">
-                {{ 'checkYourEmail' | tenantText }}
-              </h2>
-              <p class="forgot-success__msg">
-                {{ 'resetEmailSentPrefix' | tenantText }}
-                <strong>{{ forgotUsername }}</strong>
-                {{ 'resetEmailSentSuffix' | tenantText }}
-              </p>
-            </div>
-            <button type="button" class="login-button" (click)="closeForgotPassword()">
-              {{ 'backToLogin' | tenantText }}
-            </button>
-          </ng-container>
-
-          <!-- Formulario -->
-          <ng-container *ngIf="!forgotSent">
-            <div class="forgot-header">
-              <button type="button" class="forgot-back"
-                      (click)="closeForgotPassword()"
-                      [title]="'back' | tenantText">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="15 18 9 12 15 6"/>
-                </svg>
-              </button>
-              <div>
-                <h2 class="forgot-title">
-                  {{ 'recoverPassword' | tenantText }}
-                </h2>
-                <p class="forgot-subtitle">
-                  {{ 'recoverPasswordHint' | tenantText }}
-                </p>
-              </div>
-            </div>
-
-            <div *ngIf="forgotError" class="error-banner">{{ forgotError }}</div>
-
-            <div class="form-group">
-              <label for="forgot-username">{{ 'user' | tenantText }}</label>
-              <input
-                id="forgot-username"
-                type="text"
-                [(ngModel)]="forgotUsername"
-                [placeholder]="'usernameNamePlaceholder' | tenantText"
-                autocomplete="username" />
-            </div>
-
-            <button
-              type="button"
-              class="login-button"
-              [disabled]="forgotSending || !forgotUsername.trim()"
-              (click)="sendForgotPassword()">
-              <ng-container *ngIf="!forgotSending; else sendingTpl">
-                {{ 'sendInstructions' | tenantText }}
-              </ng-container>
-              <ng-template #sendingTpl>
-                <span aria-busy="true">{{ 'sending' | tenantText }}</span>
-              </ng-template>
-            </button>
-          </ng-container>
-
+        <div *ngIf="!loginValid" class="error-banner">
+          {{ 'invalidCredentials' | tenantText }}
         </div>
-      </ng-container>
+
+        <!-- Selector de sucursal -->
+        <div class="form-group">
+          <label for="tenant">{{ 'branch' | tenantText }}</label>
+          <div class="custom-select">
+            <select id="tenant" formControlName="tenant" required>
+              <option *ngFor="let t of tenantDefault" [ngValue]="t">{{ t.Sucursal }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- La contraseña (y "olvidé mi contraseña") se gestionan en la página
+             segura de Keycloak, en el siguiente paso. -->
+
+        <button
+          type="submit"
+          class="login-button"
+          [disabled]="isSubmitting || loginForm.invalid">
+          <ng-container *ngIf="!isSubmitting; else loadingTpl">
+            {{ 'signIn' | tenantText }}
+          </ng-container>
+          <ng-template #loadingTpl>
+            <span aria-busy="true">{{ 'signingIn' | tenantText }}</span>
+          </ng-template>
+        </button>
+      </form>
 
     </div>
 
