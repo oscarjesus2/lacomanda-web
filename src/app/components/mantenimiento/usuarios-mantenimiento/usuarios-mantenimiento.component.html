@@ -151,46 +151,16 @@
         </button>
       </div>
 
-      <!-- Sección inline para cambiar contraseña -->
+      <!-- Sección inline para cambiar contraseña (redirige a Keycloak) -->
       <div *ngIf="usuario.IdUsuario && showCambiarPassword" class="usr-pwd-section">
         <p class="usr-pwd-section__title">{{ 'changePassword' | tenantText }}</p>
-
-        <div class="form-row">
-          <mat-form-field appearance="fill">
-            <mat-label>{{ 'currentPassword' | tenantText }}</mat-label>
-            <input matInput [type]="hideActual() ? 'password' : 'text'"
-                   [(ngModel)]="pwd.PasswordActual" name="pwdActual">
-            <button mat-icon-button matSuffix type="button" (click)="hideActual.set(!hideActual())">
-              <mat-icon>{{ hideActual() ? 'visibility_off' : 'visibility' }}</mat-icon>
-            </button>
-          </mat-form-field>
-
-          <mat-form-field appearance="fill">
-            <mat-label>{{ 'newPassword' | tenantText }}</mat-label>
-            <input matInput [type]="hideNueva() ? 'password' : 'text'"
-                   [(ngModel)]="pwd.PasswordNueva" name="pwdNueva">
-            <button mat-icon-button matSuffix type="button" (click)="hideNueva.set(!hideNueva())">
-              <mat-icon>{{ hideNueva() ? 'visibility_off' : 'visibility' }}</mat-icon>
-            </button>
-          </mat-form-field>
-
-          <mat-form-field appearance="fill">
-            <mat-label>{{ 'confirmPassword' | tenantText }}</mat-label>
-            <input matInput [type]="hideConfirmar() ? 'password' : 'text'"
-                   [(ngModel)]="pwd.PasswordConfirmar" name="pwdConfirmar">
-            <button mat-icon-button matSuffix type="button" (click)="hideConfirmar.set(!hideConfirmar())">
-              <mat-icon>{{ hideConfirmar() ? 'visibility_off' : 'visibility' }}</mat-icon>
-            </button>
-            <mat-hint *ngIf="pwd.PasswordNueva && pwd.PasswordConfirmar && pwd.PasswordNueva !== pwd.PasswordConfirmar"
-                      class="usr-pwd-mismatch">
-              {{ 'passwordsDoNotMatch' | tenantText }}
-            </mat-hint>
-          </mat-form-field>
-        </div>
-
+        <p class="usr-pwd-section__hint">
+          Serás redirigido a la página segura de Keycloak para cambiar tu contraseña.
+          La contraseña no pasa por la aplicación.
+        </p>
         <button mat-raised-button color="primary" type="button" (click)="guardarPassword()">
-          <mat-icon>save</mat-icon>
-          {{ 'savePassword' | tenantText }}
+          <mat-icon>key</mat-icon>
+          {{ 'changePassword' | tenantText }}
         </button>
       </div>
     </form>

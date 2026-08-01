@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Usuario, UsuarioUpdateDto, CambiarPasswordDto } from '../models/usuario.models';
+import { Usuario, UsuarioUpdateDto } from '../models/usuario.models';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 
@@ -52,10 +52,9 @@ export class UsuarioService {
     return this.http.put<ApiResponse<Usuario>>(`${this.basePath}/${usuario.IdUsuario}`, dto);
   }
 
-  /** PUT /api/Usuario/{id}/cambiar-password */
-  cambiarPassword(idUsuario: number, dto: CambiarPasswordDto): Observable<void> {
-    return this.http.put<void>(`${this.basePath}/${idUsuario}/cambiar-password`, dto);
-  }
+  // cambiarPassword() (PUT .../cambiar-password) fue eliminado: el cambio de
+  // contraseña se realiza ahora directamente en Keycloak (UPDATE_PASSWORD),
+  // sin que la contraseña pase por el frontend ni por el backend.
 
   deleteUsuario(id: string): Observable<void> {
     return this.http.delete<void>(`${this.basePath}/${id}`);

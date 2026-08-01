@@ -50,18 +50,10 @@ export class KeycloakAuthService {
 
   // ── Operaciones ───────────────────────────────────────────────────────────
 
-  /** Login con username + password (ROPC). El realm es el TenantId del tenant seleccionado. */
-  login(username: string, password: string, realm: string): Observable<KeycloakTokenResponse> {
-    const body = new HttpParams()
-      .set('grant_type', 'password')
-      .set('client_id',  environment.keycloak.clientId)
-      .set('username',   username)
-      .set('password',   password);
-
-    return this.http.post<KeycloakTokenResponse>(this.tokenUrl(realm), body.toString(), {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
-  }
+  // El login por ROPC (grant_type=password) fue eliminado: las credenciales se
+  // ingresan ahora en la página de Keycloak vía Authorization Code + PKCE
+  // (ver KeycloakService). Aquí solo quedan refresh y logout, que operan con el
+  // refresh_token obtenido en ese flujo — grants estándar, no ROPC.
 
   /** Renueva el access_token. El realm viene del TenantID de la sesión activa. */
   refresh(refreshToken: string, realm: string): Observable<KeycloakTokenResponse> {

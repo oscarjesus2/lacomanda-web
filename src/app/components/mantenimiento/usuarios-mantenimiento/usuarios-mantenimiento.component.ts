@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, ViewChild } from '@angular/core';
-import { Usuario, CambiarPasswordDto } from '../../../models/usuario.models';
+import { Usuario } from '../../../models/usuario.models';
 
 import Swal from 'sweetalert2';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -12,6 +12,8 @@ import { EmpleadoService } from 'src/app/services/empleado.service';
 import { Empleado } from 'src/app/models/empleado.models';
 import { Nivel_UsuarioService } from 'src/app/services/nivel_usuario.service';
 import { Nivel_Usuario } from 'src/app/models/nivel_usuario.models';
+import { KeycloakService } from 'src/app/services/auth/keycloak.service';
+import { StorageService } from 'src/app/services/storage.service';
 
 @Component({
   selector: 'app-usuarios-mantenimiento',
@@ -35,7 +37,9 @@ export class UsuariosMantenimientoComponent implements OnInit {
     private usuarioService: UsuarioService,
     private spinnerService: NgxSpinnerService,
     private empleadoService: EmpleadoService,
-    private nivelUsuarioService: Nivel_UsuarioService) {}
+    private nivelUsuarioService: Nivel_UsuarioService,
+    private keycloak: KeycloakService,
+    private storage: StorageService) {}
     @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
       if (value) {
         this.filteredusuarios.paginator = value;
@@ -43,42 +47,28 @@ export class UsuariosMantenimientoComponent implements OnInit {
     }
 
   
-  // ── Visibilidad de passwords (solo para nuevo usuario y cambio de password) ──
-  hide         = signal(true);
-  hideActual   = signal(true);
-  hideNueva    = signal(true);
-  hideConfirmar = signal(true);
+  // ── Visibilidad de la contraseña (solo para el alta de un nuevo usuario) ──
+  hide = signal(true);
 
   clickEvent(event: MouseEvent) { this.hide.set(!this.hide()); event.stopPropagation(); }
 
   // ── Cambio de contraseña ──────────────────────────────────────────────────
+  // El cambio se realiza en la página de Keycloak (UPDATE_PASSWORD). La
+  // contraseña nunca pasa por la app: solo se redirige al usuario autenticado.
   showCambiarPassword: boolean = false;
-  pwd: CambiarPasswordDto = { PasswordActual: '', PasswordNueva: '', PasswordConfirmar: '' };
 
   toggleCambiarPassword(): void {
     this.showCambiarPassword = !this.showCambiarPassword;
-    this.pwd = { PasswordActual: '', PasswordNueva: '', PasswordConfirmar: '' };
   }
 
-  guardarPassword(): void {
-    if (!this.pwd.PasswordActual) {
-      Swal.fire('Validación', 'Ingrese la contraseña actual.', 'warning'); return;
+  async guardarPassword(): Promise<void> {
+    const realm = this.storage.getCurrentSession()?.TenantID;
+    if (!realm) {
+      Swal.fire('Sesión', 'No hay una sesión activa.', 'warning');
+      return;
     }
-    if (!this.pwd.PasswordNueva) {
-      Swal.fire('Validación', 'Ingrese la nueva contraseña.', 'warning'); return;
-    }
-    if (this.pwd.PasswordNueva !== this.pwd.PasswordConfirmar) {
-      Swal.fire('Validación', 'La nueva contraseña y la confirmación no coinciden.', 'warning'); return;
-    }
-    this.usuarioService.cambiarPassword(this.usuario.IdUsuario, this.pwd).subscribe({
-      next: () => {
-        Swal.fire('Contraseña actualizada', '', 'success');
-        this.toggleCambiarPassword();
-      },
-      error: () => {
-        Swal.fire('Error', 'No se pudo cambiar la contraseña. Verifique la contraseña actual.', 'error');
-      }
-    });
+    // Redirige a Keycloak para cambiar la contraseña del usuario autenticado.
+    await this.keycloak.beginPasswordUpdate(realm);
   }
 
   ngOnInit(): void {

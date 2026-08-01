@@ -14,7 +14,7 @@ services:
     environment:
           NG_CLI_ANALYTICS: "false"
 
-    command: npx ng serve --host 0.0.0.0 --poll 1000
+    command: sh -c "npm install && npx ng serve --host 0.0.0.0 --poll 1000"
     
     stdin_open: true
     tty: true
