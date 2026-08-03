@@ -1,0 +1,15 @@
+# Certificado comodín (cert-manager + Let's Encrypt DNS-01 vía IONOS) para los
+# subdominios de tenant en producción. cert-manager crea el Secret
+# wildcard-lacomanda-tls que usa el ingress. Requiere el ClusterIssuer
+# "letsencrypt-ionos" ya instalado (ver el README de wildcard en infra).
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-lacomanda
+spec:
+  secretName: wildcard-lacomanda-tls
+  issuerRef:
+    name: letsencrypt-ionos
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.lacomanda.store"

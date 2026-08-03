@@ -5,11 +5,29 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: "gce"
     kubernetes.io/ingress.global-static-ip-name: "frontend-staging-global-ip"
-    networking.gke.io/managed-certificates: "frontend-cert"
     networking.gke.io/frontend-config: "frontend-frontendconfig"
 spec:
+  # TLS por cert-manager (Secret wildcard-lacomanda-tls). El cert comodín cubre
+  # también app.staging (una etiqueta bajo staging.lacomanda.store), así que ya
+  # no se usa el managed cert de Google.
+  tls:
+    - hosts:
+        - "app.staging.lacomanda.store"
+        - "*.staging.lacomanda.store"
+      secretName: wildcard-lacomanda-tls
   rules:
     - host: app.staging.lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+    # Subdominios de tenant (<tenant>.staging.lacomanda.store) → mismo frontend.
+    - host: "*.staging.lacomanda.store"
       http:
         paths:
           - path: /

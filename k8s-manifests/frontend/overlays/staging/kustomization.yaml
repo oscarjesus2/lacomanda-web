@@ -7,7 +7,7 @@ resources:
 - ../../base
 - namespace.yaml
 - ingress.yaml
-- managed-cert.yaml
+- certificate.yaml
 - frontendconfig.yaml
 
 images:
