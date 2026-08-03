@@ -8,8 +8,7 @@ metadata:
     networking.gke.io/frontend-config: "frontend-frontendconfig"
 spec:
   # TLS por cert-manager (Secret wildcard-lacomanda-tls). El cert comodín cubre
-  # también app.staging (una etiqueta bajo staging.lacomanda.store), así que ya
-  # no se usa el managed cert de Google.
+  # también app.staging (una etiqueta bajo staging.lacomanda.store).
   tls:
     - hosts:
         - "app.staging.lacomanda.store"
