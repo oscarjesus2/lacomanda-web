@@ -125,6 +125,78 @@ export class EspaciosMantenimientoComponent implements OnInit {
     this.showForm = true;
   }
 
+  imprimirQr(espacio: Espacios): void {
+    this.spinnerService.show();
+    this.espacioService.obtenerQrPdf(espacio.IdEspacio).subscribe({
+      next: blob => {
+        this.spinnerService.hide();
+        this.abrirPdf(blob);
+      },
+      error: () => {
+        this.spinnerService.hide();
+        Swal.fire('Error', 'No se pudo generar el QR del espacio.', 'error');
+      }
+    });
+  }
+
+  imprimirTodosLosQr(): void {
+    this.spinnerService.show();
+    this.espacioService.obtenerTodosQrPdf().subscribe({
+      next: blob => {
+        this.spinnerService.hide();
+        this.abrirPdf(blob);
+      },
+      error: () => {
+        this.spinnerService.hide();
+        Swal.fire('Error', 'No se pudo generar el documento con todos los QR.', 'error');
+      }
+    });
+  }
+
+  regenerarQr(espacio: Espacios): void {
+    Swal.fire({
+      title: '¿Regenerar el QR?',
+      text: 'El QR que ya esté impreso dejará de funcionar.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, regenerar',
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (!result.isConfirmed) {
+        return;
+      }
+
+      this.spinnerService.show();
+      this.espacioService.regenerarQrPdf(espacio.IdEspacio).subscribe({
+        next: blob => {
+          this.spinnerService.hide();
+          this.abrirPdf(blob);
+          Swal.fire('QR regenerado', 'Imprime y reemplaza el QR anterior.', 'success');
+        },
+        error: () => {
+          this.spinnerService.hide();
+          Swal.fire('Error', 'No se pudo regenerar el QR.', 'error');
+        }
+      });
+    });
+  }
+
+  private abrirPdf(blob: Blob): void {
+    const url = URL.createObjectURL(blob);
+    const nuevaVentana = window.open(url, '_blank');
+    if (!nuevaVentana) {
+      URL.revokeObjectURL(url);
+      Swal.fire(
+        'Ventana bloqueada',
+        'Permite las ventanas emergentes para abrir el documento PDF.',
+        'info'
+      );
+      return;
+    }
+
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
     onDelete(id: number): void {
       Swal.fire({
         title: '¿Estás seguro?',

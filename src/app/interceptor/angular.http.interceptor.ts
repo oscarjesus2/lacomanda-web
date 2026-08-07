@@ -27,6 +27,7 @@ import { KeycloakAuthService } from '../services/auth/keycloak-auth.service';
 import { NotificationService } from '../services/notification.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { BackendStatusService } from '../services/backend-status.service';
+import { environment } from 'src/environments/environment';
 
 interface ApiErrorResponse {
   Success?: boolean;
@@ -53,6 +54,9 @@ export class ApiRequestInterceptor implements HttpInterceptor {
    * que reciban 401 simultáneamente.
    */
   private refreshRequest$: Observable<string> | null = null;
+
+  /** Evita mostrar varios avisos cuando las cargas iniciales fallan a la vez. */
+  private subscriptionBlockDialogOpen = false;
 
   private readonly UTC_DATE_REGEX =
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
@@ -144,6 +148,12 @@ export class ApiRequestInterceptor implements HttpInterceptor {
 
     // El backend respondió, aunque haya respondido con error.
     this.backendStatus.markUp();
+
+    if (error.status === 402 && this.isSubscriptionAccessError(error)) {
+      this.handleSubscriptionAccessError(error);
+      this.spinnerService.hide();
+      return throwError(() => error);
+    }
 
     // Renovación automática del token.
     if (error.status === 401 && allowTokenRefresh) {
@@ -458,6 +468,58 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     }
 
     return request.clone({ setHeaders: headers });
+  }
+
+  private isSubscriptionAccessError(error: HttpErrorResponse): boolean {
+    const body = error.error as ApiErrorResponse & { errorCode?: string };
+    const errorCode = body?.ErrorCode || body?.errorCode || '';
+
+    return [
+      'SUBSCRIPTION_PAYMENT_REQUIRED',
+      'SUBSCRIPTION_EXPIRED',
+      'SUBSCRIPTION_CANCELLED',
+      'SUBSCRIPTION_NOT_ACTIVE'
+    ].includes(errorCode);
+  }
+
+  private handleSubscriptionAccessError(error: HttpErrorResponse): void {
+    if (this.subscriptionBlockDialogOpen) {
+      return;
+    }
+
+    this.subscriptionBlockDialogOpen = true;
+    const body = error.error as ApiErrorResponse & { errorCode?: string };
+    const errorCode = body?.ErrorCode || body?.errorCode || '';
+    const title = errorCode === 'SUBSCRIPTION_PAYMENT_REQUIRED'
+      ? 'Suscripción pendiente de pago'
+      : errorCode === 'SUBSCRIPTION_EXPIRED'
+        ? 'Suscripción vencida'
+        : errorCode === 'SUBSCRIPTION_CANCELLED'
+          ? 'Suscripción cancelada'
+          : 'Suscripción no activa';
+
+    this.dialog.closeAll();
+    this.clearRememberedTenant();
+    this.storageService.logout();
+
+    void Swal.fire({
+      icon: 'warning',
+      title,
+      text: this.getErrorMessage(error),
+      confirmButtonText: 'Ir al Portal de Clientes',
+      allowEscapeKey: false,
+      allowOutsideClick: false
+    }).then(() => {
+      window.location.assign(environment.customerPortalUrl);
+    }).finally(() => {
+      this.subscriptionBlockDialogOpen = false;
+    });
+  }
+
+  private clearRememberedTenant(): void {
+    const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `lc_sucursal=; Max-Age=0; Path=/; SameSite=Lax${secure}`;
+    document.cookie = `lc_sucursal=; Max-Age=0; Path=/; Domain=.lacomanda.store; SameSite=Lax${secure}`;
   }
 
   private forceLogout(): void {

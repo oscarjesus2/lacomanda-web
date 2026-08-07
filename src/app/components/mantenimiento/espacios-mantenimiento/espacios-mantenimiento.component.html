@@ -7,7 +7,16 @@
 
   <!-- Lista de Mesas -->
   <div class="empleados-list" *ngIf="!showForm">
-    <button mat-raised-button color="primary" (click)="nuevaEspacio()">{{ 'newSpace' | tenantText }}</button>
+    <div class="mant-actions-bar">
+      <button mat-raised-button color="primary" (click)="nuevaEspacio()">
+        <mat-icon>add</mat-icon>
+        {{ 'newSpace' | tenantText }}
+      </button>
+      <button mat-stroked-button color="primary" (click)="imprimirTodosLosQr()">
+        <mat-icon>qr_code_2</mat-icon>
+        IMPRIMIR TODOS LOS QR
+      </button>
+    </div>
 
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>{{ 'search' | tenantText }}</mat-label>
@@ -59,6 +68,12 @@
           <button mat-icon-button color="primary" (click)="onEdit(espacio)" [matTooltip]="'edit' | tenantText">
             <mat-icon>edit</mat-icon>
           </button>
+          <button mat-icon-button color="primary" (click)="imprimirQr(espacio)" matTooltip="Imprimir QR">
+            <mat-icon>qr_code_2</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="regenerarQr(espacio)" matTooltip="Regenerar QR">
+            <mat-icon>refresh</mat-icon>
+          </button>
           <button mat-icon-button color="warn" (click)="onDelete(espacio.IdEspacio)" [matTooltip]="'delete' | tenantText">
             <mat-icon>delete</mat-icon>
           </button>
@@ -73,7 +88,7 @@
   </div>
 </div>
   <!-- Formulario -->
-  <form *ngIf="showForm" #mesaForm="ngForm" (ngSubmit)="onSubmit()">
+  <form *ngIf="showForm" #espacioForm="ngForm" (ngSubmit)="onSubmit()">
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>{{ 'description' | tenantText }}</mat-label>

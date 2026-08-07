@@ -50,4 +50,26 @@ export class EspaciosService {
   ImprimirPrecuenta(idEspacio: number): Observable<any[]> {
     return this.http.get<any[]>('/api/pedido/imprimirprecuenta/' + idEspacio);
   }
+
+  obtenerQrPdf(idEspacio: number): Observable<Blob> {
+    return this.http.get(
+      `${environment.apiUrl}/espacio-qr/${idEspacio}/pdf`,
+      { responseType: 'blob' }
+    );
+  }
+
+  obtenerTodosQrPdf(): Observable<Blob> {
+    return this.http.get(
+      `${environment.apiUrl}/espacio-qr/pdf`,
+      { responseType: 'blob' }
+    );
+  }
+
+  regenerarQrPdf(idEspacio: number): Observable<Blob> {
+    return this.http.post(
+      `${environment.apiUrl}/espacio-qr/${idEspacio}/regenerar`,
+      {},
+      { responseType: 'blob' }
+    );
+  }
 }

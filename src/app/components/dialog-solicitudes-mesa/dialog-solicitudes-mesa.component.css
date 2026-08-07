@@ -1,0 +1,12 @@
+.qr-dialog { position: relative; min-width: min(720px, 82vw); max-height: 78vh; overflow: auto; padding: 26px; box-sizing: border-box; }
+.close-button { position: absolute; top: 10px; right: 10px; }
+h2 { margin: 0 0 4px; color: #8e0c0c; letter-spacing: .08em; }
+.subtitle { margin: 0 0 22px; color: #7c7069; }
+.empty-state { min-height: 230px; display: grid; place-content: center; justify-items: center; gap: 8px; color: #81756d; }
+.empty-state mat-icon { width: 48px; height: 48px; font-size: 48px; }
+.request-card { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 22px; padding: 18px; margin-bottom: 12px; border: 1px solid #ead6c8; border-radius: 14px; background: #fff9f4; }
+.request-card h3 { margin: 3px 0; font-size: 20px; }
+.environment { color: #9a1d08; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.request-code { padding: 11px 13px; border-radius: 10px; background: #fff; color: #9a1d08; font: 800 24px/1 monospace; letter-spacing: .12em; }
+.request-actions { display: flex; gap: 8px; }
+@media (max-width: 700px) { .qr-dialog { min-width: 0; } .request-card { grid-template-columns: 1fr auto; } .request-actions { grid-column: 1 / -1; justify-content: flex-end; } }

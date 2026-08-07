@@ -59,6 +59,9 @@
         <button (click)="Refresh()">
           <fa-icon [icon]="faSync"></fa-icon> {{ 'refresh' | tenantText }}
         </button>
+        <button *ngIf="isEspacio" (click)="abrirSolicitudesMesa()">
+          <mat-icon>qr_code_scanner</mat-icon> SOLICITUDES QR
+        </button>
       </div>
     </div>
     <div class="middle-section">

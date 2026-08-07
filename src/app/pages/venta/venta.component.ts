@@ -77,6 +77,7 @@ import { CanalVentaEnum } from 'src/app/enums/enum';
 import { DialogDeliveryComponent } from 'src/app/components/dialog-delivery/dialog-delivery.component';
 import { DeliveryDialogResult } from 'src/app/models/delivery.models';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { DialogSolicitudesMesaComponent } from 'src/app/components/dialog-solicitudes-mesa/dialog-solicitudes-mesa.component';
 
 @Component({
   selector: 'app-venta',
@@ -623,6 +624,23 @@ export class VentaComponent implements OnInit, AfterViewInit {
   /** true cuando hay una mesa activa seleccionada */
   get mesaSeleccionada(): boolean {
     return !!this.espacioSelected?.IdEspacio;
+  }
+
+  abrirSolicitudesMesa(): void {
+    if (!this.turnoAbierto?.IdCaja || !this.turnoAbierto?.IdTurno) {
+      Swal.fire('Turno requerido', 'Abre un turno antes de confirmar solicitudes de mesa.', 'info');
+      return;
+    }
+
+    this.dialog.open(DialogSolicitudesMesaComponent, {
+      width: '820px',
+      maxWidth: '96vw',
+      data: {
+        idCaja: this.turnoAbierto.IdCaja,
+        idTurno: this.turnoAbierto.IdTurno,
+        identificadorEstacion: this.storageService.getCurrentIP() || ''
+      }
+    });
   }
 
   /** El pedido ya existe en el backend y tiene una cuenta válida. */

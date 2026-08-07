@@ -317,9 +317,12 @@ export class LoginComponent implements OnInit {
             this.ensureConfigThenNavigate('/dashboard');
           }
         },
-        error: () => {
+        error: (error) => {
           this.spinnerService.hide();
           this.storageService.removeCurrentSession();
+          if (error?.status === 402) {
+            return;
+          }
           this.notificationService.showError(this.textCatalog.get('couldNotLoadStations'));
           this.loadTenants();
         }

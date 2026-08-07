@@ -113,6 +113,8 @@ import { DialogDeliveryComponent } from './components/dialog-delivery/dialog-del
 import { DialogMenuComponent } from './components/dialog-menu/dialog-menu.component';
 import { SocioNegocioMantenimientoComponent } from './components/mantenimiento/socio-negocio-mantenimiento/socio-negocio-mantenimiento.component';
 import { TenantTextPipe } from './pipes/tenant-text.pipe';
+import { MesaClienteComponent } from './pages/mesa-cliente/mesa-cliente.component';
+import { DialogSolicitudesMesaComponent } from './components/dialog-solicitudes-mesa/dialog-solicitudes-mesa.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -199,6 +201,8 @@ export const MY_DATE_FORMATS = {
     DialogMenuComponent,
     SocioNegocioMantenimientoComponent,
     TenantTextPipe,
+    MesaClienteComponent,
+    DialogSolicitudesMesaComponent,
   ],
   imports: [
     CommonModule,

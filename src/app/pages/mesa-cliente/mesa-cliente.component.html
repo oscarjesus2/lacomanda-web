@@ -1,0 +1,43 @@
+<main class="mesa-cliente-page">
+  <section class="mesa-cliente-card" aria-live="polite">
+    <div class="brand-mark"><mat-icon>room_service</mat-icon></div>
+    <p class="eyebrow">LA COMANDA</p>
+
+    <div *ngIf="cargando" class="state-block">
+      <mat-icon class="state-icon state-icon--spin">progress_activity</mat-icon>
+      <h1>Abriendo la mesa</h1>
+      <p>Estamos comprobando el código QR.</p>
+    </div>
+
+    <div *ngIf="!cargando && pendiente" class="state-block">
+      <p class="location">{{ solicitud?.Ambiente || estado?.Ambiente }} · {{ nombreEspacio }}</p>
+      <h1>Confirma que estás en la mesa</h1>
+      <p>Muestra este código al camarero o al cajero. Nadie podrá pedir desde fuera del restaurante sin esta confirmación.</p>
+      <div class="visual-code">{{ solicitud?.CodigoVisual || estado?.CodigoVisual }}</div>
+      <div class="waiting"><span></span> Esperando confirmación del personal…</div>
+    </div>
+
+    <div *ngIf="!cargando && activa" class="state-block">
+      <mat-icon class="state-icon state-icon--success">check_circle</mat-icon>
+      <p class="location">{{ estado?.Ambiente }} · {{ nombreEspacio }}</p>
+      <h1>Mesa confirmada</h1>
+      <p>Ya puedes consultar la carta y realizar pedidos desde este dispositivo.</p>
+      <div class="secure-note"><mat-icon>verified_user</mat-icon>La sesión se cerrará automáticamente cuando el personal libere la mesa.</div>
+    </div>
+
+    <div *ngIf="!cargando && finalizada" class="state-block">
+      <mat-icon class="state-icon">lock_clock</mat-icon>
+      <h1>Esta solicitud ya terminó</h1>
+      <p *ngIf="estado?.Estado === 'Rechazada'">El personal rechazó la solicitud. Si estás en la mesa, solicita ayuda.</p>
+      <p *ngIf="estado?.Estado !== 'Rechazada'">Escanea nuevamente el QR si sigues en el restaurante.</p>
+      <button mat-raised-button color="primary" (click)="reintentar()">VOLVER A SOLICITAR</button>
+    </div>
+
+    <div *ngIf="!cargando && error" class="state-block">
+      <mat-icon class="state-icon state-icon--error">error_outline</mat-icon>
+      <h1>No pudimos continuar</h1>
+      <p>{{ error }}</p>
+      <button mat-raised-button color="primary" (click)="reintentar()">REINTENTAR</button>
+    </div>
+  </section>
+</main>

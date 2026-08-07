@@ -13,12 +13,14 @@ import { AdministracionComponent } from './pages/administracion/administracion.c
 // import { ClientesComponent } from './pages/ventas/clientes/clientes.component';
 import { DialogTurnoComponent } from '../app/components/dialog-turno/dialog-turno.component';
 import { QzTrayRequiredComponent } from './qz-tray-required/qz-tray-required.component';
+import { MesaClienteComponent } from './pages/mesa-cliente/mesa-cliente.component';
 // DigitacionMozoComponent reemplazado por VentaComponent con isModoMozo=true
 
 // Importa más componentes según sea necesario...
 
 const routes: Routes = [ 
 
+  { path: 'mesa/:codigoQr', component: MesaClienteComponent },
   { path: 'qz-tray-required', component: QzTrayRequiredComponent },
 {
   path:'', redirectTo:'/dashboard', pathMatch:'full'
