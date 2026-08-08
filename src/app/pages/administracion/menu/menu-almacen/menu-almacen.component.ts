@@ -8,6 +8,7 @@ import { RecetaMantenimientoComponent } from 'src/app/components/mantenimiento/r
 import { SubAreaAlmacenMantenimientoComponent } from 'src/app/components/mantenimiento/subarea-almacen-mantenimiento/subarea-almacen-mantenimiento.component';
 import { EntradaCompraMantenimientoComponent } from 'src/app/components/mantenimiento/entrada-compra-mantenimiento/entrada-compra-mantenimiento.component';
 import { ProveedorMantenimientoComponent } from 'src/app/components/mantenimiento/proveedor-mantenimiento/proveedor-mantenimiento.component';
+import { SalidaInternaMantenimientoComponent } from 'src/app/components/mantenimiento/salida-interna-mantenimiento/salida-interna-mantenimiento.component';
 
 @Component({
   selector: 'app-menu-almacen',
@@ -80,6 +81,7 @@ export class MenuAlmacenComponent implements OnInit {
     },
     {
       title: 'Salidas',
+      action: 'salidasInternas',
       icon: 'outbox',
       label: 'Salidas',
       titleKey: 'stockOut',
@@ -131,7 +133,8 @@ export class MenuAlmacenComponent implements OnInit {
       areasAlmacen: AreaAlmacenMantenimientoComponent,
       subareasAlmacen: SubAreaAlmacenMantenimientoComponent,
       proveedores: ProveedorMantenimientoComponent,
-      ingresosCompra: EntradaCompraMantenimientoComponent
+      ingresosCompra: EntradaCompraMantenimientoComponent,
+      salidasInternas: SalidaInternaMantenimientoComponent
     };
     const component = components[item.action];
     if (!component) {

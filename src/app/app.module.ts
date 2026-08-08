@@ -115,6 +115,7 @@ import { SocioNegocioMantenimientoComponent } from './components/mantenimiento/s
 import { TenantTextPipe } from './pipes/tenant-text.pipe';
 import { MesaClienteComponent } from './pages/mesa-cliente/mesa-cliente.component';
 import { DialogSolicitudesMesaComponent } from './components/dialog-solicitudes-mesa/dialog-solicitudes-mesa.component';
+import { SalidaInternaMantenimientoComponent } from './components/mantenimiento/salida-interna-mantenimiento/salida-interna-mantenimiento.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -203,6 +204,7 @@ export const MY_DATE_FORMATS = {
     TenantTextPipe,
     MesaClienteComponent,
     DialogSolicitudesMesaComponent,
+    SalidaInternaMantenimientoComponent,
   ],
   imports: [
     CommonModule,
