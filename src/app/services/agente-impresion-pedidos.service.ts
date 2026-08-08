@@ -6,6 +6,7 @@ import { TrabajoImpresion } from '../models/trabajo-impresion.models';
 import { QzTrayV224Service } from './qz-tray-v224.service';
 import { StorageService } from './storage.service';
 import { TrabajosImpresionService } from './trabajos-impresion.service';
+import { DeviceCapabilitiesService } from './device-capabilities.service';
 
 /**
  * Agente global de impresión de comandas. SignalR solo despierta al agente;
@@ -27,10 +28,12 @@ export class AgenteImpresionPedidosService {
     private readonly trabajos: TrabajosImpresionService,
     private readonly qz: QzTrayV224Service,
     private readonly zone: NgZone,
+    private readonly deviceCapabilities: DeviceCapabilitiesService,
   ) {}
 
   iniciar(): void {
-    if (!this.detenido) return;
+    if (!this.detenido
+        || !this.deviceCapabilities.requiresLocalPrintBridge()) return;
     this.detenido = false;
     this.intervaloSondeo = setInterval(
       () => void this.mantenerAgente(),

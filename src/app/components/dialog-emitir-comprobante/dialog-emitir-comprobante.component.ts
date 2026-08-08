@@ -39,6 +39,7 @@ import { TipoDocumentoPaisService } from 'src/app/services/tipo-documento-pais.s
 import { CajaTipoDocumento } from 'src/app/models/caja-tipo-documento.model';
 import { CajaTipoDocumentoService } from 'src/app/services/caja-tipo-documento.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { DeviceCapabilitiesService } from 'src/app/services/device-capabilities.service';
 
 
 @Component({
@@ -131,6 +132,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     private configuracionService: ConfiguracionService,
     private monedaService: MonedaService,
     private texts: TenantTextCatalogService,
+    private deviceCapabilities: DeviceCapabilitiesService,
   ) {
     this.dataSourcePago = new MatTableDataSource([]);
     this.nuevoRegistro.Tarjeta = new Tarjeta();
@@ -195,7 +197,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       }
     });
 
-    if (this.idTipoPedido != '004') {
+    if (this.idTipoPedido != '004'
+        && this.deviceCapabilities.requiresLocalPrintBridge()) {
       const isRunning = await this.qzTrayService.isQzTrayRunning();
       if (!isRunning) {
         this.router.navigate(['/qz-tray-required']);

@@ -80,6 +80,7 @@ import { DeliveryDialogResult } from 'src/app/models/delivery.models';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { MesaClienteService } from 'src/app/services/mesa-cliente.service';
 import { SolicitudMesaPendiente } from 'src/app/models/mesa-cliente.models';
+import { DeviceCapabilitiesService } from 'src/app/services/device-capabilities.service';
 
 @Component({
   selector: 'app-venta',
@@ -229,6 +230,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     private configuracionService: ConfiguracionService,
     private textCatalog: TenantTextCatalogService,
     private mesaClienteService: MesaClienteService,
+    private deviceCapabilities: DeviceCapabilitiesService,
     private activatedRoute: ActivatedRoute) {
 
 
@@ -430,11 +432,13 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.configuracionService.get().subscribe(cfg => this.config = cfg);
 
     this.enterFullScreen();
-    const isRunning = await this.qzTrayService.isQzTrayRunning();
-    if (!isRunning) {
-      this.router.navigate(['/qz-tray-required']);
-      return;
-    } 
+    if (this.deviceCapabilities.requiresLocalPrintBridge()) {
+      const isRunning = await this.qzTrayService.isQzTrayRunning();
+      if (!isRunning) {
+        this.router.navigate(['/qz-tray-required']);
+        return;
+      }
+    }
     this.spinnerService.show();
     this.headerService.hideHeader();
 
