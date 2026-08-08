@@ -536,6 +536,18 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       return value;
     }
 
+    // Las respuestas binarias (PDF, imÃ¡genes, exportaciones, etc.) no son
+    // objetos JSON y deben llegar intactas al consumidor. Recorrer un Blob
+    // lo convertÃ­a en {}, provocando que URL.createObjectURL fallara aunque
+    // la API hubiera respondido correctamente con 200.
+    if (
+      value instanceof Blob ||
+      value instanceof ArrayBuffer ||
+      value instanceof FormData
+    ) {
+      return value;
+    }
+
     if (typeof value === 'string') {
       return this.UTC_DATE_REGEX.test(value)
         ? new Date(value)
