@@ -968,6 +968,7 @@ export const EN_TEXTS = {
 
   // Initial setup (configuracion-inicial)
   initialSetup: 'Initial setup',
+  configurationMaintenance: 'Restaurant configuration',
   essentialBusinessData: 'Essential business details',
   initialSetupHint:
     'Complete only these details to start. Country, currency, fiscal identity and operating defaults are applied automatically.',

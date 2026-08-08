@@ -974,6 +974,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
 
   // Configuración inicial (configuracion-inicial)
   initialSetup: 'Configuración Inicial',
+  configurationMaintenance: 'Configuración del restaurante',
   essentialBusinessData: 'Datos indispensables del negocio',
   initialSetupHint:
     'Completa solo estos datos para empezar. El país, la moneda, la identidad fiscal y los valores operativos se aplican automáticamente.',

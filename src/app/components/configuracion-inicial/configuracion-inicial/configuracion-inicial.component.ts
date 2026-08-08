@@ -210,10 +210,10 @@ export class ConfiguracionInicialComponent implements OnInit {
 
     operacion.subscribe({
       next: () => {
-      this.snack.open(this.texts.get('configSaved'), this.texts.get('ok'), { duration: 2500 });
+        this.snack.open(this.texts.get('configSaved'), this.texts.get('ok'), { duration: 2500 });
       // ← importante: cerrar con 'true' para que el login sepa que ya está configurado
-      this.dialogRef.close(true);
-    },
+        this.dialogRef.close(true);
+      },
       error: (e) => this.snack.open(e?.error?.Message || this.texts.get('couldNotSave'), this.texts.get('ok'), { duration: 3000 })
     });
   }
