@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, map, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Configuracion } from '../models/configuracion.models';
+import { Configuracion, ConfiguracionInicial } from '../models/configuracion.models';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 
 @Injectable({ providedIn: 'root' })
@@ -44,6 +44,14 @@ export class ConfiguracionService {
 
   save(model: Configuracion): Observable<Configuracion> {
     return this.http.put<ApiResponse<Configuracion>>(`${this.base}`, model)
+      .pipe(
+        map(r => r.Data),
+        tap(cfg => this._config$.next(cfg))
+      );
+  }
+
+  saveInitial(model: ConfiguracionInicial): Observable<Configuracion> {
+    return this.http.put<ApiResponse<Configuracion>>(`${this.base}/inicial`, model)
       .pipe(
         map(r => r.Data),
         tap(cfg => this._config$.next(cfg))

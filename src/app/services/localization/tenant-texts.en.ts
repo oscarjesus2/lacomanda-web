@@ -968,6 +968,12 @@ export const EN_TEXTS = {
 
   // Initial setup (configuracion-inicial)
   initialSetup: 'Initial setup',
+  essentialBusinessData: 'Essential business details',
+  initialSetupHint:
+    'Complete only these details to start. Country, currency, fiscal identity and operating defaults are applied automatically.',
+  settingsAvailableLater:
+    'You can later disable or adjust any option included in your licence from Configuration.',
+  saveAndStart: 'Save and start',
   businessData: 'Business details',
   countryIso2: 'Country (ISO2)',
   defaultCurrency: 'Default currency',

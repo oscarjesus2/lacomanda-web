@@ -394,6 +394,7 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '920px',
+      data: { modoInicial: false },
     });
   }
 

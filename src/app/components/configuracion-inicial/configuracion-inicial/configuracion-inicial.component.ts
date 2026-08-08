@@ -1,12 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, Optional } from '@angular/core';
 import { FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
-import { Configuracion, TipoIdentidadEnum } from 'src/app/models/configuracion.models';
+import { Configuracion, ConfiguracionInicial, TipoIdentidadEnum } from 'src/app/models/configuracion.models';
 import { TipoIdentidadPaisService, TipoIdentidadPaisVM } from 'src/app/services/tipo-identidad-pais.service';
 import { MonedaService } from 'src/app/services/moneda.service';
 import { Moneda } from 'src/app/models/moneda.models';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 
@@ -16,6 +16,7 @@ import { TenantTextCatalogService } from 'src/app/services/localization/tenant-t
   styleUrls: ['./configuracion-inicial.component.css']
 })
 export class ConfiguracionInicialComponent implements OnInit {
+  readonly esModoInicial: boolean;
   tiposIdentidadPais: TipoIdentidadPaisVM[] = [];
   tiposEnum = TipoIdentidadEnum;
   enumKeys = Object.keys(TipoIdentidadEnum).filter(k => isNaN(Number(k)));
@@ -56,6 +57,13 @@ export class ConfiguracionInicialComponent implements OnInit {
     CodigoISO4217: [''],
   });
 
+  formInicial = this.fb.group({
+    RazonSocial: ['', [Validators.required, Validators.maxLength(120)]],
+    NombreComercial: ['', [Validators.required, Validators.maxLength(120)]],
+    Direccion: ['', [Validators.required, Validators.maxLength(120)]],
+    Telefono: ['', [Validators.required, Validators.maxLength(50)]],
+  });
+
   mascaraHint?: string;
   regexValidacion?: string;
 
@@ -66,19 +74,36 @@ export class ConfiguracionInicialComponent implements OnInit {
     private tipIdPaisSrv: TipoIdentidadPaisService,
     private monedaSrv: MonedaService,
     private dialogRef: MatDialogRef<ConfiguracionInicialComponent>,
-    private texts: TenantTextCatalogService
-  ) {}
+    private texts: TenantTextCatalogService,
+    @Optional() @Inject(MAT_DIALOG_DATA)
+    data: { modoInicial?: boolean } | null
+  ) {
+    this.esModoInicial = data?.modoInicial !== false;
+  }
 
   ngOnInit(): void {
-    // cargar config actual
     this.configSrv.get().subscribe(cfg => {
-      if (cfg) this.form.patchValue(cfg);
-      const pais = this.form.get('PaisISO2')!.value;
-      if (pais) this.onPaisChange(pais);
-      this.applyBusinessRules();
+      if (cfg) {
+        this.form.patchValue(cfg);
+        this.formInicial.patchValue({
+          RazonSocial: cfg.RazonSocial,
+          NombreComercial: cfg.NombreComercial,
+          Direccion: cfg.Direccion,
+          Telefono: cfg.Telefono,
+        });
+      }
+
+      if (!this.esModoInicial) {
+        const pais = this.form.get('PaisISO2')!.value;
+        if (pais) this.onPaisChange(pais);
+        this.applyBusinessRules();
+      }
     });
 
-    // reaccionar a cambios de toggles
+    if (this.esModoInicial) {
+      return;
+    }
+
     this.form.get('Precuentas')!.valueChanges
       .subscribe(() => this.applyBusinessRules());
 
@@ -173,14 +198,17 @@ export class ConfiguracionInicialComponent implements OnInit {
   }
 
   guardar(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    const formulario = this.esModoInicial ? this.formInicial : this.form;
+    if (formulario.invalid) {
+      formulario.markAllAsTouched();
       this.snack.open(this.texts.get('checkRequiredFields'), this.texts.get('ok'), { duration: 3000 });
       return;
     }
-    const payload = this.form.getRawValue() as Configuracion;
-    console.log(payload);
-    this.configSrv.save(payload).subscribe({
+    const operacion = this.esModoInicial
+      ? this.configSrv.saveInitial(this.formInicial.getRawValue() as ConfiguracionInicial)
+      : this.configSrv.save(this.form.getRawValue() as Configuracion);
+
+    operacion.subscribe({
       next: () => {
       this.snack.open(this.texts.get('configSaved'), this.texts.get('ok'), { duration: 2500 });
       // ← importante: cerrar con 'true' para que el login sepa que ya está configurado

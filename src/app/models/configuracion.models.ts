@@ -36,3 +36,10 @@ export class Configuracion {
   SimboloMoneda: string;
   CodigoISO4217: string;
 }
+
+export interface ConfiguracionInicial {
+  RazonSocial: string;
+  NombreComercial: string;
+  Direccion: string;
+  Telefono: string;
+}

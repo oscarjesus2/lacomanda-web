@@ -414,6 +414,7 @@ export class LoginComponent implements OnInit {
           const dialogRef = this.dialog.open(ConfiguracionInicialComponent, {
             width: '920px',
             disableClose: true,
+            data: { modoInicial: true },
           });
           dialogRef.afterClosed().subscribe((result) => {
             if (result === true || result === 'saved') {

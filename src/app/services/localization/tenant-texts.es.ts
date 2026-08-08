@@ -974,6 +974,12 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
 
   // Configuración inicial (configuracion-inicial)
   initialSetup: 'Configuración Inicial',
+  essentialBusinessData: 'Datos indispensables del negocio',
+  initialSetupHint:
+    'Completa solo estos datos para empezar. El país, la moneda, la identidad fiscal y los valores operativos se aplican automáticamente.',
+  settingsAvailableLater:
+    'Después podrás desactivar o ajustar cualquier opción incluida en tu licencia desde Configuración.',
+  saveAndStart: 'Guardar y empezar',
   businessData: 'Datos de Negocio',
   countryIso2: 'País (ISO2)',
   defaultCurrency: 'Moneda por defecto',

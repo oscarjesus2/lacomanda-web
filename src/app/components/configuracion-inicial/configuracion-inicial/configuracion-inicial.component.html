@@ -6,7 +6,54 @@
 
   <h2>{{ 'initialSetup' | tenantText }}</h2>
 
-  <form [formGroup]="form" (ngSubmit)="guardar()">
+  <form
+    *ngIf="esModoInicial"
+    [formGroup]="formInicial"
+    (ngSubmit)="guardar()">
+    <section class="card">
+      <h3>{{ 'essentialBusinessData' | tenantText }}</h3>
+
+      <div class="hint">
+        {{ 'initialSetupHint' | tenantText }}
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'businessName' | tenantText }}</mat-label>
+          <input matInput formControlName="RazonSocial" required />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'tradeName' | tenantText }}</mat-label>
+          <input matInput formControlName="NombreComercial" required />
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'address' | tenantText }}</mat-label>
+          <input matInput formControlName="Direccion" required />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'telephone' | tenantText }}</mat-label>
+          <input matInput formControlName="Telefono" required />
+        </mat-form-field>
+      </div>
+
+      <div class="hint">
+        {{ 'settingsAvailableLater' | tenantText }}
+      </div>
+    </section>
+
+    <div class="actions">
+      <button mat-raised-button color="primary" type="submit">
+        {{ 'saveAndStart' | tenantText }}
+      </button>
+    </div>
+  </form>
+
+  <form *ngIf="!esModoInicial" [formGroup]="form" (ngSubmit)="guardar()">
 
     <!-- =========================
          1. DATOS DE NEGOCIO
