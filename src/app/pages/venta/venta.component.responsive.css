@@ -225,8 +225,43 @@
     overflow: auto;
   }
 
-  .data-grid table {
+  .data-grid > table {
     min-width: 560px;
+    table-layout: fixed;
+  }
+
+  .data-grid .mat-column-NombreProducto {
+    width: auto;
+  }
+
+  .data-grid .mat-column-Precio {
+    width: 64px;
+  }
+
+  .data-grid .mat-column-Cantidad {
+    width: 58px;
+  }
+
+  .data-grid .mat-column-actions {
+    width: 132px;
+    min-width: 132px;
+    padding-right: 4px;
+    padding-left: 4px;
+  }
+
+  .product-row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+
+  .product-row-actions button {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
   }
 
   .button-row {

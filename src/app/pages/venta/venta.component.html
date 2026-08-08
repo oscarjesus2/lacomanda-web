@@ -227,24 +227,25 @@
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef></th>
               <td mat-cell *matCellDef="let product">
-                <!-- <mat-icon>add</mat-icon>  -->
-                <button mat-icon-button color="primary"
-                  [matTooltip]="'increaseQuantity' | tenantText"
-                  (click)="aumentarProductGrid(product)"
-                  [disabled]="product.Item > 0 || product.Producto?.Tipo === 1 || product.Producto?.Tipo === 2">
-                  <mat-icon>add</mat-icon>
-                </button>
-                <button mat-icon-button color="warn"
-                  [matTooltip]="'decreaseQuantity' | tenantText"
-                  (click)="restarProductGrid(product)"
-                  [disabled]="product.Item > 0 || product.Producto?.Tipo === 1 || product.Producto?.Tipo === 2">
-                  <mat-icon>remove</mat-icon>
-                </button>
-                <button mat-icon-button color="primary"
-                  [matTooltip]="'moreOptions' | tenantText"
-                  [matMenuTriggerFor]="MasOpciones">
-                  <mat-icon>more</mat-icon>
-                </button>
+                <div class="product-row-actions">
+                  <button mat-icon-button color="primary"
+                    [matTooltip]="'increaseQuantity' | tenantText"
+                    (click)="aumentarProductGrid(product)"
+                    [disabled]="product.Item > 0 || product.Producto?.Tipo === 1 || product.Producto?.Tipo === 2">
+                    <mat-icon>add</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn"
+                    [matTooltip]="'decreaseQuantity' | tenantText"
+                    (click)="restarProductGrid(product)"
+                    [disabled]="product.Item > 0 || product.Producto?.Tipo === 1 || product.Producto?.Tipo === 2">
+                    <mat-icon>remove</mat-icon>
+                  </button>
+                  <button mat-icon-button color="primary"
+                    [matTooltip]="'moreOptions' | tenantText"
+                    [matMenuTriggerFor]="MasOpciones">
+                    <mat-icon>more</mat-icon>
+                  </button>
+                </div>
                 <mat-menu #MasOpciones="matMenu">
 
                   <button mat-icon-button color="accent"
