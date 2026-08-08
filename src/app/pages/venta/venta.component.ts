@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, inject, HostListener, AfterViewInit, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, inject, HostListener, AfterViewInit, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 
@@ -50,7 +50,8 @@ import { DialogMenuComponent } from 'src/app/components/dialog-menu/dialog-menu.
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 // import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
-import { forkJoin, lastValueFrom } from 'rxjs';
+import { forkJoin, lastValueFrom, Subscription, timer } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { DialogMTextComponent } from 'src/app/components/dialog-mtext/dialog-mtext.component';
 import { AnularProductoYComplementoDTO } from 'src/app/interfaces/anularProductoYComplementoDTO.interface';
@@ -77,7 +78,8 @@ import { CanalVentaEnum } from 'src/app/enums/enum';
 import { DialogDeliveryComponent } from 'src/app/components/dialog-delivery/dialog-delivery.component';
 import { DeliveryDialogResult } from 'src/app/models/delivery.models';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
-import { DialogSolicitudesMesaComponent } from 'src/app/components/dialog-solicitudes-mesa/dialog-solicitudes-mesa.component';
+import { MesaClienteService } from 'src/app/services/mesa-cliente.service';
+import { SolicitudMesaPendiente } from 'src/app/models/mesa-cliente.models';
 
 @Component({
   selector: 'app-venta',
@@ -88,7 +90,7 @@ import { DialogSolicitudesMesaComponent } from 'src/app/components/dialog-solici
   ]
 })
 
-export class VentaComponent implements OnInit, AfterViewInit {
+export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   public vistaCompacta: 'catalogo' | 'pedido' = 'catalogo';
 
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
@@ -118,6 +120,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
   public selectedValueDos: string;
   public listaEspaciosTotal: Espacios[];
   public listaEspacios_x_Ambiente: Espacios[];
+  private solicitudesMesaSubscription?: Subscription;
+  private solicitudesQrPorEspacio = new Map<number, SolicitudMesaPendiente>();
   public listaTipoPedidos: CanalVenta[];
   public listaPedidosPendientes: PedidoDeliveryDTO[] = [];
   public listaPedido_x_Canal: PedidoDeliveryDTO[];
@@ -224,6 +228,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
     private usuarioService: UsuarioService,
     private configuracionService: ConfiguracionService,
     private textCatalog: TenantTextCatalogService,
+    private mesaClienteService: MesaClienteService,
     private activatedRoute: ActivatedRoute) {
 
 
@@ -299,6 +304,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
   ngOnDestroy() {
+    this.solicitudesMesaSubscription?.unsubscribe();
     this.headerService.showHeader(); // Mostrar el header al salir
   }
 
@@ -437,6 +443,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
         if (data?.Data != null) {
           this.turnoAbierto = data.Data;
+          this.iniciarMonitoreoSolicitudesMesa();
 
           // Aquí se ejecutan los demás servicios en paralelo una vez que se ha obtenido el turno abierto
           forkJoin({
@@ -635,21 +642,77 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.vistaCompacta = vista;
   }
 
-  abrirSolicitudesMesa(): void {
-    if (!this.turnoAbierto?.IdCaja || !this.turnoAbierto?.IdTurno) {
-      Swal.fire('Turno requerido', 'Abre un turno antes de confirmar solicitudes de mesa.', 'info');
-      return;
-    }
+  solicitudQrPendiente(espacio: Espacios): SolicitudMesaPendiente | undefined {
+    return this.solicitudesQrPorEspacio.get(espacio.IdEspacio);
+  }
 
-    this.dialog.open(DialogSolicitudesMesaComponent, {
-      width: '820px',
-      maxWidth: '96vw',
-      data: {
-        idCaja: this.turnoAbierto.IdCaja,
-        idTurno: this.turnoAbierto.IdTurno,
-        identificadorEstacion: this.storageService.getCurrentIP() || ''
+  private iniciarMonitoreoSolicitudesMesa(): void {
+    this.solicitudesMesaSubscription?.unsubscribe();
+    this.solicitudesMesaSubscription = timer(0, 3000).pipe(
+      switchMap(() => this.mesaClienteService.listarPendientes())
+    ).subscribe({
+      next: response => {
+        this.solicitudesQrPorEspacio = new Map(
+          (response.Data || []).map(solicitud => [solicitud.IdEspacio, solicitud])
+        );
+      },
+      error: () => {
+        // La venta sigue operativa aunque falle temporalmente la consulta QR.
       }
     });
+  }
+
+  private async confirmarSolicitudQr(
+    espacio: Espacios,
+    solicitud: SolicitudMesaPendiente
+  ): Promise<void> {
+    const confirmacion = await Swal.fire({
+      title: `Confirmar ${espacio.Descripcion} ${espacio.Numero}`,
+      html: `
+        <p>Comprueba que el cliente muestra este mismo código:</p>
+        <div class="swal-qr-code">${solicitud.CodigoVisual}</div>
+        <p>Indica cuántas personas ocuparán el espacio.</p>`,
+      input: 'number',
+      inputValue: 1,
+      inputAttributes: { min: '1', max: '99', step: '1' },
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Confirmar acceso',
+      cancelButtonText: 'Cancelar',
+      preConfirm: value => {
+        const pax = Number(value);
+        if (!Number.isInteger(pax) || pax < 1 || pax > 99) {
+          Swal.showValidationMessage('Ingresa una cantidad válida de personas.');
+          return false;
+        }
+        return pax;
+      }
+    });
+
+    if (!confirmacion.isConfirmed) return;
+
+    try {
+      await lastValueFrom(this.mesaClienteService.confirmar(solicitud.IdSesion, {
+        IdCaja: this.turnoAbierto.IdCaja,
+        IdTurno: this.turnoAbierto.IdTurno,
+        NroPax: Number(confirmacion.value),
+        IdentificadorEstacion: this.storageService.getCurrentIP() || ''
+      }));
+      this.solicitudesQrPorEspacio.delete(espacio.IdEspacio);
+      await Swal.fire({
+        title: 'Mesa habilitada',
+        text: 'El cliente ya puede consultar la carta y enviar pedidos.',
+        icon: 'success',
+        timer: 1800,
+        showConfirmButton: false
+      });
+    } catch (error: any) {
+      await Swal.fire(
+        'No se pudo confirmar',
+        error?.error?.Message || 'Actualiza la pantalla e inténtalo nuevamente.',
+        'error'
+      );
+    }
   }
 
   /** El pedido ya existe en el backend y tiene una cuenta válida. */
@@ -1189,6 +1252,13 @@ export class VentaComponent implements OnInit, AfterViewInit {
     if (this.aplicarFiltroTrasladarAEspacio) {
       await this.ejecutarTrasladarAEspacio(espacio);
       this.spinnerService.hide();
+      return;
+    }
+
+    const solicitudQr = this.solicitudQrPendiente(espacio);
+    if (solicitudQr) {
+      this.spinnerService.hide();
+      await this.confirmarSolicitudQr(espacio, solicitudQr);
       return;
     }
 
@@ -2109,8 +2179,6 @@ export class VentaComponent implements OnInit, AfterViewInit {
       var responseRegisterPedido: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.GrabarPedido(pedido));
 
       if (responseRegisterPedido.Success) {
-
-        this.imprimirPedido(responseRegisterPedido);
         this.limpiarPedido();
         this.procesarPedido = false;
         this.RehacerPantalla();
@@ -2129,20 +2197,6 @@ export class VentaComponent implements OnInit, AfterViewInit {
     }
 
   }
-
-  async imprimirPedido(responseRegisterPedido: ApiResponse<ImpresionDTO[]>) {
-    const contador = await this.imprimir(responseRegisterPedido.Data);
-
-    if (contador === responseRegisterPedido.Data.length) {
-      const pedido = responseRegisterPedido.Data[0];
-      this.pedidoService.ActualizarEnviosDeImpresion(pedido.IdPedido, pedido.NroCuenta).subscribe(response => {
-        console.log('Envios actualizados correctamente', response);
-      }, error => {
-        console.error('Error al actualizar los envíos', error);
-      });
-    }
-  }
-
 
   async imprimir(listImpresionDTO: ImpresionDTO[]): Promise<number> {
     let contador: number = 0;

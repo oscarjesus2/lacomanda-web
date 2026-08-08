@@ -120,6 +120,7 @@ export class QzTrayV224Service {
 
       } catch (error) {
         console.error('Error al conectar con QZ Tray:', error);
+        throw error;
       }
     }
   }
@@ -134,7 +135,11 @@ export class QzTrayV224Service {
     }
   }
 
-  async printPDF(ByteTicket: any, printerName: string): Promise<boolean> {
+  async printPDF(
+    ByteTicket: any,
+    printerName: string,
+    permitirImpresoraPredeterminadaComoRespaldo: boolean = true,
+  ): Promise<boolean> {
     try {
       if (this.isBase64(ByteTicket)) {
 
@@ -149,14 +154,18 @@ export class QzTrayV224Service {
         await this.connect();
 
         let config;
-        const isAvailable = await this.isPrinterAvailable(printerName);
+        const usarPredeterminada = printerName?.trim().toUpperCase() === 'PREDETERMINADA';
+        const isAvailable = !usarPredeterminada
+          && await this.isPrinterAvailable(printerName);
         if (isAvailable) {
           config = qz.configs.create(printerName);
           console.log(`Imprimiendo en la impresora ${printerName}`);
-        } else {
+        } else if (usarPredeterminada || permitirImpresoraPredeterminadaComoRespaldo) {
           const defaultPrinter = await qz.printers.getDefault();
           config = qz.configs.create(defaultPrinter);
           console.log('Imprimiendo en la impresora predeterminada');
+        } else {
+          throw new Error(`La impresora ${printerName} no está disponible en esta estación.`);
         }
 
         const data = [{
@@ -199,16 +208,18 @@ export class QzTrayV224Service {
     return printers.includes(printerName);
   }
 
+  async getAvailablePrinters(): Promise<string[]> {
+    await this.connect();
+    const printers = await qz.printers.find();
+    return Array.isArray(printers)
+      ? printers.filter((printer): printer is string => typeof printer === 'string')
+      : [];
+  }
+
   async isQzTrayRunning(): Promise<boolean> {
     try {
-
-      // Primero intenta conectar si no está activo
       await this.connect();
-      if (!qz.websocket.isActive()) { // Llama a la función que maneja la conexión con QZ Tray
-        await qz.websocket.disconnect();
-      }
-
-      return true;
+      return qz.websocket.isActive();
     } catch (error) {
       console.error('QZ Tray no está corriendo:', error);
       return false;

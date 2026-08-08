@@ -40,3 +40,72 @@ export interface ConfirmarSolicitudMesa {
   NroPax: number;
   IdentificadorEstacion: string;
 }
+
+export interface CategoriaCartaMesaCliente {
+  IdSubFamilia: number;
+  Nombre: string;
+  IdFamilia: number;
+  Familia: string;
+}
+
+export interface OpcionMenuCartaMesaCliente {
+  IdProducto: number;
+  Nombre: string;
+}
+
+export interface SeccionMenuCartaMesaCliente {
+  IdSeccionMenu: number;
+  Descripcion: string;
+  Cantidad: number;
+  Opciones: OpcionMenuCartaMesaCliente[];
+}
+
+export interface ProductoCartaMesaCliente {
+  IdProducto: number;
+  Nombre: string;
+  Descripcion: string;
+  Precio: number;
+  Moneda: string;
+  Tipo: number;
+  IdSubFamilia: number;
+  Color: string;
+  CantidadComplementos: number;
+  SeccionesMenu: SeccionMenuCartaMesaCliente[];
+}
+
+export interface ComplementoCartaMesaCliente {
+  IdProducto: number;
+  Nombre: string;
+  Factor: number;
+  Posicion: number;
+}
+
+export interface CartaMesaCliente {
+  Moneda: string;
+  Categorias: CategoriaCartaMesaCliente[];
+  Productos: ProductoCartaMesaCliente[];
+  Complementos: ComplementoCartaMesaCliente[];
+}
+
+export interface RegistrarPedidoMesaCliente {
+  Items: ItemPedidoMesaCliente[];
+}
+
+export interface ItemPedidoMesaCliente {
+  IdProducto: number;
+  Cantidad: number;
+  Observacion?: string;
+  Complementos: Array<{ IdProducto: number; Cantidad: number }>;
+  OpcionesMenu: Array<{
+    IdSeccionMenu: number;
+    IdProducto: number;
+    Cantidad: number;
+    Observacion?: string;
+  }>;
+}
+
+export interface PedidoMesaClienteResultado {
+  IdPedido: number;
+  NroCuenta: number;
+  Total: number;
+}

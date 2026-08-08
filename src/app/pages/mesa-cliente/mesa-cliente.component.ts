@@ -2,9 +2,36 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription, timer } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { EstadoAccesoMesa, SolicitudAccesoMesa } from 'src/app/models/mesa-cliente.models';
+import {
+  CartaMesaCliente,
+  ComplementoCartaMesaCliente,
+  EstadoAccesoMesa,
+  ItemPedidoMesaCliente,
+  ProductoCartaMesaCliente,
+  SeccionMenuCartaMesaCliente,
+  SolicitudAccesoMesa
+} from 'src/app/models/mesa-cliente.models';
 import { HeaderService } from 'src/app/services/header.service';
 import { MesaClienteService } from 'src/app/services/mesa-cliente.service';
+
+interface OpcionCantidad {
+  IdProducto: number;
+  Cantidad: number;
+}
+
+interface EditorProducto {
+  producto: ProductoCartaMesaCliente;
+  cantidad: number;
+  observacion: string;
+  complementos: OpcionCantidad[];
+  opcionesMenu: Array<OpcionCantidad & { IdSeccionMenu: number; Observacion?: string }>;
+}
+
+interface LineaCarrito {
+  nombre: string;
+  precio: number;
+  request: ItemPedidoMesaCliente;
+}
 
 @Component({
   selector: 'app-mesa-cliente',
@@ -15,8 +42,16 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   codigoQr = '';
   solicitud?: SolicitudAccesoMesa;
   estado?: EstadoAccesoMesa;
+  carta?: CartaMesaCliente;
+  categoriaActiva?: number;
+  editor?: EditorProducto;
+  carrito: LineaCarrito[] = [];
   cargando = true;
+  cargandoCarta = false;
+  enviandoPedido = false;
+  mostrarCarrito = false;
   error = '';
+  aviso = '';
   private polling?: Subscription;
 
   constructor(
@@ -47,9 +82,135 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     sessionStorage.removeItem(this.storageKey);
     this.estado = undefined;
     this.solicitud = undefined;
+    this.carta = undefined;
     this.error = '';
     this.cargando = true;
     this.solicitarAcceso();
+  }
+
+  seleccionarCategoria(idSubFamilia?: number): void {
+    this.categoriaActiva = idSubFamilia;
+  }
+
+  editarProducto(producto: ProductoCartaMesaCliente): void {
+    this.editor = {
+      producto,
+      cantidad: 1,
+      observacion: '',
+      complementos: [],
+      opcionesMenu: []
+    };
+  }
+
+  cerrarEditor(): void { this.editor = undefined; }
+
+  cambiarCantidadProducto(delta: number): void {
+    if (!this.editor) return;
+    this.editor.cantidad = Math.max(1, Math.min(50, this.editor.cantidad + delta));
+    this.recortarSeleccionesAlLimite();
+  }
+
+  cambiarComplemento(complemento: ComplementoCartaMesaCliente, delta: number): void {
+    if (!this.editor || delta > 0 && !this.puedeAgregarComplemento(complemento)) return;
+    this.cambiarOpcion(this.editor.complementos, complemento.IdProducto, delta);
+  }
+
+  cambiarOpcionMenu(
+    seccion: SeccionMenuCartaMesaCliente,
+    idProducto: number,
+    delta: number
+  ): void {
+    if (!this.editor) return;
+    const opciones = this.editor.opcionesMenu;
+    const actualSeccion = opciones
+      .filter(x => x.IdSeccionMenu === seccion.IdSeccionMenu)
+      .reduce((total, x) => total + x.Cantidad, 0);
+    const requerido = seccion.Cantidad * this.editor.cantidad;
+    if (delta > 0 && actualSeccion >= requerido) return;
+
+    const existente = opciones.find(x =>
+      x.IdSeccionMenu === seccion.IdSeccionMenu && x.IdProducto === idProducto);
+    if (existente) {
+      existente.Cantidad = Math.max(0, existente.Cantidad + delta);
+      if (existente.Cantidad === 0) {
+        this.editor.opcionesMenu = opciones.filter(x => x !== existente);
+      }
+    } else if (delta > 0) {
+      opciones.push({ IdSeccionMenu: seccion.IdSeccionMenu, IdProducto: idProducto, Cantidad: 1 });
+    }
+  }
+
+  cantidadComplemento(idProducto: number): number {
+    return this.editor?.complementos.find(x => x.IdProducto === idProducto)?.Cantidad || 0;
+  }
+
+  cantidadOpcionMenu(idSeccion: number, idProducto: number): number {
+    return this.editor?.opcionesMenu.find(x =>
+      x.IdSeccionMenu === idSeccion && x.IdProducto === idProducto)?.Cantidad || 0;
+  }
+
+  seleccionMenu(seccion: SeccionMenuCartaMesaCliente): number {
+    return this.editor?.opcionesMenu
+      .filter(x => x.IdSeccionMenu === seccion.IdSeccionMenu)
+      .reduce((total, x) => total + x.Cantidad, 0) || 0;
+  }
+
+  requeridoMenu(seccion: SeccionMenuCartaMesaCliente): number {
+    return seccion.Cantidad * (this.editor?.cantidad || 1);
+  }
+
+  puedeAgregarComplemento(complemento: ComplementoCartaMesaCliente): boolean {
+    if (!this.editor) return false;
+    return this.pesoComplementos + complemento.Factor
+      <= this.editor.producto.CantidadComplementos * this.editor.cantidad;
+  }
+
+  agregarAlCarrito(): void {
+    if (!this.editor || !this.editorValido) return;
+    const editor = this.editor;
+    this.carrito.push({
+      nombre: editor.producto.Nombre,
+      precio: editor.producto.Precio,
+      request: {
+        IdProducto: editor.producto.IdProducto,
+        Cantidad: editor.cantidad,
+        Observacion: editor.observacion.trim(),
+        Complementos: editor.complementos.map(x => ({ ...x })),
+        OpcionesMenu: editor.opcionesMenu.map(x => ({ ...x }))
+      }
+    });
+    this.editor = undefined;
+    this.aviso = 'Producto añadido al pedido.';
+    window.setTimeout(() => this.aviso = '', 2200);
+  }
+
+  quitarLinea(indice: number): void {
+    this.carrito.splice(indice, 1);
+    if (this.carrito.length === 0) this.mostrarCarrito = false;
+  }
+
+  enviarPedido(): void {
+    const token = sessionStorage.getItem(this.storageKey);
+    if (!token || this.carrito.length === 0 || this.enviandoPedido) return;
+
+    this.enviandoPedido = true;
+    this.error = '';
+    this.mesaClienteService.registrarPedido(token, {
+      Items: this.carrito.map(x => x.request)
+    }).subscribe({
+      next: response => {
+        this.enviandoPedido = false;
+        this.carrito = [];
+        this.mostrarCarrito = false;
+        this.aviso = `Pedido ${response.Data.IdPedido} enviado a preparación.`;
+      },
+      error: error => {
+        this.enviandoPedido = false;
+        this.error = error?.error?.Message
+          || error?.error?.Data
+          || 'No pudimos enviar el pedido. Inténtalo nuevamente.';
+      }
+    });
   }
 
   get pendiente(): boolean {
@@ -65,6 +226,36 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   get nombreEspacio(): string {
     const origen = this.estado || this.solicitud;
     return origen ? `${origen.Espacio} ${origen.Numero}` : '';
+  }
+
+  get productosVisibles(): ProductoCartaMesaCliente[] {
+    const productos = this.carta?.Productos || [];
+    return this.categoriaActiva
+      ? productos.filter(x => x.IdSubFamilia === this.categoriaActiva)
+      : productos;
+  }
+
+  get totalCarrito(): number {
+    return this.carrito.reduce((total, x) => total + x.precio * x.request.Cantidad, 0);
+  }
+
+  get unidadesCarrito(): number {
+    return this.carrito.reduce((total, x) => total + x.request.Cantidad, 0);
+  }
+
+  get pesoComplementos(): number {
+    if (!this.editor) return 0;
+    return this.editor.complementos.reduce((total, seleccion) => {
+      const complemento = this.carta?.Complementos
+        .find(x => x.IdProducto === seleccion.IdProducto);
+      return total + (complemento?.Factor || 0) * seleccion.Cantidad;
+    }, 0);
+  }
+
+  get editorValido(): boolean {
+    if (!this.editor) return false;
+    return this.editor.producto.SeccionesMenu.every(
+      seccion => this.seleccionMenu(seccion) === this.requeridoMenu(seccion));
   }
 
   private solicitarAcceso(): void {
@@ -84,13 +275,16 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
 
   private iniciarConsulta(token: string): void {
     this.polling?.unsubscribe();
-    this.polling = timer(0, 2500).pipe(
+    this.polling = timer(0, 5000).pipe(
       switchMap(() => this.mesaClienteService.consultar(token))
     ).subscribe({
       next: response => {
         this.cargando = false;
         this.estado = response.Data;
-        if (this.estado.Estado !== 'Pendiente') this.polling?.unsubscribe();
+        if (this.estado.Estado === 'Activa' && !this.carta && !this.cargandoCarta) {
+          this.cargarCarta(token);
+        }
+        if (this.finalizada) this.polling?.unsubscribe();
       },
       error: error => {
         this.polling?.unsubscribe();
@@ -99,6 +293,54 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
         this.error = error?.error?.Message || 'La solicitud dejó de estar disponible.';
       }
     });
+  }
+
+  private cargarCarta(token: string): void {
+    this.cargandoCarta = true;
+    this.mesaClienteService.consultarCarta(token).subscribe({
+      next: response => {
+        this.cargandoCarta = false;
+        this.carta = response.Data;
+        this.categoriaActiva = response.Data.Categorias[0]?.IdSubFamilia;
+      },
+      error: error => {
+        this.cargandoCarta = false;
+        this.error = error?.error?.Message || 'No pudimos cargar la carta.';
+      }
+    });
+  }
+
+  private cambiarOpcion(opciones: OpcionCantidad[], idProducto: number, delta: number): void {
+    const existente = opciones.find(x => x.IdProducto === idProducto);
+    if (existente) {
+      existente.Cantidad = Math.max(0, existente.Cantidad + delta);
+      if (existente.Cantidad === 0 && this.editor) {
+        this.editor.complementos = opciones.filter(x => x !== existente);
+      }
+    } else if (delta > 0) {
+      opciones.push({ IdProducto: idProducto, Cantidad: 1 });
+    }
+  }
+
+  private recortarSeleccionesAlLimite(): void {
+    if (!this.editor) return;
+    for (const seccion of this.editor.producto.SeccionesMenu) {
+      let exceso = this.seleccionMenu(seccion) - this.requeridoMenu(seccion);
+      for (const opcion of this.editor.opcionesMenu
+        .filter(x => x.IdSeccionMenu === seccion.IdSeccionMenu)
+        .reverse()) {
+        if (exceso <= 0) break;
+        const quitar = Math.min(exceso, opcion.Cantidad);
+        opcion.Cantidad -= quitar;
+        exceso -= quitar;
+      }
+    }
+    this.editor.opcionesMenu = this.editor.opcionesMenu.filter(x => x.Cantidad > 0);
+
+    while (this.editor.complementos.length > 0
+      && this.pesoComplementos > this.editor.producto.CantidadComplementos * this.editor.cantidad) {
+      this.editor.complementos.pop();
+    }
   }
 
   private get storageKey(): string { return `lacomanda-mesa-${this.codigoQr}`; }

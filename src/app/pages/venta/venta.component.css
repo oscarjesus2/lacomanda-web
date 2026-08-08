@@ -559,6 +559,47 @@
   word-break: break-word;
 }
 
+.tables-grid button.espacio-qr-pendiente {
+  position: relative;
+  border: 3px solid #ff9f00;
+  box-shadow: 0 0 0 4px rgba(255, 159, 0, .22), 0 8px 20px rgba(154, 77, 0, .2);
+  animation: mesaQrPulse 1.5s ease-in-out infinite;
+}
+
+.espacio-qr-alerta {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 24px;
+  padding: 3px 5px;
+  border-radius: 999px;
+  background: #a00000;
+  color: #fff;
+  font-size: 9px;
+  line-height: 1;
+  z-index: 2;
+}
+
+.espacio-qr-alerta mat-icon {
+  width: 15px;
+  height: 15px;
+  font-size: 15px;
+}
+
+@keyframes mesaQrPulse {
+  50% { box-shadow: 0 0 0 8px rgba(255, 159, 0, .09), 0 8px 20px rgba(154, 77, 0, .25); }
+}
+
+::ng-deep .swal-qr-code {
+  margin: 12px auto;
+  color: #9a1d08;
+  font: 800 32px/1 monospace;
+  letter-spacing: .16em;
+}
+
 .tables-grid button:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);

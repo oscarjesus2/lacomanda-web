@@ -4,8 +4,11 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import {
+  CartaMesaCliente,
   ConfirmarSolicitudMesa,
   EstadoAccesoMesa,
+  PedidoMesaClienteResultado,
+  RegistrarPedidoMesaCliente,
   SolicitudAccesoMesa,
   SolicitudMesaPendiente
 } from '../models/mesa-cliente.models';
@@ -27,6 +30,24 @@ export class MesaClienteService {
   consultar(token: string): Observable<ApiResponse<EstadoAccesoMesa>> {
     return this.http.get<ApiResponse<EstadoAccesoMesa>>(
       `${this.basePath}/sesion`,
+      { headers: this.tenantHeaders().set('X-Mesa-Token', token) }
+    );
+  }
+
+  consultarCarta(token: string): Observable<ApiResponse<CartaMesaCliente>> {
+    return this.http.get<ApiResponse<CartaMesaCliente>>(
+      `${this.basePath}/carta`,
+      { headers: this.tenantHeaders().set('X-Mesa-Token', token) }
+    );
+  }
+
+  registrarPedido(
+    token: string,
+    request: RegistrarPedidoMesaCliente
+  ): Observable<ApiResponse<PedidoMesaClienteResultado>> {
+    return this.http.post<ApiResponse<PedidoMesaClienteResultado>>(
+      `${this.basePath}/pedidos`,
+      request,
       { headers: this.tenantHeaders().set('X-Mesa-Token', token) }
     );
   }

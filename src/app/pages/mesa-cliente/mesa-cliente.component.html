@@ -1,5 +1,16 @@
-<main class="mesa-cliente-page">
-  <section class="mesa-cliente-card" aria-live="polite">
+<main class="mesa-cliente-page" [class.mesa-cliente-page--carta]="activa">
+  <header *ngIf="activa" class="carta-header">
+    <div>
+      <span class="eyebrow">LA COMANDA</span>
+      <strong>{{ estado?.Ambiente }} · {{ nombreEspacio }}</strong>
+    </div>
+    <button class="cart-button" type="button" (click)="mostrarCarrito = !mostrarCarrito">
+      <mat-icon>shopping_bag</mat-icon>
+      <span>{{ unidadesCarrito }}</span>
+    </button>
+  </header>
+
+  <section *ngIf="!activa" class="mesa-cliente-card" aria-live="polite">
     <div class="brand-mark"><mat-icon>room_service</mat-icon></div>
     <p class="eyebrow">LA COMANDA</p>
 
@@ -17,17 +28,9 @@
       <div class="waiting"><span></span> Esperando confirmación del personal…</div>
     </div>
 
-    <div *ngIf="!cargando && activa" class="state-block">
-      <mat-icon class="state-icon state-icon--success">check_circle</mat-icon>
-      <p class="location">{{ estado?.Ambiente }} · {{ nombreEspacio }}</p>
-      <h1>Mesa confirmada</h1>
-      <p>Ya puedes consultar la carta y realizar pedidos desde este dispositivo.</p>
-      <div class="secure-note"><mat-icon>verified_user</mat-icon>La sesión se cerrará automáticamente cuando el personal libere la mesa.</div>
-    </div>
-
     <div *ngIf="!cargando && finalizada" class="state-block">
       <mat-icon class="state-icon">lock_clock</mat-icon>
-      <h1>Esta solicitud ya terminó</h1>
+      <h1>Esta sesión ya terminó</h1>
       <p *ngIf="estado?.Estado === 'Rechazada'">El personal rechazó la solicitud. Si estás en la mesa, solicita ayuda.</p>
       <p *ngIf="estado?.Estado !== 'Rechazada'">Escanea nuevamente el QR si sigues en el restaurante.</p>
       <button mat-raised-button color="primary" (click)="reintentar()">VOLVER A SOLICITAR</button>
@@ -40,4 +43,96 @@
       <button mat-raised-button color="primary" (click)="reintentar()">REINTENTAR</button>
     </div>
   </section>
+
+  <section *ngIf="activa" class="carta-layout">
+    <nav class="categorias" aria-label="Categorías de la carta">
+      <button type="button" [class.active]="categoriaActiva === undefined" (click)="seleccionarCategoria()">Todo</button>
+      <button *ngFor="let categoria of carta?.Categorias" type="button"
+        [class.active]="categoriaActiva === categoria.IdSubFamilia"
+        (click)="seleccionarCategoria(categoria.IdSubFamilia)">
+        {{ categoria.Nombre }}
+      </button>
+    </nav>
+
+    <div *ngIf="cargandoCarta" class="loading-carta"><mat-spinner diameter="36"></mat-spinner>Cargando la carta…</div>
+
+    <div *ngIf="!cargandoCarta && carta" class="productos-grid">
+      <button *ngFor="let producto of productosVisibles" class="producto-card" type="button"
+        (click)="editarProducto(producto)" [style.--product-color]="producto.Color">
+        <span class="producto-color"></span>
+        <span class="producto-info">
+          <strong>{{ producto.Nombre }}</strong>
+          <small>{{ producto.Descripcion }}</small>
+          <em *ngIf="producto.Tipo === 1">Menú · Personalizable</em>
+          <em *ngIf="producto.Tipo === 2">Admite complementos</em>
+        </span>
+        <b>{{ carta.Moneda }} {{ producto.Precio | number:'1.2-2' }}</b>
+      </button>
+      <p *ngIf="productosVisibles.length === 0" class="empty-products">No hay productos disponibles en esta categoría.</p>
+    </div>
+  </section>
+
+  <div *ngIf="activa && aviso" class="toast-success">{{ aviso }}</div>
+  <div *ngIf="activa && error" class="toast-error" (click)="error = ''">{{ error }}</div>
+
+  <div *ngIf="editor" class="sheet-backdrop" (click)="cerrarEditor()">
+    <section class="bottom-sheet" (click)="$event.stopPropagation()">
+      <header>
+        <div><span>Personaliza tu pedido</span><h2>{{ editor.producto.Nombre }}</h2></div>
+        <button type="button" (click)="cerrarEditor()"><mat-icon>close</mat-icon></button>
+      </header>
+
+      <div class="quantity-main">
+        <button type="button" (click)="cambiarCantidadProducto(-1)">−</button>
+        <strong>{{ editor.cantidad }}</strong>
+        <button type="button" (click)="cambiarCantidadProducto(1)">+</button>
+        <span>{{ carta?.Moneda }} {{ editor.producto.Precio * editor.cantidad | number:'1.2-2' }}</span>
+      </div>
+
+      <div *ngFor="let seccion of editor.producto.SeccionesMenu" class="option-section">
+        <div class="section-title"><strong>{{ seccion.Descripcion }}</strong><span>Elige {{ requeridoMenu(seccion) }} · {{ seleccionMenu(seccion) }}/{{ requeridoMenu(seccion) }}</span></div>
+        <div *ngFor="let opcion of seccion.Opciones" class="option-row">
+          <span>{{ opcion.Nombre }}</span>
+          <div class="stepper">
+            <button type="button" (click)="cambiarOpcionMenu(seccion, opcion.IdProducto, -1)">−</button>
+            <b>{{ cantidadOpcionMenu(seccion.IdSeccionMenu, opcion.IdProducto) }}</b>
+            <button type="button" (click)="cambiarOpcionMenu(seccion, opcion.IdProducto, 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="editor.producto.Tipo === 2" class="option-section">
+        <div class="section-title"><strong>Complementos</strong><span>{{ pesoComplementos }}/{{ editor.producto.CantidadComplementos * editor.cantidad }}</span></div>
+        <div *ngFor="let complemento of carta?.Complementos" class="option-row">
+          <span>{{ complemento.Nombre }}</span>
+          <div class="stepper">
+            <button type="button" (click)="cambiarComplemento(complemento, -1)">−</button>
+            <b>{{ cantidadComplemento(complemento.IdProducto) }}</b>
+            <button type="button" [disabled]="!puedeAgregarComplemento(complemento)" (click)="cambiarComplemento(complemento, 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <label class="observation">¿Alguna indicación?<textarea maxlength="250" [(ngModel)]="editor.observacion" placeholder="Ej. sin cebolla, punto de cocción…"></textarea></label>
+      <button class="primary-action" type="button" [disabled]="!editorValido" (click)="agregarAlCarrito()">
+        Añadir al pedido · {{ carta?.Moneda }} {{ editor.producto.Precio * editor.cantidad | number:'1.2-2' }}
+      </button>
+    </section>
+  </div>
+
+  <div *ngIf="mostrarCarrito" class="sheet-backdrop" (click)="mostrarCarrito = false">
+    <section class="bottom-sheet cart-sheet" (click)="$event.stopPropagation()">
+      <header><div><span>Tu mesa</span><h2>Revisa tu pedido</h2></div><button type="button" (click)="mostrarCarrito = false"><mat-icon>close</mat-icon></button></header>
+      <div *ngFor="let linea of carrito; let i = index" class="cart-line">
+        <span><strong>{{ linea.request.Cantidad }} × {{ linea.nombre }}</strong><small *ngIf="linea.request.Observacion">{{ linea.request.Observacion }}</small></span>
+        <b>{{ carta?.Moneda }} {{ linea.precio * linea.request.Cantidad | number:'1.2-2' }}</b>
+        <button type="button" (click)="quitarLinea(i)"><mat-icon>delete_outline</mat-icon></button>
+      </div>
+      <p *ngIf="carrito.length === 0" class="empty-cart">Todavía no has añadido productos.</p>
+      <div class="cart-total"><span>Total</span><strong>{{ carta?.Moneda }} {{ totalCarrito | number:'1.2-2' }}</strong></div>
+      <button class="primary-action" type="button" [disabled]="carrito.length === 0 || enviandoPedido" (click)="enviarPedido()">
+        {{ enviandoPedido ? 'Enviando…' : 'Enviar a preparación' }}
+      </button>
+    </section>
+  </div>
 </main>

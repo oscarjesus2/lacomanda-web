@@ -66,8 +66,6 @@ export class DialogEnviarPedidoComponent {
                     'Se registro el pedido correctamente.',
                     'success'
                     )
-                    var responseImprimirPedido: any = await this.pedidoService.GrabarPedido(this.data.oPedido).toPromise();
-
                     this.dialogRef.close(this.data);
     
                 }else{

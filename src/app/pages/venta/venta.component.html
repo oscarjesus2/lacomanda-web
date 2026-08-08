@@ -61,9 +61,6 @@
         <button (click)="Refresh()">
           <fa-icon [icon]="faSync"></fa-icon> {{ 'refresh' | tenantText }}
         </button>
-        <button *ngIf="isEspacio" (click)="abrirSolicitudesMesa()">
-          <mat-icon>qr_code_scanner</mat-icon> SOLICITUDES QR
-        </button>
       </div>
     </div>
 
@@ -470,8 +467,15 @@
       <div *ngIf="!isLoadingEspacios" class="tables-grid">
         <button *ngFor="let espacio of listaEspacios_x_Ambiente"
           [style.background]="espacio.Color"
+          [class.espacio-qr-pendiente]="!!solicitudQrPendiente(espacio)"
           (click)="openDialogEspacio(espacio)"
           [style.visibility]="espacio.Visible === false ? 'hidden' : 'visible'">
+          <span *ngIf="solicitudQrPendiente(espacio) as solicitud"
+                class="espacio-qr-alerta"
+                title="Cliente esperando confirmación">
+            <mat-icon>qr_code_scanner</mat-icon>
+            <strong>{{ solicitud.CodigoVisual }}</strong>
+          </span>
           <div style="text-align: center;">{{espacio.Descripcion}} {{espacio.Numero}} <br> {{config?.SimboloMoneda || '-'}}.{{espacio.Total}} <br> {{espacio.NombreEmpleado?.substring(0, 8)}}</div>
         </button>
       </div>

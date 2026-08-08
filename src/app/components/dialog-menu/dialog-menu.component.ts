@@ -31,7 +31,10 @@ export class DialogMenuComponent implements OnInit {
   cargando = true;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: { pedidodet: PedidoDet },
+    @Inject(MAT_DIALOG_DATA) public data: {
+      pedidodet: PedidoDet;
+      configuracion?: ProductoComboConfiguracion;
+    },
     private readonly productoComboService: ProductoComboService,
     private readonly textCatalog: TenantTextCatalogService,
     private readonly dialogRef: MatDialogRef<DialogMenuComponent>,
@@ -52,10 +55,14 @@ export class DialogMenuComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try {
-      const response = await this.productoComboService
-        .obtenerConfiguracion(this.pedidodet.Producto.IdProducto)
-        .toPromise();
-      this.configuracion = response?.Data ?? this.configuracion;
+      if (this.data.configuracion) {
+        this.configuracion = this.data.configuracion;
+      } else {
+        const response = await this.productoComboService
+          .obtenerConfiguracion(this.pedidodet.Producto.IdProducto)
+          .toPromise();
+        this.configuracion = response?.Data ?? this.configuracion;
+      }
       this.integrarSeccionesGuardadas();
 
       if (this.configuracion.Secciones.length === 0) {
