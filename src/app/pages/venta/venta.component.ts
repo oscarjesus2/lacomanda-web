@@ -82,10 +82,15 @@ import { DialogSolicitudesMesaComponent } from 'src/app/components/dialog-solici
 @Component({
   selector: 'app-venta',
   templateUrl: './venta.component.html',
-  styleUrls: ['./venta.component.css']
+  styleUrls: [
+    './venta.component.css',
+    './venta.component.responsive.css'
+  ]
 })
 
 export class VentaComponent implements OnInit, AfterViewInit {
+  public vistaCompacta: 'catalogo' | 'pedido' = 'catalogo';
+
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
   isEdited: boolean;
   elementArr: any = [].fill(0);
@@ -624,6 +629,10 @@ export class VentaComponent implements OnInit, AfterViewInit {
   /** true cuando hay una mesa activa seleccionada */
   get mesaSeleccionada(): boolean {
     return !!this.espacioSelected?.IdEspacio;
+  }
+
+  seleccionarVistaCompacta(vista: 'catalogo' | 'pedido'): void {
+    this.vistaCompacta = vista;
   }
 
   abrirSolicitudesMesa(): void {

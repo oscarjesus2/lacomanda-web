@@ -1,4 +1,6 @@
-<div class="container">
+<div class="container"
+     [class.compact-show-catalog]="vistaCompacta === 'catalogo'"
+     [class.compact-show-order]="vistaCompacta === 'pedido'">
   <button *ngIf="isAdmin"
           mat-fab
           class="admin-fab"
@@ -64,6 +66,27 @@
         </button>
       </div>
     </div>
+
+    <nav class="compact-view-switcher" aria-label="Vista de venta">
+      <button type="button"
+              [class.active]="vistaCompacta === 'catalogo'"
+              [attr.aria-pressed]="vistaCompacta === 'catalogo'"
+              (click)="seleccionarVistaCompacta('catalogo')">
+        <mat-icon>{{ MostrarOcultarPanelProducto ? 'restaurant_menu' : 'table_restaurant' }}</mat-icon>
+        <span>{{ (MostrarOcultarPanelProducto ? 'products' : 'tableChannel') | tenantText }}</span>
+      </button>
+      <button type="button"
+              [class.active]="vistaCompacta === 'pedido'"
+              [attr.aria-pressed]="vistaCompacta === 'pedido'"
+              (click)="seleccionarVistaCompacta('pedido')">
+        <mat-icon>shopping_cart</mat-icon>
+        <span>{{ 'orders' | tenantText }}</span>
+        <span class="compact-view-switcher__count">{{ listProductGrid.length }}</span>
+        <strong>{{ config?.SimboloMoneda || '-' }} {{ sumaTotal | number:'1.2-2' }}</strong>
+      </button>
+    </nav>
+
+    <div class="order-workspace">
     <div class="middle-section">
       <div class="table-info">
         <div class="table-info__item" *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO && espacioSelected?.Descripcion && espacioSelected?.Numero">
@@ -383,6 +406,7 @@
 
   </ng-container>
 
+  </div>
   </div>
 
   <!-- Segunda Columna -->
