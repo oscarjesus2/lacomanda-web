@@ -1314,6 +1314,69 @@ body {
   text-transform: uppercase;
 }
 
+.dialog-economic-summary {
+  margin-bottom: 14px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.dialog-economic-summary__mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-warm);
+}
+
+.dialog-economic-summary__copy {
+  display: flex;
+  min-width: 220px;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dialog-economic-summary__toggle {
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.dialog-economic-summary__toggle .mat-button-toggle-label-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 16px;
+  font-weight: 700;
+}
+
+.dialog-economic-summary__toggle mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+.dialog-economic-summary .dialog-summary-grid--economic {
+  margin: 0;
+  padding: 12px;
+}
+
+.dialog-summary-card--total {
+  border-color: color-mix(in srgb, var(--color-primary) 34%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+}
+
+.dialog-summary-card--total strong {
+  color: var(--color-primary-dark);
+  font-size: 1.05rem;
+}
+
 .dialog-inline-actions {
   display: grid;
   grid-template-columns: minmax(260px, 1fr) auto auto;
@@ -1485,6 +1548,28 @@ body {
 }
 
 @media (max-width: 600px) {
+  .dialog-economic-summary__mode {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dialog-economic-summary__toggle {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dialog-economic-summary__toggle .mat-button-toggle {
+    white-space: normal;
+  }
+
+  .dialog-economic-summary__toggle .mat-button-toggle-label-content {
+    justify-content: center;
+    padding: 6px 8px;
+    line-height: 1.15;
+    text-align: center;
+  }
+
   .dialog-summary-grid {
     grid-template-columns: 1fr;
   }

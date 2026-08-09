@@ -370,23 +370,6 @@
             >
           </mat-form-field>
 
-          <div class="dialog-option dialog-form-grid__wide">
-            <span class="dialog-option__title">Importe ingresado</span>
-            <mat-button-toggle-group
-              name="preciosConImpuesto"
-              [(ngModel)]="formulario.PreciosIncluyenImpuestos"
-              [disabled]="soloLectura"
-              aria-label="Tratamiento de impuestos del importe"
-            >
-              <mat-button-toggle [value]="false">Sin impuesto</mat-button-toggle>
-              <mat-button-toggle [value]="true">Con impuesto</mat-button-toggle>
-            </mat-button-toggle-group>
-            <span class="dialog-option__hint">
-              {{ formulario.PreciosIncluyenImpuestos
-                ? 'El importe es el total final; el sistema separará la base y los tributos.'
-                : 'El importe es la base imponible; el sistema agregará los tributos.' }}
-            </span>
-          </div>
         </div>
       </section>
 
@@ -553,24 +536,60 @@
         </div>
       </section>
 
-      <div class="dialog-summary-grid">
-        <div class="dialog-summary-card">
-          <span class="dialog-summary-card__label">Valor de compra</span>
-          <strong>{{ formulario.IdMoneda }} {{ subtotalDocumento | number:'1.2-2' }}</strong>
+      <section class="dialog-economic-summary">
+        <div class="dialog-economic-summary__mode">
+          <div class="dialog-economic-summary__copy">
+            <span class="dialog-summary-card__label">Cómo se ingresaron los importes</span>
+            <strong>
+              {{ formulario.PreciosIncluyenImpuestos
+                ? 'Total con impuestos incluidos'
+                : 'Base sin impuestos' }}
+            </strong>
+            <span class="dialog-option__hint">
+              {{ formulario.PreciosIncluyenImpuestos
+                ? 'El sistema separará la base imponible y los tributos del total ingresado.'
+                : 'El sistema sumará los tributos a la base imponible ingresada.' }}
+            </span>
+          </div>
+
+          <mat-button-toggle-group
+            class="dialog-economic-summary__toggle"
+            name="preciosConImpuesto"
+            [ngModel]="formulario.PreciosIncluyenImpuestos"
+            (ngModelChange)="cambiarTratamientoImportes($event)"
+            [disabled]="soloLectura"
+            aria-label="Indique si los importes incluyen impuestos"
+          >
+            <mat-button-toggle [value]="false">
+              <mat-icon>remove_circle_outline</mat-icon>
+              Base sin impuestos
+            </mat-button-toggle>
+            <mat-button-toggle [value]="true">
+              <mat-icon>check_circle_outline</mat-icon>
+              Total con impuestos
+            </mat-button-toggle>
+          </mat-button-toggle-group>
         </div>
-        <div class="dialog-summary-card">
-          <span class="dialog-summary-card__label">Impuestos</span>
-          <strong>{{ formulario.IdMoneda }} {{ impuestosDocumento | number:'1.2-2' }}</strong>
+
+        <div class="dialog-summary-grid dialog-summary-grid--economic">
+          <div class="dialog-summary-card">
+            <span class="dialog-summary-card__label">Valor de compra</span>
+            <strong>{{ formulario.IdMoneda }} {{ subtotalDocumento | number:'1.2-2' }}</strong>
+          </div>
+          <div class="dialog-summary-card">
+            <span class="dialog-summary-card__label">Impuestos</span>
+            <strong>{{ formulario.IdMoneda }} {{ impuestosDocumento | number:'1.2-2' }}</strong>
+          </div>
+          <div class="dialog-summary-card dialog-summary-card--total">
+            <span class="dialog-summary-card__label">Total documento</span>
+            <strong>{{ formulario.IdMoneda }} {{ totalDocumento | number:'1.2-2' }}</strong>
+          </div>
+          <div class="dialog-summary-card" *ngIf="compra">
+            <span class="dialog-summary-card__label">Pago</span>
+            <strong>{{ compra.EstadoPagoDescripcion }}</strong>
+          </div>
         </div>
-        <div class="dialog-summary-card">
-          <span class="dialog-summary-card__label">Total documento</span>
-          <strong>{{ formulario.IdMoneda }} {{ totalDocumento | number:'1.2-2' }}</strong>
-        </div>
-        <div class="dialog-summary-card" *ngIf="compra">
-          <span class="dialog-summary-card__label">Pago</span>
-          <strong>{{ compra.EstadoPagoDescripcion }}</strong>
-        </div>
-      </div>
+      </section>
 
       <section class="dialog-form-section" *ngIf="compra">
         <h3 class="dialog-form-section__title">
