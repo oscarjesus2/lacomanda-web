@@ -370,13 +370,23 @@
             >
           </mat-form-field>
 
-          <mat-checkbox
-            name="preciosConImpuesto"
-            [(ngModel)]="formulario.PreciosIncluyenImpuestos"
-            [disabled]="soloLectura || lineas.length > 0"
-          >
-            Los importes ingresados incluyen impuestos
-          </mat-checkbox>
+          <div class="dialog-option dialog-form-grid__wide">
+            <span class="dialog-option__title">Importe ingresado</span>
+            <mat-button-toggle-group
+              name="preciosConImpuesto"
+              [(ngModel)]="formulario.PreciosIncluyenImpuestos"
+              [disabled]="soloLectura"
+              aria-label="Tratamiento de impuestos del importe"
+            >
+              <mat-button-toggle [value]="false">Sin impuesto</mat-button-toggle>
+              <mat-button-toggle [value]="true">Con impuesto</mat-button-toggle>
+            </mat-button-toggle-group>
+            <span class="dialog-option__hint">
+              {{ formulario.PreciosIncluyenImpuestos
+                ? 'El importe es el total final; el sistema separará la base y los tributos.'
+                : 'El importe es la base imponible; el sistema agregará los tributos.' }}
+            </span>
+          </div>
         </div>
       </section>
 
@@ -439,6 +449,16 @@
             </mat-select>
           </mat-form-field>
 
+          <mat-form-field appearance="fill" *ngIf="articuloAgregar && !articuloAgregar.Inventariable">
+            <mat-label>Subárea de ingreso</mat-label>
+            <input
+              matInput
+              value="No aplica: el artículo no controla inventario"
+              readonly
+            >
+            <mat-icon matSuffix>info</mat-icon>
+          </mat-form-field>
+
           <mat-form-field appearance="fill">
             <mat-label>Impuestos</mat-label>
             <mat-select name="impuestosAgregar" [(ngModel)]="impuestosAgregar" multiple>
@@ -480,6 +500,10 @@
               <ng-container matColumnDef="unidad">
                 <mat-header-cell *matHeaderCellDef>Unidad</mat-header-cell>
                 <mat-cell *matCellDef="let linea">{{ linea.UnidadMedida }}</mat-cell>
+              </ng-container>
+              <ng-container matColumnDef="precio">
+                <mat-header-cell *matHeaderCellDef>Precio</mat-header-cell>
+                <mat-cell *matCellDef="let linea">{{ precioLinea(linea) | number:'1.2-4' }}</mat-cell>
               </ng-container>
               <ng-container matColumnDef="subarea">
                 <mat-header-cell *matHeaderCellDef>Subárea</mat-header-cell>

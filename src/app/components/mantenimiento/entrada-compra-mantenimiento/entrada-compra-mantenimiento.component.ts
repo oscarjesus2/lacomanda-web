@@ -50,6 +50,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     'producto',
     'cantidad',
     'unidad',
+    'precio',
     'subarea',
     'impuestos',
     'base',
@@ -623,6 +624,15 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     return Math.max(0, this.redondear(base));
   }
 
+  precioLinea(linea: LineaCompraEdicion): number {
+    if (linea.Cantidad <= 0) {
+      return 0;
+    }
+    return Math.round(
+      (this.baseLinea(linea) / linea.Cantidad + Number.EPSILON) * 10000
+    ) / 10000;
+  }
+
   impuestosLinea(linea: LineaCompraEdicion): number {
     const base = this.baseLinea(linea);
     return this.redondear(
@@ -998,7 +1008,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       IdMoneda: '',
       TasaCambio: 1,
       Observacion: '',
-      PreciosIncluyenImpuestos: true,
+      PreciosIncluyenImpuestos: false,
       Detalles: []
     };
   }
