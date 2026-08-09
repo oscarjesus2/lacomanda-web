@@ -11,6 +11,7 @@ import { ProveedorMantenimientoComponent } from 'src/app/components/mantenimient
 import { SalidaInternaMantenimientoComponent } from 'src/app/components/mantenimiento/salida-interna-mantenimiento/salida-interna-mantenimiento.component';
 import { TransferenciaAlmacenMantenimientoComponent } from 'src/app/components/mantenimiento/transferencia-almacen-mantenimiento/transferencia-almacen-mantenimiento.component';
 import { PorcionamientoMantenimientoComponent } from 'src/app/components/mantenimiento/porcionamiento-mantenimiento/porcionamiento-mantenimiento.component';
+import { ProduccionMantenimientoComponent } from 'src/app/components/mantenimiento/produccion-mantenimiento/produccion-mantenimiento.component';
 
 @Component({
   selector: 'app-menu-almacen',
@@ -119,6 +120,7 @@ export class MenuAlmacenComponent implements OnInit {
     },
     {
       title: 'Producción',
+      action: 'producciones',
       icon: 'precision_manufacturing',
       label: 'Producción',
       titleKey: 'production',
@@ -140,7 +142,8 @@ export class MenuAlmacenComponent implements OnInit {
       ingresosCompra: EntradaCompraMantenimientoComponent,
       salidasInternas: SalidaInternaMantenimientoComponent,
       transferenciasAlmacen: TransferenciaAlmacenMantenimientoComponent,
-      porcionamientos: PorcionamientoMantenimientoComponent
+      porcionamientos: PorcionamientoMantenimientoComponent,
+      producciones: ProduccionMantenimientoComponent
     };
     const component = components[item.action];
     if (!component) {

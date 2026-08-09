@@ -118,6 +118,7 @@ import { DialogSolicitudesMesaComponent } from './components/dialog-solicitudes-
 import { SalidaInternaMantenimientoComponent } from './components/mantenimiento/salida-interna-mantenimiento/salida-interna-mantenimiento.component';
 import { TransferenciaAlmacenMantenimientoComponent } from './components/mantenimiento/transferencia-almacen-mantenimiento/transferencia-almacen-mantenimiento.component';
 import { PorcionamientoMantenimientoComponent } from './components/mantenimiento/porcionamiento-mantenimiento/porcionamiento-mantenimiento.component';
+import { ProduccionMantenimientoComponent } from './components/mantenimiento/produccion-mantenimiento/produccion-mantenimiento.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -209,6 +210,7 @@ export const MY_DATE_FORMATS = {
     SalidaInternaMantenimientoComponent,
     TransferenciaAlmacenMantenimientoComponent,
     PorcionamientoMantenimientoComponent,
+    ProduccionMantenimientoComponent,
   ],
   imports: [
     CommonModule,
