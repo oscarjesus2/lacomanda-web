@@ -10,6 +10,7 @@ import { EntradaCompraMantenimientoComponent } from 'src/app/components/mantenim
 import { ProveedorMantenimientoComponent } from 'src/app/components/mantenimiento/proveedor-mantenimiento/proveedor-mantenimiento.component';
 import { SalidaInternaMantenimientoComponent } from 'src/app/components/mantenimiento/salida-interna-mantenimiento/salida-interna-mantenimiento.component';
 import { TransferenciaAlmacenMantenimientoComponent } from 'src/app/components/mantenimiento/transferencia-almacen-mantenimiento/transferencia-almacen-mantenimiento.component';
+import { PorcionamientoMantenimientoComponent } from 'src/app/components/mantenimiento/porcionamiento-mantenimiento/porcionamiento-mantenimiento.component';
 
 @Component({
   selector: 'app-menu-almacen',
@@ -109,6 +110,7 @@ export class MenuAlmacenComponent implements OnInit {
     },
     {
       title: 'Porcionamiento',
+      action: 'porcionamientos',
       icon: 'content_cut',
       label: 'Porcionamiento',
       titleKey: 'portioning',
@@ -137,7 +139,8 @@ export class MenuAlmacenComponent implements OnInit {
       proveedores: ProveedorMantenimientoComponent,
       ingresosCompra: EntradaCompraMantenimientoComponent,
       salidasInternas: SalidaInternaMantenimientoComponent,
-      transferenciasAlmacen: TransferenciaAlmacenMantenimientoComponent
+      transferenciasAlmacen: TransferenciaAlmacenMantenimientoComponent,
+      porcionamientos: PorcionamientoMantenimientoComponent
     };
     const component = components[item.action];
     if (!component) {

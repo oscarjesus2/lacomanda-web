@@ -117,6 +117,7 @@ import { MesaClienteComponent } from './pages/mesa-cliente/mesa-cliente.componen
 import { DialogSolicitudesMesaComponent } from './components/dialog-solicitudes-mesa/dialog-solicitudes-mesa.component';
 import { SalidaInternaMantenimientoComponent } from './components/mantenimiento/salida-interna-mantenimiento/salida-interna-mantenimiento.component';
 import { TransferenciaAlmacenMantenimientoComponent } from './components/mantenimiento/transferencia-almacen-mantenimiento/transferencia-almacen-mantenimiento.component';
+import { PorcionamientoMantenimientoComponent } from './components/mantenimiento/porcionamiento-mantenimiento/porcionamiento-mantenimiento.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -207,6 +208,7 @@ export const MY_DATE_FORMATS = {
     DialogSolicitudesMesaComponent,
     SalidaInternaMantenimientoComponent,
     TransferenciaAlmacenMantenimientoComponent,
+    PorcionamientoMantenimientoComponent,
   ],
   imports: [
     CommonModule,
