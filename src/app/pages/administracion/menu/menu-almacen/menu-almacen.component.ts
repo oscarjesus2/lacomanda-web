@@ -9,6 +9,7 @@ import { SubAreaAlmacenMantenimientoComponent } from 'src/app/components/manteni
 import { EntradaCompraMantenimientoComponent } from 'src/app/components/mantenimiento/entrada-compra-mantenimiento/entrada-compra-mantenimiento.component';
 import { ProveedorMantenimientoComponent } from 'src/app/components/mantenimiento/proveedor-mantenimiento/proveedor-mantenimiento.component';
 import { SalidaInternaMantenimientoComponent } from 'src/app/components/mantenimiento/salida-interna-mantenimiento/salida-interna-mantenimiento.component';
+import { TransferenciaAlmacenMantenimientoComponent } from 'src/app/components/mantenimiento/transferencia-almacen-mantenimiento/transferencia-almacen-mantenimiento.component';
 
 @Component({
   selector: 'app-menu-almacen',
@@ -90,6 +91,7 @@ export class MenuAlmacenComponent implements OnInit {
     },
     {
       title: 'Transferencias',
+      action: 'transferenciasAlmacen',
       icon: 'swap_horiz',
       label: 'Transferencias',
       titleKey: 'transfers',
@@ -134,7 +136,8 @@ export class MenuAlmacenComponent implements OnInit {
       subareasAlmacen: SubAreaAlmacenMantenimientoComponent,
       proveedores: ProveedorMantenimientoComponent,
       ingresosCompra: EntradaCompraMantenimientoComponent,
-      salidasInternas: SalidaInternaMantenimientoComponent
+      salidasInternas: SalidaInternaMantenimientoComponent,
+      transferenciasAlmacen: TransferenciaAlmacenMantenimientoComponent
     };
     const component = components[item.action];
     if (!component) {

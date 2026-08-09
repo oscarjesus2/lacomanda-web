@@ -1,0 +1,304 @@
+<div class="mant-panel dialog-panel--workspace">
+  <button mat-icon-button class="close-button" aria-label="Cerrar" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>
+    {{ showForm
+      ? (transferencia ? 'Transferencia N.º ' + transferencia.IdTransferencia : 'Nueva transferencia')
+      : 'Transferencias de almacén' }}
+  </h2>
+
+  <ng-container *ngIf="!showForm">
+    <div class="dialog-toolbar">
+      <div class="dialog-toolbar__filters">
+        <mat-form-field appearance="fill">
+          <mat-label>Buscar transferencia</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [(ngModel)]="filtro.Buscar" (keyup.enter)="buscar()"
+                 placeholder="Número, área o subárea">
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Estado</mat-label>
+          <mat-select [(ngModel)]="filtro.Estado">
+            <mat-option [value]="null">Todos</mat-option>
+            <mat-option [value]="1">Generado</mat-option>
+            <mat-option [value]="2">Anulado</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Origen</mat-label>
+          <mat-select [(ngModel)]="filtro.IdSubAreaAlmacenOrigen">
+            <mat-option [value]="null">Todos</mat-option>
+            <mat-option *ngFor="let item of catalogos?.SubAreas" [value]="item.Id">
+              {{ item.AreaAlmacen }} · {{ item.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Destino</mat-label>
+          <mat-select [(ngModel)]="filtro.IdSubAreaAlmacenDestino">
+            <mat-option [value]="null">Todos</mat-option>
+            <mat-option *ngFor="let item of catalogos?.SubAreas" [value]="item.Id">
+              {{ item.AreaAlmacen }} · {{ item.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-toolbar__options">
+        <mat-form-field appearance="fill">
+          <mat-label>Desde</mat-label>
+          <input matInput [matDatepicker]="fechaInicio" [(ngModel)]="filtro.FechaInicio">
+          <mat-datepicker-toggle matSuffix [for]="fechaInicio"></mat-datepicker-toggle>
+          <mat-datepicker #fechaInicio></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Hasta</mat-label>
+          <input matInput [matDatepicker]="fechaFin" [(ngModel)]="filtro.FechaFin">
+          <mat-datepicker-toggle matSuffix [for]="fechaFin"></mat-datepicker-toggle>
+          <mat-datepicker #fechaFin></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-toolbar__footer">
+        <span class="dialog-toolbar__status">
+          <mat-icon>swap_horiz</mat-icon>
+          {{ dataSource.data.length }} transferencias encontradas
+        </span>
+        <div class="dialog-toolbar__actions">
+          <button mat-stroked-button type="button" (click)="exportarExcel()" [disabled]="cargando">
+            <mat-icon>download</mat-icon>
+            Exportar a Excel
+          </button>
+          <button mat-stroked-button color="primary" type="button" (click)="buscar()" [disabled]="cargando">
+            <mat-icon>search</mat-icon>
+            Buscar
+          </button>
+          <button mat-raised-button color="primary" type="button" (click)="nuevo()" [disabled]="!catalogos">
+            <mat-icon>add</mat-icon>
+            Nueva transferencia
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-workspace-content">
+      <div class="dialog-table-card">
+        <div class="dialog-table-wrapper--fill">
+          <mat-table [dataSource]="dataSource" class="dialog-table--wide">
+            <ng-container matColumnDef="numero">
+              <mat-header-cell *matHeaderCellDef>N.º</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.IdTransferencia }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="fecha">
+              <mat-header-cell *matHeaderCellDef>Fecha</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.Fecha | date:'dd/MM/yyyy HH:mm' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="origen">
+              <mat-header-cell *matHeaderCellDef>Origen</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                {{ row.AreaAlmacenOrigen }} · {{ row.SubAreaAlmacenOrigen }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="destino">
+              <mat-header-cell *matHeaderCellDef>Destino</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                {{ row.AreaAlmacenDestino }} · {{ row.SubAreaAlmacenDestino }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="articulos">
+              <mat-header-cell *matHeaderCellDef>Artículos</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.CantidadArticulos }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="cantidad">
+              <mat-header-cell *matHeaderCellDef>Cantidad</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.CantidadTotal | number:'1.0-3' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="estado">
+              <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <span class="status-pill" [class.status-pill--inactive]="row.Estado === 2">
+                  {{ row.EstadoDescripcion }}
+                </span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+              <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <button mat-icon-button color="primary" type="button"
+                        aria-label="Ver transferencia" (click)="abrir(row)">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+          </mat-table>
+
+          <div class="dialog-empty-state" *ngIf="!cargando && dataSource.data.length === 0">
+            <mat-icon>swap_horiz</mat-icon>
+            <span>No existen transferencias para los filtros indicados.</span>
+          </div>
+        </div>
+
+        <mat-paginator [length]="dataSource.data.length" [pageSize]="10"
+                       [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons>
+        </mat-paginator>
+      </div>
+    </div>
+  </ng-container>
+
+  <form *ngIf="showForm" class="dialog-form-workspace" (ngSubmit)="crear()">
+    <div class="dialog-detail-header">
+      <button mat-stroked-button type="button" (click)="volver()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </button>
+      <div class="dialog-detail-header__title">
+        <strong>{{ transferencia ? 'Detalle de la transferencia' : 'Datos de la transferencia' }}</strong>
+        <span *ngIf="transferencia" class="status-pill"
+              [class.status-pill--inactive]="transferencia.Estado === 2">
+          {{ transferencia.EstadoDescripcion }}
+        </span>
+      </div>
+      <button *ngIf="transferencia" mat-stroked-button type="button" (click)="imprimir()">
+        <mat-icon>print</mat-icon>
+        Imprimir
+      </button>
+    </div>
+
+    <div class="dialog-form-section">
+      <h3><mat-icon>swap_horiz</mat-icon> Movimiento entre subáreas</h3>
+      <div class="dialog-form-grid dialog-form-grid--3">
+        <mat-form-field appearance="fill">
+          <mat-label>Subárea de origen</mat-label>
+          <mat-select [(ngModel)]="formulario.IdSubAreaAlmacenOrigen" name="origen"
+                      (selectionChange)="cambiarOrigen()" [disabled]="!!transferencia" required>
+            <mat-option *ngFor="let item of catalogos?.SubAreas" [value]="item.Id">
+              {{ item.AreaAlmacen }} · {{ item.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Subárea de destino</mat-label>
+          <mat-select [(ngModel)]="formulario.IdSubAreaAlmacenDestino" name="destino"
+                      (selectionChange)="cambiarDestino()" [disabled]="!!transferencia" required>
+            <mat-option *ngFor="let item of subAreasDestino" [value]="item.Id">
+              {{ item.AreaAlmacen }} · {{ item.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Fecha</mat-label>
+          <input matInput [matDatepicker]="fechaTransferencia" [(ngModel)]="formulario.Fecha"
+                 name="fechaTransferencia" [disabled]="!!transferencia" required>
+          <mat-datepicker-toggle matSuffix [for]="fechaTransferencia"></mat-datepicker-toggle>
+          <mat-datepicker #fechaTransferencia></mat-datepicker>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="dialog-form-section" *ngIf="!transferencia">
+      <h3><mat-icon>inventory_2</mat-icon> Agregar artículo</h3>
+      <div class="dialog-form-grid dialog-form-grid--3">
+        <mat-form-field appearance="fill">
+          <mat-label>Artículo disponible en origen</mat-label>
+          <mat-select [(ngModel)]="idArticuloAgregar" name="articuloAgregar"
+                      [disabled]="!formulario.IdSubAreaAlmacenOrigen">
+            <mat-option *ngFor="let item of articulosDisponibles" [value]="item.IdProducto">
+              {{ item.Descripcion }} · Stock {{ item.Stock | number:'1.0-3' }} {{ item.UnidadMedida }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Cantidad</mat-label>
+          <input matInput type="number" min="0.001" step="0.001"
+                 [(ngModel)]="cantidadAgregar" name="cantidadAgregar">
+          <span matSuffix>{{ articuloAgregar?.UnidadMedida }}</span>
+          <mat-hint *ngIf="articuloAgregar">
+            Disponible: {{ articuloAgregar.Stock | number:'1.0-3' }}
+          </mat-hint>
+        </mat-form-field>
+
+        <div class="dialog-form-action">
+          <button mat-stroked-button color="primary" type="button" (click)="agregarLinea()">
+            <mat-icon>add</mat-icon>
+            Agregar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-table-card dialog-table-card--detail">
+      <div class="dialog-table-wrapper--fill">
+        <table class="dialog-detail-table">
+          <thead>
+            <tr>
+              <th>Artículo</th>
+              <th>Unidad</th>
+              <th *ngIf="!transferencia">Stock origen</th>
+              <th>Cantidad</th>
+              <th *ngIf="!transferencia">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let linea of lineas; let i = index">
+              <td>{{ linea.Producto }}</td>
+              <td>{{ linea.UnidadMedida }}</td>
+              <td *ngIf="!transferencia">{{ linea.StockDisponible | number:'1.0-3' }}</td>
+              <td>{{ linea.Cantidad | number:'1.0-3' }}</td>
+              <td *ngIf="!transferencia">
+                <button mat-icon-button color="warn" type="button" aria-label="Quitar artículo"
+                        (click)="quitarLinea(i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="lineas.length === 0">
+              <td [attr.colspan]="transferencia ? 3 : 5" class="dialog-empty-cell">
+                Agregue al menos un artículo para transferir.
+              </td>
+            </tr>
+          </tbody>
+          <tfoot *ngIf="lineas.length">
+            <tr>
+              <td [attr.colspan]="transferencia ? 2 : 3"><strong>Total</strong></td>
+              <td><strong>{{ cantidadTotal | number:'1.0-3' }}</strong></td>
+              <td *ngIf="!transferencia"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div class="dialog-form-footer">
+      <button mat-stroked-button type="button" (click)="volver()">Volver</button>
+      <button *ngIf="transferencia?.Estado === 1" mat-stroked-button color="warn" type="button"
+              (click)="anular()" [disabled]="guardando">
+        <mat-icon>block</mat-icon>
+        Anular transferencia
+      </button>
+      <button *ngIf="!transferencia" mat-raised-button color="primary" type="submit"
+              [disabled]="guardando || lineas.length === 0">
+        <mat-icon>swap_horiz</mat-icon>
+        Transferir y actualizar stock
+      </button>
+    </div>
+  </form>
+</div>
