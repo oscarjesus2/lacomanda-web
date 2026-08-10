@@ -1,8 +1,10 @@
 import { Injectable, NgZone } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
+import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import { environment } from 'src/environments/environment';
 import { DeviceIdentifierService } from './device-identifier.service';
+import { EstacionService } from './estacion.service';
 import { StorageService } from './storage.service';
 
 interface EstacionRevocadaMessage {
@@ -19,6 +21,7 @@ export class EstacionSessionRealtimeService {
   private revoking = false;
   private ensuring = false;
   private listenersActive = false;
+  private lastHttpWarningAt = 0;
 
   private readonly resumeListener = (): void => {
     void this.ensureConnection();
@@ -31,6 +34,7 @@ export class EstacionSessionRealtimeService {
   constructor(
     private readonly storage: StorageService,
     private readonly deviceIdentifier: DeviceIdentifierService,
+    private readonly estacionService: EstacionService,
     private readonly zone: NgZone,
   ) {}
 
@@ -63,6 +67,17 @@ export class EstacionSessionRealtimeService {
       const identifier = this.deviceIdentifier.getIdentifier();
       if (!token || !identifier) {
         await this.stopHub();
+        return;
+      }
+
+      // Esta comprobacion no depende del WebSocket. Los navegadores moviles
+      // pueden suspender SignalR al bloquear la pantalla o cambiar de app;
+      // al volver, esta consulta garantiza que una reasignacion no se pierda.
+      const vinculadaPorHttp = await this.verifyLinkByHttp(identifier);
+      if (vinculadaPorHttp === false) {
+        await this.handleRevocation({
+          mensaje: 'Esta estacion fue vinculada a otro dispositivo. Debes volver a iniciar sesion para configurar este equipo.',
+        });
         return;
       }
 
@@ -167,6 +182,8 @@ export class EstacionSessionRealtimeService {
   private addResumeListeners(): void {
     if (this.listenersActive) return;
     window.addEventListener('online', this.resumeListener);
+    window.addEventListener('focus', this.resumeListener);
+    window.addEventListener('pageshow', this.resumeListener);
     document.addEventListener('visibilitychange', this.visibilityListener);
     this.listenersActive = true;
   }
@@ -174,8 +191,26 @@ export class EstacionSessionRealtimeService {
   private removeResumeListeners(): void {
     if (!this.listenersActive) return;
     window.removeEventListener('online', this.resumeListener);
+    window.removeEventListener('focus', this.resumeListener);
+    window.removeEventListener('pageshow', this.resumeListener);
     document.removeEventListener('visibilitychange', this.visibilityListener);
     this.listenersActive = false;
+  }
+
+  private async verifyLinkByHttp(identifier: string): Promise<boolean | undefined> {
+    try {
+      const response = await firstValueFrom(this.estacionService.verifyDeviceLink(identifier));
+      return response.Success ? response.Data === true : undefined;
+    } catch (error) {
+      // Un fallo temporal de red no debe expulsar al usuario. SignalR seguira
+      // intentando reconectar y la consulta se repetira al recuperar actividad.
+      const now = Date.now();
+      if (now - this.lastHttpWarningAt >= 60_000) {
+        console.warn('No se pudo comprobar la vinculacion de la estacion por HTTP.', error);
+        this.lastHttpWarningAt = now;
+      }
+      return undefined;
+    }
   }
 
   private async stopHub(): Promise<void> {

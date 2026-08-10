@@ -30,6 +30,13 @@ export class EstacionService {
     );
   }
 
+  verifyDeviceLink(identificadorUnico: string): Observable<ApiResponse<boolean>> {
+    return this.http.get<ApiResponse<boolean>>(
+      `${this.basePath}/dispositivo/vinculacion`,
+      { params: { identificadorUnico } },
+    );
+  }
+
   delete(id: number): Observable<ApiResponse<boolean>> {
     return this.http.delete<ApiResponse<boolean>>(this.basePath + '/' + id);
   }
