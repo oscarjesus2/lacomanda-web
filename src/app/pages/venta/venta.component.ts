@@ -50,8 +50,7 @@ import { DialogMenuComponent } from 'src/app/components/dialog-menu/dialog-menu.
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 // import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
-import { forkJoin, lastValueFrom, Subscription, timer } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { forkJoin, lastValueFrom, Subscription } from 'rxjs';
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { DialogMTextComponent } from 'src/app/components/dialog-mtext/dialog-mtext.component';
 import { AnularProductoYComplementoDTO } from 'src/app/interfaces/anularProductoYComplementoDTO.interface';
@@ -79,6 +78,7 @@ import { DialogDeliveryComponent } from 'src/app/components/dialog-delivery/dial
 import { DeliveryDialogResult } from 'src/app/models/delivery.models';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { MesaClienteService } from 'src/app/services/mesa-cliente.service';
+import { SolicitudesMesaRealtimeService } from 'src/app/services/solicitudes-mesa-realtime.service';
 import { SolicitudMesaPendiente } from 'src/app/models/mesa-cliente.models';
 import { DeviceCapabilitiesService } from 'src/app/services/device-capabilities.service';
 
@@ -230,6 +230,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     private configuracionService: ConfiguracionService,
     private textCatalog: TenantTextCatalogService,
     private mesaClienteService: MesaClienteService,
+    private solicitudesMesaRealtime: SolicitudesMesaRealtimeService,
     private deviceCapabilities: DeviceCapabilitiesService,
     private activatedRoute: ActivatedRoute) {
 
@@ -447,7 +448,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
         if (data?.Data != null) {
           this.turnoAbierto = data.Data;
-          this.iniciarMonitoreoSolicitudesMesa();
+          this.iniciarSolicitudesMesaEnTiempoReal();
 
           // Aquí se ejecutan los demás servicios en paralelo una vez que se ha obtenido el turno abierto
           forkJoin({
@@ -650,18 +651,14 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.solicitudesQrPorEspacio.get(espacio.IdEspacio);
   }
 
-  private iniciarMonitoreoSolicitudesMesa(): void {
+  private iniciarSolicitudesMesaEnTiempoReal(): void {
     this.solicitudesMesaSubscription?.unsubscribe();
-    this.solicitudesMesaSubscription = timer(0, 3000).pipe(
-      switchMap(() => this.mesaClienteService.listarPendientes())
-    ).subscribe({
-      next: response => {
+    this.solicitudesMesaRealtime.iniciar();
+    this.solicitudesMesaSubscription = this.solicitudesMesaRealtime.solicitudes$.subscribe({
+      next: solicitudes => {
         this.solicitudesQrPorEspacio = new Map(
-          (response.Data || []).map(solicitud => [solicitud.IdEspacio, solicitud])
+          solicitudes.map(solicitud => [solicitud.IdEspacio, solicitud])
         );
-      },
-      error: () => {
-        // La venta sigue operativa aunque falle temporalmente la consulta QR.
       }
     });
   }

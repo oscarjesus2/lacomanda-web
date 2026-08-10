@@ -1,10 +1,10 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Subscription, timer } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 import { SolicitudMesaPendiente } from 'src/app/models/mesa-cliente.models';
 import { MesaClienteService } from 'src/app/services/mesa-cliente.service';
+import { SolicitudesMesaRealtimeService } from 'src/app/services/solicitudes-mesa-realtime.service';
 
 export interface DialogSolicitudesMesaData { idCaja: number; idTurno: number; identificadorEstacion: string; }
 
@@ -13,22 +13,23 @@ export class DialogSolicitudesMesaComponent implements OnInit, OnDestroy {
   solicitudes: SolicitudMesaPendiente[] = [];
   cargando = true;
   procesando?: number;
-  private polling?: Subscription;
+  private solicitudesSubscription?: Subscription;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public readonly data: DialogSolicitudesMesaData,
     private readonly dialogRef: MatDialogRef<DialogSolicitudesMesaComponent>,
-    private readonly mesaClienteService: MesaClienteService
+    private readonly mesaClienteService: MesaClienteService,
+    private readonly solicitudesMesaRealtime: SolicitudesMesaRealtimeService
   ) {}
 
   ngOnInit(): void {
-    this.polling = timer(0, 4000).pipe(switchMap(() => this.mesaClienteService.listarPendientes())).subscribe({
-      next: response => { this.solicitudes = response.Data || []; this.cargando = false; },
-      error: () => this.cargando = false
+    this.solicitudesMesaRealtime.iniciar();
+    this.solicitudesSubscription = this.solicitudesMesaRealtime.solicitudes$.subscribe({
+      next: solicitudes => { this.solicitudes = solicitudes; this.cargando = false; }
     });
   }
 
-  ngOnDestroy(): void { this.polling?.unsubscribe(); }
+  ngOnDestroy(): void { this.solicitudesSubscription?.unsubscribe(); }
 
   confirmar(solicitud: SolicitudMesaPendiente): void {
     Swal.fire({

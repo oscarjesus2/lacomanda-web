@@ -1,7 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Subscription, timer } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
 import {
   CartaMesaCliente,
   ComplementoCartaMesaCliente,
@@ -12,6 +10,7 @@ import {
   SolicitudAccesoMesa
 } from 'src/app/models/mesa-cliente.models';
 import { HeaderService } from 'src/app/services/header.service';
+import { MesaClienteSesionRealtimeService } from 'src/app/services/mesa-cliente-sesion-realtime.service';
 import { MesaClienteService } from 'src/app/services/mesa-cliente.service';
 
 interface OpcionCantidad {
@@ -52,11 +51,12 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   mostrarCarrito = false;
   error = '';
   aviso = '';
-  private polling?: Subscription;
+  private expiracionTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     private readonly route: ActivatedRoute,
     private readonly mesaClienteService: MesaClienteService,
+    private readonly mesaClienteRealtime: MesaClienteSesionRealtimeService,
     private readonly headerService: HeaderService
   ) {}
 
@@ -74,11 +74,14 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.polling?.unsubscribe();
+    this.limpiarExpiracion();
+    void this.mesaClienteRealtime.detener();
     this.headerService.showHeader();
   }
 
   reintentar(): void {
+    this.limpiarExpiracion();
+    void this.mesaClienteRealtime.detener();
     sessionStorage.removeItem(this.storageKey);
     this.estado = undefined;
     this.solicitud = undefined;
@@ -274,25 +277,60 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   }
 
   private iniciarConsulta(token: string): void {
-    this.polling?.unsubscribe();
-    this.polling = timer(0, 5000).pipe(
-      switchMap(() => this.mesaClienteService.consultar(token))
-    ).subscribe({
+    this.consultarEstado(token, true);
+  }
+
+  private consultarEstado(token: string, conectarTiempoReal = false): void {
+    this.mesaClienteService.consultar(token).subscribe({
       next: response => {
         this.cargando = false;
         this.estado = response.Data;
+
+        if (this.pendiente) {
+          this.programarExpiracion(token);
+          if (conectarTiempoReal) {
+            this.mesaClienteRealtime.iniciar(
+              this.estado.IdSesion,
+              token,
+              () => this.consultarEstado(token),
+              () => this.consultarEstado(token)
+            );
+          }
+          return;
+        }
+
+        this.limpiarExpiracion();
+        void this.mesaClienteRealtime.detener();
         if (this.estado.Estado === 'Activa' && !this.carta && !this.cargandoCarta) {
           this.cargarCarta(token);
         }
-        if (this.finalizada) this.polling?.unsubscribe();
       },
       error: error => {
-        this.polling?.unsubscribe();
+        this.limpiarExpiracion();
+        void this.mesaClienteRealtime.detener();
         this.cargando = false;
         sessionStorage.removeItem(this.storageKey);
         this.error = error?.error?.Message || 'La solicitud dejó de estar disponible.';
       }
     });
+  }
+
+  private programarExpiracion(token: string): void {
+    this.limpiarExpiracion();
+    const expiraUtc = this.estado?.ExpiraUtc || this.solicitud?.ExpiraUtc;
+    const espera = expiraUtc ? new Date(expiraUtc).getTime() - Date.now() : 0;
+    if (espera <= 0) return;
+
+    this.expiracionTimer = setTimeout(
+      () => this.consultarEstado(token),
+      espera + 250
+    );
+  }
+
+  private limpiarExpiracion(): void {
+    if (!this.expiracionTimer) return;
+    clearTimeout(this.expiracionTimer);
+    this.expiracionTimer = undefined;
   }
 
   private cargarCarta(token: string): void {
