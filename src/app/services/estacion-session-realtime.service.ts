@@ -75,7 +75,7 @@ export class EstacionSessionRealtimeService {
         this.connectedIdentifier = identifier;
         this.hub = new signalR.HubConnectionBuilder()
           .withUrl(
-            `${apiRoot}/hubs/sesiones-estacion?id=${encodeURIComponent(identifier)}`,
+            `${apiRoot}/hubs/sesiones-estacion?dispositivoId=${encodeURIComponent(identifier)}`,
             { accessTokenFactory: () => this.storage.getCurrentToken() ?? '' },
           )
           .withAutomaticReconnect([0, 2_000, 5_000, 15_000, 30_000])
