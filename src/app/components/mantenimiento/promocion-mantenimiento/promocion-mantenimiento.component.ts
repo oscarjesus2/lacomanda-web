@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -11,7 +11,10 @@ import { PromocionService } from 'src/app/services/promocion.service';
   templateUrl: './promocion-mantenimiento.component.html',
   styleUrls: ['./promocion-mantenimiento.component.css']
 })
-export class PromocionMantenimientoComponent implements OnInit {
+export class PromocionMantenimientoComponent implements OnInit, OnDestroy {
+  private static readonly MAXIMO_BYTES_IMAGEN = 5 * 1024 * 1024;
+  private static readonly TIPOS_IMAGEN_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
+
   @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
     if (value) {
       this.dataSource.paginator = value;
@@ -26,6 +29,11 @@ export class PromocionMantenimientoComponent implements OnInit {
   cargando = false;
   correlativo: number | null = null;
   formulario: PromocionGuardar = this.nuevoFormulario();
+  archivoImagen: File | null = null;
+  imagenPreviewUrl: string | null = null;
+  nombreImagenGuardada: string | null = null;
+  tieneImagenGuardada = false;
+  eliminarImagenGuardada = false;
 
   constructor(
     private readonly service: PromocionService,
@@ -34,6 +42,10 @@ export class PromocionMantenimientoComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+  }
+
+  ngOnDestroy(): void {
+    this.liberarPreview();
   }
 
   cargar(): void {
@@ -67,6 +79,7 @@ export class PromocionMantenimientoComponent implements OnInit {
   nueva(): void {
     this.correlativo = null;
     this.formulario = this.nuevoFormulario();
+    this.reiniciarImagen();
     this.showForm = true;
   }
 
@@ -79,10 +92,44 @@ export class PromocionMantenimientoComponent implements OnInit {
       PrecioMinimoCompra: item.PrecioMinimoCompra,
       OfertaDesde: this.fechaFormulario(item.OfertaDesde),
       OfertaHasta: this.fechaFormulario(item.OfertaHasta),
-      Imagen: item.Imagen || null,
       Activo: item.Activo
     };
+    this.reiniciarImagen();
+    this.nombreImagenGuardada = item.Imagen || null;
+    this.tieneImagenGuardada = item.TieneImagen;
+    if (item.TieneImagen) {
+      this.cargarImagenGuardada(item.Correlativo);
+    }
     this.showForm = true;
+  }
+
+  seleccionarImagen(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = '';
+    if (!archivo) {
+      return;
+    }
+
+    if (!PromocionMantenimientoComponent.TIPOS_IMAGEN_PERMITIDOS.includes(archivo.type)) {
+      Swal.fire('Imagen no válida', 'Seleccione una imagen JPG, PNG o WEBP.', 'warning');
+      return;
+    }
+    if (archivo.size > PromocionMantenimientoComponent.MAXIMO_BYTES_IMAGEN) {
+      Swal.fire('Imagen demasiado grande', 'La imagen no puede superar 5 MB.', 'warning');
+      return;
+    }
+
+    this.liberarPreview();
+    this.archivoImagen = archivo;
+    this.imagenPreviewUrl = URL.createObjectURL(archivo);
+    this.eliminarImagenGuardada = false;
+  }
+
+  quitarImagen(): void {
+    this.liberarPreview();
+    this.archivoImagen = null;
+    this.eliminarImagenGuardada = this.tieneImagenGuardada;
   }
 
   guardar(): void {
@@ -102,14 +149,12 @@ export class PromocionMantenimientoComponent implements OnInit {
 
     request.subscribe({
       next: response => {
-        this.guardando = false;
         if (!response.Success) {
+          this.guardando = false;
           Swal.fire('Error', response.Message || 'No se pudo guardar la promoción.', 'error');
           return;
         }
-        Swal.fire('Guardado', response.Message || 'Promoción guardada correctamente.', 'success');
-        this.showForm = false;
-        this.cargar();
+        this.guardarCambiosImagen(response.Data.Correlativo, response.Message);
       },
       error: error => {
         this.guardando = false;
@@ -145,6 +190,7 @@ export class PromocionMantenimientoComponent implements OnInit {
   }
 
   volver(): void {
+    this.reiniciarImagen();
     this.showForm = false;
   }
 
@@ -161,9 +207,76 @@ export class PromocionMantenimientoComponent implements OnInit {
       PrecioMinimoCompra: 0,
       OfertaDesde: hoy,
       OfertaHasta: hoy,
-      Imagen: null,
       Activo: true
     };
+  }
+
+  private cargarImagenGuardada(id: number): void {
+    this.service.obtenerImagen(id).subscribe({
+      next: blob => {
+        this.liberarPreview();
+        this.imagenPreviewUrl = URL.createObjectURL(blob);
+      },
+      error: () => {
+        this.tieneImagenGuardada = false;
+        this.nombreImagenGuardada = null;
+      }
+    });
+  }
+
+  private guardarCambiosImagen(id: number, mensajePromocion: string): void {
+    if (this.archivoImagen) {
+      this.service.guardarImagen(id, this.archivoImagen).subscribe({
+        next: response => response.Success
+          ? this.finalizarGuardado(mensajePromocion)
+          : this.mostrarGuardadoParcial(response.Message),
+        error: error => this.mostrarGuardadoParcial(error?.error?.Message)
+      });
+      return;
+    }
+
+    if (this.eliminarImagenGuardada) {
+      this.service.eliminarImagen(id).subscribe({
+        next: response => response.Success
+          ? this.finalizarGuardado(mensajePromocion)
+          : this.mostrarGuardadoParcial(response.Message),
+        error: error => this.mostrarGuardadoParcial(error?.error?.Message)
+      });
+      return;
+    }
+
+    this.finalizarGuardado(mensajePromocion);
+  }
+
+  private finalizarGuardado(mensaje?: string): void {
+    this.guardando = false;
+    Swal.fire('Guardado', mensaje || 'Promoción guardada correctamente.', 'success');
+    this.reiniciarImagen();
+    this.showForm = false;
+    this.cargar();
+  }
+
+  private mostrarGuardadoParcial(detalle?: string): void {
+    this.guardando = false;
+    Swal.fire(
+      'Promoción guardada sin imagen',
+      detalle || 'Los datos se guardaron, pero no fue posible actualizar la imagen. Inténtelo nuevamente.',
+      'warning');
+  }
+
+  private reiniciarImagen(): void {
+    this.liberarPreview();
+    this.archivoImagen = null;
+    this.nombreImagenGuardada = null;
+    this.tieneImagenGuardada = false;
+    this.eliminarImagenGuardada = false;
+  }
+
+  private liberarPreview(): void {
+    if (this.imagenPreviewUrl) {
+      URL.revokeObjectURL(this.imagenPreviewUrl);
+      this.imagenPreviewUrl = null;
+    }
   }
 
   private fechaFormulario(value: string | Date): string {

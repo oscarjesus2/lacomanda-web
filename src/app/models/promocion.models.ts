@@ -7,7 +7,16 @@ export interface Promocion {
   OfertaDesde: string | Date;
   OfertaHasta: string | Date;
   Imagen?: string | null;
+  TieneImagen: boolean;
   Activo: boolean;
 }
 
-export type PromocionGuardar = Omit<Promocion, 'Correlativo'>;
+export interface PromocionGuardar {
+  Titulo: string;
+  AnuncioPrincipal: string;
+  TerminosCondiciones: string;
+  PrecioMinimoCompra: number;
+  OfertaDesde: string | Date;
+  OfertaHasta: string | Date;
+  Activo: boolean;
+}

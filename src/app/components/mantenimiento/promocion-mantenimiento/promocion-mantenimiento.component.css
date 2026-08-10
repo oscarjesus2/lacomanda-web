@@ -1,1 +1,86 @@
+.promo-image-field {
+  align-items: stretch;
+  background: var(--app-surface-soft, #fff7f2);
+  border: 1px solid var(--app-border, #ead8cd);
+  border-radius: 14px;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(150px, 220px) 1fr;
+  padding: 16px;
+}
 
+.promo-image-field__preview {
+  align-items: center;
+  aspect-ratio: 4 / 3;
+  background: #fff;
+  border: 1px dashed #c9b7ad;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  min-height: 130px;
+  overflow: hidden;
+}
+
+.promo-image-field__preview img {
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.promo-image-field__empty {
+  align-items: center;
+  color: #8b7c73;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.promo-image-field__empty mat-icon {
+  font-size: 36px;
+  height: 36px;
+  width: 36px;
+}
+
+.promo-image-field__controls {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.promo-image-field__controls strong {
+  color: var(--app-heading, #8f120c);
+  font-size: 15px;
+}
+
+.promo-image-field__controls strong span,
+.promo-image-field__controls p,
+.promo-image-field__controls small {
+  color: #74665e;
+  font-weight: 400;
+}
+
+.promo-image-field__controls p {
+  margin: 5px 0 12px;
+}
+
+.promo-image-field__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.promo-image-field__name {
+  margin-top: 10px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .promo-image-field {
+    grid-template-columns: 1fr;
+  }
+
+  .promo-image-field__preview {
+    max-height: 220px;
+  }
+}

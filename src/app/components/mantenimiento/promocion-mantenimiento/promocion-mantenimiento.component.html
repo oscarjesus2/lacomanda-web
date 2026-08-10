@@ -125,11 +125,44 @@
               <mat-option [value]="false">Inactiva</mat-option>
             </mat-select>
           </mat-form-field>
-          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
-            <mat-label>Referencia de imagen (opcional)</mat-label>
-            <input matInput name="imagen" [(ngModel)]="formulario.Imagen" maxlength="300">
-            <mat-hint>Dato de referencia; no se descargan imágenes externas al imprimir.</mat-hint>
-          </mat-form-field>
+          <div class="promo-image-field dialog-form-grid__wide">
+            <div class="promo-image-field__preview">
+              <img *ngIf="imagenPreviewUrl" [src]="imagenPreviewUrl" alt="Vista previa de la promoción">
+              <div *ngIf="!imagenPreviewUrl" class="promo-image-field__empty">
+                <mat-icon>image</mat-icon>
+                <span>Sin imagen</span>
+              </div>
+            </div>
+            <div class="promo-image-field__controls">
+              <strong>Imagen del cupón <span>(opcional)</span></strong>
+              <p>Se imprimirá con la promoción al emitir el comprobante.</p>
+              <input
+                #selectorImagen
+                type="file"
+                hidden
+                accept="image/jpeg,image/png,image/webp"
+                (change)="seleccionarImagen($event)">
+              <div class="promo-image-field__buttons">
+                <button mat-stroked-button type="button" (click)="selectorImagen.click()">
+                  <mat-icon>upload</mat-icon>
+                  {{ imagenPreviewUrl ? 'Cambiar imagen' : 'Seleccionar imagen' }}
+                </button>
+                <button
+                  *ngIf="imagenPreviewUrl"
+                  mat-stroked-button
+                  color="warn"
+                  type="button"
+                  (click)="quitarImagen()">
+                  <mat-icon>delete</mat-icon>
+                  Quitar
+                </button>
+              </div>
+              <small class="promo-image-field__name" *ngIf="archivoImagen || nombreImagenGuardada">
+                {{ archivoImagen?.name || nombreImagenGuardada }}
+              </small>
+              <small>JPG, PNG o WEBP · máximo 5 MB.</small>
+            </div>
+          </div>
         </div>
       </section>
     </div>

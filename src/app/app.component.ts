@@ -10,6 +10,7 @@ import { SwUpdate } from '@angular/service-worker';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TenantTextCatalogService } from './services/localization/tenant-text-catalog.service';
 import { AgenteImpresionPedidosService } from './services/agente-impresion-pedidos.service';
+import { EstacionSessionRealtimeService } from './services/estacion-session-realtime.service';
 
 @Component({
   selector: 'app-root',
@@ -34,6 +35,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private backendStatusService: BackendStatusService,
     private textCatalog: TenantTextCatalogService,
     private agenteImpresionPedidos: AgenteImpresionPedidosService,
+    private estacionSessionRealtime: EstacionSessionRealtimeService,
   ) {
     this.backendDown$ = this.backendStatusService.isDown$;
     this.checkForUpdates();
@@ -44,11 +46,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.agenteImpresionPedidos.detener();
+    this.estacionSessionRealtime.stop();
     this.storageService.logout();
   }
 
   async ngOnInit(): Promise<void> {    
      this.agenteImpresionPedidos.iniciar();
+     this.estacionSessionRealtime.start();
      const session = this.storageService.getCurrentSession();
      this.textCatalog.setCulture(
        session?.Cultura ?? session?.CulturaTenant,

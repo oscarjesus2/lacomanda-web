@@ -23,6 +23,20 @@ export class PromocionService {
     return this.http.put<ApiResponse<Promocion>>(`${this.basePath}/${id}`, dto);
   }
 
+  obtenerImagen(id: number): Observable<Blob> {
+    return this.http.get(`${this.basePath}/${id}/imagen`, { responseType: 'blob' });
+  }
+
+  guardarImagen(id: number, archivo: File): Observable<ApiResponse<boolean>> {
+    const formData = new FormData();
+    formData.append('archivo', archivo, archivo.name);
+    return this.http.put<ApiResponse<boolean>>(`${this.basePath}/${id}/imagen`, formData);
+  }
+
+  eliminarImagen(id: number): Observable<ApiResponse<boolean>> {
+    return this.http.delete<ApiResponse<boolean>>(`${this.basePath}/${id}/imagen`);
+  }
+
   eliminar(id: number): Observable<ApiResponse<boolean>> {
     return this.http.delete<ApiResponse<boolean>>(`${this.basePath}/${id}`);
   }

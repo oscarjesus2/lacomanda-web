@@ -23,6 +23,13 @@ export class EstacionService {
     return this.http.put<ApiResponse<Estacion>>(this.basePath + '/' + e.IdEstacion, e);
   }
 
+  linkDevice(id: number, identificadorUnico: string): Observable<ApiResponse<Estacion>> {
+    return this.http.put<ApiResponse<Estacion>>(
+      `${this.basePath}/${id}/dispositivo`,
+      { IdentificadorUnico: identificadorUnico },
+    );
+  }
+
   delete(id: number): Observable<ApiResponse<boolean>> {
     return this.http.delete<ApiResponse<boolean>>(this.basePath + '/' + id);
   }
