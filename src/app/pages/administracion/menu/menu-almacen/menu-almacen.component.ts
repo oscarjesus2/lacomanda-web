@@ -12,6 +12,7 @@ import { SalidaInternaMantenimientoComponent } from 'src/app/components/mantenim
 import { TransferenciaAlmacenMantenimientoComponent } from 'src/app/components/mantenimiento/transferencia-almacen-mantenimiento/transferencia-almacen-mantenimiento.component';
 import { PorcionamientoMantenimientoComponent } from 'src/app/components/mantenimiento/porcionamiento-mantenimiento/porcionamiento-mantenimiento.component';
 import { ProduccionMantenimientoComponent } from 'src/app/components/mantenimiento/produccion-mantenimiento/produccion-mantenimiento.component';
+import { MotivoSalidaMantenimientoComponent } from 'src/app/components/mantenimiento/motivo-salida-mantenimiento/motivo-salida-mantenimiento.component';
 
 @Component({
   selector: 'app-menu-almacen',
@@ -69,6 +70,15 @@ export class MenuAlmacenComponent implements OnInit {
           label: 'Proveedores',
           titleKey: 'suppliers',
           labelKey: 'suppliers',
+          disabled: false
+        },
+        {
+          title: 'Motivos de salida',
+          action: 'motivosSalida',
+          icon: 'assignment_late',
+          label: 'Motivos salida',
+          titleKey: 'stockOutReasons',
+          labelKey: 'stockOutReasons',
           disabled: false
         }
       ]
@@ -143,7 +153,8 @@ export class MenuAlmacenComponent implements OnInit {
       salidasInternas: SalidaInternaMantenimientoComponent,
       transferenciasAlmacen: TransferenciaAlmacenMantenimientoComponent,
       porcionamientos: PorcionamientoMantenimientoComponent,
-      producciones: ProduccionMantenimientoComponent
+      producciones: ProduccionMantenimientoComponent,
+      motivosSalida: MotivoSalidaMantenimientoComponent
     };
     const component = components[item.action];
     if (!component) {
@@ -153,7 +164,8 @@ export class MenuAlmacenComponent implements OnInit {
     const esMaestroCompacto = [
       'areasAlmacen',
       'subareasAlmacen',
-      'proveedores'
+      'proveedores',
+      'motivosSalida'
     ].includes(item.action);
     const configuracion = esMaestroCompacto
       ? {

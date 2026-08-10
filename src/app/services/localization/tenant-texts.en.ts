@@ -1107,6 +1107,7 @@ export const EN_TEXTS = {
   suppliers: 'Suppliers',
   stockIn: 'Stock in',
   stockOut: 'Stock out',
+  stockOutReasons: 'Stock-out reasons',
   transfers: 'Transfers',
   inventories: 'Inventories',
   portioning: 'Portioning',

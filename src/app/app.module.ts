@@ -119,6 +119,8 @@ import { SalidaInternaMantenimientoComponent } from './components/mantenimiento/
 import { TransferenciaAlmacenMantenimientoComponent } from './components/mantenimiento/transferencia-almacen-mantenimiento/transferencia-almacen-mantenimiento.component';
 import { PorcionamientoMantenimientoComponent } from './components/mantenimiento/porcionamiento-mantenimiento/porcionamiento-mantenimiento.component';
 import { ProduccionMantenimientoComponent } from './components/mantenimiento/produccion-mantenimiento/produccion-mantenimiento.component';
+import { PromocionMantenimientoComponent } from './components/mantenimiento/promocion-mantenimiento/promocion-mantenimiento.component';
+import { MotivoSalidaMantenimientoComponent } from './components/mantenimiento/motivo-salida-mantenimiento/motivo-salida-mantenimiento.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -211,6 +213,8 @@ export const MY_DATE_FORMATS = {
     TransferenciaAlmacenMantenimientoComponent,
     PorcionamientoMantenimientoComponent,
     ProduccionMantenimientoComponent,
+    PromocionMantenimientoComponent,
+    MotivoSalidaMantenimientoComponent,
   ],
   imports: [
     CommonModule,

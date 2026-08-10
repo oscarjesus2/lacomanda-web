@@ -10,7 +10,7 @@
         <button
           type="button"
           class="tile"
-          *ngFor="let item of section.children"
+          *ngFor="let item of itemsVisibles(section)"
           (click)="openDialog(item)"
           [title]="item.titleKey | tenantText"
         >

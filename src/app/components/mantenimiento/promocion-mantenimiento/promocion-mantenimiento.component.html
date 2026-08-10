@@ -1,0 +1,145 @@
+<div class="mant-panel dialog-panel--workspace">
+  <button mat-icon-button class="close-button" aria-label="Cerrar" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>{{ showForm ? (correlativo ? 'Editar promoción' : 'Nueva promoción') : 'Mantenimiento de promociones' }}</h2>
+
+  <ng-container *ngIf="!showForm">
+    <div class="dialog-toolbar">
+      <div class="dialog-toolbar__filters dialog-toolbar__filters--single">
+        <mat-form-field appearance="fill">
+          <mat-label>Buscar promoción</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [(ngModel)]="filtro" (ngModelChange)="aplicarFiltro()" placeholder="Título, anuncio o estado">
+        </mat-form-field>
+      </div>
+      <div class="dialog-toolbar__actions">
+        <button mat-raised-button color="primary" type="button" (click)="nueva()">
+          <mat-icon>add</mat-icon>
+          Nueva promoción
+        </button>
+      </div>
+    </div>
+
+    <div class="dialog-workspace-content">
+      <div class="dialog-table-card">
+        <div class="dialog-table-wrapper--fill">
+          <mat-table [dataSource]="dataSource" class="dialog-table--wide">
+            <ng-container matColumnDef="titulo">
+              <mat-header-cell *matHeaderCellDef>Promoción</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <span>{{ row.Titulo }}</span>
+                <small>{{ row.AnuncioPrincipal }}</small>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="vigencia">
+              <mat-header-cell *matHeaderCellDef>Vigencia</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                {{ row.OfertaDesde | date:'dd/MM/yyyy' }} — {{ row.OfertaHasta | date:'dd/MM/yyyy' }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="minimo">
+              <mat-header-cell *matHeaderCellDef>Compra mínima</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.PrecioMinimoCompra | number:'1.2-2' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="estado">
+              <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <span class="status-pill" [class.status-pill--inactive]="!row.Activo">
+                  {{ row.Activo ? 'Activa' : 'Inactiva' }}
+                </span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+              <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <button mat-icon-button color="primary" type="button" aria-label="Editar promoción" (click)="editar(row)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" type="button" aria-label="Eliminar promoción" (click)="eliminar(row)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+          </mat-table>
+
+          <div class="dialog-empty-state" *ngIf="!cargando && dataSource.filteredData.length === 0">
+            <mat-icon>campaign</mat-icon>
+            <span>No se encontraron promociones.</span>
+          </div>
+        </div>
+        <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons></mat-paginator>
+      </div>
+    </div>
+  </ng-container>
+
+  <form *ngIf="showForm" class="dialog-form dialog-form--workspace" (ngSubmit)="guardar()">
+    <div class="dialog-form-scroll">
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title"><mat-icon>campaign</mat-icon> Contenido de la promoción</h3>
+        <p class="dialog-form-section__hint">Este contenido se imprimirá como cupón después del comprobante.</p>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+            <mat-label>Título</mat-label>
+            <input matInput name="titulo" [(ngModel)]="formulario.Titulo" maxlength="300" required>
+          </mat-form-field>
+          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+            <mat-label>Anuncio principal</mat-label>
+            <textarea matInput name="anuncio" [(ngModel)]="formulario.AnuncioPrincipal" maxlength="300" required rows="2"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+            <mat-label>Términos y condiciones</mat-label>
+            <textarea matInput name="terminos" [(ngModel)]="formulario.TerminosCondiciones" maxlength="300" required rows="3"></textarea>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title"><mat-icon>event</mat-icon> Aplicación</h3>
+        <p class="dialog-form-section__hint">Solo se imprimirá durante la vigencia y cuando la venta alcance el importe mínimo.</p>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Vigente desde</mat-label>
+            <input matInput type="date" name="desde" [(ngModel)]="formulario.OfertaDesde" required>
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Vigente hasta</mat-label>
+            <input matInput type="date" name="hasta" [(ngModel)]="formulario.OfertaHasta" required>
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Compra mínima</mat-label>
+            <input matInput type="number" min="0" step="0.01" name="minimo" [(ngModel)]="formulario.PrecioMinimoCompra" required>
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Estado</mat-label>
+            <mat-select name="activo" [(ngModel)]="formulario.Activo" required>
+              <mat-option [value]="true">Activa</mat-option>
+              <mat-option [value]="false">Inactiva</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+            <mat-label>Referencia de imagen (opcional)</mat-label>
+            <input matInput name="imagen" [(ngModel)]="formulario.Imagen" maxlength="300">
+            <mat-hint>Dato de referencia; no se descargan imágenes externas al imprimir.</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+    </div>
+
+    <div class="dialog-form-actions">
+      <button mat-stroked-button type="button" (click)="volver()">Cancelar</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="guardando">
+        <mat-icon>save</mat-icon>
+        {{ correlativo ? 'Actualizar' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+</div>

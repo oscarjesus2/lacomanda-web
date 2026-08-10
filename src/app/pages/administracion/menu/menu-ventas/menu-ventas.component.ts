@@ -29,6 +29,8 @@ import { ConfigurarOrdenadorComponent } from 'src/app/components/configuracion-i
 import { AreaImpresionMantenimientoComponent } from 'src/app/components/mantenimiento/area-impresion-mantenimiento/area-impresion-mantenimiento.component';
 import { DescuentoMantenimientoComponent } from 'src/app/components/mantenimiento/descuento-mantenimiento/descuento-mantenimiento.component';
 import { SocioNegocioMantenimientoComponent } from 'src/app/components/mantenimiento/socio-negocio-mantenimiento/socio-negocio-mantenimiento.component';
+import { PromocionMantenimientoComponent } from 'src/app/components/mantenimiento/promocion-mantenimiento/promocion-mantenimiento.component';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 
 @Component({
   selector: 'app-menu-ventas',
@@ -36,6 +38,7 @@ import { SocioNegocioMantenimientoComponent } from 'src/app/components/mantenimi
   styleUrls: ['./menu-ventas.component.css']
 })
 export class MenuVentasComponent implements OnInit {
+  promocionesHabilitadas = false;
 
   ventasMenu = [
     {
@@ -58,7 +61,7 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Estacion',                    route: '/ventas/estacion',                 icon: 'computer',         label: 'Estación',     titleKey: 'station',            labelKey: 'station'            },
         { title: 'Descuentos',                  route: '/ventas/descuentos',               icon: 'local_offer',      label: 'Descuentos',   titleKey: 'discounts',          labelKey: 'discounts'          },
         { title: 'Tarjetas',                    route: '/ventas/tarjetas',                 icon: 'credit_card',      label: 'Tarjetas',     titleKey: 'cards',              labelKey: 'cards'              },
-        { title: 'Promociones',                 route: '/ventas/promociones',              icon: 'campaign',         label: 'Promociones',  titleKey: 'promotions',         labelKey: 'promotions'         },
+        { title: 'Promociones',                 route: '/ventas/promociones',              icon: 'campaign',         label: 'Promociones',  titleKey: 'promotions',         labelKey: 'promotions', feature: 'ventas.promociones' },
         { title: 'Clientes',                    route: '/ventas/clientes',                 icon: 'people',           label: 'Clientes',     titleKey: 'customers',          labelKey: 'customers'          },
       ]
     },
@@ -95,7 +98,12 @@ export class MenuVentasComponent implements OnInit {
     private storageService: StorageService,
     private TurnoService: TurnoService,
     private dataService: DataService,
+    private licenciaTenantService: LicenciaTenantService,
   ) { }
+
+  itemsVisibles(section: any): any[] {
+    return section.children.filter((item: any) => !item.feature || this.promocionesHabilitadas);
+  }
 
   openDialog(item: any): void {
     if (item.title === 'Colores') 
@@ -192,6 +200,22 @@ export class MenuVentasComponent implements OnInit {
     {
       this.OpenDescuentoMantenimientoComponent();
     }
+    if (item.title === 'Promociones')
+    {
+      this.OpenPromocionMantenimientoComponent();
+    }
+  }
+
+  OpenPromocionMantenimientoComponent(): void {
+    this.dialog.open(PromocionMantenimientoComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'calc(100vw - 32px)',
+      height: 'calc(100vh - 32px)',
+      maxWidth: '1180px',
+      maxHeight: '860px',
+      panelClass: 'dialog-window--workspace'
+    });
   }
   OpenCajaMantenimientoComponent() {
      const dialog = this.dialog.open(CajaMantenimientoComponent, {
@@ -416,6 +440,14 @@ export class MenuVentasComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.licenciaTenantService.obtener().subscribe({
+      next: response => {
+        const licencia = response.Data;
+        this.promocionesHabilitadas = licencia == null ||
+          licencia.Caracteristicas?.some(c => c.Codigo === 'ventas.promociones' && c.Habilitada) === true;
+      },
+      error: () => this.promocionesHabilitadas = false
+    });
   }
 
 }

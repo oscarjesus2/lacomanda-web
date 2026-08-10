@@ -1113,6 +1113,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   suppliers: 'Proveedores',
   stockIn: 'Ingresos',
   stockOut: 'Salidas',
+  stockOutReasons: 'Motivos de salida',
   transfers: 'Transferencias',
   inventories: 'Inventarios',
   portioning: 'Porcionamiento',
