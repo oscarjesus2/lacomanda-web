@@ -28,6 +28,7 @@ import { NotificationService } from '../services/notification.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { BackendStatusService } from '../services/backend-status.service';
 import { environment } from 'src/environments/environment';
+import { DeviceIdentifierService } from '../services/device-identifier.service';
 
 interface ApiErrorResponse {
   Success?: boolean;
@@ -58,6 +59,9 @@ export class ApiRequestInterceptor implements HttpInterceptor {
   /** Evita mostrar varios avisos cuando las cargas iniciales fallan a la vez. */
   private subscriptionBlockDialogOpen = false;
 
+  /** Evita repetir el cierre si varias consultas detectan a la vez la desvinculación. */
+  private stationRevokedDialogOpen = false;
+
   private readonly UTC_DATE_REGEX =
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
 
@@ -67,7 +71,8 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     private dialog: MatDialog,
     private notificationService: NotificationService,
     private spinnerService: NgxSpinnerService,
-    private backendStatus: BackendStatusService
+    private backendStatus: BackendStatusService,
+    private deviceIdentifier: DeviceIdentifierService,
   ) {}
 
   intercept(
@@ -152,6 +157,11 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     if (error.status === 402 && this.isSubscriptionAccessError(error)) {
       this.handleSubscriptionAccessError(error);
       this.spinnerService.hide();
+      return throwError(() => error);
+    }
+
+    if (this.isRevokedStationAccess(error, request)) {
+      this.handleRevokedStationAccess();
       return throwError(() => error);
     }
 
@@ -480,6 +490,45 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       'SUBSCRIPTION_CANCELLED',
       'SUBSCRIPTION_NOT_ACTIVE'
     ].includes(errorCode);
+  }
+
+  private isRevokedStationAccess(
+    error: HttpErrorResponse,
+    request: HttpRequest<any>,
+  ): boolean {
+    const body = error.error as ApiErrorResponse & { errorCode?: string };
+    const errorCode = body?.ErrorCode || body?.errorCode || '';
+    const message = body?.Message || body?.message || '';
+
+    return request.url.includes('/trabajos-impresion') && (
+      errorCode === 'ESTACION_NOT_FOUND'
+      || message.trim().toLowerCase() === 'la estación no existe.'
+      || message.trim().toLowerCase() === 'la estacion no existe.'
+    );
+  }
+
+  private handleRevokedStationAccess(): void {
+    if (this.stationRevokedDialogOpen) return;
+    this.stationRevokedDialogOpen = true;
+
+    this.spinnerService.hide();
+    this.dialog.closeAll();
+    this.deviceIdentifier.deleteIdentifier();
+
+    // La sesión se elimina antes de mostrar el aviso. El mensaje ya no puede
+    // dejar al usuario operando con una estación que fue reasignada.
+    this.storageService.logout();
+
+    void Swal.fire({
+      icon: 'warning',
+      title: 'Sesión cerrada en este equipo',
+      text: 'La estación fue asignada a otro dispositivo. Inicia sesión nuevamente para configurar este equipo.',
+      confirmButtonText: 'Ir a iniciar sesión',
+      allowEscapeKey: false,
+      allowOutsideClick: false,
+    }).finally(() => {
+      this.stationRevokedDialogOpen = false;
+    });
   }
 
   private handleSubscriptionAccessError(error: HttpErrorResponse): void {

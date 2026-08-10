@@ -161,31 +161,35 @@ export class EstacionMantenimientoComponent implements OnInit {
     const reemplazaOtroDispositivo = !!this.estacion.IdentificadorUnico &&
       !this.sonIguales(this.estacion.IdentificadorUnico, identificador);
 
-    const advertencias: string[] = [];
-    if (reemplazaOtroDispositivo) {
-      advertencias.push(
-        `La estación ${this.estacion.Descripcion || ''} ya está vinculada a otro equipo. ` +
-        'Ese equipo cerrará su sesión y dejará de operar como esta estación.'
-      );
+    const estacionDestino = this.estacion.Descripcion || 'esta estación';
+    const estacionAnterior = estacionDeEsteDispositivo?.Descripcion || 'la estación anterior';
+    let mensaje = `Al guardar, este equipo quedará configurado como ${estacionDestino}.`;
+
+    if (reemplazaOtroDispositivo && estacionDeEsteDispositivo) {
+      mensaje =
+        `Al guardar, este equipo sustituirá al que está vinculado a ${estacionDestino} ` +
+        `y dejará de estar asignado a ${estacionAnterior}. El otro equipo cerrará su sesión ` +
+        `y ${estacionAnterior} quedará disponible para vincular otro dispositivo.`;
+    } else if (reemplazaOtroDispositivo) {
+      mensaje =
+        `Al guardar, este equipo sustituirá al que está vinculado a ${estacionDestino}. ` +
+        'El otro equipo cerrará su sesión.';
+    } else if (estacionDeEsteDispositivo) {
+      mensaje =
+        `Al guardar, este equipo dejará de estar asignado a ${estacionAnterior} ` +
+        `y pasará a ${estacionDestino}. ${estacionAnterior} quedará disponible para vincular otro dispositivo.`;
     }
-    if (estacionDeEsteDispositivo) {
-      advertencias.push(
-        `Este dispositivo está configurado como ${estacionDeEsteDispositivo.Descripcion}. ` +
-        'Esa estación quedará sin dispositivo asignado.'
-      );
-    }
-    advertencias.push(
-      `Este dispositivo quedará asociado a ${this.estacion.Descripcion || 'la estación'} cuando guardes.`
-    );
 
     const result = await Swal.fire({
       title: reemplazaOtroDispositivo || estacionDeEsteDispositivo
-        ? 'Confirmar cambio de dispositivo'
-        : 'Configurar este dispositivo',
-      html: advertencias.map(texto => `<p>${this.escapeHtml(texto)}</p>`).join(''),
+        ? `Usar este equipo en ${estacionDestino}`
+        : `Configurar este equipo como ${estacionDestino}`,
+      text: mensaje,
       icon: reemplazaOtroDispositivo || estacionDeEsteDispositivo ? 'warning' : 'question',
       showCancelButton: true,
-      confirmButtonText: 'Sí, usar este dispositivo',
+      confirmButtonText: reemplazaOtroDispositivo || estacionDeEsteDispositivo
+        ? 'Preparar cambio'
+        : 'Usar este equipo',
       cancelButtonText: 'Cancelar',
       focusCancel: reemplazaOtroDispositivo,
     });
@@ -316,12 +320,6 @@ export class EstacionMantenimientoComponent implements OnInit {
 
   private sonIguales(a?: string, b?: string): boolean {
     return !!a && !!b && a.trim().toLowerCase() === b.trim().toLowerCase();
-  }
-
-  private escapeHtml(value: string): string {
-    return value.replace(/[&<>'\"]/g, char => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
-    })[char] ?? char);
   }
 
   private inicializarTipos(): void {

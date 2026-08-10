@@ -84,17 +84,21 @@ export class EstacionSessionRealtimeService {
     if (this.revoking) return;
     this.revoking = true;
     this.deviceIdentifier.deleteIdentifier();
+    await this.stopHub();
+
+    // Primero se invalida la sesión local y se navega al acceso. El usuario
+    // ya no puede continuar operando mientras el aviso permanece abierto.
+    this.storage.logout();
 
     await Swal.fire({
-      title: 'Este equipo fue desvinculado',
+      title: 'Sesión cerrada en este equipo',
       text: message?.mensaje
         || 'La estacion fue asignada a otro dispositivo. Debes volver a iniciar sesion para configurar este equipo.',
       icon: 'warning',
-      confirmButtonText: 'Entendido',
+      confirmButtonText: 'Ir a iniciar sesión',
       allowOutsideClick: false,
       allowEscapeKey: false,
     });
-    this.storage.logout();
   }
 
   private async stopHub(): Promise<void> {
