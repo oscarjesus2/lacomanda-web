@@ -638,38 +638,11 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       return;
     }
 
-    const importesConvertidos = this.lineas.map(linea => ({
-      linea,
-      base: this.baseLinea(linea),
-      total: this.totalLinea(linea)
-    }));
-
-    let importeAgregarConvertido: number | null = null;
-    if (this.articuloAgregar && this.importeAgregar > 0) {
-      const lineaTemporal: LineaCompraEdicion = {
-        IdProducto: this.articuloAgregar.IdProducto,
-        Producto: this.articuloAgregar.Descripcion,
-        UnidadMedida: this.articuloAgregar.UnidadMedida,
-        Inventariable: this.articuloAgregar.Inventariable,
-        Cantidad: this.cantidadAgregar,
-        Importe: this.importeAgregar,
-        IdSubAreaAlmacen: this.idSubAreaAgregar,
-        Impuestos: [...this.impuestosAgregar]
-      };
-      importeAgregarConvertido = incluyenImpuestos
-        ? this.totalLinea(lineaTemporal)
-        : this.baseLinea(lineaTemporal);
-    }
-
+    // El importe digitado no se convierte al cambiar de modalidad.
+    // Igual que en la versión Windows, el mismo número pasa a
+    // interpretarse como base imponible o como total con impuestos.
     this.formulario.PreciosIncluyenImpuestos = incluyenImpuestos;
-    importesConvertidos.forEach(item => {
-      item.linea.Importe = incluyenImpuestos ? item.total : item.base;
-    });
     this.lineas = [...this.lineas];
-
-    if (importeAgregarConvertido !== null) {
-      this.importeAgregar = importeAgregarConvertido;
-    }
   }
 
   impuestosLinea(linea: LineaCompraEdicion): number {
