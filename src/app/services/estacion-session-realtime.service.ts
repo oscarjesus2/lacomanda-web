@@ -17,6 +17,16 @@ export class EstacionSessionRealtimeService {
   private interval?: ReturnType<typeof setInterval>;
   private connectedIdentifier = '';
   private revoking = false;
+  private ensuring = false;
+  private listenersActive = false;
+
+  private readonly resumeListener = (): void => {
+    void this.ensureConnection();
+  };
+
+  private readonly visibilityListener = (): void => {
+    if (!document.hidden) void this.ensureConnection();
+  };
 
   constructor(
     private readonly storage: StorageService,
@@ -26,6 +36,7 @@ export class EstacionSessionRealtimeService {
 
   start(): void {
     if (this.interval) return;
+    this.addResumeListeners();
     this.interval = setInterval(() => void this.ensureConnection(), this.intervalMs);
     void this.ensureConnection();
   }
@@ -35,6 +46,7 @@ export class EstacionSessionRealtimeService {
   }
 
   stop(): void {
+    this.removeResumeListeners();
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = undefined;
@@ -43,40 +55,65 @@ export class EstacionSessionRealtimeService {
   }
 
   private async ensureConnection(): Promise<void> {
-    const token = this.storage.getCurrentToken() ?? '';
-    const identifier = this.deviceIdentifier.getIdentifier();
-    if (!token || !identifier) {
-      await this.stopHub();
-      return;
-    }
+    if (this.ensuring || this.revoking) return;
+    this.ensuring = true;
 
-    if (this.hub && this.connectedIdentifier !== identifier) {
-      await this.stopHub();
-    }
-
-    if (!this.hub) {
-      const apiRoot = environment.apiUrl.replace(/\/api\/?$/i, '');
-      this.connectedIdentifier = identifier;
-      this.hub = new signalR.HubConnectionBuilder()
-        .withUrl(
-          `${apiRoot}/hubs/trabajos-impresion?id=${encodeURIComponent(identifier)}`,
-          { accessTokenFactory: () => this.storage.getCurrentToken() ?? '' },
-        )
-        .withAutomaticReconnect([0, 2_000, 5_000, 15_000, 30_000])
-        .configureLogging(signalR.LogLevel.Warning)
-        .build();
-
-      this.hub.on('EstacionDispositivoRevocado', (message: EstacionRevocadaMessage) => {
-        this.zone.run(() => void this.handleRevocation(message));
-      });
-    }
-
-    if (this.hub.state === signalR.HubConnectionState.Disconnected) {
-      try {
-        await this.hub.start();
-      } catch (error) {
-        console.warn('No se pudo conectar el control de estacion en tiempo real.', error);
+    try {
+      const token = this.storage.getCurrentToken() ?? '';
+      const identifier = this.deviceIdentifier.getIdentifier();
+      if (!token || !identifier) {
+        await this.stopHub();
+        return;
       }
+
+      if (this.hub && this.connectedIdentifier !== identifier) {
+        await this.stopHub();
+      }
+
+      if (!this.hub) {
+        const apiRoot = environment.apiUrl.replace(/\/api\/?$/i, '');
+        this.connectedIdentifier = identifier;
+        this.hub = new signalR.HubConnectionBuilder()
+          .withUrl(
+            `${apiRoot}/hubs/sesiones-estacion?id=${encodeURIComponent(identifier)}`,
+            { accessTokenFactory: () => this.storage.getCurrentToken() ?? '' },
+          )
+          .withAutomaticReconnect([0, 2_000, 5_000, 15_000, 30_000])
+          .configureLogging(signalR.LogLevel.Warning)
+          .build();
+
+        this.hub.on('EstacionDispositivoRevocado', (message: EstacionRevocadaMessage) => {
+          this.zone.run(() => void this.handleRevocation(message));
+        });
+      }
+
+      if (this.hub.state === signalR.HubConnectionState.Disconnected) {
+        try {
+          await this.hub.start();
+        } catch (error) {
+          if (this.isAuthenticationError(error)) {
+            await this.handleAuthenticationFailure();
+          } else {
+            console.warn('No se pudo conectar el control de estación en tiempo real.', error);
+          }
+          return;
+        }
+      }
+
+      if (this.hub.state === signalR.HubConnectionState.Connected) {
+        try {
+          const vinculada = await this.hub.invoke<boolean>('VerificarVinculacion');
+          if (!vinculada) {
+            await this.handleRevocation({
+              mensaje: 'Este dispositivo ya no está vinculado a una estación. Debes volver a iniciar sesión para configurar el equipo.',
+            });
+          }
+        } catch (error) {
+          console.warn('No se pudo verificar la vinculación de la estación.', error);
+        }
+      }
+    } finally {
+      this.ensuring = false;
     }
   }
 
@@ -99,6 +136,46 @@ export class EstacionSessionRealtimeService {
       allowOutsideClick: false,
       allowEscapeKey: false,
     });
+    this.revoking = false;
+  }
+
+  private async handleAuthenticationFailure(): Promise<void> {
+    if (this.revoking) return;
+    this.revoking = true;
+    await this.stopHub();
+
+    // No se borra el identificador: la sesión perdió validez, pero sigue
+    // siendo el mismo equipo y su vínculo se comprobará al reingresar.
+    this.storage.logout();
+
+    await Swal.fire({
+      title: 'Tu sesión ya no es válida',
+      text: 'Vuelve a iniciar sesión para comprobar la vinculación de este equipo.',
+      icon: 'warning',
+      confirmButtonText: 'Ir a iniciar sesión',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+    });
+    this.revoking = false;
+  }
+
+  private isAuthenticationError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error ?? '');
+    return /\b401\b|unauthorized|invalid_token|signature key/i.test(message);
+  }
+
+  private addResumeListeners(): void {
+    if (this.listenersActive) return;
+    window.addEventListener('online', this.resumeListener);
+    document.addEventListener('visibilitychange', this.visibilityListener);
+    this.listenersActive = true;
+  }
+
+  private removeResumeListeners(): void {
+    if (!this.listenersActive) return;
+    window.removeEventListener('online', this.resumeListener);
+    document.removeEventListener('visibilitychange', this.visibilityListener);
+    this.listenersActive = false;
   }
 
   private async stopHub(): Promise<void> {
