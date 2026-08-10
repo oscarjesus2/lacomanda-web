@@ -14,12 +14,11 @@ interface EstacionRevocadaMessage {
 
 @Injectable({ providedIn: 'root' })
 export class EstacionSessionRealtimeService {
-  private readonly intervalMs = 15_000;
   private hub?: signalR.HubConnection;
-  private interval?: ReturnType<typeof setInterval>;
   private connectedIdentifier = '';
   private revoking = false;
   private ensuring = false;
+  private started = false;
   private listenersActive = false;
   private lastHttpWarningAt = 0;
 
@@ -39,9 +38,9 @@ export class EstacionSessionRealtimeService {
   ) {}
 
   start(): void {
-    if (this.interval) return;
+    if (this.started) return;
+    this.started = true;
     this.addResumeListeners();
-    this.interval = setInterval(() => void this.ensureConnection(), this.intervalMs);
     void this.ensureConnection();
   }
 
@@ -50,11 +49,8 @@ export class EstacionSessionRealtimeService {
   }
 
   stop(): void {
+    this.started = false;
     this.removeResumeListeners();
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = undefined;
-    }
     void this.stopHub();
   }
 
@@ -100,6 +96,11 @@ export class EstacionSessionRealtimeService {
         this.hub.on('EstacionDispositivoRevocado', (message: EstacionRevocadaMessage) => {
           this.zone.run(() => void this.handleRevocation(message));
         });
+
+        const currentHub = this.hub;
+        currentHub.onreconnected(() => {
+          this.zone.run(() => void this.verifyLinkByHub(currentHub));
+        });
       }
 
       if (this.hub.state === signalR.HubConnectionState.Disconnected) {
@@ -116,16 +117,7 @@ export class EstacionSessionRealtimeService {
       }
 
       if (this.hub.state === signalR.HubConnectionState.Connected) {
-        try {
-          const vinculada = await this.hub.invoke<boolean>('VerificarVinculacion');
-          if (!vinculada) {
-            await this.handleRevocation({
-              mensaje: 'Este dispositivo ya no está vinculado a una estación. Debes volver a iniciar sesión para configurar el equipo.',
-            });
-          }
-        } catch (error) {
-          console.warn('No se pudo verificar la vinculación de la estación.', error);
-        }
+        await this.verifyLinkByHub(this.hub);
       }
     } finally {
       this.ensuring = false;
@@ -210,6 +202,21 @@ export class EstacionSessionRealtimeService {
         this.lastHttpWarningAt = now;
       }
       return undefined;
+    }
+  }
+
+  private async verifyLinkByHub(hub: signalR.HubConnection): Promise<void> {
+    if (this.revoking || this.hub !== hub || hub.state !== signalR.HubConnectionState.Connected) return;
+
+    try {
+      const vinculada = await hub.invoke<boolean>('VerificarVinculacion');
+      if (!vinculada) {
+        await this.handleRevocation({
+          mensaje: 'Este dispositivo ya no está vinculado a una estación. Debes volver a iniciar sesión para configurar el equipo.',
+        });
+      }
+    } catch (error) {
+      console.warn('No se pudo verificar la vinculación de la estación.', error);
     }
   }
 
