@@ -139,60 +139,83 @@ export class QzTrayV224Service {
     ByteTicket: any,
     printerName: string,
     permitirImpresoraPredeterminadaComoRespaldo: boolean = true,
+    desconectarAlFinalizar: boolean = true,
   ): Promise<boolean> {
     try {
-      if (this.isBase64(ByteTicket)) {
-
-        const byteCharacters = atob(ByteTicket);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'application/pdf' });
-
-        await this.connect();
-
-        let config;
-        const usarPredeterminada = printerName?.trim().toUpperCase() === 'PREDETERMINADA';
-        const isAvailable = !usarPredeterminada
-          && await this.isPrinterAvailable(printerName);
-        if (isAvailable) {
-          config = qz.configs.create(printerName);
-          console.log(`Imprimiendo en la impresora ${printerName}`);
-        } else if (usarPredeterminada || permitirImpresoraPredeterminadaComoRespaldo) {
-          const defaultPrinter = await qz.printers.getDefault();
-          config = qz.configs.create(defaultPrinter);
-          console.log('Imprimiendo en la impresora predeterminada');
-        } else {
-          throw new Error(`La impresora ${printerName} no está disponible en esta estación.`);
-        }
-
-        const data = [{
-          type: 'pdf',
-          format: 'base64',
-          data: await blob.arrayBuffer().then(buffer => {
-            const bytes = new Uint8Array(buffer);
-            let binary = '';
-            for (let i = 0; i < bytes.length; i++) {
-              binary += String.fromCharCode(bytes[i]);
-            }
-            return btoa(binary);
-          })
-        }];
-
-        await qz.print(config, data);
-        console.log('Impresión exitosa');
-        return true;
-
-      } else {
-        console.error("Error: ByteTicket no está codificado correctamente en base64");
+      if (!this.isBase64(ByteTicket)) {
+        throw new Error('El documento recibido no está codificado correctamente en base64.');
       }
 
+      await this.connect();
+      const data = [{
+        type: 'pdf',
+        format: 'base64',
+        data: ByteTicket,
+      }];
+      const impresora = printerName?.trim();
+      const usarPredeterminada = !impresora
+        || impresora.toUpperCase() === 'PREDETERMINADA';
+
+      if (usarPredeterminada) {
+        await this.printOnDefault(data);
+        return true;
+      }
+
+      try {
+        await qz.print(qz.configs.create(impresora), data);
+        console.log(`Imprimiendo en la impresora ${impresora}`);
+        return true;
+      } catch (error) {
+        if (!permitirImpresoraPredeterminadaComoRespaldo
+            || !this.isPrinterNotFoundError(error)) {
+          throw error;
+        }
+
+        console.warn(
+          `La impresora ${impresora} no existe en este equipo; se usará la predeterminada.`,
+        );
+        await this.printOnDefault(data);
+        return true;
+      }
     } catch (error) {
       console.error('Error al imprimir:', error);
       return false;
+    } finally {
+      if (desconectarAlFinalizar) {
+        await this.disconnect();
+      }
     }
+  }
+
+  private async printOnDefault(data: any[]): Promise<void> {
+    const defaultPrinter = await qz.printers.getDefault();
+    if (!defaultPrinter) {
+      throw new Error('Este equipo no tiene una impresora predeterminada configurada.');
+    }
+
+    await qz.print(qz.configs.create(defaultPrinter), data);
+    console.log(`Imprimiendo en la impresora predeterminada ${defaultPrinter}`);
+  }
+
+  private isPrinterNotFoundError(error: unknown): boolean {
+    const message = error instanceof Error
+      ? error.message
+      : String(error ?? '');
+    const normalized = message.normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+
+    return [
+      'printer not found',
+      'printer does not exist',
+      'invalid printer',
+      'unable to find printer',
+      'cannot find printer',
+      'no such printer',
+      'impresora no encontrada',
+      'impresora no existe',
+      'nombre de impresora no valido',
+    ].some(fragment => normalized.includes(fragment));
   }
 
   private isBase64(str: string): boolean {
@@ -201,19 +224,6 @@ export class QzTrayV224Service {
     } catch (err) {
       return false;
     }
-  }
-
-  async isPrinterAvailable(printerName: string): Promise<boolean> {
-    const printers = await qz.printers.find();
-    return printers.includes(printerName);
-  }
-
-  async getAvailablePrinters(): Promise<string[]> {
-    await this.connect();
-    const printers = await qz.printers.find();
-    return Array.isArray(printers)
-      ? printers.filter((printer): printer is string => typeof printer === 'string')
-      : [];
   }
 
   async isQzTrayRunning(): Promise<boolean> {

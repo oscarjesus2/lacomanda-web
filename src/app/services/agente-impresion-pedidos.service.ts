@@ -101,35 +101,41 @@ export class AgenteImpresionPedidosService {
     if (Date.now() < this.reintentarQzDesde) return;
 
     this.procesando = true;
+    let huboTrabajos = false;
+    let huboErrorImpresion = false;
     try {
-      if (!await this.qz.isQzTrayRunning()) {
-        this.reintentarQzDesde = Date.now() + this.esperaSinQzMs;
-        return;
-      }
-
-      const impresorasDisponibles = await this.qz.getAvailablePrinters();
       const response = await firstValueFrom(this.trabajos.reclamar({
         IdentificadorEstacion: this.storage.getCurrentIP()!.trim(),
         Cantidad: 3,
-        ImpresorasDisponibles: impresorasDisponibles,
       }));
 
-      for (const trabajo of response.Data ?? []) {
-        await this.imprimir(trabajo);
+      const trabajos = response.Data ?? [];
+      huboTrabajos = trabajos.length > 0;
+      for (const trabajo of trabajos) {
+        const impreso = await this.imprimir(trabajo);
+        huboErrorImpresion ||= !impreso;
+      }
+
+      if (huboErrorImpresion) {
+        this.reintentarQzDesde = Date.now() + this.esperaSinQzMs;
       }
     } catch (error) {
       console.warn('No se pudieron consultar trabajos de impresión.', error);
     } finally {
+      if (huboTrabajos) {
+        await this.qz.disconnect();
+      }
       this.procesando = false;
     }
   }
 
-  private async imprimir(trabajo: TrabajoImpresion): Promise<void> {
+  private async imprimir(trabajo: TrabajoImpresion): Promise<boolean> {
     try {
       const impreso = await this.qz.printPDF(
         trabajo.Documento,
         trabajo.NombreImpresora,
         true,
+        false,
       );
 
       if (!impreso) {
@@ -140,6 +146,7 @@ export class AgenteImpresionPedidosService {
         trabajo.IdTrabajoImpresion,
         { TokenReclamo: trabajo.TokenReclamo },
       ));
+      return true;
     } catch (error) {
       const mensaje = error instanceof Error
         ? error.message
@@ -156,6 +163,7 @@ export class AgenteImpresionPedidosService {
       } catch (registroError) {
         console.error('No se pudo liberar el trabajo de impresión.', registroError);
       }
+      return false;
     }
   }
 }
