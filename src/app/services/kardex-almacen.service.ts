@@ -20,13 +20,13 @@ export class KardexAlmacenService {
 
   consultar(
     idSubAreaAlmacen: number,
-    idProducto: number,
+    idArticulo: number,
     fechaDesde: string,
     fechaHasta: string
   ): Observable<ApiResponse<ConsultaKardexAlmacen>> {
     const params = new HttpParams()
       .set('idSubAreaAlmacen', idSubAreaAlmacen.toString())
-      .set('idProducto', idProducto.toString())
+      .set('idArticulo', idArticulo.toString())
       .set('fechaDesde', fechaDesde)
       .set('fechaHasta', fechaHasta);
 
