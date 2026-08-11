@@ -1442,6 +1442,81 @@ body {
   grid-template-columns: minmax(280px, 1fr);
 }
 
+.dialog-toolbar__filters--stock {
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+}
+
+.dialog-summary-grid--stock {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dialog-summary-card--warning strong,
+.stock-low-label,
+.stock-output {
+  color: var(--color-danger, #c62828);
+}
+
+.stock-almacen-consulta .stock-table {
+  min-width: 1180px;
+}
+
+.stock-cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stock-cell-stack span,
+.stock-muted {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.stock-movements {
+  display: flex;
+  gap: 10px;
+  font-weight: 700;
+}
+
+.stock-entry {
+  color: #2e7d32;
+}
+
+.stock-current strong {
+  font-size: 1rem;
+}
+
+.stock-low-label {
+  font-weight: 700;
+}
+
+.stock-row--low {
+  background: #fff4f1;
+}
+
+.stock-table-state {
+  display: flex;
+  min-height: 170px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--color-text-muted);
+}
+
+.stock-table-state mat-icon {
+  width: 34px;
+  height: 34px;
+  font-size: 34px;
+}
+
+@media (max-width: 900px) {
+  .dialog-toolbar__filters--stock,
+  .dialog-summary-grid--stock {
+    grid-template-columns: 1fr;
+  }
+}
+
 .dialog-table--wide {
   min-width: 1040px;
 }

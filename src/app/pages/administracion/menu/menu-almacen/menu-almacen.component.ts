@@ -13,6 +13,7 @@ import { TransferenciaAlmacenMantenimientoComponent } from 'src/app/components/m
 import { PorcionamientoMantenimientoComponent } from 'src/app/components/mantenimiento/porcionamiento-mantenimiento/porcionamiento-mantenimiento.component';
 import { ProduccionMantenimientoComponent } from 'src/app/components/mantenimiento/produccion-mantenimiento/produccion-mantenimiento.component';
 import { MotivoSalidaMantenimientoComponent } from 'src/app/components/mantenimiento/motivo-salida-mantenimiento/motivo-salida-mantenimiento.component';
+import { StockAlmacenConsultaComponent } from 'src/app/components/mantenimiento/stock-almacen-consulta/stock-almacen-consulta.component';
 
 @Component({
   selector: 'app-menu-almacen',
@@ -120,6 +121,15 @@ export class MenuAlmacenComponent implements OnInit {
       children: []
     },
     {
+      title: 'Stock por área',
+      action: 'stockPorArea',
+      icon: 'query_stats',
+      label: 'Stock por área',
+      titleKey: 'stockByArea',
+      labelKey: 'stockByArea',
+      children: []
+    },
+    {
       title: 'Porcionamiento',
       action: 'porcionamientos',
       icon: 'content_cut',
@@ -146,6 +156,7 @@ export class MenuAlmacenComponent implements OnInit {
       articulos: ArticuloMantenimientoComponent,
       recetas: RecetaMantenimientoComponent,
       inventarios: InventarioMantenimientoComponent,
+      stockPorArea: StockAlmacenConsultaComponent,
       areasAlmacen: AreaAlmacenMantenimientoComponent,
       subareasAlmacen: SubAreaAlmacenMantenimientoComponent,
       proveedores: ProveedorMantenimientoComponent,

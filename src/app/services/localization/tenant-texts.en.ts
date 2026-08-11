@@ -1110,6 +1110,7 @@ export const EN_TEXTS = {
   stockOutReasons: 'Stock-out reasons',
   transfers: 'Transfers',
   inventories: 'Inventories',
+  stockByArea: 'Stock by area',
   portioning: 'Portioning',
   production: 'Production',
 } as const;

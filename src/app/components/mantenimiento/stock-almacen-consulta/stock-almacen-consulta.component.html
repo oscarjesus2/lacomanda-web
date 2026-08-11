@@ -1,0 +1,176 @@
+<div class="mant-panel dialog-panel--workspace stock-almacen-consulta">
+  <button
+    mat-icon-button
+    class="close-button"
+    aria-label="Cerrar"
+    (click)="cerrar()"
+  >
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>CONSULTA DE STOCK POR ÁREA</h2>
+
+  <div class="dialog-toolbar">
+    <div class="dialog-toolbar__filters dialog-toolbar__filters--stock">
+      <mat-form-field appearance="fill">
+        <mat-label>Área de almacén</mat-label>
+        <mat-select [(ngModel)]="idAreaAlmacen" (selectionChange)="cambiarArea()">
+          <mat-option [value]="null">Todas las áreas</mat-option>
+          <mat-option *ngFor="let area of consulta?.Areas || []" [value]="area.IdAreaAlmacen">
+            {{ area.Descripcion }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Subárea de almacén</mat-label>
+        <mat-select [(ngModel)]="idSubAreaAlmacen" (selectionChange)="cambiarSubArea()">
+          <mat-option [value]="null">Todas las subáreas</mat-option>
+          <mat-option *ngFor="let subArea of subAreasFiltradas" [value]="subArea.IdSubAreaAlmacen">
+            {{ subArea.Descripcion }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Buscar artículo</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          [(ngModel)]="filtro"
+          (ngModelChange)="aplicarFiltro()"
+          placeholder="Código, artículo, área o unidad"
+        >
+      </mat-form-field>
+    </div>
+
+    <div class="dialog-toolbar__actions">
+      <button mat-stroked-button type="button" (click)="consultar()" [disabled]="cargando">
+        <mat-icon>refresh</mat-icon>
+        Actualizar
+      </button>
+      <button mat-raised-button color="primary" type="button" (click)="exportarExcel()" [disabled]="cargando">
+        <mat-icon>download</mat-icon>
+        Exportar a Excel
+      </button>
+    </div>
+  </div>
+
+  <div class="dialog-summary-grid dialog-summary-grid--stock">
+    <div class="dialog-summary-card">
+      <span class="dialog-summary-card__label">Artículos consultados</span>
+      <strong>{{ consulta?.CantidadRegistros || 0 }}</strong>
+    </div>
+    <div class="dialog-summary-card dialog-summary-card--warning">
+      <span class="dialog-summary-card__label">Bajo stock mínimo</span>
+      <strong>{{ consulta?.CantidadBajoMinimo || 0 }}</strong>
+    </div>
+    <div class="dialog-summary-card">
+      <span class="dialog-summary-card__label">Stock total seleccionado</span>
+      <strong>{{ (consulta?.StockTotalSeleccionado || 0) | number:'1.0-3' }}</strong>
+    </div>
+  </div>
+
+  <div class="dialog-workspace-content">
+    <div class="dialog-table-card">
+      <div class="dialog-table-wrapper--fill">
+        <mat-table [dataSource]="dataSource" class="dialog-table--wide stock-table">
+          <ng-container matColumnDef="area">
+            <mat-header-cell *matHeaderCellDef>Área / subárea</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <div class="stock-cell-stack">
+                <strong>{{ row.SubArea }}</strong>
+                <span>{{ row.Area }}</span>
+              </div>
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="producto">
+            <mat-header-cell *matHeaderCellDef>Artículo</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <div class="stock-cell-stack">
+                <strong>{{ row.Producto }}</strong>
+                <span>Código {{ row.IdProducto }}</span>
+              </div>
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="unidad">
+            <mat-header-cell *matHeaderCellDef>Unidad</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.UnidadStock }}</mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="limites">
+            <mat-header-cell *matHeaderCellDef>Mín. / máx.</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              {{ row.StockMinimo | number:'1.0-3' }} / {{ row.StockMaximo | number:'1.0-3' }}
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="inventario">
+            <mat-header-cell *matHeaderCellDef>Último inventario</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <div class="stock-cell-stack" *ngIf="row.IdUltimoInventario; else sinInventario">
+                <strong>{{ row.StockUltimoInventario | number:'1.0-3' }}</strong>
+                <span>N.º {{ row.IdUltimoInventario }} · {{ row.FechaUltimoInventario | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <ng-template #sinInventario><span class="stock-muted">Sin inventario cerrado</span></ng-template>
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="movimientos">
+            <mat-header-cell *matHeaderCellDef>Movimientos</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <div class="stock-movements">
+                <span class="stock-entry">+{{ row.EntradasDesdeInventario | number:'1.0-3' }}</span>
+                <span class="stock-output">−{{ row.SalidasDesdeInventario | number:'1.0-3' }}</span>
+              </div>
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="actual">
+            <mat-header-cell *matHeaderCellDef>Stock actual</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <div class="stock-cell-stack stock-current">
+                <strong>{{ row.StockActual | number:'1.0-3' }}</strong>
+                <span *ngIf="row.BajoMinimo" class="stock-low-label">Bajo mínimo</span>
+              </div>
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="receta">
+            <mat-header-cell *matHeaderCellDef>Equivalencia receta</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <div class="stock-cell-stack" *ngIf="row.UnidadReceta; else sinConversion">
+                <strong>{{ row.StockEnUnidadReceta | number:'1.0-3' }}</strong>
+                <span>{{ row.UnidadReceta }}</span>
+              </div>
+              <ng-template #sinConversion><span class="stock-muted">—</span></ng-template>
+            </mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row
+            *matRowDef="let row; columns: displayedColumns"
+            [class.stock-row--low]="row.BajoMinimo"
+          ></mat-row>
+        </mat-table>
+
+        <div class="stock-table-state" *ngIf="cargando">
+          <mat-spinner diameter="38"></mat-spinner>
+          <span>Consultando existencias…</span>
+        </div>
+        <div class="stock-table-state" *ngIf="!cargando && !dataSource.filteredData.length">
+          <mat-icon>inventory_2</mat-icon>
+          <span>No se encontraron existencias para los filtros seleccionados.</span>
+        </div>
+      </div>
+
+      <mat-paginator
+        [pageSize]="10"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        showFirstLastButtons
+      ></mat-paginator>
+    </div>
+  </div>
+</div>
