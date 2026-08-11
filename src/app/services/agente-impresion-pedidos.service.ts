@@ -123,6 +123,7 @@ export class AgenteImpresionPedidosService {
       await this.procesarPendientes();
     } catch (error) {
       console.warn('No se pudo registrar el agente web de impresion.', error);
+      await this.reiniciarSignalR();
     }
   }
 
@@ -154,9 +155,24 @@ export class AgenteImpresionPedidosService {
       }
     } catch (error) {
       console.warn('No se pudieron reclamar trabajos de impresion.', error);
+      if (!this.detenido) await this.reiniciarSignalR();
     } finally {
       this.procesando = false;
     }
+  }
+
+  private async reiniciarSignalR(): Promise<void> {
+    const hub = this.hub;
+    this.hub = undefined;
+    if (hub) {
+      try {
+        await hub.stop();
+      } catch (error) {
+        console.warn('No se pudo cerrar SignalR de impresion.', error);
+      }
+    }
+
+    this.programarReconexion();
   }
 
   private async imprimir(trabajo: TrabajoImpresion): Promise<boolean> {
