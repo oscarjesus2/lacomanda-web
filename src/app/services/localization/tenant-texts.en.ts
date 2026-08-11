@@ -1111,6 +1111,7 @@ export const EN_TEXTS = {
   transfers: 'Transfers',
   inventories: 'Inventories',
   stockByArea: 'Stock by area',
+  warehouseKardex: 'Warehouse Kardex',
   portioning: 'Portioning',
   production: 'Production',
 } as const;

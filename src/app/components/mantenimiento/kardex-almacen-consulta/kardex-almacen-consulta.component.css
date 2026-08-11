@@ -1,0 +1,110 @@
+.kardex-almacen-consulta {
+  min-height: min(88vh, 860px);
+}
+
+.kardex-toolbar__filters {
+  display: grid;
+  grid-template-columns: minmax(210px, 1fr) minmax(250px, 1.4fr) minmax(145px, .65fr) minmax(145px, .65fr);
+  gap: 12px;
+  flex: 1 1 auto;
+}
+
+.kardex-context {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  margin: 0 24px 12px;
+}
+
+.kardex-context > div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--dialog-border-color, #ead5ca);
+  border-radius: 10px;
+  background: var(--dialog-soft-background, #fff6f0);
+}
+
+.kardex-context span,
+.kardex-context small {
+  color: #776a63;
+  font-size: 11px;
+}
+
+.kardex-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.kardex-content,
+.kardex-table-card {
+  min-height: 0;
+}
+
+.kardex-table-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.kardex-table {
+  min-width: 1180px;
+}
+
+.kardex-table td,
+.kardex-table th {
+  white-space: nowrap;
+}
+
+.kardex-type {
+  display: block;
+  color: #8c817b;
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.kardex-number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.kardex-number--entry {
+  color: #2e7d32;
+}
+
+.kardex-number--exit {
+  color: #c62828;
+}
+
+.kardex-balance {
+  color: #8f170f;
+  font-weight: 700;
+}
+
+.kardex-empty {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #746a64;
+  text-align: center;
+  padding: 24px;
+}
+
+.kardex-empty mat-icon {
+  width: 42px;
+  height: 42px;
+  font-size: 42px;
+  color: #c83d16;
+}
+
+@media (max-width: 1050px) {
+  .kardex-toolbar__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kardex-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

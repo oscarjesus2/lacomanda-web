@@ -1,0 +1,169 @@
+<div class="mant-panel dialog-panel--workspace kardex-almacen-consulta">
+  <button mat-icon-button class="dialog-close" type="button" aria-label="Cerrar" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>CONSULTA DE KARDEX</h2>
+
+  <div class="dialog-toolbar kardex-toolbar">
+    <div class="dialog-toolbar__filters kardex-toolbar__filters">
+      <mat-form-field appearance="fill">
+        <mat-label>Subárea de almacén</mat-label>
+        <mat-select [(ngModel)]="idSubAreaAlmacen">
+          <mat-option *ngFor="let subArea of catalogos.SubAreas" [value]="subArea.IdSubAreaAlmacen">
+            {{ subArea.Descripcion }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Artículo</mat-label>
+        <mat-select [(ngModel)]="idProducto">
+          <mat-option *ngFor="let articulo of catalogos.Articulos" [value]="articulo.IdProducto">
+            {{ articulo.Descripcion }} · {{ articulo.UnidadMedida }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Desde</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaDesde">
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Hasta</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaHasta">
+      </mat-form-field>
+    </div>
+
+    <div class="dialog-toolbar__actions">
+      <button mat-stroked-button type="button" (click)="exportarExcel()" [disabled]="cargando || !resultado">
+        <mat-icon>download</mat-icon>
+        EXPORTAR A EXCEL
+      </button>
+      <button mat-raised-button color="primary" type="button" (click)="consultar()" [disabled]="cargando">
+        <mat-icon>search</mat-icon>
+        {{ cargando ? 'CONSULTANDO...' : 'CONSULTAR' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="kardex-context" *ngIf="resultado">
+    <div>
+      <span>ARTÍCULO</span>
+      <strong>{{ resultado.Articulo }}</strong>
+      <small>{{ resultado.UnidadMedida }}</small>
+    </div>
+    <div>
+      <span>SUBÁREA</span>
+      <strong>{{ resultado.SubAreaAlmacen }}</strong>
+    </div>
+  </div>
+
+  <div class="report-summary-grid kardex-summary" *ngIf="resultado">
+    <div class="report-summary-card">
+      <span>SALDO INICIAL</span>
+      <strong>{{ resultado.SaldoInicial | number:'1.3-3' }}</strong>
+    </div>
+    <div class="report-summary-card report-summary-card--success">
+      <span>ENTRADAS</span>
+      <strong>{{ resultado.TotalEntradas | number:'1.3-3' }}</strong>
+    </div>
+    <div class="report-summary-card report-summary-card--danger">
+      <span>SALIDAS</span>
+      <strong>{{ resultado.TotalSalidas | number:'1.3-3' }}</strong>
+    </div>
+    <div class="report-summary-card report-summary-card--accent">
+      <span>SALDO FINAL</span>
+      <strong>{{ resultado.SaldoFinal | number:'1.3-3' }}</strong>
+    </div>
+  </div>
+
+  <div class="dialog-workspace-content kardex-content">
+    <div class="dialog-table-card kardex-table-card">
+      <div class="kardex-empty" *ngIf="!cargando && !resultado">
+        <mat-icon>inventory_2</mat-icon>
+        <strong>Selecciona los filtros para consultar</strong>
+        <span>El Kardex mostrará el saldo inicial y cada movimiento en orden cronológico.</span>
+      </div>
+
+      <div class="kardex-empty" *ngIf="resultado && dataSource.data.length === 0">
+        <mat-icon>info</mat-icon>
+        <strong>Sin movimientos en el período</strong>
+        <span>El saldo inicial y final corresponden al historial anterior al rango seleccionado.</span>
+      </div>
+
+      <div class="dialog-table-wrapper dialog-table-wrapper--fill" *ngIf="dataSource.data.length > 0">
+        <table mat-table [dataSource]="dataSource" class="dialog-table dialog-table--wide kardex-table">
+          <ng-container matColumnDef="fecha">
+            <th mat-header-cell *matHeaderCellDef>FECHA</th>
+            <td mat-cell *matCellDef="let item">{{ item.Fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="operacion">
+            <th mat-header-cell *matHeaderCellDef>OPERACIÓN</th>
+            <td mat-cell *matCellDef="let item">
+              <strong>{{ item.Operacion }}</strong>
+              <small class="kardex-type">{{ item.Tipo }}</small>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="referencia">
+            <th mat-header-cell *matHeaderCellDef>REFERENCIA</th>
+            <td mat-cell *matCellDef="let item">{{ item.Referencia || '—' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="entrada">
+            <th mat-header-cell *matHeaderCellDef>ENTRADA</th>
+            <td mat-cell *matCellDef="let item" class="kardex-number kardex-number--entry">
+              {{ item.Entrada ? (item.Entrada | number:'1.3-3') : '—' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="salida">
+            <th mat-header-cell *matHeaderCellDef>SALIDA</th>
+            <td mat-cell *matCellDef="let item" class="kardex-number kardex-number--exit">
+              {{ item.Salida ? (item.Salida | number:'1.3-3') : '—' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="conteo">
+            <th mat-header-cell *matHeaderCellDef>CONTEO</th>
+            <td mat-cell *matCellDef="let item" class="kardex-number">
+              {{ item.ConteoInventario == null ? '—' : (item.ConteoInventario | number:'1.3-3') }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="saldo">
+            <th mat-header-cell *matHeaderCellDef>SALDO</th>
+            <td mat-cell *matCellDef="let item" class="kardex-number kardex-balance">
+              {{ item.Saldo | number:'1.3-3' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="precio">
+            <th mat-header-cell *matHeaderCellDef>PRECIO</th>
+            <td mat-cell *matCellDef="let item" class="kardex-number">
+              {{ item.Precio == null ? '—' : (item.Precio | number:'1.2-3') }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="observacion">
+            <th mat-header-cell *matHeaderCellDef>OBSERVACIÓN</th>
+            <td mat-cell *matCellDef="let item">{{ item.Observacion || '—' }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+
+      <mat-paginator
+        *ngIf="dataSource.data.length > 0"
+        [pageSize]="10"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </div>
+</div>

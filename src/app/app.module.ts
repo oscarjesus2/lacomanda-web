@@ -92,6 +92,7 @@ import { ArticuloMantenimientoComponent } from './components/mantenimiento/artic
 import { RecetaMantenimientoComponent } from './components/mantenimiento/receta-mantenimiento/receta-mantenimiento.component';
 import { InventarioMantenimientoComponent } from './components/mantenimiento/inventario-mantenimiento/inventario-mantenimiento.component';
 import { StockAlmacenConsultaComponent } from './components/mantenimiento/stock-almacen-consulta/stock-almacen-consulta.component';
+import { KardexAlmacenConsultaComponent } from './components/mantenimiento/kardex-almacen-consulta/kardex-almacen-consulta.component';
 import { AreaAlmacenMantenimientoComponent } from './components/mantenimiento/area-almacen-mantenimiento/area-almacen-mantenimiento.component';
 import { SubAreaAlmacenMantenimientoComponent } from './components/mantenimiento/subarea-almacen-mantenimiento/subarea-almacen-mantenimiento.component';
 import { EntradaCompraMantenimientoComponent } from './components/mantenimiento/entrada-compra-mantenimiento/entrada-compra-mantenimiento.component';
@@ -187,6 +188,7 @@ export const MY_DATE_FORMATS = {
     RecetaMantenimientoComponent,
     InventarioMantenimientoComponent,
     StockAlmacenConsultaComponent,
+    KardexAlmacenConsultaComponent,
     AreaAlmacenMantenimientoComponent,
     SubAreaAlmacenMantenimientoComponent,
     EntradaCompraMantenimientoComponent,

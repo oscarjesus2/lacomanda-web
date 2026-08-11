@@ -14,6 +14,7 @@ import { PorcionamientoMantenimientoComponent } from 'src/app/components/manteni
 import { ProduccionMantenimientoComponent } from 'src/app/components/mantenimiento/produccion-mantenimiento/produccion-mantenimiento.component';
 import { MotivoSalidaMantenimientoComponent } from 'src/app/components/mantenimiento/motivo-salida-mantenimiento/motivo-salida-mantenimiento.component';
 import { StockAlmacenConsultaComponent } from 'src/app/components/mantenimiento/stock-almacen-consulta/stock-almacen-consulta.component';
+import { KardexAlmacenConsultaComponent } from 'src/app/components/mantenimiento/kardex-almacen-consulta/kardex-almacen-consulta.component';
 
 @Component({
   selector: 'app-menu-almacen',
@@ -130,6 +131,15 @@ export class MenuAlmacenComponent implements OnInit {
       children: []
     },
     {
+      title: 'Kardex',
+      action: 'kardexAlmacen',
+      icon: 'receipt_long',
+      label: 'Kardex',
+      titleKey: 'warehouseKardex',
+      labelKey: 'warehouseKardex',
+      children: []
+    },
+    {
       title: 'Porcionamiento',
       action: 'porcionamientos',
       icon: 'content_cut',
@@ -157,6 +167,7 @@ export class MenuAlmacenComponent implements OnInit {
       recetas: RecetaMantenimientoComponent,
       inventarios: InventarioMantenimientoComponent,
       stockPorArea: StockAlmacenConsultaComponent,
+      kardexAlmacen: KardexAlmacenConsultaComponent,
       areasAlmacen: AreaAlmacenMantenimientoComponent,
       subareasAlmacen: SubAreaAlmacenMantenimientoComponent,
       proveedores: ProveedorMantenimientoComponent,
