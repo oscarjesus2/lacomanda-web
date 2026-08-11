@@ -1,5 +1,10 @@
 import { PedidoDet } from "./pedidodet.models";
 
+export enum ModoImpresionPedido {
+    ColaAgente = 0,
+    DirectaQz = 1,
+}
+
 export class PedidoCab {
 
     IdEmpleado: number;
@@ -27,6 +32,7 @@ export class PedidoCab {
     IdEspacio: number;
     IdTurno: number;
     IdCaja: number;
+    ModoImpresion: ModoImpresionPedido;
     NumPrecuentas: number;
     FechaPrecuenta?: Date;
     EspacioPrecuenta: string;

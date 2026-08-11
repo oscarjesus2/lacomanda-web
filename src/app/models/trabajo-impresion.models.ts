@@ -11,6 +11,7 @@ export interface TrabajoImpresion {
 export interface ReclamarTrabajosImpresionRequest {
   IdentificadorEstacion: string;
   Cantidad: number;
+  QzDisponible: boolean;
 }
 
 export interface ConfirmarTrabajoImpresionRequest {

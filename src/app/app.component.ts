@@ -51,7 +51,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {    
-     this.agenteImpresionPedidos.iniciar();
      this.estacionSessionRealtime.start();
      const session = this.storageService.getCurrentSession();
      this.textCatalog.setCulture(

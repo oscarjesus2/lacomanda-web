@@ -4,9 +4,12 @@ import { StorageService } from '../../services/storage.service';
 import { MatTableDataSource } from '@angular/material/table';
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { PedidoCab } from '../../models/pedido.models';
+import { ModoImpresionPedido, PedidoCab } from '../../models/pedido.models';
 import { PedidoDet } from '../../models/pedidodet.models';
 import { PedidoService } from '../../services/pedido.service';
+import { DeviceCapabilitiesService } from '../../services/device-capabilities.service';
+import { QzTrayV224Service } from '../../services/qz-tray-v224.service';
+import { ImpresionDTO } from '../../interfaces/impresionDTO.interface';
 @Component({
     selector: 'app-dialog-grabar-pedido',
     templateUrl: './dialog-grabar-pedido.component.html',
@@ -26,6 +29,8 @@ export class DialogEnviarPedidoComponent {
         private storageService: StorageService,
         private pedidoService: PedidoService,
         private spinnerService: NgxSpinnerService,
+        private deviceCapabilities: DeviceCapabilitiesService,
+        private qz: QzTrayV224Service,
         @Inject(MAT_DIALOG_DATA) public data: DialogData) {  
             this.data.Resultado = "false";
             this.GridListaPedidoDetProducto.data=this.data.oPedido.ListaPedidoDet;
@@ -58,8 +63,15 @@ export class DialogEnviarPedidoComponent {
             try
             {
                 this.spinnerService.show();
+                this.data.oPedido.ModoImpresion =
+                    this.deviceCapabilities.requiresLocalPrintBridge()
+                        ? ModoImpresionPedido.DirectaQz
+                        : ModoImpresionPedido.ColaAgente;
                 var responseRegisterPedido: any = await this.pedidoService.GrabarPedido(this.data.oPedido).toPromise();
                 if (responseRegisterPedido) {
+                    if (this.data.oPedido.ModoImpresion === ModoImpresionPedido.DirectaQz) {
+                        await this.imprimir(responseRegisterPedido.Data ?? []);
+                    }
                     this.data.Resultado = "true";
                     Swal.fire(
                     'Good job!',
@@ -101,6 +113,17 @@ export class DialogEnviarPedidoComponent {
             Swal.fire('Oops...', 'No ha ingresado ningun producto.', 'error')
         }
     } 
+
+    private async imprimir(impresiones: ImpresionDTO[]): Promise<void> {
+        for (const impresion of impresiones) {
+            await this.qz.printPDF(
+                impresion.Documento,
+                impresion.NombreImpresora,
+                true,
+                false,
+            );
+        }
+    }
 
 }
 

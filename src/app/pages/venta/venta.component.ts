@@ -20,7 +20,7 @@ import { ProductGrid } from '../../models/product.grid.models';
 import { Empleado } from '../../models/empleado.models';
 import { PedidoDet } from '../../models/pedidodet.models';
 import { Observacion } from '../../models/observacion.models';
-import { PedidoCab } from '../../models/pedido.models';
+import { ModoImpresionPedido, PedidoCab } from '../../models/pedido.models';
 import { Familia } from '../../models/familia.models';
 import { SubFamilia } from '../../models/subfamilia.models';
 import { Usuario } from '../../models/usuario.models';
@@ -81,6 +81,8 @@ import { MesaClienteService } from 'src/app/services/mesa-cliente.service';
 import { SolicitudesMesaRealtimeService } from 'src/app/services/solicitudes-mesa-realtime.service';
 import { SolicitudMesaPendiente } from 'src/app/models/mesa-cliente.models';
 import { DeviceCapabilitiesService } from 'src/app/services/device-capabilities.service';
+import { AgenteImpresionPedidosService } from 'src/app/services/agente-impresion-pedidos.service';
+import { AgenteImpresionLocalService } from 'src/app/services/agente-impresion-local.service';
 
 @Component({
   selector: 'app-venta',
@@ -232,6 +234,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     private mesaClienteService: MesaClienteService,
     private solicitudesMesaRealtime: SolicitudesMesaRealtimeService,
     private deviceCapabilities: DeviceCapabilitiesService,
+    private agenteImpresionPedidos: AgenteImpresionPedidosService,
+    private agenteImpresionLocal: AgenteImpresionLocalService,
     private activatedRoute: ActivatedRoute) {
 
 
@@ -438,6 +442,13 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!isRunning) {
         this.router.navigate(['/qz-tray-required']);
         return;
+      }
+      // El programa instalado es el agente principal. Mientras aun no exista,
+      // esta sesion de venta funciona como respaldo para pedidos de moviles/QR.
+      const agenteInstalado = await this.agenteImpresionLocal
+        .configurarSiEstaInstalado();
+      if (!agenteInstalado) {
+        await this.agenteImpresionPedidos.iniciar();
       }
     }
     this.spinnerService.show();
@@ -2149,6 +2160,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
           Espacio: (this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) ? this.espacioSelected.Espacio : '',
           NroPax: (this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) ? this.espacioSelected.NroPersonas : 0,
           IdCaja: this.turnoAbierto.IdCaja,
+          ModoImpresion: this.deviceCapabilities.requiresLocalPrintBridge()
+            ? ModoImpresionPedido.DirectaQz
+            : ModoImpresionPedido.ColaAgente,
           IdTurno: this.turnoAbierto.IdTurno,
           Moneda: this.config?.IdMoneda ?? 'SOL',
           IdSocioNegocio: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY)
@@ -2180,6 +2194,17 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       var responseRegisterPedido: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.GrabarPedido(pedido));
 
       if (responseRegisterPedido.Success) {
+        if (pedido.ModoImpresion === ModoImpresionPedido.DirectaQz) {
+          const impresiones = responseRegisterPedido.Data ?? [];
+          const impresas = await this.imprimir(impresiones);
+          if (impresas !== impresiones.length) {
+            await Swal.fire(
+              this.textCatalog.get('error'),
+              'El pedido se grabo, pero QZ no pudo completar todas las impresiones.',
+              'error',
+            );
+          }
+        }
         this.limpiarPedido();
         this.procesarPedido = false;
         this.RehacerPantalla();
@@ -2204,7 +2229,12 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
     for (const element of listImpresionDTO) {
       const printerName = element.NombreImpresora;
-      const success = await this.qzTrayService.printPDF(element.Documento, printerName);
+      const success = await this.qzTrayService.printPDF(
+        element.Documento,
+        printerName,
+        true,
+        false,
+      );
       if (success) {
         contador += 1;
       }

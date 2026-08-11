@@ -3,25 +3,25 @@ import * as signalR from '@microsoft/signalr';
 import { firstValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { TrabajoImpresion } from '../models/trabajo-impresion.models';
+import { DeviceCapabilitiesService } from './device-capabilities.service';
 import { QzTrayV224Service } from './qz-tray-v224.service';
 import { StorageService } from './storage.service';
 import { TrabajosImpresionService } from './trabajos-impresion.service';
-import { DeviceCapabilitiesService } from './device-capabilities.service';
 
 /**
- * Agente global de impresión de comandas. SignalR solo despierta al agente;
- * la cola durable del backend es la fuente de verdad y el reclamo atómico
- * evita duplicados entre estaciones con QZ disponible.
+ * Respaldo web para imprimir trabajos originados en moviles o QR.
+ *
+ * No sondea la API. Consulta la cola al conectar, al reconectar y cuando
+ * SignalR avisa que hay trabajos. Los pedidos creados por este ordenador no
+ * pasan por aqui: VentaComponent recibe sus bytes en la respuesta HTTP.
  */
 @Injectable({ providedIn: 'root' })
 export class AgenteImpresionPedidosService {
-  private readonly intervaloSondeoMs = 15_000;
-  private readonly esperaSinQzMs = 60_000;
+  private static readonly reintentoConexionMs = 30_000;
   private hub?: signalR.HubConnection;
-  private intervaloSondeo?: ReturnType<typeof setInterval>;
+  private reintentoConexion?: ReturnType<typeof setTimeout>;
   private procesando = false;
   private detenido = true;
-  private reintentarQzDesde = 0;
 
   constructor(
     private readonly storage: StorageService,
@@ -31,33 +31,31 @@ export class AgenteImpresionPedidosService {
     private readonly deviceCapabilities: DeviceCapabilitiesService,
   ) {}
 
-  iniciar(): void {
+  async iniciar(): Promise<void> {
     if (!this.detenido
-        || !this.deviceCapabilities.requiresLocalPrintBridge()) return;
+        || !this.deviceCapabilities.requiresLocalPrintBridge()
+        || !this.puedeParticipar()) {
+      return;
+    }
+
+    // Es obligatorio comprobar QZ antes de registrarse y, sobre todo, antes
+    // de reclamar. Asi un navegador sin QZ nunca consume intentos de la cola.
+    if (!await this.qz.isQzTrayRunning()) return;
+
     this.detenido = false;
-    this.intervaloSondeo = setInterval(
-      () => void this.mantenerAgente(),
-      this.intervaloSondeoMs,
-    );
-    void this.mantenerAgente();
+    await this.conectarSignalR();
   }
 
   detener(): void {
     this.detenido = true;
-    if (this.intervaloSondeo) {
-      clearInterval(this.intervaloSondeo);
-      this.intervaloSondeo = undefined;
+    if (this.reintentoConexion) {
+      clearTimeout(this.reintentoConexion);
+      this.reintentoConexion = undefined;
     }
 
     const hub = this.hub;
     this.hub = undefined;
     if (hub) void hub.stop();
-  }
-
-  private async mantenerAgente(): Promise<void> {
-    if (this.detenido || !this.puedeParticipar()) return;
-    await this.conectarSignalR();
-    await this.procesarPendientes();
   }
 
   private puedeParticipar(): boolean {
@@ -67,64 +65,96 @@ export class AgenteImpresionPedidosService {
     );
   }
 
+  private crearHub(): signalR.HubConnection {
+    const apiRoot = environment.apiUrl.replace(/\/api\/?$/i, '');
+    const hub = new signalR.HubConnectionBuilder()
+      .withUrl(`${apiRoot}/hubs/trabajos-impresion`, {
+        accessTokenFactory: () => this.storage.getCurrentToken() ?? '',
+      })
+      .withAutomaticReconnect([0, 2_000, 5_000, 15_000, 30_000])
+      .configureLogging(signalR.LogLevel.Warning)
+      .build();
+
+    hub.on('TrabajosImpresionPendientes', () => {
+      this.zone.runOutsideAngular(() => void this.procesarPendientes());
+    });
+    hub.onreconnected(() => {
+      this.zone.runOutsideAngular(() => void this.registrarYProcesar());
+    });
+    hub.onclose(() => {
+      if (!this.detenido) this.programarReconexion();
+    });
+    return hub;
+  }
+
   private async conectarSignalR(): Promise<void> {
-    if (this.hub
-        && this.hub.state !== signalR.HubConnectionState.Disconnected) {
-      return;
-    }
-
-    if (!this.hub) {
-      const apiRoot = environment.apiUrl.replace(/\/api\/?$/i, '');
-      this.hub = new signalR.HubConnectionBuilder()
-        .withUrl(`${apiRoot}/hubs/trabajos-impresion`, {
-          accessTokenFactory: () => this.storage.getCurrentToken() ?? '',
-        })
-        .withAutomaticReconnect([0, 2_000, 5_000, 15_000, 30_000])
-        .configureLogging(signalR.LogLevel.Warning)
-        .build();
-
-      this.hub.on('TrabajosImpresionPendientes', () => {
-        this.zone.runOutsideAngular(() => void this.procesarPendientes());
-      });
-    }
+    if (this.detenido || !this.puedeParticipar()) return;
+    if (!this.hub) this.hub = this.crearHub();
+    if (this.hub.state !== signalR.HubConnectionState.Disconnected) return;
 
     try {
       await this.hub.start();
+      await this.registrarYProcesar();
     } catch (error) {
-      // El sondeo periódico mantiene el sistema operativo aunque SignalR falle.
-      console.warn('SignalR de impresión no está disponible.', error);
+      console.warn('SignalR de impresion no esta disponible.', error);
+      this.programarReconexion();
+    }
+  }
+
+  private programarReconexion(): void {
+    if (this.detenido || this.reintentoConexion) return;
+    this.reintentoConexion = setTimeout(() => {
+      this.reintentoConexion = undefined;
+      void this.conectarSignalR();
+    }, AgenteImpresionPedidosService.reintentoConexionMs);
+  }
+
+  private async registrarYProcesar(): Promise<void> {
+    if (!this.hub
+        || this.hub.state !== signalR.HubConnectionState.Connected
+        || !this.puedeParticipar()) return;
+
+    try {
+      await this.hub.invoke(
+        'RegistrarAgente',
+        this.storage.getCurrentIP()!.trim(),
+        true,
+      );
+      await this.procesarPendientes();
+    } catch (error) {
+      console.warn('No se pudo registrar el agente web de impresion.', error);
     }
   }
 
   private async procesarPendientes(): Promise<void> {
     if (this.procesando || this.detenido || !this.puedeParticipar()) return;
-    if (Date.now() < this.reintentarQzDesde) return;
-
     this.procesando = true;
-    let huboTrabajos = false;
-    let huboErrorImpresion = false;
+
     try {
-      const response = await firstValueFrom(this.trabajos.reclamar({
-        IdentificadorEstacion: this.storage.getCurrentIP()!.trim(),
-        Cantidad: 3,
-      }));
+      while (!this.detenido) {
+        if (!await this.qz.isQzTrayRunning()) {
+          // QZ se cerro despues de entrar a venta. Se abandona el grupo y no se
+          // reclama nada mas hasta una nueva validacion al volver a ingresar.
+          this.detener();
+          break;
+        }
 
-      const trabajos = response.Data ?? [];
-      huboTrabajos = trabajos.length > 0;
-      for (const trabajo of trabajos) {
-        const impreso = await this.imprimir(trabajo);
-        huboErrorImpresion ||= !impreso;
-      }
+        const response = await firstValueFrom(this.trabajos.reclamar({
+          IdentificadorEstacion: this.storage.getCurrentIP()!.trim(),
+          Cantidad: 1,
+          QzDisponible: true,
+        }));
+        const trabajo = response.Data?.[0];
+        if (!trabajo) break;
 
-      if (huboErrorImpresion) {
-        this.reintentarQzDesde = Date.now() + this.esperaSinQzMs;
+        if (!await this.imprimir(trabajo)) {
+          this.detener();
+          break;
+        }
       }
     } catch (error) {
-      console.warn('No se pudieron consultar trabajos de impresión.', error);
+      console.warn('No se pudieron reclamar trabajos de impresion.', error);
     } finally {
-      if (huboTrabajos) {
-        await this.qz.disconnect();
-      }
       this.procesando = false;
     }
   }
@@ -137,9 +167,8 @@ export class AgenteImpresionPedidosService {
         true,
         false,
       );
-
       if (!impreso) {
-        throw new Error('QZ no confirmó la impresión del documento.');
+        throw new Error('QZ no confirmo la impresion del documento.');
       }
 
       await firstValueFrom(this.trabajos.confirmar(
@@ -151,7 +180,6 @@ export class AgenteImpresionPedidosService {
       const mensaje = error instanceof Error
         ? error.message
         : 'Fallo no identificado al imprimir la comanda.';
-
       try {
         await firstValueFrom(this.trabajos.fallar(
           trabajo.IdTrabajoImpresion,
@@ -161,7 +189,7 @@ export class AgenteImpresionPedidosService {
           },
         ));
       } catch (registroError) {
-        console.error('No se pudo liberar el trabajo de impresión.', registroError);
+        console.error('No se pudo liberar el trabajo de impresion.', registroError);
       }
       return false;
     }
