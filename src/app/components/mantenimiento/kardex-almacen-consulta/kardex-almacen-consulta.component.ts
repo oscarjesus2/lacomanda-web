@@ -7,7 +7,8 @@ import Swal from 'sweetalert2';
 import {
   ConsultaKardexAlmacen,
   KardexAlmacenCatalogos,
-  KardexAlmacenMovimiento
+  KardexAlmacenMovimiento,
+  KardexProductoCatalogo
 } from 'src/app/models/kardex-almacen.models';
 import { KardexAlmacenService } from 'src/app/services/kardex-almacen.service';
 
@@ -39,6 +40,7 @@ export class KardexAlmacenConsultaComponent implements OnInit {
   resultado: ConsultaKardexAlmacen | null = null;
   idSubAreaAlmacen: number | null = null;
   idProducto: number | null = null;
+  busquedaArticulo = '';
   fechaDesde = this.formatearFecha(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   fechaHasta = this.formatearFecha(new Date());
   cargando = false;
@@ -57,6 +59,7 @@ export class KardexAlmacenConsultaComponent implements OnInit {
     this.kardexService.obtenerCatalogos().subscribe({
       next: response => {
         this.catalogos = response.Data ?? { SubAreas: [], Articulos: [] };
+        this.seleccionarPrimeraSubAreaDisponible();
         this.cargando = false;
       },
       error: error => {
@@ -64,6 +67,42 @@ export class KardexAlmacenConsultaComponent implements OnInit {
         this.mostrarError(error, 'No se pudieron cargar las subáreas y los artículos.');
       }
     });
+  }
+
+  get articulosFiltrados(): KardexProductoCatalogo[] {
+    if (!this.idSubAreaAlmacen) {
+      return [];
+    }
+
+    const termino = this.normalizarTexto(this.busquedaArticulo);
+    return this.catalogos.Articulos.filter(articulo =>
+      articulo.IdSubAreaAlmacen === this.idSubAreaAlmacen &&
+      (!termino || this.normalizarTexto(
+        `${articulo.Descripcion} ${articulo.UnidadMedida}`
+      ).includes(termino))
+    );
+  }
+
+  cambiarSubArea(): void {
+    this.busquedaArticulo = '';
+    this.resultado = null;
+    this.dataSource.data = [];
+
+    const pertenece = this.catalogos.Articulos.some(articulo =>
+      articulo.IdSubAreaAlmacen === this.idSubAreaAlmacen &&
+      articulo.IdProducto === this.idProducto
+    );
+    if (!pertenece) {
+      this.idProducto = null;
+    }
+  }
+
+  buscarArticulo(event: Event): void {
+    this.busquedaArticulo = (event.target as HTMLInputElement).value;
+  }
+
+  detenerEvento(event: Event): void {
+    event.stopPropagation();
   }
 
   consultar(): void {
@@ -142,6 +181,24 @@ export class KardexAlmacenConsultaComponent implements OnInit {
   private mostrarError(error: any, mensajePredeterminado: string): void {
     const mensaje = error?.error?.Message || error?.error?.Data || mensajePredeterminado;
     Swal.fire('Error', mensaje, 'error');
+  }
+
+  private seleccionarPrimeraSubAreaDisponible(): void {
+    const primeraSubArea = this.catalogos.SubAreas.find(subArea =>
+      this.catalogos.Articulos.some(articulo =>
+        articulo.IdSubAreaAlmacen === subArea.IdSubAreaAlmacen
+      )
+    );
+    this.idSubAreaAlmacen = primeraSubArea?.IdSubAreaAlmacen ?? null;
+    this.cambiarSubArea();
+  }
+
+  private normalizarTexto(valor: string): string {
+    return valor
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
   }
 
   private formatearFecha(fecha: Date): string {

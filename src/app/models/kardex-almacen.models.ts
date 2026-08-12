@@ -5,6 +5,7 @@ export interface KardexSubAreaCatalogo {
 }
 
 export interface KardexProductoCatalogo {
+  IdSubAreaAlmacen: number;
   IdProducto: number;
   Descripcion: string;
   IdUnidadMedida?: number | null;

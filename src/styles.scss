@@ -2649,3 +2649,32 @@ mat-row:hover mat-cell {
 .cdk-global-overlay-wrapper .dialog-panel--workspace > h2 {
   top: 0;
 }
+.select-search-option.mat-option {
+  height: auto;
+  min-height: 48px;
+  padding: 6px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  opacity: 1;
+}
+
+.select-search-option .mat-option-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.select-search-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  padding: 8px 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}

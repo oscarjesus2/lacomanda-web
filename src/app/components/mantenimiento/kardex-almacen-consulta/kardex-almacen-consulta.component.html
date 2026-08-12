@@ -9,7 +9,7 @@
     <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
       <mat-form-field appearance="fill">
         <mat-label>Subárea de almacén</mat-label>
-        <mat-select [(ngModel)]="idSubAreaAlmacen">
+        <mat-select [(ngModel)]="idSubAreaAlmacen" (selectionChange)="cambiarSubArea()">
           <mat-option *ngFor="let subArea of catalogos.SubAreas" [value]="subArea.IdSubAreaAlmacen">
             {{ subArea.Descripcion }}
           </mat-option>
@@ -18,9 +18,28 @@
 
       <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide">
         <mat-label>Artículo</mat-label>
-        <mat-select [(ngModel)]="idProducto">
-          <mat-option *ngFor="let articulo of catalogos.Articulos" [value]="articulo.IdProducto">
+        <mat-select
+          [(ngModel)]="idProducto"
+          [disabled]="!idSubAreaAlmacen"
+          (closed)="busquedaArticulo = ''">
+          <mat-option class="select-search-option" disabled>
+            <mat-icon>search</mat-icon>
+            <input
+              class="select-search-input"
+              type="text"
+              autocomplete="off"
+              aria-label="Buscar artículo"
+              placeholder="Buscar artículo..."
+              [value]="busquedaArticulo"
+              (input)="buscarArticulo($event)"
+              (click)="detenerEvento($event)"
+              (keydown)="detenerEvento($event)">
+          </mat-option>
+          <mat-option *ngFor="let articulo of articulosFiltrados" [value]="articulo.IdProducto">
             {{ articulo.Descripcion }} · {{ articulo.UnidadMedida }}
+          </mat-option>
+          <mat-option disabled *ngIf="articulosFiltrados.length === 0">
+            {{ busquedaArticulo ? 'No hay coincidencias' : 'La subárea no tiene artículos' }}
           </mat-option>
         </mat-select>
       </mat-form-field>
