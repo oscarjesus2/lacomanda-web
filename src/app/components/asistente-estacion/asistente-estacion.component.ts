@@ -29,6 +29,7 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
   feedbackMessage = '';
 
   private availableStations: Estacion[] = [];
+  private onDashboard = false;
   private readonly subscriptions = new Subscription();
   private navigationTimer?: ReturnType<typeof setTimeout>;
 
@@ -155,7 +156,8 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
 
   private handleRoute(url: string): void {
     const path = url.split('?')[0].split('#')[0];
-    if (path !== '/dashboard') {
+    this.onDashboard = path === '/dashboard';
+    if (!this.onDashboard) {
       this.visible = false;
       return;
     }
@@ -218,7 +220,9 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
           station.Tipo === EstacionTipoEnum.CAJA
           || station.Tipo === EstacionTipoEnum.MOZO,
         );
-        this.visible = this.availableStations.length > 0;
+        this.visible = this.onDashboard
+          && this.isEligible()
+          && this.availableStations.length > 0;
         if (!this.visible) this.expanded = false;
       },
       error: () => {
