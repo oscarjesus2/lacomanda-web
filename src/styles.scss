@@ -1211,8 +1211,12 @@ body {
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-warm);
 }
 
 .dialog-toolbar__options,
@@ -1228,6 +1232,45 @@ body {
   grid-template-columns: minmax(190px, 240px) minmax(280px, 1fr);
   gap: 14px;
   align-items: start;
+}
+
+/* Barra de filtros fluida para consultas con muchos criterios. Mantiene los
+   campos en una sola franja cuando hay espacio y se adapta sin anchos locales. */
+.dialog-toolbar__filters--fluid {
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 8px 12px;
+}
+
+.dialog-toolbar__filter--wide,
+.dialog-toolbar__filter--toggle {
+  grid-column: span 2;
+}
+
+.dialog-toolbar__filter--toggle {
+  display: flex;
+  min-width: 0;
+  min-height: 56px;
+  align-items: stretch;
+}
+
+.dialog-toolbar__filter--toggle .mat-button-toggle-group {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+}
+
+.dialog-toolbar__filter--toggle .mat-button-toggle,
+.dialog-toolbar__filter--toggle .mat-button-toggle-button {
+  width: 100%;
+}
+
+.dialog-toolbar__filter--toggle .mat-button-toggle-label-content {
+  width: 100%;
+  padding: 0 10px;
+  text-align: center;
 }
 
 .dialog-toolbar__filters .mat-mdc-form-field {
@@ -1278,11 +1321,70 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+.dialog-table-card mat-table,
+.dialog-table-card .dialog-table {
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  background: var(--color-surface);
+  box-shadow: none;
+}
+
+.dialog-table-card mat-header-cell,
+.dialog-table-card th.mat-mdc-header-cell {
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 7%,
+    var(--color-surface)
+  );
+}
+
+.dialog-table-card mat-row:hover mat-cell,
+.dialog-table-card tr.mat-mdc-row:hover td {
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 4%,
+    var(--color-surface)
+  );
+}
+
+.dialog-table-card .mat-mdc-paginator {
+  flex: 0 0 auto;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  box-shadow: none;
+}
+
 .dialog-table-wrapper--fill {
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
   overflow: auto;
+}
+
+.dialog-table-state,
+.dialog-table-card > .dialog-empty-state,
+.dialog-table-wrapper--fill > .dialog-empty-state {
+  display: flex;
+  min-height: 220px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 24px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.dialog-table-state mat-icon,
+.dialog-table-card > .dialog-empty-state mat-icon,
+.dialog-table-wrapper--fill > .dialog-empty-state mat-icon {
+  width: 38px;
+  height: 38px;
+  color: var(--color-primary-light);
+  font-size: 38px;
 }
 
 .dialog-summary-grid {
@@ -1377,6 +1479,75 @@ body {
   font-size: 1.05rem;
 }
 
+.dialog-summary-card--success strong,
+.is-positive {
+  color: var(--color-success);
+}
+
+.dialog-summary-card--danger strong,
+.is-negative {
+  color: var(--color-warn);
+}
+
+.dialog-summary-card--accent {
+  border-color: color-mix(in srgb, var(--color-primary) 34%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+}
+
+.dialog-summary-card--accent strong,
+.is-emphasis {
+  color: var(--color-primary-dark);
+  font-weight: 800;
+}
+
+.dialog-context-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.dialog-context-card {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+}
+
+.dialog-context-card span,
+.dialog-context-card small,
+.table-cell-subtext {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.table-cell-stack {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.table-values-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+}
+
+.is-numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-row--warning {
+  background: var(--color-warn-soft);
+}
+
 .dialog-inline-actions {
   display: grid;
   grid-template-columns: minmax(260px, 1fr) auto auto;
@@ -1442,78 +1613,17 @@ body {
   grid-template-columns: minmax(280px, 1fr);
 }
 
-.dialog-toolbar__filters--stock {
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
-}
-
 .dialog-summary-grid--stock {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.dialog-summary-card--warning strong,
-.stock-low-label,
-.stock-output {
-  color: var(--color-danger, #c62828);
-}
-
-.stock-almacen-consulta .stock-table {
-  min-width: 1180px;
-}
-
-.stock-cell-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.stock-cell-stack span,
-.stock-muted {
-  color: var(--color-text-muted);
-  font-size: 0.72rem;
-}
-
-.stock-movements {
-  display: flex;
-  gap: 10px;
-  font-weight: 700;
-}
-
-.stock-entry {
-  color: #2e7d32;
-}
-
-.stock-current strong {
-  font-size: 1rem;
-}
-
-.stock-low-label {
-  font-weight: 700;
-}
-
-.stock-row--low {
-  background: #fff4f1;
-}
-
-.stock-table-state {
-  display: flex;
-  min-height: 170px;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 10px;
-  color: var(--color-text-muted);
-}
-
-.stock-table-state mat-icon {
-  width: 34px;
-  height: 34px;
-  font-size: 34px;
+.dialog-summary-card--warning strong {
+  color: var(--color-warn);
 }
 
 @media (max-width: 900px) {
-  .dialog-toolbar__filters--stock,
   .dialog-summary-grid--stock {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1521,10 +1631,57 @@ body {
   min-width: 1040px;
 }
 
+.dialog-table--xwide {
+  min-width: 1180px;
+}
+
+.dialog-table--xwide td,
+.dialog-table--xwide th,
+mat-table.dialog-table--xwide mat-cell,
+mat-table.dialog-table--xwide mat-header-cell {
+  white-space: nowrap;
+}
+
 .dialog-form--workspace {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+}
+
+/* Estructura compartida por los formularios operativos de almacén. */
+.dialog-form-workspace {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 2px;
+  overflow: auto;
+}
+
+.dialog-detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  flex: 0 0 auto;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.dialog-detail-header__title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--color-text);
+  text-align: center;
 }
 
 .dialog-form-scroll {
@@ -1546,7 +1703,8 @@ body {
   grid-column: 1 / -1;
 }
 
-.dialog-form-section__title {
+.dialog-form-section__title,
+.dialog-form-section > h3 {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1558,7 +1716,8 @@ body {
   text-transform: uppercase;
 }
 
-.dialog-form-section__title .mat-icon {
+.dialog-form-section__title .mat-icon,
+.dialog-form-section > h3 .mat-icon {
   width: 20px;
   height: 20px;
   font-size: 20px;
@@ -1579,6 +1738,112 @@ body {
 
 .dialog-form-grid__wide {
   grid-column: span 2;
+}
+
+.dialog-form-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dialog-form-action {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+}
+
+.dialog-section-help {
+  margin: 0 0 12px;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.dialog-table-card--detail {
+  flex: 0 0 auto;
+  min-height: 120px;
+  max-height: min(42vh, 420px);
+}
+
+.dialog-detail-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  background: var(--color-surface);
+}
+
+.dialog-detail-table th,
+.dialog-detail-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 0.78rem;
+  text-align: left;
+}
+
+.dialog-detail-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 7%,
+    var(--color-surface)
+  );
+  color: var(--color-primary-dark);
+  font-size: 0.69rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dialog-detail-table tbody tr:hover td {
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 4%,
+    var(--color-surface)
+  );
+}
+
+.dialog-detail-table tfoot td {
+  background: var(--color-surface-warm);
+}
+
+.dialog-inline-number {
+  box-sizing: border-box;
+  width: 112px;
+  min-height: 34px;
+  padding: 6px 9px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.dialog-inline-number:focus {
+  border-color: var(--color-primary);
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.dialog-empty-cell {
+  padding: 24px !important;
+  color: var(--color-text-muted) !important;
+  text-align: center !important;
+}
+
+.dialog-form-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 0 2px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .dialog-toggle-grid {
@@ -1617,6 +1882,10 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .dialog-form-grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .dialog-toggle-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1650,8 +1919,35 @@ body {
   }
 
   .dialog-form-grid,
+  .dialog-form-grid--3,
   .dialog-toggle-grid {
     grid-template-columns: 1fr;
+  }
+
+  .dialog-toolbar__filter--wide,
+  .dialog-toolbar__filter--toggle {
+    grid-column: auto;
+  }
+
+  .dialog-detail-header {
+    position: static;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dialog-detail-header__title {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .dialog-form-footer {
+    position: static;
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .dialog-form-footer button {
+    width: 100%;
   }
 
   .dialog-form-grid__wide {

@@ -1,4 +1,4 @@
-<div class="mant-panel dialog-panel--workspace stock-almacen-consulta">
+<div class="mant-panel dialog-panel--workspace">
   <button
     mat-icon-button
     class="close-button"
@@ -11,7 +11,7 @@
   <h2>CONSULTA DE STOCK POR ÁREA</h2>
 
   <div class="dialog-toolbar">
-    <div class="dialog-toolbar__filters dialog-toolbar__filters--stock">
+    <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
       <mat-form-field appearance="fill">
         <mat-label>Área de almacén</mat-label>
         <mat-select [(ngModel)]="idAreaAlmacen" (selectionChange)="cambiarArea()">
@@ -74,13 +74,13 @@
   <div class="dialog-workspace-content">
     <div class="dialog-table-card">
       <div class="dialog-table-wrapper--fill">
-        <mat-table [dataSource]="dataSource" class="dialog-table--wide stock-table">
+        <mat-table [dataSource]="dataSource" class="dialog-table--xwide">
           <ng-container matColumnDef="area">
             <mat-header-cell *matHeaderCellDef>Área / subárea</mat-header-cell>
             <mat-cell *matCellDef="let row">
-              <div class="stock-cell-stack">
+              <div class="table-cell-stack">
                 <strong>{{ row.SubArea }}</strong>
-                <span>{{ row.Area }}</span>
+                <span class="table-cell-subtext">{{ row.Area }}</span>
               </div>
             </mat-cell>
           </ng-container>
@@ -88,9 +88,9 @@
           <ng-container matColumnDef="producto">
             <mat-header-cell *matHeaderCellDef>Artículo</mat-header-cell>
             <mat-cell *matCellDef="let row">
-              <div class="stock-cell-stack">
+              <div class="table-cell-stack">
                 <strong>{{ row.Producto }}</strong>
-                <span>Código {{ row.IdProducto }}</span>
+                <span class="table-cell-subtext">Código {{ row.IdProducto }}</span>
               </div>
             </mat-cell>
           </ng-container>
@@ -110,20 +110,20 @@
           <ng-container matColumnDef="inventario">
             <mat-header-cell *matHeaderCellDef>Último inventario</mat-header-cell>
             <mat-cell *matCellDef="let row">
-              <div class="stock-cell-stack" *ngIf="row.IdUltimoInventario; else sinInventario">
+              <div class="table-cell-stack" *ngIf="row.IdUltimoInventario; else sinInventario">
                 <strong>{{ row.StockUltimoInventario | number:'1.0-3' }}</strong>
-                <span>N.º {{ row.IdUltimoInventario }} · {{ row.FechaUltimoInventario | date:'dd/MM/yyyy HH:mm' }}</span>
+                <span class="table-cell-subtext">N.º {{ row.IdUltimoInventario }} · {{ row.FechaUltimoInventario | date:'dd/MM/yyyy HH:mm' }}</span>
               </div>
-              <ng-template #sinInventario><span class="stock-muted">Sin inventario cerrado</span></ng-template>
+              <ng-template #sinInventario><span class="table-cell-subtext">Sin inventario cerrado</span></ng-template>
             </mat-cell>
           </ng-container>
 
           <ng-container matColumnDef="movimientos">
             <mat-header-cell *matHeaderCellDef>Movimientos</mat-header-cell>
             <mat-cell *matCellDef="let row">
-              <div class="stock-movements">
-                <span class="stock-entry">+{{ row.EntradasDesdeInventario | number:'1.0-3' }}</span>
-                <span class="stock-output">−{{ row.SalidasDesdeInventario | number:'1.0-3' }}</span>
+              <div class="table-values-inline">
+                <span class="is-positive">+{{ row.EntradasDesdeInventario | number:'1.0-3' }}</span>
+                <span class="is-negative">−{{ row.SalidasDesdeInventario | number:'1.0-3' }}</span>
               </div>
             </mat-cell>
           </ng-container>
@@ -131,9 +131,9 @@
           <ng-container matColumnDef="actual">
             <mat-header-cell *matHeaderCellDef>Stock actual</mat-header-cell>
             <mat-cell *matCellDef="let row">
-              <div class="stock-cell-stack stock-current">
+              <div class="table-cell-stack">
                 <strong>{{ row.StockActual | number:'1.0-3' }}</strong>
-                <span *ngIf="row.BajoMinimo" class="stock-low-label">Bajo mínimo</span>
+                <span *ngIf="row.BajoMinimo" class="table-cell-subtext is-negative">Bajo mínimo</span>
               </div>
             </mat-cell>
           </ng-container>
@@ -141,34 +141,34 @@
           <ng-container matColumnDef="receta">
             <mat-header-cell *matHeaderCellDef>Equivalencia receta</mat-header-cell>
             <mat-cell *matCellDef="let row">
-              <div class="stock-cell-stack" *ngIf="row.UnidadReceta; else sinConversion">
+              <div class="table-cell-stack" *ngIf="row.UnidadReceta; else sinConversion">
                 <strong>{{ row.StockEnUnidadReceta | number:'1.0-3' }}</strong>
-                <span>{{ row.UnidadReceta }}</span>
+                <span class="table-cell-subtext">{{ row.UnidadReceta }}</span>
               </div>
-              <ng-template #sinConversion><span class="stock-muted">—</span></ng-template>
+              <ng-template #sinConversion><span class="table-cell-subtext">—</span></ng-template>
             </mat-cell>
           </ng-container>
 
-          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
           <mat-row
             *matRowDef="let row; columns: displayedColumns"
-            [class.stock-row--low]="row.BajoMinimo"
+            [class.table-row--warning]="row.BajoMinimo"
           ></mat-row>
         </mat-table>
 
-        <div class="stock-table-state" *ngIf="cargando">
+        <div class="dialog-table-state" *ngIf="cargando">
           <mat-spinner diameter="38"></mat-spinner>
           <span>Consultando existencias…</span>
         </div>
-        <div class="stock-table-state" *ngIf="!cargando && !dataSource.filteredData.length">
+        <div class="dialog-table-state" *ngIf="!cargando && !dataSource.filteredData.length">
           <mat-icon>inventory_2</mat-icon>
           <span>No se encontraron existencias para los filtros seleccionados.</span>
         </div>
       </div>
 
       <mat-paginator
-        [pageSize]="10"
-        [pageSizeOptions]="[5, 10, 20, 50]"
+        [pageSize]="25"
+        [pageSizeOptions]="[10, 25, 50, 100]"
         showFirstLastButtons
       ></mat-paginator>
     </div>

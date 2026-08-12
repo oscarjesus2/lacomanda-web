@@ -13,8 +13,8 @@
 
   <ng-container *ngIf="vista === 'lista'">
     <div class="dialog-toolbar">
-      <div class="dialog-toolbar__filters">
-        <mat-form-field appearance="fill">
+      <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+        <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide">
           <mat-label>Buscar</mat-label>
           <mat-icon matPrefix>search</mat-icon>
           <input matInput [(ngModel)]="filtro.Buscar" (keyup.enter)="buscar()"
@@ -39,9 +39,6 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-      </div>
-
-      <div class="dialog-toolbar__options">
         <mat-form-field appearance="fill">
           <mat-label>Desde</mat-label>
           <input matInput [matDatepicker]="fechaInicio" [(ngModel)]="filtro.FechaInicio">
@@ -137,7 +134,7 @@
               </mat-cell>
             </ng-container>
 
-            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
             <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
           </mat-table>
 
@@ -147,8 +144,8 @@
           </div>
         </div>
 
-        <mat-paginator [length]="dataSource.data.length" [pageSize]="10"
-                       [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons>
+        <mat-paginator [length]="dataSource.data.length" [pageSize]="25"
+                       [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons>
         </mat-paginator>
       </div>
     </div>
@@ -298,10 +295,22 @@
     </div>
 
     <div class="dialog-summary-grid">
-      <div><span>Cantidad bruta</span><strong>{{ formulario.CantidadBruta | number:'1.0-3' }}</strong></div>
-      <div><span>Cantidad útil</span><strong>{{ porcionamiento?.CantidadUtil || cantidadUtil | number:'1.0-3' }}</strong></div>
-      <div><span>Merma</span><strong>{{ porcionamiento?.Merma || merma | number:'1.0-3' }}</strong></div>
-      <div><span>% merma</span><strong>{{ porcentajeMerma | number:'1.0-2' }} %</strong></div>
+      <div class="dialog-summary-card">
+        <span class="dialog-summary-card__label">Cantidad bruta</span>
+        <strong>{{ formulario.CantidadBruta | number:'1.0-3' }}</strong>
+      </div>
+      <div class="dialog-summary-card">
+        <span class="dialog-summary-card__label">Cantidad útil</span>
+        <strong>{{ porcionamiento?.CantidadUtil || cantidadUtil | number:'1.0-3' }}</strong>
+      </div>
+      <div class="dialog-summary-card dialog-summary-card--danger">
+        <span class="dialog-summary-card__label">Merma</span>
+        <strong>{{ porcionamiento?.Merma || merma | number:'1.0-3' }}</strong>
+      </div>
+      <div class="dialog-summary-card">
+        <span class="dialog-summary-card__label">% merma</span>
+        <strong>{{ porcentajeMerma | number:'1.0-2' }} %</strong>
+      </div>
     </div>
 
     <div class="dialog-form-footer">

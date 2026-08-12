@@ -11,8 +11,8 @@
 
   <ng-container *ngIf="!showForm">
     <div class="dialog-toolbar">
-      <div class="dialog-toolbar__filters">
-        <mat-form-field appearance="fill">
+      <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+        <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide">
           <mat-label>Buscar transferencia</mat-label>
           <mat-icon matPrefix>search</mat-icon>
           <input matInput [(ngModel)]="filtro.Buscar" (keyup.enter)="buscar()"
@@ -47,9 +47,6 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-      </div>
-
-      <div class="dialog-toolbar__options">
         <mat-form-field appearance="fill">
           <mat-label>Desde</mat-label>
           <input matInput [matDatepicker]="fechaInicio" [(ngModel)]="filtro.FechaInicio">
@@ -144,7 +141,7 @@
               </mat-cell>
             </ng-container>
 
-            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
             <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
           </mat-table>
 
@@ -154,8 +151,8 @@
           </div>
         </div>
 
-        <mat-paginator [length]="dataSource.data.length" [pageSize]="10"
-                       [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons>
+        <mat-paginator [length]="dataSource.data.length" [pageSize]="25"
+                       [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons>
         </mat-paginator>
       </div>
     </div>

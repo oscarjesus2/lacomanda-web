@@ -13,8 +13,7 @@ import { KardexAlmacenService } from 'src/app/services/kardex-almacen.service';
 
 @Component({
   selector: 'app-kardex-almacen-consulta',
-  templateUrl: './kardex-almacen-consulta.component.html',
-  styleUrls: ['./kardex-almacen-consulta.component.css']
+  templateUrl: './kardex-almacen-consulta.component.html'
 })
 export class KardexAlmacenConsultaComponent implements OnInit {
   @ViewChild(MatPaginator) set paginator(value: MatPaginator) {

@@ -35,8 +35,8 @@
 
     <ng-container *ngIf="seccion === 'producciones'">
       <div class="dialog-toolbar">
-        <div class="dialog-toolbar__filters">
-          <mat-form-field appearance="fill">
+        <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+          <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide">
             <mat-label>Buscar producción</mat-label>
             <mat-icon matPrefix>search</mat-icon>
             <input matInput [(ngModel)]="filtro.Buscar" (keyup.enter)="buscar()"
@@ -51,8 +51,6 @@
               <mat-option [value]="3">Anulado</mat-option>
             </mat-select>
           </mat-form-field>
-        </div>
-        <div class="dialog-toolbar__options">
           <mat-form-field appearance="fill">
             <mat-label>Desde</mat-label>
             <input matInput [matDatepicker]="desde" [(ngModel)]="filtro.FechaInicio">
@@ -65,9 +63,17 @@
             <mat-datepicker-toggle matSuffix [for]="hasta"></mat-datepicker-toggle>
             <mat-datepicker #hasta></mat-datepicker>
           </mat-form-field>
-          <button mat-stroked-button color="primary" type="button" (click)="buscar()" [disabled]="cargando">
-            <mat-icon>search</mat-icon> Buscar
-          </button>
+        </div>
+        <div class="dialog-toolbar__footer">
+          <span class="dialog-toolbar__status">
+            <mat-icon>precision_manufacturing</mat-icon>
+            {{ producciones.data.length }} producciones encontradas
+          </span>
+          <div class="dialog-toolbar__actions">
+            <button mat-stroked-button color="primary" type="button" (click)="buscar()" [disabled]="cargando">
+              <mat-icon>search</mat-icon> Buscar
+            </button>
+          </div>
         </div>
       </div>
 
@@ -109,7 +115,7 @@
                   </button>
                 </mat-cell>
               </ng-container>
-              <mat-header-row *matHeaderRowDef="columnasProduccion"></mat-header-row>
+              <mat-header-row *matHeaderRowDef="columnasProduccion; sticky: true"></mat-header-row>
               <mat-row *matRowDef="let row; columns: columnasProduccion"></mat-row>
             </mat-table>
             <div class="dialog-empty-state" *ngIf="!cargando && producciones.data.length === 0">
@@ -117,8 +123,8 @@
               <span>No existen producciones para los filtros indicados.</span>
             </div>
           </div>
-          <mat-paginator [length]="producciones.data.length" [pageSize]="10"
-                         [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons></mat-paginator>
+          <mat-paginator [length]="producciones.data.length" [pageSize]="25"
+                         [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons></mat-paginator>
         </div>
       </div>
     </ng-container>
@@ -151,15 +157,15 @@
                           aria-label="Editar receta"><mat-icon>edit</mat-icon></button>
                 </mat-cell>
               </ng-container>
-              <mat-header-row *matHeaderRowDef="columnasReceta"></mat-header-row>
+              <mat-header-row *matHeaderRowDef="columnasReceta; sticky: true"></mat-header-row>
               <mat-row *matRowDef="let row; columns: columnasReceta"></mat-row>
             </mat-table>
             <div class="dialog-empty-state" *ngIf="!cargando && recetas.data.length === 0">
               <mat-icon>menu_book</mat-icon><span>Todavía no hay recetas de producción.</span>
             </div>
           </div>
-          <mat-paginator [length]="recetas.data.length" [pageSize]="10"
-                         [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons></mat-paginator>
+          <mat-paginator [length]="recetas.data.length" [pageSize]="25"
+                         [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons></mat-paginator>
         </div>
       </div>
     </ng-container>
