@@ -18,8 +18,7 @@ import { KardexAlmacenConsultaComponent } from 'src/app/components/mantenimiento
 
 @Component({
   selector: 'app-menu-almacen',
-  templateUrl: './menu-almacen.component.html',
-  styleUrls: ['./menu-almacen.component.css']
+  templateUrl: './menu-almacen.component.html'
 })
 export class MenuAlmacenComponent implements OnInit {
   almacenMenu: any[] = [
@@ -86,76 +85,94 @@ export class MenuAlmacenComponent implements OnInit {
       ]
     },
     {
-      title: 'Ingresos',
-      action: 'ingresosCompra',
-      icon: 'move_to_inbox',
-      label: 'Ingresos',
-      titleKey: 'stockIn',
-      labelKey: 'stockIn',
-      children: []
+      title: 'Movimientos',
+      titleKey: 'menuWarehouseMovements',
+      children: [
+        {
+          title: 'Ingresos',
+          action: 'ingresosCompra',
+          icon: 'move_to_inbox',
+          label: 'Ingresos',
+          titleKey: 'stockIn',
+          labelKey: 'stockIn',
+          disabled: false
+        },
+        {
+          title: 'Salidas',
+          action: 'salidasInternas',
+          icon: 'outbox',
+          label: 'Salidas',
+          titleKey: 'stockOut',
+          labelKey: 'stockOut',
+          disabled: false
+        },
+        {
+          title: 'Transferencias',
+          action: 'transferenciasAlmacen',
+          icon: 'swap_horiz',
+          label: 'Transferencias',
+          titleKey: 'transfers',
+          labelKey: 'transfers',
+          disabled: false
+        }
+      ]
     },
     {
-      title: 'Salidas',
-      action: 'salidasInternas',
-      icon: 'outbox',
-      label: 'Salidas',
-      titleKey: 'stockOut',
-      labelKey: 'stockOut',
-      children: []
+      title: 'Control de inventario',
+      titleKey: 'menuInventoryControl',
+      children: [
+        {
+          title: 'Inventarios',
+          action: 'inventarios',
+          icon: 'fact_check',
+          label: 'Inventarios',
+          titleKey: 'inventories',
+          labelKey: 'inventories',
+          disabled: false
+        },
+        {
+          title: 'Stock por área',
+          action: 'stockPorArea',
+          icon: 'query_stats',
+          label: 'Stock por área',
+          titleKey: 'stockByArea',
+          labelKey: 'stockByArea',
+          disabled: false
+        },
+        {
+          title: 'Kardex',
+          action: 'kardexAlmacen',
+          icon: 'receipt_long',
+          label: 'Kardex',
+          titleKey: 'warehouseKardex',
+          labelKey: 'warehouseKardex',
+          disabled: false
+        }
+      ]
     },
     {
-      title: 'Transferencias',
-      action: 'transferenciasAlmacen',
-      icon: 'swap_horiz',
-      label: 'Transferencias',
-      titleKey: 'transfers',
-      labelKey: 'transfers',
-      children: []
-    },
-    {
-      title: 'Inventarios',
-      action: 'inventarios',
-      icon: 'fact_check',
-      label: 'Inventarios',
-      titleKey: 'inventories',
-      labelKey: 'inventories',
-      children: []
-    },
-    {
-      title: 'Stock por área',
-      action: 'stockPorArea',
-      icon: 'query_stats',
-      label: 'Stock por área',
-      titleKey: 'stockByArea',
-      labelKey: 'stockByArea',
-      children: []
-    },
-    {
-      title: 'Kardex',
-      action: 'kardexAlmacen',
-      icon: 'receipt_long',
-      label: 'Kardex',
-      titleKey: 'warehouseKardex',
-      labelKey: 'warehouseKardex',
-      children: []
-    },
-    {
-      title: 'Porcionamiento',
-      action: 'porcionamientos',
-      icon: 'content_cut',
-      label: 'Porcionamiento',
-      titleKey: 'portioning',
-      labelKey: 'portioning',
-      children: []
-    },
-    {
-      title: 'Producción',
-      action: 'producciones',
-      icon: 'precision_manufacturing',
-      label: 'Producción',
-      titleKey: 'production',
-      labelKey: 'production',
-      children: []
+      title: 'Transformación',
+      titleKey: 'menuWarehouseTransformation',
+      children: [
+        {
+          title: 'Porcionamiento',
+          action: 'porcionamientos',
+          icon: 'content_cut',
+          label: 'Porcionamiento',
+          titleKey: 'portioning',
+          labelKey: 'portioning',
+          disabled: false
+        },
+        {
+          title: 'Producción',
+          action: 'producciones',
+          icon: 'precision_manufacturing',
+          label: 'Producción',
+          titleKey: 'production',
+          labelKey: 'production',
+          disabled: false
+        }
+      ]
     }
   ];
 

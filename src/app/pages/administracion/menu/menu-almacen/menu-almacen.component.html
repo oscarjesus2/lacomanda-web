@@ -1,11 +1,15 @@
 <div class="admin-menu">
+  <div class="admin-menu__sections">
 
-  <ng-container *ngFor="let section of almacenMenu">
-
-    <!-- Sección con ítems -->
-    <div class="admin-menu__section" *ngIf="section.children.length > 0">
+    <div class="admin-menu__section" *ngFor="let section of almacenMenu">
       <h4 class="admin-menu__subtitle">{{ section.titleKey | tenantText }}</h4>
-      <div class="tiles-grid">
+
+      <div
+        class="tiles-grid"
+        [class.tiles-grid--accent]="section.titleKey === 'menuWarehouseMovements'"
+        [class.tiles-grid--report]="section.titleKey === 'menuInventoryControl'"
+        [class.tiles-grid--process]="section.titleKey === 'menuWarehouseTransformation'"
+      >
         <button
           type="button"
           class="tile"
@@ -21,20 +25,5 @@
       </div>
     </div>
 
-    <!-- Sección sin ítems → tile deshabilitado (próximamente) -->
-    <button
-      type="button"
-      class="tile"
-      [class.tile--disabled]="!section.action"
-      *ngIf="section.children.length === 0"
-      [disabled]="!section.action"
-      [title]="section.titleKey | tenantText"
-      (click)="openDialog(section)"
-    >
-      <mat-icon class="tile__icon">{{ section.icon }}</mat-icon>
-      <span class="tile__label">{{ section.labelKey | tenantText }}</span>
-    </button>
-
-  </ng-container>
-
+  </div>
 </div>

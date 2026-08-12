@@ -34,8 +34,7 @@ import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service'
 
 @Component({
   selector: 'app-menu-ventas',
-  templateUrl: './menu-ventas.component.html',
-  styleUrls: ['./menu-ventas.component.css']
+  templateUrl: './menu-ventas.component.html'
 })
 export class MenuVentasComponent implements OnInit {
   promocionesHabilitadas = false;
