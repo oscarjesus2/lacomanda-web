@@ -23,13 +23,13 @@ export class VentaCostoReporteComponent implements OnInit {
   }
 
   readonly displayedColumns = [
-    'producto',
-    'cantidad',
-    'precioVenta',
+    'fecha',
+    'documento',
+    'turno',
+    'canal',
     'venta',
-    'costosUnitarios',
     'costo',
-    'diferencia'
+    'margen'
   ];
 
   readonly dataSource = new MatTableDataSource<VentaCostoReporteItem>([]);
@@ -48,7 +48,9 @@ export class VentaCostoReporteComponent implements OnInit {
     private readonly reportesService: ReportesAlmacenService
   ) {
     this.dataSource.filterPredicate = (item, filter) =>
-      this.normalizar(`${item.IdProducto} ${item.Producto}`).includes(filter);
+      this.normalizar(
+        `${item.IdVenta} ${item.Documento} ${item.CanalVenta} ${item.NroTurno}`
+      ).includes(filter);
   }
 
   ngOnInit(): void {
@@ -106,31 +108,41 @@ export class VentaCostoReporteComponent implements OnInit {
     }
 
     const filas = items.map(item => ({
-      Código: item.IdProducto,
-      Producto: item.Producto,
-      'Precio de venta': item.PrecioVenta,
-      'Costo mesa': item.CostoMesa,
-      'Costo para llevar': item.CostoLlevar,
-      'Costo delivery': item.CostoDelivery,
-      'Cantidad vendida': item.CantidadVendida,
-      'Venta total': item.TotalVenta,
-      'Costo total mesa': item.TotalCostoMesa,
-      'Costo total para llevar': item.TotalCostoLlevar,
-      'Costo total delivery': item.TotalCostoDelivery,
-      'Costo total': item.TotalCosto,
-      Diferencia: item.Diferencia
+      Fecha: item.Fecha,
+      'Id. venta': item.IdVenta,
+      Documento: item.Documento,
+      Turno: item.NroTurno,
+      Canal: item.CanalVenta,
+      Moneda: item.IdMoneda,
+      Venta: item.TotalVenta,
+      'Estado del costo': this.descripcionEstadoCosto(item),
+      'Costo histórico': item.TotalCosto,
+      Diferencia: item.Diferencia,
+      'Margen %': item.MargenPorcentaje
     }));
     const hoja = XLSX.utils.json_to_sheet(filas);
     const libro = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(libro, hoja, 'Venta vs costo');
+    XLSX.utils.book_append_sheet(libro, hoja, 'Venta vs costo histórico');
     XLSX.writeFile(
       libro,
-      `venta-vs-costo_${this.fechaDesde}_${this.fechaHasta}.xlsx`
+      `venta-vs-costo-historico_${this.fechaDesde}_${this.fechaHasta}.xlsx`
     );
   }
 
   cerrar(): void {
     this.dialogRef.close();
+  }
+
+  private descripcionEstadoCosto(item: VentaCostoReporteItem): string {
+    if (!item.CostoDisponible) {
+      return item.TurnoCerrado
+        ? 'Sin costo histórico en Kardex'
+        : 'Pendiente de cierre de turno';
+    }
+
+    return item.TieneMovimientosKardex
+      ? 'Calculado desde Kardex'
+      : 'Sin consumo inventariable';
   }
 
   private cargarMoneda(): void {

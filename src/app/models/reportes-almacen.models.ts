@@ -22,28 +22,34 @@ export interface ConsumoAreaReporte {
 }
 
 export interface VentaCostoReporteItem {
-  IdProducto: number;
-  Producto: string;
-  PrecioVenta: number;
-  CostoMesa: number;
-  CostoLlevar: number;
-  CostoDelivery: number;
-  CantidadVendida: number;
+  IdVenta: number;
+  Fecha: string;
+  TipoDocumento: string;
+  Serie: string;
+  NumeroDocumento: number;
+  Documento: string;
+  IdTurno: number;
+  NroTurno: number;
+  CanalVenta: string;
+  IdMoneda: string;
   TotalVenta: number;
-  TotalCostoMesa: number;
-  TotalCostoLlevar: number;
-  TotalCostoDelivery: number;
-  TotalCosto: number;
-  Diferencia: number;
+  TurnoCerrado: boolean;
+  CostoDisponible: boolean;
+  TieneMovimientosKardex: boolean;
+  TotalCosto: number | null;
+  Diferencia: number | null;
+  MargenPorcentaje: number | null;
 }
 
 export interface VentaCostoReporte {
   FechaDesde: string;
   FechaHasta: string;
-  CantidadProductos: number;
-  CantidadVendida: number;
-  TotalVenta: number;
+  CantidadVentas: number;
+  CantidadVentasConCosto: number;
+  CantidadVentasSinCosto: number;
+  TotalVentaAnalizada: number;
   TotalCosto: number;
   Diferencia: number;
+  MargenPorcentaje: number;
   Items: VentaCostoReporteItem[];
 }

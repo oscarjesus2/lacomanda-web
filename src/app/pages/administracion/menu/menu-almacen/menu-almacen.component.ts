@@ -194,7 +194,7 @@ export class MenuAlmacenComponent implements OnInit {
           disabled: false
         },
         {
-          title: 'Venta versus costo',
+          title: 'Venta versus costo histórico',
           action: 'ventaCosto',
           icon: 'analytics',
           label: 'Venta vs. costo',

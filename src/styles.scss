@@ -1150,6 +1150,12 @@ body {
   color: var(--color-warn);
 }
 
+.status-badge--warning {
+  border-color: var(--color-warning-border);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
 .dialog-empty-state,
 .dialog-notice {
   display: flex;
