@@ -30,6 +30,25 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   useTenantLanguage: 'Usar idioma del negocio',
   cultureChangeError: 'No se pudo cambiar la preferencia de idioma.',
 
+  stationAssistantEyebrow: 'Configuración rápida',
+  stationAssistantTitle: '¿Quieres configurar este ordenador?',
+  stationAssistantBody:
+    'Hay estaciones disponibles sin dispositivo asociado: {{options}}.',
+  stationAssistantConfigure: 'Configurar ahora',
+  stationAssistantLater: 'Preguntarme después',
+  stationAssistantNever: 'No volver a mostrar',
+  stationAssistantChooseTitle: '¿Para qué se utilizará este ordenador?',
+  stationAssistantChooseBody:
+    'Solo aparecen los tipos de estación que están disponibles en este momento.',
+  stationAssistantRegisterOption: 'Estación de caja',
+  stationAssistantAttendantOption: 'Estación de {{attendant}}',
+  stationAssistantAssigning: 'Vinculando estación…',
+  stationAssistantTaken:
+    'Otro dispositivo acaba de vincular esa estación. Hemos actualizado las opciones disponibles.',
+  stationAssistantError:
+    'No se pudo vincular este ordenador. Inténtalo nuevamente.',
+  stationAssistantReady: '{{station}} ya está vinculada a este ordenador.',
+
   restaurantManagement:
     'Gestión ágil para restaurantes y hostelería',
   installApplication: 'Instalar aplicación',

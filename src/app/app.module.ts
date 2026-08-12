@@ -123,6 +123,7 @@ import { PorcionamientoMantenimientoComponent } from './components/mantenimiento
 import { ProduccionMantenimientoComponent } from './components/mantenimiento/produccion-mantenimiento/produccion-mantenimiento.component';
 import { PromocionMantenimientoComponent } from './components/mantenimiento/promocion-mantenimiento/promocion-mantenimiento.component';
 import { MotivoSalidaMantenimientoComponent } from './components/mantenimiento/motivo-salida-mantenimiento/motivo-salida-mantenimiento.component';
+import { AsistenteEstacionComponent } from './components/asistente-estacion/asistente-estacion.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -219,6 +220,7 @@ export const MY_DATE_FORMATS = {
     ProduccionMantenimientoComponent,
     PromocionMantenimientoComponent,
     MotivoSalidaMantenimientoComponent,
+    AsistenteEstacionComponent,
   ],
   imports: [
     CommonModule,

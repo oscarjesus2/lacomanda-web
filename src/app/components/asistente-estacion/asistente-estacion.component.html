@@ -1,0 +1,95 @@
+<aside
+  *ngIf="visible"
+  class="station-assistant"
+  [class.station-assistant--expanded]="expanded"
+  role="status"
+  aria-live="polite">
+
+  <div class="station-assistant__header">
+    <span class="station-assistant__icon" aria-hidden="true">
+      <mat-icon>{{ readyMessage ? 'check' : 'devices' }}</mat-icon>
+    </span>
+    <div>
+      <span class="station-assistant__eyebrow">
+        {{ t('stationAssistantEyebrow') }}
+      </span>
+      <h3 *ngIf="!readyMessage">
+        {{ expanded
+          ? t('stationAssistantChooseTitle')
+          : t('stationAssistantTitle') }}
+      </h3>
+      <h3 *ngIf="readyMessage">{{ readyMessage }}</h3>
+    </div>
+  </div>
+
+  <ng-container *ngIf="!readyMessage">
+    <p class="station-assistant__body" *ngIf="!expanded">
+      {{ t('stationAssistantBody', { options: availableOptionsText }) }}
+    </p>
+
+    <ng-container *ngIf="expanded">
+      <p class="station-assistant__body">
+        {{ t('stationAssistantChooseBody') }}
+      </p>
+
+      <div class="station-assistant__options">
+        <button
+          *ngIf="hasRegisterAvailable"
+          type="button"
+          class="station-assistant__option"
+          [disabled]="assigning"
+          (click)="assign(2)">
+          <mat-icon>point_of_sale</mat-icon>
+          <span>{{ t('stationAssistantRegisterOption') }}</span>
+        </button>
+
+        <button
+          *ngIf="hasAttendantAvailable"
+          type="button"
+          class="station-assistant__option"
+          [disabled]="assigning"
+          (click)="assign(1)">
+          <mat-icon>room_service</mat-icon>
+          <span>
+            {{ t('stationAssistantAttendantOption', {
+              attendant: t('orderAttendant')
+            }) }}
+          </span>
+        </button>
+      </div>
+    </ng-container>
+
+    <p *ngIf="assigning" class="station-assistant__feedback">
+      {{ t('stationAssistantAssigning') }}
+    </p>
+    <p
+      *ngIf="feedbackMessage"
+      class="station-assistant__feedback station-assistant__feedback--warning">
+      {{ feedbackMessage }}
+    </p>
+
+    <div class="station-assistant__actions">
+      <button
+        *ngIf="!expanded"
+        type="button"
+        class="station-assistant__primary"
+        (click)="openOptions()">
+        {{ t('stationAssistantConfigure') }}
+      </button>
+      <button
+        type="button"
+        class="station-assistant__secondary"
+        [disabled]="assigning"
+        (click)="remindLater()">
+        {{ t('stationAssistantLater') }}
+      </button>
+      <button
+        type="button"
+        class="station-assistant__link"
+        [disabled]="assigning"
+        (click)="neverShowAgain()">
+        {{ t('stationAssistantNever') }}
+      </button>
+    </div>
+  </ng-container>
+</aside>

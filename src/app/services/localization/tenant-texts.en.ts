@@ -29,6 +29,26 @@ export const EN_TEXTS = {
   useTenantLanguage: 'Use business language',
   cultureChangeError: 'The language preference could not be changed.',
 
+  // Contextual station setup assistant
+  stationAssistantEyebrow: 'Quick setup',
+  stationAssistantTitle: 'Would you like to configure this computer?',
+  stationAssistantBody:
+    'There are stations available without a linked device: {{options}}.',
+  stationAssistantConfigure: 'Configure now',
+  stationAssistantLater: 'Remind me later',
+  stationAssistantNever: "Don't show again",
+  stationAssistantChooseTitle: 'What will this computer be used for?',
+  stationAssistantChooseBody:
+    'Only station types that are currently available are shown.',
+  stationAssistantRegisterOption: 'Register station',
+  stationAssistantAttendantOption: '{{attendant}} station',
+  stationAssistantAssigning: 'Linking station…',
+  stationAssistantTaken:
+    'That station was just linked from another device. The available options have been refreshed.',
+  stationAssistantError:
+    'This computer could not be linked. Please try again.',
+  stationAssistantReady: '{{station}} is now linked to this computer.',
+
   // Application and login
   restaurantManagement: 'Agile management for restaurants and hospitality',
   installApplication: 'Install application',

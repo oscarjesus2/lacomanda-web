@@ -192,6 +192,14 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       return throwError(() => error);
     }
 
+    // El asistente contextual actualiza sus opciones en el propio panel cuando
+    // otro equipo ocupa la misma estación unos instantes antes. Evitamos abrir
+    // además un modal global para esa concurrencia esperable.
+    if (this.isStationAvailabilityRace(error, request)) {
+      this.spinnerService.hide();
+      return throwError(() => error);
+    }
+
     this.presentError(error);
     this.spinnerService.hide();
 
@@ -490,6 +498,16 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       'SUBSCRIPTION_CANCELLED',
       'SUBSCRIPTION_NOT_ACTIVE'
     ].includes(errorCode);
+  }
+
+  private isStationAvailabilityRace(
+    error: HttpErrorResponse,
+    request: HttpRequest<any>,
+  ): boolean {
+    const body = error.error as ApiErrorResponse & { errorCode?: string };
+    const errorCode = body?.ErrorCode || body?.errorCode || '';
+    return request.url.includes('/estacion/dispositivo/asignar-disponible')
+      && errorCode === 'ESTACION_DISPONIBLE_NOT_FOUND';
   }
 
   private isRevokedStationAccess(

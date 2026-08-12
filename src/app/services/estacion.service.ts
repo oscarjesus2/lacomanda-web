@@ -58,6 +58,22 @@ export class EstacionService {
     );
   }
 
+  getAvailableForDevice(): Observable<ApiResponse<Estacion[]>> {
+    return this.http.get<ApiResponse<Estacion[]>>(
+      `${this.basePath}/dispositivo/disponibles`,
+    );
+  }
+
+  assignAvailableDevice(
+    tipo: number,
+    identificadorUnico: string,
+  ): Observable<ApiResponse<Estacion>> {
+    return this.http.post<ApiResponse<Estacion>>(
+      `${this.basePath}/dispositivo/asignar-disponible`,
+      { Tipo: tipo, IdentificadorUnico: identificadorUnico },
+    );
+  }
+
   delete(id: number): Observable<ApiResponse<boolean>> {
     return this.http.delete<ApiResponse<boolean>>(this.basePath + '/' + id);
   }
