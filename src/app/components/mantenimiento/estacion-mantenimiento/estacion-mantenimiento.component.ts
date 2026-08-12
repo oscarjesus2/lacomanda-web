@@ -45,6 +45,7 @@ export class EstacionMantenimientoComponent implements OnInit {
   almacenHabilitado = false;
   catalogoAlmacenCargado = false;
   cargandoDescargasStock = false;
+  descargaStockHabilitada = false;
   areasAlmacen: AreaAlmacen[] = [];
   subAreasAlmacen: SubAreaAlmacen[] = [];
   descargasStockPorArea: Record<number, number | null> = {};
@@ -86,28 +87,32 @@ export class EstacionMantenimientoComponent implements OnInit {
 
   get textoVinculacion(): string {
     if (this.seVincularaEsteDispositivo) {
-      return 'Al guardar, este dispositivo quedará vinculado a la estación.';
+      return 'Al guardar, esta estación quedará vinculada al equipo que estás usando.';
     }
     if (this.esEsteDispositivo) {
-      return 'Este es el dispositivo actualmente vinculado a la estación.';
+      return 'Esta estación ya está vinculada a este equipo.';
     }
     if (this.estacion.IdentificadorUnico) {
-      return 'La estación está vinculada a otro dispositivo.';
+      return 'Esta estación está vinculada a un equipo diferente. Solo reemplázalo si deseas usarla en este equipo.';
     }
-    return 'La estación todavía no tiene un dispositivo vinculado.';
+    return 'Esta estación todavía no está vinculada a ningún equipo. Puedes hacerlo ahora o más adelante.';
   }
 
   get textoAccionDispositivo(): string {
-    return this.estacion.IdentificadorUnico && !this.esEsteDispositivo
-      ? 'Reemplazar por este dispositivo'
-      : 'Usar este dispositivo';
+    if (this.esEsteDispositivo && !this.seVincularaEsteDispositivo) {
+      return 'Equipo vinculado';
+    }
+    return this.estacion.IdentificadorUnico
+      ? 'Vincular este equipo en su lugar'
+      : 'Vincular este equipo';
   }
 
   get configuracionDescargaStockValida(): boolean {
     if (!this.licenciaAlmacenVerificada) return false;
     if (!this.almacenHabilitado) return true;
-    if (!this.catalogoAlmacenCargado) return false;
     if (this.cargandoDescargasStock) return false;
+    if (!this.descargaStockHabilitada) return true;
+    if (!this.catalogoAlmacenCargado) return false;
     return this.areasAlmacen.every(area =>
       this.subAreasPorArea(area.IdArea).length > 0 &&
       Number(this.descargasStockPorArea[area.IdArea]) > 0
@@ -124,7 +129,9 @@ export class EstacionMantenimientoComponent implements OnInit {
             Swal.fire('Error', resp.Message || 'Error al cargar estaciones', 'error');
             return;
           }
-          this.estaciones = resp.Data ?? [];
+          this.estaciones = (resp.Data ?? []).map(estacion =>
+            this.normalizarEstacionSembrada(estacion)
+          );
           this.filteredEstaciones.data = this.estaciones;
         },
         error: () => Swal.fire('Error', 'No se pudieron cargar las estaciones', 'error'),
@@ -259,14 +266,16 @@ export class EstacionMantenimientoComponent implements OnInit {
   }
 
   onEdit(row: Estacion): void {
+    const estacionNormalizada = this.normalizarEstacionSembrada(row);
     this.estacion = Object.assign(new Estacion(), {
-      ...row,
-      IdEstacion: Number(row.IdEstacion),
-      IdCaja: Number(row.IdCaja),
-      Tipo: Number(row.Tipo) as EstacionTipoEnum,
-      IdentificadorUnico: row.IdentificadorUnico ?? '',
+      ...estacionNormalizada,
+      IdEstacion: Number(estacionNormalizada.IdEstacion),
+      IdCaja: Number(estacionNormalizada.IdCaja),
+      Tipo: Number(estacionNormalizada.Tipo) as EstacionTipoEnum,
+      IdentificadorUnico: estacionNormalizada.IdentificadorUnico,
     });
     this.identificadorPendiente = '';
+    this.descargaStockHabilitada = false;
     this.showForm = true;
     if (this.almacenHabilitado) {
       this.cargarDescargasStock(Number(row.IdEstacion));
@@ -300,6 +309,7 @@ export class EstacionMantenimientoComponent implements OnInit {
   resetForm(): void {
     this.estacion = Object.assign(new Estacion(), { IdentificadorUnico: '' });
     this.identificadorPendiente = '';
+    this.descargaStockHabilitada = false;
     this.descargasStockPorArea = {};
   }
 
@@ -320,9 +330,11 @@ export class EstacionMantenimientoComponent implements OnInit {
 
     const guardada = resp.Data;
     if (this.almacenHabilitado) {
-      const idsSubAreas = this.areasAlmacen.map(area =>
-        Number(this.descargasStockPorArea[area.IdArea])
-      );
+      const idsSubAreas = this.descargaStockHabilitada
+        ? this.areasAlmacen.map(area =>
+          Number(this.descargasStockPorArea[area.IdArea])
+        )
+        : [];
       this.estacionService.updateStockDischarges(
         Number(guardada.IdEstacion),
         idsSubAreas,
@@ -430,6 +442,9 @@ export class EstacionMantenimientoComponent implements OnInit {
         }
         this.areasAlmacen = (areas.Data ?? []).filter(area => area.Activo);
         this.subAreasAlmacen = (subAreas.Data ?? []).filter(subArea => subArea.Activo);
+        if (!this.areasAlmacen.length) {
+          this.descargaStockHabilitada = false;
+        }
         this.catalogoAlmacenCargado = true;
         this.inicializarDescargasStock(true);
       },
@@ -455,10 +470,13 @@ export class EstacionMantenimientoComponent implements OnInit {
             );
             return;
           }
+          const descargas = response.Data ?? [];
           const seleccionActual: Record<number, number | null> = {};
-          (response.Data ?? []).forEach(descarga => {
+          descargas.forEach(descarga => {
             seleccionActual[descarga.IdAreaAlmacen] = descarga.IdSubAreaAlmacen;
           });
+          this.descargaStockHabilitada = descargas.length > 0 &&
+            (!this.catalogoAlmacenCargado || this.areasAlmacen.length > 0);
           this.descargasStockPorArea = seleccionActual;
           this.inicializarDescargasStock(true);
         },
@@ -506,6 +524,20 @@ export class EstacionMantenimientoComponent implements OnInit {
 
   private sonIguales(a?: string, b?: string): boolean {
     return !!a && !!b && a.trim().toLowerCase() === b.trim().toLowerCase();
+  }
+
+  private normalizarEstacionSembrada(estacion: Estacion): Estacion {
+    const identificador = (estacion.IdentificadorUnico ?? '').trim();
+    const descripcion = (estacion.Descripcion ?? '').trim().toUpperCase();
+    const esIdentificadorInicial =
+      (/^CAJA-\d{2}$/.test(identificador.toUpperCase()) && /^CAJA(?: \d+)?$/.test(descripcion)) ||
+      (/^MOZO-\d{2}$/.test(identificador.toUpperCase()) && /^MOZO(?: \d+)?$/.test(descripcion)) ||
+      (identificador.toUpperCase() === 'ADMIN-01' && descripcion === 'ADMINISTRADOR');
+
+    return Object.assign(new Estacion(), {
+      ...estacion,
+      IdentificadorUnico: esIdentificadorInicial ? '' : identificador,
+    });
   }
 
   private inicializarTipos(): void {

@@ -1646,6 +1646,41 @@ body {
   gap: 3px;
 }
 
+.table-operation-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.movement-type-badge {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--color-surface-warm);
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.movement-type-badge.is-entry {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.movement-type-badge.is-exit {
+  background: var(--color-warn-soft);
+  color: var(--color-warn);
+}
+
+.document-reference {
+  font-weight: 700;
+}
+
 .table-values-inline {
   display: flex;
   align-items: center;
@@ -1747,6 +1782,18 @@ body {
 
 .dialog-table--xwide {
   min-width: 1180px;
+}
+
+.dialog-table--kardex {
+  min-width: 1380px;
+}
+
+.dialog-table--kardex .mat-column-operacion {
+  min-width: 190px;
+}
+
+.dialog-table--kardex .mat-column-referencia {
+  min-width: 300px;
 }
 
 .dialog-table--xwide td,

@@ -118,7 +118,7 @@
       </div>
 
       <div class="dialog-table-wrapper--fill" *ngIf="dataSource.data.length > 0">
-        <table mat-table [dataSource]="dataSource" class="dialog-table dialog-table--xwide">
+        <table mat-table [dataSource]="dataSource" class="dialog-table dialog-table--xwide dialog-table--kardex">
           <ng-container matColumnDef="fecha">
             <th mat-header-cell *matHeaderCellDef>FECHA</th>
             <td mat-cell *matCellDef="let item">{{ item.Fecha | date:'dd/MM/yyyy HH:mm' }}</td>
@@ -127,14 +127,24 @@
           <ng-container matColumnDef="operacion">
             <th mat-header-cell *matHeaderCellDef>OPERACIÓN</th>
             <td mat-cell *matCellDef="let item">
-              <strong>{{ item.Operacion }}</strong>
-              <small class="table-cell-subtext">{{ item.Tipo }}</small>
+              <span class="table-operation-inline">
+                <strong>{{ item.Operacion }}</strong>
+                <span
+                  class="movement-type-badge"
+                  [class.is-entry]="item.Tipo === 'E'"
+                  [class.is-exit]="item.Tipo === 'S'"
+                  [attr.title]="item.Tipo === 'E' ? 'Entrada' : item.Tipo === 'S' ? 'Salida' : 'Movimiento'">
+                  {{ item.Tipo }}
+                </span>
+              </span>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="referencia">
             <th mat-header-cell *matHeaderCellDef>REFERENCIA</th>
-            <td mat-cell *matCellDef="let item">{{ item.Referencia || '—' }}</td>
+            <td mat-cell *matCellDef="let item">
+              <span class="document-reference">{{ item.Referencia || '—' }}</span>
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="entrada">

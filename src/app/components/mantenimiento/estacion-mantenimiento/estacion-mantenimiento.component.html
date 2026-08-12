@@ -96,7 +96,10 @@
         <span class="stock-discharge-icon"><mat-icon>inventory_2</mat-icon></span>
         <div>
           <h3>Descarga de stock</h3>
-          <p>Define la subárea desde la que esta estación descontará el stock de cada área.</p>
+          <p>
+            Configúralo solo si controlas existencias. Si no vas a controlar stock,
+            puedes omitir esta sección y comenzar a vender normalmente.
+          </p>
         </div>
       </div>
 
@@ -110,10 +113,21 @@
 
       <div *ngIf="catalogoAlmacenCargado && !cargandoDescargasStock && !areasAlmacen.length"
            class="stock-discharge-warning">
-        No existen áreas de almacén activas.
+        <strong>No existen áreas de almacén activas.</strong>
+        No necesitas crearlas para comenzar a vender; configúralas únicamente cuando
+        decidas controlar el stock.
       </div>
 
-      <div *ngIf="catalogoAlmacenCargado && !cargandoDescargasStock && areasAlmacen.length"
+      <mat-checkbox
+        *ngIf="catalogoAlmacenCargado && !cargandoDescargasStock && areasAlmacen.length"
+        [(ngModel)]="descargaStockHabilitada"
+        name="descargaStockHabilitada"
+        [disabled]="guardando"
+        class="stock-discharge-toggle">
+        Descontar stock automáticamente desde esta estación
+      </mat-checkbox>
+
+      <div *ngIf="catalogoAlmacenCargado && !cargandoDescargasStock && areasAlmacen.length && descargaStockHabilitada"
            class="stock-discharge-grid">
         <div *ngFor="let area of areasAlmacen" class="stock-discharge-field">
           <mat-form-field appearance="fill">
@@ -146,7 +160,6 @@
       <div class="device-link-copy">
         <h3>Dispositivo de esta estación</h3>
         <p>{{ textoVinculacion }}</p>
-        <small>No necesitas copiar ni escribir identificadores técnicos.</small>
       </div>
       <button mat-stroked-button color="primary" type="button" (click)="usarEsteDispositivo()"
               [disabled]="guardando || (esEsteDispositivo && !seVincularaEsteDispositivo)">

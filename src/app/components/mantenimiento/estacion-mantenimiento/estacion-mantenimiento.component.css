@@ -91,6 +91,21 @@
   color: #6d5e55;
 }
 
+.stock-discharge-warning {
+  line-height: 1.45;
+}
+
+.stock-discharge-warning strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #4e423b;
+}
+
+.stock-discharge-toggle {
+  color: #4e423b;
+  font-weight: 600;
+}
+
 .stock-discharge-icon {
   display: grid;
   flex: 0 0 44px;

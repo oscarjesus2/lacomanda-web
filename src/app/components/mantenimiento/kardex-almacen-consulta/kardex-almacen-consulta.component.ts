@@ -147,6 +147,7 @@ export class KardexAlmacenConsultaComponent implements OnInit {
       {
         Fecha: this.fechaDesde,
         Operación: 'SALDO INICIAL',
+        Tipo: '',
         Referencia: '',
         Entrada: '',
         Salida: '',
@@ -158,6 +159,7 @@ export class KardexAlmacenConsultaComponent implements OnInit {
       ...this.resultado.Movimientos.map(movimiento => ({
         Fecha: new Date(movimiento.Fecha).toLocaleString(),
         Operación: movimiento.Operacion,
+        Tipo: movimiento.Tipo,
         Referencia: movimiento.Referencia,
         Entrada: movimiento.Entrada || '',
         Salida: movimiento.Salida || '',
