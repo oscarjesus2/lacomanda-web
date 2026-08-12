@@ -16,6 +16,12 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { DeviceIdentifierService } from 'src/app/services/device-identifier.service';
 import { EstacionSessionRealtimeService } from 'src/app/services/estacion-session-realtime.service';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { AreaAlmacenService } from 'src/app/services/area-almacen.service';
+import { SubAreaAlmacenService } from 'src/app/services/sub-area-almacen.service';
+import { AreaAlmacen } from 'src/app/models/receta.models';
+import { SubAreaAlmacen } from 'src/app/models/almacen-maestro.models';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-estacion-mantenimiento',
@@ -35,6 +41,13 @@ export class EstacionMantenimientoComponent implements OnInit {
   showForm = false;
   guardando = false;
   identificadorPendiente = '';
+  licenciaAlmacenVerificada = false;
+  almacenHabilitado = false;
+  catalogoAlmacenCargado = false;
+  cargandoDescargasStock = false;
+  areasAlmacen: AreaAlmacen[] = [];
+  subAreasAlmacen: SubAreaAlmacen[] = [];
+  descargasStockPorArea: Record<number, number | null> = {};
 
   listCajas: CajaDto[] = [];
   tipos: ReadonlyArray<{ value: EstacionTipoEnum; label: string }> = [];
@@ -50,12 +63,16 @@ export class EstacionMantenimientoComponent implements OnInit {
     private readonly textCatalog: TenantTextCatalogService,
     private readonly deviceIdentifier: DeviceIdentifierService,
     private readonly realtime: EstacionSessionRealtimeService,
+    private readonly licenciaTenantService: LicenciaTenantService,
+    private readonly areaAlmacenService: AreaAlmacenService,
+    private readonly subAreaAlmacenService: SubAreaAlmacenService,
   ) {}
 
   ngOnInit(): void {
     this.inicializarTipos();
     this.cargarEstaciones();
     this.cargarCajas();
+    this.cargarLicenciaAlmacen();
   }
 
   get esEsteDispositivo(): boolean {
@@ -84,6 +101,17 @@ export class EstacionMantenimientoComponent implements OnInit {
     return this.estacion.IdentificadorUnico && !this.esEsteDispositivo
       ? 'Reemplazar por este dispositivo'
       : 'Usar este dispositivo';
+  }
+
+  get configuracionDescargaStockValida(): boolean {
+    if (!this.licenciaAlmacenVerificada) return false;
+    if (!this.almacenHabilitado) return true;
+    if (!this.catalogoAlmacenCargado) return false;
+    if (this.cargandoDescargasStock) return false;
+    return this.areasAlmacen.every(area =>
+      this.subAreasPorArea(area.IdArea).length > 0 &&
+      Number(this.descargasStockPorArea[area.IdArea]) > 0
+    );
   }
 
   cargarEstaciones(): void {
@@ -122,6 +150,7 @@ export class EstacionMantenimientoComponent implements OnInit {
 
   nuevo(): void {
     this.resetForm();
+    this.inicializarDescargasStock();
     this.showForm = true;
   }
 
@@ -206,6 +235,15 @@ export class EstacionMantenimientoComponent implements OnInit {
       return;
     }
 
+    if (!this.configuracionDescargaStockValida) {
+      Swal.fire(
+        'Descarga de stock incompleta',
+        'Selecciona una subárea activa para cada área de almacén.',
+        'warning',
+      );
+      return;
+    }
+
     this.guardando = true;
     this.spinner.show();
     const request = this.estacion.IdEstacion
@@ -230,6 +268,9 @@ export class EstacionMantenimientoComponent implements OnInit {
     });
     this.identificadorPendiente = '';
     this.showForm = true;
+    if (this.almacenHabilitado) {
+      this.cargarDescargasStock(Number(row.IdEstacion));
+    }
   }
 
   onDelete(id: number): void {
@@ -259,6 +300,7 @@ export class EstacionMantenimientoComponent implements OnInit {
   resetForm(): void {
     this.estacion = Object.assign(new Estacion(), { IdentificadorUnico: '' });
     this.identificadorPendiente = '';
+    this.descargasStockPorArea = {};
   }
 
   cancelar(): void {
@@ -277,6 +319,35 @@ export class EstacionMantenimientoComponent implements OnInit {
     }
 
     const guardada = resp.Data;
+    if (this.almacenHabilitado) {
+      const idsSubAreas = this.areasAlmacen.map(area =>
+        Number(this.descargasStockPorArea[area.IdArea])
+      );
+      this.estacionService.updateStockDischarges(
+        Number(guardada.IdEstacion),
+        idsSubAreas,
+      ).subscribe({
+        next: configuracion => {
+          if (!configuracion.Success) {
+            this.finalizarConError(
+              configuracion.Message || 'No se pudo guardar la descarga de stock.'
+            );
+            return;
+          }
+          this.continuarDespuesDeConfigurarStock(guardada);
+        },
+        error: error => this.finalizarConError(
+          error?.error?.Message ||
+          'La estación se guardó, pero no se pudo configurar la descarga de stock.'
+        ),
+      });
+      return;
+    }
+
+    this.continuarDespuesDeConfigurarStock(guardada);
+  }
+
+  private continuarDespuesDeConfigurarStock(guardada: Estacion): void {
     if (!this.identificadorPendiente) {
       this.finalizarGuardado(
         this.estacion.IdEstacion ? 'Estación actualizada' : 'Estación creada'
@@ -301,6 +372,121 @@ export class EstacionMantenimientoComponent implements OnInit {
         error?.error?.Message || 'La estación se guardó, pero no se pudo vincular el dispositivo.'
       ),
     });
+  }
+
+  private cargarLicenciaAlmacen(): void {
+    this.licenciaTenantService.obtener().subscribe({
+      next: response => {
+        if (!response.Success) {
+          Swal.fire(
+            'Error',
+            response.Message || 'No se pudo verificar la licencia del restaurante.',
+            'error',
+          );
+          return;
+        }
+        const licencia = response.Data;
+        this.licenciaAlmacenVerificada = true;
+        this.almacenHabilitado = (
+          licencia == null ||
+          licencia.Caracteristicas?.some(caracteristica =>
+            caracteristica.Codigo === 'almacen.gestion' &&
+            caracteristica.Habilitada
+          ) === true
+        );
+        if (!this.almacenHabilitado) return;
+
+        this.cargarCatalogoAlmacen();
+        if (this.showForm && this.estacion.IdEstacion) {
+          this.cargarDescargasStock(Number(this.estacion.IdEstacion));
+        }
+      },
+      error: () => {
+        this.licenciaAlmacenVerificada = false;
+        this.almacenHabilitado = false;
+        Swal.fire(
+          'Error',
+          'No se pudo verificar la licencia del restaurante.',
+          'error',
+        );
+      },
+    });
+  }
+
+  private cargarCatalogoAlmacen(): void {
+    this.catalogoAlmacenCargado = false;
+    forkJoin({
+      areas: this.areaAlmacenService.listarActivas(),
+      subAreas: this.subAreaAlmacenService.listar(),
+    }).subscribe({
+      next: ({ areas, subAreas }) => {
+        if (!areas.Success || !subAreas.Success) {
+          Swal.fire(
+            'Error',
+            areas.Message || subAreas.Message || 'No se pudo cargar el catálogo de almacén.',
+            'error',
+          );
+          return;
+        }
+        this.areasAlmacen = (areas.Data ?? []).filter(area => area.Activo);
+        this.subAreasAlmacen = (subAreas.Data ?? []).filter(subArea => subArea.Activo);
+        this.catalogoAlmacenCargado = true;
+        this.inicializarDescargasStock(true);
+      },
+      error: () => Swal.fire(
+        'Error',
+        'No se pudo cargar el catálogo para configurar la descarga de stock.',
+        'error',
+      ),
+    });
+  }
+
+  private cargarDescargasStock(idEstacion: number): void {
+    this.cargandoDescargasStock = true;
+    this.estacionService.getStockDischarges(idEstacion)
+      .pipe(finalize(() => this.cargandoDescargasStock = false))
+      .subscribe({
+        next: response => {
+          if (!response.Success) {
+            Swal.fire(
+              'Error',
+              response.Message || 'No se pudo cargar la descarga de stock.',
+              'error',
+            );
+            return;
+          }
+          const seleccionActual: Record<number, number | null> = {};
+          (response.Data ?? []).forEach(descarga => {
+            seleccionActual[descarga.IdAreaAlmacen] = descarga.IdSubAreaAlmacen;
+          });
+          this.descargasStockPorArea = seleccionActual;
+          this.inicializarDescargasStock(true);
+        },
+        error: error => Swal.fire(
+          'Error',
+          error?.error?.Message || 'No se pudo cargar la descarga de stock.',
+          'error',
+        ),
+      });
+  }
+
+  subAreasPorArea(idArea: number): SubAreaAlmacen[] {
+    return this.subAreasAlmacen.filter(subArea =>
+      Number(subArea.IdAreaAlmacen) === Number(idArea)
+    );
+  }
+
+  private inicializarDescargasStock(conservarSeleccion = false): void {
+    const seleccionActual = conservarSeleccion
+      ? { ...this.descargasStockPorArea }
+      : {};
+    const nuevaSeleccion: Record<number, number | null> = {};
+    this.areasAlmacen.forEach(area => {
+      const opciones = this.subAreasPorArea(area.IdArea);
+      nuevaSeleccion[area.IdArea] = seleccionActual[area.IdArea]
+        ?? (opciones.length === 1 ? opciones[0].IdSubAreaAlmacen : null);
+    });
+    this.descargasStockPorArea = nuevaSeleccion;
   }
 
   private finalizarGuardado(mensaje: string): void {

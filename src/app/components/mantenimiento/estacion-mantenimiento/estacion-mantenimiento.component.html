@@ -91,6 +91,53 @@
       <input matInput [(ngModel)]="estacion.Descripcion" name="descripcion" required>
     </mat-form-field>
 
+    <section *ngIf="almacenHabilitado" class="stock-discharge-card">
+      <div class="stock-discharge-heading">
+        <span class="stock-discharge-icon"><mat-icon>inventory_2</mat-icon></span>
+        <div>
+          <h3>Descarga de stock</h3>
+          <p>Define la subárea desde la que esta estación descontará el stock de cada área.</p>
+        </div>
+      </div>
+
+      <div *ngIf="cargandoDescargasStock" class="stock-discharge-loading">
+        Cargando configuración…
+      </div>
+
+      <div *ngIf="!catalogoAlmacenCargado" class="stock-discharge-loading">
+        Cargando áreas y subáreas…
+      </div>
+
+      <div *ngIf="catalogoAlmacenCargado && !cargandoDescargasStock && !areasAlmacen.length"
+           class="stock-discharge-warning">
+        No existen áreas de almacén activas.
+      </div>
+
+      <div *ngIf="catalogoAlmacenCargado && !cargandoDescargasStock && areasAlmacen.length"
+           class="stock-discharge-grid">
+        <div *ngFor="let area of areasAlmacen" class="stock-discharge-field">
+          <mat-form-field appearance="fill">
+            <mat-label>{{ area.Descripcion }}</mat-label>
+            <mat-select [(ngModel)]="descargasStockPorArea[area.IdArea]"
+                        [name]="'descargaStock' + area.IdArea"
+                        required>
+              <mat-option *ngFor="let subArea of subAreasPorArea(area.IdArea)"
+                          [value]="subArea.IdSubAreaAlmacen">
+                {{ subArea.Descripcion }}
+              </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="subAreasPorArea(area.IdArea).length">
+              Subárea que asumirá el consumo de {{ area.Descripcion }}
+            </mat-hint>
+          </mat-form-field>
+          <small *ngIf="!subAreasPorArea(area.IdArea).length"
+                 class="stock-discharge-error">
+            Esta área no tiene subáreas activas.
+          </small>
+        </div>
+      </div>
+    </section>
+
     <section class="device-link-card"
              [class.device-link-current]="esEsteDispositivo || seVincularaEsteDispositivo">
       <div class="device-link-icon">
@@ -109,7 +156,8 @@
     </section>
 
     <div class="form-actions">
-      <button mat-raised-button type="submit" color="primary" [disabled]="guardando">
+      <button mat-raised-button type="submit" color="primary"
+              [disabled]="guardando || !configuracionDescargaStockValida">
         {{ (estacion.IdEstacion ? 'updateAction' : 'save') | tenantText }}
       </button>
       <button mat-stroked-button type="button" (click)="cancelar()" [disabled]="guardando">

@@ -7,3 +7,11 @@ export class Estacion {
   IdCaja: number;
   Tipo: EstacionTipoEnum;
 }
+
+export interface EstacionDescargaStock {
+  IdEstacion: number;
+  IdAreaAlmacen: number;
+  Area: string;
+  IdSubAreaAlmacen: number;
+  SubArea: string;
+}

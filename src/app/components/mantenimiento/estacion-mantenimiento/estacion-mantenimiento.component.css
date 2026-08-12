@@ -59,6 +59,65 @@
   background: #f4fbf5;
 }
 
+.stock-discharge-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #e0d4cb;
+  border-radius: 13px;
+  background: #fffaf6;
+}
+
+.stock-discharge-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stock-discharge-heading h3,
+.stock-discharge-heading p {
+  margin: 0;
+}
+
+.stock-discharge-heading h3 {
+  margin-bottom: 4px;
+  font-size: 15px;
+}
+
+.stock-discharge-heading p,
+.stock-discharge-loading,
+.stock-discharge-warning {
+  color: #6d5e55;
+}
+
+.stock-discharge-icon {
+  display: grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  color: #9b2c09;
+  background: #ffe8dc;
+}
+
+.stock-discharge-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+.stock-discharge-field mat-form-field {
+  width: 100%;
+}
+
+.stock-discharge-error {
+  display: block;
+  margin-top: -14px;
+  color: #b3261e;
+}
+
 .device-link-icon {
   display: grid;
   width: 44px;
@@ -101,6 +160,10 @@
 
   .device-link-card {
     grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .stock-discharge-grid {
+    grid-template-columns: 1fr;
   }
 
   .device-link-card > button {
