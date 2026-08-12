@@ -1140,6 +1140,8 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   inventories: 'Inventarios',
   stockByArea: 'Stock por área',
   warehouseKardex: 'Kardex de almacén',
+  warehouseConsumptionByArea: 'Consumo por subárea',
+  salesVersusCost: 'Venta vs. costo',
   portioning: 'Porcionamiento',
   production: 'Producción',
 };

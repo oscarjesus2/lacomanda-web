@@ -15,12 +15,17 @@ import { ProduccionMantenimientoComponent } from 'src/app/components/mantenimien
 import { MotivoSalidaMantenimientoComponent } from 'src/app/components/mantenimiento/motivo-salida-mantenimiento/motivo-salida-mantenimiento.component';
 import { StockAlmacenConsultaComponent } from 'src/app/components/mantenimiento/stock-almacen-consulta/stock-almacen-consulta.component';
 import { KardexAlmacenConsultaComponent } from 'src/app/components/mantenimiento/kardex-almacen-consulta/kardex-almacen-consulta.component';
+import { ConsumoAreaReporteComponent } from 'src/app/components/mantenimiento/consumo-area-reporte/consumo-area-reporte.component';
+import { VentaCostoReporteComponent } from 'src/app/components/mantenimiento/venta-costo-reporte/venta-costo-reporte.component';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 
 @Component({
   selector: 'app-menu-almacen',
   templateUrl: './menu-almacen.component.html'
 })
 export class MenuAlmacenComponent implements OnInit {
+  reportesHabilitados = false;
+
   almacenMenu: any[] = [
     {
       title: 'Maestros',
@@ -173,10 +178,44 @@ export class MenuAlmacenComponent implements OnInit {
           disabled: false
         }
       ]
+    },
+    {
+      title: 'Reportes',
+      titleKey: 'menuReports',
+      feature: 'operacion.reportes',
+      children: [
+        {
+          title: 'Consumo de artículos por subárea',
+          action: 'consumoArea',
+          icon: 'restaurant_menu',
+          label: 'Consumo por subárea',
+          titleKey: 'warehouseConsumptionByArea',
+          labelKey: 'warehouseConsumptionByArea',
+          disabled: false
+        },
+        {
+          title: 'Venta versus costo',
+          action: 'ventaCosto',
+          icon: 'analytics',
+          label: 'Venta vs. costo',
+          titleKey: 'salesVersusCost',
+          labelKey: 'salesVersusCost',
+          disabled: false
+        }
+      ]
     }
   ];
 
-  constructor(private readonly dialog: MatDialog) {}
+  constructor(
+    private readonly dialog: MatDialog,
+    private readonly licenciaTenantService: LicenciaTenantService
+  ) {}
+
+  get seccionesVisibles(): any[] {
+    return this.almacenMenu.filter(
+      section => !section.feature || this.reportesHabilitados
+    );
+  }
 
   openDialog(item: any): void {
     const components: Record<string, ComponentType<unknown>> = {
@@ -185,6 +224,8 @@ export class MenuAlmacenComponent implements OnInit {
       inventarios: InventarioMantenimientoComponent,
       stockPorArea: StockAlmacenConsultaComponent,
       kardexAlmacen: KardexAlmacenConsultaComponent,
+      consumoArea: ConsumoAreaReporteComponent,
+      ventaCosto: VentaCostoReporteComponent,
       areasAlmacen: AreaAlmacenMantenimientoComponent,
       subareasAlmacen: SubAreaAlmacenMantenimientoComponent,
       proveedores: ProveedorMantenimientoComponent,
@@ -229,5 +270,17 @@ export class MenuAlmacenComponent implements OnInit {
     this.dialog.open(component, configuracion);
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.licenciaTenantService.obtener().subscribe({
+      next: response => {
+        const licencia = response.Data;
+        this.reportesHabilitados = licencia == null ||
+          licencia.Caracteristicas?.some(caracteristica =>
+            caracteristica.Codigo === 'operacion.reportes' &&
+            caracteristica.Habilitada
+          ) === true;
+      },
+      error: () => this.reportesHabilitados = false
+    });
+  }
 }

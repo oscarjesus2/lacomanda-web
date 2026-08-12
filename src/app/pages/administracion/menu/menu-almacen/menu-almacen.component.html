@@ -1,13 +1,13 @@
 <div class="admin-menu">
   <div class="admin-menu__sections">
 
-    <div class="admin-menu__section" *ngFor="let section of almacenMenu">
+    <div class="admin-menu__section" *ngFor="let section of seccionesVisibles">
       <h4 class="admin-menu__subtitle">{{ section.titleKey | tenantText }}</h4>
 
       <div
         class="tiles-grid"
         [class.tiles-grid--accent]="section.titleKey === 'menuWarehouseMovements'"
-        [class.tiles-grid--report]="section.titleKey === 'menuInventoryControl'"
+        [class.tiles-grid--report]="section.titleKey === 'menuInventoryControl' || section.titleKey === 'menuReports'"
         [class.tiles-grid--process]="section.titleKey === 'menuWarehouseTransformation'"
       >
         <button

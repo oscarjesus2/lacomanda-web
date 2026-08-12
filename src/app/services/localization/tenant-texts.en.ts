@@ -1135,6 +1135,8 @@ export const EN_TEXTS = {
   inventories: 'Inventories',
   stockByArea: 'Stock by area',
   warehouseKardex: 'Warehouse Kardex',
+  warehouseConsumptionByArea: 'Consumption by subarea',
+  salesVersusCost: 'Sales vs. cost',
   portioning: 'Portioning',
   production: 'Production',
 } as const;
