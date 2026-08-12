@@ -12,6 +12,8 @@ export class Pago {
     Propina: number;
     MontoVenta: number;
     MontoPagado: number;
+    MontoRecibido?: number;
+    TipoCambio?: number;
     IdTipoPago: number;
     IdMoneda: string;
     IdVenta: number;

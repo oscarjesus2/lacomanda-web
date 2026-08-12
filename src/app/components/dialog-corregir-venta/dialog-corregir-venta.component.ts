@@ -197,6 +197,8 @@ export class DialogCorregirVentaComponent implements OnInit {
       Propina: 0,
       MontoVenta: this.preparacion?.Total ?? 0,
       MontoPagado: restante,
+      MontoRecibido: restante,
+      TipoCambio: 1,
       IdTipoPago: 1,
       IdVenta: 0,
       IdPago: 0,
@@ -217,6 +219,12 @@ export class DialogCorregirVentaComponent implements OnInit {
     monto: number | string | null,
   ): void {
     pago.MontoPagado = Number(monto || 0);
+    pago.MontoRecibido = pago.TipoCambio && pago.TipoCambio > 0
+      ? Number((pago.MontoPagado / pago.TipoCambio).toFixed(2))
+      : pago.MontoPagado;
+    pago.TipoCambio = pago.TipoCambio && pago.TipoCambio > 0
+      ? pago.TipoCambio
+      : 1;
     this.recalcularVueltos();
   }
 

@@ -22,6 +22,8 @@ export interface PagoCorreccionVenta {
   Propina: number;
   MontoVenta: number;
   MontoPagado: number;
+  MontoRecibido?: number;
+  TipoCambio?: number;
   IdTipoPago: number;
   IdVenta: number;
   IdPago: number;
