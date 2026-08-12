@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { NgxSpinnerService } from 'ngx-spinner';
 import { DialogTurnoComponent } from 'src/app/components/dialog-turno/dialog-turno.component';
 import { Turno } from 'src/app/models/turno.models';
 import { LoginService } from 'src/app/services/auth/login.service';
@@ -96,7 +95,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private statsInterval: any;
 
   constructor(
-    private spinnerService: NgxSpinnerService,
     private router: Router,
     private loginService: LoginService,
     private storageService: StorageService,
@@ -278,8 +276,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-    this.spinnerService.show();
-
     // Reloj (cada segundo)
     this.updateClock();
     this.clockInterval = setInterval(() => this.updateClock(), 1000);
@@ -287,7 +283,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // No cargar datos en la pantalla de login (evita 500 aunque haya token residual)
     const esLogin = this.router.url.startsWith('/iniciar-sesion');
     const sesionActiva = !!this.storageService.getCurrentSession();
-    if (esLogin || !sesionActiva) { this.spinnerService.hide(); return; }
+    if (esLogin || !sesionActiva) return;
 
     // Configuración (símbolo de moneda)
     this.configuracionService.get().subscribe(cfg => this.config = cfg);

@@ -4,14 +4,6 @@
    Estilos visuales usando design tokens de styles.scss.
    ============================================================ */
 
-/* ── FAB admin (posición fija) ─────────────────────────────── */
-.admin-fab {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 1000;
-}
-
 /* ══════════════════════════════════════════════════════════════
    CONTENEDOR RAÍZ
 ══════════════════════════════════════════════════════════════ */

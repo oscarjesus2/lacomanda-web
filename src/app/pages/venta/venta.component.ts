@@ -297,19 +297,6 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   
-  goAdmin() {
-    this.router.navigateByUrl('/administracion');
-  }
-
-  // Atajo de teclado: Ctrl + Alt + A
-  @HostListener('document:keydown', ['$event'])
-  onKeydown(e: KeyboardEvent) {
-    if (this.isAdmin && e.ctrlKey && e.altKey && (e.key.toLowerCase() === 'a')) {
-      e.preventDefault();
-      this.goAdmin();
-    }
-  }
-
   ngOnDestroy() {
     this.solicitudesMesaSubscription?.unsubscribe();
     this.headerService.showHeader(); // Mostrar el header al salir

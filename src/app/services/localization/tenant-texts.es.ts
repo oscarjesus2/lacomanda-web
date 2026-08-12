@@ -29,6 +29,8 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   language: 'Idioma',
   useTenantLanguage: 'Usar idioma del negocio',
   cultureChangeError: 'No se pudo cambiar la preferencia de idioma.',
+  showNavigationHeader: 'Mostrar navegación',
+  hideNavigationHeader: 'Ocultar navegación',
 
   stationAssistantEyebrow: 'Configuración rápida',
   stationAssistantTitle: '¿Quieres configurar este ordenador?',
@@ -113,8 +115,6 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   componentWillClose: 'Esta pantalla se cerrará.',
   change: 'Cambiar',
 
-  goToAdministration: 'Ir a Administración',
-  administrationShortcut: 'Administración (Ctrl+Alt+A)',
   date: 'Fecha',
   tableChannel: 'CANAL MESA',
   takeawayChannel: 'CANAL LLEVAR',

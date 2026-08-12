@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { Observable } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -11,6 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TenantTextCatalogService } from './services/localization/tenant-text-catalog.service';
 import { AgenteImpresionPedidosService } from './services/agente-impresion-pedidos.service';
 import { EstacionSessionRealtimeService } from './services/estacion-session-realtime.service';
+import { NivelUsuarioEnum } from './enums/enum';
 
 @Component({
   selector: 'app-root',
@@ -21,6 +22,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   title = 'Jbs_Resta';
   headerVisible = true;
+  operationalHeaderOpen = false;
+  isOperationalRoute = false;
 
   /** true cuando el backend no responde (status 0) */
   backendDown$: Observable<boolean>;
@@ -41,6 +44,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.checkForUpdates();
     this.headerService.headerVisible$.subscribe(visible => {
       this.headerVisible = visible;
+      if (visible) {
+        this.operationalHeaderOpen = false;
+      }
     });
   }
 
@@ -60,9 +66,31 @@ export class AppComponent implements OnInit, OnDestroy {
      this.router.events.pipe(
        filter(event => event instanceof NavigationEnd)
      ).subscribe((event: NavigationEnd) => {
+       this.isOperationalRoute = event.urlAfterRedirects.startsWith('/caja')
+         || event.urlAfterRedirects.startsWith('/mozo');
+       this.operationalHeaderOpen = false;
        const newTitle = this.getTitle(event.urlAfterRedirects);
        this.dataService.updateVariable_TituloHeader(newTitle);
      });
+  }
+
+  get canRevealOperationalHeader(): boolean {
+    return this.isOperationalRoute
+      && !this.headerVisible
+      && this.storageService.getCurrentUser()?.IdNivel === NivelUsuarioEnum.Administrador;
+  }
+
+  toggleOperationalHeader(): void {
+    this.operationalHeaderOpen = !this.operationalHeaderOpen;
+  }
+
+  closeOperationalHeader(): void {
+    this.operationalHeaderOpen = false;
+  }
+
+  @HostListener('document:keydown.escape')
+  closeOperationalHeaderWithEscape(): void {
+    this.closeOperationalHeader();
   }
 
   checkForUpdates() {

@@ -28,6 +28,8 @@ export const EN_TEXTS = {
   language: 'Language',
   useTenantLanguage: 'Use business language',
   cultureChangeError: 'The language preference could not be changed.',
+  showNavigationHeader: 'Show navigation',
+  hideNavigationHeader: 'Hide navigation',
 
   // Contextual station setup assistant
   stationAssistantEyebrow: 'Quick setup',
@@ -112,8 +114,6 @@ export const EN_TEXTS = {
   change: 'Change',
 
   // Sales screen
-  goToAdministration: 'Go to Administration',
-  administrationShortcut: 'Administration (Ctrl+Alt+A)',
   date: 'Date',
   tableChannel: 'TABLE CHANNEL',
   takeawayChannel: 'TAKEAWAY CHANNEL',

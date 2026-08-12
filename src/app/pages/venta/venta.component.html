@@ -1,14 +1,6 @@
 <div class="container"
      [class.compact-show-catalog]="vistaCompacta === 'catalogo'"
      [class.compact-show-order]="vistaCompacta === 'pedido'">
-  <button *ngIf="isAdmin"
-          mat-fab
-          class="admin-fab"
-          [attr.aria-label]="'goToAdministration' | tenantText"
-          [matTooltip]="'administrationShortcut' | tenantText"
-          (click)="goAdmin()">
-    <mat-icon>admin_panel_settings</mat-icon>
-  </button>
   <!-- Primera Columna -->
 <div class="column-left">
 
