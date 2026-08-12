@@ -81,6 +81,11 @@
 
   <div class="dialog-workspace-content">
     <div class="dialog-table-card">
+      <div class="dialog-table-state" *ngIf="cargando">
+        <mat-spinner diameter="38"></mat-spinner>
+        <span>Consultando movimientos…</span>
+      </div>
+
       <div class="dialog-table-state" *ngIf="!cargando && !resultado">
         <mat-icon>inventory_2</mat-icon>
         <strong>Selecciona los filtros para consultar</strong>

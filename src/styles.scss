@@ -1984,6 +1984,11 @@ mat-table.dialog-table--xwide mat-header-cell {
     grid-template-columns: 1fr;
   }
 
+  .dialog-toolbar__filter--wide,
+  .dialog-toolbar__filter--toggle {
+    grid-column: auto;
+  }
+
   .dialog-toolbar__actions {
     align-items: stretch;
     flex-direction: column;
