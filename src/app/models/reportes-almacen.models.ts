@@ -35,7 +35,7 @@ export interface VentaCostoReporteItem {
   TotalVenta: number;
   TurnoCerrado: boolean;
   CostoDisponible: boolean;
-  TieneMovimientosKardex: boolean;
+  TieneDetalleCosto: boolean;
   TotalCosto: number | null;
   Diferencia: number | null;
   MargenPorcentaje: number | null;

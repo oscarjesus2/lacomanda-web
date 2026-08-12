@@ -140,9 +140,9 @@ export class VentaCostoReporteComponent implements OnInit {
         : 'Pendiente de cierre de turno';
     }
 
-    return item.TieneMovimientosKardex
-      ? 'Calculado desde Kardex'
-      : 'Sin consumo inventariable';
+    return item.TieneDetalleCosto
+      ? 'Fotografía histórica guardada'
+      : 'Sin detalle histórico de costo';
   }
 
   private cargarMoneda(): void {

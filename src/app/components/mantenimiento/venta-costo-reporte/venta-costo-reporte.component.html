@@ -52,7 +52,7 @@
       </span>
     </div>
     <div class="dialog-summary-card dialog-summary-card--danger">
-      <span class="dialog-summary-card__label">Costo Kardex</span>
+      <span class="dialog-summary-card__label">Costo histórico</span>
       <strong>{{ monedaSimbolo }} {{ (resultado?.TotalCosto || 0) | number:'1.2-2' }}</strong>
       <span class="table-cell-subtext">Fotografía al cierre del turno</span>
     </div>
@@ -110,12 +110,12 @@
               <div class="table-cell-stack" *ngIf="row.CostoDisponible; else costoPendiente">
                 <strong class="is-negative">{{ monedaSimbolo }} {{ row.TotalCosto | number:'1.2-2' }}</strong>
                 <span class="table-cell-subtext">
-                  {{ row.TieneMovimientosKardex ? 'Kardex histórico' : 'Sin consumo inventariable' }}
+                  {{ row.TieneDetalleCosto ? 'Detalle histórico guardado' : 'Sin detalle histórico' }}
                 </span>
               </div>
               <ng-template #costoPendiente>
                 <span class="status-badge status-badge--warning">
-                  {{ row.TurnoCerrado ? 'Sin costo Kardex' : 'Pendiente de cierre' }}
+                  {{ row.TurnoCerrado ? 'Sin detalle histórico' : 'Pendiente de cierre' }}
                 </span>
               </ng-template>
             </mat-cell>
