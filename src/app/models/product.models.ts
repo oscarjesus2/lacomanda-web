@@ -39,7 +39,6 @@ export class Producto {
     public IdUnidadReceta: number | null;
     public FactorReceta: number;
     public IdGrupoCompra: number | null;
-    public IdAreaAlmacen: number | null;
     public DescripcionCompra: string;
     public PrecioCompra: number;
     public StockMinimo: number;

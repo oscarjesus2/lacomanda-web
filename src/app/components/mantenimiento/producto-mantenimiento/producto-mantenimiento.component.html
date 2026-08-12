@@ -382,7 +382,8 @@
       </h3>
       <p class="dialog-form-section__hint">
         Al vender este producto se descontará directamente su propio stock.
-        El área de salida determina de qué almacén se realiza el descuento.
+        La subárea se resuelve cruzando el stock del artículo con las descargas
+        habilitadas para la estación.
       </p>
 
       <div class="dialog-form-grid">
@@ -428,23 +429,6 @@
             </mat-option>
           </mat-select>
           <mat-hint>Clasificación usada en compras e inventario.</mat-hint>
-        </mat-form-field>
-
-        <mat-form-field appearance="fill">
-          <mat-label>Área de salida</mat-label>
-          <mat-select
-            [(ngModel)]="p.IdAreaAlmacen"
-            name="areaAlmacen"
-            required
-          >
-            <mat-option
-              *ngFor="let areaAlmacen of areasAlmacen"
-              [value]="areaAlmacen.IdArea"
-            >
-              {{ areaAlmacen.Descripcion }}
-            </mat-option>
-          </mat-select>
-          <mat-hint>Almacén del que se descontará al vender.</mat-hint>
         </mat-form-field>
 
         <mat-form-field appearance="fill">

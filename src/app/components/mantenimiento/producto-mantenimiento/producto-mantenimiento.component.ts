@@ -26,9 +26,7 @@ import { ImpuestoPais } from 'src/app/models/impuestopais.models';
 import { AreaImpresionService } from 'src/app/services/area-impresion.service';
 import { AreaImpresion } from 'src/app/models/area-impresion.models';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
-import { AreaAlmacen } from 'src/app/models/receta.models';
 import { UnidadMedida } from 'src/app/models/articulo.models';
-import { AreaAlmacenService } from 'src/app/services/area-almacen.service';
 import { UnidadMedidaService } from 'src/app/services/unidad-medida.service';
 
 @Component({
@@ -59,7 +57,6 @@ export class ProductoMantenimientoComponent implements OnInit {
   grupos: Grupo[] = [];
   gruposAlmacen: Grupo[] = [];
   unidadesMedida: UnidadMedida[] = [];
-  areasAlmacen: AreaAlmacen[] = [];
   impuestoPais: ImpuestoPais[] = [];
   seccionMenu: SeccionMenu[] = [];
 
@@ -93,7 +90,6 @@ export class ProductoMantenimientoComponent implements OnInit {
     private spinner: NgxSpinnerService,
     private areaSrv: AreaImpresionService,
     private configuracionService: ConfiguracionService,
-    private areaAlmacenService: AreaAlmacenService,
     private unidadMedidaService: UnidadMedidaService
   ) {}
 
@@ -133,7 +129,6 @@ export class ProductoMantenimientoComponent implements OnInit {
     this.grupoService.getGrupos('P').subscribe(r => { if (r.Success) this.grupos = r.Data; });
     this.grupoService.getGrupos('A').subscribe(r => { if (r.Success) this.gruposAlmacen = r.Data; });
     this.unidadMedidaService.listar().subscribe(r => { if (r.Success) this.unidadesMedida = r.Data || []; });
-    this.areaAlmacenService.listarActivas().subscribe(r => { if (r.Success) this.areasAlmacen = r.Data || []; });
     this.impuestoPaisService.getImpuestoPais().subscribe(r => {
       if (r.Success) {
         this.impuestoPais = r.Data || [];
@@ -235,8 +230,7 @@ export class ProductoMantenimientoComponent implements OnInit {
       ControlDirectoStock:
         row.ControlDirectoStock ??
         !!(row.IdUnidadStock ||
-           row.IdGrupoCompra ||
-           row.IdAreaAlmacen)
+           row.IdGrupoCompra)
     };
     // El panel es solo visual: editar con él plegado conserva los datos.
     this.configuracionAvanzadaHabilitada = true;
@@ -341,11 +335,10 @@ export class ProductoMantenimientoComponent implements OnInit {
     if (this.configuracionAvanzadaHabilitada &&
         this.p.ControlDirectoStock) {
       if (!this.p.IdGrupoCompra ||
-          !this.p.IdAreaAlmacen ||
           !this.p.IdUnidadStock) {
         Swal.fire(
           'Validación',
-          'Los productos sin receta necesitan grupo de almacén, área de salida y unidad de compra/stock.',
+          'Los productos sin receta necesitan grupo de almacén y unidad de compra/stock.',
           'info'
         );
         return;
@@ -424,7 +417,6 @@ export class ProductoMantenimientoComponent implements OnInit {
     this.p.IdUnidadReceta = null;
     this.p.FactorReceta = 1;
     this.p.IdGrupoCompra = null;
-    this.p.IdAreaAlmacen = null;
     this.p.DescripcionCompra = '';
     this.p.PrecioCompra = 0;
     this.p.StockMinimo = 0;
@@ -440,7 +432,6 @@ export class ProductoMantenimientoComponent implements OnInit {
     this.p.IdUnidadReceta = null;
     this.p.FactorReceta = 1;
     this.p.IdGrupoCompra = null;
-    this.p.IdAreaAlmacen = null;
     this.p.DescripcionCompra = '';
     this.p.PrecioCompra = 0;
     this.p.StockMinimo = 0;
