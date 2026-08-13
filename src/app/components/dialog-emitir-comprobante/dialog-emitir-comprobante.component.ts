@@ -30,7 +30,6 @@ import { EnumTipoDocumento, EnumTipoIdentidad, TipoPagoEnum } from 'src/app/enum
 
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
 import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
-import { Router } from '@angular/router';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import { DescuentoCodigo } from 'src/app/models/descuentocodigo.models';
 import { NgxSpinnerService } from 'ngx-spinner';
@@ -39,7 +38,7 @@ import { TipoDocumentoPaisService } from 'src/app/services/tipo-documento-pais.s
 import { CajaTipoDocumento } from 'src/app/models/caja-tipo-documento.model';
 import { CajaTipoDocumentoService } from 'src/app/services/caja-tipo-documento.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
-import { DeviceCapabilitiesService } from 'src/app/services/device-capabilities.service';
+import { EstadoImpresionService } from 'src/app/services/estado-impresion.service';
 
 
 @Component({
@@ -128,11 +127,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     public dialog: MatDialog,
     private fb: FormBuilder,
     private qzTrayService: QzTrayV224Service,
-    private router: Router,
     private configuracionService: ConfiguracionService,
     private monedaService: MonedaService,
     private texts: TenantTextCatalogService,
-    private deviceCapabilities: DeviceCapabilitiesService,
+    private estadoImpresion: EstadoImpresionService,
   ) {
     this.dataSourcePago = new MatTableDataSource([]);
     this.nuevoRegistro.Tarjeta = new Tarjeta();
@@ -196,14 +194,6 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         });
       }
     });
-
-    if (this.idTipoPedido != '004'
-        && this.deviceCapabilities.requiresLocalPrintBridge()) {
-      const isRunning = await this.qzTrayService.isQzTrayRunning();
-      if (!isRunning) {
-        this.router.navigate(['/qz-tray-required']);
-      }
-    }
 
     this.ValidaTotalAPagar();
 
@@ -958,6 +948,28 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     return contador;
   }
 
+  /**
+   * Imprime sin retener el cierre del dialogo y avisa si algun documento no ha
+   * salido: una venta emitida sin comprobante no puede pasar desapercibida.
+   */
+  private async imprimirYAvisarSiFalla(
+    listImpresionDTO: ImpresionDTO[],
+  ): Promise<void> {
+    const impresos = await this.imprimir(listImpresionDTO);
+    if (impresos >= listImpresionDTO.length) return;
+
+    // Refresca el aviso de la caja: si se ha llegado aqui, la impresion directa
+    // ha dejado de funcionar en esta estacion.
+    void this.estadoImpresion.comprobar(true);
+
+    Swal.fire({
+      icon: 'warning',
+      title: 'No se pudo imprimir el comprobante',
+      text: 'La venta se emitió correctamente, pero el documento no salió por '
+        + 'la impresora. Puedes reimprimirlo desde Documentos emitidos.',
+    });
+  }
+
 
   async procesarCobro(alCredito: boolean): Promise<void> {
     if (!this.ChkVentaAlCredito && parseFloat(this.lbltotal) < parseFloat(this.lblmonto)) {
@@ -990,7 +1002,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
           }
         });
       } else {
-        this.imprimir(listaImpresionDTO);
+        void this.imprimirYAvisarSiFalla(listaImpresionDTO);
       }
 
       if (this.idTipoPedido === '003') {

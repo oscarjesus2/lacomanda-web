@@ -15,6 +15,34 @@
       </div>
     </header>
 
+    <div
+      class="setup-guide__notice setup-guide__notice--permiso"
+      role="alert"
+      *ngIf="esProblemaDePermiso"
+    >
+      <mat-icon aria-hidden="true">lock</mat-icon>
+      <div>
+        <ng-container *ngIf="permisoDenegado; else permisoPendiente">
+          <strong>Puede que QZ Tray ya esté instalado</strong>
+          <p>
+            Lo que impide conectar con la impresora es que este navegador tiene
+            <strong>bloqueado el acceso a la red local</strong>. Ábrelo en el candado
+            de la barra de direcciones &rarr; <strong>Acceso a la red local</strong>
+            &rarr; <strong>Permitir</strong>, y vuelve a comprobar la conexión abajo.
+          </p>
+        </ng-container>
+
+        <ng-template #permisoPendiente>
+          <strong>Falta autorizar el acceso a la red local</strong>
+          <p>
+            Pulsa <strong>Comprobar conexión</strong> al final de esta página: el
+            navegador te pedirá permiso para conectar con la impresora y solo tienes
+            que aceptar.
+          </p>
+        </ng-template>
+      </div>
+    </div>
+
     <div class="setup-guide__notice" role="note">
       <mat-icon aria-hidden="true">info</mat-icon>
       <p>
@@ -97,7 +125,35 @@
       <mat-icon aria-hidden="true">check_circle</mat-icon>
       <div>
         <strong>Cuando termines</strong>
-        <p>Deja QZ Tray abierto, vuelve a LaComanda y actualiza la página para comprobar la conexión.</p>
+        <p>Deja QZ Tray abierto y comprueba la conexión desde aquí mismo.</p>
+
+        <button
+          mat-flat-button
+          color="primary"
+          class="setup-guide__retry"
+          type="button"
+          [disabled]="comprobando"
+          (click)="comprobarConexion()"
+        >
+          <mat-icon>refresh</mat-icon>
+          {{ comprobando ? 'Comprobando…' : 'Comprobar conexión' }}
+        </button>
+
+        <p class="setup-guide__retry-error" *ngIf="reintentoFallido" role="status">
+          <ng-container *ngIf="permisoDenegado; else sigueSinDetectarse">
+            El navegador sigue bloqueando el acceso a la red local. Cámbialo desde el
+            candado de la barra de direcciones: recargar la página no lo desbloquea.
+          </ng-container>
+          <ng-template #sigueSinDetectarse>
+            Seguimos sin detectar QZ Tray. Comprueba que esté abierto y que hayas
+            importado el certificado en <strong>Advanced &gt; Site Manager</strong>.
+          </ng-template>
+        </p>
+
+        <p class="setup-guide__retry-note">
+          Mientras tanto puedes seguir cobrando: los tickets saldrán por el diálogo de
+          impresión del navegador.
+        </p>
       </div>
     </footer>
   </section>

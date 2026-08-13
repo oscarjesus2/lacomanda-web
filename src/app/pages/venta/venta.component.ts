@@ -83,6 +83,7 @@ import { SolicitudMesaPendiente } from 'src/app/models/mesa-cliente.models';
 import { DeviceCapabilitiesService } from 'src/app/services/device-capabilities.service';
 import { AgenteImpresionPedidosService } from 'src/app/services/agente-impresion-pedidos.service';
 import { AgenteImpresionLocalService } from 'src/app/services/agente-impresion-local.service';
+import { EstadoImpresionService } from 'src/app/services/estado-impresion.service';
 
 @Component({
   selector: 'app-venta',
@@ -236,6 +237,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     private deviceCapabilities: DeviceCapabilitiesService,
     private agenteImpresionPedidos: AgenteImpresionPedidosService,
     private agenteImpresionLocal: AgenteImpresionLocalService,
+    private estadoImpresion: EstadoImpresionService,
     private activatedRoute: ActivatedRoute) {
 
 
@@ -425,17 +427,17 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.enterFullScreen();
     if (this.deviceCapabilities.requiresLocalPrintBridge()) {
-      const isRunning = await this.qzTrayService.isQzTrayRunning();
-      if (!isRunning) {
-        this.router.navigate(['/qz-tray-required']);
-        return;
-      }
-      // El programa instalado es el agente principal. Mientras aun no exista,
-      // esta sesion de venta funciona como respaldo para pedidos de moviles/QR.
-      const agenteInstalado = await this.agenteImpresionLocal
-        .configurarSiEstaInstalado();
-      if (!agenteInstalado) {
-        await this.agenteImpresionPedidos.iniciar();
+      // Sin impresion directa la caja sigue operativa: los tickets salen por el
+      // dialogo del navegador y el banner avisa de que falta configurarla.
+      const impresion = await this.estadoImpresion.comprobar();
+      if (impresion.disponible) {
+        // El programa instalado es el agente principal. Mientras aun no exista,
+        // esta sesion de venta funciona como respaldo para pedidos de moviles/QR.
+        const agenteInstalado = await this.agenteImpresionLocal
+          .configurarSiEstaInstalado();
+        if (!agenteInstalado) {
+          await this.agenteImpresionPedidos.iniciar();
+        }
       }
     }
     this.spinnerService.show();

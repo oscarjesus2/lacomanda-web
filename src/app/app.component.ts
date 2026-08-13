@@ -11,6 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TenantTextCatalogService } from './services/localization/tenant-text-catalog.service';
 import { AgenteImpresionPedidosService } from './services/agente-impresion-pedidos.service';
 import { EstacionSessionRealtimeService } from './services/estacion-session-realtime.service';
+import { EstadoImpresion, EstadoImpresionService } from './services/estado-impresion.service';
 import { NivelUsuarioEnum } from './enums/enum';
 
 @Component({
@@ -28,6 +29,9 @@ export class AppComponent implements OnInit, OnDestroy {
   /** true cuando el backend no responde (status 0) */
   backendDown$: Observable<boolean>;
 
+  /** Aviso de impresion directa no disponible; null cuando todo va bien. */
+  avisoImpresion: string | null = null;
+
   constructor(
     private swUpdate: SwUpdate,
     private snackBar: MatSnackBar,
@@ -39,6 +43,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private textCatalog: TenantTextCatalogService,
     private agenteImpresionPedidos: AgenteImpresionPedidosService,
     private estacionSessionRealtime: EstacionSessionRealtimeService,
+    private estadoImpresionService: EstadoImpresionService,
   ) {
     this.backendDown$ = this.backendStatusService.isDown$;
     this.checkForUpdates();
@@ -48,6 +53,34 @@ export class AppComponent implements OnInit, OnDestroy {
         this.operationalHeaderOpen = false;
       }
     });
+    this.estadoImpresionService.estado$.subscribe(estado => {
+      this.avisoImpresion = this.mensajeImpresion(estado);
+    });
+  }
+
+  /**
+   * Texto del aviso segun por que no se puede imprimir. Un permiso denegado no
+   * se recupera solo, asi que ese caso indica donde tiene que ir el usuario.
+   */
+  private mensajeImpresion(estado: EstadoImpresion): string | null {
+    if (estado.disponible) return null;
+
+    switch (estado.motivo) {
+      case 'permiso-denegado':
+        return 'Impresión directa desactivada: este navegador tiene bloqueado el '
+          + 'acceso a la red local. Actívalo en el candado de la barra de '
+          + 'direcciones → Acceso a la red local → Permitir.';
+      case 'permiso-pendiente':
+        return 'Impresión directa sin autorizar. Los tickets saldrán por el '
+          + 'diálogo del navegador hasta que la actives.';
+      default:
+        return 'QZ Tray no responde. Los tickets saldrán por el diálogo del '
+          + 'navegador hasta que se restablezca.';
+    }
+  }
+
+  cerrarAvisoImpresion(): void {
+    this.avisoImpresion = null;
   }
 
   ngOnDestroy(): void {

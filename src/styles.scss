@@ -3093,6 +3093,38 @@ mat-row:hover mat-cell {
   color: var(--color-warning);
 }
 
+/* El problema esta en el navegador, no en la instalacion: se destaca para que
+   nadie reinstale QZ Tray buscando arreglar un permiso. */
+.setup-guide__notice--permiso {
+  border-color: var(--color-danger-border, #b71c1c);
+  background: var(--color-danger-soft, #fdecea);
+}
+
+.setup-guide__notice--permiso mat-icon {
+  color: var(--color-danger, #b71c1c);
+}
+
+.setup-guide__notice--permiso strong {
+  display: block;
+  margin-bottom: .35rem;
+}
+
+.setup-guide__retry {
+  margin-top: .9rem;
+}
+
+.setup-guide__retry-error {
+  margin-top: .7rem !important;
+  color: var(--color-danger, #b71c1c);
+  font-weight: 600;
+}
+
+.setup-guide__retry-note {
+  margin-top: .5rem !important;
+  color: var(--color-text-muted);
+  font-size: .92rem;
+}
+
 .setup-guide__notice p,
 .setup-guide__footer p {
   margin: 0;

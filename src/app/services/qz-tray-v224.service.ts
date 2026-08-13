@@ -140,6 +140,7 @@ export class QzTrayV224Service {
     printerName: string,
     permitirImpresoraPredeterminadaComoRespaldo: boolean = true,
     desconectarAlFinalizar: boolean = true,
+    permitirDialogoNativoComoRespaldo: boolean = true,
   ): Promise<boolean> {
     try {
       if (!this.isBase64(ByteTicket)) {
@@ -179,12 +180,62 @@ export class QzTrayV224Service {
       }
     } catch (error) {
       console.error('Error al imprimir:', error);
+
+      // Sin QZ Tray el ticket sale igual por el dialogo del navegador. Es peor
+      // experiencia (hay que confirmar y no corta el papel) pero no depende de
+      // ningun permiso, asi que el negocio nunca se queda sin comprobante.
+      if (permitirDialogoNativoComoRespaldo && this.isBase64(ByteTicket)) {
+        return this.imprimirConDialogoNativo(ByteTicket);
+      }
       return false;
     } finally {
       if (desconectarAlFinalizar) {
         await this.disconnect();
       }
     }
+  }
+
+  /**
+   * Respaldo sin permisos: carga el PDF en un iframe oculto y abre el dialogo
+   * de impresion del navegador.
+   */
+  private imprimirConDialogoNativo(ByteTicket: string): boolean {
+    try {
+      const url = URL.createObjectURL(this.base64ToPdfBlob(ByteTicket));
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute('aria-hidden', 'true');
+      iframe.style.position = 'fixed';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+
+      iframe.onload = () => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        // El dialogo nativo es sincrono pero no avisa al cerrarse; se libera
+        // con holgura para no cortar una impresion en curso.
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+          iframe.remove();
+        }, 60_000);
+      };
+
+      iframe.src = url;
+      document.body.appendChild(iframe);
+      return true;
+    } catch (error) {
+      console.error('No se pudo abrir el diálogo de impresión del navegador:', error);
+      return false;
+    }
+  }
+
+  private base64ToPdfBlob(base64: string): Blob {
+    const binario = atob(base64);
+    const bytes = new Uint8Array(binario.length);
+    for (let i = 0; i < binario.length; i++) {
+      bytes[i] = binario.charCodeAt(i);
+    }
+    return new Blob([bytes], { type: 'application/pdf' });
   }
 
   private async printOnDefault(data: any[]): Promise<void> {

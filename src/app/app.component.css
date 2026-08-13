@@ -28,6 +28,83 @@
   to   { transform: translateY(0); }
 }
 
+/* ── Aviso: impresion directa no disponible ───────────────────── */
+/* Va abajo para no tapar la cabecera ni los paneles de la caja. */
+.print-warning-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: #8a5300;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.35);
+  animation: print-banner-slide-in 0.3s ease;
+}
+
+.print-warning-banner__icon {
+  flex: none;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.print-warning-banner__text {
+  max-width: 90ch;
+}
+
+.print-warning-banner__action,
+.print-warning-banner__close {
+  flex: none;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.print-warning-banner__action {
+  padding: 2px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: var(--radius-pill, 999px);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.print-warning-banner__action:hover,
+.print-warning-banner__action:focus-visible {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.print-warning-banner__close {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.print-warning-banner__close mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+@keyframes print-banner-slide-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .print-warning-banner {
+    animation: none;
+  }
+}
+
 /* Navegación contextual de Caja/Mozo. La cabecera se superpone para conservar
    toda la altura de trabajo de la pantalla operativa. */
 .header-shell {

@@ -38,6 +38,20 @@
   </span>
 </div>
 
+<!-- Aviso: impresion directa no disponible. Avisa, no bloquea la venta. -->
+<div *ngIf="isOperationalRoute && avisoImpresion" class="print-warning-banner">
+  <mat-icon class="print-warning-banner__icon" aria-hidden="true">print_disabled</mat-icon>
+  <span class="print-warning-banner__text">{{ avisoImpresion }}</span>
+  <a class="print-warning-banner__action" routerLink="/qz-tray-required">Configurar</a>
+  <button
+    type="button"
+    class="print-warning-banner__close"
+    aria-label="Ocultar aviso de impresión"
+    (click)="cerrarAvisoImpresion()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
 <router-outlet></router-outlet>
 <app-asistente-estacion></app-asistente-estacion>
  
