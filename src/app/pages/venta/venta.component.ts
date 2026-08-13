@@ -416,7 +416,10 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     const elem = document.documentElement;
 
     if (elem.requestFullscreen) {
-      elem.requestFullscreen();
+      // Sin gesto previo del usuario el navegador rechaza la promesa. No
+      // afecta a la venta, pero sin capturarla ensucia la consola con un
+      // "Permissions check failed" que despista al depurar otras cosas.
+      elem.requestFullscreen().catch(() => { });
     } else {
       console.warn("Pantalla completa no es soportada por este navegador.");
     }

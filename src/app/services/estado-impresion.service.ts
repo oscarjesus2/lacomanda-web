@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import Swal from 'sweetalert2';
 import { DeviceCapabilitiesService } from './device-capabilities.service';
@@ -40,9 +40,13 @@ export class EstadoImpresionService {
   /** El aviso previo se muestra una vez por sesion, no en cada carga. */
   private avisoPrevioMostrado = false;
 
+  /** Ultimo estado del permiso leido, solo para diagnostico en consola. */
+  private ultimoPermiso: PermissionState | 'no-expuesto' = 'no-expuesto';
+
   constructor(
     private readonly qz: QzTrayV224Service,
     private readonly deviceCapabilities: DeviceCapabilitiesService,
+    private readonly zone: NgZone,
   ) {}
 
   get estado(): EstadoImpresion {
@@ -109,8 +113,10 @@ export class EstadoImpresionService {
       const resultado = await permisos.query(
         EstadoImpresionService.permisoRedLocal,
       );
+      this.ultimoPermiso = resultado.state;
       return resultado.state;
     } catch {
+      this.ultimoPermiso = 'no-expuesto';
       return null;
     }
   }
@@ -143,7 +149,16 @@ export class EstadoImpresionService {
   }
 
   private publicar(estado: EstadoImpresion): EstadoImpresion {
-    this.estadoSubject.next(estado);
+    console.info(
+      '[impresion] permiso=%s disponible=%s motivo=%s',
+      this.ultimoPermiso,
+      estado.disponible,
+      estado.motivo ?? 'ninguno',
+    );
+
+    // QZ Tray resuelve sus promesas con RSVP, que zone.js no parchea: sin esto
+    // el estado cambia pero Angular no repinta y el banner no llega a salir.
+    this.zone.run(() => this.estadoSubject.next(estado));
     return estado;
   }
 }
