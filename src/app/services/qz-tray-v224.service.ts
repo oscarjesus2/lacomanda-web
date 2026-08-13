@@ -277,6 +277,31 @@ export class QzTrayV224Service {
     }
   }
 
+  /**
+   * Comprueba si QZ Tray confia en este sitio, es decir, si el certificado de
+   * LaComanda esta en su Site Manager.
+   *
+   * No hay una API que lo pregunte, pero una llamada firmada lo delata: con el
+   * certificado importado responde al instante y sin el QZ Tray abre un dialogo
+   * en el escritorio, asi que la promesa se queda esperando al usuario. De ahi
+   * que se resuelva por tiempo: es una heuristica, no una certeza.
+   */
+  async tieneCertificadoConfigurado(esperaMs: number = 3000): Promise<boolean> {
+    try {
+      await this.connect();
+
+      const llamadaFirmada = Promise.resolve(qz.printers.find()).then(() => true);
+      const espera = new Promise<boolean>(resolve => {
+        setTimeout(() => resolve(false), esperaMs);
+      });
+
+      return await Promise.race([llamadaFirmada, espera]);
+    } catch (error) {
+      console.error('No se pudo comprobar la confianza de QZ Tray:', error);
+      return false;
+    }
+  }
+
   async isQzTrayRunning(): Promise<boolean> {
     try {
       await this.connect();

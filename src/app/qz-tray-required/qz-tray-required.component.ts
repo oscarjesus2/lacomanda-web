@@ -40,6 +40,11 @@ export class QzTrayRequiredComponent implements OnInit {
     return this.estado.motivo === 'permiso-denegado';
   }
 
+  /** QZ Tray responde pero no confia en el sitio: falta importar el certificado. */
+  get certificadoPendiente(): boolean {
+    return this.estado.disponible && this.estado.certificadoConfigurado === false;
+  }
+
   /**
    * Reintenta la conexion. Al nacer de un clic, el navegador muestra su
    * dialogo de permiso de forma fiable y el usuario sabe por que se lo pide.
@@ -49,7 +54,9 @@ export class QzTrayRequiredComponent implements OnInit {
     this.reintentoFallido = false;
     try {
       this.estado = await this.estadoImpresion.comprobar(true);
-      if (this.estado.disponible) {
+      // Con el certificado pendiente no se vuelve atras: el paso que falta esta
+      // justo en esta pagina y salir de aqui lo esconderia.
+      if (this.estado.disponible && !this.certificadoPendiente) {
         this.location.back();
         return;
       }

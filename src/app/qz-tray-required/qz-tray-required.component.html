@@ -18,6 +18,22 @@
     <div
       class="setup-guide__notice setup-guide__notice--permiso"
       role="alert"
+      *ngIf="certificadoPendiente"
+    >
+      <mat-icon aria-hidden="true">workspace_premium</mat-icon>
+      <div>
+        <strong>QZ Tray ya está instalado; falta el certificado</strong>
+        <p>
+          La conexión funciona, pero QZ Tray todavía no confía en LaComanda y pedirá
+          confirmación en el escritorio <strong>en cada impresión</strong>. Completa el
+          <strong>paso 2</strong> para dejarlo resuelto de una vez.
+        </p>
+      </div>
+    </div>
+
+    <div
+      class="setup-guide__notice setup-guide__notice--permiso"
+      role="alert"
       *ngIf="esProblemaDePermiso"
     >
       <mat-icon aria-hidden="true">lock</mat-icon>
@@ -140,14 +156,18 @@
         </button>
 
         <p class="setup-guide__retry-error" *ngIf="reintentoFallido" role="status">
-          <ng-container *ngIf="permisoDenegado; else sigueSinDetectarse">
+          <ng-container *ngIf="certificadoPendiente">
+            QZ Tray responde, pero sigue sin reconocer el certificado de LaComanda.
+            Impórtalo en <strong>Advanced &gt; Site Manager</strong> y vuelve a comprobar.
+          </ng-container>
+          <ng-container *ngIf="!certificadoPendiente && permisoDenegado">
             El navegador sigue bloqueando el acceso a la red local. Cámbialo desde el
             candado de la barra de direcciones: recargar la página no lo desbloquea.
           </ng-container>
-          <ng-template #sigueSinDetectarse>
-            Seguimos sin detectar QZ Tray. Comprueba que esté abierto y que hayas
-            importado el certificado en <strong>Advanced &gt; Site Manager</strong>.
-          </ng-template>
+          <ng-container *ngIf="!certificadoPendiente && !permisoDenegado">
+            Seguimos sin detectar QZ Tray. Comprueba que esté abierto y que no lo haya
+            cerrado el antivirus o el arranque del equipo.
+          </ng-container>
         </p>
 
         <p class="setup-guide__retry-note">

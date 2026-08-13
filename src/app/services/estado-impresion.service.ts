@@ -16,6 +16,12 @@ export type MotivoSinImpresion =
 export interface EstadoImpresion {
   disponible: boolean;
   motivo?: MotivoSinImpresion;
+  /**
+   * false cuando QZ Tray responde pero aun no confia en este sitio. Se puede
+   * imprimir, pero QZ pedira confirmacion en el escritorio cada vez, asi que
+   * no es un fallo: es un aviso de que falta el paso del certificado.
+   */
+  certificadoConfigurado?: boolean;
 }
 
 /**
@@ -86,7 +92,12 @@ export class EstadoImpresionService {
     }
 
     if (await this.qz.isQzTrayRunning()) {
-      return this.publicar({ disponible: true });
+      // Conectar no basta: QZ Tray acepta el WebSocket aunque no confie en el
+      // sitio, y sin certificado cada impresion pide confirmacion a mano.
+      return this.publicar({
+        disponible: true,
+        certificadoConfigurado: await this.qz.tieneCertificadoConfigurado(),
+      });
     }
 
     // El navegador oculta el motivo real del fallo para que una web no pueda
@@ -150,10 +161,11 @@ export class EstadoImpresionService {
 
   private publicar(estado: EstadoImpresion): EstadoImpresion {
     console.info(
-      '[impresion] permiso=%s disponible=%s motivo=%s',
+      '[impresion] permiso=%s disponible=%s motivo=%s certificado=%s',
       this.ultimoPermiso,
       estado.disponible,
       estado.motivo ?? 'ninguno',
+      estado.certificadoConfigurado ?? 'sin-comprobar',
     );
 
     // QZ Tray resuelve sus promesas con RSVP, que zone.js no parchea: sin esto

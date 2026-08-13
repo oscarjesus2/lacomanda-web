@@ -63,7 +63,15 @@ export class AppComponent implements OnInit, OnDestroy {
    * se recupera solo, asi que ese caso indica donde tiene que ir el usuario.
    */
   private mensajeImpresion(estado: EstadoImpresion): string | null {
-    if (estado.disponible) return null;
+    if (estado.disponible) {
+      // Se imprime, pero QZ Tray pedira confirmacion en el escritorio en cada
+      // ticket hasta que se importe el certificado.
+      return estado.certificadoConfigurado === false
+        ? 'QZ Tray está conectado pero no tiene el certificado de LaComanda: '
+          + 'pedirá confirmación en el escritorio en cada impresión. '
+          + 'Impórtalo desde Advanced → Site Manager.'
+        : null;
+    }
 
     switch (estado.motivo) {
       case 'permiso-denegado':
