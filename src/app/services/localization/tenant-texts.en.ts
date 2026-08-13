@@ -217,6 +217,7 @@ export const EN_TEXTS = {
 
   // Shift dialogs
   closeShift: 'Close shift',
+  closingShift: 'Closing shift…',
   shiftNumber: 'Shift No.',
   startDate: 'Start date',
   currentDate: 'Current date',

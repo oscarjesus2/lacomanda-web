@@ -221,6 +221,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   internalErrorRefresh: 'Error interno. Actualice la pantalla.',
 
   closeShift: 'Cerrar turno',
+  closingShift: 'Cerrando turno…',
   shiftNumber: 'N.º de turno',
   startDate: 'Fecha de inicio',
   currentDate: 'Fecha actual',

@@ -28,6 +28,7 @@ import { ConfiguracionInicialComponent } from 'src/app/components/configuracion-
 import { ConfigurarOrdenadorComponent } from 'src/app/components/configuracion-inicial/configurar-ordenador/configurar-ordenador.component';
 import { AreaImpresionMantenimientoComponent } from 'src/app/components/mantenimiento/area-impresion-mantenimiento/area-impresion-mantenimiento.component';
 import { DescuentoMantenimientoComponent } from 'src/app/components/mantenimiento/descuento-mantenimiento/descuento-mantenimiento.component';
+import { TarjetaMantenimientoComponent } from 'src/app/components/mantenimiento/tarjeta-mantenimiento/tarjeta-mantenimiento.component';
 import { SocioNegocioMantenimientoComponent } from 'src/app/components/mantenimiento/socio-negocio-mantenimiento/socio-negocio-mantenimiento.component';
 import { PromocionMantenimientoComponent } from 'src/app/components/mantenimiento/promocion-mantenimiento/promocion-mantenimiento.component';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
@@ -198,6 +199,10 @@ export class MenuVentasComponent implements OnInit {
     if (item.title === 'Descuentos')
     {
       this.OpenDescuentoMantenimientoComponent();
+    }
+    if (item.title === 'Tarjetas')
+    {
+      this.OpenTarjetaMantenimientoComponent();
     }
     if (item.title === 'Promociones')
     {
@@ -423,6 +428,15 @@ export class MenuVentasComponent implements OnInit {
 
   OpenDescuentoMantenimientoComponent(): void {
     this.dialog.open(DescuentoMantenimientoComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: '900px',
+      maxWidth: '96vw',
+    });
+  }
+
+  OpenTarjetaMantenimientoComponent(): void {
+    this.dialog.open(TarjetaMantenimientoComponent, {
       disableClose: true,
       hasBackdrop: true,
       width: '900px',

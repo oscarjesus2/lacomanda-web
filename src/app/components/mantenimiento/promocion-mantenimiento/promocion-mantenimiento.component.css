@@ -1,3 +1,10 @@
+/* El campo Estado comparte fila con el bloque de imagen, mucho más alto. Como
+   el grid estira sus celdas por defecto, el desplegable crecía hasta ocupar
+   toda la altura de la fila. */
+.dialog-form-grid > mat-form-field {
+  align-self: start;
+}
+
 .promo-image-field {
   align-items: stretch;
   background: var(--app-surface-soft, #fff7f2);

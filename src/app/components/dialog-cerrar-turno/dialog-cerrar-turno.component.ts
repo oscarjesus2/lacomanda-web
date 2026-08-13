@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { NgxSpinnerService } from 'ngx-spinner';
 import Swal from 'sweetalert2';
-import { finalize } from 'rxjs/operators';
 
+import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import { CajaDto } from 'src/app/models/caja.models';
 import { Turno } from 'src/app/models/turno.models';
 import { CajaService } from 'src/app/services/caja.service';
@@ -14,6 +14,7 @@ import { PedidoService } from 'src/app/services/pedido.service';
 import {
   AnularPedidoPendienteRequest,
   CerrarTurnoRequest,
+  CerrarTurnoResult,
   PedidoPendienteCierre,
   VentaSinPago
 } from 'src/app/interfaces/cerrarTurno.interface';
@@ -117,6 +118,11 @@ export class DialogCerrarTurnoComponent implements OnInit {
   }
 
   cerrarTurno(): void {
+    // Un doble clic rapido puede colarse antes de que Angular repinte el
+    // boton deshabilitado, y cerrar dos veces el mismo turno.
+    if (this.procesando) {
+      return;
+    }
     if (this.idCajaSel == null) {
       Swal.fire(
         this.texts.get('validation'),
@@ -150,63 +156,80 @@ export class DialogCerrarTurnoComponent implements OnInit {
     this.spinner.show();
 
     this.turnoService.CerrarTurno(request)
-      .pipe(
-        finalize(() => {
-          this.spinner.hide();
-          this.procesando = false;
-        })
-      )
       .subscribe({
         next: async (response) => {
-          const data = response?.Data;
-
-          if (!response?.Success || !data) {
-            Swal.fire(
-              this.texts.get('error'),
-              response?.Message || this.texts.get('couldNotCloseShift'),
-              'error'
-            );
-            return;
+          try {
+            await this.procesarRespuestaCierre(response);
+          } finally {
+            this.liberarProceso();
           }
-
-          /*
-           * No es una excepción: el backend devuelve la información necesaria
-           * para que el usuario resuelva los pedidos y después reintente.
-           */
-          if (data.RequiereResolverPedidosPendientes) {
-            this.pedidosPendientes = data.PedidosPendientes ?? [];
-            return;
-          }
-
-          this.pedidosPendientes = [];
-
-          if (data.RequiereConfirmacionCredito) {
-            this.confirmarVentasCredito(data.VentasSinPago);
-            return;
-          }
-
-          if (data.Cerrado) {
-            this.cerrado = true;
-            await this.imprimir(data.Impresiones);
-
-            Swal.fire(
-              this.texts.get('shiftCloseTitle'),
-              data.Mensaje || this.texts.get('shiftClosedSuccessfully'),
-              'success'
-            );
-            return;
-          }
-
-          Swal.fire(
-            this.texts.get('shiftCloseTitle'),
-            data.Mensaje || this.texts.get('couldNotCloseShift'),
-            'warning'
-          );
         },
 
         // El interceptor ya clasificó y mostró los errores HTTP.
-        error: () => {}
+        error: () => this.liberarProceso()
       });
+  }
+
+  /**
+   * Libera el bloqueo del boton y el spinner.
+   *
+   * No puede hacerse con finalize(): el observable se completa en cuanto se
+   * invoca next(), pero el cierre sigue trabajando dentro (la impresion es
+   * asincrona). Con finalize el boton se rehabilitaba mientras aun se estaba
+   * imprimiendo, y el aviso de "turno cerrado" aparecia mucho despues.
+   */
+  private liberarProceso(): void {
+    this.spinner.hide();
+    this.procesando = false;
+  }
+
+  private async procesarRespuestaCierre(
+    response: ApiResponse<CerrarTurnoResult>
+  ): Promise<void> {
+    const data = response?.Data;
+
+    if (!response?.Success || !data) {
+      Swal.fire(
+        this.texts.get('error'),
+        response?.Message || this.texts.get('couldNotCloseShift'),
+        'error'
+      );
+      return;
+    }
+
+    /*
+     * No es una excepción: el backend devuelve la información necesaria
+     * para que el usuario resuelva los pedidos y después reintente.
+     */
+    if (data.RequiereResolverPedidosPendientes) {
+      this.pedidosPendientes = data.PedidosPendientes ?? [];
+      return;
+    }
+
+    this.pedidosPendientes = [];
+
+    if (data.RequiereConfirmacionCredito) {
+      this.confirmarVentasCredito(data.VentasSinPago);
+      return;
+    }
+
+    if (data.Cerrado) {
+      this.cerrado = true;
+      await this.imprimir(data.Impresiones);
+
+      Swal.fire(
+        this.texts.get('shiftCloseTitle'),
+        data.Mensaje || this.texts.get('shiftClosedSuccessfully'),
+        'success'
+      );
+      return;
+    }
+
+    Swal.fire(
+      this.texts.get('shiftCloseTitle'),
+      data.Mensaje || this.texts.get('couldNotCloseShift'),
+      'warning'
+    );
   }
 
   async anularPedidoPendiente(pedido: PedidoPendienteCierre): Promise<void> {
@@ -247,39 +270,37 @@ export class DialogCerrarTurnoComponent implements OnInit {
     this.spinner.show();
 
     this.pedidoService.AnularPedidoPendiente(request)
-      .pipe(
-        finalize(() => {
-          this.spinner.hide();
-          this.procesando = false;
-        })
-      )
       .subscribe({
         next: async (response) => {
-          if (!response?.Success) {
-            Swal.fire(
-              this.texts.get('error'),
-              response?.Message || this.texts.get('couldNotVoidOrder'),
-              'error'
+          try {
+            if (!response?.Success) {
+              Swal.fire(
+                this.texts.get('error'),
+                response?.Message || this.texts.get('couldNotVoidOrder'),
+                'error'
+              );
+              return;
+            }
+
+            await this.imprimir(response.Data ?? []);
+            this.pedidosPendientes = this.pedidosPendientes.filter(
+              item =>
+                item.IdPedido !== pedido.IdPedido
+                || item.NroCuenta !== pedido.NroCuenta
             );
-            return;
+
+            Swal.fire(
+              this.texts.get('orderVoided'),
+              response.Message || this.texts.get('orderVoidedSuccessfully'),
+              'success'
+            );
+          } finally {
+            this.liberarProceso();
           }
-
-          await this.imprimir(response.Data ?? []);
-          this.pedidosPendientes = this.pedidosPendientes.filter(
-            item =>
-              item.IdPedido !== pedido.IdPedido
-              || item.NroCuenta !== pedido.NroCuenta
-          );
-
-          Swal.fire(
-            this.texts.get('orderVoided'),
-            response.Message || this.texts.get('orderVoidedSuccessfully'),
-            'success'
-          );
         },
 
         // El interceptor ya clasificó y mostró los errores HTTP.
-        error: () => {}
+        error: () => this.liberarProceso()
       });
   }
 

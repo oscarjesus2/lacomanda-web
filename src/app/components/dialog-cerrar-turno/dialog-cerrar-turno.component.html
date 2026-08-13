@@ -146,12 +146,20 @@
     <button mat-raised-button color="primary" type="button"
             (click)="cerrarTurno()"
             [disabled]="!turnoAbierto || cerrado || procesando">
-      <mat-icon>{{ pedidosPendientes.length > 0 ? 'refresh' : 'lock' }}</mat-icon>
+      <mat-icon>
+        {{
+          procesando
+            ? 'hourglass_top'
+            : (pedidosPendientes.length > 0 ? 'refresh' : 'lock')
+        }}
+      </mat-icon>
       <span>
         {{
-          (pedidosPendientes.length > 0
-            ? 'revalidateClose'
-            : 'closeShift') | tenantText
+          (procesando
+            ? 'closingShift'
+            : (pedidosPendientes.length > 0
+              ? 'revalidateClose'
+              : 'closeShift')) | tenantText
         }}
       </span>
     </button>
