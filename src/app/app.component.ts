@@ -29,8 +29,30 @@ export class AppComponent implements OnInit, OnDestroy {
   /** true cuando el backend no responde (status 0) */
   backendDown$: Observable<boolean>;
 
-  /** Aviso de impresion directa no disponible; null cuando todo va bien. */
-  avisoImpresion: string | null = null;
+  /** Documentos esperando a que la impresora vuelva. */
+  documentosEnEspera = 0;
+
+  private mensajeEstadoImpresion: string | null = null;
+  private avisoImpresionOculto = false;
+
+  /**
+   * Aviso de impresion para la caja; null cuando no hay nada que decir. Una
+   * impresora caida manda sobre el resto: es lo unico que el cajero puede
+   * resolver ahora mismo, y ademas se arregla solo.
+   */
+  get avisoImpresion(): string | null {
+    if (this.avisoImpresionOculto) return null;
+
+    if (this.documentosEnEspera > 0) {
+      const documentos = this.documentosEnEspera === 1
+        ? '1 documento'
+        : `${this.documentosEnEspera} documentos`;
+      return `La impresora no responde. Hay ${documentos} en espera; `
+        + 'se imprimirán solos en cuanto vuelva.';
+    }
+
+    return this.mensajeEstadoImpresion;
+  }
 
   constructor(
     private swUpdate: SwUpdate,
@@ -54,7 +76,19 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     });
     this.estadoImpresionService.estado$.subscribe(estado => {
-      this.avisoImpresion = this.mensajeImpresion(estado);
+      const mensaje = this.mensajeImpresion(estado);
+      if (mensaje !== this.mensajeEstadoImpresion) {
+        // Un aviso nuevo vuelve a mostrarse aunque se cerrara el anterior.
+        this.avisoImpresionOculto = false;
+      }
+      this.mensajeEstadoImpresion = mensaje;
+    });
+
+    this.estadoImpresionService.pendientes$.subscribe(pendientes => {
+      if (pendientes > 0 && this.documentosEnEspera === 0) {
+        this.avisoImpresionOculto = false;
+      }
+      this.documentosEnEspera = pendientes;
     });
   }
 
@@ -89,7 +123,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   cerrarAvisoImpresion(): void {
-    this.avisoImpresion = null;
+    this.avisoImpresionOculto = true;
   }
 
   ngOnDestroy(): void {

@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import * as RSVP from 'rsvp';
 declare var qz: any;
@@ -12,6 +12,20 @@ export class QzTrayV224Service {
   private privateKeyPath: string = 'assets/signing/private-key.pem';
   private privateDigitalCertificatePath: string = 'assets/signing/certificate.pem';
 
+  /** Cada cuanto se reintenta la cola mientras la impresora no responda. */
+  private static readonly reintentoMs = 15_000;
+  /** Tope de seguridad: una impresora caida toda la tarde no debe crecer sin fin. */
+  private static readonly maxPendientes = 50;
+
+  private readonly pendientes: { documento: string; impresora: string }[] = [];
+  private readonly pendientesSubject = new BehaviorSubject<number>(0);
+  /** Documentos esperando a que la impresora vuelva. */
+  readonly pendientes$ = this.pendientesSubject.asObservable();
+
+  private temporizadorReintento?: ReturnType<typeof setTimeout>;
+  /** Evita que un reintento fallido vuelva a encolar el mismo documento. */
+  private reintentandoCola = false;
+
   private readonly confianzaSubject = new BehaviorSubject<boolean | null>(null);
   /**
    * Si QZ Tray acepta las peticiones firmadas de este sitio. null mientras no
@@ -20,7 +34,7 @@ export class QzTrayV224Service {
    */
   readonly confianza$ = this.confianzaSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private zone: NgZone) {
     // Configuración para asegurar que las conexiones sean seguras
     qz.api.setSha256Type(data => {
       return crypto.subtle.digest("SHA-256", new TextEncoder().encode(data)).then(hash =>
@@ -151,12 +165,17 @@ export class QzTrayV224Service {
     desconectarAlFinalizar: boolean = true,
     permitirDialogoNativoComoRespaldo: boolean = true,
   ): Promise<boolean> {
+    // Distingue un problema de configuracion (QZ ausente o que nos rechaza) de
+    // uno de la impresora. El primero no se arregla solo; el segundo si.
+    let puenteOperativo = false;
+
     try {
       if (!this.isBase64(ByteTicket)) {
         throw new Error('El documento recibido no está codificado correctamente en base64.');
       }
 
       await this.connect();
+      puenteOperativo = true;
       const data = [{
         type: 'pdf',
         format: 'base64',
@@ -192,14 +211,25 @@ export class QzTrayV224Service {
       console.error('Error al imprimir:', error);
 
       // Que QZ Tray rechace la peticion no es un fallo de impresion: es que no
-      // confia en el sitio. Se publica para que la caja avise del certificado.
+      // confia en el sitio. Eso es configuracion, no se arregla esperando.
       if (this.esPeticionBloqueada(error)) {
         this.registrarConfianza(false);
+        puenteOperativo = false;
       }
 
-      // Sin QZ Tray el ticket sale igual por el dialogo del navegador. Es peor
-      // experiencia (hay que confirmar y no corta el papel) pero no depende de
-      // ningun permiso, asi que el negocio nunca se queda sin comprobante.
+      // Con QZ operativo el fallo es de la impresora: apagada, sin papel o
+      // atascada. Es transitorio, asi que el documento espera en cola y se
+      // reintenta solo. Abrir aqui el dialogo del navegador seria secuestrar
+      // la pantalla del cajero a mitad de servicio para nada.
+      if (puenteOperativo) {
+        if (!this.reintentandoCola) {
+          this.encolar(ByteTicket, printerName);
+        }
+        return false;
+      }
+
+      // Sin QZ no hay nada que esperar: el ticket sale por el dialogo del
+      // navegador, que es peor pero no depende de ninguna configuracion.
       if (permitirDialogoNativoComoRespaldo && this.isBase64(ByteTicket)) {
         return this.imprimirConDialogoNativo(ByteTicket);
       }
@@ -286,10 +316,69 @@ export class QzTrayV224Service {
     ].some(fragment => normalized.includes(fragment));
   }
 
-  private registrarConfianza(confia: boolean): void {
-    if (this.confianzaSubject.value !== confia) {
-      this.confianzaSubject.next(confia);
+  /**
+   * Encola un documento que no pudo salir por un fallo de la impresora y
+   * programa el reintento. La cola vive en memoria a proposito: un ticket
+   * rescatado al dia siguiente no le sirve a nadie.
+   */
+  private encolar(documento: string, impresora: string): void {
+    if (this.pendientes.length >= QzTrayV224Service.maxPendientes) {
+      console.warn('Cola de impresión llena; se descarta el documento más antiguo.');
+      this.pendientes.shift();
     }
+
+    this.pendientes.push({ documento, impresora });
+    this.publicarPendientes();
+    this.programarReintento();
+  }
+
+  private programarReintento(): void {
+    if (this.temporizadorReintento || !this.pendientes.length) return;
+
+    this.temporizadorReintento = setTimeout(() => {
+      this.temporizadorReintento = undefined;
+      void this.vaciarCola();
+    }, QzTrayV224Service.reintentoMs);
+  }
+
+  /**
+   * Reintenta en orden y se detiene al primer fallo: si la impresora sigue
+   * caida, insistir con el resto solo desordenaria los tickets.
+   */
+  private async vaciarCola(): Promise<void> {
+    this.reintentandoCola = true;
+    try {
+      while (this.pendientes.length) {
+        const siguiente = this.pendientes[0];
+        const impreso = await this.printPDF(
+          siguiente.documento,
+          siguiente.impresora,
+          true,
+          false,
+          false,
+        );
+        if (!impreso) break;
+
+        this.pendientes.shift();
+        this.publicarPendientes();
+      }
+    } finally {
+      this.reintentandoCola = false;
+      await this.disconnect();
+      this.programarReintento();
+    }
+  }
+
+  private publicarPendientes(): void {
+    this.zone.run(() => this.pendientesSubject.next(this.pendientes.length));
+  }
+
+  private registrarConfianza(confia: boolean): void {
+    if (this.confianzaSubject.value === confia) return;
+
+    // qz resuelve con RSVP, fuera de la zona de Angular: sin esto el estado
+    // cambia pero la vista no se entera.
+    this.zone.run(() => this.confianzaSubject.next(confia));
   }
 
   /**

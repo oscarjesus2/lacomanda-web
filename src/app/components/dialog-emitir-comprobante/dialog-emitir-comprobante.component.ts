@@ -964,9 +964,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
     Swal.fire({
       icon: 'warning',
-      title: 'No se pudo imprimir el comprobante',
-      text: 'La venta se emitió correctamente, pero el documento no salió por '
-        + 'la impresora. Puedes reimprimirlo desde Documentos emitidos.',
+      title: 'El comprobante no ha salido todavía',
+      text: 'La venta se emitió correctamente. El documento queda en espera y se '
+        + 'imprimirá solo en cuanto la impresora responda; si no, puedes '
+        + 'reimprimirlo desde Documentos emitidos.',
     });
   }
 

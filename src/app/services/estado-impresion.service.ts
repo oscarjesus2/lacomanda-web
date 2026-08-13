@@ -43,6 +43,9 @@ export class EstadoImpresionService {
   });
   readonly estado$ = this.estadoSubject.asObservable();
 
+  /** Documentos esperando a que vuelva la impresora. */
+  readonly pendientes$ = this.qz.pendientes$;
+
   /** El aviso previo se muestra una vez por sesion, no en cada carga. */
   private avisoPrevioMostrado = false;
 
