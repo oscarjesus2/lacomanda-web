@@ -13,4 +13,4 @@ resources:
 images:
 - name: oscar020/frontend
   newName: oscar020/frontend
-  newTag: 202608132020-751122e-staging
+  newTag: 202608132122-e5df617-staging
