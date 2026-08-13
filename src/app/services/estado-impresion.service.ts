@@ -53,7 +53,18 @@ export class EstadoImpresionService {
     private readonly qz: QzTrayV224Service,
     private readonly deviceCapabilities: DeviceCapabilitiesService,
     private readonly zone: NgZone,
-  ) {}
+  ) {
+    // Una impresion rechazada por QZ Tray es la prueba mas fiable de que falta
+    // autorizar el certificado, y llega mucho despues de la comprobacion
+    // inicial. Sin esto los "Request blocked" se quedaban solo en la consola.
+    this.qz.confianza$.subscribe(confia => {
+      if (confia === null || confia === this.estado.certificadoConfigurado) return;
+
+      // Si QZ Tray ha llegado a responder es que esta accesible, asi que el
+      // motivo anterior (si lo habia) ya no describe la situacion.
+      this.publicar({ disponible: true, certificadoConfigurado: confia });
+    });
+  }
 
   get estado(): EstadoImpresion {
     return this.estadoSubject.value;

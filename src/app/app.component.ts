@@ -67,9 +67,10 @@ export class AppComponent implements OnInit, OnDestroy {
       // Se imprime, pero QZ Tray pedira confirmacion en el escritorio en cada
       // ticket hasta que se importe el certificado.
       return estado.certificadoConfigurado === false
-        ? 'QZ Tray está conectado pero no tiene el certificado de LaComanda: '
-          + 'pedirá confirmación en el escritorio en cada impresión. '
-          + 'Impórtalo desde Advanced → Site Manager.'
+        ? 'QZ Tray está rechazando las impresiones de LaComanda porque no tiene '
+          + 'autorizado su certificado. Ábrelo en Advanced → Site Manager, '
+          + 'importa el certificado y comprueba que el sitio no esté en la lista '
+          + 'de bloqueados.'
         : null;
     }
 

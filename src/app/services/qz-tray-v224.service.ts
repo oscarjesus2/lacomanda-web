@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 import * as RSVP from 'rsvp';
 declare var qz: any;
 
@@ -10,6 +11,14 @@ export class QzTrayV224Service {
 
   private privateKeyPath: string = 'assets/signing/private-key.pem';
   private privateDigitalCertificatePath: string = 'assets/signing/certificate.pem';
+
+  private readonly confianzaSubject = new BehaviorSubject<boolean | null>(null);
+  /**
+   * Si QZ Tray acepta las peticiones firmadas de este sitio. null mientras no
+   * se sepa. Lo alimenta cualquier llamada firmada, no solo la comprobacion
+   * inicial: asi una impresion rechazada actualiza el aviso de la caja.
+   */
+  readonly confianza$ = this.confianzaSubject.asObservable();
 
   constructor(private http: HttpClient) {
     // Configuración para asegurar que las conexiones sean seguras
@@ -164,6 +173,7 @@ export class QzTrayV224Service {
 
       try {
         await qz.print(qz.configs.create(impresora), data);
+        this.registrarConfianza(true);
         console.log(`Imprimiendo en la impresora ${impresora}`);
         return true;
       } catch (error) {
@@ -180,6 +190,12 @@ export class QzTrayV224Service {
       }
     } catch (error) {
       console.error('Error al imprimir:', error);
+
+      // Que QZ Tray rechace la peticion no es un fallo de impresion: es que no
+      // confia en el sitio. Se publica para que la caja avise del certificado.
+      if (this.esPeticionBloqueada(error)) {
+        this.registrarConfianza(false);
+      }
 
       // Sin QZ Tray el ticket sale igual por el dialogo del navegador. Es peor
       // experiencia (hay que confirmar y no corta el papel) pero no depende de
@@ -245,6 +261,7 @@ export class QzTrayV224Service {
     }
 
     await qz.print(qz.configs.create(defaultPrinter), data);
+    this.registrarConfianza(true);
     console.log(`Imprimiendo en la impresora predeterminada ${defaultPrinter}`);
   }
 
@@ -267,6 +284,22 @@ export class QzTrayV224Service {
       'impresora no existe',
       'nombre de impresora no valido',
     ].some(fragment => normalized.includes(fragment));
+  }
+
+  private registrarConfianza(confia: boolean): void {
+    if (this.confianzaSubject.value !== confia) {
+      this.confianzaSubject.next(confia);
+    }
+  }
+
+  /**
+   * QZ Tray responde "Request blocked" cuando el sitio no esta autorizado: o
+   * falta importar el certificado en el Site Manager, o esta en su lista de
+   * bloqueados. En ambos casos ninguna peticion firmada va a funcionar.
+   */
+  private esPeticionBloqueada(error: any): boolean {
+    const mensaje = String(error?.message ?? error ?? '').toLowerCase();
+    return mensaje.includes('blocked') || mensaje.includes('bloquead');
   }
 
   private isBase64(str: string): boolean {
@@ -295,8 +328,19 @@ export class QzTrayV224Service {
         setTimeout(() => resolve(false), esperaMs);
       });
 
-      return await Promise.race([llamadaFirmada, espera]);
+      const confia = await Promise.race([llamadaFirmada, espera]);
+      // Agotar la espera no prueba nada: solo dice que hay un dialogo abierto
+      // en el escritorio, asi que no se publica como respuesta firme.
+      if (confia) {
+        this.registrarConfianza(true);
+      }
+      return confia;
     } catch (error) {
+      if (this.esPeticionBloqueada(error)) {
+        console.warn('QZ Tray rechaza este sitio: falta autorizar el certificado.');
+        this.registrarConfianza(false);
+        return false;
+      }
       console.error('No se pudo comprobar la confianza de QZ Tray:', error);
       return false;
     }
