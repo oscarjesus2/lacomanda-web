@@ -1,0 +1,32 @@
+<div class="mant-panel dialog-panel--workspace">
+  <button mat-icon-button class="close-button" type="button" aria-label="Cerrar" (click)="cerrar()"><mat-icon>close</mat-icon></button>
+  <h2>RENTABILIDAD POR PRODUCTO Y CANAL</h2>
+  <div class="dialog-notice"><mat-icon>info</mat-icon><span>El margen se calcula únicamente con ventas que tienen su detalle histórico de costo. La venta pendiente de costo se muestra aparte y nunca se considera costo cero.</span></div>
+  <div class="dialog-toolbar">
+    <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+      <mat-form-field appearance="fill"><mat-label>Canal de venta</mat-label><mat-select [(ngModel)]="idCanalVenta"><mat-option [value]="null">Todos los canales</mat-option><mat-option *ngFor="let canal of canales" [value]="canal.IdCanalVenta">{{ canal.Descripcion }}</mat-option></mat-select></mat-form-field>
+      <mat-form-field appearance="fill"><mat-label>Desde</mat-label><input matInput type="date" [(ngModel)]="fechaDesde"></mat-form-field>
+      <mat-form-field appearance="fill"><mat-label>Hasta</mat-label><input matInput type="date" [(ngModel)]="fechaHasta"></mat-form-field>
+      <mat-form-field appearance="fill"><mat-label>Buscar producto</mat-label><mat-icon matPrefix>search</mat-icon><input matInput [(ngModel)]="filtro" (ngModelChange)="aplicarFiltro()" placeholder="Producto, código o canal"></mat-form-field>
+    </div>
+    <div class="dialog-toolbar__actions"><button mat-stroked-button type="button" (click)="consultar()" [disabled]="cargando"><mat-icon>search</mat-icon> Consultar</button><button mat-raised-button color="primary" type="button" (click)="exportarExcel()" [disabled]="cargando"><mat-icon>download</mat-icon> Exportar a Excel</button></div>
+  </div>
+  <div class="dialog-summary-grid">
+    <div class="dialog-summary-card"><span class="dialog-summary-card__label">Venta total</span><strong>{{ monedaSimbolo }} {{ (resultado?.VentaTotal || 0) | number:'1.2-2' }}</strong><span class="table-cell-subtext">{{ resultado?.CantidadProductos || 0 }} productos</span></div>
+    <div class="dialog-summary-card dialog-summary-card--total"><span class="dialog-summary-card__label">Venta analizada</span><strong>{{ monedaSimbolo }} {{ (resultado?.VentaAnalizada || 0) | number:'1.2-2' }}</strong></div>
+    <div class="dialog-summary-card dialog-summary-card--danger"><span class="dialog-summary-card__label">Costo histórico</span><strong>{{ monedaSimbolo }} {{ (resultado?.TotalCosto || 0) | number:'1.2-2' }}</strong><span class="table-cell-subtext">{{ monedaSimbolo }} {{ (resultado?.VentaSinCosto || 0) | number:'1.2-2' }} sin costo</span></div>
+    <div class="dialog-summary-card dialog-summary-card--success"><span class="dialog-summary-card__label">Margen</span><strong>{{ monedaSimbolo }} {{ (resultado?.Margen || 0) | number:'1.2-2' }}</strong><span class="table-cell-subtext">{{ (resultado?.MargenPorcentaje || 0) | number:'1.2-2' }} %</span></div>
+  </div>
+  <div class="dialog-workspace-content"><div class="dialog-table-card"><div class="dialog-table-wrapper--fill">
+    <mat-table [dataSource]="dataSource" class="dialog-table--xwide">
+      <ng-container matColumnDef="producto"><mat-header-cell *matHeaderCellDef>Producto</mat-header-cell><mat-cell *matCellDef="let row"><div class="table-cell-stack"><strong>{{ row.Producto }}</strong><span class="table-cell-subtext">Código {{ row.IdProducto }}</span></div></mat-cell></ng-container>
+      <ng-container matColumnDef="canal"><mat-header-cell *matHeaderCellDef>Canal</mat-header-cell><mat-cell *matCellDef="let row">{{ row.CanalVenta }}</mat-cell></ng-container>
+      <ng-container matColumnDef="cantidad"><mat-header-cell *matHeaderCellDef>Cantidad</mat-header-cell><mat-cell *matCellDef="let row"><div class="table-cell-stack"><strong>{{ row.CantidadVendida }}</strong><span class="table-cell-subtext">{{ row.CantidadAnalizada }} con costo</span></div></mat-cell></ng-container>
+      <ng-container matColumnDef="venta"><mat-header-cell *matHeaderCellDef>Venta</mat-header-cell><mat-cell *matCellDef="let row"><div class="table-cell-stack"><strong>{{ monedaSimbolo }} {{ row.VentaTotal | number:'1.2-2' }}</strong><span class="table-cell-subtext">{{ monedaSimbolo }} {{ row.VentaAnalizada | number:'1.2-2' }} analizada</span></div></mat-cell></ng-container>
+      <ng-container matColumnDef="costo"><mat-header-cell *matHeaderCellDef>Costo histórico</mat-header-cell><mat-cell *matCellDef="let row"><div class="table-cell-stack"><strong class="is-negative">{{ monedaSimbolo }} {{ row.TotalCosto | number:'1.2-2' }}</strong><span class="status-badge status-badge--warning" *ngIf="row.VentasSinCosto">{{ row.VentasSinCosto }} sin costo</span></div></mat-cell></ng-container>
+      <ng-container matColumnDef="margen"><mat-header-cell *matHeaderCellDef>Margen</mat-header-cell><mat-cell *matCellDef="let row"><div class="table-cell-stack"><strong [class.is-negative]="row.Margen < 0">{{ monedaSimbolo }} {{ row.Margen | number:'1.2-2' }}</strong><span class="table-cell-subtext">{{ row.MargenPorcentaje | number:'1.2-2' }} %</span></div></mat-cell></ng-container>
+      <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row><mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    </mat-table>
+    <div class="dialog-table-state" *ngIf="cargando"><mat-spinner diameter="38"></mat-spinner><span>Calculando rentabilidad…</span></div><div class="dialog-table-state" *ngIf="!cargando && !dataSource.filteredData.length"><mat-icon>analytics</mat-icon><span>No hay ventas en el período seleccionado.</span></div>
+  </div><mat-paginator [pageSize]="25" [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons></mat-paginator></div></div>
+</div>

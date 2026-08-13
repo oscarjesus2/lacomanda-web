@@ -53,3 +53,96 @@ export interface VentaCostoReporte {
   MargenPorcentaje: number;
   Items: VentaCostoReporteItem[];
 }
+
+export interface ConsumoTeoricoRealReporteItem {
+  IdInventario: number;
+  FechaInventario: string;
+  IdSubAreaAlmacen: number;
+  SubAreaAlmacen: string;
+  IdArticulo: number;
+  Articulo: string;
+  IdUnidadMedida: number;
+  UnidadMedida: string;
+  StockInicio: number;
+  Ingresos: number;
+  ConsumoTeorico: number;
+  StockSistema: number;
+  StockContado: number;
+  ConsumoReal: number;
+  Diferencia: number;
+  DiferenciaPorcentaje: number | null;
+}
+
+export interface ConsumoTeoricoRealReporte {
+  FechaDesde: string;
+  FechaHasta: string;
+  CantidadInventarios: number;
+  CantidadArticulos: number;
+  CantidadLineas: number;
+  CantidadLineasConDiferencia: number;
+  Items: ConsumoTeoricoRealReporteItem[];
+}
+
+export interface RentabilidadProductoCanalReporteItem {
+  IdProducto: number;
+  Producto: string;
+  IdCanalVenta: number;
+  CanalVenta: string;
+  IdMoneda: string;
+  CantidadVendida: number;
+  CantidadAnalizada: number;
+  VentaTotal: number;
+  VentaAnalizada: number;
+  VentaSinCosto: number;
+  TotalCosto: number;
+  VentasSinCosto: number;
+  Margen: number;
+  MargenPorcentaje: number;
+}
+
+export interface RentabilidadProductoCanalReporte {
+  FechaDesde: string;
+  FechaHasta: string;
+  CantidadProductos: number;
+  VentaTotal: number;
+  VentaAnalizada: number;
+  VentaSinCosto: number;
+  TotalCosto: number;
+  Margen: number;
+  MargenPorcentaje: number;
+  Items: RentabilidadProductoCanalReporteItem[];
+}
+
+export type CoberturaStockEstado =
+  | 'SIN_STOCK'
+  | 'BAJO_MINIMO'
+  | 'SOBRE_MAXIMO'
+  | 'SIN_CONSUMO'
+  | 'DISPONIBLE';
+
+export interface CoberturaStockReporteItem {
+  IdArticulo: number;
+  Articulo: string;
+  IdUnidadMedida: number;
+  UnidadMedida: string;
+  StockActual: number;
+  StockMinimo: number;
+  StockMaximo: number;
+  CantidadUbicaciones: number;
+  ConsumoPeriodo: number;
+  ConsumoPromedioDiario: number;
+  DiasCobertura: number | null;
+  FechaAgotamientoEstimada: string | null;
+  Estado: CoberturaStockEstado;
+}
+
+export interface CoberturaStockReporte {
+  FechaDesde: string;
+  FechaHasta: string;
+  DiasPeriodo: number;
+  CantidadArticulos: number;
+  ArticulosSinStock: number;
+  ArticulosBajoMinimo: number;
+  ArticulosSinConsumo: number;
+  Items: CoberturaStockReporteItem[];
+}

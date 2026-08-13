@@ -61,6 +61,7 @@
   <main class="dashboard__grid">
     <article
       class="dashboard-card"
+      [class.dashboard-card--wide]="rep.wide"
       *ngFor="let rep of visibleReportes"
     >
       <div class="dashboard-card__chart">
@@ -95,6 +96,24 @@
             [fechaInicial]="fechaInicial"
             [fechaFinal]="fechaFinal">
           </app-anulaciones>
+
+          <app-comparativo-ventas
+            *ngSwitchCase="'comparativo-ventas'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-comparativo-ventas>
+
+          <app-evolucion-margen
+            *ngSwitchCase="'evolucion-margen'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-evolucion-margen>
+
+          <app-metodos-pago-dashboard
+            *ngSwitchCase="'metodos-pago-dashboard'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-metodos-pago-dashboard>
 
         </ng-container>
       </div>

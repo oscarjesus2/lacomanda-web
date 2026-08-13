@@ -95,6 +95,9 @@ import { StockAlmacenConsultaComponent } from './components/mantenimiento/stock-
 import { KardexAlmacenConsultaComponent } from './components/mantenimiento/kardex-almacen-consulta/kardex-almacen-consulta.component';
 import { ConsumoAreaReporteComponent } from './components/mantenimiento/consumo-area-reporte/consumo-area-reporte.component';
 import { VentaCostoReporteComponent } from './components/mantenimiento/venta-costo-reporte/venta-costo-reporte.component';
+import { ConsumoTeoricoRealReporteComponent } from './components/mantenimiento/consumo-teorico-real-reporte/consumo-teorico-real-reporte.component';
+import { RentabilidadProductoCanalReporteComponent } from './components/mantenimiento/rentabilidad-producto-canal-reporte/rentabilidad-producto-canal-reporte.component';
+import { CoberturaStockReporteComponent } from './components/mantenimiento/cobertura-stock-reporte/cobertura-stock-reporte.component';
 import { AreaAlmacenMantenimientoComponent } from './components/mantenimiento/area-almacen-mantenimiento/area-almacen-mantenimiento.component';
 import { SubAreaAlmacenMantenimientoComponent } from './components/mantenimiento/subarea-almacen-mantenimiento/subarea-almacen-mantenimiento.component';
 import { EntradaCompraMantenimientoComponent } from './components/mantenimiento/entrada-compra-mantenimiento/entrada-compra-mantenimiento.component';
@@ -126,6 +129,9 @@ import { ProduccionMantenimientoComponent } from './components/mantenimiento/pro
 import { PromocionMantenimientoComponent } from './components/mantenimiento/promocion-mantenimiento/promocion-mantenimiento.component';
 import { MotivoSalidaMantenimientoComponent } from './components/mantenimiento/motivo-salida-mantenimiento/motivo-salida-mantenimiento.component';
 import { AsistenteEstacionComponent } from './components/asistente-estacion/asistente-estacion.component';
+import { ComparativoVentasComponent } from './pages/dashboard/comparativo-ventas/comparativo-ventas.component';
+import { EvolucionMargenComponent } from './pages/dashboard/evolucion-margen/evolucion-margen.component';
+import { MetodosPagoDashboardComponent } from './pages/dashboard/metodos-pago-dashboard/metodos-pago-dashboard.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -194,6 +200,9 @@ export const MY_DATE_FORMATS = {
     KardexAlmacenConsultaComponent,
     ConsumoAreaReporteComponent,
     VentaCostoReporteComponent,
+    ConsumoTeoricoRealReporteComponent,
+    RentabilidadProductoCanalReporteComponent,
+    CoberturaStockReporteComponent,
     AreaAlmacenMantenimientoComponent,
     SubAreaAlmacenMantenimientoComponent,
     EntradaCompraMantenimientoComponent,
@@ -225,6 +234,9 @@ export const MY_DATE_FORMATS = {
     PromocionMantenimientoComponent,
     MotivoSalidaMantenimientoComponent,
     AsistenteEstacionComponent,
+    ComparativoVentasComponent,
+    EvolucionMargenComponent,
+    MetodosPagoDashboardComponent,
   ],
   imports: [
     CommonModule,

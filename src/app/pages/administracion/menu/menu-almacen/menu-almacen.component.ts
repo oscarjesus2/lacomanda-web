@@ -17,6 +17,9 @@ import { StockAlmacenConsultaComponent } from 'src/app/components/mantenimiento/
 import { KardexAlmacenConsultaComponent } from 'src/app/components/mantenimiento/kardex-almacen-consulta/kardex-almacen-consulta.component';
 import { ConsumoAreaReporteComponent } from 'src/app/components/mantenimiento/consumo-area-reporte/consumo-area-reporte.component';
 import { VentaCostoReporteComponent } from 'src/app/components/mantenimiento/venta-costo-reporte/venta-costo-reporte.component';
+import { ConsumoTeoricoRealReporteComponent } from 'src/app/components/mantenimiento/consumo-teorico-real-reporte/consumo-teorico-real-reporte.component';
+import { RentabilidadProductoCanalReporteComponent } from 'src/app/components/mantenimiento/rentabilidad-producto-canal-reporte/rentabilidad-producto-canal-reporte.component';
+import { CoberturaStockReporteComponent } from 'src/app/components/mantenimiento/cobertura-stock-reporte/cobertura-stock-reporte.component';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 
 @Component({
@@ -201,6 +204,33 @@ export class MenuAlmacenComponent implements OnInit {
           titleKey: 'salesVersusCost',
           labelKey: 'salesVersusCost',
           disabled: false
+        },
+        {
+          title: 'Consumo teórico versus real',
+          action: 'consumoTeoricoReal',
+          icon: 'compare_arrows',
+          label: 'Teórico vs. real',
+          titleKey: 'theoreticalVsActualConsumption',
+          labelKey: 'theoreticalVsActualConsumption',
+          disabled: false
+        },
+        {
+          title: 'Rentabilidad por producto y canal',
+          action: 'rentabilidadProductoCanal',
+          icon: 'trending_up',
+          label: 'Rentabilidad',
+          titleKey: 'profitabilityByProductChannel',
+          labelKey: 'profitabilityByProductChannel',
+          disabled: false
+        },
+        {
+          title: 'Cobertura de stock',
+          action: 'coberturaStock',
+          icon: 'hourglass_bottom',
+          label: 'Cobertura de stock',
+          titleKey: 'stockCoverage',
+          labelKey: 'stockCoverage',
+          disabled: false
         }
       ]
     }
@@ -226,6 +256,9 @@ export class MenuAlmacenComponent implements OnInit {
       kardexAlmacen: KardexAlmacenConsultaComponent,
       consumoArea: ConsumoAreaReporteComponent,
       ventaCosto: VentaCostoReporteComponent,
+      consumoTeoricoReal: ConsumoTeoricoRealReporteComponent,
+      rentabilidadProductoCanal: RentabilidadProductoCanalReporteComponent,
+      coberturaStock: CoberturaStockReporteComponent,
       areasAlmacen: AreaAlmacenMantenimientoComponent,
       subareasAlmacen: SubAreaAlmacenMantenimientoComponent,
       proveedores: ProveedorMantenimientoComponent,

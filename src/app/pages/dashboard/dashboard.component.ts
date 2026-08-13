@@ -21,6 +21,9 @@ export class DashboardComponent implements OnInit {
   userData?: Usuario;
 
   reportes = [
+    { tituloKey: 'comparisonSales', componente: 'comparativo-ventas', visible: true, wide: true },
+    { tituloKey: 'marginEvolution', componente: 'evolucion-margen', visible: true, wide: false },
+    { tituloKey: 'paymentDistribution', componente: 'metodos-pago-dashboard', visible: true, wide: false },
     { tituloKey: 'dailySales', componente: 'ventas-diarias', visible: false },
     { tituloKey: 'dishPopularity', componente: 'popularidad-platos', visible: false },
     { tituloKey: 'peakHours', componente: 'horas-pico', visible: false },
