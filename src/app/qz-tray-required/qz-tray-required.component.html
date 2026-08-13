@@ -1,9 +1,104 @@
-<div class="qz-tray-required">
-    <h1>QZ Tray es necesario para utilizar esta funcionalidad</h1>
-    <p>1. Debes descargar e instalar QZ Tray. Una vez instalado y ejecutado, vuelve a esta página.</p>
-    <a href="https://qz.io/download/" target="_blank" class="btn btn-primary">Descargar QZ Tray</a>
+<main class="setup-guide" aria-labelledby="qz-tray-title">
+  <section class="setup-guide__panel">
+    <header class="setup-guide__hero">
+      <div class="setup-guide__hero-icon" aria-hidden="true">
+        <mat-icon>print</mat-icon>
+      </div>
 
-    <p>2. Debes decargar el certificado para configurarlo en QZ Tray </p>
-    <a href="assets/signing/certificate.pem" target="_blank" class="btn btn-primary">Descargar Certificado</a>
-  </div>
-  
+      <div>
+        <p class="setup-guide__eyebrow">Configuración de impresión</p>
+        <h1 id="qz-tray-title">Prepara QZ Tray para imprimir desde LaComanda</h1>
+        <p class="setup-guide__lead">
+          Esta configuración se realiza una sola vez en cada ordenador que vaya a imprimir.
+          Descarga los tres recursos y sigue el orden indicado.
+        </p>
+      </div>
+    </header>
+
+    <div class="setup-guide__notice" role="note">
+      <mat-icon aria-hidden="true">info</mat-icon>
+      <p>
+        QZ Tray debe permanecer abierto durante la jornada. No es compatible con móviles ni tabletas.
+      </p>
+    </div>
+
+    <ol class="setup-guide__steps" aria-label="Recursos para configurar QZ Tray">
+      <li class="setup-guide__step">
+        <div class="setup-guide__step-number" aria-hidden="true">1</div>
+        <div class="setup-guide__step-icon" aria-hidden="true">
+          <mat-icon>download</mat-icon>
+        </div>
+        <div class="setup-guide__step-content">
+          <h2>Descarga e instala QZ Tray</h2>
+          <p>
+            Abre la página oficial, elige el instalador para Windows o Linux y conserva las opciones recomendadas.
+          </p>
+          <a
+            mat-flat-button
+            color="primary"
+            [href]="qzTrayDownloadUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <mat-icon>open_in_new</mat-icon>
+            Descargar QZ Tray
+          </a>
+        </div>
+      </li>
+
+      <li class="setup-guide__step">
+        <div class="setup-guide__step-number" aria-hidden="true">2</div>
+        <div class="setup-guide__step-icon" aria-hidden="true">
+          <mat-icon>verified_user</mat-icon>
+        </div>
+        <div class="setup-guide__step-content">
+          <h2>Descarga el certificado de LaComanda</h2>
+          <p>
+            Después de instalar QZ Tray, agrega <strong>certificate.pem</strong> desde
+            <strong>Advanced &gt; Site Manager</strong>.
+          </p>
+          <a
+            mat-stroked-button
+            color="primary"
+            [href]="certificateUrl"
+            download="certificate.pem"
+          >
+            <mat-icon>workspace_premium</mat-icon>
+            Descargar certificado
+          </a>
+        </div>
+      </li>
+
+      <li class="setup-guide__step setup-guide__step--manual">
+        <div class="setup-guide__step-number" aria-hidden="true">3</div>
+        <div class="setup-guide__step-icon" aria-hidden="true">
+          <mat-icon>picture_as_pdf</mat-icon>
+        </div>
+        <div class="setup-guide__step-content">
+          <h2>Consulta el manual ilustrado</h2>
+          <p>
+            Incluye el recorrido completo para Windows y Linux, la importación del certificado,
+            la prueba final y soluciones rápidas.
+          </p>
+          <a
+            mat-flat-button
+            color="primary"
+            [href]="manualUrl"
+            download="Manual-QZ-Tray-LaComanda.pdf"
+          >
+            <mat-icon>download</mat-icon>
+            Descargar manual PDF
+          </a>
+        </div>
+      </li>
+    </ol>
+
+    <footer class="setup-guide__footer">
+      <mat-icon aria-hidden="true">check_circle</mat-icon>
+      <div>
+        <strong>Cuando termines</strong>
+        <p>Deja QZ Tray abierto, vuelve a LaComanda y actualiza la página para comprobar la conexión.</p>
+      </div>
+    </footer>
+  </section>
+</main>
