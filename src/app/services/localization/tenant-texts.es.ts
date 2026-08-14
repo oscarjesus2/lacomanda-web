@@ -151,6 +151,8 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   viewComplement: 'Ver complemento',
   express: 'Express',
   sendOrder: 'Enviar pedido',
+  noNewProductsToSend:
+    'Este pedido ya está enviado. Añade productos nuevos antes de volver a enviarlo.',
   lock: 'Bloquear',
   reset: 'Rehacer',
   prioritizeDispatch: 'Priorizar despacho',

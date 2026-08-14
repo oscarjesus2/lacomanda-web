@@ -2108,6 +2108,18 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // Reenviar un pedido sin productos nuevos no aporta nada y ademas el
+    // backend lo interpretaba como pedido vacio, dandolo por cobrado.
+    if (this.listProductGrid.length > 0
+        && !this.listProductGrid.some(item => !item.Item)) {
+      Swal.fire(
+        this.textCatalog.get('sendOrder'),
+        this.textCatalog.get('noNewProductsToSend'),
+        'info'
+      );
+      return;
+    }
+
     this.spinnerService.show();
     this.procesarPedido = true;
     if (this.listProductGrid.length > 0) {
