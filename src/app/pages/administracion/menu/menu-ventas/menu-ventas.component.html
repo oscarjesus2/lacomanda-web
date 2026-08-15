@@ -12,10 +12,10 @@
           class="tile"
           *ngFor="let item of itemsVisibles(section)"
           (click)="openDialog(item)"
-          [title]="item.titleKey | tenantText"
+          [title]="item.titleKey ? (item.titleKey | tenantText) : item.title"
         >
           <mat-icon class="tile__icon">{{ item.icon }}</mat-icon>
-          <span class="tile__label">{{ item.labelKey | tenantText }}</span>
+          <span class="tile__label">{{ item.labelKey ? (item.labelKey | tenantText) : item.label }}</span>
         </button>
       </div>
     </div>

@@ -136,6 +136,9 @@ import { MetodosPagoDashboardComponent } from './pages/dashboard/metodos-pago-da
 import { ControlHorarioComponent } from './components/control-horario/control-horario.component';
 import { ControlHorarioMantenimientoComponent } from './components/mantenimiento/control-horario-mantenimiento/control-horario-mantenimiento.component';
 import { ControlHorarioCorreccionComponent } from './components/mantenimiento/control-horario-correccion/control-horario-correccion.component';
+import { ReporteVentasAnaliticoComponent } from './components/mantenimiento/reporte-ventas-analitico/reporte-ventas-analitico.component';
+import { ReservasMantenimientoComponent } from './components/mantenimiento/reservas-mantenimiento/reservas-mantenimiento.component';
+import { ReservasOnlineComponent } from './pages/reservas-online/reservas-online.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -245,6 +248,9 @@ export const MY_DATE_FORMATS = {
     ControlHorarioComponent,
     ControlHorarioMantenimientoComponent,
     ControlHorarioCorreccionComponent,
+    ReporteVentasAnaliticoComponent,
+    ReservasMantenimientoComponent,
+    ReservasOnlineComponent,
   ],
   imports: [
     CommonModule,

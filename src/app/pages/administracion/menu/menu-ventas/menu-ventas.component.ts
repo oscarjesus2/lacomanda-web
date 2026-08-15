@@ -33,6 +33,9 @@ import { SocioNegocioMantenimientoComponent } from 'src/app/components/mantenimi
 import { PromocionMantenimientoComponent } from 'src/app/components/mantenimiento/promocion-mantenimiento/promocion-mantenimiento.component';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 import { ControlHorarioMantenimientoComponent } from 'src/app/components/mantenimiento/control-horario-mantenimiento/control-horario-mantenimiento.component';
+import { ReporteVentasAnaliticoComponent } from 'src/app/components/mantenimiento/reporte-ventas-analitico/reporte-ventas-analitico.component';
+import { TipoReporteVentas } from 'src/app/models/reportes-ventas.models';
+import { ReservasMantenimientoComponent } from 'src/app/components/mantenimiento/reservas-mantenimiento/reservas-mantenimiento.component';
 
 @Component({
   selector: 'app-menu-ventas',
@@ -73,7 +76,8 @@ export class MenuVentasComponent implements OnInit {
       children: [
         { title: 'Abrir Turno',      route: '/ventas/abrir-turno',        icon: 'lock_open',    label: 'Abrir turno',  titleKey: 'openShift',  labelKey: 'openShift'  },
         { title: 'Cerrar Turno',     route: '/ventas/cerrar-turno',       icon: 'lock',         label: 'Cerrar turno', titleKey: 'closeShift', labelKey: 'closeShift' },
-        { title: 'Listado de Ventas',route: '/ventas/cerrar-turno',       icon: 'receipt_long', label: 'Ventas',       titleKey: 'salesList',  labelKey: 'sales'      }
+        { title: 'Listado de Ventas',route: '/ventas/cerrar-turno',       icon: 'receipt_long', label: 'Ventas',       titleKey: 'salesList',  labelKey: 'sales'      },
+        { title: 'Reservas online', route: '/ventas/reservas', icon: 'event_available', label: 'Reservas', feature: 'ventas.reservas_online' }
       ]
     },
     {
@@ -83,7 +87,15 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Ventas por Producto',route: '/ventas/ventas-por-producto',icon: 'bar_chart',  label: 'Por producto', titleKey: 'salesByProduct', labelKey: 'salesByProductShort' },
         { title: 'Resumen de Ventas',  route: '/ventas/resumen-ventas',     icon: 'summarize',  label: 'Resumen',      titleKey: 'salesSummary',   labelKey: 'summary'             },
         { title: 'Liquidación',        route: '/ventas/liquidacion',        icon: 'payments',   label: 'Liquidación',  titleKey: 'settlement',     labelKey: 'settlement'          },
-        { title: 'Control Horario',    route: '/ventas/control-horario',    icon: 'schedule',   label: 'Control horario', titleKey: 'timeTracking', labelKey: 'timeTracking', feature: 'personal.control_horario' }
+        { title: 'Productividad por empleado', route: '/ventas/reportes/productividad-empleados', icon: 'groups', label: 'Productividad', reporte: 'productividad-empleados', feature: 'operacion.reportes' },
+        { title: 'Mesas y servicio', route: '/ventas/reportes/mesas-servicio', icon: 'table_restaurant', label: 'Mesas y servicio', reporte: 'mesas-servicio', feature: 'operacion.reportes' },
+        { title: 'Productos sin rotación', route: '/ventas/reportes/productos-sin-rotacion', icon: 'inventory', label: 'Sin rotación', reporte: 'productos-sin-rotacion', feature: 'operacion.reportes' },
+        { title: 'Efectividad de descuentos', route: '/ventas/reportes/efectividad-descuentos', icon: 'percent', label: 'Descuentos', reporte: 'efectividad-descuentos', feature: 'operacion.reportes' },
+        { title: 'Clientes y recurrencia', route: '/ventas/reportes/clientes-recurrencia', icon: 'loyalty', label: 'Recurrencia', reporte: 'clientes-recurrencia', feature: 'operacion.reportes' },
+        { title: 'Incidencias operativas', route: '/ventas/reportes/incidencias-operativas', icon: 'report_problem', label: 'Incidencias', reporte: 'incidencias-operativas', feature: 'operacion.reportes' },
+        { title: 'Calidad documental', route: '/ventas/reportes/calidad-documental', icon: 'verified', label: 'Calidad docs.', reporte: 'calidad-documental', feature: 'operacion.reportes' },
+        { title: 'Control Horario',    route: '/ventas/control-horario',    icon: 'schedule',   label: 'Control horario', titleKey: 'timeTracking', labelKey: 'timeTracking', feature: 'personal.control_horario' },
+        { title: 'Incidencias de jornada', route: '/ventas/reportes/incidencias-jornada', icon: 'more_time', label: 'Incid. jornada', reporte: 'incidencias-jornada', feature: 'personal.control_horario' }
       ]
     },
     {
@@ -114,6 +126,10 @@ export class MenuVentasComponent implements OnInit {
   }
 
   openDialog(item: any): void {
+    if (item.reporte) {
+      this.OpenReporteVentasAnalitico(item.reporte as TipoReporteVentas);
+      return;
+    }
     if (item.title === 'Colores') 
       {
         this.OpenColorMantenimientoComponent();
@@ -190,6 +206,10 @@ export class MenuVentasComponent implements OnInit {
     {
       this.OpenDialogVentasGeneralesTurno();
     }
+    if (item.title === 'Reservas online')
+    {
+      this.OpenReservasMantenimientoComponent();
+    }
     if (item.title === 'Contable') 
     {
       this.OpenDialogReportecontableComponent();
@@ -220,6 +240,31 @@ export class MenuVentasComponent implements OnInit {
     {
       this.OpenControlHorarioMantenimientoComponent();
     }
+  }
+
+  OpenReporteVentasAnalitico(tipo: TipoReporteVentas): void {
+    this.dialog.open(ReporteVentasAnaliticoComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'calc(100vw - 32px)',
+      height: 'calc(100vh - 32px)',
+      maxWidth: '1480px',
+      maxHeight: '920px',
+      panelClass: 'dialog-window--workspace',
+      data: { tipo }
+    });
+  }
+
+  OpenReservasMantenimientoComponent(): void {
+    this.dialog.open(ReservasMantenimientoComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'calc(100vw - 32px)',
+      height: 'calc(100vh - 32px)',
+      maxWidth: '1380px',
+      maxHeight: '920px',
+      panelClass: 'dialog-window--workspace'
+    });
   }
 
   OpenControlHorarioMantenimientoComponent(): void {

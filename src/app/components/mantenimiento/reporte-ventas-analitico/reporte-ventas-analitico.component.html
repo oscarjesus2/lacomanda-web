@@ -1,0 +1,121 @@
+<div class="mant-panel dialog-panel--workspace sales-analytics">
+  <button class="close-button" type="button" (click)="cerrar()" aria-label="Cerrar">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <div class="mant-title sales-analytics__title">
+    <span class="sales-analytics__title-icon"><mat-icon>{{ configuracion.icono }}</mat-icon></span>
+    <span>
+      {{ configuracion.titulo }}
+      <small>{{ configuracion.descripcion }}</small>
+    </span>
+  </div>
+
+  <div class="dialog-toolbar sales-analytics__toolbar">
+    <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+      <mat-form-field appearance="fill">
+        <mat-label>Desde</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaDesde">
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Hasta</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaHasta">
+      </mat-form-field>
+      <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide">
+        <mat-label>Buscar en resultados</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [(ngModel)]="filtro" (ngModelChange)="aplicarFiltro()" placeholder="Nombre, referencia, estado…">
+      </mat-form-field>
+    </div>
+    <div class="dialog-toolbar__actions">
+      <button mat-stroked-button type="button" (click)="consultar()" [disabled]="cargando">
+        <mat-icon>search</mat-icon> Consultar
+      </button>
+      <button mat-raised-button color="primary" type="button" (click)="exportarExcel()" [disabled]="cargando || !dataSource.filteredData.length">
+        <mat-icon>download</mat-icon> Excel
+      </button>
+    </div>
+  </div>
+
+  <div class="sales-analytics__help">
+    <mat-icon>lightbulb</mat-icon>
+    <span>{{ configuracion.ayuda }}</span>
+  </div>
+
+  <div class="dialog-summary-grid sales-analytics__summary" *ngIf="resultado">
+    <article class="dialog-summary-card"
+             *ngFor="let indicador of configuracion.indicadores"
+             [class.dialog-summary-card--success]="indicador.tono === 'positivo'"
+             [class.dialog-summary-card--warning]="indicador.tono === 'advertencia'"
+             [class.dialog-summary-card--danger]="indicador.tono === 'critico'">
+      <span class="dialog-summary-card__icon"><mat-icon>{{ indicador.icono }}</mat-icon></span>
+      <span class="dialog-summary-card__label">{{ indicador.etiqueta }}</span>
+      <strong>{{ formatearValor(valorIndicador(indicador), indicador.formato) }}</strong>
+    </article>
+  </div>
+
+  <div class="sales-analytics__content" [class.sales-analytics__content--loading]="cargando">
+    <section class="sales-analytics__chart-card">
+      <div class="sales-analytics__section-heading">
+        <span><mat-icon>leaderboard</mat-icon> Lectura rápida</span>
+        <small>{{ configuracion.graficoValorEtiqueta || 'Top' }} · {{ puntosGrafico.length }} resultados</small>
+      </div>
+
+      <div class="sales-analytics__bars" *ngIf="puntosGrafico.length; else chartEmpty">
+        <div class="sales-analytics__bar-row" *ngFor="let punto of puntosGrafico; let posicion = index">
+          <span class="sales-analytics__rank">{{ posicion + 1 }}</span>
+          <span class="sales-analytics__bar-label" [title]="punto.etiqueta">{{ punto.etiqueta }}</span>
+          <span class="sales-analytics__bar-track">
+            <span class="sales-analytics__bar-fill" [style.width.%]="anchoBarra(punto)"></span>
+          </span>
+          <span class="sales-analytics__bar-values">
+            <strong>{{ textoGrafico(punto.valor, configuracion.graficoFormato) }}</strong>
+            <small *ngIf="punto.valorSecundario !== undefined">
+              {{ configuracion.graficoValorSecundarioEtiqueta }}: {{ textoGrafico(punto.valorSecundario, configuracion.graficoFormatoSecundario) }}
+            </small>
+          </span>
+        </div>
+      </div>
+      <ng-template #chartEmpty>
+        <div class="sales-analytics__empty sales-analytics__empty--compact">
+          <mat-icon>insights</mat-icon>
+          <span>Sin datos para construir el gráfico.</span>
+        </div>
+      </ng-template>
+    </section>
+
+    <section class="dialog-table-card sales-analytics__table-card">
+      <div class="sales-analytics__section-heading">
+        <span><mat-icon>table_view</mat-icon> Detalle</span>
+        <small>{{ dataSource.filteredData.length }} registros</small>
+      </div>
+      <div class="dialog-table-wrapper--fill" *ngIf="dataSource.data.length; else tableEmpty">
+        <table mat-table [dataSource]="dataSource">
+          <ng-container *ngFor="let columna of configuracion.columnas" [matColumnDef]="columna.campo">
+            <th mat-header-cell *matHeaderCellDef>{{ columna.etiqueta }}</th>
+            <td mat-cell *matCellDef="let item"
+                [class.sales-analytics__cell--money]="columna.formato === 'moneda'"
+                [class.sales-analytics__cell--status]="columna.formato === 'estado'">
+              {{ formatearValor(item[columna.campo], columna.formato) }}
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+      <mat-paginator [pageSize]="25" [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons></mat-paginator>
+      <ng-template #tableEmpty>
+        <div class="sales-analytics__empty">
+          <mat-icon>query_stats</mat-icon>
+          <strong>No hay resultados en el período</strong>
+          <span>Prueba con un rango de fechas más amplio.</span>
+        </div>
+      </ng-template>
+    </section>
+
+    <div class="sales-analytics__loading" *ngIf="cargando">
+      <span class="sales-analytics__spinner"></span>
+      <strong>Analizando información…</strong>
+    </div>
+  </div>
+</div>
