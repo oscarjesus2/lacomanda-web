@@ -1,19 +1,15 @@
 export interface PausaJornada {
   IdPausaJornada: number;
-  InicioUtc: string;
-  FinUtc?: string | null;
-  InicioLocal: string;
-  FinLocal?: string | null;
+  InicioUtc: Date;
+  FinUtc?: Date | null;
 }
 
 export interface RegistroJornada {
   IdRegistroJornada: number;
   IdEmpleado: number;
   Empleado: string;
-  InicioUtc: string;
-  FinUtc?: string | null;
-  InicioLocal: string;
-  FinLocal?: string | null;
+  InicioUtc: Date;
+  FinUtc?: Date | null;
   EstaAbierta: boolean;
   EstaEnPausa: boolean;
   MinutosPausa: number;
@@ -36,13 +32,13 @@ export interface ConsultaControlHorario {
 }
 
 export interface PausaJornadaCorreccion {
-  InicioLocal: string;
-  FinLocal: string;
+  InicioUtc: string;
+  FinUtc: string;
 }
 
 export interface CorregirRegistroJornadaRequest {
-  InicioLocal: string;
-  FinLocal: string;
+  InicioUtc: string;
+  FinUtc: string;
   Motivo: string;
   Pausas: PausaJornadaCorreccion[];
 }

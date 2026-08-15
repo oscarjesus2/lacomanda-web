@@ -40,8 +40,8 @@
       <tbody>
         <tr *ngFor="let jornada of resultado?.Registros">
           <td><strong>{{ jornada.Empleado }}</strong><small *ngIf="jornada.TieneCorrecciones"><mat-icon>history</mat-icon> Corregido</small></td>
-          <td>{{ jornada.InicioLocal | date:'dd/MM/yyyy HH:mm' }}</td>
-          <td>{{ jornada.FinLocal ? (jornada.FinLocal | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+          <td>{{ jornada.InicioUtc | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ jornada.FinUtc ? (jornada.FinUtc | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
           <td>{{ jornada.MinutosPausa }} min</td>
           <td><strong>{{ duracion(jornada.MinutosTrabajados) }}</strong></td>
           <td><span class="time-admin__status" [class.time-admin__status--open]="jornada.EstaAbierta">{{ jornada.EstaAbierta ? 'EN CURSO' : 'FINALIZADA' }}</span></td>

@@ -74,8 +74,8 @@ export class ControlHorarioMantenimientoComponent implements OnInit {
       ['Empleado', 'Entrada', 'Salida', 'Pausas (min)', 'Trabajo efectivo', 'Estado', 'Corregido'],
       ...registros.map(registro => [
         registro.Empleado,
-        this.formatearFecha(registro.InicioLocal),
-        registro.FinLocal ? this.formatearFecha(registro.FinLocal) : '',
+        this.formatearFecha(registro.InicioUtc),
+        registro.FinUtc ? this.formatearFecha(registro.FinUtc) : '',
         registro.MinutosPausa.toString(),
         this.duracion(registro.MinutosTrabajados),
         registro.EstaAbierta ? 'EN CURSO' : 'FINALIZADA',
@@ -103,13 +103,14 @@ export class ControlHorarioMantenimientoComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  private formatearFecha(value: string): string {
-    if (!value) {
-      return '';
-    }
-    const [fecha, hora = ''] = value.split('T');
-    const [year, month, day] = fecha.split('-');
-    return `${day}/${month}/${year} ${hora.substring(0, 5)}`;
+  private formatearFecha(value: Date): string {
+    return new Intl.DateTimeFormat('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(value);
   }
 
   private fechaInput(value: Date): string {

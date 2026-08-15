@@ -1,8 +1,13 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { finalize } from 'rxjs';
-import { PausaJornadaCorreccion, RegistroJornada } from 'src/app/models/control-horario.models';
+import { RegistroJornada } from 'src/app/models/control-horario.models';
 import { ControlHorarioService } from 'src/app/services/control-horario.service';
+
+interface PausaJornadaFormulario {
+  InicioLocal: string;
+  FinLocal: string;
+}
 
 @Component({
   selector: 'app-control-horario-correccion',
@@ -13,7 +18,7 @@ export class ControlHorarioCorreccionComponent {
   inicioLocal: string;
   finLocal: string;
   motivo = '';
-  pausas: PausaJornadaCorreccion[];
+  pausas: PausaJornadaFormulario[];
   guardando = false;
   error = '';
 
@@ -22,11 +27,11 @@ export class ControlHorarioCorreccionComponent {
     private readonly service: ControlHorarioService,
     private readonly dialogRef: MatDialogRef<ControlHorarioCorreccionComponent>,
   ) {
-    this.inicioLocal = this.aInput(jornada.InicioLocal);
-    this.finLocal = this.aInput(jornada.FinLocal ?? '');
+    this.inicioLocal = this.aInput(jornada.InicioUtc);
+    this.finLocal = this.aInput(jornada.FinUtc ?? null);
     this.pausas = (jornada.Pausas ?? []).map(pausa => ({
-      InicioLocal: this.aInput(pausa.InicioLocal),
-      FinLocal: this.aInput(pausa.FinLocal ?? ''),
+      InicioLocal: this.aInput(pausa.InicioUtc),
+      FinLocal: this.aInput(pausa.FinUtc ?? null),
     }));
   }
 
@@ -55,10 +60,13 @@ export class ControlHorarioCorreccionComponent {
 
     this.guardando = true;
     this.service.corregir(this.jornada.IdRegistroJornada, {
-      InicioLocal: this.inicioLocal,
-      FinLocal: this.finLocal,
+      InicioUtc: new Date(this.inicioLocal).toISOString(),
+      FinUtc: new Date(this.finLocal).toISOString(),
       Motivo: this.motivo.trim(),
-      Pausas: this.pausas,
+      Pausas: this.pausas.map(pausa => ({
+        InicioUtc: new Date(pausa.InicioLocal).toISOString(),
+        FinUtc: new Date(pausa.FinLocal).toISOString(),
+      })),
     }).pipe(finalize(() => this.guardando = false)).subscribe({
       next: response => this.dialogRef.close(response.Data),
     });
@@ -68,7 +76,15 @@ export class ControlHorarioCorreccionComponent {
     this.dialogRef.close();
   }
 
-  private aInput(value: string): string {
-    return value ? value.substring(0, 16) : '';
+  private aInput(value: Date | null): string {
+    if (!value) {
+      return '';
+    }
+
+    const fecha = new Date(value);
+    const desplazamientoLocal = fecha.getTimezoneOffset() * 60_000;
+    return new Date(fecha.getTime() - desplazamientoLocal)
+      .toISOString()
+      .substring(0, 16);
   }
 }

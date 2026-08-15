@@ -33,7 +33,7 @@
         </div>
         <div class="time-clock__timer">{{ duracion }}</div>
         <div class="time-clock__meta">
-          <span><mat-icon>login</mat-icon> Entrada {{ actual.InicioLocal | date:'HH:mm' }}</span>
+          <span><mat-icon>login</mat-icon> Entrada {{ actual.InicioUtc | date:'HH:mm' }}</span>
           <span><mat-icon>coffee</mat-icon> {{ actual.MinutosPausa }} min. de pausa</span>
         </div>
       </div>
