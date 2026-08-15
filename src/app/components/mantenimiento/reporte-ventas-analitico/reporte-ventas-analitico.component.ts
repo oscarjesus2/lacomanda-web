@@ -193,22 +193,24 @@ export class ReporteVentasAnaliticoComponent implements OnInit {
   private crearConfiguracion(tipo: TipoReporteVentas): ConfiguracionVisualReporte {
     const configs: Record<TipoReporteVentas, ConfiguracionVisualReporte> = {
       'productividad-empleados': {
-        tipo, titulo: 'Productividad por empleado', descripcion: 'Ventas, atención y rendimiento por hora trabajada.', icono: 'groups',
-        ayuda: 'La venta se atribuye al empleado que atendió el pedido. Las horas proceden del control horario y no se estiman.',
+        tipo, titulo: 'Productividad por empleado', descripcion: 'Distingue la venta digitada por el personal de los pedidos hechos por el cliente mediante QR.', icono: 'groups',
+        ayuda: 'Venta / hora solo utiliza lo que digitó el empleado. Los pedidos QR se muestran aparte bajo la responsabilidad de quien atendió la mesa. Los datos anteriores a esta medición aparecen como origen no identificado para no atribuirlos incorrectamente.',
         indicadores: [
-          { campo: 'VentaTotal', etiqueta: 'Venta neta', icono: 'payments', formato: 'moneda', tono: 'positivo' },
-          { campo: 'Empleados', etiqueta: 'Empleados', icono: 'badge', formato: 'numero' },
-          { campo: 'MinutosTrabajados', etiqueta: 'Tiempo registrado', icono: 'schedule', formato: 'duracion' },
-          { campo: 'DescuentosTotal', etiqueta: 'Descuentos', icono: 'sell', formato: 'moneda', tono: 'advertencia' }
+          { campo: 'VentaDigitadaTotal', etiqueta: 'Digitado por personal', icono: 'person', formato: 'moneda', tono: 'positivo' },
+          { campo: 'VentaQrTotal', etiqueta: 'Pedido por clientes QR', icono: 'qr_code_2', formato: 'moneda' },
+          { campo: 'VentaTotal', etiqueta: 'Venta total atendida', icono: 'payments', formato: 'moneda' },
+          { campo: 'VentaOrigenNoIdentificadoTotal', etiqueta: 'Histórico sin origen', icono: 'help_outline', formato: 'moneda', tono: 'advertencia' }
         ],
         columnas: [
-          { campo: 'Empleado', etiqueta: 'Empleado' }, { campo: 'VentaNeta', etiqueta: 'Venta neta', formato: 'moneda' },
-          { campo: 'Documentos', etiqueta: 'Documentos', formato: 'numero' }, { campo: 'Pedidos', etiqueta: 'Pedidos', formato: 'numero' },
-          { campo: 'Comensales', etiqueta: 'Comensales', formato: 'numero' }, { campo: 'TicketMedio', etiqueta: 'Ticket medio', formato: 'moneda' },
-          { campo: 'HorasTrabajadas', etiqueta: 'Horas', formato: 'decimal' }, { campo: 'VentaPorHora', etiqueta: 'Venta / hora', formato: 'moneda' },
+          { campo: 'Empleado', etiqueta: 'Empleado responsable' }, { campo: 'VentaDigitada', etiqueta: 'Digitado por empleado', formato: 'moneda' },
+          { campo: 'VentaQrAtendida', etiqueta: 'Pedido por QR', formato: 'moneda' }, { campo: 'VentaOrigenNoIdentificado', etiqueta: 'Origen no identificado', formato: 'moneda' },
+          { campo: 'VentaNeta', etiqueta: 'Total atendido', formato: 'moneda' }, { campo: 'ParticipacionQrPorcentaje', etiqueta: '% QR', formato: 'porcentaje' },
+          { campo: 'Documentos', etiqueta: 'Documentos atendidos', formato: 'numero' }, { campo: 'Pedidos', etiqueta: 'Pedidos atendidos', formato: 'numero' },
+          { campo: 'TicketMedio', etiqueta: 'Ticket medio atendido', formato: 'moneda' },
+          { campo: 'HorasTrabajadas', etiqueta: 'Horas', formato: 'decimal' }, { campo: 'VentaPorHora', etiqueta: 'Venta digitada / hora', formato: 'moneda' },
           { campo: 'Anulaciones', etiqueta: 'Anulaciones', formato: 'numero' }
-        ], graficoEtiqueta: 'Empleado', graficoValor: 'VentaPorHora', graficoValorEtiqueta: 'Venta / hora', graficoFormato: 'moneda',
-        graficoValorSecundario: 'VentaNeta', graficoValorSecundarioEtiqueta: 'Venta total', graficoFormatoSecundario: 'moneda'
+        ], graficoEtiqueta: 'Empleado', graficoValor: 'VentaPorHora', graficoValorEtiqueta: 'Venta digitada / hora', graficoFormato: 'moneda',
+        graficoValorSecundario: 'VentaQrAtendida', graficoValorSecundarioEtiqueta: 'Pedido por clientes QR', graficoFormatoSecundario: 'moneda'
       },
       'mesas-servicio': {
         tipo, titulo: 'Mesas y servicio', descripcion: 'Ocupación, rotación, comensales y rendimiento de cada mesa.', icono: 'table_restaurant',
