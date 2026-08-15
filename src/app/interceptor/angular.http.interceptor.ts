@@ -462,7 +462,8 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     return (
       request.url.includes('/protocol/openid-connect/token') ||
       request.url.includes('/api/Auth/login') ||
-      request.url.includes('/api/Tenant')
+      request.url.includes('/api/Tenant') ||
+      request.url.includes('/api/public/reservas')
     );
   }
 
