@@ -80,9 +80,9 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
 
-    const isAuthEndpoint = this.isAuthenticationEndpoint(request);
+    const isUnauthenticatedEndpoint = this.isUnauthenticatedEndpoint(request);
 
-    if (!isAuthEndpoint) {
+    if (!isUnauthenticatedEndpoint) {
       request = this.addAuthHeaders(request);
     }
 
@@ -92,7 +92,7 @@ export class ApiRequestInterceptor implements HttpInterceptor {
           error,
           request,
           next,
-          isAuthEndpoint,
+          isUnauthenticatedEndpoint,
           true
         )
       )
@@ -132,12 +132,12 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     error: HttpErrorResponse,
     request: HttpRequest<any>,
     next: HttpHandler,
-    isAuthEndpoint: boolean,
+    isUnauthenticatedEndpoint: boolean,
     allowTokenRefresh: boolean
   ): Observable<never | HttpEvent<any>> {
 
-    // Los errores propios del login/refresh los maneja su componente.
-    if (isAuthEndpoint) {
+    // Los errores de endpoints que no usan sesión los maneja su propio componente.
+    if (isUnauthenticatedEndpoint) {
       this.spinnerService.hide();
       return throwError(() => error);
     }
@@ -455,7 +455,7 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     );
   }
 
-  private isAuthenticationEndpoint(
+  private isUnauthenticatedEndpoint(
     request: HttpRequest<any>
   ): boolean {
 
