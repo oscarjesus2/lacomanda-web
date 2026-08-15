@@ -6,8 +6,10 @@ import {
   EntradaCompra,
   EntradaCompraCatalogos,
   EntradaCompraCanjearGuias,
+  ConfirmarFacturaCompraIa,
   EntradaCompraCrearNota,
   EntradaCompraGuardar,
+  FacturaCompraIaPrevisualizacion,
   EntradaCompraPagoGuardar,
   EntradaCompraResumen
 } from '../models/entrada-compra.models';
@@ -63,6 +65,26 @@ export class EntradaCompraService {
   catalogos(): Observable<ApiResponse<EntradaCompraCatalogos>> {
     return this.http.get<ApiResponse<EntradaCompraCatalogos>>(
       `${this.basePath}/catalogos`
+    );
+  }
+
+  previsualizarFactura(
+    archivo: File
+  ): Observable<ApiResponse<FacturaCompraIaPrevisualizacion>> {
+    const formulario = new FormData();
+    formulario.append('documento', archivo, archivo.name);
+    return this.http.post<ApiResponse<FacturaCompraIaPrevisualizacion>>(
+      `${this.basePath}/documentos-ia/previsualizar`,
+      formulario
+    );
+  }
+
+  confirmarFactura(
+    dto: ConfirmarFacturaCompraIa
+  ): Observable<ApiResponse<EntradaCompra>> {
+    return this.http.post<ApiResponse<EntradaCompra>>(
+      `${this.basePath}/documentos-ia/confirmar`,
+      dto
     );
   }
 

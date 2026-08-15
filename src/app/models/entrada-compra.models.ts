@@ -1,3 +1,5 @@
+import { ProveedorGuardar } from './proveedor.models';
+
 export interface EntradaCompraResumen {
   IdEntrada: number;
   IdTipoDocumento: string;
@@ -179,4 +181,50 @@ export interface EntradaCompraImpuesto {
   Descripcion: string;
   Tasa: number;
   FijoPorUnidad: number;
+}
+
+export interface FacturaCompraIaPrevisualizacion {
+  IdProveedor: number | null;
+  NumeroIdentificacionProveedor: string;
+  RazonSocialProveedor: string;
+  IdTipoIdentidadProveedor: string | null;
+  DireccionProveedor: string;
+  TelefonoProveedor: string;
+  ContactoProveedor: string;
+  EmailProveedor: string;
+  IdTipoDocumento: string | null;
+  TipoDocumentoDetectado: string;
+  NumeroDocumento: string;
+  FechaEmision: string | null;
+  IdMoneda: string | null;
+  TasaCambio: number | null;
+  PreciosIncluyenImpuestos: boolean;
+  SubtotalDetectado: number | null;
+  ImpuestosDetectados: number | null;
+  TotalDetectado: number | null;
+  Confianza: number;
+  RequiereRevision: boolean;
+  Advertencias: string[];
+  Lineas: FacturaCompraIaLinea[];
+}
+
+export interface ConfirmarFacturaCompraIa {
+  Entrada: EntradaCompraGuardar;
+  NuevoProveedor: ProveedorGuardar | null;
+}
+
+export interface FacturaCompraIaLinea {
+  CodigoOriginal: string;
+  DescripcionOriginal: string;
+  IdProducto: number | null;
+  Producto: string;
+  UnidadMedida: string;
+  Inventariable: boolean;
+  Cantidad: number;
+  Importe: number;
+  IdSubAreaAlmacen: number | null;
+  Impuestos: string[];
+  Confianza: number;
+  RequiereRevision: boolean;
+  MotivoRevision: string;
 }

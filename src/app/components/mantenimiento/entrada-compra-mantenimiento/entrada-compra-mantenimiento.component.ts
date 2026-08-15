@@ -14,14 +14,28 @@ import {
   EntradaCompraPago,
   EntradaCompraPagoGuardar,
   EntradaCompraResumen,
-  EntradaCompraSubMovimiento
+  EntradaCompraSubMovimiento,
+  FacturaCompraIaPrevisualizacion
 } from 'src/app/models/entrada-compra.models';
 import { EntradaCompraService } from 'src/app/services/entrada-compra.service';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import {
+  ProveedorCatalogo,
+  ProveedorGuardar
+} from 'src/app/models/proveedor.models';
+import { ProveedorService } from 'src/app/services/proveedor.service';
 
-interface LineaCompraEdicion extends EntradaCompraLineaGuardar {
+interface LineaCompraEdicion
+  extends Omit<EntradaCompraLineaGuardar, 'IdProducto'> {
+  IdProducto: number | null;
   Producto: string;
   UnidadMedida: string;
   Inventariable: boolean;
+  OrigenIa?: boolean;
+  DescripcionOriginal?: string;
+  ConfianzaIa?: number;
+  RequiereRevision?: boolean;
+  MotivoRevision?: string;
 }
 
 @Component({
@@ -87,30 +101,42 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   guardando = false;
   showForm = false;
   soloLectura = false;
+  facturaIaHabilitada = false;
+  procesandoFactura = false;
+  previsualizacionFactura: FacturaCompraIaPrevisualizacion | null = null;
+  catalogoProveedor: ProveedorCatalogo | null = null;
+  proveedorNuevo = new ProveedorGuardar();
 
   constructor(
     private readonly dialogRef:
       MatDialogRef<EntradaCompraMantenimientoComponent>,
-    private readonly entradaCompraService: EntradaCompraService
+    private readonly entradaCompraService: EntradaCompraService,
+    private readonly licenciaTenantService: LicenciaTenantService,
+    private readonly proveedorService: ProveedorService
   ) {}
 
   ngOnInit(): void {
     this.cargarInicial();
+    this.cargarLicenciaFacturaIa();
   }
 
   cargarInicial(): void {
     this.cargando = true;
     forkJoin({
       catalogos: this.entradaCompraService.catalogos(),
-      compras: this.entradaCompraService.listar(this.filtro)
+      compras: this.entradaCompraService.listar(this.filtro),
+      catalogoProveedor: this.proveedorService.catalogo()
     }).subscribe({
       next: response => {
         this.cargando = false;
-        if (!response.catalogos.Success || !response.compras.Success) {
+        if (!response.catalogos.Success ||
+            !response.compras.Success ||
+            !response.catalogoProveedor.Success) {
           Swal.fire(
             'No se pudo iniciar',
             response.catalogos.Message ||
               response.compras.Message ||
+              response.catalogoProveedor.Message ||
               'No se pudieron cargar los ingresos de compras.',
             'error'
           );
@@ -118,6 +144,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         }
 
         this.catalogos = response.catalogos.Data;
+        this.catalogoProveedor = response.catalogoProveedor.Data;
         this.dataSource.data = response.compras.Data || [];
       },
       error: error => {
@@ -173,9 +200,78 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     this.formulario.IdSubTipoMovimiento =
       movimiento?.SubTipos[0]?.IdSubTipoMovimiento ?? null;
     this.lineas = [];
+    this.previsualizacionFactura = null;
+    this.proveedorNuevo = new ProveedorGuardar();
     this.limpiarLinea();
     this.soloLectura = false;
     this.showForm = true;
+  }
+
+  seleccionarFactura(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.item(0);
+    input.value = '';
+    if (!archivo || !this.catalogos || this.procesandoFactura) {
+      return;
+    }
+
+    this.nuevo();
+    this.procesandoFactura = true;
+    this.entradaCompraService.previsualizarFactura(archivo).subscribe({
+      next: response => {
+        this.procesandoFactura = false;
+        if (!response.Success || !response.Data) {
+          Swal.fire(
+            'No pudimos leer el documento',
+            response.Message || 'Prueba con una fotografía más nítida.',
+            'info'
+          );
+          return;
+        }
+
+        this.aplicarPrevisualizacionFactura(response.Data);
+      },
+      error: error => {
+        this.procesandoFactura = false;
+        this.mostrarError(
+          error,
+          'No pudimos leer el documento. Prueba con una fotografía más nítida.'
+        );
+      }
+    });
+  }
+
+  actualizarArticuloLinea(linea: LineaCompraEdicion): void {
+    const articulo = this.catalogos?.Articulos.find(
+      item => item.IdProducto === linea.IdProducto
+    );
+    if (!articulo) {
+      linea.Producto = '';
+      linea.UnidadMedida = '';
+      linea.Inventariable = false;
+      linea.IdSubAreaAlmacen = null;
+      linea.Impuestos = [];
+      linea.RequiereRevision = true;
+      return;
+    }
+
+    linea.Producto = articulo.Descripcion;
+    linea.UnidadMedida = articulo.UnidadMedida;
+    linea.Inventariable = articulo.Inventariable;
+    linea.Impuestos = [...articulo.Impuestos];
+    linea.IdSubAreaAlmacen = articulo.Inventariable
+      ? (this.catalogos?.SubAreas.length === 1
+          ? this.catalogos.SubAreas[0].IdSubAreaAlmacen
+          : linea.IdSubAreaAlmacen)
+      : null;
+    this.actualizarRevisionLinea(linea);
+  }
+
+  actualizarRevisionLinea(linea: LineaCompraEdicion): void {
+    linea.RequiereRevision = !linea.IdProducto ||
+      linea.Cantidad <= 0 ||
+      linea.Importe < 0 ||
+      (linea.Inventariable && !linea.IdSubAreaAlmacen);
   }
 
   editar(row: EntradaCompraResumen): void {
@@ -321,7 +417,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         this.formulario.IdSubTipoMovimiento
       ),
       Detalles: this.lineas.map(linea => ({
-        IdProducto: linea.IdProducto,
+        IdProducto: Number(linea.IdProducto),
         Cantidad: Number(linea.Cantidad),
         Importe: Number(linea.Importe),
         IdSubAreaAlmacen: linea.IdSubAreaAlmacen,
@@ -330,7 +426,15 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     };
 
     this.guardando = true;
-    const request = this.notaOrigen
+    const request = this.previsualizacionFactura &&
+      !this.formulario.IdProveedor &&
+      !this.compra &&
+      !this.notaOrigen
+      ? this.entradaCompraService.confirmarFactura({
+          Entrada: dto,
+          NuevoProveedor: this.proveedorNuevo
+        })
+      : this.notaOrigen
       ? this.entradaCompraService.crearNota({
           IdEntradaOrigen: this.notaOrigen.IdEntrada,
           TipoNota: this.tipoNotaCreacion,
@@ -357,6 +461,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         }
 
         this.cargarFormulario(response.Data);
+        this.incluirProveedorCreado(response.Data);
         const eraNota = !!this.notaOrigen;
         this.notaOrigen = null;
         this.soloLectura = false;
@@ -572,6 +677,8 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     this.showForm = false;
     this.compra = null;
     this.notaOrigen = null;
+    this.previsualizacionFactura = null;
+    this.proveedorNuevo = new ProveedorGuardar();
     this.buscar();
   }
 
@@ -757,6 +864,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   }
 
   private cargarFormulario(compra: EntradaCompra): void {
+    this.previsualizacionFactura = null;
     this.compra = compra;
     this.fechaPagoProgramada = compra.FechaPagoProgramada
       ? new Date(compra.FechaPagoProgramada)
@@ -829,8 +937,8 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   async canjearGuias(): Promise<void> {
     if (!this.catalogos || this.idsGuiasSeleccionadas.size === 0) {
       Swal.fire(
-        'Seleccione las guías',
-        'Marque una o más guías revisadas del mismo proveedor.',
+        `Seleccione ${this.documentoLogisticoPlural}`,
+        `Marque uno o más ${this.documentoLogisticoPlural} revisados del mismo proveedor.`,
         'info'
       );
       return;
@@ -850,7 +958,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         }>${m.Descripcion}</option>`)
       .join('');
     const result = await Swal.fire({
-      title: 'Canjear guías por factura',
+      title: `Canjear ${this.documentoLogisticoPlural} por factura`,
       html: `
         <div class="swal-form-grid">
           <select id="canje-tipo" class="swal2-input">${tipos}</select>
@@ -899,7 +1007,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         if (!response.Success || !response.Data) {
           Swal.fire(
             'No se pudo realizar el canje',
-            response.Message || 'Revise las guías seleccionadas.',
+            response.Message || `Revise los ${this.documentoLogisticoPlural} seleccionados.`,
             'error'
           );
           return;
@@ -910,7 +1018,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         this.showForm = true;
         Swal.fire(
           'Canje realizado',
-          'La factura quedó vinculada y las guías fueron marcadas como canjeadas.',
+          `La factura quedó vinculada y los ${this.documentoLogisticoPlural} fueron marcados como canjeados.`,
           'success'
         );
       },
@@ -957,9 +1065,15 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   }
 
   private formularioValido(): boolean {
+    const proveedorValido = !!this.formulario.IdProveedor ||
+      (!!this.previsualizacionFactura &&
+       !!this.proveedorNuevo.IdTipoIdentidad &&
+       !!this.proveedorNuevo.NumeroIdentificacion.trim() &&
+       !!this.proveedorNuevo.RazonSocial.trim() &&
+       !!this.proveedorNuevo.Direccion.trim());
     if (!this.formulario.IdTipoDocumento ||
         !this.formulario.NumDocumento.trim() ||
-        !this.formulario.IdProveedor ||
+        !proveedorValido ||
         !this.formulario.IdTipoMovimiento ||
         !this.formulario.IdSubTipoMovimiento ||
         !this.formulario.IdMoneda) {
@@ -996,7 +1110,127 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       );
       return false;
     }
+    const lineaPendiente = this.lineas.find(linea =>
+      !linea.IdProducto ||
+      linea.Cantidad <= 0 ||
+      linea.Importe < 0 ||
+      (linea.Inventariable && !linea.IdSubAreaAlmacen)
+    );
+    if (lineaPendiente) {
+      Swal.fire(
+        'Revise los artículos leídos',
+        'Seleccione el artículo, la cantidad y la subárea de las líneas señaladas antes de guardar.',
+        'info'
+      );
+      return false;
+    }
+    const repetido = this.lineas.find((linea, index) =>
+      this.lineas.some((otra, otroIndex) =>
+        otroIndex !== index && otra.IdProducto === linea.IdProducto
+      )
+    );
+    if (repetido) {
+      Swal.fire(
+        'Artículo repetido',
+        'Unifique las cantidades de las líneas que corresponden al mismo artículo.',
+        'info'
+      );
+      return false;
+    }
     return true;
+  }
+
+  get documentoLogisticoPlural(): string {
+    return this.catalogos?.PaisISO2?.toUpperCase() === 'ES'
+      ? 'albaranes'
+      : 'guías';
+  }
+
+  private cargarLicenciaFacturaIa(): void {
+    this.licenciaTenantService.obtener().subscribe({
+      next: response => {
+        const licencia = response.Data;
+        this.facturaIaHabilitada = licencia == null ||
+          licencia.Caracteristicas?.some(caracteristica =>
+            caracteristica.Codigo === 'almacen.captura_documentos_ia' &&
+            caracteristica.Habilitada
+          ) === true;
+      },
+      error: () => this.facturaIaHabilitada = false
+    });
+  }
+
+  private aplicarPrevisualizacionFactura(
+    datos: FacturaCompraIaPrevisualizacion
+  ): void {
+    this.previsualizacionFactura = datos;
+    this.formulario.IdProveedor = datos.IdProveedor;
+    this.proveedorNuevo = new ProveedorGuardar({
+      IdTipoIdentidad: datos.IdTipoIdentidadProveedor || '',
+      NumeroIdentificacion: datos.NumeroIdentificacionProveedor || '',
+      RazonSocial: datos.RazonSocialProveedor || '',
+      Direccion: datos.DireccionProveedor || '',
+      IdDistrito: 0,
+      Telefono: datos.TelefonoProveedor || null,
+      Contacto: datos.ContactoProveedor || null,
+      Email: datos.EmailProveedor || null,
+      DiasCredito: 0,
+      Activo: true
+    });
+    if (datos.IdTipoDocumento) {
+      this.formulario.IdTipoDocumento = datos.IdTipoDocumento;
+    }
+    this.formulario.NumDocumento = datos.NumeroDocumento || '';
+    if (datos.FechaEmision) {
+      this.formulario.FechaEmision = this.fechaLocal(datos.FechaEmision);
+    }
+    if (datos.IdMoneda) {
+      this.formulario.IdMoneda = datos.IdMoneda;
+    }
+    if (datos.TasaCambio && datos.TasaCambio > 0) {
+      this.formulario.TasaCambio = datos.TasaCambio;
+    }
+    this.formulario.PreciosIncluyenImpuestos =
+      datos.PreciosIncluyenImpuestos;
+    this.lineas = datos.Lineas.map(linea => ({
+      IdProducto: linea.IdProducto,
+      Producto: linea.Producto,
+      UnidadMedida: linea.UnidadMedida,
+      Inventariable: linea.Inventariable,
+      Cantidad: linea.Cantidad,
+      Importe: linea.Importe,
+      IdSubAreaAlmacen: linea.IdSubAreaAlmacen,
+      Impuestos: [...linea.Impuestos],
+      OrigenIa: true,
+      DescripcionOriginal: linea.DescripcionOriginal,
+      ConfianzaIa: linea.Confianza,
+      RequiereRevision: linea.RequiereRevision,
+      MotivoRevision: linea.MotivoRevision
+    }));
+  }
+
+  private fechaLocal(valor: string): Date {
+    const fecha = valor.substring(0, 10).split('-').map(Number);
+    return new Date(fecha[0], fecha[1] - 1, fecha[2]);
+  }
+
+  private incluirProveedorCreado(compra: EntradaCompra): void {
+    if (!this.catalogos ||
+        this.catalogos.Proveedores.some(
+          proveedor => proveedor.IdProveedor === compra.IdProveedor
+        )) {
+      return;
+    }
+
+    this.catalogos.Proveedores = [
+      ...this.catalogos.Proveedores,
+      {
+        IdProveedor: compra.IdProveedor,
+        NumeroIdentificacion: compra.NumeroIdentificacionProveedor,
+        RazonSocial: compra.Proveedor,
+        DiasCredito: this.proveedorNuevo.DiasCredito
+      }
+    ];
   }
 
   private limpiarLinea(): void {

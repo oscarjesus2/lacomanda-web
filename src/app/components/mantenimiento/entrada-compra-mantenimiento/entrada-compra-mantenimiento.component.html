@@ -11,6 +11,22 @@
       : 'Ingreso de compras' }}
   </h2>
 
+  <input
+    #cameraFactura
+    type="file"
+    hidden
+    accept="image/jpeg,image/png,image/webp"
+    capture="environment"
+    (change)="seleccionarFactura($event)"
+  >
+  <input
+    #archivoFactura
+    type="file"
+    hidden
+    accept="image/jpeg,image/png,image/webp"
+    (change)="seleccionarFactura($event)"
+  >
+
   <ng-container *ngIf="!showForm">
     <div class="dialog-toolbar">
       <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
@@ -64,6 +80,28 @@
           {{ dataSource.data.length }} documentos encontrados
         </span>
         <div class="dialog-toolbar__actions">
+          <button
+            mat-stroked-button
+            color="primary"
+            type="button"
+            *ngIf="facturaIaHabilitada"
+            (click)="cameraFactura.click()"
+            [disabled]="!catalogos || procesandoFactura"
+          >
+            <mat-icon>photo_camera</mat-icon>
+            Tomar foto
+          </button>
+          <button
+            mat-stroked-button
+            color="primary"
+            type="button"
+            *ngIf="facturaIaHabilitada"
+            (click)="archivoFactura.click()"
+            [disabled]="!catalogos || procesandoFactura"
+          >
+            <mat-icon>upload_file</mat-icon>
+            Subir documento
+          </button>
           <button mat-stroked-button color="primary" type="button" (click)="buscar()" [disabled]="cargando">
             <mat-icon>search</mat-icon>
             Buscar
@@ -76,7 +114,7 @@
             [disabled]="idsGuiasSeleccionadas.size === 0 || guardando"
           >
             <mat-icon>published_with_changes</mat-icon>
-            Canjear guías ({{ idsGuiasSeleccionadas.size }})
+            Canjear {{ documentoLogisticoPlural }} ({{ idsGuiasSeleccionadas.size }})
           </button>
           <button mat-raised-button color="primary" type="button" (click)="nuevo()" [disabled]="!catalogos">
             <mat-icon>add</mat-icon>
@@ -212,6 +250,66 @@
         </div>
       </div>
 
+      <section
+        class="dialog-form-section ai-document-capture"
+        *ngIf="facturaIaHabilitada && !compra && !notaOrigen"
+      >
+        <div class="ai-document-capture__header">
+          <div>
+            <h3 class="dialog-form-section__title">
+              <mat-icon>auto_awesome</mat-icon>
+              Lectura inteligente
+            </h3>
+            <p class="dialog-form-section__hint">
+              Fotografía o sube una factura, boleta, guía de remisión o albarán. Prepararemos un borrador editable antes de guardar.
+            </p>
+          </div>
+          <div class="dialog-toolbar__actions" *ngIf="!procesandoFactura">
+            <button mat-stroked-button color="primary" type="button" (click)="cameraFactura.click()">
+              <mat-icon>photo_camera</mat-icon>
+              Tomar otra foto
+            </button>
+            <button mat-stroked-button color="primary" type="button" (click)="archivoFactura.click()">
+              <mat-icon>upload_file</mat-icon>
+              Elegir imagen
+            </button>
+          </div>
+        </div>
+
+        <div class="ai-document-processing" *ngIf="procesandoFactura">
+          <mat-spinner diameter="34"></mat-spinner>
+          <div>
+            <strong>Estamos leyendo el documento…</strong>
+            <span>Puede tardar unos segundos. No cierres esta ventana.</span>
+          </div>
+        </div>
+
+        <div class="ai-document-preview" *ngIf="previsualizacionFactura && !procesandoFactura">
+          <div class="ai-document-preview__summary">
+            <span class="status-pill" [class.status-pill--warning]="previsualizacionFactura.RequiereRevision">
+              {{ previsualizacionFactura.RequiereRevision ? 'Revisión necesaria' : 'Lectura completa' }}
+            </span>
+            <span>
+              Confianza de lectura:
+              <strong>{{ previsualizacionFactura.Confianza * 100 | number:'1.0-0' }} %</strong>
+            </span>
+            <span *ngIf="previsualizacionFactura.TotalDetectado !== null">
+              Total leído:
+              <strong>{{ previsualizacionFactura.IdMoneda || formulario.IdMoneda }} {{ previsualizacionFactura.TotalDetectado | number:'1.2-2' }}</strong>
+            </span>
+          </div>
+          <div class="ai-document-preview__warnings" *ngIf="previsualizacionFactura.Advertencias.length">
+            <mat-icon>info</mat-icon>
+            <div>
+              <strong>Comprueba estos datos</strong>
+              <ul>
+                <li *ngFor="let advertencia of previsualizacionFactura.Advertencias">{{ advertencia }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="dialog-form-section">
         <h3 class="dialog-form-section__title">
           <mat-icon>description</mat-icon>
@@ -231,6 +329,9 @@
               required
               [disabled]="soloLectura"
             >
+              <mat-option [value]="null" *ngIf="previsualizacionFactura">
+                Registrar el proveedor leído en el documento
+              </mat-option>
               <mat-option *ngFor="let proveedor of catalogos?.Proveedores" [value]="proveedor.IdProveedor">
                 {{ proveedor.NumeroIdentificacion }} · {{ proveedor.RazonSocial }}
               </mat-option>
@@ -301,6 +402,53 @@
             <mat-datepicker-toggle matSuffix [for]="recepcion"></mat-datepicker-toggle>
             <mat-datepicker #recepcion></mat-datepicker>
           </mat-form-field>
+        </div>
+
+        <div
+          class="ai-supplier-preview"
+          *ngIf="previsualizacionFactura && !formulario.IdProveedor && !soloLectura"
+        >
+          <div class="ai-supplier-preview__intro">
+            <mat-icon>add_business</mat-icon>
+            <div>
+              <strong>Este proveedor todavía no existe</strong>
+              <span>Confirma sus datos. Al guardar se crearán el proveedor y el ingreso en una sola operación.</span>
+            </div>
+          </div>
+          <div class="dialog-form-grid">
+            <mat-form-field appearance="fill">
+              <mat-label>Tipo de identificación*</mat-label>
+              <mat-select name="nuevoProveedorTipo" [(ngModel)]="proveedorNuevo.IdTipoIdentidad" required>
+                <mat-option *ngFor="let tipo of catalogoProveedor?.TiposIdentidad" [value]="tipo.IdTipoIdentidad">
+                  {{ tipo.Descripcion }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>Identificación fiscal*</mat-label>
+              <input matInput name="nuevoProveedorNumero" maxlength="20" [(ngModel)]="proveedorNuevo.NumeroIdentificacion" required>
+            </mat-form-field>
+            <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+              <mat-label>Razón social*</mat-label>
+              <input matInput name="nuevoProveedorRazon" maxlength="250" [(ngModel)]="proveedorNuevo.RazonSocial" required>
+            </mat-form-field>
+            <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+              <mat-label>Dirección fiscal*</mat-label>
+              <input matInput name="nuevoProveedorDireccion" maxlength="250" [(ngModel)]="proveedorNuevo.Direccion" required>
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>Teléfono</mat-label>
+              <input matInput name="nuevoProveedorTelefono" maxlength="30" [(ngModel)]="proveedorNuevo.Telefono">
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>Persona de contacto</mat-label>
+              <input matInput name="nuevoProveedorContacto" maxlength="120" [(ngModel)]="proveedorNuevo.Contacto">
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>Correo</mat-label>
+              <input matInput name="nuevoProveedorEmail" type="email" maxlength="160" [(ngModel)]="proveedorNuevo.Email">
+            </mat-form-field>
+          </div>
         </div>
       </section>
 
@@ -473,27 +621,70 @@
             <mat-table [dataSource]="lineas" class="dialog-table--wide">
               <ng-container matColumnDef="producto">
                 <mat-header-cell *matHeaderCellDef>Artículo</mat-header-cell>
-                <mat-cell *matCellDef="let linea">{{ linea.Producto }}</mat-cell>
+                <mat-cell *matCellDef="let linea; let index = index">
+                  <mat-form-field appearance="fill" class="dialog-table-field" *ngIf="!soloLectura; else productoLectura">
+                    <mat-select
+                      [(ngModel)]="linea.IdProducto"
+                      [ngModelOptions]="{standalone: true}"
+                      (selectionChange)="actualizarArticuloLinea(linea)"
+                      placeholder="Seleccione el artículo"
+                    >
+                      <mat-option *ngFor="let articulo of articulosParaAgregar" [value]="articulo.IdProducto">
+                        {{ articulo.Descripcion }} · {{ articulo.UnidadMedida }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-hint *ngIf="linea.DescripcionOriginal">Leído: {{ linea.DescripcionOriginal }}</mat-hint>
+                  </mat-form-field>
+                  <ng-template #productoLectura>{{ linea.Producto }}</ng-template>
+                </mat-cell>
               </ng-container>
               <ng-container matColumnDef="cantidad">
                 <mat-header-cell *matHeaderCellDef>Cant.</mat-header-cell>
-                <mat-cell *matCellDef="let linea">{{ linea.Cantidad | number:'1.0-3' }}</mat-cell>
+                <mat-cell *matCellDef="let linea">
+                  <mat-form-field appearance="fill" class="dialog-table-field dialog-table-field--small" *ngIf="!soloLectura; else cantidadLectura">
+                    <input matInput type="number" min="0.001" step="0.001" [(ngModel)]="linea.Cantidad" [ngModelOptions]="{standalone: true}" (ngModelChange)="actualizarRevisionLinea(linea)">
+                  </mat-form-field>
+                  <ng-template #cantidadLectura>{{ linea.Cantidad | number:'1.0-3' }}</ng-template>
+                </mat-cell>
               </ng-container>
               <ng-container matColumnDef="unidad">
                 <mat-header-cell *matHeaderCellDef>Unidad</mat-header-cell>
                 <mat-cell *matCellDef="let linea">{{ linea.UnidadMedida }}</mat-cell>
               </ng-container>
               <ng-container matColumnDef="precio">
-                <mat-header-cell *matHeaderCellDef>Precio</mat-header-cell>
-                <mat-cell *matCellDef="let linea">{{ precioLinea(linea) | number:'1.2-4' }}</mat-cell>
+                <mat-header-cell *matHeaderCellDef>Importe</mat-header-cell>
+                <mat-cell *matCellDef="let linea">
+                  <mat-form-field appearance="fill" class="dialog-table-field dialog-table-field--small" *ngIf="!soloLectura; else importeLectura">
+                    <input matInput type="number" min="0" step="0.01" [(ngModel)]="linea.Importe" [ngModelOptions]="{standalone: true}" (ngModelChange)="actualizarRevisionLinea(linea)">
+                  </mat-form-field>
+                  <ng-template #importeLectura>{{ linea.Importe | number:'1.2-2' }}</ng-template>
+                </mat-cell>
               </ng-container>
               <ng-container matColumnDef="subarea">
                 <mat-header-cell *matHeaderCellDef>Subárea</mat-header-cell>
-                <mat-cell *matCellDef="let linea">{{ descripcionSubArea(linea.IdSubAreaAlmacen) }}</mat-cell>
+                <mat-cell *matCellDef="let linea">
+                  <mat-form-field appearance="fill" class="dialog-table-field" *ngIf="!soloLectura && linea.Inventariable; else subareaLectura">
+                    <mat-select [(ngModel)]="linea.IdSubAreaAlmacen" [ngModelOptions]="{standalone: true}" (selectionChange)="actualizarRevisionLinea(linea)" placeholder="Seleccione destino">
+                      <mat-option *ngFor="let subarea of catalogos?.SubAreas" [value]="subarea.IdSubAreaAlmacen">
+                        {{ subarea.AreaAlmacen }} · {{ subarea.Descripcion }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <ng-template #subareaLectura>{{ descripcionSubArea(linea.IdSubAreaAlmacen) }}</ng-template>
+                </mat-cell>
               </ng-container>
               <ng-container matColumnDef="impuestos">
                 <mat-header-cell *matHeaderCellDef>Impuestos</mat-header-cell>
-                <mat-cell *matCellDef="let linea">{{ descripcionImpuestos(linea.Impuestos) }}</mat-cell>
+                <mat-cell *matCellDef="let linea">
+                  <mat-form-field appearance="fill" class="dialog-table-field" *ngIf="!soloLectura; else impuestosLectura">
+                    <mat-select [(ngModel)]="linea.Impuestos" [ngModelOptions]="{standalone: true}" multiple>
+                      <mat-option *ngFor="let impuesto of catalogos?.Impuestos" [value]="impuesto.IdImpuestoPais">
+                        {{ impuesto.Descripcion }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <ng-template #impuestosLectura>{{ descripcionImpuestos(linea.Impuestos) }}</ng-template>
+                </mat-cell>
               </ng-container>
               <ng-container matColumnDef="base">
                 <mat-header-cell *matHeaderCellDef>Base</mat-header-cell>
