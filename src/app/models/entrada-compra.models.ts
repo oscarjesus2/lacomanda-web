@@ -196,7 +196,7 @@ export interface FacturaCompraIaPrevisualizacion {
   IdTipoDocumento: string | null;
   TipoDocumentoDetectado: string;
   NumeroDocumento: string;
-  FechaEmision: string | null;
+  FechaEmision: Date | string | null;
   IdMoneda: string | null;
   TasaCambio: number | null;
   PreciosIncluyenImpuestos: boolean;

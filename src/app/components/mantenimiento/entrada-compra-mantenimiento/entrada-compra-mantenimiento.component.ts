@@ -248,6 +248,9 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     }
 
     this.nuevo();
+    // La fecha de emisión debe proceder exclusivamente del documento.
+    // Durante la lectura no conservamos la fecha actual del formulario nuevo.
+    this.formulario.FechaEmision = '';
     this.procesandoFactura = true;
     this.entradaCompraService.previsualizarFactura(archivo).subscribe({
       next: response => {
@@ -1241,7 +1244,8 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     }
     this.formulario.NumDocumento = datos.NumeroDocumento || '';
     if (datos.FechaEmision) {
-      this.formulario.FechaEmision = this.fechaLocal(datos.FechaEmision);
+      this.formulario.FechaEmision =
+        this.fechaLocal(datos.FechaEmision) || '';
     } else {
       this.formulario.FechaEmision = '';
     }
@@ -1274,9 +1278,17 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     }));
   }
 
-  private fechaLocal(valor: string): Date {
-    const fecha = valor.substring(0, 10).split('-').map(Number);
-    return new Date(fecha[0], fecha[1] - 1, fecha[2]);
+  private fechaLocal(valor: Date | string): Date | null {
+    const fechaUtc = valor instanceof Date ? valor : new Date(valor);
+    if (Number.isNaN(fechaUtc.getTime())) {
+      return null;
+    }
+
+    return new Date(
+      fechaUtc.getUTCFullYear(),
+      fechaUtc.getUTCMonth(),
+      fechaUtc.getUTCDate()
+    );
   }
 
   private incluirProveedorCreado(compra: EntradaCompra): void {
