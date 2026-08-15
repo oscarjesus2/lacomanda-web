@@ -82,6 +82,19 @@
   color: var(--header-muted);
 }
 
+.app-header__chip--time-control {
+  border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  color: #fff3c4;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.app-header__chip--time-control:hover {
+  background: color-mix(in srgb, var(--color-accent) 27%, transparent);
+  transform: translateY(-1px);
+}
+
 /* ── Stat cards del turno ──────────────────────────────────── */
 .app-header__stat-sep {
   width: 1px;

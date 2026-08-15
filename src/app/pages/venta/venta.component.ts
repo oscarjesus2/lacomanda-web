@@ -2207,6 +2207,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
               'El pedido se grabo, pero QZ no pudo completar todas las impresiones.',
               'error',
             );
+          } else {
+            await this.confirmarEnviosDeImpresion(impresiones);
           }
         }
         this.limpiarPedido();
@@ -2244,6 +2246,37 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     return contador;
+  }
+
+  /**
+   * Marca en el backend las lineas como ya impresas.
+   *
+   * La comanda se arma con los detalles que tienen NumEnvios = 0. Sin esta
+   * confirmacion siguen en cero para siempre, y la siguiente grabacion del
+   * mismo pedido vuelve a incluirlos: cocina recibe otra vez lo que ya salio.
+   * Solo se confirma si todo se imprimio; si algo fallo, esas lineas deben
+   * seguir pendientes para el proximo envio.
+   */
+  private async confirmarEnviosDeImpresion(
+    listImpresionDTO: ImpresionDTO[],
+  ): Promise<void> {
+    const referencia = listImpresionDTO[0];
+    if (!referencia) {
+      return;
+    }
+
+    try {
+      await lastValueFrom(
+        this.pedidoService.ActualizarEnviosDeImpresion(
+          referencia.IdPedido,
+          referencia.NroCuenta,
+        ),
+      );
+    } catch (error) {
+      // Si falla, las lineas quedan pendientes y se reimprimiran. Es preferible
+      // a darlas por impresas sin estarlo, pero conviene verlo en consola.
+      console.error('No se pudo confirmar la impresión de la comanda:', error);
+    }
   }
 
   async processComprobante() {

@@ -15,6 +15,8 @@ import { EstacionTipoEnum, NivelUsuarioEnum } from 'src/app/enums/enum';
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import Swal from 'sweetalert2';
+import { ControlHorarioComponent } from 'src/app/components/control-horario/control-horario.component';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 
 @Component({
   selector: 'app-header',
@@ -53,6 +55,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   showAdministracion = false;
   showCaja          = false;
   showMozo          = false;
+  controlHorarioHabilitado = false;
 
   private calcMenuVisibility(): void {
     const user = this.storageService.getCurrentUser();
@@ -104,6 +107,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private ventaService: VentaService,
     private configuracionService: ConfiguracionService,
     private usuarioService: UsuarioService,
+    private licenciaTenantService: LicenciaTenantService,
     public textCatalog: TenantTextCatalogService,
   ) { }
 
@@ -240,6 +244,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
     });
   }
 
+  OpenControlHorario(): void {
+    this.dialogTurno.open(ControlHorarioComponent, {
+      disableClose: false,
+      hasBackdrop: true,
+      width: '520px',
+      maxWidth: '96vw',
+    });
+  }
+
   public cambiarCultura(cultura: string | null): void {
     const session = this.storageService.getCurrentSession();
     if (!session) {
@@ -290,6 +303,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     // Usuario y sucursal
     this.loadUserInfo();
+
+    this.licenciaTenantService.obtener().subscribe({
+      next: response => {
+        const licencia = response.Data;
+        this.controlHorarioHabilitado = licencia == null ||
+          licencia.Caracteristicas?.some(caracteristica =>
+            caracteristica.Codigo === 'personal.control_horario' &&
+            caracteristica.Habilitada) === true;
+      },
+      error: () => this.controlHorarioHabilitado = false,
+    });
 
     // Turno + stats
     this.checkTurno();

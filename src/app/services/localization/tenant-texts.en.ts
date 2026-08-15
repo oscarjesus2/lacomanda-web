@@ -1169,6 +1169,7 @@ export const EN_TEXTS = {
   reportLoadError: 'The report could not be loaded.',
   portioning: 'Portioning',
   production: 'Production',
+  timeTracking: 'Time tracking',
 } as const;
 
 export type TenantTextKey = keyof typeof EN_TEXTS;

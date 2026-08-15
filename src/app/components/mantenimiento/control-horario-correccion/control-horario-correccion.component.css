@@ -1,0 +1,18 @@
+.time-correction { color: var(--color-text); }
+.time-correction__header { display: flex; justify-content: space-between; gap: 20px; padding: 22px 24px 16px; border-bottom: 1px solid var(--color-border); }
+.time-correction__header span { color: var(--color-primary); font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.time-correction__header h2 { margin: 3px 0; color: var(--color-primary-dark); }
+.time-correction__header p, .time-correction__section-title span, .time-correction__empty { margin: 0; color: var(--color-text-muted); font-size: .82rem; }
+.time-correction__body { display: grid; gap: 20px; padding: 22px 24px; }
+.time-correction__grid, .time-correction__break { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; }
+.time-correction__grid { grid-template-columns: 1fr 1fr; }
+.time-correction label { display: grid; gap: 6px; font-size: .76rem; font-weight: 700; }
+.time-correction input, .time-correction textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); padding: 10px 12px; background: white; color: var(--color-text); font: inherit; font-weight: 400; }
+.time-correction input:focus, .time-correction textarea:focus { outline: 2px solid color-mix(in srgb, var(--color-primary) 25%, transparent); border-color: var(--color-primary); }
+.time-correction__breaks { display: grid; gap: 10px; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-warm); }
+.time-correction__section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.time-correction__section-title > div { display: grid; gap: 2px; }
+.time-correction__reason { display: grid; }
+.time-correction__error { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--color-warn); font-size: .82rem; }
+.time-correction__footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px 22px; border-top: 1px solid var(--color-border); }
+@media (max-width: 620px) { .time-correction__grid, .time-correction__break { grid-template-columns: 1fr; } }

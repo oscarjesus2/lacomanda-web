@@ -133,6 +133,9 @@ import { AsistenteEstacionComponent } from './components/asistente-estacion/asis
 import { ComparativoVentasComponent } from './pages/dashboard/comparativo-ventas/comparativo-ventas.component';
 import { EvolucionMargenComponent } from './pages/dashboard/evolucion-margen/evolucion-margen.component';
 import { MetodosPagoDashboardComponent } from './pages/dashboard/metodos-pago-dashboard/metodos-pago-dashboard.component';
+import { ControlHorarioComponent } from './components/control-horario/control-horario.component';
+import { ControlHorarioMantenimientoComponent } from './components/mantenimiento/control-horario-mantenimiento/control-horario-mantenimiento.component';
+import { ControlHorarioCorreccionComponent } from './components/mantenimiento/control-horario-correccion/control-horario-correccion.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -239,6 +242,9 @@ export const MY_DATE_FORMATS = {
     ComparativoVentasComponent,
     EvolucionMargenComponent,
     MetodosPagoDashboardComponent,
+    ControlHorarioComponent,
+    ControlHorarioMantenimientoComponent,
+    ControlHorarioCorreccionComponent,
   ],
   imports: [
     CommonModule,

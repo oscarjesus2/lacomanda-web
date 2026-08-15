@@ -32,6 +32,7 @@ import { TarjetaMantenimientoComponent } from 'src/app/components/mantenimiento/
 import { SocioNegocioMantenimientoComponent } from 'src/app/components/mantenimiento/socio-negocio-mantenimiento/socio-negocio-mantenimiento.component';
 import { PromocionMantenimientoComponent } from 'src/app/components/mantenimiento/promocion-mantenimiento/promocion-mantenimiento.component';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { ControlHorarioMantenimientoComponent } from 'src/app/components/mantenimiento/control-horario-mantenimiento/control-horario-mantenimiento.component';
 
 @Component({
   selector: 'app-menu-ventas',
@@ -39,6 +40,8 @@ import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service'
 })
 export class MenuVentasComponent implements OnInit {
   promocionesHabilitadas = false;
+  private caracteristicasHabilitadas = new Set<string>();
+  private licenciaSinRestricciones = false;
 
   ventasMenu = [
     {
@@ -79,7 +82,8 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Contable',           route: '/ventas/contable',           icon: 'calculate',  label: 'Contable',     titleKey: 'accounting',     labelKey: 'accounting'          },
         { title: 'Ventas por Producto',route: '/ventas/ventas-por-producto',icon: 'bar_chart',  label: 'Por producto', titleKey: 'salesByProduct', labelKey: 'salesByProductShort' },
         { title: 'Resumen de Ventas',  route: '/ventas/resumen-ventas',     icon: 'summarize',  label: 'Resumen',      titleKey: 'salesSummary',   labelKey: 'summary'             },
-        { title: 'Liquidación',        route: '/ventas/liquidacion',        icon: 'payments',   label: 'Liquidación',  titleKey: 'settlement',     labelKey: 'settlement'          }
+        { title: 'Liquidación',        route: '/ventas/liquidacion',        icon: 'payments',   label: 'Liquidación',  titleKey: 'settlement',     labelKey: 'settlement'          },
+        { title: 'Control Horario',    route: '/ventas/control-horario',    icon: 'schedule',   label: 'Control horario', titleKey: 'timeTracking', labelKey: 'timeTracking', feature: 'personal.control_horario' }
       ]
     },
     {
@@ -102,7 +106,10 @@ export class MenuVentasComponent implements OnInit {
   ) { }
 
   itemsVisibles(section: any): any[] {
-    return section.children.filter((item: any) => !item.feature || this.promocionesHabilitadas);
+    return section.children.filter((item: any) =>
+      !item.feature ||
+      this.licenciaSinRestricciones ||
+      this.caracteristicasHabilitadas.has(item.feature));
   }
 
   openDialog(item: any): void {
@@ -208,6 +215,22 @@ export class MenuVentasComponent implements OnInit {
     {
       this.OpenPromocionMantenimientoComponent();
     }
+    if (item.title === 'Control Horario')
+    {
+      this.OpenControlHorarioMantenimientoComponent();
+    }
+  }
+
+  OpenControlHorarioMantenimientoComponent(): void {
+    this.dialog.open(ControlHorarioMantenimientoComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'calc(100vw - 32px)',
+      height: 'calc(100vh - 32px)',
+      maxWidth: '1320px',
+      maxHeight: '900px',
+      panelClass: 'dialog-window--workspace',
+    });
   }
 
   OpenPromocionMantenimientoComponent(): void {
@@ -456,6 +479,11 @@ export class MenuVentasComponent implements OnInit {
     this.licenciaTenantService.obtener().subscribe({
       next: response => {
         const licencia = response.Data;
+        this.licenciaSinRestricciones = licencia == null;
+        this.caracteristicasHabilitadas = new Set(
+          licencia?.Caracteristicas
+            ?.filter(c => c.Habilitada)
+            .map(c => c.Codigo) ?? []);
         this.promocionesHabilitadas = licencia == null ||
           licencia.Caracteristicas?.some(c => c.Codigo === 'ventas.promociones' && c.Habilitada) === true;
       },

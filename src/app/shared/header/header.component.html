@@ -62,6 +62,16 @@
       <span>{{ nombreUsuario }}</span>
     </div>
 
+    <button
+      *ngIf="controlHorarioHabilitado"
+      type="button"
+      class="app-header__chip app-header__chip--time-control"
+      (click)="OpenControlHorario()"
+      [matTooltip]="'timeTracking' | tenantText">
+      <mat-icon class="app-header__chip-icon">schedule</mat-icon>
+      <span>{{ 'timeTracking' | tenantText }}</span>
+    </button>
+
   </div>
 
   <!-- RELOJ -->
@@ -106,6 +116,9 @@
   <button mat-menu-item *ngIf="showMozo" (click)="Mozo()">
     <mat-icon>restaurant</mat-icon>
     <span>{{ 'orderAttendant' | tenantText }}</span>
+  </button>
+  <button mat-menu-item *ngIf="controlHorarioHabilitado" (click)="OpenControlHorario()">
+    <mat-icon>schedule</mat-icon><span>{{ 'timeTracking' | tenantText }}</span>
   </button>
 </mat-menu>
 

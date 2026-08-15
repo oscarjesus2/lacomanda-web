@@ -1174,6 +1174,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   reportLoadError: 'No se pudo cargar el reporte.',
   portioning: 'Porcionamiento',
   production: 'Producción',
+  timeTracking: 'Control horario',
 };
 
 export const ES_PE_OVERRIDES: Partial<Record<TenantTextKey, string>> = {
