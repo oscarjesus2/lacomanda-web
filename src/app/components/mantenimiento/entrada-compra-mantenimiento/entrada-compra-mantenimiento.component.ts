@@ -938,7 +938,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     if (!this.catalogos || this.idsGuiasSeleccionadas.size === 0) {
       Swal.fire(
         `Seleccione ${this.documentoLogisticoPlural}`,
-        `Marque uno o más ${this.documentoLogisticoPlural} revisados del mismo proveedor.`,
+        'Marque uno o más documentos revisados del mismo proveedor.',
         'info'
       );
       return;
@@ -1007,7 +1007,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         if (!response.Success || !response.Data) {
           Swal.fire(
             'No se pudo realizar el canje',
-            response.Message || `Revise los ${this.documentoLogisticoPlural} seleccionados.`,
+            response.Message || 'Revise los documentos seleccionados.',
             'error'
           );
           return;
@@ -1018,7 +1018,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         this.showForm = true;
         Swal.fire(
           'Canje realizado',
-          `La factura quedó vinculada y los ${this.documentoLogisticoPlural} fueron marcados como canjeados.`,
+          this.mensajeCanjeExitoso,
           'success'
         );
       },
@@ -1144,6 +1144,12 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     return this.catalogos?.PaisISO2?.toUpperCase() === 'ES'
       ? 'albaranes'
       : 'guías';
+  }
+
+  get mensajeCanjeExitoso(): string {
+    return this.catalogos?.PaisISO2?.toUpperCase() === 'ES'
+      ? 'La factura quedó vinculada y los albaranes fueron marcados como canjeados.'
+      : 'La factura quedó vinculada y las guías fueron marcadas como canjeadas.';
   }
 
   private cargarLicenciaFacturaIa(): void {
