@@ -30,7 +30,7 @@
       <h2>¡Nos vemos pronto, {{ nombre }}!</h2>
       <p class="booking-code">{{ resultado.Codigo }}</p>
       <div class="booking-success__summary"><span><mat-icon>calendar_today</mat-icon>{{ fechaVisible() }}</span><span><mat-icon>groups</mat-icon>{{ resultado.Personas }} personas</span></div>
-      <p>Guarda este enlace: te permitirá cancelar la reserva si cambian tus planes.</p>
+      <p>Te hemos enviado los datos de la reserva por correo. Guarda también este enlace: te permitirá cancelarla si cambian tus planes.</p>
     </section>
 
     <section class="booking-card" *ngIf="!resultado && !codigoGestion">
@@ -52,11 +52,11 @@
         <div class="booking-section-title"><span>¿A nombre de quién reservamos?</span><small>{{ fecha | date:'dd/MM/yyyy' }} · {{ hora }}</small></div>
         <div class="booking-form__grid">
           <label><span>Nombre y apellidos *</span><input type="text" required maxlength="120" [(ngModel)]="nombre" name="nombre" autocomplete="name"></label>
-          <label><span>Teléfono *</span><input type="tel" required maxlength="30" [(ngModel)]="telefono" name="telefono" autocomplete="tel"></label>
-          <label><span>Correo (opcional)</span><input type="email" maxlength="160" [(ngModel)]="email" name="email" autocomplete="email"></label>
+          <label><span>Correo *</span><input type="email" required maxlength="160" [(ngModel)]="email" name="email" autocomplete="email"><small>Recibirás aquí la confirmación y cualquier cambio.</small></label>
+          <label><span>Teléfono (opcional)</span><input type="tel" maxlength="30" [(ngModel)]="telefono" name="telefono" autocomplete="tel"></label>
           <label class="booking-form__wide"><span>¿Algo que debamos saber?</span><textarea maxlength="500" rows="2" [(ngModel)]="notas" name="notas" placeholder="Carrito de bebé, accesibilidad, celebración…"></textarea></label>
         </div>
-        <button class="booking-button" type="submit" [disabled]="enviando || !nombre.trim() || !telefono.trim()">{{ enviando ? 'Reservando…' : (configuracion.ConfirmacionAutomatica ? 'Confirmar reserva' : 'Solicitar reserva') }}<mat-icon>arrow_forward</mat-icon></button>
+        <button class="booking-button" type="submit" [disabled]="enviando || !nombre.trim() || !email.trim()">{{ enviando ? 'Reservando…' : (configuracion.ConfirmacionAutomatica ? 'Confirmar reserva' : 'Solicitar reserva') }}<mat-icon>arrow_forward</mat-icon></button>
       </form>
       <div class="booking-error" *ngIf="error"><mat-icon>error_outline</mat-icon>{{ error }}</div>
     </section>

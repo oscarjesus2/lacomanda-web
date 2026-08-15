@@ -32,7 +32,7 @@
       <div class="reservations-admin__agenda" *ngIf="reservas.length; else emptyAgenda">
         <article class="reservation-card" *ngFor="let reserva of reservas" [attr.data-status]="reserva.Estado">
           <div class="reservation-card__time"><strong>{{ fechaHoraLocal(reserva.InicioUtc) }}</strong><span>{{ reserva.Ambiente }} · {{ reserva.Mesa }}</span></div>
-          <div class="reservation-card__guest"><strong>{{ reserva.ClienteNombre }}</strong><span><mat-icon>groups</mat-icon>{{ reserva.Personas }} · <mat-icon>phone</mat-icon>{{ reserva.ClienteTelefono }}</span></div>
+          <div class="reservation-card__guest"><strong>{{ reserva.ClienteNombre }}</strong><span><mat-icon>groups</mat-icon>{{ reserva.Personas }} · <mat-icon>email</mat-icon>{{ reserva.ClienteEmail }}<ng-container *ngIf="reserva.ClienteTelefono"> · <mat-icon>phone</mat-icon>{{ reserva.ClienteTelefono }}</ng-container></span></div>
           <div class="reservation-card__code"><span>{{ reserva.Codigo }}</span><small>{{ reserva.Estado }}</small></div>
           <div class="reservation-card__actions"><button mat-stroked-button *ngFor="let accion of acciones(reserva)" (click)="cambiarEstado(reserva, accion.estado)"><mat-icon>{{ accion.icono }}</mat-icon>{{ accion.etiqueta }}</button></div>
           <p *ngIf="reserva.NotasCliente" class="reservation-card__note"><mat-icon>notes</mat-icon>{{ reserva.NotasCliente }}</p>

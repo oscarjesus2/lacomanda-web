@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import {
   ConfiguracionReservas,
+  CrearReservaPublicaRequest,
   DisponibilidadReserva,
   EspacioReserva,
   Reserva,
@@ -55,7 +56,7 @@ export class ReservasService {
     return this.http.get<ApiResponse<DisponibilidadReserva>>(`${this.publicPath}/disponibilidad`, { params });
   }
 
-  crearPublica(request: Record<string, unknown>): Observable<ApiResponse<ReservaCreada>> {
+  crearPublica(request: CrearReservaPublicaRequest): Observable<ApiResponse<ReservaCreada>> {
     return this.http.post<ApiResponse<ReservaCreada>>(this.publicPath, request);
   }
 

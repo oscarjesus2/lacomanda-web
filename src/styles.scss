@@ -3595,6 +3595,7 @@ mat-row:hover mat-cell {
 .booking-steps i { background: #e8dbd3; height: 1px; width: 70px; }
 .booking-choice-grid, .booking-form__grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
 .booking-choice-grid label, .booking-form label { color: #634f45; display: flex; flex-direction: column; font-size: 12px; font-weight: 700; gap: 7px; }
+.booking-form label > small { color: #92796c; font-size: 11px; font-weight: 500; line-height: 1.35; }
 .booking-choice-grid label > span { align-items: center; display: flex; gap: 5px; }
 .booking-choice-grid mat-icon { color: #c34820; font-size: 18px; height: 18px; width: 18px; }
 .booking-choice-grid input, .booking-choice-grid select, .booking-form input, .booking-form textarea { background: #fffaf7; border: 1px solid #ddcec5; border-radius: 10px; box-sizing: border-box; color: #39241a; font: inherit; font-size: 14px; outline: none; padding: 12px; width: 100%; }

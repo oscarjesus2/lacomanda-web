@@ -73,12 +73,12 @@ export class ReservasOnlineComponent implements OnInit, OnDestroy {
   }
 
   crear(): void {
-    if (!this.hora || !this.nombre.trim() || !this.telefono.trim()) return;
+    if (!this.hora || !this.nombre.trim() || !this.email.trim()) return;
     this.enviando = true;
     this.error = '';
     this.service.crearPublica({
       Fecha: this.fecha, Hora: this.hora, Personas: this.personas,
-      Nombre: this.nombre, Telefono: this.telefono, Email: this.email || null, Notas: this.notas || null
+      Nombre: this.nombre, Telefono: this.telefono || null, Email: this.email, Notas: this.notas || null
     }).subscribe({
       next: response => {
         this.resultado = response.Data;

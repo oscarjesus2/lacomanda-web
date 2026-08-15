@@ -33,8 +33,8 @@ export interface Reserva {
   IdReserva: number;
   Codigo: string;
   ClienteNombre: string;
-  ClienteTelefono: string;
-  ClienteEmail?: string;
+  ClienteTelefono?: string;
+  ClienteEmail: string;
   Personas: number;
   InicioUtc: string;
   FinUtc: string;
@@ -60,4 +60,14 @@ export interface ReservaCreada {
   Estado: string;
   InicioUtc: string;
   Personas: number;
+}
+
+export interface CrearReservaPublicaRequest {
+  Fecha: string;
+  Hora: string;
+  Personas: number;
+  Nombre: string;
+  Telefono?: string | null;
+  Email: string;
+  Notas?: string | null;
 }
