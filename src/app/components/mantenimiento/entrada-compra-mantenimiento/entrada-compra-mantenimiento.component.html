@@ -633,7 +633,10 @@
                         {{ articulo.Descripcion }} · {{ articulo.UnidadMedida }}
                       </mat-option>
                     </mat-select>
-                    <mat-hint *ngIf="linea.DescripcionOriginal">Leído: {{ linea.DescripcionOriginal }}</mat-hint>
+                    <mat-hint *ngIf="linea.DescripcionOriginal || linea.CodigoOriginal || linea.UnidadMedidaOriginal">
+                      Leído: {{ linea.DescripcionOriginal || linea.CodigoOriginal || 'Sin descripción' }}
+                      <ng-container *ngIf="linea.UnidadMedidaOriginal"> · {{ linea.UnidadMedidaOriginal }}</ng-container>
+                    </mat-hint>
                   </mat-form-field>
                   <ng-template #productoLectura>{{ linea.Producto }}</ng-template>
                 </mat-cell>
@@ -643,6 +646,10 @@
                 <mat-cell *matCellDef="let linea">
                   <mat-form-field appearance="fill" class="dialog-table-field dialog-table-field--small" *ngIf="!soloLectura; else cantidadLectura">
                     <input matInput type="number" min="0.001" step="0.001" [(ngModel)]="linea.Cantidad" [ngModelOptions]="{standalone: true}" (ngModelChange)="actualizarRevisionLinea(linea)">
+                    <mat-hint *ngIf="linea.OrigenIa && linea.FactorConversionUnidad && linea.FactorConversionUnidad !== 1">
+                      {{ linea.CantidadOriginal | number:'1.0-3' }} {{ linea.UnidadMedidaOriginal }}
+                      → {{ linea.Cantidad | number:'1.0-3' }} {{ linea.UnidadMedida }}
+                    </mat-hint>
                   </mat-form-field>
                   <ng-template #cantidadLectura>{{ linea.Cantidad | number:'1.0-3' }}</ng-template>
                 </mat-cell>

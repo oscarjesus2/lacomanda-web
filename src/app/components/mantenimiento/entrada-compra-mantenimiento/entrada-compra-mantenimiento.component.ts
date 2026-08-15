@@ -32,7 +32,11 @@ interface LineaCompraEdicion
   UnidadMedida: string;
   Inventariable: boolean;
   OrigenIa?: boolean;
+  CodigoOriginal?: string;
   DescripcionOriginal?: string;
+  UnidadMedidaOriginal?: string;
+  CantidadOriginal?: number;
+  FactorConversionUnidad?: number;
   ConfianzaIa?: number;
   RequiereRevision?: boolean;
   MotivoRevision?: string;
@@ -1234,7 +1238,11 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       IdSubAreaAlmacen: linea.IdSubAreaAlmacen,
       Impuestos: [...linea.Impuestos],
       OrigenIa: true,
+      CodigoOriginal: linea.CodigoOriginal,
       DescripcionOriginal: linea.DescripcionOriginal,
+      UnidadMedidaOriginal: linea.UnidadMedidaOriginal,
+      CantidadOriginal: linea.CantidadOriginal,
+      FactorConversionUnidad: linea.FactorConversionUnidad,
       ConfianzaIa: linea.Confianza,
       RequiereRevision: linea.RequiereRevision,
       MotivoRevision: linea.MotivoRevision

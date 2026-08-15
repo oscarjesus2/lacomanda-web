@@ -216,6 +216,9 @@ export interface ConfirmarFacturaCompraIa {
 export interface FacturaCompraIaLinea {
   CodigoOriginal: string;
   DescripcionOriginal: string;
+  UnidadMedidaOriginal: string;
+  CantidadOriginal: number;
+  FactorConversionUnidad: number;
   IdProducto: number | null;
   Producto: string;
   UnidadMedida: string;
