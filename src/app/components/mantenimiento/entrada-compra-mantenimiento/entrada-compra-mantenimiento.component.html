@@ -75,10 +75,25 @@
       </div>
 
       <div class="dialog-toolbar__footer">
-        <span class="dialog-toolbar__status">
-          <mat-icon>receipt_long</mat-icon>
-          {{ dataSource.data.length }} documentos encontrados
-        </span>
+        <div class="dialog-toolbar__status-group">
+          <span class="dialog-toolbar__status">
+            <mat-icon>receipt_long</mat-icon>
+            {{ dataSource.data.length }} documentos encontrados
+          </span>
+          <span
+            class="ai-document-quota"
+            *ngIf="facturaIaHabilitada && cuotaFacturaIa"
+            [class.ai-document-quota--warning]="cuotaFacturaIa.MostrarAviso && !cuotaFacturaIa.Agotada"
+            [class.ai-document-quota--exhausted]="cuotaFacturaIa.Agotada"
+          >
+            <mat-icon>{{ cuotaFacturaIa.Agotada ? 'block' : 'auto_awesome' }}</mat-icon>
+            <span>
+              <strong>{{ cuotaFacturaIa.Restantes }}</strong>
+              de {{ cuotaFacturaIa.LimiteTotal }} lecturas con IA disponibles
+              <small>{{ cuotaFacturaIa.EsPrueba ? 'durante la prueba' : 'en este periodo' }}</small>
+            </span>
+          </span>
+        </div>
         <div class="dialog-toolbar__actions">
           <button
             mat-stroked-button
@@ -86,7 +101,7 @@
             type="button"
             *ngIf="facturaIaHabilitada"
             (click)="cameraFactura.click()"
-            [disabled]="!catalogos || procesandoFactura"
+            [disabled]="!catalogos || procesandoFactura || cuotaFacturaIa?.Agotada"
           >
             <mat-icon>photo_camera</mat-icon>
             Tomar foto
@@ -97,7 +112,7 @@
             type="button"
             *ngIf="facturaIaHabilitada"
             (click)="archivoFactura.click()"
-            [disabled]="!catalogos || procesandoFactura"
+            [disabled]="!catalogos || procesandoFactura || cuotaFacturaIa?.Agotada"
           >
             <mat-icon>upload_file</mat-icon>
             Subir documento

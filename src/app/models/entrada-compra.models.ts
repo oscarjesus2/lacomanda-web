@@ -184,6 +184,7 @@ export interface EntradaCompraImpuesto {
 }
 
 export interface FacturaCompraIaPrevisualizacion {
+  Cuota: CuotaDocumentosCompraIa | null;
   IdProveedor: number | null;
   NumeroIdentificacionProveedor: string;
   RazonSocialProveedor: string;
@@ -206,6 +207,20 @@ export interface FacturaCompraIaPrevisualizacion {
   RequiereRevision: boolean;
   Advertencias: string[];
   Lineas: FacturaCompraIaLinea[];
+}
+
+export interface CuotaDocumentosCompraIa {
+  LimiteBase: number;
+  CreditosExtra: number;
+  LimiteTotal: number;
+  Utilizados: number;
+  Restantes: number;
+  PorcentajeUtilizado: number;
+  PeriodoInicioUtc: string;
+  PeriodoFinUtc: string;
+  EsPrueba: boolean;
+  MostrarAviso: boolean;
+  Agotada: boolean;
 }
 
 export interface ConfirmarFacturaCompraIa {

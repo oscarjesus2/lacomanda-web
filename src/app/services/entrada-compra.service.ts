@@ -7,6 +7,7 @@ import {
   EntradaCompraCatalogos,
   EntradaCompraCanjearGuias,
   ConfirmarFacturaCompraIa,
+  CuotaDocumentosCompraIa,
   EntradaCompraCrearNota,
   EntradaCompraGuardar,
   FacturaCompraIaPrevisualizacion,
@@ -76,6 +77,12 @@ export class EntradaCompraService {
     return this.http.post<ApiResponse<FacturaCompraIaPrevisualizacion>>(
       `${this.basePath}/documentos-ia/previsualizar`,
       formulario
+    );
+  }
+
+  cuotaDocumentosIa(): Observable<ApiResponse<CuotaDocumentosCompraIa>> {
+    return this.http.get<ApiResponse<CuotaDocumentosCompraIa>>(
+      `${this.basePath}/documentos-ia/cuota`
     );
   }
 

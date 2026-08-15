@@ -15,6 +15,7 @@ import {
   EntradaCompraPagoGuardar,
   EntradaCompraResumen,
   EntradaCompraSubMovimiento,
+  CuotaDocumentosCompraIa,
   FacturaCompraIaPrevisualizacion
 } from 'src/app/models/entrada-compra.models';
 import { EntradaCompraService } from 'src/app/services/entrada-compra.service';
@@ -114,6 +115,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   showForm = false;
   soloLectura = false;
   facturaIaHabilitada = false;
+  cuotaFacturaIa: CuotaDocumentosCompraIa | null = null;
   procesandoFactura = false;
   previsualizacionFactura: FacturaCompraIaPrevisualizacion | null = null;
   catalogoProveedor: ProveedorCatalogo | null = null;
@@ -259,10 +261,16 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
           return;
         }
 
+        if (response.Data.Cuota) {
+          this.cuotaFacturaIa = response.Data.Cuota;
+        }
         this.aplicarPrevisualizacionFactura(response.Data);
       },
       error: error => {
         this.procesandoFactura = false;
+        if (error?.error?.ErrorCode === 'AI_DOCUMENT_QUOTA_EXCEEDED') {
+          this.cargarCuotaFacturaIa();
+        }
         this.mostrarError(
           error,
           'No pudimos leer el documento. Prueba con una imagen o PDF más legible.'
@@ -1191,8 +1199,23 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
             caracteristica.Codigo === 'almacen.captura_documentos_ia' &&
             caracteristica.Habilitada
           ) === true;
+        if (this.facturaIaHabilitada) {
+          this.cargarCuotaFacturaIa();
+        }
       },
-      error: () => this.facturaIaHabilitada = false
+      error: () => {
+        this.facturaIaHabilitada = false;
+        this.cuotaFacturaIa = null;
+      }
+    });
+  }
+
+  private cargarCuotaFacturaIa(): void {
+    this.entradaCompraService.cuotaDocumentosIa().subscribe({
+      next: response => {
+        this.cuotaFacturaIa = response.Success ? response.Data : null;
+      },
+      error: () => this.cuotaFacturaIa = null
     });
   }
 
@@ -1219,6 +1242,8 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     this.formulario.NumDocumento = datos.NumeroDocumento || '';
     if (datos.FechaEmision) {
       this.formulario.FechaEmision = this.fechaLocal(datos.FechaEmision);
+    } else {
+      this.formulario.FechaEmision = '';
     }
     if (datos.IdMoneda) {
       this.formulario.IdMoneda = datos.IdMoneda;
