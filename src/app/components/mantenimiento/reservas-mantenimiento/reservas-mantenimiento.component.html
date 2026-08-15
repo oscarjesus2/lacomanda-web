@@ -51,12 +51,12 @@
         <div class="reservations-config-card">
           <h3>Reglas de disponibilidad</h3>
           <div class="reservations-config-fields">
-            <mat-form-field appearance="fill"><mat-label>Duración de mesa</mat-label><input matInput type="number" [(ngModel)]="configuracion.DuracionMinutos"><span matSuffix>min</span></mat-form-field>
-            <mat-form-field appearance="fill"><mat-label>Intervalo de horas</mat-label><input matInput type="number" [(ngModel)]="configuracion.IntervaloMinutos"><span matSuffix>min</span></mat-form-field>
-            <mat-form-field appearance="fill"><mat-label>Anticipación mínima</mat-label><input matInput type="number" [(ngModel)]="configuracion.AnticipacionMinimaMinutos"><span matSuffix>min</span></mat-form-field>
-            <mat-form-field appearance="fill"><mat-label>Días disponibles</mat-label><input matInput type="number" [(ngModel)]="configuracion.DiasAntelacion"></mat-form-field>
-            <mat-form-field appearance="fill"><mat-label>Cancelación mínima</mat-label><input matInput type="number" [(ngModel)]="configuracion.CancelacionMinimaMinutos"><span matSuffix>min</span></mat-form-field>
-            <mat-form-field appearance="fill"><mat-label>Máximo de personas</mat-label><input matInput type="number" [(ngModel)]="configuracion.MaximoPersonasPorReserva"></mat-form-field>
+            <mat-form-field appearance="fill"><mat-label>Bloquear cada mesa durante</mat-label><input matInput type="number" [(ngModel)]="configuracion.DuracionMinutos"><span matSuffix>min</span><mat-hint>Tiempo estimado que dura la reserva.</mat-hint></mat-form-field>
+            <mat-form-field appearance="fill"><mat-label>Mostrar horarios disponibles cada</mat-label><input matInput type="number" [(ngModel)]="configuracion.IntervaloMinutos"><span matSuffix>min</span><mat-hint>Ej.: 30 muestra 13:00, 13:30, 14:00…</mat-hint></mat-form-field>
+            <mat-form-field appearance="fill"><mat-label>Permitir reservar con al menos</mat-label><input matInput type="number" [(ngModel)]="configuracion.AnticipacionMinimaMinutos"><span matSuffix>min</span><mat-hint>Tiempo mínimo antes de la hora elegida.</mat-hint></mat-form-field>
+            <mat-form-field appearance="fill"><mat-label>Permitir reservar hasta dentro de</mat-label><input matInput type="number" [(ngModel)]="configuracion.DiasAntelacion"><span matSuffix>días</span><mat-hint>Máximo de días futuros visibles.</mat-hint></mat-form-field>
+            <mat-form-field appearance="fill"><mat-label>Permitir cancelar con al menos</mat-label><input matInput type="number" [(ngModel)]="configuracion.CancelacionMinimaMinutos"><span matSuffix>min</span><mat-hint>Después deberá contactar con el restaurante.</mat-hint></mat-form-field>
+            <mat-form-field appearance="fill"><mat-label>Personas permitidas por reserva</mat-label><input matInput type="number" [(ngModel)]="configuracion.MaximoPersonasPorReserva"><span matSuffix>personas</span><mat-hint>También debe existir una mesa con capacidad.</mat-hint></mat-form-field>
           </div>
           <mat-slide-toggle [(ngModel)]="configuracion.ConfirmacionAutomatica">Confirmar automáticamente si existe una mesa libre</mat-slide-toggle>
           <mat-form-field appearance="fill" class="reservations-full"><mat-label>Mensaje para el cliente</mat-label><textarea matInput rows="2" maxlength="500" [(ngModel)]="configuracion.MensajePublico"></textarea></mat-form-field>
@@ -78,7 +78,7 @@
     </ng-container>
 
     <ng-container *ngIf="seccion === 'mesas'">
-      <div class="reservations-info"><mat-icon>info</mat-icon><span>Solo se ofrecen mesas habilitadas cuya capacidad admita al grupo. La asignación usa primero la mesa adecuada más pequeña para no desperdiciar capacidad.</span></div>
+      <div class="reservations-info"><mat-icon>info</mat-icon><span>Activa las mesas que quieras ofrecer online e indica cuántas personas admite cada una. Cuando alguien reserva, el sistema busca una mesa libre y asigna la más pequeña en la que quepa el grupo; por ejemplo, para 3 personas elegirá una mesa de 4. Las capacidades no se suman: actualmente no se unen varias mesas automáticamente.</span></div>
       <div class="reservation-tables-grid">
         <article class="reservation-table-card" *ngFor="let espacio of espacios" [class.is-enabled]="espacio.AceptaReservas">
           <mat-slide-toggle [(ngModel)]="espacio.AceptaReservas"><strong>{{ espacio.Mesa }}</strong></mat-slide-toggle>

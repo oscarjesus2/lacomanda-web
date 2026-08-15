@@ -42,7 +42,7 @@
       </div>
 
       <div class="booking-times">
-        <div class="booking-section-title"><span>Horas disponibles</span><small>Duración estimada: {{ configuracion.DuracionMinutos }} min</small></div>
+        <div class="booking-section-title"><span>Horas disponibles</span><small>Tu mesa estará reservada durante: {{ configuracion.DuracionMinutos }} min</small></div>
         <div class="booking-time-grid" *ngIf="horas.length"><button type="button" *ngFor="let item of horas" [class.is-selected]="hora === item" (click)="hora = item">{{ item }}</button></div>
         <div class="booking-inline-state" *ngIf="consultando"><span></span>Buscando mesas…</div>
         <div class="booking-inline-state" *ngIf="!consultando && !horas.length"><mat-icon>event_busy</mat-icon>No quedan horas disponibles para este día.</div>
