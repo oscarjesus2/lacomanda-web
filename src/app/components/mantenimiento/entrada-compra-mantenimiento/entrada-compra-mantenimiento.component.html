@@ -23,7 +23,7 @@
     #archivoFactura
     type="file"
     hidden
-    accept="image/jpeg,image/png,image/webp"
+    accept="image/jpeg,image/png,image/webp,application/pdf,.pdf"
     (change)="seleccionarFactura($event)"
   >
 
@@ -261,7 +261,7 @@
               Lectura inteligente
             </h3>
             <p class="dialog-form-section__hint">
-              Fotografía o sube una factura, boleta, guía de remisión o albarán. Prepararemos un borrador editable antes de guardar.
+              Fotografía o sube una imagen o PDF de una factura, boleta, guía de remisión o albarán. Prepararemos un borrador editable antes de guardar.
             </p>
           </div>
           <div class="dialog-toolbar__actions" *ngIf="!procesandoFactura">
@@ -271,7 +271,7 @@
             </button>
             <button mat-stroked-button color="primary" type="button" (click)="archivoFactura.click()">
               <mat-icon>upload_file</mat-icon>
-              Elegir imagen
+              Elegir imagen o PDF
             </button>
           </div>
         </div>

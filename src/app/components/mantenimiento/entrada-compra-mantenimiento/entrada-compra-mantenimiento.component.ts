@@ -43,6 +43,14 @@ interface LineaCompraEdicion
   templateUrl: './entrada-compra-mantenimiento.component.html'
 })
 export class EntradaCompraMantenimientoComponent implements OnInit {
+  private static readonly MAXIMO_DOCUMENTO_IA_BYTES = 8 * 1024 * 1024;
+  private static readonly TIPOS_DOCUMENTO_IA_PERMITIDOS = [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'application/pdf'
+  ];
+
   @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
     if (value) {
       this.dataSource.paginator = value;
@@ -215,6 +223,24 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       return;
     }
 
+    if (!EntradaCompraMantenimientoComponent.TIPOS_DOCUMENTO_IA_PERMITIDOS
+      .includes(archivo.type)) {
+      Swal.fire(
+        'Formato no compatible',
+        'Seleccione una imagen JPG, PNG, WebP o un archivo PDF.',
+        'info'
+      );
+      return;
+    }
+    if (archivo.size > EntradaCompraMantenimientoComponent.MAXIMO_DOCUMENTO_IA_BYTES) {
+      Swal.fire(
+        'Documento demasiado grande',
+        'El archivo no puede superar 8 MB.',
+        'info'
+      );
+      return;
+    }
+
     this.nuevo();
     this.procesandoFactura = true;
     this.entradaCompraService.previsualizarFactura(archivo).subscribe({
@@ -223,7 +249,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         if (!response.Success || !response.Data) {
           Swal.fire(
             'No pudimos leer el documento',
-            response.Message || 'Prueba con una fotografía más nítida.',
+            response.Message || 'Prueba con una imagen o PDF más legible.',
             'info'
           );
           return;
@@ -235,7 +261,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         this.procesandoFactura = false;
         this.mostrarError(
           error,
-          'No pudimos leer el documento. Prueba con una fotografía más nítida.'
+          'No pudimos leer el documento. Prueba con una imagen o PDF más legible.'
         );
       }
     });
