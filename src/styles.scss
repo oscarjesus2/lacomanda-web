@@ -114,7 +114,20 @@
 .btn-compact { min-height: 34px; padding: 0 12px; font-size: .72rem; }
 
 /* Control horario: estilos centralizados para fichaje y consulta administrativa. */
-.time-clock { color: var(--color-text); min-width: 320px; }
+.time-clock,
+.time-admin,
+.time-correction {
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--color-primary);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-lg);
+}
+.time-clock { min-width: 320px; }
 .time-clock__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 24px 24px 18px; border-bottom: 1px solid var(--color-border); }
 .time-clock__header h2 { margin: 2px 0 4px; color: var(--color-primary-dark); font-size: 1.55rem; }
 .time-clock__header p, .time-clock__note { margin: 0; color: var(--color-text-muted); }
@@ -135,7 +148,7 @@
 .time-clock__actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; padding: 0 24px 18px; }
 .time-clock__note { padding: 0 28px 24px; font-size: .8rem; text-align: center; }
 
-.time-admin { display: flex; flex-direction: column; height: 100%; min-height: 520px; color: var(--color-text); }
+.time-admin { display: flex; flex-direction: column; height: 100%; min-height: 520px; }
 .time-admin__header { display: flex; justify-content: space-between; gap: 24px; padding: 20px 24px 16px; border-bottom: 1px solid var(--color-border); }
 .time-admin__header h2 { margin: 3px 0; color: var(--color-primary-dark); letter-spacing: .08em; }
 .time-admin__header p { margin: 0; color: var(--color-text-muted); }

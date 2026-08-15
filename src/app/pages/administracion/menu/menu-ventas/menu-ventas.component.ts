@@ -108,8 +108,9 @@ export class MenuVentasComponent implements OnInit {
   itemsVisibles(section: any): any[] {
     return section.children.filter((item: any) =>
       !item.feature ||
-      this.licenciaSinRestricciones ||
-      this.caracteristicasHabilitadas.has(item.feature));
+      this.caracteristicasHabilitadas.has(item.feature) ||
+      (this.licenciaSinRestricciones &&
+        item.feature !== 'personal.control_horario'));
   }
 
   openDialog(item: any): void {

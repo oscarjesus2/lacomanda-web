@@ -307,10 +307,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.licenciaTenantService.obtener().subscribe({
       next: response => {
         const licencia = response.Data;
-        this.controlHorarioHabilitado = licencia == null ||
-          licencia.Caracteristicas?.some(caracteristica =>
+        this.controlHorarioHabilitado = licencia?.Caracteristicas?.some(
+          caracteristica =>
             caracteristica.Codigo === 'personal.control_horario' &&
-            caracteristica.Habilitada) === true;
+            caracteristica.Habilitada,
+        ) === true;
       },
       error: () => this.controlHorarioHabilitado = false,
     });
