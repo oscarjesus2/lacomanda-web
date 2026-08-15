@@ -3594,6 +3594,18 @@ mat-row:hover mat-cell {
 .booking-steps small { color: #78675e; font-size: 10px; font-weight: 600; left: 50%; position: absolute; top: 34px; transform: translateX(-50%); white-space: nowrap; }
 .booking-steps i { background: #e8dbd3; height: 1px; width: 70px; }
 .booking-choice-grid, .booking-form__grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+.booking-shell--branches { max-width: 720px; }
+.booking-branch-heading { margin: 34px auto 25px; max-width: 560px; text-align: center; }
+.booking-branch-heading h1 { color: #3b2117; font-family: Georgia, serif; font-size: clamp(28px, 5vw, 42px); line-height: 1.08; margin: 8px 0 10px; }
+.booking-branch-heading p { color: #806b60; line-height: 1.5; margin: 0; }
+.booking-branch-list { display: grid; gap: 10px; margin: 0 auto; max-width: 560px; }
+.booking-branch-list button { align-items: center; background: #fffaf7; border: 1px solid #e4d2c8; border-radius: 14px; color: #40261b; cursor: pointer; display: grid; gap: 14px; grid-template-columns: auto 1fr auto; padding: 16px 18px; text-align: left; transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.booking-branch-list button:hover { border-color: #cc3a12; box-shadow: 0 9px 24px rgb(118 48 23 / 12%); transform: translateY(-1px); }
+.booking-branch-list button > mat-icon:first-child { align-items: center; background: #fff0e7; border-radius: 10px; color: #c33a15; display: flex; height: 42px; justify-content: center; width: 42px; }
+.booking-branch-list button > mat-icon:last-child { color: #c33a15; }
+.booking-branch-list span { display: flex; flex-direction: column; gap: 3px; }
+.booking-branch-list strong { font-size: 16px; }
+.booking-branch-list small { color: #8b756b; font-size: 12px; }
 .booking-choice-grid label, .booking-form label { color: #634f45; display: flex; flex-direction: column; font-size: 12px; font-weight: 700; gap: 7px; }
 .booking-form label > small { color: #92796c; font-size: 11px; font-weight: 500; line-height: 1.35; }
 .booking-choice-grid label > span { align-items: center; display: flex; gap: 5px; }

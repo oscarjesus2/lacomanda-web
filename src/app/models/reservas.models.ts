@@ -4,6 +4,11 @@ export interface HorarioReserva {
   HoraFin: string;
 }
 
+export interface SucursalReservaPublica {
+  TenantId: string;
+  Nombre: string;
+}
+
 export interface ConfiguracionReservas {
   Restaurante: string;
   Direccion: string;

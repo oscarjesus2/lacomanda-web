@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
@@ -8,7 +8,8 @@ import {
   DisponibilidadReserva,
   EspacioReserva,
   Reserva,
-  ReservaCreada
+  ReservaCreada,
+  SucursalReservaPublica
 } from 'src/app/models/reservas.models';
 import { environment } from 'src/environments/environment';
 
@@ -16,8 +17,20 @@ import { environment } from 'src/environments/environment';
 export class ReservasService {
   private readonly basePath = `${environment.apiUrl}/reservas`;
   private readonly publicPath = `${environment.apiUrl}/public/reservas`;
+  private tenantId = '';
 
   constructor(private readonly http: HttpClient) {}
+
+  listarSucursalesPublicas(): Observable<ApiResponse<SucursalReservaPublica[]>> {
+    return this.http.get<ApiResponse<SucursalReservaPublica[]>>(
+      `${this.publicPath}/sucursales`,
+      { headers: this.tenantHeaders(false) }
+    );
+  }
+
+  seleccionarSucursal(tenantId: string): void {
+    this.tenantId = tenantId.trim();
+  }
 
   obtenerConfiguracion(): Observable<ApiResponse<ConfiguracionReservas>> {
     return this.http.get<ApiResponse<ConfiguracionReservas>>(`${this.basePath}/configuracion`);
@@ -48,19 +61,39 @@ export class ReservasService {
   }
 
   obtenerConfiguracionPublica(): Observable<ApiResponse<ConfiguracionReservas>> {
-    return this.http.get<ApiResponse<ConfiguracionReservas>>(`${this.publicPath}/configuracion`);
+    return this.http.get<ApiResponse<ConfiguracionReservas>>(
+      `${this.publicPath}/configuracion`,
+      { headers: this.tenantHeaders() }
+    );
   }
 
   disponibilidad(fecha: string, personas: number): Observable<ApiResponse<DisponibilidadReserva>> {
     const params = new HttpParams().set('Fecha', fecha).set('Personas', personas);
-    return this.http.get<ApiResponse<DisponibilidadReserva>>(`${this.publicPath}/disponibilidad`, { params });
+    return this.http.get<ApiResponse<DisponibilidadReserva>>(`${this.publicPath}/disponibilidad`, {
+      params,
+      headers: this.tenantHeaders()
+    });
   }
 
   crearPublica(request: CrearReservaPublicaRequest): Observable<ApiResponse<ReservaCreada>> {
-    return this.http.post<ApiResponse<ReservaCreada>>(this.publicPath, request);
+    return this.http.post<ApiResponse<ReservaCreada>>(this.publicPath, request, {
+      headers: this.tenantHeaders()
+    });
   }
 
   cancelarPublica(codigo: string, tokenGestion: string): Observable<ApiResponse<boolean>> {
-    return this.http.post<ApiResponse<boolean>>(`${this.publicPath}/${codigo}/cancelar`, { TokenGestion: tokenGestion });
+    return this.http.post<ApiResponse<boolean>>(
+      `${this.publicPath}/${codigo}/cancelar`,
+      { TokenGestion: tokenGestion },
+      { headers: this.tenantHeaders() }
+    );
+  }
+
+  private tenantHeaders(incluirTenant = true): HttpHeaders {
+    let headers = new HttpHeaders({ 'X-Tenant-Host': window.location.hostname });
+    if (incluirTenant && this.tenantId) {
+      headers = headers.set('X-Tenant-Id', this.tenantId);
+    }
+    return headers;
   }
 }

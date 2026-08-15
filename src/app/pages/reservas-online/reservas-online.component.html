@@ -2,6 +2,25 @@
   <div class="booking-page__glow booking-page__glow--one"></div>
   <div class="booking-page__glow booking-page__glow--two"></div>
 
+  <section class="booking-shell booking-shell--branches" *ngIf="esperandoSucursal">
+    <header class="booking-brand">
+      <img src="/assets/logo.svg" alt="LaComanda">
+      <span>RESERVAS ONLINE</span>
+    </header>
+    <div class="booking-branch-heading">
+      <span class="booking-hero__eyebrow">Elige dónde reservar</span>
+      <h1>¿A qué sucursal deseas venir?</h1>
+      <p>Selecciona el local para mostrarte sus mesas y horarios disponibles.</p>
+    </div>
+    <div class="booking-branch-list">
+      <button type="button" *ngFor="let sucursal of sucursales" (click)="seleccionarSucursal(sucursal)">
+        <mat-icon>storefront</mat-icon>
+        <span><strong>{{ sucursal.Nombre }}</strong><small>Ver disponibilidad</small></span>
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </div>
+  </section>
+
   <section class="booking-shell" *ngIf="configuracion; else loadingOrError">
     <header class="booking-brand">
       <img src="/assets/logo.svg" alt="LaComanda">
@@ -65,7 +84,7 @@
   </section>
 
   <ng-template #loadingOrError>
-    <section class="booking-shell booking-shell--state">
+    <section class="booking-shell booking-shell--state" *ngIf="!esperandoSucursal">
       <img src="/assets/logo.svg" alt="LaComanda">
       <div class="booking-page__loader" *ngIf="cargando"></div>
       <mat-icon *ngIf="!cargando">event_busy</mat-icon>

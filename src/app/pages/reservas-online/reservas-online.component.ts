@@ -1,7 +1,7 @@
 import { formatDate } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ConfiguracionReservas, ReservaCreada } from 'src/app/models/reservas.models';
+import { ConfiguracionReservas, ReservaCreada, SucursalReservaPublica } from 'src/app/models/reservas.models';
 import { HeaderService } from 'src/app/services/header.service';
 import { ReservasService } from 'src/app/services/reservas.service';
 
@@ -11,6 +11,8 @@ import { ReservasService } from 'src/app/services/reservas.service';
 })
 export class ReservasOnlineComponent implements OnInit, OnDestroy {
   configuracion: ConfiguracionReservas | null = null;
+  sucursales: SucursalReservaPublica[] = [];
+  tenantId = '';
   fecha = formatDate(new Date(Date.now() + 86400000), 'yyyy-MM-dd', 'en-US');
   personas = 2;
   horas: string[] = [];
@@ -39,6 +41,35 @@ export class ReservasOnlineComponent implements OnInit, OnDestroy {
     this.headerService.hideHeader();
     this.codigoGestion = this.route.snapshot.queryParamMap.get('codigo') ?? '';
     this.tokenGestion = this.route.snapshot.queryParamMap.get('token') ?? '';
+    const tenantSolicitado = this.route.snapshot.queryParamMap.get('sucursal') ?? '';
+    this.service.listarSucursalesPublicas().subscribe({
+      next: response => {
+        this.sucursales = response.Data ?? [];
+        const seleccionada = this.sucursales.find(x => x.TenantId === tenantSolicitado)
+          ?? (this.sucursales.length === 1 ? this.sucursales[0] : null);
+        if (seleccionada) {
+          this.seleccionarSucursal(seleccionada);
+          return;
+        }
+
+        this.cargando = false;
+        if (!this.sucursales.length) {
+          this.error = 'No hay sucursales disponibles para reservas online.';
+        }
+      },
+      error: error => {
+        this.error = error?.error?.Message || 'No se pudieron consultar las sucursales disponibles.';
+        this.cargando = false;
+      }
+    });
+  }
+
+  seleccionarSucursal(sucursal: SucursalReservaPublica): void {
+    this.tenantId = sucursal.TenantId;
+    this.service.seleccionarSucursal(sucursal.TenantId);
+    this.cargando = true;
+    this.error = '';
+    this.actualizarUrl({ sucursal: sucursal.TenantId });
     this.service.obtenerConfiguracionPublica().subscribe({
       next: response => {
         this.configuracion = response.Data;
@@ -83,7 +114,11 @@ export class ReservasOnlineComponent implements OnInit, OnDestroy {
       next: response => {
         this.resultado = response.Data;
         this.enviando = false;
-        history.replaceState(null, '', `${location.pathname}?codigo=${encodeURIComponent(response.Data.Codigo)}&token=${encodeURIComponent(response.Data.TokenGestion)}`);
+        this.actualizarUrl({
+          sucursal: this.tenantId,
+          codigo: response.Data.Codigo,
+          token: response.Data.TokenGestion
+        });
       },
       error: error => {
         this.error = error?.error?.Message || 'No se pudo registrar la reserva.';
@@ -109,4 +144,18 @@ export class ReservasOnlineComponent implements OnInit, OnDestroy {
 
   minFecha(): string { return formatDate(new Date(), 'yyyy-MM-dd', 'en-US'); }
   maxFecha(): string { return formatDate(new Date(Date.now() + (this.configuracion?.DiasAntelacion ?? 60) * 86400000), 'yyyy-MM-dd', 'en-US'); }
+
+  get esperandoSucursal(): boolean {
+    return !this.cargando && !this.configuracion && !this.error && this.sucursales.length > 1;
+  }
+
+  private actualizarUrl(values: Record<string, string>): void {
+    const params = new URLSearchParams(location.search);
+    Object.entries(values).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+      else params.delete(key);
+    });
+    const query = params.toString();
+    history.replaceState(null, '', `${location.pathname}${query ? `?${query}` : ''}`);
+  }
 }
