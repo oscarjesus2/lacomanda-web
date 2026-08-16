@@ -119,7 +119,7 @@ export class DialogEnviarPedidoComponent {
             await this.qz.printPDF(
                 impresion.Documento,
                 impresion.NombreImpresora,
-                true,
+                false,
                 false,
             );
         }

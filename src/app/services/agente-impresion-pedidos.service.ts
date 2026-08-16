@@ -180,7 +180,7 @@ export class AgenteImpresionPedidosService {
       const impreso = await this.qz.printPDF(
         trabajo.Documento,
         trabajo.NombreImpresora,
-        true,
+        false,
         false,
       );
       if (!impreso) {
