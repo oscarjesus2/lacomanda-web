@@ -44,6 +44,19 @@ import { TipoReporteTermicoAdministracion } from 'src/app/models/reportes-termic
   templateUrl: './menu-ventas.component.html'
 })
 export class MenuVentasComponent implements OnInit {
+  readonly gruposReportes = [
+    {
+      clave: 'turno',
+      titulo: 'Reportes de turno',
+      descripcion: 'El mismo formato de Caja, preparado para ticket térmico.',
+    },
+    {
+      clave: 'analisis',
+      titulo: 'Análisis y gestión',
+      descripcion: 'Indicadores y consultas para analizar la operación.',
+    },
+  ];
+
   promocionesHabilitadas = false;
   private caracteristicasHabilitadas = new Set<string>();
   private licenciaSinRestricciones = false;
@@ -85,19 +98,19 @@ export class MenuVentasComponent implements OnInit {
     {
       title: 'Reportes', titleKey: 'menuReports',
       children: [
-        { title: 'Contable',           route: '/ventas/contable',           icon: 'calculate',  label: 'Contable',     titleKey: 'accounting',     labelKey: 'accounting'          },
-        { title: 'Ventas por Producto', route: '/ventas/ventas-por-producto', icon: 'inventory_2', label: 'Por producto', titleKey: 'salesByProduct', labelKey: 'salesByProductShort', reporteTermico: 'ventas-producto', feature: 'operacion.reportes' },
-        { title: 'Resumen de Ventas', route: '/ventas/resumen-ventas', icon: 'summarize', label: 'Resumen ventas', titleKey: 'salesSummary', labelKey: 'salesSummary', reporteTermico: 'resumen-ventas', feature: 'operacion.reportes' },
-        { title: 'Resumen de Documentos', route: '/ventas/resumen-documentos', icon: 'receipt_long', label: 'Resumen documentos', titleKey: 'documentsSummary', labelKey: 'documentsSummary', reporteTermico: 'resumen-documentos', feature: 'operacion.reportes' },
-        { title: 'Productividad por empleado', route: '/ventas/reportes/productividad-empleados', icon: 'groups', label: 'Productividad', reporte: 'productividad-empleados', feature: 'operacion.reportes' },
-        { title: 'Espacios y servicio', route: '/ventas/reportes/mesas-servicio', icon: 'table_restaurant', label: 'Espacios y servicio', reporte: 'mesas-servicio', feature: 'operacion.reportes' },
-        { title: 'Productos sin rotación', route: '/ventas/reportes/productos-sin-rotacion', icon: 'inventory', label: 'Sin rotación', reporte: 'productos-sin-rotacion', feature: 'operacion.reportes' },
-        { title: 'Efectividad de descuentos', route: '/ventas/reportes/efectividad-descuentos', icon: 'percent', label: 'Descuentos', reporte: 'efectividad-descuentos', feature: 'operacion.reportes' },
-        { title: 'Clientes y recurrencia', route: '/ventas/reportes/clientes-recurrencia', icon: 'loyalty', label: 'Recurrencia', reporte: 'clientes-recurrencia', feature: 'operacion.reportes' },
-        { title: 'Incidencias operativas', route: '/ventas/reportes/incidencias-operativas', icon: 'report_problem', label: 'Incidencias', reporte: 'incidencias-operativas', feature: 'operacion.reportes' },
-        { title: 'Calidad documental', route: '/ventas/reportes/calidad-documental', icon: 'verified', label: 'Calidad docs.', reporte: 'calidad-documental', feature: 'operacion.reportes' },
-        { title: 'Control Horario',    route: '/ventas/control-horario',    icon: 'schedule',   label: 'Control horario', titleKey: 'timeTracking', labelKey: 'timeTracking', feature: 'personal.control_horario' },
-        { title: 'Incidencias de jornada', route: '/ventas/reportes/incidencias-jornada', icon: 'more_time', label: 'Incid. jornada', reporte: 'incidencias-jornada', feature: 'personal.control_horario' }
+        { title: 'Ventas por Producto', route: '/ventas/ventas-por-producto', icon: 'inventory_2', label: 'Ventas por producto', reporteTermico: 'ventas-producto', feature: 'operacion.reportes', grupoReporte: 'turno' },
+        { title: 'Resumen de Ventas', route: '/ventas/resumen-ventas', icon: 'summarize', label: 'Resumen de ventas', reporteTermico: 'resumen-ventas', feature: 'operacion.reportes', grupoReporte: 'turno' },
+        { title: 'Resumen de Documentos', route: '/ventas/resumen-documentos', icon: 'receipt_long', label: 'Resumen de documentos', reporteTermico: 'resumen-documentos', feature: 'operacion.reportes', grupoReporte: 'turno' },
+        { title: 'Contable',           route: '/ventas/contable',           icon: 'calculate',  label: 'Contable',     titleKey: 'accounting',     labelKey: 'accounting', grupoReporte: 'analisis' },
+        { title: 'Productividad por empleado', route: '/ventas/reportes/productividad-empleados', icon: 'groups', label: 'Productividad', reporte: 'productividad-empleados', feature: 'operacion.reportes', grupoReporte: 'analisis' },
+        { title: 'Espacios y servicio', route: '/ventas/reportes/mesas-servicio', icon: 'table_restaurant', label: 'Espacios y servicio', reporte: 'mesas-servicio', feature: 'operacion.reportes', grupoReporte: 'analisis' },
+        { title: 'Productos sin rotación', route: '/ventas/reportes/productos-sin-rotacion', icon: 'inventory', label: 'Sin rotación', reporte: 'productos-sin-rotacion', feature: 'operacion.reportes', grupoReporte: 'analisis' },
+        { title: 'Efectividad de descuentos', route: '/ventas/reportes/efectividad-descuentos', icon: 'percent', label: 'Descuentos', reporte: 'efectividad-descuentos', feature: 'operacion.reportes', grupoReporte: 'analisis' },
+        { title: 'Clientes y recurrencia', route: '/ventas/reportes/clientes-recurrencia', icon: 'loyalty', label: 'Recurrencia', reporte: 'clientes-recurrencia', feature: 'operacion.reportes', grupoReporte: 'analisis' },
+        { title: 'Incidencias operativas', route: '/ventas/reportes/incidencias-operativas', icon: 'report_problem', label: 'Incidencias', reporte: 'incidencias-operativas', feature: 'operacion.reportes', grupoReporte: 'analisis' },
+        { title: 'Calidad documental', route: '/ventas/reportes/calidad-documental', icon: 'verified', label: 'Calidad docs.', reporte: 'calidad-documental', feature: 'operacion.reportes', grupoReporte: 'analisis' },
+        { title: 'Control Horario',    route: '/ventas/control-horario',    icon: 'schedule',   label: 'Control horario', titleKey: 'timeTracking', labelKey: 'timeTracking', feature: 'personal.control_horario', grupoReporte: 'analisis' },
+        { title: 'Incidencias de jornada', route: '/ventas/reportes/incidencias-jornada', icon: 'more_time', label: 'Incid. jornada', reporte: 'incidencias-jornada', feature: 'personal.control_horario', grupoReporte: 'analisis' }
       ]
     },
     {
@@ -125,6 +138,12 @@ export class MenuVentasComponent implements OnInit {
       this.caracteristicasHabilitadas.has(item.feature) ||
       (this.licenciaSinRestricciones &&
         item.feature !== 'personal.control_horario'));
+  }
+
+  reportesVisibles(section: any, grupo: string): any[] {
+    return this.itemsVisibles(section).filter(
+      (item: any) => item.grupoReporte === grupo,
+    );
   }
 
   openDialog(item: any): void {

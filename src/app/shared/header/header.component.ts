@@ -156,11 +156,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   // ── Stats del turno ────────────────────────────────────────
   private loadTurnoStats(idTurno: number): void {
-    this.ventaService.getListadoVentas(idTurno, 0).subscribe({
-      next: (ventas) => {
-        const activas = ventas.filter(v => v.EstadoDescripcion !== 'ANULADO');
+    this.ventaService.getVentasTurno(idTurno).subscribe({
+      next: (response) => {
+        const activas = (response.Data ?? []).filter(
+          venta => (venta.Estado ?? '').toLocaleUpperCase() !== 'ANULADO',
+        );
         this.nroPedidos      = activas.length;
-        this.totalVentaTurno = activas.reduce((sum, v) => sum + (v.Total || 0), 0);
+        this.totalVentaTurno = activas.reduce(
+          (sum, venta) => sum + (venta.Total || venta.Monto || 0),
+          0,
+        );
         this.ticketMedio     = this.nroPedidos > 0
           ? this.totalVentaTurno / this.nroPedidos
           : 0;
