@@ -139,6 +139,7 @@ import { ControlHorarioCorreccionComponent } from './components/mantenimiento/co
 import { ReporteVentasAnaliticoComponent } from './components/mantenimiento/reporte-ventas-analitico/reporte-ventas-analitico.component';
 import { ReservasMantenimientoComponent } from './components/mantenimiento/reservas-mantenimiento/reservas-mantenimiento.component';
 import { ReservasOnlineComponent } from './pages/reservas-online/reservas-online.component';
+import { ReportesTermicosAdministracionComponent } from './components/mantenimiento/reportes-termicos-administracion/reportes-termicos-administracion.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -251,6 +252,7 @@ export const MY_DATE_FORMATS = {
     ReporteVentasAnaliticoComponent,
     ReservasMantenimientoComponent,
     ReservasOnlineComponent,
+    ReportesTermicosAdministracionComponent,
   ],
   imports: [
     CommonModule,

@@ -36,6 +36,8 @@ import { ControlHorarioMantenimientoComponent } from 'src/app/components/manteni
 import { ReporteVentasAnaliticoComponent } from 'src/app/components/mantenimiento/reporte-ventas-analitico/reporte-ventas-analitico.component';
 import { TipoReporteVentas } from 'src/app/models/reportes-ventas.models';
 import { ReservasMantenimientoComponent } from 'src/app/components/mantenimiento/reservas-mantenimiento/reservas-mantenimiento.component';
+import { ReportesTermicosAdministracionComponent } from 'src/app/components/mantenimiento/reportes-termicos-administracion/reportes-termicos-administracion.component';
+import { TipoReporteTermicoAdministracion } from 'src/app/models/reportes-termicos-administracion.models';
 
 @Component({
   selector: 'app-menu-ventas',
@@ -84,9 +86,9 @@ export class MenuVentasComponent implements OnInit {
       title: 'Reportes', titleKey: 'menuReports',
       children: [
         { title: 'Contable',           route: '/ventas/contable',           icon: 'calculate',  label: 'Contable',     titleKey: 'accounting',     labelKey: 'accounting'          },
-        { title: 'Ventas por Producto',route: '/ventas/ventas-por-producto',icon: 'bar_chart',  label: 'Por producto', titleKey: 'salesByProduct', labelKey: 'salesByProductShort' },
-        { title: 'Resumen de Ventas',  route: '/ventas/resumen-ventas',     icon: 'summarize',  label: 'Resumen',      titleKey: 'salesSummary',   labelKey: 'summary'             },
-        { title: 'Liquidación',        route: '/ventas/liquidacion',        icon: 'payments',   label: 'Liquidación',  titleKey: 'settlement',     labelKey: 'settlement'          },
+        { title: 'Ventas por Producto', route: '/ventas/ventas-por-producto', icon: 'inventory_2', label: 'Por producto', titleKey: 'salesByProduct', labelKey: 'salesByProductShort', reporteTermico: 'ventas-producto', feature: 'operacion.reportes' },
+        { title: 'Resumen de Ventas', route: '/ventas/resumen-ventas', icon: 'summarize', label: 'Resumen ventas', titleKey: 'salesSummary', labelKey: 'salesSummary', reporteTermico: 'resumen-ventas', feature: 'operacion.reportes' },
+        { title: 'Resumen de Documentos', route: '/ventas/resumen-documentos', icon: 'receipt_long', label: 'Resumen documentos', titleKey: 'documentsSummary', labelKey: 'documentsSummary', reporteTermico: 'resumen-documentos', feature: 'operacion.reportes' },
         { title: 'Productividad por empleado', route: '/ventas/reportes/productividad-empleados', icon: 'groups', label: 'Productividad', reporte: 'productividad-empleados', feature: 'operacion.reportes' },
         { title: 'Espacios y servicio', route: '/ventas/reportes/mesas-servicio', icon: 'table_restaurant', label: 'Espacios y servicio', reporte: 'mesas-servicio', feature: 'operacion.reportes' },
         { title: 'Productos sin rotación', route: '/ventas/reportes/productos-sin-rotacion', icon: 'inventory', label: 'Sin rotación', reporte: 'productos-sin-rotacion', feature: 'operacion.reportes' },
@@ -126,6 +128,12 @@ export class MenuVentasComponent implements OnInit {
   }
 
   openDialog(item: any): void {
+    if (item.reporteTermico) {
+      this.OpenReporteTermicoAdministracion(
+        item.reporteTermico as TipoReporteTermicoAdministracion,
+      );
+      return;
+    }
     if (item.reporte) {
       this.OpenReporteVentasAnalitico(item.reporte as TipoReporteVentas);
       return;
@@ -252,6 +260,21 @@ export class MenuVentasComponent implements OnInit {
       maxHeight: '920px',
       panelClass: 'dialog-window--workspace',
       data: { tipo }
+    });
+  }
+
+  OpenReporteTermicoAdministracion(
+    tipo: TipoReporteTermicoAdministracion,
+  ): void {
+    this.dialog.open(ReportesTermicosAdministracionComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'calc(100vw - 32px)',
+      height: 'calc(100vh - 32px)',
+      maxWidth: '1380px',
+      maxHeight: '920px',
+      panelClass: 'dialog-window--workspace',
+      data: { tipo },
     });
   }
 

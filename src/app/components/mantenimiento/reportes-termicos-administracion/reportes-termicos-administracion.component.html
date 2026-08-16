@@ -1,0 +1,99 @@
+<div class="mant-panel dialog-panel--workspace thermal-report">
+  <button class="close-button" type="button" (click)="cerrar()" aria-label="Cerrar">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <div class="mant-title thermal-report__title">
+    <span class="thermal-report__title-icon"><mat-icon>{{ configuracion.icono }}</mat-icon></span>
+    <span>
+      {{ configuracion.titulo }}
+      <small>{{ configuracion.descripcion }}</small>
+    </span>
+  </div>
+
+  <div class="dialog-toolbar">
+    <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+      <mat-form-field appearance="fill">
+        <mat-label>Fecha de trabajo desde</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaDesde">
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Fecha de trabajo hasta</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaHasta">
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide">
+        <mat-label>Turnos que se incluirán</mat-label>
+        <mat-select [(ngModel)]="idTurnoSeleccionado" [disabled]="cargandoTurnos || !turnos.length">
+          <mat-option [value]="0">Todos los turnos del período ({{ turnos.length }})</mat-option>
+          <mat-option *ngFor="let turno of turnos" [value]="turno.IdTurno">
+            {{ fechaTurno(turno) }} · {{ turno.Caja }} · Turno {{ turno.NroTurno }} · {{ turno.Estado }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="dialog-toolbar__footer">
+      <span class="dialog-toolbar__status">
+        <mat-icon>receipt_long</mat-icon>
+        {{ alcanceSeleccionado }}
+      </span>
+      <div class="dialog-toolbar__actions">
+        <button mat-stroked-button type="button" (click)="consultarTurnos()" [disabled]="cargandoTurnos || !rangoValido">
+          <mat-icon>search</mat-icon>
+          {{ cargandoTurnos ? 'Consultando…' : 'Consultar turnos' }}
+        </button>
+        <button mat-raised-button color="primary" type="button" (click)="generarPdf()"
+                [disabled]="generandoPdf || cargandoTurnos || !turnos.length">
+          <mat-icon>picture_as_pdf</mat-icon>
+          {{ generandoPdf ? 'Generando…' : 'Generar PDF' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialog-notice thermal-report__notice" *ngIf="turnos.length">
+    <mat-icon>print</mat-icon>
+    <div class="dialog-notice__content">
+      <span class="dialog-notice__title">Preparado para impresora térmica de 80 mm</span>
+      <span class="dialog-notice__text">
+        Conserva el mismo contenido y formato de Caja. Al elegir todos, cada turno se imprime en una página independiente.
+      </span>
+    </div>
+  </div>
+
+  <div class="dialog-workspace-content thermal-report__content">
+    <section class="dialog-table-card thermal-report__preview" *ngIf="pdfUrl; else emptyState">
+      <div class="thermal-report__preview-toolbar">
+        <span><mat-icon>preview</mat-icon> Vista previa</span>
+        <div>
+          <button mat-stroked-button type="button" (click)="descargarPdf()">
+            <mat-icon>download</mat-icon> Descargar
+          </button>
+          <button mat-raised-button color="primary" type="button" (click)="abrirParaImprimir()">
+            <mat-icon>print</mat-icon> Abrir / imprimir
+          </button>
+        </div>
+      </div>
+      <iframe class="thermal-report__frame" [src]="pdfUrl" title="Vista previa del reporte térmico"></iframe>
+    </section>
+
+    <ng-template #emptyState>
+      <div class="dialog-table-card">
+        <div class="dialog-empty-state" *ngIf="consultaRealizada && !turnos.length; else readyState">
+          <mat-icon>event_busy</mat-icon>
+          <strong>No hay turnos en el período seleccionado</strong>
+          <span>Amplíe el rango de fechas de trabajo para encontrar turnos anteriores.</span>
+        </div>
+        <ng-template #readyState>
+          <div class="dialog-empty-state">
+            <mat-icon>receipt_long</mat-icon>
+            <strong>{{ cargandoTurnos ? 'Buscando turnos…' : 'El reporte está listo para generarse' }}</strong>
+            <span *ngIf="!cargandoTurnos">Seleccione todos los turnos o uno concreto y pulse Generar PDF.</span>
+          </div>
+        </ng-template>
+      </div>
+    </ng-template>
+  </div>
+</div>
