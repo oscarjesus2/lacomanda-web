@@ -344,7 +344,10 @@
               required
               [disabled]="soloLectura"
             >
-              <mat-option [value]="null" *ngIf="previsualizacionFactura">
+              <mat-option
+                [value]="idProveedorNuevoIa"
+                *ngIf="previsualizacionFactura && !previsualizacionFactura.IdProveedor"
+              >
                 Registrar el proveedor leído en el documento
               </mat-option>
               <mat-option *ngFor="let proveedor of catalogos?.Proveedores" [value]="proveedor.IdProveedor">
@@ -421,7 +424,7 @@
 
         <div
           class="ai-supplier-preview"
-          *ngIf="previsualizacionFactura && !formulario.IdProveedor && !soloLectura"
+          *ngIf="registrandoProveedorLeido && !soloLectura"
         >
           <div class="ai-supplier-preview__intro">
             <mat-icon>add_business</mat-icon>

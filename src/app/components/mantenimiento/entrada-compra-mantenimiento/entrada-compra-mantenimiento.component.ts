@@ -55,6 +55,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     'image/webp',
     'application/pdf'
   ];
+  readonly idProveedorNuevoIa = 0;
 
   @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
     if (value) {
@@ -467,8 +468,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     };
 
     this.guardando = true;
-    const request = this.previsualizacionFactura &&
-      !this.formulario.IdProveedor &&
+    const request = this.registrandoProveedorLeido &&
       !this.compra &&
       !this.notaOrigen
       ? this.entradaCompraService.confirmarFactura({
@@ -1107,7 +1107,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
 
   private formularioValido(): boolean {
     const proveedorValido = !!this.formulario.IdProveedor ||
-      (!!this.previsualizacionFactura &&
+      (this.registrandoProveedorLeido &&
        !!this.proveedorNuevo.IdTipoIdentidad &&
        !!this.proveedorNuevo.NumeroIdentificacion.trim() &&
        !!this.proveedorNuevo.RazonSocial.trim() &&
@@ -1226,7 +1226,8 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     datos: FacturaCompraIaPrevisualizacion
   ): void {
     this.previsualizacionFactura = datos;
-    this.formulario.IdProveedor = datos.IdProveedor;
+    this.formulario.IdProveedor =
+      datos.IdProveedor ?? this.idProveedorNuevoIa;
     this.proveedorNuevo = new ProveedorGuardar({
       IdTipoIdentidad: datos.IdTipoIdentidadProveedor || '',
       NumeroIdentificacion: datos.NumeroIdentificacionProveedor || '',
@@ -1289,6 +1290,12 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       fechaUtc.getUTCMonth(),
       fechaUtc.getUTCDate()
     );
+  }
+
+  get registrandoProveedorLeido(): boolean {
+    return !!this.previsualizacionFactura &&
+      !this.previsualizacionFactura.IdProveedor &&
+      this.formulario.IdProveedor === this.idProveedorNuevoIa;
   }
 
   private incluirProveedorCreado(compra: EntradaCompra): void {
