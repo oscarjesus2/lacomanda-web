@@ -1,9 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, NgZone } from '@angular/core';
-import { BehaviorSubject, firstValueFrom } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import * as RSVP from 'rsvp';
-import { AreaImpresionService } from './area-impresion.service';
-import { DeviceIdentifierService } from './device-identifier.service';
 declare var qz: any;
 
 @Injectable({
@@ -36,14 +34,9 @@ export class QzTrayV224Service {
    */
   readonly confianza$ = this.confianzaSubject.asObservable();
 
-  private mapaImpresorasPromise?: Promise<Map<string, string>>;
-  private identificadorMapa = '';
-
   constructor(
     private http: HttpClient,
     private zone: NgZone,
-    private areaImpresionService: AreaImpresionService,
-    private deviceIdentifierService: DeviceIdentifierService,
   ) {
     // Configuración para asegurar que las conexiones sean seguras
     qz.api.setSha256Type(data => {
@@ -191,7 +184,7 @@ export class QzTrayV224Service {
         format: 'base64',
         data: ByteTicket,
       }];
-      const impresora = await this.resolverImpresoraDelEquipo(printerName?.trim());
+      const impresora = printerName?.trim();
       const usarPredeterminada = !impresora
         || impresora.toUpperCase() === 'PREDETERMINADA';
 
@@ -507,45 +500,4 @@ export class QzTrayV224Service {
     }
   }
 
-  invalidarConfiguracionImpresoras(): void {
-    this.mapaImpresorasPromise = undefined;
-    this.identificadorMapa = '';
-  }
-
-  private async resolverImpresoraDelEquipo(
-    nombrePredeterminado: string,
-  ): Promise<string> {
-    const identificador = this.deviceIdentifierService.getIdentifier();
-    if (!identificador || !nombrePredeterminado) {
-      return nombrePredeterminado;
-    }
-
-    try {
-      if (!this.mapaImpresorasPromise || this.identificadorMapa !== identificador) {
-        this.identificadorMapa = identificador;
-        this.mapaImpresorasPromise = firstValueFrom(
-          this.areaImpresionService.obtenerConfiguracionDispositivo(identificador),
-        ).then(configuraciones => new Map(
-          configuraciones
-            .filter(configuracion => !!configuracion.NombreImpresora)
-            .map(configuracion => [
-              configuracion.NombreImpresoraPredeterminada.trim().toUpperCase(),
-              configuracion.NombreImpresora!.trim(),
-            ]),
-        )).catch(error => {
-          this.mapaImpresorasPromise = undefined;
-          throw error;
-        });
-      }
-
-      const mapa = await this.mapaImpresorasPromise;
-      return mapa.get(nombrePredeterminado.toUpperCase()) ?? nombrePredeterminado;
-    } catch (error) {
-      console.warn(
-        'No se pudo resolver la impresora de este equipo; se usará la configuración general.',
-        error,
-      );
-      return nombrePredeterminado;
-    }
-  }
 }

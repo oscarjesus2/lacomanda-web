@@ -17,7 +17,6 @@ import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 import { TenantTextKey } from 'src/app/services/localization/tenant-texts.en';
 
 interface AreaImpresionEquipo extends AreaImpresion {
-  NombreImpresoraEquipo: string;
   NombreImpresoraGuardada: string;
   FechaUltimaValidacionUtc: string | null;
 }
@@ -49,8 +48,7 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
 
   displayedColumns: string[] = [
     'descripcion',
-    'impresoraGeneral',
-    'impresoraEquipo',
+    'nombreImpresora',
     'estadoEquipo',
     'actions',
   ];
@@ -88,7 +86,7 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
     }
   }
 
-  async refrescarImpresoras(mostrarResultado = true): Promise<void> {
+  async refrescarImpresoras(mostrarResultado = false): Promise<void> {
     this.detectandoImpresoras = true;
     try {
       const resultado = await this.qzTray.listarImpresoras();
@@ -124,38 +122,20 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
     this.filtered.data = this.areas.filter(area =>
       !filtro
       || (area.Descripcion || '').toLowerCase().includes(filtro)
-      || (area.NombreImpresora || '').toLowerCase().includes(filtro)
-      || (area.NombreImpresoraEquipo || '').toLowerCase().includes(filtro),
+      || (area.NombreImpresora || '').toLowerCase().includes(filtro),
     );
-  }
-
-  onPrinterChange(area: AreaImpresionEquipo): void {
-    const alias = area.NombreImpresora.trim().toUpperCase();
-    if (!alias) return;
-
-    this.areas
-      .filter(item => item.IdAreaImpresion !== area.IdAreaImpresion
-        && item.NombreImpresora.trim().toUpperCase() === alias)
-      .forEach(item => item.NombreImpresoraEquipo = area.NombreImpresoraEquipo);
   }
 
   impresoraExiste(area: AreaImpresionEquipo): boolean {
-    const nombre = area.NombreImpresoraEquipo?.trim();
+    const nombre = area.NombreImpresora?.trim();
     if (!nombre || this.qzDisponible !== true) return false;
-    if (nombre.toUpperCase() === 'PREDETERMINADA') {
-      return !!this.impresoraPredeterminada;
-    }
-
-    return this.impresorasInstaladas.some(
-      impresora => impresora.toUpperCase() === nombre.toUpperCase(),
-    );
+    return this.impresorasInstaladas.some(impresora => impresora === nombre);
   }
 
   estadoEquipo(area: AreaImpresionEquipo): TenantTextKey {
     if (this.qzDisponible === false) return 'qzUnavailable';
-    if (!area.NombreImpresoraEquipo) return 'printerNotConfiguredOnDevice';
     if (!this.impresoraExiste(area)) return 'printerNotFoundOnDevice';
-    if (area.NombreImpresoraEquipo !== area.NombreImpresoraGuardada) {
+    if (area.NombreImpresora !== area.NombreImpresoraGuardada) {
       return 'printerReadyToSave';
     }
     return 'printerValidatedOnDevice';
@@ -163,15 +143,15 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
 
   claseEstadoEquipo(area: AreaImpresionEquipo): string {
     if (this.qzDisponible === false) return 'device-printer-status--warning';
-    if (!area.NombreImpresoraEquipo) return 'device-printer-status--neutral';
     if (!this.impresoraExiste(area)) return 'device-printer-status--error';
-    if (area.NombreImpresoraEquipo !== area.NombreImpresoraGuardada) {
+    if (area.NombreImpresora !== area.NombreImpresoraGuardada) {
       return 'device-printer-status--pending';
     }
     return 'device-printer-status--success';
   }
 
-  async guardarConfiguracionEquipo(): Promise<void> {
+  async validarEsteEquipo(): Promise<void> {
+    await this.refrescarImpresoras(false);
     if (this.qzDisponible !== true) {
       await Swal.fire(
         'No se puede validar',
@@ -181,30 +161,17 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
       return;
     }
 
-    const noEncontradas = this.areas.filter(area =>
-      !!area.NombreImpresoraEquipo && !this.impresoraExiste(area),
-    );
-    if (noEncontradas.length) {
-      await Swal.fire(
-        'Revise las impresoras',
-        `No se encontraron en este equipo: ${noEncontradas.map(x => x.Descripcion).join(', ')}.`,
-        'warning',
-      );
-      return;
-    }
-
     this.guardandoEquipo = true;
     try {
+      const encontradas = this.areas.filter(area => this.impresoraExiste(area));
       const respuesta = await firstValueFrom(
         this.areaSrv.guardarConfiguracionDispositivo(
           this.identificadorDispositivo,
           {
             IdentificadorDispositivo: this.identificadorDispositivo,
-            Impresoras: this.areas
-              .filter(area => !!area.NombreImpresoraEquipo)
-              .map(area => ({
+            Impresoras: encontradas.map(area => ({
                 IdAreaImpresion: area.IdAreaImpresion,
-                NombreImpresora: area.NombreImpresoraEquipo,
+                NombreImpresora: area.NombreImpresora,
               })),
           },
         ),
@@ -220,12 +187,22 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
         area.NombreImpresoraGuardada = configuracion?.NombreImpresora ?? '';
         area.FechaUltimaValidacionUtc = configuracion?.FechaUltimaValidacionUtc ?? null;
       });
-      this.qzTray.invalidarConfiguracionImpresoras();
-      await Swal.fire(
-        'Configuración guardada',
-        'Las impresiones de este equipo usarán las impresoras validadas.',
-        'success',
-      );
+      const noEncontradas = this.areas.filter(area => !this.impresoraExiste(area));
+      if (noEncontradas.length) {
+        await Swal.fire(
+          'Validación incompleta',
+          `Se validaron ${encontradas.length} impresora(s). No se encontraron: `
+            + `${noEncontradas.map(area => `${area.Descripcion} (${area.NombreImpresora})`).join(', ')}. `
+            + 'El nombre debe existir exactamente igual en QZ/Windows.',
+          'warning',
+        );
+      } else {
+        await Swal.fire(
+          'Equipo validado',
+          'Todas las impresoras configuradas existen en este equipo.',
+          'success',
+        );
+      }
     } catch (error: any) {
       await Swal.fire(
         'Error',
@@ -242,7 +219,7 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
 
     this.probandoAreaId = area.IdAreaImpresion;
     try {
-      await this.qzTray.probarImpresora(area.NombreImpresoraEquipo);
+      await this.qzTray.probarImpresora(area.NombreImpresora);
       await Swal.fire(
         'Prueba enviada',
         `Se envió una prueba a la impresora de ${area.Descripcion}.`,
@@ -356,11 +333,9 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
     );
     return areas.map(area => {
       const configuracion = porArea.get(area.IdAreaImpresion);
-      const impresoraEquipo = configuracion?.NombreImpresora ?? '';
       return {
         ...area,
-        NombreImpresoraEquipo: impresoraEquipo,
-        NombreImpresoraGuardada: impresoraEquipo,
+        NombreImpresoraGuardada: configuracion?.NombreImpresora ?? '',
         FechaUltimaValidacionUtc: configuracion?.FechaUltimaValidacionUtc ?? null,
       };
     });

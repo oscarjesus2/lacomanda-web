@@ -3568,19 +3568,11 @@ mat-row:hover mat-cell {
 .device-printer-toolbar .full-width { flex: 1; }
 .device-printer-table { overflow-x: auto; }
 .device-printer-table mat-table { min-width: 1040px; }
-.device-printer-table .mat-column-descripcion { flex: 0 0 16%; }
-.device-printer-table .mat-column-impresoraGeneral { flex: 0 0 16%; }
-.device-printer-table .mat-column-impresoraEquipo { flex: 0 0 27%; }
-.device-printer-table .mat-column-estadoEquipo { flex: 1 0 31%; }
+.device-printer-table .mat-column-descripcion { flex: 0 0 24%; }
+.device-printer-table .mat-column-nombreImpresora { flex: 0 0 30%; }
+.device-printer-table .mat-column-estadoEquipo { flex: 1 0 36%; }
 .device-printer-table .mat-column-actions { flex: 0 0 86px; justify-content: center; }
-.device-printer-select { width: 100%; margin-top: 14px; }
-.device-printer-alias {
-  padding: 4px 8px;
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-warm);
-  color: var(--color-primary-dark);
-  font-weight: 700;
-}
+.device-printer-name { overflow-wrap: anywhere; }
 .device-printer-state-cell { flex-wrap: wrap; gap: 7px; }
 .device-printer-test { min-width: 92px; }
 
