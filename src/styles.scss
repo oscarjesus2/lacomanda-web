@@ -3511,6 +3511,85 @@ mat-row:hover mat-cell {
   overflow: hidden;
 }
 
+/* ── Configuración de impresoras por dispositivo ─────────────────────── */
+.device-printer-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 4px 0 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--color-warning-soft), var(--color-surface));
+}
+
+.device-printer-panel__copy,
+.device-printer-panel__actions,
+.device-printer-toolbar,
+.device-printer-state-cell,
+.device-printer-bridge,
+.device-printer-status {
+  display: flex;
+  align-items: center;
+}
+
+.device-printer-panel__copy { gap: 12px; min-width: 260px; }
+.device-printer-panel__copy > mat-icon { color: var(--color-primary); }
+.device-printer-panel__copy strong { color: var(--color-text); }
+.device-printer-panel__copy p {
+  margin: 3px 0 0;
+  color: var(--color-text-muted);
+  font-size: .82rem;
+}
+
+.device-printer-panel__actions { justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.device-printer-bridge,
+.device-printer-status {
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: var(--radius-pill);
+  font-size: .7rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.device-printer-bridge mat-icon,
+.device-printer-status mat-icon { width: 16px; height: 16px; font-size: 16px; }
+.device-printer-bridge { background: var(--color-border); color: var(--color-text-muted); }
+.device-printer-bridge--online,
+.device-printer-status--success { background: var(--color-success-soft); color: var(--color-success); }
+.device-printer-bridge--offline,
+.device-printer-status--error { background: var(--color-warn-soft); color: var(--color-warn); }
+.device-printer-status--warning,
+.device-printer-status--pending { background: var(--color-warning-soft); color: var(--color-warning); }
+.device-printer-status--neutral { background: var(--color-border); color: var(--color-text-muted); }
+
+.device-printer-toolbar { gap: 12px; }
+.device-printer-toolbar .full-width { flex: 1; }
+.device-printer-table { overflow-x: auto; }
+.device-printer-table mat-table { min-width: 1040px; }
+.device-printer-table .mat-column-descripcion { flex: 0 0 16%; }
+.device-printer-table .mat-column-impresoraGeneral { flex: 0 0 16%; }
+.device-printer-table .mat-column-impresoraEquipo { flex: 0 0 27%; }
+.device-printer-table .mat-column-estadoEquipo { flex: 1 0 31%; }
+.device-printer-table .mat-column-actions { flex: 0 0 86px; justify-content: center; }
+.device-printer-select { width: 100%; margin-top: 14px; }
+.device-printer-alias {
+  padding: 4px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-warm);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+.device-printer-state-cell { flex-wrap: wrap; gap: 7px; }
+.device-printer-test { min-width: 92px; }
+
+@media (max-width: 900px) {
+  .device-printer-panel { align-items: stretch; flex-direction: column; }
+  .device-printer-panel__actions { justify-content: flex-start; }
+  .device-printer-toolbar { align-items: stretch; flex-direction: column; }
+}
+
 .ai-document-capture {
   border-color: color-mix(in srgb, var(--color-primary) 32%, var(--color-border));
   background:

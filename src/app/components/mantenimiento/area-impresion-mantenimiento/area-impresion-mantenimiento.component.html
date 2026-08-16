@@ -5,46 +5,120 @@
 
   <h2>{{ 'maintenancePrintAreas' | tenantText }}</h2>
 
-  <!-- LISTA -->
   <div class="empleados-list" *ngIf="!showForm">
-    <button mat-raised-button color="primary" (click)="nuevo()">{{ 'newPrintArea' | tenantText }}</button>
+    <section class="device-printer-panel">
+      <div class="device-printer-panel__copy">
+        <mat-icon>print</mat-icon>
+        <div>
+          <strong>{{ 'printersOnThisDevice' | tenantText }}</strong>
+          <p>{{ 'printersOnThisDeviceHelp' | tenantText }}</p>
+        </div>
+      </div>
+      <div class="device-printer-panel__actions">
+        <span class="device-printer-bridge"
+              [class.device-printer-bridge--online]="qzDisponible === true"
+              [class.device-printer-bridge--offline]="qzDisponible === false">
+          <mat-icon>{{ qzDisponible === true ? 'check_circle' : (qzDisponible === false ? 'error' : 'hourglass_empty') }}</mat-icon>
+          {{ qzDisponible === true ? ('qzConnected' | tenantText) : (qzDisponible === false ? ('qzUnavailable' | tenantText) : ('checkingQz' | tenantText)) }}
+        </span>
+        <button mat-stroked-button type="button" (click)="refrescarImpresoras()" [disabled]="detectandoImpresoras">
+          <mat-icon>refresh</mat-icon>
+          {{ 'checkThisDevice' | tenantText }}
+        </button>
+        <button mat-raised-button color="primary" type="button"
+                (click)="guardarConfiguracionEquipo()"
+                [disabled]="guardandoEquipo || detectandoImpresoras || qzDisponible !== true">
+          <mat-icon>save</mat-icon>
+          {{ 'saveDevicePrinters' | tenantText }}
+        </button>
+      </div>
+    </section>
 
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>{{ 'search' | tenantText }}</mat-label>
-      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" [placeholder]="'descriptionOrPrinter' | tenantText">
-    </mat-form-field>
- <div class="mant-table-card">
-    <mat-table [dataSource]="filtered" class="mat-elevation-z8">
-      <ng-container matColumnDef="descripcion">
-        <mat-header-cell *matHeaderCellDef>{{ 'description' | tenantText }}</mat-header-cell>
-        <mat-cell *matCellDef="let r"> {{ r.Descripcion }} </mat-cell>
-      </ng-container>
+    <div class="device-printer-toolbar">
+      <button mat-raised-button color="primary" (click)="nuevo()">
+        <mat-icon>add</mat-icon>
+        {{ 'newPrintArea' | tenantText }}
+      </button>
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>{{ 'search' | tenantText }}</mat-label>
+        <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()"
+               [placeholder]="'descriptionOrPrinter' | tenantText">
+      </mat-form-field>
+    </div>
 
-      <ng-container matColumnDef="impresora">
-        <mat-header-cell *matHeaderCellDef>{{ 'printerName' | tenantText }}</mat-header-cell>
-        <mat-cell *matCellDef="let r"> {{ r.NombreImpresora }} </mat-cell>
-      </ng-container>
+    <div class="mant-table-card device-printer-table">
+      <mat-table [dataSource]="filtered" class="mat-elevation-z8">
+        <ng-container matColumnDef="descripcion">
+          <mat-header-cell *matHeaderCellDef>{{ 'description' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            <strong>{{ r.Descripcion }}</strong>
+          </mat-cell>
+        </ng-container>
 
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
-        <mat-cell *matCellDef="let r">
-          <button mat-icon-button color="primary" (click)="onEdit(r)">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="onDelete(r.IdAreaImpresion)">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-cell>
-      </ng-container>
+        <ng-container matColumnDef="impresoraGeneral">
+          <mat-header-cell *matHeaderCellDef>{{ 'generalPrinterAlias' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            <span class="device-printer-alias">{{ r.NombreImpresora }}</span>
+          </mat-cell>
+        </ng-container>
 
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-    </mat-table>
+        <ng-container matColumnDef="impresoraEquipo">
+          <mat-header-cell *matHeaderCellDef>{{ 'printerOnThisDevice' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            <mat-form-field appearance="outline" class="device-printer-select">
+              <mat-label>{{ 'selectPrinter' | tenantText }}</mat-label>
+              <mat-select [(ngModel)]="r.NombreImpresoraEquipo" (selectionChange)="onPrinterChange(r)">
+                <mat-option value="">{{ 'doNotPrintOnThisDevice' | tenantText }}</mat-option>
+                <mat-option value="PREDETERMINADA" *ngIf="impresoraPredeterminada">
+                  {{ 'defaultPrinter' | tenantText }} — {{ impresoraPredeterminada }}
+                </mat-option>
+                <mat-option *ngFor="let impresora of impresorasInstaladas" [value]="impresora">
+                  {{ impresora }}
+                  <span *ngIf="impresora === impresoraPredeterminada">({{ 'defaultPrinter' | tenantText }})</span>
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-cell>
+        </ng-container>
 
-    <mat-paginator [length]="areas.length" [pageSize]="5" [pageSizeOptions]="[5,10,20]"></mat-paginator>
+        <ng-container matColumnDef="estadoEquipo">
+          <mat-header-cell *matHeaderCellDef>{{ 'validationStatus' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            <div class="device-printer-state-cell">
+              <span class="device-printer-status" [ngClass]="claseEstadoEquipo(r)">
+                <mat-icon>{{ impresoraExiste(r) ? 'check_circle' : (r.NombreImpresoraEquipo ? 'error' : 'remove_circle_outline') }}</mat-icon>
+                {{ estadoEquipo(r) | tenantText }}
+              </span>
+              <button mat-stroked-button type="button" class="device-printer-test"
+                      (click)="probarImpresora(r)"
+                      [disabled]="!impresoraExiste(r) || probandoAreaId !== null">
+                <mat-icon>print</mat-icon>
+                {{ probandoAreaId === r.IdAreaImpresion ? ('sending' | tenantText) : ('testPrint' | tenantText) }}
+              </button>
+            </div>
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            <button mat-icon-button color="primary" (click)="onEdit(r)" [attr.aria-label]="'edit' | tenantText">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="onDelete(r.IdAreaImpresion)" [attr.aria-label]="'delete' | tenantText">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      </mat-table>
+
+      <mat-paginator [length]="filtered.data.length" [pageSize]="5" [pageSizeOptions]="[5,10,20]"></mat-paginator>
+    </div>
   </div>
-</div>
-  <!-- FORM -->
+
   <form *ngIf="showForm" #areaForm="ngForm" (ngSubmit)="onSubmit()">
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
@@ -54,8 +128,10 @@
       </mat-form-field>
 
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>{{ 'printerName' | tenantText }}</mat-label>
-        <input matInput [(ngModel)]="a.NombreImpresora" name="impresora" required #impresora="ngModel" maxlength="120" [placeholder]="'printerExample' | tenantText">
+        <mat-label>{{ 'generalPrinterAlias' | tenantText }}</mat-label>
+        <input matInput [(ngModel)]="a.NombreImpresora" name="impresora" required #impresora="ngModel"
+               maxlength="100" [placeholder]="'printerExample' | tenantText">
+        <mat-hint>{{ 'generalPrinterAliasHelp' | tenantText }}</mat-hint>
         <mat-error *ngIf="impresora.invalid && (impresora.dirty || impresora.touched)">{{ 'required' | tenantText }}</mat-error>
       </mat-form-field>
     </div>

@@ -3,7 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { Observable, map } from 'rxjs';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
-import { AreaImpresion } from '../models/area-impresion.models';
+import {
+  ActualizarConfiguracionImpresionDispositivo,
+  AreaImpresion,
+  ConfiguracionImpresionDispositivo,
+} from '../models/area-impresion.models';
 
 @Injectable({ providedIn: 'root' })
 export class AreaImpresionService {
@@ -26,5 +30,25 @@ export class AreaImpresionService {
 
   eliminar(id: number): Observable<ApiResponse<boolean>> {
     return this.http.delete<ApiResponse<boolean>>(`${this.base}/${id}`);
+  }
+
+  obtenerConfiguracionDispositivo(
+    identificadorDispositivo: string,
+  ): Observable<ConfiguracionImpresionDispositivo[]> {
+    const identificador = encodeURIComponent(identificadorDispositivo);
+    return this.http.get<ApiResponse<ConfiguracionImpresionDispositivo[]>>(
+      `${this.base}/dispositivos/${identificador}`,
+    ).pipe(map(r => r.Data ?? []));
+  }
+
+  guardarConfiguracionDispositivo(
+    identificadorDispositivo: string,
+    configuracion: ActualizarConfiguracionImpresionDispositivo,
+  ): Observable<ApiResponse<ConfiguracionImpresionDispositivo[]>> {
+    const identificador = encodeURIComponent(identificadorDispositivo);
+    return this.http.put<ApiResponse<ConfiguracionImpresionDispositivo[]>>(
+      `${this.base}/dispositivos/${identificador}`,
+      configuracion,
+    );
   }
 }
