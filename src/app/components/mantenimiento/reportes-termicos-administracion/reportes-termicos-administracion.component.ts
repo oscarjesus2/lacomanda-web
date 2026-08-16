@@ -29,19 +29,19 @@ export class ReportesTermicosAdministracionComponent implements OnInit, OnDestro
   readonly configuraciones: Record<TipoReporteTermicoAdministracion, ReporteTermicoConfiguracion> = {
     'ventas-producto': {
       titulo: 'Ventas por producto',
-      descripcion: 'Detalle térmico de productos vendidos, agrupados igual que en Caja.',
+      descripcion: 'Productos y totales acumulados de todos los turnos incluidos.',
       icono: 'inventory_2',
       nombreArchivo: 'ventas-por-producto',
     },
     'resumen-ventas': {
       titulo: 'Resumen de ventas',
-      descripcion: 'Totales, cobros, divisas, tarjetas, gastos y correlativos de cada turno.',
+      descripcion: 'Totales, cobros, divisas, tarjetas, gastos y correlativos acumulados.',
       icono: 'summarize',
       nombreArchivo: 'resumen-de-ventas',
     },
     'resumen-documentos': {
       titulo: 'Resumen de documentos',
-      descripcion: 'Documentos emitidos y totales por tipo de documento para cada turno.',
+      descripcion: 'Documentos y totales acumulados por tipo para el período seleccionado.',
       icono: 'receipt_long',
       nombreArchivo: 'resumen-de-documentos',
     },
@@ -84,7 +84,7 @@ export class ReportesTermicosAdministracionComponent implements OnInit, OnDestro
       return 'Sin turnos en el período';
     }
     if (this.idTurnoSeleccionado === 0) {
-      return `${this.turnos.length} ${this.turnos.length === 1 ? 'turno' : 'turnos'} · una página térmica por turno`;
+      return `${this.turnos.length} ${this.turnos.length === 1 ? 'turno incluido' : 'turnos incluidos'} · un único reporte consolidado`;
     }
     const turno = this.turnos.find(item => item.IdTurno === this.idTurnoSeleccionado);
     return turno
