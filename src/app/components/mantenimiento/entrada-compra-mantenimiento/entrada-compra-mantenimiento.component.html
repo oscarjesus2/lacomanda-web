@@ -634,120 +634,193 @@
           <mat-icon>format_list_bulleted</mat-icon>
           Detalle del ingreso
         </h3>
-        <div class="dialog-table-card">
-          <div class="dialog-table-wrapper--fill">
-            <mat-table [dataSource]="lineas" class="dialog-table--wide">
-              <ng-container matColumnDef="producto">
-                <mat-header-cell *matHeaderCellDef>Artículo</mat-header-cell>
-                <mat-cell *matCellDef="let linea; let index = index">
-                  <mat-form-field appearance="fill" class="dialog-table-field" *ngIf="!soloLectura; else productoLectura">
-                    <mat-select
-                      [(ngModel)]="linea.IdProducto"
-                      [ngModelOptions]="{standalone: true}"
-                      (selectionChange)="actualizarArticuloLinea(linea)"
-                      placeholder="Seleccione el artículo"
-                    >
-                      <mat-option *ngFor="let articulo of articulosParaAgregar" [value]="articulo.IdProducto">
-                        {{ articulo.Descripcion }} · {{ articulo.UnidadMedida }}
-                      </mat-option>
-                    </mat-select>
-                    <mat-hint *ngIf="linea.DescripcionOriginal || linea.CodigoOriginal || linea.UnidadMedidaOriginal">
-                      Leído: {{ linea.DescripcionOriginal || linea.CodigoOriginal || 'Sin descripción' }}
-                      <ng-container *ngIf="linea.UnidadMedidaOriginal"> · {{ linea.UnidadMedidaOriginal }}</ng-container>
-                    </mat-hint>
-                  </mat-form-field>
-                  <ng-template #productoLectura>{{ linea.Producto }}</ng-template>
-                </mat-cell>
-              </ng-container>
-              <ng-container matColumnDef="cantidad">
-                <mat-header-cell *matHeaderCellDef>Cant.</mat-header-cell>
-                <mat-cell *matCellDef="let linea">
-                  <mat-form-field appearance="fill" class="dialog-table-field dialog-table-field--small" *ngIf="!soloLectura; else cantidadLectura">
-                    <input matInput type="number" min="0.001" step="0.001" [(ngModel)]="linea.Cantidad" [ngModelOptions]="{standalone: true}" (ngModelChange)="actualizarRevisionLinea(linea)">
-                    <mat-hint *ngIf="linea.OrigenIa && linea.FactorConversionUnidad && linea.FactorConversionUnidad !== 1">
-                      {{ linea.CantidadOriginal | number:'1.0-3' }} {{ linea.UnidadMedidaOriginal }}
-                      → {{ linea.Cantidad | number:'1.0-3' }} {{ linea.UnidadMedida }}
-                    </mat-hint>
-                  </mat-form-field>
-                  <ng-template #cantidadLectura>{{ linea.Cantidad | number:'1.0-3' }}</ng-template>
-                </mat-cell>
-              </ng-container>
-              <ng-container matColumnDef="unidad">
-                <mat-header-cell *matHeaderCellDef>Unidad</mat-header-cell>
-                <mat-cell *matCellDef="let linea">{{ linea.UnidadMedida }}</mat-cell>
-              </ng-container>
-              <ng-container matColumnDef="precio">
-                <mat-header-cell *matHeaderCellDef>Importe</mat-header-cell>
-                <mat-cell *matCellDef="let linea">
-                  <mat-form-field appearance="fill" class="dialog-table-field dialog-table-field--small" *ngIf="!soloLectura; else importeLectura">
-                    <input matInput type="number" min="0" step="0.01" [(ngModel)]="linea.Importe" [ngModelOptions]="{standalone: true}" (ngModelChange)="actualizarRevisionLinea(linea)">
-                  </mat-form-field>
-                  <ng-template #importeLectura>{{ linea.Importe | number:'1.2-2' }}</ng-template>
-                </mat-cell>
-              </ng-container>
-              <ng-container matColumnDef="subarea">
-                <mat-header-cell *matHeaderCellDef>Subárea</mat-header-cell>
-                <mat-cell *matCellDef="let linea">
-                  <mat-form-field appearance="fill" class="dialog-table-field" *ngIf="!soloLectura && linea.Inventariable; else subareaLectura">
-                    <mat-select [(ngModel)]="linea.IdSubAreaAlmacen" [ngModelOptions]="{standalone: true}" (selectionChange)="actualizarRevisionLinea(linea)" placeholder="Seleccione destino">
-                      <mat-option *ngFor="let subarea of catalogos?.SubAreas" [value]="subarea.IdSubAreaAlmacen">
-                        {{ subarea.AreaAlmacen }} · {{ subarea.Descripcion }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <ng-template #subareaLectura>{{ descripcionSubArea(linea.IdSubAreaAlmacen) }}</ng-template>
-                </mat-cell>
-              </ng-container>
-              <ng-container matColumnDef="impuestos">
-                <mat-header-cell *matHeaderCellDef>Impuestos</mat-header-cell>
-                <mat-cell *matCellDef="let linea">
-                  <mat-form-field appearance="fill" class="dialog-table-field" *ngIf="!soloLectura; else impuestosLectura">
-                    <mat-select [(ngModel)]="linea.Impuestos" [ngModelOptions]="{standalone: true}" multiple>
-                      <mat-option *ngFor="let impuesto of catalogos?.Impuestos" [value]="impuesto.IdImpuestoPais">
-                        {{ impuesto.Descripcion }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <ng-template #impuestosLectura>{{ descripcionImpuestos(linea.Impuestos) }}</ng-template>
-                </mat-cell>
-              </ng-container>
-              <ng-container matColumnDef="base">
-                <mat-header-cell *matHeaderCellDef>Base</mat-header-cell>
-                <mat-cell *matCellDef="let linea">{{ baseLinea(linea) | number:'1.2-2' }}</mat-cell>
-              </ng-container>
-              <ng-container matColumnDef="tributos">
-                <mat-header-cell *matHeaderCellDef>Tributos</mat-header-cell>
-                <mat-cell *matCellDef="let linea">{{ impuestosLinea(linea) | number:'1.2-2' }}</mat-cell>
-              </ng-container>
-              <ng-container matColumnDef="total">
-                <mat-header-cell *matHeaderCellDef>Total</mat-header-cell>
-                <mat-cell *matCellDef="let linea">{{ totalLinea(linea) | number:'1.2-2' }}</mat-cell>
-              </ng-container>
-              <ng-container matColumnDef="acciones">
-                <mat-header-cell *matHeaderCellDef></mat-header-cell>
-                <mat-cell *matCellDef="let linea; let index = index">
-                  <button
-                    mat-icon-button
-                    color="warn"
-                    type="button"
-                    aria-label="Quitar artículo"
-                    (click)="quitarLinea(index)"
-                    *ngIf="!soloLectura"
+        <div class="dialog-table-card purchase-entry-detail">
+          <div class="purchase-entry-lines" *ngIf="lineas.length > 0; else detalleIngresoVacio">
+            <article
+              class="purchase-entry-line"
+              [class.purchase-entry-line--review]="linea.RequiereRevision"
+              *ngFor="let linea of lineas; let index = index"
+            >
+              <div class="purchase-entry-line__main">
+                <mat-form-field
+                  appearance="fill"
+                  class="purchase-entry-line__article"
+                  *ngIf="!soloLectura; else productoLectura"
+                >
+                  <mat-label>Artículo</mat-label>
+                  <mat-select
+                    [(ngModel)]="linea.IdProducto"
+                    [ngModelOptions]="{standalone: true}"
+                    (selectionChange)="actualizarArticuloLinea(linea)"
+                    placeholder="Seleccione el artículo"
+                    [matTooltip]="linea.Producto || linea.DescripcionOriginal || ''"
                   >
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </mat-cell>
-              </ng-container>
+                    <mat-select-trigger>
+                      <span class="purchase-entry-line__selection">
+                        {{ linea.Producto || 'Seleccione el artículo' }}
+                      </span>
+                    </mat-select-trigger>
+                    <mat-option *ngFor="let articulo of articulosParaAgregar" [value]="articulo.IdProducto">
+                      {{ articulo.Descripcion }} · {{ articulo.UnidadMedida }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <ng-template #productoLectura>
+                  <div class="purchase-entry-line__display purchase-entry-line__article">
+                    <span>Artículo</span>
+                    <strong>{{ linea.Producto || 'Sin artículo asociado' }}</strong>
+                  </div>
+                </ng-template>
 
-              <mat-header-row *matHeaderRowDef="detalleColumns"></mat-header-row>
-              <mat-row *matRowDef="let row; columns: detalleColumns"></mat-row>
-            </mat-table>
+                <mat-form-field appearance="fill" *ngIf="!soloLectura; else cantidadLectura">
+                  <mat-label>Cantidad</mat-label>
+                  <input
+                    matInput
+                    type="number"
+                    min="0.001"
+                    step="0.001"
+                    [(ngModel)]="linea.Cantidad"
+                    [ngModelOptions]="{standalone: true}"
+                    (ngModelChange)="actualizarRevisionLinea(linea)"
+                  >
+                </mat-form-field>
+                <ng-template #cantidadLectura>
+                  <div class="purchase-entry-line__display">
+                    <span>Cantidad</span>
+                    <strong>{{ linea.Cantidad | number:'1.0-3' }}</strong>
+                  </div>
+                </ng-template>
 
-            <div class="dialog-empty-state" *ngIf="lineas.length === 0">
+                <div class="purchase-entry-line__display">
+                  <span>Unidad</span>
+                  <strong>{{ linea.UnidadMedida || 'Por definir' }}</strong>
+                </div>
+
+                <mat-form-field appearance="fill" *ngIf="!soloLectura; else importeLectura">
+                  <mat-label>Importe</mat-label>
+                  <input
+                    matInput
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    [(ngModel)]="linea.Importe"
+                    [ngModelOptions]="{standalone: true}"
+                    (ngModelChange)="actualizarRevisionLinea(linea)"
+                  >
+                </mat-form-field>
+                <ng-template #importeLectura>
+                  <div class="purchase-entry-line__display">
+                    <span>Importe</span>
+                    <strong>{{ linea.Importe | number:'1.2-2' }}</strong>
+                  </div>
+                </ng-template>
+
+                <mat-form-field
+                  appearance="fill"
+                  class="purchase-entry-line__subarea"
+                  *ngIf="!soloLectura && linea.Inventariable; else subareaLectura"
+                >
+                  <mat-label>Subárea de ingreso</mat-label>
+                  <mat-select
+                    [(ngModel)]="linea.IdSubAreaAlmacen"
+                    [ngModelOptions]="{standalone: true}"
+                    (selectionChange)="actualizarRevisionLinea(linea)"
+                    placeholder="Seleccione destino"
+                    [matTooltip]="descripcionSubArea(linea.IdSubAreaAlmacen)"
+                  >
+                    <mat-select-trigger>
+                      {{ descripcionSubArea(linea.IdSubAreaAlmacen) }}
+                    </mat-select-trigger>
+                    <mat-option *ngFor="let subarea of catalogos?.SubAreas" [value]="subarea.IdSubAreaAlmacen">
+                      {{ subarea.AreaAlmacen }} · {{ subarea.Descripcion }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <ng-template #subareaLectura>
+                  <div class="purchase-entry-line__display purchase-entry-line__subarea">
+                    <span>Subárea de ingreso</span>
+                    <strong>
+                      {{ linea.Inventariable ? descripcionSubArea(linea.IdSubAreaAlmacen) : 'No aplica' }}
+                    </strong>
+                  </div>
+                </ng-template>
+
+                <button
+                  mat-icon-button
+                  class="purchase-entry-line__remove"
+                  color="warn"
+                  type="button"
+                  aria-label="Quitar artículo"
+                  matTooltip="Quitar artículo"
+                  (click)="quitarLinea(index)"
+                  *ngIf="!soloLectura"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+
+              <div class="purchase-entry-line__fiscal">
+                <mat-form-field appearance="fill" *ngIf="!soloLectura; else impuestosLectura">
+                  <mat-label>Impuestos aplicados</mat-label>
+                  <mat-select
+                    [(ngModel)]="linea.Impuestos"
+                    [ngModelOptions]="{standalone: true}"
+                    multiple
+                    [matTooltip]="descripcionImpuestos(linea.Impuestos)"
+                  >
+                    <mat-select-trigger>
+                      {{ descripcionImpuestos(linea.Impuestos) || 'Sin impuestos' }}
+                    </mat-select-trigger>
+                    <mat-option *ngFor="let impuesto of catalogos?.Impuestos" [value]="impuesto.IdImpuestoPais">
+                      {{ impuesto.Descripcion }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <ng-template #impuestosLectura>
+                  <div class="purchase-entry-line__display purchase-entry-line__taxes">
+                    <span>Impuestos aplicados</span>
+                    <strong>{{ descripcionImpuestos(linea.Impuestos) || 'Sin impuestos' }}</strong>
+                  </div>
+                </ng-template>
+
+                <div class="purchase-entry-line__metric">
+                  <span>Base imponible</span>
+                  <strong>{{ baseLinea(linea) | number:'1.2-2' }}</strong>
+                </div>
+                <div class="purchase-entry-line__metric">
+                  <span>Tributos</span>
+                  <strong>{{ impuestosLinea(linea) | number:'1.2-2' }}</strong>
+                </div>
+                <div class="purchase-entry-line__metric purchase-entry-line__metric--total">
+                  <span>Total de la línea</span>
+                  <strong>{{ totalLinea(linea) | number:'1.2-2' }}</strong>
+                </div>
+              </div>
+
+              <div
+                class="purchase-entry-line__source"
+                *ngIf="linea.DescripcionOriginal || linea.CodigoOriginal || linea.UnidadMedidaOriginal"
+              >
+                <mat-icon>auto_awesome</mat-icon>
+                <span>
+                  Leído del documento:
+                  {{ linea.DescripcionOriginal || linea.CodigoOriginal || 'Sin descripción' }}
+                  <ng-container *ngIf="linea.UnidadMedidaOriginal"> · {{ linea.UnidadMedidaOriginal }}</ng-container>
+                </span>
+                <span *ngIf="linea.OrigenIa && linea.FactorConversionUnidad && linea.FactorConversionUnidad !== 1">
+                  Conversión: {{ linea.CantidadOriginal | number:'1.0-3' }} {{ linea.UnidadMedidaOriginal }}
+                  → {{ linea.Cantidad | number:'1.0-3' }} {{ linea.UnidadMedida }}
+                </span>
+              </div>
+            </article>
+          </div>
+
+          <ng-template #detalleIngresoVacio>
+            <div class="dialog-empty-state">
               <mat-icon>shopping_cart</mat-icon>
               <span>Agregue los artículos del documento.</span>
             </div>
-          </div>
+          </ng-template>
         </div>
       </section>
 

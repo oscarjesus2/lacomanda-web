@@ -74,19 +74,6 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     'estado',
     'acciones'
   ];
-  readonly detalleColumns = [
-    'producto',
-    'cantidad',
-    'unidad',
-    'precio',
-    'subarea',
-    'impuestos',
-    'base',
-    'tributos',
-    'total',
-    'acciones'
-  ];
-
   dataSource = new MatTableDataSource<EntradaCompraResumen>([]);
   catalogos: EntradaCompraCatalogos | null = null;
   compra: EntradaCompra | null = null;

@@ -6,13 +6,12 @@ import { StorageService } from 'src/app/services/storage.service';
 import { DataService } from '../app/services/data.service';
 import { HeaderService } from './services/header.service';
 import { BackendStatusService } from './services/backend-status.service';
-import { SwUpdate } from '@angular/service-worker';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { TenantTextCatalogService } from './services/localization/tenant-text-catalog.service';
 import { AgenteImpresionPedidosService } from './services/agente-impresion-pedidos.service';
 import { EstacionSessionRealtimeService } from './services/estacion-session-realtime.service';
 import { EstadoImpresion, EstadoImpresionService } from './services/estado-impresion.service';
 import { NivelUsuarioEnum } from './enums/enum';
+import { AppUpdateService } from './services/app-update.service';
 
 @Component({
   selector: 'app-root',
@@ -55,8 +54,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   constructor(
-    private swUpdate: SwUpdate,
-    private snackBar: MatSnackBar,
+    private appUpdateService: AppUpdateService,
     private router: Router,
     private storageService: StorageService,
     private dataService: DataService,
@@ -68,7 +66,6 @@ export class AppComponent implements OnInit, OnDestroy {
     private estadoImpresionService: EstadoImpresionService,
   ) {
     this.backendDown$ = this.backendStatusService.isDown$;
-    this.checkForUpdates();
     this.headerService.headerVisible$.subscribe(visible => {
       this.headerVisible = visible;
       if (visible) {
@@ -127,12 +124,14 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.appUpdateService.stop();
     this.agenteImpresionPedidos.detener();
     this.estacionSessionRealtime.stop();
     this.storageService.logout();
   }
 
   async ngOnInit(): Promise<void> {    
+     this.appUpdateService.start();
      this.estacionSessionRealtime.start();
      const session = this.storageService.getCurrentSession();
      this.textCatalog.setCulture(
@@ -167,24 +166,6 @@ export class AppComponent implements OnInit, OnDestroy {
   @HostListener('document:keydown.escape')
   closeOperationalHeaderWithEscape(): void {
     this.closeOperationalHeader();
-  }
-
-  checkForUpdates() {
-    if (this.swUpdate.isEnabled) {
-      this.swUpdate.available.subscribe(() => {
-        const snackBarRef = this.snackBar.open('Nueva versión disponible', 'Actualizar');
-
-        snackBarRef.onAction().subscribe(() => {
-          this.updateToLatestVersion();
-        });
-      });
-    }
-  }
-
-  updateToLatestVersion() {
-    this.swUpdate.activateUpdate().then(() => {
-      document.location.reload();  // Recargar la página para cargar la nueva versión
-    });
   }
 
   getTitle(url: string): string {
