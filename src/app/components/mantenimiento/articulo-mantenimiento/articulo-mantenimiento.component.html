@@ -40,14 +40,7 @@
             <ng-container matColumnDef="descripcion">
               <mat-header-cell *matHeaderCellDef>Descripción</mat-header-cell>
               <mat-cell *matCellDef="let row">
-                <span>{{ row.Descripcion }}</span>
-                <small
-                  *ngIf="row.InsumoProducto === 'P' &&
-                         row.DescripcionCompra &&
-                         row.DescripcionCompra !== row.Descripcion"
-                >
-                  Compra: {{ row.DescripcionCompra }}
-                </small>
+                <span>{{ row.DescripcionCompra || row.Descripcion }}</span>
               </mat-cell>
             </ng-container>
 

@@ -108,7 +108,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
     const filtro = this.normalizar(this.filtro);
     this.dataSource.data = this.articulos.filter(item =>
       this.normalizar(item.Codigo).includes(filtro) ||
-      this.normalizar(item.Descripcion).includes(filtro) ||
+      this.normalizar(item.DescripcionCompra || item.Descripcion).includes(filtro) ||
       this.normalizar(item.GrupoCompra).includes(filtro) ||
       this.normalizar(item.UnidadStock).includes(filtro) ||
       this.normalizar(this.descripcionTipo(item.InsumoProducto)).includes(filtro) ||
