@@ -27,7 +27,7 @@
     <mat-table [dataSource]="filteredEspacios" class="mat-elevation-z8">
       <!-- Descripcion -->
       <ng-container matColumnDef="descripcion">
-        <mat-header-cell *matHeaderCellDef> {{ 'description' | tenantText }} </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef> {{ 'spaceType' | tenantText }} </mat-header-cell>
         <mat-cell *matCellDef="let espacio"> {{ espacio.Descripcion }} </mat-cell>
       </ng-container>
 
@@ -91,7 +91,7 @@
   <form *ngIf="showForm" #espacioForm="ngForm" (ngSubmit)="onSubmit()">
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>{{ 'description' | tenantText }}</mat-label>
+        <mat-label>{{ 'spaceType' | tenantText }}</mat-label>
         <input type="text" matInput [(ngModel)]="espacio.Descripcion" [matAutocomplete]="auto" name="descripcion" required>
         <mat-autocomplete #auto="matAutocomplete">
           <mat-option *ngFor="let opt of descripcionesEjemplo" [value]="opt">{{ opt }}</mat-option>

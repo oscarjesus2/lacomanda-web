@@ -88,7 +88,7 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Resumen de Ventas',  route: '/ventas/resumen-ventas',     icon: 'summarize',  label: 'Resumen',      titleKey: 'salesSummary',   labelKey: 'summary'             },
         { title: 'Liquidación',        route: '/ventas/liquidacion',        icon: 'payments',   label: 'Liquidación',  titleKey: 'settlement',     labelKey: 'settlement'          },
         { title: 'Productividad por empleado', route: '/ventas/reportes/productividad-empleados', icon: 'groups', label: 'Productividad', reporte: 'productividad-empleados', feature: 'operacion.reportes' },
-        { title: 'Mesas y servicio', route: '/ventas/reportes/mesas-servicio', icon: 'table_restaurant', label: 'Mesas y servicio', reporte: 'mesas-servicio', feature: 'operacion.reportes' },
+        { title: 'Espacios y servicio', route: '/ventas/reportes/mesas-servicio', icon: 'table_restaurant', label: 'Espacios y servicio', reporte: 'mesas-servicio', feature: 'operacion.reportes' },
         { title: 'Productos sin rotación', route: '/ventas/reportes/productos-sin-rotacion', icon: 'inventory', label: 'Sin rotación', reporte: 'productos-sin-rotacion', feature: 'operacion.reportes' },
         { title: 'Efectividad de descuentos', route: '/ventas/reportes/efectividad-descuentos', icon: 'percent', label: 'Descuentos', reporte: 'efectividad-descuentos', feature: 'operacion.reportes' },
         { title: 'Clientes y recurrencia', route: '/ventas/reportes/clientes-recurrencia', icon: 'loyalty', label: 'Recurrencia', reporte: 'clientes-recurrencia', feature: 'operacion.reportes' },

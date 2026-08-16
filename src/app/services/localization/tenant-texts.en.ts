@@ -644,7 +644,8 @@ export const EN_TEXTS = {
   // Space maintenance (espacios)
   maintenanceSpaces: 'Space maintenance',
   newSpace: 'New space',
-  searchSpace: 'Search by description, number, position or environment',
+  searchSpace: 'Search by type, number, position or environment',
+  spaceType: 'Space type',
   environment: 'Zone',
   selectEnvironment: 'Select a zone.',
   numberRequiredGreaterThanZero: 'The number is required and must be greater than 0.',

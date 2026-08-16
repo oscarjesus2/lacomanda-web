@@ -63,7 +63,7 @@
 
       <div class="sales-analytics__bars" *ngIf="puntosGrafico.length; else chartEmpty">
         <div class="sales-analytics__bar-row" *ngFor="let punto of puntosGrafico; let posicion = index">
-          <span class="sales-analytics__rank">{{ posicion + 1 }}</span>
+          <span class="sales-analytics__rank" [title]="'Posición ' + (posicion + 1) + ' del ranking'">{{ posicion + 1 }}.º</span>
           <span class="sales-analytics__bar-label" [title]="punto.etiqueta">{{ punto.etiqueta }}</span>
           <span class="sales-analytics__bar-track">
             <span class="sales-analytics__bar-fill" [style.width.%]="anchoBarra(punto)"></span>

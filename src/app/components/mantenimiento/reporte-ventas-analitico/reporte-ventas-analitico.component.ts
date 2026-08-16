@@ -96,8 +96,11 @@ export class ReporteVentasAnaliticoComponent implements OnInit {
           this.mostrarError(response.Message);
           return;
         }
-        this.resultado = response.Data;
-        this.dataSource.data = response.Data?.Items ?? [];
+        const items = this.normalizarItems(response.Data?.Items ?? []);
+        this.resultado = response.Data
+          ? { ...response.Data, Items: items }
+          : null;
+        this.dataSource.data = items;
         this.construirGrafico();
         this.aplicarFiltro();
       },
@@ -190,6 +193,17 @@ export class ReporteVentasAnaliticoComponent implements OnInit {
       .slice(0, 8);
   }
 
+  private normalizarItems(
+    items: Record<string, unknown>[]
+  ): Record<string, unknown>[] {
+    if (this.data.tipo !== 'mesas-servicio') return items;
+
+    return items.map(item => ({
+      ...item,
+      Espacio: item['Espacio'] || item['Mesa'] || 'Sin identificar'
+    }));
+  }
+
   private crearConfiguracion(tipo: TipoReporteVentas): ConfiguracionVisualReporte {
     const configs: Record<TipoReporteVentas, ConfiguracionVisualReporte> = {
       'productividad-empleados': {
@@ -213,20 +227,20 @@ export class ReporteVentasAnaliticoComponent implements OnInit {
         graficoValorSecundario: 'VentaQrAtendida', graficoValorSecundarioEtiqueta: 'Pedido por clientes QR', graficoFormatoSecundario: 'moneda'
       },
       'mesas-servicio': {
-        tipo, titulo: 'Mesas y servicio', descripcion: 'Ocupación, rotación, comensales y rendimiento de cada mesa.', icono: 'table_restaurant',
-        ayuda: 'La duración solo se calcula cuando el servicio tiene apertura y cierre registrados; el reporte indica cuántos servicios disponen de ese dato.',
+        tipo, titulo: 'Espacios y servicio', descripcion: 'Ocupación, rotación, comensales y rendimiento de cada espacio.', icono: 'table_restaurant',
+        ayuda: 'Cada espacio se identifica por su tipo y número, por ejemplo Mesa 1, Barra 2 o Box 3. La duración solo se calcula cuando el servicio tiene apertura y cierre registrados.',
         indicadores: [
-          { campo: 'VentaTotal', etiqueta: 'Venta en mesa', icono: 'payments', formato: 'moneda', tono: 'positivo' },
+          { campo: 'VentaTotal', etiqueta: 'Venta en espacios', icono: 'payments', formato: 'moneda', tono: 'positivo' },
           { campo: 'Servicios', etiqueta: 'Servicios', icono: 'room_service', formato: 'numero' },
           { campo: 'Comensales', etiqueta: 'Comensales', icono: 'groups', formato: 'numero' },
           { campo: 'DuracionPromedioMinutos', etiqueta: 'Duración media', icono: 'timer', formato: 'duracion' }
         ],
         columnas: [
-          { campo: 'Ambiente', etiqueta: 'Ambiente' }, { campo: 'Mesa', etiqueta: 'Mesa' }, { campo: 'Servicios', etiqueta: 'Servicios', formato: 'numero' },
+          { campo: 'Ambiente', etiqueta: 'Ambiente' }, { campo: 'Espacio', etiqueta: 'Espacio' }, { campo: 'Servicios', etiqueta: 'Servicios', formato: 'numero' },
           { campo: 'Pedidos', etiqueta: 'Pedidos', formato: 'numero' }, { campo: 'Comensales', etiqueta: 'Comensales', formato: 'numero' },
           { campo: 'VentaNeta', etiqueta: 'Venta neta', formato: 'moneda' }, { campo: 'TicketMedio', etiqueta: 'Ticket medio', formato: 'moneda' },
           { campo: 'VentaPorComensal', etiqueta: 'Venta / comensal', formato: 'moneda' }, { campo: 'DuracionPromedioMinutos', etiqueta: 'Duración media', formato: 'duracion' }
-        ], graficoEtiqueta: 'Mesa', graficoValor: 'VentaNeta', graficoValorEtiqueta: 'Venta neta', graficoFormato: 'moneda',
+        ], graficoEtiqueta: 'Espacio', graficoValor: 'VentaNeta', graficoValorEtiqueta: 'Venta neta', graficoFormato: 'moneda',
         graficoValorSecundario: 'Servicios', graficoValorSecundarioEtiqueta: 'Servicios', graficoFormatoSecundario: 'numero'
       },
       'productos-sin-rotacion': {

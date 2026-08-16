@@ -648,7 +648,8 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   // Mantenimiento de espacios
   maintenanceSpaces: 'Mantenimiento de espacios',
   newSpace: 'Nuevo espacio',
-  searchSpace: 'Buscar por descripción, número, posición o ambiente',
+  searchSpace: 'Buscar por tipo, número, posición o ambiente',
+  spaceType: 'Tipo de espacio',
   environment: 'Ambiente',
   selectEnvironment: 'Seleccione un ambiente.',
   numberRequiredGreaterThanZero: 'El número es requerido y debe ser mayor a 0.',

@@ -28,7 +28,7 @@ export class EspaciosMantenimientoComponent implements OnInit {
 
   // Estado UI
   showForm = false;
-  descripcionesEjemplo = ['Espacio','Barra','Box','Lounge','Mostrador'];
+  descripcionesEjemplo = ['Mesa', 'Barra', 'Box', 'Lounge', 'Mostrador'];
 
   // Datos
   espacio: Espacios = new Espacios();
@@ -69,13 +69,13 @@ export class EspaciosMantenimientoComponent implements OnInit {
           this.espacios = res.Data || [];
           this.filteredEspacios.data = this.espacios;
         } else {
-          Swal.fire('Error', res.Message || 'Error al cargar las espacios', 'error');
+          Swal.fire('Error', res.Message || 'Error al cargar los espacios', 'error');
         }
         this.spinnerService.hide();
       },
       error: () => {
         this.spinnerService.hide();
-        Swal.fire('Error', 'No se pudo cargar las espacios', 'error');
+        Swal.fire('Error', 'No se pudieron cargar los espacios', 'error');
       }
     });
   }
@@ -245,12 +245,12 @@ export class EspaciosMantenimientoComponent implements OnInit {
           if (res.Success) {
             this.cargarEspacios();
             this.showForm = false;
-            Swal.fire('espacio actualizada', '', 'success');
+            Swal.fire('Espacio actualizado', '', 'success');
           } else {
-            Swal.fire('Error', res.Message || 'Error al actualizar la espacio', 'error');
+            Swal.fire('Error', res.Message || 'Error al actualizar el espacio', 'error');
           }
         },
-        error: () => Swal.fire('Error', 'No se pudo actualizar la espacio', 'error')
+        error: () => Swal.fire('Error', 'No se pudo actualizar el espacio', 'error')
       });
     } else {
       this.espacioService.createEspacio(this.espacio).subscribe({
@@ -258,12 +258,12 @@ export class EspaciosMantenimientoComponent implements OnInit {
           if (res.Success) {
             this.cargarEspacios();
             this.showForm = false;
-            Swal.fire('Espacio creada', '', 'success');
+            Swal.fire('Espacio creado', '', 'success');
           } else {
-            Swal.fire('Error', res.Message || 'Error al crear la espacio', 'error');
+            Swal.fire('Error', res.Message || 'Error al crear el espacio', 'error');
           }
         },
-        error: () => Swal.fire('Error', 'No se pudo crear la espacio', 'error')
+        error: () => Swal.fire('Error', 'No se pudo crear el espacio', 'error')
       });
     }
   }
@@ -299,7 +299,7 @@ export class EspaciosMantenimientoComponent implements OnInit {
       return;
     }
 
-    // Posiciones ocupadas en el ambiente seleccionado (excluyendo la espacio actual si está editando)
+    // Posiciones ocupadas en el ambiente seleccionado (excluyendo el espacio actual si está editando)
     const ocupadas = this.espacios
       .filter(m => m.IdAmbiente === this.selectedAmbiente!.IdAmbiente)
       .filter(m => !(this.espacio.IdEspacio && m.IdEspacio === this.espacio.IdEspacio))
