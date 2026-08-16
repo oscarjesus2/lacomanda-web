@@ -7,10 +7,10 @@ export interface AreaImpresion {
 export interface ConfiguracionImpresionDispositivo {
   IdAreaImpresion: number;
   Descripcion: string;
-  NombreImpresoraPredeterminada: string;
-  NombreImpresora: string | null;
+  NombreImpresoraConfigurada: string;
+  NombreImpresoraValidada: string | null;
   FechaUltimaValidacionUtc: string | null;
-  Configurada: boolean;
+  Validada: boolean;
 }
 
 export interface ImpresoraAreaDispositivo {

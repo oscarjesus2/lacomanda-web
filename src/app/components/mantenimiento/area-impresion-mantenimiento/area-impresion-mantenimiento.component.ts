@@ -184,7 +184,7 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
       const porArea = new Map(guardadas.map(item => [item.IdAreaImpresion, item]));
       this.areas.forEach(area => {
         const configuracion = porArea.get(area.IdAreaImpresion);
-        area.NombreImpresoraGuardada = configuracion?.NombreImpresora ?? '';
+        area.NombreImpresoraGuardada = configuracion?.NombreImpresoraValidada ?? '';
         area.FechaUltimaValidacionUtc = configuracion?.FechaUltimaValidacionUtc ?? null;
       });
       const noEncontradas = this.areas.filter(area => !this.impresoraExiste(area));
@@ -335,7 +335,7 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
       const configuracion = porArea.get(area.IdAreaImpresion);
       return {
         ...area,
-        NombreImpresoraGuardada: configuracion?.NombreImpresora ?? '',
+        NombreImpresoraGuardada: configuracion?.NombreImpresoraValidada ?? '',
         FechaUltimaValidacionUtc: configuracion?.FechaUltimaValidacionUtc ?? null,
       };
     });
