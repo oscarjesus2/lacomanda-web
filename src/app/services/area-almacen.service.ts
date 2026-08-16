@@ -2,10 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
-import {
-  AreaAlmacenGuardar,
-  AreaAlmacenMaestro
-} from '../models/almacen-maestro.models';
+import { AreaAlmacenGuardar, AreaAlmacenMaestro } from '../models/almacen-maestro.models';
 import { AreaAlmacen } from '../models/receta.models';
 import { environment } from 'src/environments/environment';
 
