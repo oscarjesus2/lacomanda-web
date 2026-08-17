@@ -138,6 +138,8 @@ import { ControlHorarioMantenimientoComponent } from './components/mantenimiento
 import { ControlHorarioCorreccionComponent } from './components/mantenimiento/control-horario-correccion/control-horario-correccion.component';
 import { ReporteVentasAnaliticoComponent } from './components/mantenimiento/reporte-ventas-analitico/reporte-ventas-analitico.component';
 import { ReservasMantenimientoComponent } from './components/mantenimiento/reservas-mantenimiento/reservas-mantenimiento.component';
+import { AgendaReservasComponent } from './components/reservas/agenda-reservas/agenda-reservas.component';
+import { AgendaReservasDialogComponent } from './components/reservas/agenda-reservas-dialog/agenda-reservas-dialog.component';
 import { ReservasOnlineComponent } from './pages/reservas-online/reservas-online.component';
 import { ReportesTermicosAdministracionComponent } from './components/mantenimiento/reportes-termicos-administracion/reportes-termicos-administracion.component';
 import { MonitorComandasComponent } from './components/mantenimiento/monitor-comandas/monitor-comandas.component';
@@ -252,6 +254,8 @@ export const MY_DATE_FORMATS = {
     ControlHorarioCorreccionComponent,
     ReporteVentasAnaliticoComponent,
     ReservasMantenimientoComponent,
+    AgendaReservasComponent,
+    AgendaReservasDialogComponent,
     ReservasOnlineComponent,
     ReportesTermicosAdministracionComponent,
     MonitorComandasComponent,

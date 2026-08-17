@@ -84,6 +84,8 @@ import { DeviceCapabilitiesService } from 'src/app/services/device-capabilities.
 import { AgenteImpresionPedidosService } from 'src/app/services/agente-impresion-pedidos.service';
 import { AgenteImpresionLocalService } from 'src/app/services/agente-impresion-local.service';
 import { EstadoImpresionService } from 'src/app/services/estado-impresion.service';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { AgendaReservasDialogComponent } from 'src/app/components/reservas/agenda-reservas-dialog/agenda-reservas-dialog.component';
 
 @Component({
   selector: 'app-venta',
@@ -200,6 +202,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   isBloquearDisabled = false;
   selectedRow: PedidoDet;
   isAdmin = false;
+  reservasHabilitadas = false;
   listaSociosNegocio: SocioNegocio[];
   public canalVentaEnum = CanalVentaEnum;
   idCanalVentaSelected: number = this.canalVentaEnum.ESPACIO;
@@ -238,6 +241,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     private agenteImpresionPedidos: AgenteImpresionPedidosService,
     private agenteImpresionLocal: AgenteImpresionLocalService,
     private estadoImpresion: EstadoImpresionService,
+    private licenciaTenantService: LicenciaTenantService,
     private activatedRoute: ActivatedRoute) {
 
 
@@ -427,6 +431,16 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async ngOnInit() {
     this.configuracionService.get().subscribe(cfg => this.config = cfg);
+    this.licenciaTenantService.obtener().subscribe({
+      next: response => {
+        const licencia = response.Data;
+        this.reservasHabilitadas = licencia == null ||
+          licencia.Caracteristicas?.some(
+            caracteristica => caracteristica.Codigo === 'ventas.reservas_online' && caracteristica.Habilitada
+          ) === true;
+      },
+      error: () => this.reservasHabilitadas = false
+    });
 
     this.enterFullScreen();
     if (this.deviceCapabilities.requiresLocalPrintBridge()) {
@@ -2485,6 +2499,14 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.nroCuentaCobrar = firstItem.NroCuenta;
     this.fechaApertura = firstItem.FechaApertura;
     this.numeroPedido = firstItem.NroPedido;
+  }
+
+  abrirAgendaReservas(): void {
+    this.dialog.open(AgendaReservasDialogComponent, {
+      disableClose: false,
+      hasBackdrop: true,
+      panelClass: 'dialog-window--workspace'
+    });
   }
 
   /** Reintentar carga completa tras un error de backend en el inicio */

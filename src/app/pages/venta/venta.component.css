@@ -154,6 +154,17 @@
   background-color: rgba(255, 255, 255, 0.10);
 }
 
+.channel-buttons button mat-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+}
+
+.channel-buttons .channel-buttons__reservations {
+  border-color: rgba(255, 208, 76, 0.75);
+  color: #fff5cf;
+}
+
 /* ══════════════════════════════════════════════════════════════
    ZONA — INFO MESA / PEDIDO
 ══════════════════════════════════════════════════════════════ */

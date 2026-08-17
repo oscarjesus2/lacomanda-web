@@ -4772,6 +4772,13 @@ mat-row:hover mat-cell {
 .reservations-admin__metrics .is-pending { background: #fffaf0; border-color: #edd4a4; }
 .reservations-admin__metrics .is-confirmed { background: #f2faf4; border-color: #bee0c6; }
 .reservations-admin__agenda { display: flex; flex-direction: column; gap: 8px; overflow: auto; }
+.reservations-agenda { display: flex; flex: 1; flex-direction: column; min-height: 0; position: relative; }
+.reservations-admin__body > app-agenda-reservas { display: flex; flex: 1; min-height: 0; }
+.reservations-agenda .reservations-admin__agenda { flex: 1; min-height: 0; }
+.reservations-agenda.is-readonly .reservation-card { grid-template-columns: minmax(150px, 1.1fr) minmax(180px, 1.4fr) 110px; }
+.reservations-admin__body--agenda { overflow: hidden; }
+.reservations-admin__body--agenda app-agenda-reservas { display: flex; flex: 1; min-height: 0; }
+.reservations-info--readonly { background: #f4f7fb; border-color: #cbd9e8; color: #46596c; }
 .reservation-card { align-items: center; background: #fff; border: 1px solid #e7ded8; border-left: 5px solid #dca54a; border-radius: 11px; display: grid; gap: 12px; grid-template-columns: minmax(150px, 1.1fr) minmax(180px, 1.4fr) 110px auto; padding: 12px 14px; }
 .reservation-card[data-status="Confirmada"] { border-left-color: #3ca263; }
 .reservation-card[data-status="Sentada"] { border-left-color: #2777c7; }

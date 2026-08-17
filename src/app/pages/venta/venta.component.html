@@ -53,6 +53,9 @@
         <button (click)="Refresh()">
           <fa-icon [icon]="faSync"></fa-icon> {{ 'refresh' | tenantText }}
         </button>
+        <button *ngIf="reservasHabilitadas" type="button" class="channel-buttons__reservations" (click)="abrirAgendaReservas()">
+          <mat-icon>event_available</mat-icon> Reservas
+        </button>
       </div>
     </div>
 
