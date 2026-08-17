@@ -1,8 +1,35 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, NgZone } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import * as RSVP from 'rsvp';
 declare var qz: any;
+
+export interface ContextoDocumentoImpresionPedido {
+  loteId: string;
+  idPedido: number;
+  nroCuenta: number;
+  documentoId: string;
+  totalDocumentos: number;
+}
+
+export interface LoteImpresionPedidoCompletado {
+  loteId: string;
+  idPedido: number;
+  nroCuenta: number;
+}
+
+interface DocumentoImpresionPendiente {
+  documento: string;
+  impresora: string;
+  contexto?: ContextoDocumentoImpresionPedido;
+}
+
+interface EstadoLoteImpresionPedido {
+  idPedido: number;
+  nroCuenta: number;
+  totalDocumentos: number;
+  documentosImpresos: Set<string>;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -17,10 +44,15 @@ export class QzTrayV224Service {
   /** Tope de seguridad: una impresora caida toda la tarde no debe crecer sin fin. */
   private static readonly maxPendientes = 50;
 
-  private readonly pendientes: { documento: string; impresora: string }[] = [];
+  private readonly pendientes: DocumentoImpresionPendiente[] = [];
   private readonly pendientesSubject = new BehaviorSubject<number>(0);
   /** Documentos esperando a que la impresora vuelva. */
   readonly pendientes$ = this.pendientesSubject.asObservable();
+
+  private readonly lotes = new Map<string, EstadoLoteImpresionPedido>();
+  private readonly lotesCompletadosSubject = new Subject<LoteImpresionPedidoCompletado>();
+  /** Lotes cuya última comanda pendiente ya fue aceptada por QZ. */
+  readonly lotesCompletados$ = this.lotesCompletadosSubject.asObservable();
 
   private temporizadorReintento?: ReturnType<typeof setTimeout>;
   /** Evita que un reintento fallido vuelva a encolar el mismo documento. */
@@ -167,6 +199,7 @@ export class QzTrayV224Service {
     permitirImpresoraPredeterminadaComoRespaldo: boolean = true,
     desconectarAlFinalizar: boolean = true,
     permitirDialogoNativoComoRespaldo: boolean = true,
+    contexto?: ContextoDocumentoImpresionPedido,
   ): Promise<boolean> {
     // Distingue un problema de configuracion (QZ ausente o que nos rechaza) de
     // uno de la impresora. El primero no se arregla solo; el segundo si.
@@ -190,6 +223,7 @@ export class QzTrayV224Service {
 
       if (usarPredeterminada) {
         await this.printOnDefault(data);
+        this.registrarDocumentoImpreso(contexto);
         return true;
       }
 
@@ -197,6 +231,7 @@ export class QzTrayV224Service {
         await qz.print(qz.configs.create(impresora), data);
         this.registrarConfianza(true);
         console.log(`Imprimiendo en la impresora ${impresora}`);
+        this.registrarDocumentoImpreso(contexto);
         return true;
       } catch (error) {
         if (!permitirImpresoraPredeterminadaComoRespaldo
@@ -208,6 +243,7 @@ export class QzTrayV224Service {
           `La impresora ${impresora} no existe en este equipo; se usará la predeterminada.`,
         );
         await this.printOnDefault(data);
+        this.registrarDocumentoImpreso(contexto);
         return true;
       }
     } catch (error) {
@@ -226,7 +262,7 @@ export class QzTrayV224Service {
       // la pantalla del cajero a mitad de servicio para nada.
       if (puenteOperativo) {
         if (!this.reintentandoCola) {
-          this.encolar(ByteTicket, printerName);
+          this.encolar(ByteTicket, printerName, contexto);
         }
         return false;
       }
@@ -234,7 +270,9 @@ export class QzTrayV224Service {
       // Sin QZ no hay nada que esperar: el ticket sale por el dialogo del
       // navegador, que es peor pero no depende de ninguna configuracion.
       if (permitirDialogoNativoComoRespaldo && this.isBase64(ByteTicket)) {
-        return this.imprimirConDialogoNativo(ByteTicket);
+        const impreso = this.imprimirConDialogoNativo(ByteTicket);
+        if (impreso) this.registrarDocumentoImpreso(contexto);
+        return impreso;
       }
       return false;
     } finally {
@@ -324,13 +362,17 @@ export class QzTrayV224Service {
    * programa el reintento. La cola vive en memoria a proposito: un ticket
    * rescatado al dia siguiente no le sirve a nadie.
    */
-  private encolar(documento: string, impresora: string): void {
+  private encolar(
+    documento: string,
+    impresora: string,
+    contexto?: ContextoDocumentoImpresionPedido,
+  ): void {
     if (this.pendientes.length >= QzTrayV224Service.maxPendientes) {
       console.warn('Cola de impresión llena; se descarta el documento más antiguo.');
       this.pendientes.shift();
     }
 
-    this.pendientes.push({ documento, impresora });
+    this.pendientes.push({ documento, impresora, contexto });
     this.publicarPendientes();
     this.programarReintento();
   }
@@ -359,6 +401,7 @@ export class QzTrayV224Service {
           true,
           false,
           false,
+          siguiente.contexto,
         );
         if (!impreso) break;
 
@@ -374,6 +417,31 @@ export class QzTrayV224Service {
 
   private publicarPendientes(): void {
     this.zone.run(() => this.pendientesSubject.next(this.pendientes.length));
+  }
+
+  private registrarDocumentoImpreso(contexto?: ContextoDocumentoImpresionPedido): void {
+    if (!contexto || contexto.totalDocumentos <= 0) return;
+
+    let lote = this.lotes.get(contexto.loteId);
+    if (!lote) {
+      lote = {
+        idPedido: contexto.idPedido,
+        nroCuenta: contexto.nroCuenta,
+        totalDocumentos: contexto.totalDocumentos,
+        documentosImpresos: new Set<string>()
+      };
+      this.lotes.set(contexto.loteId, lote);
+    }
+
+    lote.documentosImpresos.add(contexto.documentoId);
+    if (lote.documentosImpresos.size < lote.totalDocumentos) return;
+
+    this.lotes.delete(contexto.loteId);
+    this.zone.run(() => this.lotesCompletadosSubject.next({
+      loteId: contexto.loteId,
+      idPedido: lote!.idPedido,
+      nroCuenta: lote!.nroCuenta
+    }));
   }
 
   private registrarConfianza(confia: boolean): void {

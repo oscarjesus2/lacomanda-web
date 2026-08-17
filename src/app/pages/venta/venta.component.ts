@@ -55,7 +55,7 @@ import { UsuarioService } from 'src/app/services/usuario.service';
 import { DialogMTextComponent } from 'src/app/components/dialog-mtext/dialog-mtext.component';
 import { AnularProductoYComplementoDTO } from 'src/app/interfaces/anularProductoYComplementoDTO.interface';
 import { DialogProductSearchComponent } from 'src/app/components/dialog-product-search/dialog-product-search.component';
-import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
+import { ContextoDocumentoImpresionPedido, QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 import { PedidoDeliveryDTO } from 'src/app/interfaces/pedidoDTO.interface';
 import { SocioNegocio } from 'src/app/models/socionegocio.models';
 import { Cliente } from 'src/app/models/cliente.models';
@@ -86,6 +86,7 @@ import { AgenteImpresionLocalService } from 'src/app/services/agente-impresion-l
 import { EstadoImpresionService } from 'src/app/services/estado-impresion.service';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 import { AgendaReservasDialogComponent } from 'src/app/components/reservas/agenda-reservas-dialog/agenda-reservas-dialog.component';
+import { ConfirmacionImpresionPedidosService } from 'src/app/services/confirmacion-impresion-pedidos.service';
 
 @Component({
   selector: 'app-venta',
@@ -242,6 +243,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     private agenteImpresionLocal: AgenteImpresionLocalService,
     private estadoImpresion: EstadoImpresionService,
     private licenciaTenantService: LicenciaTenantService,
+    private confirmacionImpresionPedidos: ConfirmacionImpresionPedidosService,
     private activatedRoute: ActivatedRoute) {
 
 
@@ -430,6 +432,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async ngOnInit() {
+    this.confirmacionImpresionPedidos.iniciar();
     this.configuracionService.get().subscribe(cfg => this.config = cfg);
     this.licenciaTenantService.obtener().subscribe({
       next: response => {
@@ -2214,15 +2217,23 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       if (responseRegisterPedido.Success) {
         if (pedido.ModoImpresion === ModoImpresionPedido.DirectaQz) {
           const impresiones = responseRegisterPedido.Data ?? [];
-          const impresas = await this.imprimir(impresiones);
+          const referencia = impresiones[0];
+          const contextoLote = referencia && impresiones.length > 0
+            ? {
+                loteId: `${referencia.IdPedido}-${referencia.NroCuenta}-${Date.now()}`,
+                idPedido: referencia.IdPedido,
+                nroCuenta: referencia.NroCuenta,
+                totalDocumentos: impresiones.length,
+              }
+            : undefined;
+          const impresas = await this.imprimir(impresiones, contextoLote);
           if (impresas !== impresiones.length) {
-            await Swal.fire(
-              this.textCatalog.get('error'),
-              'El pedido se grabo, pero QZ no pudo completar todas las impresiones.',
-              'error',
-            );
-          } else {
-            await this.confirmarEnviosDeImpresion(impresiones);
+            await Swal.fire({
+              icon: 'warning',
+              title: 'Pedido guardado',
+              text: 'Una o más comandas quedaron pendientes de impresión. QZ volverá a intentarlo automáticamente; comprueba que las impresoras estén encendidas y disponibles.',
+              confirmButtonText: 'Entendido',
+            });
           }
         }
         this.limpiarPedido();
@@ -2244,53 +2255,33 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   }
 
-  async imprimir(listImpresionDTO: ImpresionDTO[]): Promise<number> {
+  async imprimir(
+    listImpresionDTO: ImpresionDTO[],
+    contextoLote?: Omit<ContextoDocumentoImpresionPedido, 'documentoId'>,
+  ): Promise<number> {
     let contador: number = 0;
 
-    for (const element of listImpresionDTO) {
+    for (let index = 0; index < listImpresionDTO.length; index++) {
+      const element = listImpresionDTO[index];
       const printerName = element.NombreImpresora;
       const success = await this.qzTrayService.printPDF(
         element.Documento,
         printerName,
         false,
         false,
+        true,
+        contextoLote
+          ? {
+              ...contextoLote,
+              documentoId: `${index}-${element.Item}-${printerName}`,
+            }
+          : undefined,
       );
       if (success) {
         contador += 1;
       }
     }
     return contador;
-  }
-
-  /**
-   * Marca en el backend las lineas como ya impresas.
-   *
-   * La comanda se arma con los detalles que tienen NumEnvios = 0. Sin esta
-   * confirmacion siguen en cero para siempre, y la siguiente grabacion del
-   * mismo pedido vuelve a incluirlos: cocina recibe otra vez lo que ya salio.
-   * Solo se confirma si todo se imprimio; si algo fallo, esas lineas deben
-   * seguir pendientes para el proximo envio.
-   */
-  private async confirmarEnviosDeImpresion(
-    listImpresionDTO: ImpresionDTO[],
-  ): Promise<void> {
-    const referencia = listImpresionDTO[0];
-    if (!referencia) {
-      return;
-    }
-
-    try {
-      await lastValueFrom(
-        this.pedidoService.ActualizarEnviosDeImpresion(
-          referencia.IdPedido,
-          referencia.NroCuenta,
-        ),
-      );
-    } catch (error) {
-      // Si falla, las lineas quedan pendientes y se reimprimiran. Es preferible
-      // a darlas por impresas sin estarlo, pero conviene verlo en consola.
-      console.error('No se pudo confirmar la impresión de la comanda:', error);
-    }
   }
 
   async processComprobante() {
