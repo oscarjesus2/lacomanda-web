@@ -2245,11 +2245,12 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       this.spinnerService.hide();
     } else {
-      Swal.fire(
-        this.textCatalog.get('error'),
-        this.textCatalog.get('noProductsEntered'),
-        'error'
-      );
+      await Swal.fire({
+        icon: 'warning',
+        title: this.textCatalog.get('attention'),
+        text: this.textCatalog.get('noProductsEntered'),
+        confirmButtonText: this.textCatalog.get('ok'),
+      });
       this.spinnerService.hide();
     }
 

@@ -211,7 +211,7 @@ export const EN_TEXTS = {
   no: 'No',
   orderNotFoundInAccount: 'The order does not exist in the account.',
   printPreBill: 'Print pre-bill',
-  noProductsEntered: 'No products have been entered.',
+  noProductsEntered: 'Add at least one product before sending the order.',
   allProductsMustBeSaved: 'Not all products in the list were saved.',
   orderMustBeSaved: 'Send the order before issuing the receipt.',
   savedOrderRequiredForOperation: 'Send the order before performing this operation.',

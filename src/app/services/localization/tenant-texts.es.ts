@@ -214,7 +214,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   no: 'No',
   orderNotFoundInAccount: 'No existe el pedido en la cuenta.',
   printPreBill: 'Imprimir precuenta',
-  noProductsEntered: 'No ha ingresado ningún producto.',
+  noProductsEntered: 'Añade al menos un producto antes de enviar el pedido.',
   allProductsMustBeSaved:
     'No se guardaron todos los productos de la lista.',
   orderMustBeSaved: 'Envíe primero el pedido antes de emitir el comprobante.',
