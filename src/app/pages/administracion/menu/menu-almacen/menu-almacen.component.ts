@@ -300,6 +300,11 @@ export class MenuAlmacenComponent implements OnInit {
           panelClass: 'dialog-window--workspace'
         };
 
+    const elementoActivo = document.activeElement;
+    if (elementoActivo instanceof HTMLElement) {
+      elementoActivo.blur();
+    }
+
     this.dialog.open(component, configuracion);
   }
 

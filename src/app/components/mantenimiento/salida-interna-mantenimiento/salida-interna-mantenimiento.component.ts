@@ -49,6 +49,7 @@ export class SalidaInternaMantenimientoComponent implements OnInit {
   };
   idArticuloAgregar: number | null = null;
   idUnidadAgregar: number | null = null;
+  unidadesArticuloAgregar: Array<{ Id: number; Descripcion: string }> = [];
   idSubAreaAnterior: number | null = null;
   cantidadAgregar = 1;
   showForm = false;
@@ -167,7 +168,27 @@ export class SalidaInternaMantenimientoComponent implements OnInit {
   }
 
   seleccionarArticulo(): void {
-    this.idUnidadAgregar = this.articuloAgregar?.IdUnidadStock || null;
+    const articulo = this.articuloAgregar;
+    if (!articulo) {
+      this.idUnidadAgregar = null;
+      this.unidadesArticuloAgregar = [];
+      return;
+    }
+
+    const unidades = [
+      { Id: articulo.IdUnidadStock, Descripcion: articulo.UnidadStock }
+    ];
+    if (articulo.IdUnidadReceta &&
+        articulo.IdUnidadReceta !== articulo.IdUnidadStock &&
+        articulo.FactorReceta > 0) {
+      unidades.push({
+        Id: articulo.IdUnidadReceta,
+        Descripcion: articulo.UnidadReceta
+      });
+    }
+
+    this.unidadesArticuloAgregar = unidades;
+    this.idUnidadAgregar = articulo.IdUnidadStock;
   }
 
   agregarLinea(): void {
@@ -320,20 +341,6 @@ export class SalidaInternaMantenimientoComponent implements OnInit {
     );
   }
 
-  get unidadesArticuloAgregar(): Array<{ Id: number; Descripcion: string }> {
-    const articulo = this.articuloAgregar;
-    if (!articulo) {
-      return [];
-    }
-    const unidades = [{ Id: articulo.IdUnidadStock, Descripcion: articulo.UnidadStock }];
-    if (articulo.IdUnidadReceta &&
-        articulo.IdUnidadReceta !== articulo.IdUnidadStock &&
-        articulo.FactorReceta > 0) {
-      unidades.push({ Id: articulo.IdUnidadReceta, Descripcion: articulo.UnidadReceta });
-    }
-    return unidades;
-  }
-
   private ejecutarAccion(
     request: Observable<ApiResponse<SalidaInterna>>,
     titulo: string,
@@ -396,6 +403,7 @@ export class SalidaInternaMantenimientoComponent implements OnInit {
   private limpiarLinea(): void {
     this.idArticuloAgregar = null;
     this.idUnidadAgregar = null;
+    this.unidadesArticuloAgregar = [];
     this.cantidadAgregar = 1;
   }
 

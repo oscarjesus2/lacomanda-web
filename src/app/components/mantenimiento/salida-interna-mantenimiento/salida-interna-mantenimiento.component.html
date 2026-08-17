@@ -241,6 +241,7 @@
               [(ngModel)]="idArticuloAgregar"
               (selectionChange)="seleccionarArticulo()"
             >
+              <mat-option [value]="null">Ningún artículo</mat-option>
               <mat-option *ngFor="let articulo of articulosDisponibles" [value]="articulo.IdProducto">
                 {{ articulo.Descripcion }}
               </mat-option>
@@ -249,7 +250,11 @@
 
           <mat-form-field appearance="fill">
             <mat-label>Unidad</mat-label>
-            <mat-select name="unidadAgregar" [(ngModel)]="idUnidadAgregar">
+            <mat-select
+              name="unidadAgregar"
+              [(ngModel)]="idUnidadAgregar"
+              [disabled]="!idArticuloAgregar"
+            >
               <mat-option *ngFor="let unidad of unidadesArticuloAgregar" [value]="unidad.Id">
                 {{ unidad.Descripcion }}
               </mat-option>
