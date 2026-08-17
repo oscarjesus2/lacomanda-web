@@ -1,0 +1,297 @@
+<div class="mant-panel dialog-panel--workspace command-trace">
+  <button class="close-button" type="button" (click)="cerrar()" aria-label="Cerrar">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <div class="mant-title command-trace__title">
+    <span class="command-trace__title-icon"><mat-icon>account_tree</mat-icon></span>
+    <span>
+      Trazabilidad de comandas
+      <small>Reconstruye el pedido desde su captura hasta los comprobantes y pagos.</small>
+    </span>
+  </div>
+
+  <div class="dialog-toolbar command-trace__toolbar">
+    <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+      <mat-form-field appearance="fill">
+        <mat-label>Desde</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaDesde">
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Hasta</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaHasta">
+      </mat-form-field>
+      <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide">
+        <mat-label>Buscar en toda la trazabilidad</mat-label>
+        <mat-icon matPrefix>manage_search</mat-icon>
+        <input
+          matInput
+          [(ngModel)]="busqueda"
+          (keyup.enter)="consultar()"
+          placeholder="Comanda, comprobante, espacio, producto o responsable">
+      </mat-form-field>
+    </div>
+    <div class="dialog-toolbar__actions">
+      <button mat-raised-button color="primary" type="button" (click)="consultar()" [disabled]="cargandoTurnos">
+        <mat-icon>search</mat-icon>
+        Investigar
+      </button>
+    </div>
+  </div>
+
+  <div class="command-trace__help">
+    <mat-icon>policy</mat-icon>
+    <span>
+      Una comanda se mantiene unificada aunque se divida en varias cuentas. Las señales indican hechos para revisar, no atribuyen responsabilidades sin evidencia.
+    </span>
+  </div>
+
+  <div class="command-trace__workspace">
+    <aside class="command-trace__rail command-trace__rail--turns">
+      <header class="command-trace__section-header">
+        <span><mat-icon>event_note</mat-icon> Turnos</span>
+        <small>{{ turnos.length }}</small>
+      </header>
+
+      <div class="command-trace__list" *ngIf="turnos.length; else turnosEmpty">
+        <button
+          type="button"
+          class="command-trace__turn"
+          *ngFor="let turno of turnos"
+          [class.command-trace__item--selected]="turnoSeleccionado?.IdTurno === turno.IdTurno"
+          (click)="seleccionarTurno(turno)">
+          <span class="command-trace__item-heading">
+            <strong>Turno {{ turno.NroTurno }}</strong>
+            <span class="trace-status" [ngClass]="'trace-status--' + estadoClase(turno.Estado)">{{ turno.Estado }}</span>
+          </span>
+          <span>{{ formatearFecha(turno.FechaTrabajo) }} · {{ turno.Caja }}</span>
+          <span class="command-trace__item-metrics">
+            <span><mat-icon>receipt_long</mat-icon> {{ turno.CantidadComandas }}</span>
+            <span><mat-icon>payments</mat-icon> {{ formatearImporte(turno.TotalDocumentos) }}</span>
+          </span>
+          <span class="command-trace__alert-count" *ngIf="turno.CantidadAlertas">
+            <mat-icon>warning_amber</mat-icon> {{ turno.CantidadAlertas }} para revisar
+          </span>
+        </button>
+      </div>
+      <ng-template #turnosEmpty>
+        <div class="command-trace__empty command-trace__empty--rail">
+          <span class="command-trace__loader" *ngIf="cargandoTurnos"></span>
+          <mat-icon *ngIf="!cargandoTurnos">event_busy</mat-icon>
+          <strong>{{ cargandoTurnos ? 'Buscando turnos…' : 'No hay turnos' }}</strong>
+          <span *ngIf="!cargandoTurnos">Amplía el rango o limpia la búsqueda.</span>
+        </div>
+      </ng-template>
+    </aside>
+
+    <section class="command-trace__rail command-trace__rail--orders">
+      <header class="command-trace__section-header">
+        <span><mat-icon>receipt</mat-icon> Comandas</span>
+        <small>{{ pedidos.length }}</small>
+      </header>
+
+      <div class="command-trace__list" *ngIf="pedidos.length; else pedidosEmpty">
+        <button
+          type="button"
+          class="command-trace__order"
+          *ngFor="let pedido of pedidos"
+          [class.command-trace__item--selected]="pedidoSeleccionado?.IdPedido === pedido.IdPedido"
+          (click)="seleccionarPedido(pedido)">
+          <span class="command-trace__item-heading">
+            <strong>Comanda {{ pedido.NroPedido }}</strong>
+            <span class="trace-status" [ngClass]="'trace-status--' + estadoClase(pedido.Estado)">{{ pedido.Estado }}</span>
+          </span>
+          <span>{{ pedido.Espacio }} · {{ pedido.CanalVenta }}</span>
+          <span>{{ formatearHora(pedido.FechaPrimerProductoUtc) }} · {{ pedido.EmpleadoResponsable }}</span>
+          <span class="command-trace__origin"><mat-icon>person_pin</mat-icon> {{ pedido.Origen }}</span>
+          <span class="command-trace__item-metrics">
+            <span>{{ pedido.CantidadLineas }} líneas</span>
+            <span>{{ pedido.CantidadDocumentos }} docs.</span>
+            <strong>{{ formatearImporte(pedido.Total) }}</strong>
+          </span>
+          <span class="command-trace__alert-count" *ngIf="pedido.Alertas.length">
+            <mat-icon>warning_amber</mat-icon> {{ pedido.Alertas.length }} señales
+          </span>
+        </button>
+      </div>
+      <ng-template #pedidosEmpty>
+        <div class="command-trace__empty command-trace__empty--rail">
+          <span class="command-trace__loader" *ngIf="cargandoPedidos"></span>
+          <mat-icon *ngIf="!cargandoPedidos">receipt_long</mat-icon>
+          <strong>{{ cargandoPedidos ? 'Cargando comandas…' : 'Sin comandas' }}</strong>
+          <span *ngIf="!cargandoPedidos && turnoSeleccionado">No hay coincidencias en este turno.</span>
+          <span *ngIf="!cargandoPedidos && !turnoSeleccionado">Selecciona un turno.</span>
+        </div>
+      </ng-template>
+    </section>
+
+    <main class="command-trace__detail">
+      <div class="command-trace__loading" *ngIf="cargandoDetalle">
+        <span class="command-trace__loader"></span>
+        <strong>Reconstruyendo la comanda…</strong>
+      </div>
+
+      <ng-container *ngIf="detalle && !cargandoDetalle; else detalleEmpty">
+        <header class="command-trace__detail-header">
+          <div>
+            <span class="command-trace__eyebrow">COMANDA {{ detalle.NroPedido }}</span>
+            <h3>{{ detalle.Espacio }}</h3>
+            <p>{{ detalle.Ambiente || detalle.CanalVenta }} · Turno {{ detalle.NroTurno }} · {{ formatearFecha(detalle.FechaTrabajo) }}</p>
+          </div>
+          <div class="command-trace__detail-total">
+            <span class="trace-status" [ngClass]="'trace-status--' + estadoClase(detalle.Estado)">{{ detalle.Estado }}</span>
+            <strong>{{ formatearImporte(detalle.Total) }}</strong>
+          </div>
+        </header>
+
+        <div class="command-trace__facts">
+          <span><mat-icon>person</mat-icon><small>Responsable</small><strong>{{ detalle.EmpleadoResponsable }}</strong></span>
+          <span><mat-icon>qr_code_2</mat-icon><small>Origen</small><strong>{{ detalle.Origen }}</strong></span>
+          <span><mat-icon>schedule</mat-icon><small>Primer pedido</small><strong>{{ formatearFechaHora(detalle.FechaInicioUtc) }}</strong></span>
+          <span><mat-icon>update</mat-icon><small>Último movimiento</small><strong>{{ formatearFechaHora(detalle.FechaUltimaActividadUtc) }}</strong></span>
+        </div>
+
+        <div class="command-trace__alerts" *ngIf="detalle.Alertas.length">
+          <mat-icon>warning_amber</mat-icon>
+          <div>
+            <strong>Señales que conviene revisar</strong>
+            <ul><li *ngFor="let alerta of detalle.Alertas">{{ alerta }}</li></ul>
+          </div>
+        </div>
+
+        <section class="command-trace__accounts" *ngIf="detalle.Cuentas.length">
+          <article *ngFor="let cuenta of detalle.Cuentas">
+            <span>
+              <strong>{{ cuenta.Nombre }}</strong>
+              <small>{{ cuenta.NroPersonas }} comensales · {{ cuenta.UsuarioRegistro }}</small>
+            </span>
+            <span class="trace-status" [ngClass]="'trace-status--' + estadoClase(cuenta.Estado)">{{ cuenta.Estado }}</span>
+            <strong>{{ formatearImporte(cuenta.Total) }}</strong>
+          </article>
+        </section>
+
+        <div class="command-trace__investigation">
+          <section class="command-trace__timeline-card">
+            <header class="command-trace__section-header">
+              <span><mat-icon>timeline</mat-icon> Secuencia de productos</span>
+              <small>{{ detalle.Lineas.length }} líneas</small>
+            </header>
+
+            <div class="command-trace__timeline" *ngIf="detalle.Lineas.length; else lineasEmpty">
+              <article
+                class="command-trace__timeline-item"
+                *ngFor="let linea of detalle.Lineas; let indice = index"
+                [class.command-trace__timeline-item--danger]="estadoClase(linea.Estado) === 'danger'">
+                <span class="command-trace__timeline-index">{{ indice + 1 }}</span>
+                <div class="command-trace__timeline-content">
+                  <header>
+                    <span>
+                      <strong>{{ linea.Cantidad }} × {{ linea.Producto }}</strong>
+                      <small>Cuenta {{ linea.NroCuenta }} · Ítem {{ linea.Item }}</small>
+                    </span>
+                    <strong>{{ formatearImporte(linea.Subtotal - linea.Descuento) }}</strong>
+                  </header>
+                  <div class="command-trace__timeline-meta">
+                    <span><mat-icon>schedule</mat-icon>{{ formatearFechaHora(linea.FechaPedidoUtc) }}</span>
+                    <span><mat-icon>person_pin</mat-icon>{{ linea.Actor }}</span>
+                    <span><mat-icon>computer</mat-icon>{{ linea.EstacionOrigen }}</span>
+                  </div>
+                  <div class="command-trace__line-statuses">
+                    <span class="trace-status" [ngClass]="'trace-status--' + estadoClase(linea.Estado)">{{ linea.Estado }}</span>
+                    <span class="trace-stage"><mat-icon>route</mat-icon>{{ faseLinea(linea) }}</span>
+                    <span *ngIf="linea.NumeroReimpresiones"><mat-icon>print</mat-icon>{{ linea.NumeroReimpresiones }} reimp.</span>
+                    <span *ngIf="linea.IdSesionMesaCliente"><mat-icon>qr_code</mat-icon>Sesión QR {{ linea.IdSesionMesaCliente }}</span>
+                  </div>
+                  <p *ngIf="linea.Observacion"><strong>Observación:</strong> {{ linea.Observacion }}</p>
+                  <p class="command-trace__reason" *ngIf="linea.MotivoAnulacion">
+                    <strong>Anulación:</strong> {{ linea.MotivoAnulacion }} · {{ linea.UsuarioAnulacion || 'Usuario no identificado' }}
+                  </p>
+                </div>
+              </article>
+            </div>
+            <ng-template #lineasEmpty>
+              <div class="command-trace__empty"><mat-icon>playlist_remove</mat-icon><span>No hay líneas registradas.</span></div>
+            </ng-template>
+          </section>
+
+          <section class="command-trace__documents-card">
+            <header class="command-trace__section-header">
+              <span><mat-icon>receipt_long</mat-icon> Comprobantes y pagos</span>
+              <small>{{ detalle.Documentos.length }} documentos</small>
+            </header>
+
+            <ng-container *ngIf="detalle.Documentos.length; else documentosEmpty">
+              <div class="command-trace__document-tabs">
+                <button
+                  type="button"
+                  *ngFor="let documento of detalle.Documentos"
+                  [class.command-trace__document-tab--selected]="documentoSeleccionado?.IdVenta === documento.IdVenta"
+                  (click)="seleccionarDocumento(documento)">
+                  <mat-icon>description</mat-icon>
+                  <span><strong>{{ documento.NumeroDocumento }}</strong><small>{{ documento.TipoDocumento }}</small></span>
+                  <span class="trace-status" [ngClass]="'trace-status--' + estadoClase(documento.Estado)">{{ documento.Estado }}</span>
+                </button>
+              </div>
+
+              <article class="command-trace__document" *ngIf="documentoSeleccionado as documento">
+                <header>
+                  <span>
+                    <small>{{ documento.TipoDocumento }}</small>
+                    <strong>{{ documento.NumeroDocumento }}</strong>
+                  </span>
+                  <strong>{{ formatearImporte(documento.Total, documento.SimboloMoneda) }}</strong>
+                </header>
+                <dl>
+                  <div><dt>Fecha documento</dt><dd>{{ formatearFecha(documento.FechaDocumento) }}</dd></div>
+                  <div><dt>Emitido</dt><dd>{{ formatearFechaHora(documento.FechaEmisionUtc) }}</dd></div>
+                  <div><dt>Usuario</dt><dd>{{ documento.UsuarioEmision }}</dd></div>
+                  <div><dt>Cuentas liberadas</dt><dd>{{ cuentasDocumento(documento) }}</dd></div>
+                </dl>
+
+                <div class="command-trace__payments-heading">
+                  <strong>Forma de pago</strong>
+                  <span>{{ documento.Pagos.length }} movimiento(s)</span>
+                </div>
+                <div class="command-trace__payments" *ngIf="documento.Pagos.length; else pagosEmpty">
+                  <article *ngFor="let pago of documento.Pagos">
+                    <span class="command-trace__payment-icon"><mat-icon>payments</mat-icon></span>
+                    <span>
+                      <strong>{{ pago.MetodoPago }}<ng-container *ngIf="pago.Tarjeta"> · {{ pago.Tarjeta }}</ng-container></strong>
+                      <small>{{ formatearFechaHora(pago.FechaRegistroUtc) }}</small>
+                      <small *ngIf="pago.Autorizacion">Autorización: {{ pago.Autorizacion }}</small>
+                    </span>
+                    <span class="command-trace__payment-amount">
+                      <strong>{{ formatearImporte(pago.MontoPagado, documento.SimboloMoneda) }}</strong>
+                      <small *ngIf="pago.MontoRecibido !== null && pago.MontoRecibido !== undefined">
+                        Recibido: {{ formatearImporte(pago.MontoRecibido, pago.SimboloMoneda) }}
+                      </small>
+                      <span class="trace-status" [ngClass]="'trace-status--' + estadoClase(pago.Estado)">{{ pago.Estado }}</span>
+                    </span>
+                  </article>
+                </div>
+                <ng-template #pagosEmpty>
+                  <div class="command-trace__missing"><mat-icon>money_off</mat-icon>Este comprobante no tiene pagos registrados.</div>
+                </ng-template>
+              </article>
+            </ng-container>
+            <ng-template #documentosEmpty>
+              <div class="command-trace__empty command-trace__empty--document">
+                <mat-icon>receipt_long</mat-icon>
+                <strong>Sin comprobante vinculado</strong>
+                <span>La comanda todavía no se ha liberado mediante un documento de venta.</span>
+              </div>
+            </ng-template>
+          </section>
+        </div>
+      </ng-container>
+
+      <ng-template #detalleEmpty>
+        <div class="command-trace__empty command-trace__empty--detail" *ngIf="!cargandoDetalle">
+          <mat-icon>manage_search</mat-icon>
+          <strong>Selecciona una comanda</strong>
+          <span>Aquí verás quién la originó, la secuencia de productos, sus documentos y pagos.</span>
+        </div>
+      </ng-template>
+    </main>
+  </div>
+</div>

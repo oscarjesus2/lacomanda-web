@@ -140,6 +140,7 @@ import { ReporteVentasAnaliticoComponent } from './components/mantenimiento/repo
 import { ReservasMantenimientoComponent } from './components/mantenimiento/reservas-mantenimiento/reservas-mantenimiento.component';
 import { ReservasOnlineComponent } from './pages/reservas-online/reservas-online.component';
 import { ReportesTermicosAdministracionComponent } from './components/mantenimiento/reportes-termicos-administracion/reportes-termicos-administracion.component';
+import { MonitorComandasComponent } from './components/mantenimiento/monitor-comandas/monitor-comandas.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -253,6 +254,7 @@ export const MY_DATE_FORMATS = {
     ReservasMantenimientoComponent,
     ReservasOnlineComponent,
     ReportesTermicosAdministracionComponent,
+    MonitorComandasComponent,
   ],
   imports: [
     CommonModule,

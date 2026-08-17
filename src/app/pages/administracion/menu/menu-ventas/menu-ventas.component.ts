@@ -38,6 +38,7 @@ import { TipoReporteVentas } from 'src/app/models/reportes-ventas.models';
 import { ReservasMantenimientoComponent } from 'src/app/components/mantenimiento/reservas-mantenimiento/reservas-mantenimiento.component';
 import { ReportesTermicosAdministracionComponent } from 'src/app/components/mantenimiento/reportes-termicos-administracion/reportes-termicos-administracion.component';
 import { TipoReporteTermicoAdministracion } from 'src/app/models/reportes-termicos-administracion.models';
+import { MonitorComandasComponent } from 'src/app/components/mantenimiento/monitor-comandas/monitor-comandas.component';
 
 @Component({
   selector: 'app-menu-ventas',
@@ -101,6 +102,7 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Ventas por Producto', route: '/ventas/ventas-por-producto', icon: 'inventory_2', label: 'Ventas por producto', reporteTermico: 'ventas-producto', feature: 'operacion.reportes', grupoReporte: 'turno' },
         { title: 'Resumen de Ventas', route: '/ventas/resumen-ventas', icon: 'summarize', label: 'Resumen de ventas', reporteTermico: 'resumen-ventas', feature: 'operacion.reportes', grupoReporte: 'turno' },
         { title: 'Resumen de Documentos', route: '/ventas/resumen-documentos', icon: 'receipt_long', label: 'Resumen de documentos', reporteTermico: 'resumen-documentos', feature: 'operacion.reportes', grupoReporte: 'turno' },
+        { title: 'Trazabilidad de comandas', route: '/ventas/reportes/monitor-comandas', icon: 'account_tree', label: 'Monitor comandas', monitorComandas: true, feature: 'operacion.reportes', grupoReporte: 'analisis' },
         { title: 'Contable',           route: '/ventas/contable',           icon: 'calculate',  label: 'Contable',     titleKey: 'accounting',     labelKey: 'accounting', grupoReporte: 'analisis' },
         { title: 'Productividad por empleado', route: '/ventas/reportes/productividad-empleados', icon: 'groups', label: 'Productividad', reporte: 'productividad-empleados', feature: 'operacion.reportes', grupoReporte: 'analisis' },
         { title: 'Espacios y servicio', route: '/ventas/reportes/mesas-servicio', icon: 'table_restaurant', label: 'Espacios y servicio', reporte: 'mesas-servicio', feature: 'operacion.reportes', grupoReporte: 'analisis' },
@@ -147,6 +149,10 @@ export class MenuVentasComponent implements OnInit {
   }
 
   openDialog(item: any): void {
+    if (item.monitorComandas) {
+      this.OpenMonitorComandasComponent();
+      return;
+    }
     if (item.reporteTermico) {
       this.OpenReporteTermicoAdministracion(
         item.reporteTermico as TipoReporteTermicoAdministracion,
@@ -279,6 +285,18 @@ export class MenuVentasComponent implements OnInit {
       maxHeight: '920px',
       panelClass: 'dialog-window--workspace',
       data: { tipo }
+    });
+  }
+
+  OpenMonitorComandasComponent(): void {
+    this.dialog.open(MonitorComandasComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'calc(100vw - 24px)',
+      height: 'calc(100vh - 24px)',
+      maxWidth: '1760px',
+      maxHeight: '980px',
+      panelClass: 'dialog-window--workspace',
     });
   }
 
