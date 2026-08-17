@@ -24,7 +24,7 @@ export class CajaMantenimientoComponent implements OnInit {
   filtro = '';
   showForm = false;
 
-  canales: CanalVenta[] = [];        // todos los canales activos del sistema
+  canales: CanalVenta[] = [];        // canales activos incluidos en la licencia
   canalesSeleccionados: number[] = []; // IDs de canales habilitados para la caja actual
   m: CajaDto = this.blank();
 
@@ -50,7 +50,7 @@ export class CajaMantenimientoComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
-    this.canalSrv.listarActivos().subscribe(x => this.canales = x);
+    this.canalSrv.listarDisponibles().subscribe(x => this.canales = x);
   }
 
   private blank(): CajaDto {

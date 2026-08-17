@@ -14,8 +14,8 @@ export class CanalVentaService {
 
   constructor(private http: HttpClient) {}
 
-  listarActivos(): Observable<CanalVenta[]> {
+  listarDisponibles(): Observable<CanalVenta[]> {
     return this.http.get<ApiResponse<CanalVenta[]>>(`${this.basePath}`)
-      .pipe(map(r => (r.Data ?? []).filter(x => x.Activo)));
+      .pipe(map(r => r.Data ?? []));
   }
 }

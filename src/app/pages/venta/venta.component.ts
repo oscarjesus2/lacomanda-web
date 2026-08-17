@@ -67,7 +67,6 @@ import { PedidoDescuentoDTO } from 'src/app/interfaces/pedidoDescuentoDTO.interf
 import { TrasladarProductoDTO } from 'src/app/interfaces/trasladarProductoDTO.interface';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { Configuracion } from 'src/app/models/configuracion.models';
-import { CanalVentaService } from 'src/app/services/canal-venta.service';
 import { CanalVenta } from 'src/app/models/canalventa.models';
 import { CajaService } from 'src/app/services/caja.service';
 import { CajaTipoDocumento } from 'src/app/models/caja-tipo-documento.model';
@@ -224,7 +223,6 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     private observacionService: ObservacionService,
     private socioNegocioService: SocioNegocioService,
     private pedidoService: PedidoService,
-    private tipoPedidoService: CanalVentaService,
     private cajaService: CajaService,
     private dialogEspacio: MatDialog,
     private dialogComprobante: MatDialog,
@@ -502,17 +500,10 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
             // Calcular visibilidad y texto de botones Factura / Boleta
             this.calcularBotonesDocumento(results.tiposDocumentoCaja);
 
-            // Si la caja tiene canales configurados, usar esos; si no, cargar todos como fallback
-            const canalesCaja = results.responseTipoPedidos;
-            if (canalesCaja.length > 0) {
-              this.listaTipoPedidos = canalesCaja;
-              this.actualizarFlagsCanales();
-            } else {
-              this.tipoPedidoService.listarActivos().subscribe(todos => {
-                this.listaTipoPedidos = todos;
-                this.actualizarFlagsCanales();
-              });
-            }
+            // La caja solo opera con los canales que el cliente le asignó y
+            // que siguen incluidos en la licencia vigente.
+            this.listaTipoPedidos = results.responseTipoPedidos;
+            this.actualizarFlagsCanales();
         
 
             if (results.responseEmpleados.Success) {

@@ -128,7 +128,7 @@ export class RentabilidadProductoCanalReporteComponent implements OnInit {
 
   private cargarCanales(): void {
     this.cargando = true;
-    this.canalVentaService.listarActivos().subscribe({
+    this.canalVentaService.listarDisponibles().subscribe({
       next: canales => {
         this.canales = canales;
         this.cargando = false;
