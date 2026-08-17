@@ -9,7 +9,7 @@ import { NgxSpinnerService } from 'ngx-spinner';
 
 import {
   AreaImpresion,
-  ConfiguracionImpresionDispositivo,
+  ValidacionAreaImpresionDispositivo,
 } from 'src/app/models/area-impresion.models';
 import { AreaImpresionService } from 'src/app/services/area-impresion.service';
 import { DeviceIdentifierService } from 'src/app/services/device-identifier.service';
@@ -69,13 +69,13 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
   async cargar(): Promise<void> {
     this.spinner.show();
     try {
-      const [areas, configuracion] = await Promise.all([
+      const [areas, validaciones] = await Promise.all([
         firstValueFrom(this.areaSrv.listar()),
-        firstValueFrom(this.areaSrv.obtenerConfiguracionDispositivo(
+        firstValueFrom(this.areaSrv.obtenerValidacionesDispositivo(
           this.identificadorDispositivo,
         )),
       ]);
-      this.areas = this.combinarConfiguracion(areas ?? [], configuracion ?? []);
+      this.areas = this.combinarValidaciones(areas ?? [], validaciones ?? []);
       this.applyFilter();
       await this.refrescarImpresoras(false);
     } catch (error) {
@@ -165,13 +165,13 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
     try {
       const encontradas = this.areas.filter(area => this.impresoraExiste(area));
       const respuesta = await firstValueFrom(
-        this.areaSrv.guardarConfiguracionDispositivo(
+        this.areaSrv.guardarValidacionesDispositivo(
           this.identificadorDispositivo,
           {
             IdentificadorDispositivo: this.identificadorDispositivo,
-            Impresoras: encontradas.map(area => ({
+            ImpresorasValidadas: encontradas.map(area => ({
                 IdAreaImpresion: area.IdAreaImpresion,
-                NombreImpresora: area.NombreImpresora,
+                NombreImpresoraValidada: area.NombreImpresora,
               })),
           },
         ),
@@ -183,9 +183,9 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
       const guardadas = respuesta.Data ?? [];
       const porArea = new Map(guardadas.map(item => [item.IdAreaImpresion, item]));
       this.areas.forEach(area => {
-        const configuracion = porArea.get(area.IdAreaImpresion);
-        area.NombreImpresoraGuardada = configuracion?.NombreImpresoraValidada ?? '';
-        area.FechaUltimaValidacionUtc = configuracion?.FechaUltimaValidacionUtc ?? null;
+        const validacion = porArea.get(area.IdAreaImpresion);
+        area.NombreImpresoraGuardada = validacion?.NombreImpresoraValidada ?? '';
+        area.FechaUltimaValidacionUtc = validacion?.FechaUltimaValidacionUtc ?? null;
       });
       const noEncontradas = this.areas.filter(area => !this.impresoraExiste(area));
       if (noEncontradas.length) {
@@ -324,19 +324,19 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
     return nuevo;
   }
 
-  private combinarConfiguracion(
+  private combinarValidaciones(
     areas: AreaImpresion[],
-    configuraciones: ConfiguracionImpresionDispositivo[],
+    validaciones: ValidacionAreaImpresionDispositivo[],
   ): AreaImpresionEquipo[] {
     const porArea = new Map(
-      configuraciones.map(configuracion => [configuracion.IdAreaImpresion, configuracion]),
+      validaciones.map(validacion => [validacion.IdAreaImpresion, validacion]),
     );
     return areas.map(area => {
-      const configuracion = porArea.get(area.IdAreaImpresion);
+      const validacion = porArea.get(area.IdAreaImpresion);
       return {
         ...area,
-        NombreImpresoraGuardada: configuracion?.NombreImpresoraValidada ?? '',
-        FechaUltimaValidacionUtc: configuracion?.FechaUltimaValidacionUtc ?? null,
+        NombreImpresoraGuardada: validacion?.NombreImpresoraValidada ?? '',
+        FechaUltimaValidacionUtc: validacion?.FechaUltimaValidacionUtc ?? null,
       };
     });
   }

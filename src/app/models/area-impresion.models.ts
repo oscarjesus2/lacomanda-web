@@ -4,7 +4,7 @@ export interface AreaImpresion {
   NombreImpresora: string;
 }
 
-export interface ConfiguracionImpresionDispositivo {
+export interface ValidacionAreaImpresionDispositivo {
   IdAreaImpresion: number;
   Descripcion: string;
   NombreImpresoraConfigurada: string;
@@ -13,12 +13,12 @@ export interface ConfiguracionImpresionDispositivo {
   Validada: boolean;
 }
 
-export interface ImpresoraAreaDispositivo {
+export interface ImpresoraValidadaAreaDispositivo {
   IdAreaImpresion: number;
-  NombreImpresora: string;
+  NombreImpresoraValidada: string;
 }
 
-export interface ActualizarConfiguracionImpresionDispositivo {
+export interface ActualizarValidacionesAreaImpresionDispositivo {
   IdentificadorDispositivo: string;
-  Impresoras: ImpresoraAreaDispositivo[];
+  ImpresorasValidadas: ImpresoraValidadaAreaDispositivo[];
 }

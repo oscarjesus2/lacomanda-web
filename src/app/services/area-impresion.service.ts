@@ -4,9 +4,9 @@ import { environment } from 'src/environments/environment';
 import { Observable, map } from 'rxjs';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import {
-  ActualizarConfiguracionImpresionDispositivo,
+  ActualizarValidacionesAreaImpresionDispositivo,
   AreaImpresion,
-  ConfiguracionImpresionDispositivo,
+  ValidacionAreaImpresionDispositivo,
 } from '../models/area-impresion.models';
 
 @Injectable({ providedIn: 'root' })
@@ -32,23 +32,23 @@ export class AreaImpresionService {
     return this.http.delete<ApiResponse<boolean>>(`${this.base}/${id}`);
   }
 
-  obtenerConfiguracionDispositivo(
+  obtenerValidacionesDispositivo(
     identificadorDispositivo: string,
-  ): Observable<ConfiguracionImpresionDispositivo[]> {
+  ): Observable<ValidacionAreaImpresionDispositivo[]> {
     const identificador = encodeURIComponent(identificadorDispositivo);
-    return this.http.get<ApiResponse<ConfiguracionImpresionDispositivo[]>>(
-      `${this.base}/dispositivos/${identificador}`,
+    return this.http.get<ApiResponse<ValidacionAreaImpresionDispositivo[]>>(
+      `${this.base}/dispositivos/${identificador}/validaciones`,
     ).pipe(map(r => r.Data ?? []));
   }
 
-  guardarConfiguracionDispositivo(
+  guardarValidacionesDispositivo(
     identificadorDispositivo: string,
-    configuracion: ActualizarConfiguracionImpresionDispositivo,
-  ): Observable<ApiResponse<ConfiguracionImpresionDispositivo[]>> {
+    validaciones: ActualizarValidacionesAreaImpresionDispositivo,
+  ): Observable<ApiResponse<ValidacionAreaImpresionDispositivo[]>> {
     const identificador = encodeURIComponent(identificadorDispositivo);
-    return this.http.put<ApiResponse<ConfiguracionImpresionDispositivo[]>>(
-      `${this.base}/dispositivos/${identificador}`,
-      configuracion,
+    return this.http.put<ApiResponse<ValidacionAreaImpresionDispositivo[]>>(
+      `${this.base}/dispositivos/${identificador}/validaciones`,
+      validaciones,
     );
   }
 }
