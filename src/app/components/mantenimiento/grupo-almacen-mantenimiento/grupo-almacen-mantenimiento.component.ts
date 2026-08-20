@@ -9,6 +9,8 @@ import {
   TipoGrupoAlmacen,
 } from 'src/app/models/grupo-almacen.models';
 import { GrupoAlmacenService } from 'src/app/services/grupo-almacen.service';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { TenantTextKey } from 'src/app/services/localization/tenant-texts.en';
 
 @Component({
   selector: 'app-grupo-almacen-mantenimiento',
@@ -37,6 +39,7 @@ export class GrupoAlmacenMantenimientoComponent implements OnInit {
 
   constructor(
     private readonly service: GrupoAlmacenService,
+    private readonly textCatalog: TenantTextCatalogService,
     private readonly dialogRef: MatDialogRef<GrupoAlmacenMantenimientoComponent>
   ) {}
 
@@ -46,27 +49,28 @@ export class GrupoAlmacenMantenimientoComponent implements OnInit {
     this.cargar();
   }
 
+  /** Clave de catálogo del tipo, para que la tabla respete el idioma elegido. */
+  claveTipo(tipo: TipoGrupoAlmacen): TenantTextKey {
+    return tipo === 'A' ? 'groupTypeItem' : 'groupTypeSupply';
+  }
+
   cargar(): void {
     this.service.listar(this.filtroTipo || undefined).subscribe({
       next: response => {
         if (!response.Success) {
-          Swal.fire('Error', response.Message || 'No se pudieron cargar los grupos.', 'error');
+          this.avisarError(response.Message, 'couldNotLoadWarehouseGroups');
           return;
         }
         this.dataSource.data = response.Data || [];
         this.aplicarFiltro();
       },
-      error: () => Swal.fire('Error', 'No se pudieron cargar los grupos de almacén.', 'error')
+      error: () => this.avisarError(null, 'couldNotLoadWarehouseGroups')
     });
   }
 
   aplicarFiltro(): void {
     this.dataSource.filter = this.filtro.trim().toLowerCase();
     this.dataSource.paginator?.firstPage();
-  }
-
-  etiquetaTipo(tipo: TipoGrupoAlmacen): string {
-    return this.tipos.find(x => x.valor === tipo)?.etiqueta ?? tipo;
   }
 
   nuevo(): void {
@@ -88,7 +92,11 @@ export class GrupoAlmacenMantenimientoComponent implements OnInit {
   guardar(): void {
     const descripcion = this.descripcion.trim();
     if (!descripcion) {
-      Swal.fire('Validación', 'Ingrese la descripción del grupo.', 'warning');
+      Swal.fire(
+        this.textCatalog.get('validation'),
+        this.textCatalog.get('groupDescriptionRequired'),
+        'warning'
+      );
       return;
     }
 
@@ -105,28 +113,32 @@ export class GrupoAlmacenMantenimientoComponent implements OnInit {
       next: response => {
         this.guardando = false;
         if (!response.Success) {
-          Swal.fire('Error', response.Message || 'No se pudo guardar el grupo.', 'error');
+          this.avisarError(response.Message, 'couldNotSaveGroup');
           return;
         }
-        Swal.fire('Guardado', response.Message, 'success');
+        Swal.fire(
+          this.textCatalog.get('saved'),
+          response.Message,
+          'success'
+        );
         this.showForm = false;
         this.cargar();
       },
       error: error => {
         this.guardando = false;
-        Swal.fire('Error', error?.error?.Message || 'No se pudo guardar el grupo.', 'error');
+        this.avisarError(error?.error?.Message, 'couldNotSaveGroup');
       }
     });
   }
 
   eliminar(item: GrupoAlmacen): void {
     Swal.fire({
-      title: '¿Eliminar grupo de almacén?',
+      title: this.textCatalog.get('deleteWarehouseGroupTitle'),
       text: item.Descripcion,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: this.textCatalog.get('yesDelete'),
+      cancelButtonText: this.textCatalog.get('cancel')
     }).then(result => {
       if (!result.isConfirmed) {
         return;
@@ -134,13 +146,17 @@ export class GrupoAlmacenMantenimientoComponent implements OnInit {
       this.service.eliminar(item.IdGrupo).subscribe({
         next: response => {
           if (response.Success) {
-            Swal.fire('Eliminado', response.Message, 'success');
+            Swal.fire(
+              this.textCatalog.get('deleted'),
+              response.Message,
+              'success'
+            );
             this.cargar();
           } else {
-            Swal.fire('Error', response.Message || 'No se pudo eliminar el grupo.', 'error');
+            this.avisarError(response.Message, 'couldNotDeleteGroup');
           }
         },
-        error: error => Swal.fire('No se puede eliminar', error?.error?.Message || 'El grupo está siendo utilizado.', 'error')
+        error: error => this.avisarError(error?.error?.Message, 'groupInUse')
       });
     });
   }
@@ -151,5 +167,19 @@ export class GrupoAlmacenMantenimientoComponent implements OnInit {
 
   cerrar(): void {
     this.dialogRef.close();
+  }
+
+  /**
+   * El mensaje del servidor ya viene en el idioma del tenant; la clave del
+   * catálogo es el respaldo cuando no llega ninguno.
+   */
+  private avisarError(
+    mensajeServidor: string | null | undefined,
+    clave: TenantTextKey): void {
+    Swal.fire(
+      this.textCatalog.get('error'),
+      mensajeServidor || this.textCatalog.get(clave),
+      'error'
+    );
   }
 }

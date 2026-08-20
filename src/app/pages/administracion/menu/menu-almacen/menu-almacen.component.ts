@@ -119,6 +119,8 @@ export class MenuAlmacenComponent implements OnInit {
           feature: C.AlmacenGestion,
           icon: 'category',
           label: 'Grupos',
+          titleKey: 'warehouseGroups',
+          labelKey: 'groups',
           disabled: false
         }
       ]
@@ -344,7 +346,8 @@ export class MenuAlmacenComponent implements OnInit {
       'areasAlmacen',
       'subareasAlmacen',
       'proveedores',
-      'motivosSalida'
+      'motivosSalida',
+      'gruposAlmacen'
     ].includes(item.action);
     const configuracion = esMaestroCompacto
       ? {

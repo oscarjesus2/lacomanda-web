@@ -3,28 +3,32 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>{{ showForm ? (idGrupo ? 'Editar grupo de almacén' : 'Nuevo grupo de almacén') : 'Grupos de almacén' }}</h2>
+  <h2>
+    {{ (showForm
+          ? (idGrupo ? 'editWarehouseGroup' : 'newWarehouseGroup')
+          : 'warehouseGroups') | tenantText }}
+  </h2>
 
   <ng-container *ngIf="!showForm">
     <div class="dialog-toolbar">
       <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
         <mat-form-field appearance="fill">
-          <mat-label>Buscar grupo</mat-label>
+          <mat-label>{{ 'searchGroup' | tenantText }}</mat-label>
           <mat-icon matPrefix>search</mat-icon>
           <input
             matInput
             [(ngModel)]="filtro"
             (ngModelChange)="aplicarFiltro()"
-            placeholder="Descripción"
+            [placeholder]="'description' | tenantText"
           >
         </mat-form-field>
 
         <mat-form-field appearance="fill">
-          <mat-label>Tipo</mat-label>
+          <mat-label>{{ 'type' | tenantText }}</mat-label>
           <mat-select [(ngModel)]="filtroTipo" (ngModelChange)="cargar()">
-            <mat-option value="">Todos</mat-option>
+            <mat-option value="">{{ 'allTypes' | tenantText }}</mat-option>
             <mat-option *ngFor="let tipo of tipos" [value]="tipo.valor">
-              {{ tipo.etiqueta }}
+              {{ tipo.clave | tenantText }}
             </mat-option>
           </mat-select>
         </mat-form-field>
@@ -33,7 +37,7 @@
       <div class="dialog-toolbar__actions">
         <button mat-raised-button color="primary" type="button" (click)="nuevo()">
           <mat-icon>add</mat-icon>
-          Nuevo grupo
+          {{ 'newWarehouseGroup' | tenantText }}
         </button>
       </div>
     </div>
@@ -43,32 +47,32 @@
         <div class="dialog-table-wrapper--fill">
           <mat-table [dataSource]="dataSource">
             <ng-container matColumnDef="descripcion">
-              <mat-header-cell *matHeaderCellDef>Descripción</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef>{{ 'description' | tenantText }}</mat-header-cell>
               <mat-cell *matCellDef="let row">{{ row.Descripcion }}</mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="tipo">
-              <mat-header-cell *matHeaderCellDef>Tipo</mat-header-cell>
-              <mat-cell *matCellDef="let row">{{ etiquetaTipo(row.TipoGrupo) }}</mat-cell>
+              <mat-header-cell *matHeaderCellDef>{{ 'type' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ claveTipo(row.TipoGrupo) | tenantText }}</mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="estado">
-              <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef>{{ 'status' | tenantText }}</mat-header-cell>
               <mat-cell *matCellDef="let row">
                 <span class="status-pill" [class.status-pill--inactive]="!row.Activo">
-                  {{ row.Activo ? 'Activo' : 'Inactivo' }}
+                  {{ (row.Activo ? 'active' : 'inactive') | tenantText }}
                 </span>
               </mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="acciones">
-              <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
               <mat-cell *matCellDef="let row">
                 <button
                   mat-icon-button
                   color="primary"
                   type="button"
-                  aria-label="Editar grupo"
+                  [attr.aria-label]="'edit' | tenantText"
                   (click)="editar(row)"
                 >
                   <mat-icon>edit</mat-icon>
@@ -77,7 +81,7 @@
                   mat-icon-button
                   color="warn"
                   type="button"
-                  aria-label="Eliminar grupo"
+                  [attr.aria-label]="'delete' | tenantText"
                   (click)="eliminar(row)"
                 >
                   <mat-icon>delete</mat-icon>
@@ -91,7 +95,7 @@
 
           <div class="dialog-empty-state" *ngIf="dataSource.filteredData.length === 0">
             <mat-icon>category</mat-icon>
-            <span>No se encontraron grupos de almacén.</span>
+            <span>{{ 'noWarehouseGroupsFound' | tenantText }}</span>
           </div>
         </div>
 
@@ -113,16 +117,12 @@
       <section class="dialog-form-section">
         <h3 class="dialog-form-section__title">
           <mat-icon>category</mat-icon>
-          Datos del grupo
+          {{ 'groupData' | tenantText }}
         </h3>
-        <p class="dialog-form-section__hint">
-          Agrupa insumos y artículos de almacén. Los grupos de productos de venta
-          se mantienen desde Ventas.
-        </p>
 
         <div class="dialog-form-grid">
           <mat-form-field appearance="fill" class="dialog-form-grid__wide">
-            <mat-label>Descripción</mat-label>
+            <mat-label>{{ 'description' | tenantText }}</mat-label>
             <input
               matInput
               name="descripcion"
@@ -130,36 +130,42 @@
               maxlength="100"
               required
             >
-            <mat-error>La descripción es obligatoria.</mat-error>
+            <mat-error>{{ 'groupDescriptionRequired' | tenantText }}</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="fill">
-            <mat-label>Tipo</mat-label>
+            <mat-label>{{ 'type' | tenantText }}</mat-label>
             <mat-select name="tipoGrupo" [(ngModel)]="tipoGrupo" required>
               <mat-option *ngFor="let tipo of tipos" [value]="tipo.valor">
-                {{ tipo.etiqueta }}
+                {{ tipo.clave | tenantText }}
               </mat-option>
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="fill">
-            <mat-label>Estado</mat-label>
+            <mat-label>{{ 'status' | tenantText }}</mat-label>
             <mat-select name="activo" [(ngModel)]="activo" required>
-              <mat-option [value]="true">Activo</mat-option>
-              <mat-option [value]="false">Inactivo</mat-option>
+              <mat-option [value]="true">{{ 'active' | tenantText }}</mat-option>
+              <mat-option [value]="false">{{ 'inactive' | tenantText }}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
+
+        <!-- Nota al pie, en el mismo tono que el aviso de Control horario:
+             explica la consecuencia justo donde se decide, sin interrumpir. -->
+        <p class="dialog-form-section__hint">
+          {{ 'warehouseGroupsHint' | tenantText }}
+        </p>
       </section>
     </div>
 
     <div class="dialog-actions">
       <button mat-stroked-button type="button" (click)="volver()" [disabled]="guardando">
-        Cancelar
+        {{ 'cancel' | tenantText }}
       </button>
       <button mat-raised-button color="primary" type="submit" [disabled]="guardando">
         <mat-icon>save</mat-icon>
-        {{ idGrupo ? 'Actualizar' : 'Guardar' }}
+        {{ (idGrupo ? 'update' : 'save') | tenantText }}
       </button>
     </div>
   </form>

@@ -1,3 +1,5 @@
+import { TenantTextKey } from '../services/localization/tenant-texts.en';
+
 /**
  * Tipos de grupo que gestiona el mantenimiento de Almacén.
  * "P" queda fuera a propósito: esos son los grupos de venta y los mantiene
@@ -20,8 +22,9 @@ export interface GrupoAlmacenGuardar {
 
 export const TIPOS_GRUPO_ALMACEN: ReadonlyArray<{
   valor: TipoGrupoAlmacen;
-  etiqueta: string;
+  /** Clave del catálogo de textos, para respetar el idioma del usuario. */
+  clave: TenantTextKey;
 }> = [
-  { valor: 'I', etiqueta: 'Insumo' },
-  { valor: 'A', etiqueta: 'Artículo' },
+  { valor: 'I', clave: 'groupTypeSupply' },
+  { valor: 'A', clave: 'groupTypeItem' },
 ];

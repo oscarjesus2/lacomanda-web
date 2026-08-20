@@ -151,12 +151,11 @@
         </button>
       </div>
 
-      <!-- Sección inline para cambiar contraseña (redirige a Keycloak) -->
+      <!-- Sección inline para cambiar contraseña (redirige al proveedor de identidad) -->
       <div *ngIf="usuario.IdUsuario && showCambiarPassword" class="usr-pwd-section">
         <p class="usr-pwd-section__title">{{ 'changePassword' | tenantText }}</p>
         <p class="usr-pwd-section__hint">
-          Serás redirigido a la página segura de Keycloak para cambiar tu contraseña.
-          La contraseña no pasa por la aplicación.
+          {{ 'passwordChangeRedirectHint' | tenantText }}
         </p>
         <button mat-raised-button color="primary" type="button" (click)="guardarPassword()">
           <mat-icon>key</mat-icon>
