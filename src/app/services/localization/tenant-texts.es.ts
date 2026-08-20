@@ -1180,7 +1180,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   couldNotDeleteGroup: 'No se pudo eliminar el grupo.',
   groupInUse: 'El grupo está siendo utilizado.',
   passwordChangeRedirectHint:
-    'Te llevaremos a una página segura para cambiar tu contraseña. La contraseña nunca pasa por la aplicación.',
+    'Te llevaremos a una página segura para cambiar tu contraseña.',
   transfers: 'Transferencias',
   inventories: 'Inventarios',
   stockByArea: 'Stock por área',

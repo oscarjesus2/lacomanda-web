@@ -1175,7 +1175,7 @@ export const EN_TEXTS = {
   couldNotDeleteGroup: 'The group could not be deleted.',
   groupInUse: 'The group is in use.',
   passwordChangeRedirectHint:
-    'You will be taken to a secure page to change your password. Your password never passes through the application.',
+    'You will be taken to a secure page to change your password.',
   transfers: 'Transfers',
   inventories: 'Inventories',
   stockByArea: 'Stock by area',
