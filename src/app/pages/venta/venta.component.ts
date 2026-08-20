@@ -84,6 +84,7 @@ import { AgenteImpresionPedidosService } from 'src/app/services/agente-impresion
 import { AgenteImpresionLocalService } from 'src/app/services/agente-impresion-local.service';
 import { EstadoImpresionService } from 'src/app/services/estado-impresion.service';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 import { AgendaReservasDialogComponent } from 'src/app/components/reservas/agenda-reservas-dialog/agenda-reservas-dialog.component';
 import { ConfirmacionImpresionPedidosService } from 'src/app/services/confirmacion-impresion-pedidos.service';
 
@@ -432,16 +433,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   async ngOnInit() {
     this.confirmacionImpresionPedidos.iniciar();
     this.configuracionService.get().subscribe(cfg => this.config = cfg);
-    this.licenciaTenantService.obtener().subscribe({
-      next: response => {
-        const licencia = response.Data;
-        this.reservasHabilitadas = licencia == null ||
-          licencia.Caracteristicas?.some(
-            caracteristica => caracteristica.Codigo === 'ventas.reservas_online' && caracteristica.Habilitada
-          ) === true;
-      },
-      error: () => this.reservasHabilitadas = false
-    });
+    this.licenciaTenantService
+      .tieneCaracteristica(CARACTERISTICAS_LICENCIA.VentasReservasOnline)
+      .subscribe(habilitado => (this.reservasHabilitadas = habilitado));
 
     this.enterFullScreen();
     if (this.deviceCapabilities.requiresLocalPrintBridge()) {

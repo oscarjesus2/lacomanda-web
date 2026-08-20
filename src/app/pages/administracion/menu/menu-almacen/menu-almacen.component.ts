@@ -13,6 +13,7 @@ import { TransferenciaAlmacenMantenimientoComponent } from 'src/app/components/m
 import { PorcionamientoMantenimientoComponent } from 'src/app/components/mantenimiento/porcionamiento-mantenimiento/porcionamiento-mantenimiento.component';
 import { ProduccionMantenimientoComponent } from 'src/app/components/mantenimiento/produccion-mantenimiento/produccion-mantenimiento.component';
 import { MotivoSalidaMantenimientoComponent } from 'src/app/components/mantenimiento/motivo-salida-mantenimiento/motivo-salida-mantenimiento.component';
+import { GrupoAlmacenMantenimientoComponent } from 'src/app/components/mantenimiento/grupo-almacen-mantenimiento/grupo-almacen-mantenimiento.component';
 import { StockAlmacenConsultaComponent } from 'src/app/components/mantenimiento/stock-almacen-consulta/stock-almacen-consulta.component';
 import { KardexAlmacenConsultaComponent } from 'src/app/components/mantenimiento/kardex-almacen-consulta/kardex-almacen-consulta.component';
 import { ConsumoAreaReporteComponent } from 'src/app/components/mantenimiento/consumo-area-reporte/consumo-area-reporte.component';
@@ -20,14 +21,30 @@ import { VentaCostoReporteComponent } from 'src/app/components/mantenimiento/ven
 import { ConsumoTeoricoRealReporteComponent } from 'src/app/components/mantenimiento/consumo-teorico-real-reporte/consumo-teorico-real-reporte.component';
 import { RentabilidadProductoCanalReporteComponent } from 'src/app/components/mantenimiento/rentabilidad-producto-canal-reporte/rentabilidad-producto-canal-reporte.component';
 import { CoberturaStockReporteComponent } from 'src/app/components/mantenimiento/cobertura-stock-reporte/cobertura-stock-reporte.component';
-import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import {
+  EstadoLicenciaTenant,
+  LicenciaTenantService,
+} from 'src/app/services/licencia-tenant.service';
+import {
+  CARACTERISTICAS_LICENCIA as C,
+  ExigenciaLicencia,
+} from 'src/app/constants/caracteristicas-licencia';
 
 @Component({
   selector: 'app-menu-almacen',
   templateUrl: './menu-almacen.component.html'
 })
 export class MenuAlmacenComponent implements OnInit {
-  reportesHabilitados = false;
+  /**
+   * Hasta que `/licencia/me` responde no se muestra nada sujeto a licencia,
+   * para no ofrecer opciones que la API rechazaría con 403.
+   */
+  private estadoLicencia: EstadoLicenciaTenant = {
+    licencia: null,
+    sinSuscripcion: false,
+    error: true,
+    habilitadas: new Set<string>(),
+  };
 
   almacenMenu: any[] = [
     {
@@ -39,6 +56,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Artículos',
           action: 'articulos',
+          feature: C.AlmacenGestion,
           icon: 'inventory',
           label: 'Artículos',
           titleKey: 'items',
@@ -48,6 +66,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Recetas',
           action: 'recetas',
+          feature: C.AlmacenRecetas,
           icon: 'menu_book',
           label: 'Recetas',
           titleKey: 'recipes',
@@ -57,6 +76,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Áreas de almacén',
           action: 'areasAlmacen',
+          feature: C.AlmacenGestion,
           icon: 'warehouse',
           label: 'Áreas de almacén',
           titleKey: 'warehouseAreas',
@@ -66,6 +86,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Subáreas de almacén',
           action: 'subareasAlmacen',
+          feature: C.AlmacenGestion,
           icon: 'account_tree',
           label: 'Subáreas de almacén',
           titleKey: 'warehouseSubareas',
@@ -75,6 +96,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Proveedores',
           action: 'proveedores',
+          feature: C.AlmacenCompras,
           icon: 'local_shipping',
           label: 'Proveedores',
           titleKey: 'suppliers',
@@ -84,10 +106,19 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Motivos de salida',
           action: 'motivosSalida',
+          feature: C.AlmacenGestion,
           icon: 'assignment_late',
           label: 'Motivos salida',
           titleKey: 'stockOutReasons',
           labelKey: 'stockOutReasons',
+          disabled: false
+        },
+        {
+          title: 'Grupos de almacén',
+          action: 'gruposAlmacen',
+          feature: C.AlmacenGestion,
+          icon: 'category',
+          label: 'Grupos',
           disabled: false
         }
       ]
@@ -99,6 +130,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Ingresos',
           action: 'ingresosCompra',
+          feature: C.AlmacenCompras,
           icon: 'move_to_inbox',
           label: 'Ingresos',
           titleKey: 'stockIn',
@@ -108,6 +140,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Salidas',
           action: 'salidasInternas',
+          feature: C.AlmacenGestion,
           icon: 'outbox',
           label: 'Salidas',
           titleKey: 'stockOut',
@@ -117,6 +150,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Transferencias',
           action: 'transferenciasAlmacen',
+          feature: C.AlmacenGestion,
           icon: 'swap_horiz',
           label: 'Transferencias',
           titleKey: 'transfers',
@@ -132,6 +166,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Inventarios',
           action: 'inventarios',
+          feature: C.AlmacenInventarios,
           icon: 'fact_check',
           label: 'Inventarios',
           titleKey: 'inventories',
@@ -141,6 +176,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Stock por área',
           action: 'stockPorArea',
+          feature: C.AlmacenKardex,
           icon: 'query_stats',
           label: 'Stock por área',
           titleKey: 'stockByArea',
@@ -150,6 +186,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Kardex',
           action: 'kardexAlmacen',
+          feature: C.AlmacenKardex,
           icon: 'receipt_long',
           label: 'Kardex',
           titleKey: 'warehouseKardex',
@@ -165,6 +202,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Porcionamiento',
           action: 'porcionamientos',
+          feature: C.AlmacenGestion,
           icon: 'content_cut',
           label: 'Porcionamiento',
           titleKey: 'portioning',
@@ -174,6 +212,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Producción',
           action: 'producciones',
+          feature: C.AlmacenGestion,
           icon: 'precision_manufacturing',
           label: 'Producción',
           titleKey: 'production',
@@ -185,11 +224,12 @@ export class MenuAlmacenComponent implements OnInit {
     {
       title: 'Reportes',
       titleKey: 'menuReports',
-      feature: 'operacion.reportes',
+      feature: C.OperacionReportes,
       children: [
         {
           title: 'Consumo de artículos por subárea',
           action: 'consumoArea',
+          feature: [C.AlmacenGestion, C.OperacionReportes],
           icon: 'restaurant_menu',
           label: 'Consumo por subárea',
           titleKey: 'warehouseConsumptionByArea',
@@ -199,6 +239,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Venta versus costo histórico',
           action: 'ventaCosto',
+          feature: [C.AlmacenGestion, C.OperacionReportes],
           icon: 'analytics',
           label: 'Venta vs. costo',
           titleKey: 'salesVersusCost',
@@ -208,6 +249,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Consumo teórico versus real',
           action: 'consumoTeoricoReal',
+          feature: [C.AlmacenGestion, C.OperacionReportes],
           icon: 'compare_arrows',
           label: 'Teórico vs. real',
           titleKey: 'theoreticalVsActualConsumption',
@@ -217,6 +259,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Rentabilidad por producto y canal',
           action: 'rentabilidadProductoCanal',
+          feature: [C.AlmacenGestion, C.OperacionReportes],
           icon: 'trending_up',
           label: 'Rentabilidad',
           titleKey: 'profitabilityByProductChannel',
@@ -226,6 +269,7 @@ export class MenuAlmacenComponent implements OnInit {
         {
           title: 'Cobertura de stock',
           action: 'coberturaStock',
+          feature: [C.AlmacenGestion, C.OperacionReportes],
           icon: 'hourglass_bottom',
           label: 'Cobertura de stock',
           titleKey: 'stockCoverage',
@@ -241,9 +285,30 @@ export class MenuAlmacenComponent implements OnInit {
     private readonly licenciaTenantService: LicenciaTenantService
   ) {}
 
+  /**
+   * Una sección se muestra si su propia exigencia se cumple y además le queda
+   * al menos una opción visible. Antes solo se filtraba la sección de reportes,
+   * de modo que todo Almacén aparecía sin estar contratado.
+   */
   get seccionesVisibles(): any[] {
     return this.almacenMenu.filter(
-      section => !section.feature || this.reportesHabilitados
+      section =>
+        this.cubiertoPorLicencia(section.feature) &&
+        this.itemsVisibles(section).length > 0,
+    );
+  }
+
+  itemsVisibles(section: any): any[] {
+    return (section.children ?? []).filter((item: any) =>
+      this.cubiertoPorLicencia(item.feature),
+    );
+  }
+
+  /** Una opción sin `feature` no está sujeta a licencia. */
+  private cubiertoPorLicencia(feature?: ExigenciaLicencia): boolean {
+    return (
+      !feature ||
+      this.licenciaTenantService.evaluar(this.estadoLicencia, feature)
     );
   }
 
@@ -267,7 +332,8 @@ export class MenuAlmacenComponent implements OnInit {
       transferenciasAlmacen: TransferenciaAlmacenMantenimientoComponent,
       porcionamientos: PorcionamientoMantenimientoComponent,
       producciones: ProduccionMantenimientoComponent,
-      motivosSalida: MotivoSalidaMantenimientoComponent
+      motivosSalida: MotivoSalidaMantenimientoComponent,
+      gruposAlmacen: GrupoAlmacenMantenimientoComponent
     };
     const component = components[item.action];
     if (!component) {
@@ -309,16 +375,8 @@ export class MenuAlmacenComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.licenciaTenantService.obtener().subscribe({
-      next: response => {
-        const licencia = response.Data;
-        this.reportesHabilitados = licencia == null ||
-          licencia.Caracteristicas?.some(caracteristica =>
-            caracteristica.Codigo === 'operacion.reportes' &&
-            caracteristica.Habilitada
-          ) === true;
-      },
-      error: () => this.reportesHabilitados = false
-    });
+    this.licenciaTenantService
+      .obtenerEstado()
+      .subscribe(estado => (this.estadoLicencia = estado));
   }
 }

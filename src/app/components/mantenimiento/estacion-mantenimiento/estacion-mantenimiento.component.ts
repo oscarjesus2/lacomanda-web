@@ -17,6 +17,7 @@ import { TenantTextCatalogService } from 'src/app/services/localization/tenant-t
 import { DeviceIdentifierService } from 'src/app/services/device-identifier.service';
 import { EstacionSessionRealtimeService } from 'src/app/services/estacion-session-realtime.service';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 import { AreaAlmacenService } from 'src/app/services/area-almacen.service';
 import { SubAreaAlmacenService } from 'src/app/services/sub-area-almacen.service';
 import { AreaAlmacen } from 'src/app/models/receta.models';
@@ -387,33 +388,8 @@ export class EstacionMantenimientoComponent implements OnInit {
   }
 
   private cargarLicenciaAlmacen(): void {
-    this.licenciaTenantService.obtener().subscribe({
-      next: response => {
-        if (!response.Success) {
-          Swal.fire(
-            'Error',
-            response.Message || 'No se pudo verificar la licencia del restaurante.',
-            'error',
-          );
-          return;
-        }
-        const licencia = response.Data;
-        this.licenciaAlmacenVerificada = true;
-        this.almacenHabilitado = (
-          licencia == null ||
-          licencia.Caracteristicas?.some(caracteristica =>
-            caracteristica.Codigo === 'almacen.gestion' &&
-            caracteristica.Habilitada
-          ) === true
-        );
-        if (!this.almacenHabilitado) return;
-
-        this.cargarCatalogoAlmacen();
-        if (this.showForm && this.estacion.IdEstacion) {
-          this.cargarDescargasStock(Number(this.estacion.IdEstacion));
-        }
-      },
-      error: () => {
+    this.licenciaTenantService.obtenerEstado().subscribe(estado => {
+      if (estado.error) {
         this.licenciaAlmacenVerificada = false;
         this.almacenHabilitado = false;
         Swal.fire(
@@ -421,7 +397,20 @@ export class EstacionMantenimientoComponent implements OnInit {
           'No se pudo verificar la licencia del restaurante.',
           'error',
         );
-      },
+        return;
+      }
+
+      this.licenciaAlmacenVerificada = true;
+      this.almacenHabilitado = this.licenciaTenantService.evaluar(
+        estado,
+        CARACTERISTICAS_LICENCIA.AlmacenGestion,
+      );
+      if (!this.almacenHabilitado) return;
+
+      this.cargarCatalogoAlmacen();
+      if (this.showForm && this.estacion.IdEstacion) {
+        this.cargarDescargasStock(Number(this.estacion.IdEstacion));
+      }
     });
   }
 

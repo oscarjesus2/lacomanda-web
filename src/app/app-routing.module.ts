@@ -5,6 +5,8 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { VentaComponent } from './pages/venta/venta.component';
 import { AdminGuard } from './guards/admin.guard';
 import { RoleGuard } from './guards/role.guard';
+import { LicenseGuard } from './guards/license.guard';
+import { CARACTERISTICAS_LICENCIA } from './constants/caracteristicas-licencia';
 import { AdministracionComponent } from './pages/administracion/administracion.component';
  
  // Importa los componentes de las sub-secciones
@@ -30,20 +32,29 @@ const routes: Routes = [
 {
   path: 'dashboard',
   component: DashboardComponent,
-  canActivate: [RoleGuard],
-  data: { roles: ['admin'] }
+  canActivate: [RoleGuard, LicenseGuard],
+  data: {
+    roles: ['admin'],
+    feature: CARACTERISTICAS_LICENCIA.OperacionReportes
+  }
 },
 {
   path: 'caja',
   component: VentaComponent,
-  canActivate: [RoleGuard],
-  data: { roles: ['admin', 'caja'] }
+  canActivate: [RoleGuard, LicenseGuard],
+  data: {
+    roles: ['admin', 'caja'],
+    feature: CARACTERISTICAS_LICENCIA.OperacionCaja
+  }
 },
 {
   path: 'mozo',
   component: VentaComponent,
-  canActivate: [RoleGuard],
-  data: { roles: ['admin', 'mozo'] }
+  canActivate: [RoleGuard, LicenseGuard],
+  data: {
+    roles: ['admin', 'mozo'],
+    feature: CARACTERISTICAS_LICENCIA.OperacionCaja
+  }
 },
 {
   path: 'administracion',

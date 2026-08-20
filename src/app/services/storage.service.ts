@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { Router } from '@angular/router';
 import { Session } from '../models/session.models';
 import { Usuario } from '../models/usuario.models';
 import { KeycloakAuthService } from './auth/keycloak-auth.service';
+import { LicenciaTenantService } from './licencia-tenant.service';
 
 @Injectable({ providedIn: 'root' })
 export class StorageService {
@@ -12,6 +13,7 @@ export class StorageService {
   constructor(
     private router: Router,
     private keycloakAuth: KeycloakAuthService,
+    private injector: Injector,
   ) {
     this.currentSession = this.loadSessionData();
   }
@@ -83,6 +85,12 @@ export class StorageService {
     const refreshToken = this.getRefreshToken();
     const realm        = this.currentSession?.TenantID ?? '';
     this.removeCurrentSession();
+
+    // La licencia se cachea por sesión: sin esto, entrar con otro restaurante
+    // reutilizaría las características del anterior.
+    // Se resuelve de forma diferida porque LicenciaTenantService depende de
+    // HttpClient, cuyo interceptor depende a su vez de este servicio.
+    this.injector.get(LicenciaTenantService).invalidar();
 
     if (refreshToken && realm) {
       // Invalidar sesión en Keycloak (fire & forget — no bloqueamos la navegación)

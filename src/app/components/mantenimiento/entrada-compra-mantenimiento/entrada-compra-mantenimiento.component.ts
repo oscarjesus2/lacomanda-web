@@ -20,6 +20,7 @@ import {
 } from 'src/app/models/entrada-compra.models';
 import { EntradaCompraService } from 'src/app/services/entrada-compra.service';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 import {
   ProveedorCatalogo,
   ProveedorGuardar
@@ -1181,23 +1182,16 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   }
 
   private cargarLicenciaFacturaIa(): void {
-    this.licenciaTenantService.obtener().subscribe({
-      next: response => {
-        const licencia = response.Data;
-        this.facturaIaHabilitada = licencia == null ||
-          licencia.Caracteristicas?.some(caracteristica =>
-            caracteristica.Codigo === 'almacen.captura_documentos_ia' &&
-            caracteristica.Habilitada
-          ) === true;
-        if (this.facturaIaHabilitada) {
+    this.licenciaTenantService
+      .tieneCaracteristica(CARACTERISTICAS_LICENCIA.AlmacenCapturaDocumentosIa)
+      .subscribe(habilitado => {
+        this.facturaIaHabilitada = habilitado;
+        if (habilitado) {
           this.cargarCuotaFacturaIa();
+        } else {
+          this.cuotaFacturaIa = null;
         }
-      },
-      error: () => {
-        this.facturaIaHabilitada = false;
-        this.cuotaFacturaIa = null;
-      }
-    });
+      });
   }
 
   private cargarCuotaFacturaIa(): void {

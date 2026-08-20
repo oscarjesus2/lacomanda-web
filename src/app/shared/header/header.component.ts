@@ -17,6 +17,7 @@ import { TenantTextCatalogService } from 'src/app/services/localization/tenant-t
 import Swal from 'sweetalert2';
 import { ControlHorarioComponent } from 'src/app/components/control-horario/control-horario.component';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 
 @Component({
   selector: 'app-header',
@@ -309,17 +310,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Usuario y sucursal
     this.loadUserInfo();
 
-    this.licenciaTenantService.obtener().subscribe({
-      next: response => {
-        const licencia = response.Data;
-        this.controlHorarioHabilitado = licencia?.Caracteristicas?.some(
-          caracteristica =>
-            caracteristica.Codigo === 'personal.control_horario' &&
-            caracteristica.Habilitada,
-        ) === true;
-      },
-      error: () => this.controlHorarioHabilitado = false,
-    });
+    this.licenciaTenantService
+      .tieneCaracteristica(CARACTERISTICAS_LICENCIA.PersonalControlHorario)
+      .subscribe(habilitado => (this.controlHorarioHabilitado = habilitado));
 
     // Turno + stats
     this.checkTurno();

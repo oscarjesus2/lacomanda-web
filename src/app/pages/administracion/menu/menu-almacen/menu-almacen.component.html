@@ -14,7 +14,7 @@
           type="button"
           class="tile"
           [class.tile--disabled]="item.disabled"
-          *ngFor="let item of section.children"
+          *ngFor="let item of itemsVisibles(section)"
           [disabled]="item.disabled"
           (click)="openDialog(item)"
           [title]="item.titleKey | tenantText"

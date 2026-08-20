@@ -31,7 +31,14 @@ import { DescuentoMantenimientoComponent } from 'src/app/components/mantenimient
 import { TarjetaMantenimientoComponent } from 'src/app/components/mantenimiento/tarjeta-mantenimiento/tarjeta-mantenimiento.component';
 import { SocioNegocioMantenimientoComponent } from 'src/app/components/mantenimiento/socio-negocio-mantenimiento/socio-negocio-mantenimiento.component';
 import { PromocionMantenimientoComponent } from 'src/app/components/mantenimiento/promocion-mantenimiento/promocion-mantenimiento.component';
-import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import {
+  EstadoLicenciaTenant,
+  LicenciaTenantService,
+} from 'src/app/services/licencia-tenant.service';
+import {
+  CARACTERISTICAS_LICENCIA as C,
+  ExigenciaLicencia,
+} from 'src/app/constants/caracteristicas-licencia';
 import { ControlHorarioMantenimientoComponent } from 'src/app/components/mantenimiento/control-horario-mantenimiento/control-horario-mantenimiento.component';
 import { ReporteVentasAnaliticoComponent } from 'src/app/components/mantenimiento/reporte-ventas-analitico/reporte-ventas-analitico.component';
 import { TipoReporteVentas } from 'src/app/models/reportes-ventas.models';
@@ -58,61 +65,71 @@ export class MenuVentasComponent implements OnInit {
     },
   ];
 
-  promocionesHabilitadas = false;
-  private caracteristicasHabilitadas = new Set<string>();
-  private licenciaSinRestricciones = false;
+  /**
+   * Hasta que `/licencia/me` responde no se muestra ninguna opción sujeta a
+   * licencia: es preferible que aparezcan un instante después a que parpadeen y
+   * desaparezcan, o a ofrecer algo que la API rechazará.
+   */
+  private estadoLicencia: EstadoLicenciaTenant = {
+    licencia: null,
+    sinSuscripcion: false,
+    error: true,
+    habilitadas: new Set<string>(),
+  };
 
   ventasMenu = [
     {
       title: 'Maestros', titleKey: 'menuMasters',
       children: [
-        { title: 'Configuración de Ambientes', route: '/ventas/configuracion-ambientes', icon: 'meeting_room',     label: 'Ambientes',    titleKey: 'zonesConfig',        labelKey: 'zones'              },
-        { title: 'Configuración de Espacios',  route: '/ventas/configuracion-espacios',  icon: 'table_restaurant', label: 'Espacios',     titleKey: 'spacesConfig',       labelKey: 'spaces'             },
-        { title: 'Familia de Productos',        route: '/ventas/familia-productos',        icon: 'category',         label: 'Familias',     titleKey: 'productFamilies',    labelKey: 'families'           },
-        { title: 'Sub Familia de Productos',    route: '/ventas/subfamilia-productos',     icon: 'account_tree',     label: 'Sub familias', titleKey: 'productSubfamilies', labelKey: 'subfamiliesShort'   },
-        { title: 'Grupos de Productos',         route: '/ventas/grupos',                   icon: 'inventory_2',      label: 'Grupos',       titleKey: 'productGroups',      labelKey: 'groups'             },
-        { title: 'Colores',                     route: '/ventas/colores',                  icon: 'palette',          label: 'Colores',      titleKey: 'colors',             labelKey: 'colors'             },
-        { title: 'Areas de Impresión',          route: '/ventas/area-impresion',           icon: 'print',            label: 'Impresión',    titleKey: 'printAreas',         labelKey: 'printing'           },
-        { title: 'Productos',                   route: '/ventas/productos',                icon: 'restaurant_menu',  label: 'Productos',    titleKey: 'products',           labelKey: 'products'           },
-        { title: 'Socios de Negocio',           route: '/ventas/socios-negocio',           icon: 'handshake',        label: 'Socios',       titleKey: 'businessPartners',   labelKey: 'partners'           },
-        { title: 'Configuración de menús',      route: '/ventas/configuracion-combos',     icon: 'tune',             label: 'Menús',        titleKey: 'combosConfig',       labelKey: 'combos'             },
-        { title: 'Observaciones',               route: '/ventas/observaciones',            icon: 'sticky_note_2',    label: 'Observac.',    titleKey: 'observations',       labelKey: 'observations'       },
+        { title: 'Configuración de Ambientes', route: '/ventas/configuracion-ambientes', icon: 'meeting_room',     label: 'Ambientes',    titleKey: 'zonesConfig',        labelKey: 'zones',              feature: C.VentasMesa      },
+        { title: 'Configuración de Espacios',  route: '/ventas/configuracion-espacios',  icon: 'table_restaurant', label: 'Espacios',     titleKey: 'spacesConfig',       labelKey: 'spaces',             feature: C.VentasMesa      },
+        { title: 'Familia de Productos',        route: '/ventas/familia-productos',        icon: 'category',         label: 'Familias',     titleKey: 'productFamilies',    labelKey: 'families',           feature: C.OperacionCaja   },
+        { title: 'Sub Familia de Productos',    route: '/ventas/subfamilia-productos',     icon: 'account_tree',     label: 'Sub familias', titleKey: 'productSubfamilies', labelKey: 'subfamiliesShort',   feature: C.OperacionCaja   },
+        { title: 'Grupos de Productos',         route: '/ventas/grupos',                   icon: 'inventory_2',      label: 'Grupos',       titleKey: 'productGroups',      labelKey: 'groups',             feature: C.OperacionCaja   },
+        { title: 'Colores',                     route: '/ventas/colores',                  icon: 'palette',          label: 'Colores',      titleKey: 'colors',             labelKey: 'colors',             feature: C.OperacionCaja   },
+        { title: 'Areas de Impresión',          route: '/ventas/area-impresion',           icon: 'print',            label: 'Impresión',    titleKey: 'printAreas',         labelKey: 'printing',           feature: C.OperacionCaja   },
+        { title: 'Productos',                   route: '/ventas/productos',                icon: 'restaurant_menu',  label: 'Productos',    titleKey: 'products',           labelKey: 'products',           feature: C.OperacionCaja   },
+        { title: 'Socios de Negocio',           route: '/ventas/socios-negocio',           icon: 'handshake',        label: 'Socios',       titleKey: 'businessPartners',   labelKey: 'partners',           feature: C.OperacionCaja   },
+        { title: 'Configuración de menús',      route: '/ventas/configuracion-combos',     icon: 'tune',             label: 'Menús',        titleKey: 'combosConfig',       labelKey: 'combos',             feature: C.ProductosMenus  },
+        { title: 'Observaciones',               route: '/ventas/observaciones',            icon: 'sticky_note_2',    label: 'Observac.',    titleKey: 'observations',       labelKey: 'observations',       feature: C.OperacionCaja   },
         { title: 'Empleados',                   route: '/ventas/empleados',                icon: 'badge',            label: 'Empleados',    titleKey: 'employees',          labelKey: 'employees'          },
         { title: 'Usuarios',                    route: '/ventas/usuarios',                 icon: 'manage_accounts',  label: 'Usuarios',     titleKey: 'users',              labelKey: 'users'              },
-        { title: 'Caja',                        route: '/ventas/caja',                     icon: 'point_of_sale',    label: 'Caja',         titleKey: 'register',           labelKey: 'register'           },
+        { title: 'Caja',                        route: '/ventas/caja',                     icon: 'point_of_sale',    label: 'Caja',         titleKey: 'register',           labelKey: 'register',           feature: C.OperacionCaja   },
         { title: 'Estacion',                    route: '/ventas/estacion',                 icon: 'computer',         label: 'Estación',     titleKey: 'station',            labelKey: 'station'            },
-        { title: 'Descuentos',                  route: '/ventas/descuentos',               icon: 'local_offer',      label: 'Descuentos',   titleKey: 'discounts',          labelKey: 'discounts'          },
-        { title: 'Tarjetas',                    route: '/ventas/tarjetas',                 icon: 'credit_card',      label: 'Tarjetas',     titleKey: 'cards',              labelKey: 'cards'              },
-        { title: 'Promociones',                 route: '/ventas/promociones',              icon: 'campaign',         label: 'Promociones',  titleKey: 'promotions',         labelKey: 'promotions', feature: 'ventas.promociones' },
-        { title: 'Clientes',                    route: '/ventas/clientes',                 icon: 'people',           label: 'Clientes',     titleKey: 'customers',          labelKey: 'customers'          },
+        { title: 'Descuentos',                  route: '/ventas/descuentos',               icon: 'local_offer',      label: 'Descuentos',   titleKey: 'discounts',          labelKey: 'discounts',          feature: C.VentasDescuentos },
+        { title: 'Tarjetas',                    route: '/ventas/tarjetas',                 icon: 'credit_card',      label: 'Tarjetas',     titleKey: 'cards',              labelKey: 'cards',              feature: C.OperacionCaja   },
+        { title: 'Promociones',                 route: '/ventas/promociones',              icon: 'campaign',         label: 'Promociones',  titleKey: 'promotions',         labelKey: 'promotions',         feature: C.VentasPromociones },
+        { title: 'Clientes',                    route: '/ventas/clientes',                 icon: 'people',           label: 'Clientes',     titleKey: 'customers',          labelKey: 'customers',          feature: C.OperacionCaja   },
       ]
     },
     {
       title: 'Operaciones', titleKey: 'menuOperations',
       children: [
-        { title: 'Abrir Turno',      route: '/ventas/abrir-turno',        icon: 'lock_open',    label: 'Abrir turno',  titleKey: 'openShift',  labelKey: 'openShift'  },
-        { title: 'Cerrar Turno',     route: '/ventas/cerrar-turno',       icon: 'lock',         label: 'Cerrar turno', titleKey: 'closeShift', labelKey: 'closeShift' },
-        { title: 'Listado de Ventas',route: '/ventas/cerrar-turno',       icon: 'receipt_long', label: 'Ventas',       titleKey: 'salesList',  labelKey: 'sales'      },
-        { title: 'Reservas online', route: '/ventas/reservas', icon: 'event_available', label: 'Reservas', feature: 'ventas.reservas_online' }
+        { title: 'Abrir Turno',      route: '/ventas/abrir-turno',        icon: 'lock_open',    label: 'Abrir turno',  titleKey: 'openShift',  labelKey: 'openShift',  feature: C.OperacionCaja },
+        { title: 'Cerrar Turno',     route: '/ventas/cerrar-turno',       icon: 'lock',         label: 'Cerrar turno', titleKey: 'closeShift', labelKey: 'closeShift', feature: C.OperacionCaja },
+        { title: 'Listado de Ventas',route: '/ventas/cerrar-turno',       icon: 'receipt_long', label: 'Ventas',       titleKey: 'salesList',  labelKey: 'sales',      feature: C.OperacionCaja },
+        { title: 'Reservas online', route: '/ventas/reservas', icon: 'event_available', label: 'Reservas', feature: C.VentasReservasOnline }
       ]
     },
     {
       title: 'Reportes', titleKey: 'menuReports',
       children: [
-        { title: 'Ventas por Producto', route: '/ventas/ventas-por-producto', icon: 'inventory_2', label: 'Ventas por producto', reporteTermico: 'ventas-producto', feature: 'operacion.reportes', grupoReporte: 'turno' },
-        { title: 'Resumen de Ventas', route: '/ventas/resumen-ventas', icon: 'summarize', label: 'Resumen de ventas', reporteTermico: 'resumen-ventas', feature: 'operacion.reportes', grupoReporte: 'turno' },
-        { title: 'Resumen de Documentos', route: '/ventas/resumen-documentos', icon: 'receipt_long', label: 'Resumen de documentos', reporteTermico: 'resumen-documentos', feature: 'operacion.reportes', grupoReporte: 'turno' },
-        { title: 'Trazabilidad de comandas', route: '/ventas/reportes/monitor-comandas', icon: 'account_tree', label: 'Monitor comandas', monitorComandas: true, feature: 'operacion.reportes', grupoReporte: 'analisis' },
+        { title: 'Ventas por Producto', route: '/ventas/ventas-por-producto', icon: 'inventory_2', label: 'Ventas por producto', reporteTermico: 'ventas-producto', feature: C.OperacionReportes, grupoReporte: 'turno' },
+        { title: 'Resumen de Ventas', route: '/ventas/resumen-ventas', icon: 'summarize', label: 'Resumen de ventas', reporteTermico: 'resumen-ventas', feature: C.OperacionReportes, grupoReporte: 'turno' },
+        { title: 'Resumen de Documentos', route: '/ventas/resumen-documentos', icon: 'receipt_long', label: 'Resumen de documentos', reporteTermico: 'resumen-documentos', feature: C.OperacionReportes, grupoReporte: 'turno' },
+        // MonitorComandasController apila las dos características, así que la
+        // opción solo aparece cuando la licencia cubre ambas.
+        { title: 'Trazabilidad de comandas', route: '/ventas/reportes/monitor-comandas', icon: 'account_tree', label: 'Monitor comandas', monitorComandas: true, feature: [C.OperacionReportes, C.ReportesSeguimientoComandas], grupoReporte: 'analisis' },
         { title: 'Contable',           route: '/ventas/contable',           icon: 'calculate',  label: 'Contable',     titleKey: 'accounting',     labelKey: 'accounting', grupoReporte: 'analisis' },
-        { title: 'Productividad por empleado', route: '/ventas/reportes/productividad-empleados', icon: 'groups', label: 'Productividad', reporte: 'productividad-empleados', feature: 'operacion.reportes', grupoReporte: 'analisis' },
-        { title: 'Espacios y servicio', route: '/ventas/reportes/mesas-servicio', icon: 'table_restaurant', label: 'Espacios y servicio', reporte: 'mesas-servicio', feature: 'operacion.reportes', grupoReporte: 'analisis' },
-        { title: 'Productos sin rotación', route: '/ventas/reportes/productos-sin-rotacion', icon: 'inventory', label: 'Sin rotación', reporte: 'productos-sin-rotacion', feature: 'operacion.reportes', grupoReporte: 'analisis' },
-        { title: 'Efectividad de descuentos', route: '/ventas/reportes/efectividad-descuentos', icon: 'percent', label: 'Descuentos', reporte: 'efectividad-descuentos', feature: 'operacion.reportes', grupoReporte: 'analisis' },
-        { title: 'Clientes y recurrencia', route: '/ventas/reportes/clientes-recurrencia', icon: 'loyalty', label: 'Recurrencia', reporte: 'clientes-recurrencia', feature: 'operacion.reportes', grupoReporte: 'analisis' },
-        { title: 'Incidencias operativas', route: '/ventas/reportes/incidencias-operativas', icon: 'report_problem', label: 'Incidencias', reporte: 'incidencias-operativas', feature: 'operacion.reportes', grupoReporte: 'analisis' },
-        { title: 'Calidad documental', route: '/ventas/reportes/calidad-documental', icon: 'verified', label: 'Calidad docs.', reporte: 'calidad-documental', feature: 'operacion.reportes', grupoReporte: 'analisis' },
-        { title: 'Control Horario',    route: '/ventas/control-horario',    icon: 'schedule',   label: 'Control horario', titleKey: 'timeTracking', labelKey: 'timeTracking', feature: 'personal.control_horario', grupoReporte: 'analisis' },
-        { title: 'Incidencias de jornada', route: '/ventas/reportes/incidencias-jornada', icon: 'more_time', label: 'Incid. jornada', reporte: 'incidencias-jornada', feature: 'personal.control_horario', grupoReporte: 'analisis' }
+        { title: 'Productividad por empleado', route: '/ventas/reportes/productividad-empleados', icon: 'groups', label: 'Productividad', reporte: 'productividad-empleados', feature: C.OperacionReportes, grupoReporte: 'analisis' },
+        { title: 'Espacios y servicio', route: '/ventas/reportes/mesas-servicio', icon: 'table_restaurant', label: 'Espacios y servicio', reporte: 'mesas-servicio', feature: C.OperacionReportes, grupoReporte: 'analisis' },
+        { title: 'Productos sin rotación', route: '/ventas/reportes/productos-sin-rotacion', icon: 'inventory', label: 'Sin rotación', reporte: 'productos-sin-rotacion', feature: C.OperacionReportes, grupoReporte: 'analisis' },
+        { title: 'Efectividad de descuentos', route: '/ventas/reportes/efectividad-descuentos', icon: 'percent', label: 'Descuentos', reporte: 'efectividad-descuentos', feature: C.OperacionReportes, grupoReporte: 'analisis' },
+        { title: 'Clientes y recurrencia', route: '/ventas/reportes/clientes-recurrencia', icon: 'loyalty', label: 'Recurrencia', reporte: 'clientes-recurrencia', feature: C.OperacionReportes, grupoReporte: 'analisis' },
+        { title: 'Incidencias operativas', route: '/ventas/reportes/incidencias-operativas', icon: 'report_problem', label: 'Incidencias', reporte: 'incidencias-operativas', feature: C.OperacionReportes, grupoReporte: 'analisis' },
+        { title: 'Calidad documental', route: '/ventas/reportes/calidad-documental', icon: 'verified', label: 'Calidad docs.', reporte: 'calidad-documental', feature: C.OperacionReportes, grupoReporte: 'analisis' },
+        { title: 'Control Horario',    route: '/ventas/control-horario',    icon: 'schedule',   label: 'Control horario', titleKey: 'timeTracking', labelKey: 'timeTracking', feature: C.PersonalControlHorario, grupoReporte: 'analisis' },
+        { title: 'Incidencias de jornada', route: '/ventas/reportes/incidencias-jornada', icon: 'more_time', label: 'Incid. jornada', reporte: 'incidencias-jornada', feature: C.PersonalControlHorario, grupoReporte: 'analisis' }
       ]
     },
     {
@@ -136,10 +153,15 @@ export class MenuVentasComponent implements OnInit {
 
   itemsVisibles(section: any): any[] {
     return section.children.filter((item: any) =>
-      !item.feature ||
-      this.caracteristicasHabilitadas.has(item.feature) ||
-      (this.licenciaSinRestricciones &&
-        item.feature !== 'personal.control_horario'));
+      this.cubiertoPorLicencia(item.feature));
+  }
+
+  /** Una opción sin `feature` no está sujeta a licencia. */
+  private cubiertoPorLicencia(feature?: ExigenciaLicencia): boolean {
+    return (
+      !feature ||
+      this.licenciaTenantService.evaluar(this.estadoLicencia, feature)
+    );
   }
 
   reportesVisibles(section: any, grupo: string): any[] {
@@ -582,19 +604,9 @@ export class MenuVentasComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.licenciaTenantService.obtener().subscribe({
-      next: response => {
-        const licencia = response.Data;
-        this.licenciaSinRestricciones = licencia == null;
-        this.caracteristicasHabilitadas = new Set(
-          licencia?.Caracteristicas
-            ?.filter(c => c.Habilitada)
-            .map(c => c.Codigo) ?? []);
-        this.promocionesHabilitadas = licencia == null ||
-          licencia.Caracteristicas?.some(c => c.Codigo === 'ventas.promociones' && c.Habilitada) === true;
-      },
-      error: () => this.promocionesHabilitadas = false
-    });
+    this.licenciaTenantService
+      .obtenerEstado()
+      .subscribe(estado => (this.estadoLicencia = estado));
   }
 
 }

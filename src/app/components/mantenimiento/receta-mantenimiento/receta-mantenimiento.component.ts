@@ -77,18 +77,20 @@ export class RecetaMantenimientoComponent implements OnInit {
 
   cargarInicial(): void {
     this.cargando = true;
+    // Las familias no se piden aquí: son de venta y alimentan solo el filtro de
+    // un informe. Un restaurante con plan de solo almacén recibe 403 en ese
+    // catálogo, y al ir en el forkJoin tumbaba también recetas, artículos y
+    // áreas. Se cargan bajo demanda en cambiarTipoReporte().
     forkJoin({
       recetas: this.recetaService.listar(),
       articulos: this.articuloService.listar(),
-      areas: this.areaAlmacenService.listarActivas(),
-      familias: this.familiaService.getFamilias()
+      areas: this.areaAlmacenService.listarActivas()
     }).subscribe({
       next: response => {
         this.cargando = false;
         if (!response.recetas.Success ||
             !response.articulos.Success ||
-            !response.areas.Success ||
-            !response.familias.Success) {
+            !response.areas.Success) {
           Swal.fire(
             'Error',
             'No se pudieron cargar los datos del mantenimiento.',
@@ -102,7 +104,6 @@ export class RecetaMantenimientoComponent implements OnInit {
         this.articulos = (response.articulos.Data || [])
           .filter(articulo => articulo.Activo);
         this.areas = response.areas.Data || [];
-        this.familias = response.familias.Data || [];
       },
       error: error => {
         this.cargando = false;
@@ -176,9 +177,28 @@ export class RecetaMantenimientoComponent implements OnInit {
     this.idFamiliaReporte = null;
     this.idArticuloReporte = null;
     this.reporte = [];
+    if (this.tipoReporte === 'familia') {
+      this.cargarFamilias();
+    }
     if (this.tipoReporte === 'todos') {
       this.consultarReporte();
     }
+  }
+
+  /**
+   * Catálogo de venta, solo necesario para el informe por familia. Si la
+   * licencia no lo cubre se deja vacío en silencio: el resto de la pantalla es
+   * de almacén y debe seguir funcionando.
+   */
+  private cargarFamilias(): void {
+    if (this.familias.length > 0) {
+      return;
+    }
+
+    this.familiaService.getFamilias().subscribe({
+      next: response => this.familias = response.Data || [],
+      error: () => this.familias = []
+    });
   }
 
   consultarReporte(): void {
