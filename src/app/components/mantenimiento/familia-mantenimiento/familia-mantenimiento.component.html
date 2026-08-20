@@ -1,57 +1,116 @@
-<div class="mant-panel">
+<div class="mant-panel dialog-panel--workspace">
   <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
-  
+
   <h2>{{ 'maintenanceFamilies' | tenantText }}</h2>
 
-  <!-- Listado -->
-  <div *ngIf="!showForm">
-    <button mat-raised-button color="primary" (click)="nuevaFamilia()">
-      {{ 'newFamily' | tenantText }}
-    </button>
+  <ng-container *ngIf="!showForm">
+    <div class="dialog-toolbar">
+      <div class="dialog-toolbar__filters dialog-toolbar__filters--single">
+        <mat-form-field appearance="fill">
+          <mat-label>{{ 'search' | tenantText }}</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            matInput
+            [(ngModel)]="filtro"
+            (ngModelChange)="applyFilter()"
+            [placeholder]="'searchByDescription' | tenantText"
+          >
+        </mat-form-field>
+      </div>
 
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>{{ 'search' | tenantText }}</mat-label>
-      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" [placeholder]="'searchByDescription' | tenantText">
-    </mat-form-field>
-    <div class="mant-table-card">
-        <mat-table [dataSource]="filtered" class="mat-elevation-z8">
-          <ng-container matColumnDef="descripcion">
-            <mat-header-cell *matHeaderCellDef>{{ 'description' | tenantText }}</mat-header-cell>
-            <mat-cell *matCellDef="let fam"> {{fam.Descripcion}} </mat-cell>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
-            <mat-cell *matCellDef="let fam">
-              <button mat-icon-button color="primary" (click)="onEdit(fam)">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" (click)="onDelete(fam.IdFamilia)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </mat-cell>
-          </ng-container>
-
-          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-        </mat-table>
+      <div class="dialog-toolbar__actions">
+        <button mat-raised-button color="primary" type="button" (click)="nuevaFamilia()">
+          <mat-icon>add</mat-icon>
+          {{ 'newFamily' | tenantText }}
+        </button>
       </div>
     </div>
-  <!-- Formulario -->
-  <form *ngIf="showForm" #familiaForm="ngForm" (ngSubmit)="onSubmit()">
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>{{ 'description' | tenantText }}</mat-label>
-      <input matInput [(ngModel)]="familia.Descripcion" name="descripcion" required #descripcion="ngModel">
-      <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">
-        {{ 'descriptionRequired' | tenantText }}
-      </mat-error>
-    </mat-form-field>
 
-    <button mat-raised-button color="primary">
-      {{ (familia.IdFamilia ? 'updateAction' : 'save') | tenantText }}
-    </button>
-    <button mat-stroked-button type="button" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
+    <div class="dialog-workspace-content">
+      <div class="dialog-table-card">
+        <div class="dialog-table-wrapper--fill">
+          <mat-table [dataSource]="filtered">
+            <ng-container matColumnDef="descripcion">
+              <mat-header-cell *matHeaderCellDef>{{ 'description' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let fam">{{ fam.Descripcion }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let fam">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  [attr.aria-label]="'edit' | tenantText"
+                  (click)="onEdit(fam)"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  type="button"
+                  [attr.aria-label]="'delete' | tenantText"
+                  (click)="onDelete(fam.IdFamilia)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+          </mat-table>
+
+          <div class="dialog-empty-state" *ngIf="filtered.filteredData.length === 0">
+            <mat-icon>category</mat-icon>
+            <span>{{ 'noResults' | tenantText }}</span>
+          </div>
+        </div>
+
+        <mat-paginator
+          [pageSize]="10"
+          [pageSizeOptions]="[10, 20, 50]"
+          showFirstLastButtons
+        ></mat-paginator>
+      </div>
+    </div>
+  </ng-container>
+
+  <form
+    *ngIf="showForm"
+    #familiaForm="ngForm"
+    class="dialog-form dialog-form--workspace"
+    (ngSubmit)="onSubmit()"
+  >
+    <div class="dialog-form-scroll">
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>category</mat-icon>
+          {{ 'maintenanceFamilies' | tenantText }}
+        </h3>
+
+        <mat-form-field appearance="fill" class="dialog-form-section--full">
+          <mat-label>{{ 'description' | tenantText }}</mat-label>
+          <input matInput [(ngModel)]="familia.Descripcion" name="descripcion" required #descripcion="ngModel">
+          <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">
+            {{ 'descriptionRequired' | tenantText }}
+          </mat-error>
+        </mat-form-field>
+      </section>
+    </div>
+
+    <div class="dialog-actions">
+      <button mat-stroked-button type="button" (click)="cancelar()">
+        {{ 'cancel' | tenantText }}
+      </button>
+      <button mat-raised-button color="primary" type="submit">
+        <mat-icon>save</mat-icon>
+        {{ (familia.IdFamilia ? 'updateAction' : 'save') | tenantText }}
+      </button>
+    </div>
   </form>
 </div>
