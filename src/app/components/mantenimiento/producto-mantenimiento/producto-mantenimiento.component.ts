@@ -28,6 +28,7 @@ import { AreaImpresion } from 'src/app/models/area-impresion.models';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { UnidadMedida } from 'src/app/models/articulo.models';
 import { UnidadMedidaService } from 'src/app/services/unidad-medida.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-producto-mantenimiento',
@@ -264,7 +265,7 @@ export class ProductoMantenimientoComponent implements OnInit {
         this.productoService.eliminar(id).subscribe({
           next: (res) => {
             if (!res.Success) { Swal.fire('Error', res.Message || 'No se pudo eliminar', 'error'); return; }
-            this.cargarTodo(); Swal.fire('Producto eliminado', '', 'success');
+            this.cargarTodo(); Notificar.exito('Producto eliminado', '');
           },
           error: () => Swal.fire('Error', 'No se pudo eliminar', 'error')
         });
@@ -394,7 +395,7 @@ export class ProductoMantenimientoComponent implements OnInit {
       next: (res) => {
         if (!res.Success) { Swal.fire('Error', res.Message || 'Operación no realizada', 'error'); return; }
         this.cargarTodo(); this.showForm = false;
-        Swal.fire('Ok', this.p.IdProducto ? 'Producto actualizado' : 'Producto creado', 'success');
+        Notificar.exito('Ok', this.p.IdProducto ? 'Producto actualizado' : 'Producto creado');
       },
     });
   }

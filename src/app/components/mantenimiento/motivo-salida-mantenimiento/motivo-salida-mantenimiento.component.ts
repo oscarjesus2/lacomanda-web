@@ -5,6 +5,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import Swal from 'sweetalert2';
 import { MotivoSalidaMantenimiento } from 'src/app/models/motivo-salida.models';
 import { MotivoSalidaService } from 'src/app/services/motivo-salida.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-motivo-salida-mantenimiento',
@@ -84,7 +85,7 @@ export class MotivoSalidaMantenimientoComponent implements OnInit {
           Swal.fire('Error', response.Message || 'No se pudo guardar el motivo.', 'error');
           return;
         }
-        Swal.fire('Guardado', response.Message, 'success');
+        Notificar.exito('Guardado', response.Message);
         this.showForm = false;
         this.cargar();
       },
@@ -110,7 +111,7 @@ export class MotivoSalidaMantenimientoComponent implements OnInit {
       this.service.eliminar(item.IdMotivo).subscribe({
         next: response => {
           if (response.Success) {
-            Swal.fire('Eliminado', response.Message, 'success');
+            Notificar.exito('Eliminado', response.Message);
             this.cargar();
           } else {
             Swal.fire('Error', response.Message || 'No se pudo eliminar el motivo.', 'error');

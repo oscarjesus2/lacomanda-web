@@ -7,6 +7,7 @@ import { SubFamilia } from '../../../models/subfamilia.models';
 import { Familia } from '../../../models/familia.models';
 import { FamiliaService } from 'src/app/services/familia.service';
 import { MatDialogRef } from '@angular/material/dialog';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-subfamilia-mantenimiento',
@@ -90,7 +91,7 @@ export class SubFamiliaMantenimientoComponent implements OnInit {
     if (this.subfamilia.IdSubFamilia) {
       this.familiaService.updateSubFamilia(this.subfamilia).subscribe(r => {
         if (r.Success) {
-          Swal.fire('Actualizado', '', 'success');
+          Notificar.exito('Actualizado', '');
           this.cargarSubFamilias();
           this.showForm = false;
         } else {
@@ -100,7 +101,7 @@ export class SubFamiliaMantenimientoComponent implements OnInit {
     } else {
       this.familiaService.createSubFamilia(this.subfamilia).subscribe(r => {
         if (r.Success) {
-          Swal.fire('Guardado', '', 'success');
+          Notificar.exito('Guardado', '');
           this.cargarSubFamilias();
           this.showForm = false;
         } else {
@@ -122,7 +123,7 @@ export class SubFamiliaMantenimientoComponent implements OnInit {
       if (r.isConfirmed) {
         this.familiaService.deleteSubFamilia(id).subscribe(resp => {
           if (resp.Success) {
-            Swal.fire('Eliminado', '', 'success');
+            Notificar.exito('Eliminado', '');
             this.cargarSubFamilias();
           } else {
             Swal.fire('Error', resp.Message || 'No se pudo eliminar', 'error');

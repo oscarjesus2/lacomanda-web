@@ -9,6 +9,7 @@ import { Tarjeta, TarjetaGuardar } from 'src/app/models/tarjeta.models';
 import { SocioNegocio } from 'src/app/models/socionegocio.models';
 import { TarjetaService } from 'src/app/services/tarjeta.service';
 import { SocioNegocioService } from 'src/app/services/socionegocio.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-tarjeta-mantenimiento',
@@ -113,7 +114,7 @@ export class TarjetaMantenimientoComponent implements OnInit {
       this.service.eliminarTarjeta(row.IdTarjeta).subscribe({
         next: r => {
           if (r.Success) {
-            Swal.fire('Eliminada', 'La tarjeta fue eliminada.', 'success');
+            Notificar.exito('Eliminada', 'La tarjeta fue eliminada.');
             this.cargar();
           } else {
             Swal.fire('No se puede eliminar', r.Message || 'Error al eliminar', 'warning');
@@ -168,7 +169,7 @@ export class TarjetaMantenimientoComponent implements OnInit {
       next: r => {
         this.guardando = false;
         if (r.Success) {
-          Swal.fire(esEdicion ? 'Actualizada' : 'Guardada', '', 'success');
+          Notificar.exito(esEdicion ? 'Actualizada' : 'Guardada', '');
           this.cargar();
           this.showForm = false;
         } else {

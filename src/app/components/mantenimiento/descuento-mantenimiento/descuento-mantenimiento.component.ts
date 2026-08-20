@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 import { Descuento, DescuentoCreateDto } from 'src/app/models/descuento.models';
 import { DescuentoService } from 'src/app/services/descuento.service';
 import { TipoDescuentoEnum } from 'src/app/enums/enum';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-descuento-mantenimiento',
@@ -113,7 +114,7 @@ export class DescuentoMantenimientoComponent implements OnInit {
         this.service.eliminarDescuento(id).subscribe({
           next: r => {
             if (r.Success) {
-              Swal.fire('Eliminado', 'El descuento fue eliminado.', 'success');
+              Notificar.exito('Eliminado', 'El descuento fue eliminado.');
               this.cargar();
             } else {
               Swal.fire('No se puede eliminar', r.Message || 'Error al eliminar', 'warning');
@@ -194,7 +195,7 @@ export class DescuentoMantenimientoComponent implements OnInit {
     op$.subscribe({
       next: r => {
         if (r.Success) {
-          Swal.fire(this.descuento.IdDescuento ? 'Actualizado' : 'Guardado', '', 'success');
+          Notificar.exito(this.descuento.IdDescuento ? 'Actualizado' : 'Guardado', '');
           this.cargar();
           this.showForm = false;
         } else {

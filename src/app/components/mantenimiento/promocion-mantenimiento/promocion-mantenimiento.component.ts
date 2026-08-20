@@ -5,6 +5,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import Swal from 'sweetalert2';
 import { Promocion, PromocionGuardar } from 'src/app/models/promocion.models';
 import { PromocionService } from 'src/app/services/promocion.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-promocion-mantenimiento',
@@ -178,7 +179,7 @@ export class PromocionMantenimientoComponent implements OnInit, OnDestroy {
       this.service.eliminar(item.Correlativo).subscribe({
         next: response => {
           if (response.Success) {
-            Swal.fire('Eliminada', response.Message, 'success');
+            Notificar.exito('Eliminada', response.Message);
             this.cargar();
           } else {
             Swal.fire('Error', response.Message || 'No se pudo eliminar la promoción.', 'error');
@@ -250,7 +251,7 @@ export class PromocionMantenimientoComponent implements OnInit, OnDestroy {
 
   private finalizarGuardado(mensaje?: string): void {
     this.guardando = false;
-    Swal.fire('Guardado', mensaje || 'Promoción guardada correctamente.', 'success');
+    Notificar.exito('Guardado', mensaje || 'Promoción guardada correctamente.');
     this.reiniciarImagen();
     this.showForm = false;
     this.cargar();

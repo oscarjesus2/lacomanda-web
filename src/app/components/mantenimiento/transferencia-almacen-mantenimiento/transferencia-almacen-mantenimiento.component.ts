@@ -15,6 +15,7 @@ import {
   TransferenciaAlmacenSubArea
 } from 'src/app/models/transferencia-almacen.models';
 import { TransferenciaAlmacenService } from 'src/app/services/transferencia-almacen.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 interface TransferenciaLinea extends TransferenciaAlmacenDetalleGuardar {
   Producto: string;
@@ -187,7 +188,7 @@ export class TransferenciaAlmacenMantenimientoComponent implements OnInit {
           Swal.fire('No se pudo transferir', response.Message || 'Revise los datos.', 'error'); return;
         }
         this.cargarFormulario(response.Data);
-        Swal.fire('Transferencia realizada', 'Los stocks y el Kardex fueron actualizados.', 'success');
+        Notificar.exito('Transferencia realizada', 'Los stocks y el Kardex fueron actualizados.');
       },
       error: error => { this.guardando = false; this.mostrarError(error, 'No se pudo realizar la transferencia.'); }
     });
@@ -211,7 +212,7 @@ export class TransferenciaAlmacenMantenimientoComponent implements OnInit {
             Swal.fire('No se pudo anular', response.Message || 'Revise la transferencia.', 'error'); return;
           }
           this.cargarFormulario(response.Data);
-          Swal.fire('Transferencia anulada', 'El stock y el Kardex fueron revertidos.', 'success');
+          Notificar.exito('Transferencia anulada', 'El stock y el Kardex fueron revertidos.');
         },
         error: error => { this.guardando = false; this.mostrarError(error, 'No se pudo anular la transferencia.'); }
       });

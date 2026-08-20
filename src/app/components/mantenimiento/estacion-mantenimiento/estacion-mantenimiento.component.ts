@@ -23,6 +23,7 @@ import { SubAreaAlmacenService } from 'src/app/services/sub-area-almacen.service
 import { AreaAlmacen } from 'src/app/models/receta.models';
 import { SubAreaAlmacen } from 'src/app/models/almacen-maestro.models';
 import { forkJoin } from 'rxjs';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-estacion-mantenimiento',
@@ -300,7 +301,7 @@ export class EstacionMantenimientoComponent implements OnInit {
             return;
           }
           this.cargarEstaciones();
-          Swal.fire('Estación eliminada', '', 'success');
+          Notificar.exito('Estación eliminada', '');
         },
         error: () => Swal.fire('Error', 'No se pudo eliminar la estación.', 'error'),
       });
@@ -502,7 +503,7 @@ export class EstacionMantenimientoComponent implements OnInit {
     this.showForm = false;
     this.resetForm();
     this.cargarEstaciones();
-    Swal.fire(mensaje, '', 'success');
+    Notificar.exito(mensaje, '');
   }
 
   private finalizarConError(mensaje: string): void {

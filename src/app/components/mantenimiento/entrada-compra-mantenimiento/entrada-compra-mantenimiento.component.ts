@@ -26,6 +26,7 @@ import {
   ProveedorGuardar
 } from 'src/app/models/proveedor.models';
 import { ProveedorService } from 'src/app/services/proveedor.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 interface LineaCompraEdicion
   extends Omit<EntradaCompraLineaGuardar, 'IdProducto'> {
@@ -585,7 +586,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
           }
           this.cargarFormulario(response.Data);
           this.soloLectura = true;
-          Swal.fire('Compra anulada', '', 'success');
+          Notificar.exito('Compra anulada', '');
         },
         error: error => {
           this.guardando = false;
@@ -622,7 +623,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
           return;
         }
         this.cargarFormulario(response.Data);
-        Swal.fire('Pago registrado', '', 'success');
+        Notificar.exito('Pago registrado', '');
       },
       error: error => {
         this.guardando = false;
@@ -693,7 +694,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
           return;
         }
         this.cargarFormulario(response.Data);
-        Swal.fire('Fecha de pago actualizada', '', 'success');
+        Notificar.exito('Fecha de pago actualizada', '');
       },
       error: error => {
         this.guardando = false;

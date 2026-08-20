@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { Observacion } from 'src/app/models/observacion.models';
 import { ObservacionService } from 'src/app/services/observacion.service';
 import { MatDialogRef } from '@angular/material/dialog';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-observacion-mantenimiento',
@@ -111,7 +112,7 @@ export class ObservacionMantenimientoComponent implements OnInit {
         this.service.eliminar(id).subscribe(resp => {
           if (resp.Success) {
             this.cargar();
-            Swal.fire('Eliminado', '', 'success');
+            Notificar.exito('Eliminado', '');
           } else {
             Swal.fire('Error', resp.Message || 'No se pudo eliminar', 'error');
           }
@@ -186,7 +187,7 @@ export class ObservacionMantenimientoComponent implements OnInit {
     obs$.subscribe({
       next: r => {
         if (r.Success) {
-          Swal.fire(this.obs.IdObservacion ? 'Actualizado' : 'Guardado', '', 'success');
+          Notificar.exito(this.obs.IdObservacion ? 'Actualizado' : 'Guardado', '');
           this.cargar();
           this.showForm = false;
         } else {

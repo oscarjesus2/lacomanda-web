@@ -12,6 +12,7 @@ import { AmbienteService } from 'src/app/services/ambiente.service';
 // Reutiliza el selector genérico de posiciones:
 import { PosicionSelectorDialogComponent, PosicionSelectorData } from '../../posicion-selector-dialog/posicion-selector-dialog.component';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-ambiente-mantenimiento',
@@ -105,7 +106,7 @@ export class AmbienteMantenimientoComponent implements OnInit {
               return;
             }
             this.cargarAmbientes();
-            Swal.fire('Ambiente eliminado', '', 'success');
+            Notificar.exito('Ambiente eliminado', '');
           },
           error: () => Swal.fire('Error', 'No se pudo eliminar', 'error')
         });
@@ -172,7 +173,7 @@ export class AmbienteMantenimientoComponent implements OnInit {
           }
           this.cargarAmbientes();
           this.showForm = false;
-          Swal.fire('Ambiente actualizado', '', 'success');
+          Notificar.exito('Ambiente actualizado', '');
         },
         error: () => Swal.fire('Error', 'No se pudo actualizar', 'error')
       });
@@ -185,7 +186,7 @@ export class AmbienteMantenimientoComponent implements OnInit {
           }
           this.cargarAmbientes();
           this.showForm = false;
-          Swal.fire('Ambiente creado', '', 'success');
+          Notificar.exito('Ambiente creado', '');
         },
         error: () => Swal.fire('Error', 'No se pudo crear', 'error')
       });

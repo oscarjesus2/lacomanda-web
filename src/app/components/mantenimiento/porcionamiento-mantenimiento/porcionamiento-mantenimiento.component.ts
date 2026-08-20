@@ -15,6 +15,7 @@ import {
   PorcionamientoResumen
 } from 'src/app/models/porcionamiento.models';
 import { PorcionamientoService } from 'src/app/services/porcionamiento.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 interface LineaPorcionamiento {
   IdProducto: number;
@@ -251,7 +252,7 @@ export class PorcionamientoMantenimientoComponent implements OnInit {
           }
           this.cargarOperacion(response.Data);
           this.recargarCatalogos();
-          Swal.fire('Porcionamiento anulado', 'Stocks y Kardex fueron revertidos.', 'success');
+          Notificar.exito('Porcionamiento anulado', 'Stocks y Kardex fueron revertidos.');
         },
         error: error => {
           this.guardando = false;
@@ -340,7 +341,7 @@ export class PorcionamientoMantenimientoComponent implements OnInit {
           Swal.fire('No se pudo guardar', response.Message || 'Revise los datos.', 'error');
           return;
         }
-        Swal.fire('Configuración guardada', 'Ya puede registrar porcionamientos con esta relación.', 'success');
+        Notificar.exito('Configuración guardada', 'Ya puede registrar porcionamientos con esta relación.');
         this.recargarCatalogos(true);
       },
       error: error => {
@@ -370,7 +371,7 @@ export class PorcionamientoMantenimientoComponent implements OnInit {
             Swal.fire('No se pudo eliminar', response.Message, 'error');
             return;
           }
-          Swal.fire('Configuración eliminada', response.Message, 'success');
+          Notificar.exito('Configuración eliminada', response.Message);
           this.recargarCatalogos(true);
         },
         error: error => {

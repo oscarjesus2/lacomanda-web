@@ -12,6 +12,7 @@ import { ArticuloService } from 'src/app/services/articulo.service';
 import { GrupoService } from 'src/app/services/grupo.service';
 import { ImpuestoPaisService } from 'src/app/services/impuestopais.service';
 import { UnidadMedidaService } from 'src/app/services/unidad-medida.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 export interface ArticuloMantenimientoData {
   creacionRapida?: boolean;
@@ -212,7 +213,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
           Swal.fire('Error', response.Message || 'No se pudo guardar el artículo.', 'error');
           return;
         }
-        Swal.fire(esEdicion ? 'Artículo actualizado' : 'Artículo creado', '', 'success');
+        Notificar.exito(esEdicion ? 'Artículo actualizado' : 'Artículo creado', '');
         if (this.creacionRapida && !esEdicion) {
           this.dialogRef.close(response.Data);
           return;

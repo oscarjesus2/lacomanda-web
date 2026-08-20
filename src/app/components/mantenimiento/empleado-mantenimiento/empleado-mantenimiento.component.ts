@@ -9,6 +9,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { EnumTipoIdentidad } from 'src/app/enums/enum';
 import { EmpleadoService } from 'src/app/services/empleado.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 
 @Component({
@@ -92,7 +93,7 @@ export class EmpleadoMantenimientoComponent implements OnInit {
                 if (response.Success) {
                     this.cargarEmpleados();
                     this.showForm = false; // Ocultar formulario al guardar
-                    Swal.fire('Empleado actualizado', '', 'success');
+                    Notificar.exito('Empleado actualizado', '');
                 } else {
                     Swal.fire('Error', response.Message || 'Error al actualizar el empleado', 'error');
                 }
@@ -104,7 +105,7 @@ export class EmpleadoMantenimientoComponent implements OnInit {
                 if (response.Success) {
                     this.cargarEmpleados();
                     this.showForm = false; // Ocultar formulario al guardar
-                    Swal.fire('Empleado creado', '', 'success');
+                    Notificar.exito('Empleado creado', '');
                 } else {
                     Swal.fire('Error', response.Message || 'Error al crear el empleado', 'error');
                 }
@@ -132,7 +133,7 @@ export class EmpleadoMantenimientoComponent implements OnInit {
       if (result.isConfirmed) {
         this.empleadoService.deleteEmpleado(id).subscribe(() => {
           this.cargarEmpleados();
-          Swal.fire('Empleado eliminado', '', 'success');
+          Notificar.exito('Empleado eliminado', '');
         });
       }
     });

@@ -10,6 +10,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { EnumTipoIdentidad } from 'src/app/enums/enum';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 
 @Component({
@@ -305,7 +306,7 @@ buscarCliente(): void {
       if (result.isConfirmed) {
         this.clienteService.deleteCliente(id).subscribe(() => {
           this.cargarClientes();
-          Swal.fire('Cliente eliminado', '', 'success');
+          Notificar.exito('Cliente eliminado', '');
         });
       }
     });

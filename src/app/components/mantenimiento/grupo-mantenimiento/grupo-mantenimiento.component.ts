@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { Grupo } from 'src/app/models/grupo.models';
 import { GrupoService } from 'src/app/services/grupo.service';
 import { MatPaginator } from '@angular/material/paginator';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-grupo-mantenimiento',
@@ -72,7 +73,7 @@ export class GrupoMantenimientoComponent implements OnInit {
     }).then(s => {
       if (s.isConfirmed) {
         this.service.eliminar(id).subscribe(r => {
-          if (r.Success) { this.cargar(); Swal.fire('Eliminado', '', 'success'); }
+          if (r.Success) { this.cargar(); Notificar.exito('Eliminado', ''); }
           else { Swal.fire('Error', r.Message || 'No se pudo eliminar', 'error'); }
         });
       }
@@ -88,7 +89,7 @@ export class GrupoMantenimientoComponent implements OnInit {
     const obs = this.grupo.IdGrupo ? this.service.update(this.grupo) : this.service.create(this.grupo);
     obs.subscribe(r => {
       if (r.Success) {
-        Swal.fire(this.grupo.IdGrupo ? 'Actualizado' : 'Guardado', '', 'success');
+        Notificar.exito(this.grupo.IdGrupo ? 'Actualizado' : 'Guardado', '');
         this.cargar(); this.showForm = false;
       } else {
         Swal.fire('Error', r.Message || 'Operación no realizada', 'error');

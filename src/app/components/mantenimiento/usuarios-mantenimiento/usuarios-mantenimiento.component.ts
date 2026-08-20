@@ -14,6 +14,7 @@ import { Nivel_UsuarioService } from 'src/app/services/nivel_usuario.service';
 import { Nivel_Usuario } from 'src/app/models/nivel_usuario.models';
 import { KeycloakService } from 'src/app/services/auth/keycloak.service';
 import { StorageService } from 'src/app/services/storage.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-usuarios-mantenimiento',
@@ -195,7 +196,7 @@ onInputChange(valor: string) {
                 if (response.Success) {
                     this.cargarusuarios();
                     this.showForm = false; // Ocultar formulario al guardar
-                    Swal.fire('usuario actualizado', '', 'success');
+                    Notificar.exito('usuario actualizado', '');
                 } else {
                     Swal.fire('Error', response.Message || 'Error al actualizar el usuario', 'error');
                 }
@@ -207,7 +208,7 @@ onInputChange(valor: string) {
                 if (response.Success) {
                     this.cargarusuarios();
                     this.showForm = false; // Ocultar formulario al guardar
-                    Swal.fire('usuario creado', '', 'success');
+                    Notificar.exito('usuario creado', '');
                 } else {
                     Swal.fire('Error', response.Message || 'Error al crear el usuario', 'error');
                 }
@@ -242,7 +243,7 @@ compareNivel(tipo1: Nivel_Usuario, tipo2: Nivel_Usuario): boolean {
       if (result.isConfirmed) {
         this.usuarioService.deleteUsuario(id).subscribe(() => {
           this.cargarusuarios();
-          Swal.fire('usuario eliminado', '', 'success');
+          Notificar.exito('usuario eliminado', '');
         });
       }
     });

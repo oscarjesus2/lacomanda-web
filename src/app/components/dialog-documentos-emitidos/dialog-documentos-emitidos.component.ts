@@ -21,6 +21,7 @@ import { DialogMTextComponent } from '../dialog-mtext/dialog-mtext.component';
 import { NivelUsuarioEnum } from 'src/app/enums/enum';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { DialogCorregirVentaComponent } from '../dialog-corregir-venta/dialog-corregir-venta.component';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-dialog-documentos-emitidos',
@@ -259,7 +260,7 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
     this.ventaService.anularDocumentoVenta(IntIdVenta, this.motivoAnulacion, anularPedido).subscribe({
       next: (response: ApiResponse<ImpresionDTO[]>) => {
         if (response.Success) {
-          Swal.fire(this.texts.get('voided'), this.texts.get('documentVoidedSuccessfully'), 'success');
+          Notificar.exito(this.texts.get('voided'), this.texts.get('documentVoidedSuccessfully'));
           this.getVentasPorTurno(this.idTurno);
           this.motivoAnulacion = '';
           this.selectedRow = null;

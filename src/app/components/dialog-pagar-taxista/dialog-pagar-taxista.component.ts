@@ -20,6 +20,7 @@ import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { MonedaService } from 'src/app/services/moneda.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-dialog-pagar-taxista',
@@ -240,7 +241,7 @@ export class DialogPagarTaxistaComponent {
           this.spinnerService.hide();
           // Manejar la respuesta del servidor
           if (response.Success) {
-            Swal.fire('Éxito', 'Se grabaron los datos correctamente.', 'success');
+            Notificar.exito('Éxito', 'Se grabaron los datos correctamente.');
             this.imprimir(response.Data);
             this.limpiarFormulario();
             this.listarTragosGratis(); // Refrescar la lista de tragos gratis

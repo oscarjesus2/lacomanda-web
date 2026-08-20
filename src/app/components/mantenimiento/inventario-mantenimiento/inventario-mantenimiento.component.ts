@@ -16,6 +16,7 @@ import {
 import { ArticuloService } from 'src/app/services/articulo.service';
 import { InventarioService } from 'src/app/services/inventario.service';
 import { ArticuloMantenimientoComponent } from '../articulo-mantenimiento/articulo-mantenimiento.component';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-inventario-mantenimiento',
@@ -413,7 +414,7 @@ export class InventarioMantenimientoComponent implements OnInit {
             return;
           }
           this.asignarInventario(response.Data);
-          Swal.fire('Inventario anulado', '', 'success');
+          Notificar.exito('Inventario anulado', '');
         },
         error: error => {
           this.guardando = false;

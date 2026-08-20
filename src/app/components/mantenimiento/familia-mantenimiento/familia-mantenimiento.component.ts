@@ -5,6 +5,7 @@ import { Familia } from '../../../models/familia.models';
 import { FamiliaService } from 'src/app/services/familia.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import Swal from 'sweetalert2';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-familia-mantenimiento',
@@ -70,7 +71,7 @@ export class FamiliaMantenimientoComponent implements OnInit {
     if (this.familia.IdFamilia) {
       this.familiaService.updateFamilia(this.familia).subscribe(resp => {
         if (resp.Success) {
-          Swal.fire('Actualizado', '', 'success');
+          Notificar.exito('Actualizado', '');
           this.cargarFamilias();
           this.showForm = false;
         } else {
@@ -80,7 +81,7 @@ export class FamiliaMantenimientoComponent implements OnInit {
     } else {
       this.familiaService.createFamilia(this.familia).subscribe(resp => {
         if (resp.Success) {
-          Swal.fire('Guardado', '', 'success');
+          Notificar.exito('Guardado', '');
           this.cargarFamilias();
           this.showForm = false;
         } else {
@@ -102,7 +103,7 @@ export class FamiliaMantenimientoComponent implements OnInit {
       if (r.isConfirmed) {
         this.familiaService.deleteFamilia(id).subscribe(resp => {
           if (resp.Success) {
-            Swal.fire('Eliminado', '', 'success');
+            Notificar.exito('Eliminado', '');
             this.cargarFamilias();
           } else {
             Swal.fire('Error', resp.Message || 'No se pudo eliminar', 'error');

@@ -12,6 +12,7 @@ import { Ambiente } from 'src/app/models/ambiente.models';
 import { EspaciosService } from 'src/app/services/espacios.service';
 import { AmbienteService } from 'src/app/services/ambiente.service';
 import { PosicionSelectorDialogComponent, PosicionSelectorData } from '../../posicion-selector-dialog/posicion-selector-dialog.component';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-espacios-mantenimiento',
@@ -171,7 +172,7 @@ export class EspaciosMantenimientoComponent implements OnInit {
         next: blob => {
           this.spinnerService.hide();
           this.abrirPdf(blob);
-          Swal.fire('QR regenerado', 'Imprime y reemplaza el QR anterior.', 'success');
+          Notificar.exito('QR regenerado', 'Imprime y reemplaza el QR anterior.');
         },
         error: () => {
           this.spinnerService.hide();
@@ -209,7 +210,7 @@ export class EspaciosMantenimientoComponent implements OnInit {
         if (result.isConfirmed) {
           this.espacioService.deleteEspacio(id).subscribe(() => {
             this.cargarEspacios();
-            Swal.fire('Espacio eliminado', '', 'success');
+            Notificar.exito('Espacio eliminado', '');
           });
         }
       });
@@ -245,7 +246,7 @@ export class EspaciosMantenimientoComponent implements OnInit {
           if (res.Success) {
             this.cargarEspacios();
             this.showForm = false;
-            Swal.fire('Espacio actualizado', '', 'success');
+            Notificar.exito('Espacio actualizado', '');
           } else {
             Swal.fire('Error', res.Message || 'Error al actualizar el espacio', 'error');
           }
@@ -258,7 +259,7 @@ export class EspaciosMantenimientoComponent implements OnInit {
           if (res.Success) {
             this.cargarEspacios();
             this.showForm = false;
-            Swal.fire('Espacio creado', '', 'success');
+            Notificar.exito('Espacio creado', '');
           } else {
             Swal.fire('Error', res.Message || 'Error al crear el espacio', 'error');
           }

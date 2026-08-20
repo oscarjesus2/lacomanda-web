@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { SolicitudMesaPendiente } from 'src/app/models/mesa-cliente.models';
 import { MesaClienteService } from 'src/app/services/mesa-cliente.service';
 import { SolicitudesMesaRealtimeService } from 'src/app/services/solicitudes-mesa-realtime.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 export interface DialogSolicitudesMesaData { idCaja: number; idTurno: number; identificadorEstacion: string; }
 
@@ -43,7 +44,7 @@ export class DialogSolicitudesMesaComponent implements OnInit, OnDestroy {
       if (!result.isConfirmed) return;
       this.procesando = solicitud.IdSesion;
       this.mesaClienteService.confirmar(solicitud.IdSesion, { IdCaja: this.data.idCaja, IdTurno: this.data.idTurno, NroPax: Number(result.value), IdentificadorEstacion: this.data.identificadorEstacion }).subscribe({
-        next: () => { this.procesando = undefined; this.solicitudes = this.solicitudes.filter(x => x.IdSesion !== solicitud.IdSesion); Swal.fire('Mesa habilitada', 'El cliente ya puede usar la carta digital.', 'success'); },
+        next: () => { this.procesando = undefined; this.solicitudes = this.solicitudes.filter(x => x.IdSesion !== solicitud.IdSesion); Notificar.exito('Mesa habilitada', 'El cliente ya puede usar la carta digital.'); },
         error: () => this.procesando = undefined
       });
     });

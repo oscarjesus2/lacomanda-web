@@ -10,6 +10,7 @@ import { CajaDocumentosDialogComponent } from './caja-documentos-dialog/caja-doc
 import { CanalVenta } from 'src/app/models/canalventa.models';
 import { CanalVentaEnum } from 'src/app/enums/enum';
 import { faL } from '@fortawesome/free-solid-svg-icons';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-caja-mantenimiento',
@@ -133,7 +134,7 @@ export class CajaMantenimientoComponent implements OnInit {
     }).then(s => {
       if (s.isConfirmed) {
         this.service.eliminar(id).subscribe(r => {
-          if (r.Success) { this.cargar(); Swal.fire('Eliminado', '', 'success'); }
+          if (r.Success) { this.cargar(); Notificar.exito('Eliminado', ''); }
           else { Swal.fire('Error', r.Message || 'No se pudo eliminar', 'error'); }
         });
       }
@@ -151,7 +152,7 @@ export class CajaMantenimientoComponent implements OnInit {
     const obs = this.m.IdCaja ? this.service.actualizar(this.m) : this.service.crear(this.m);
     obs.subscribe(r => {
       if (r.Success) {
-        Swal.fire(this.m.IdCaja ? 'Actualizado' : 'Guardado', '', 'success');
+        Notificar.exito(this.m.IdCaja ? 'Actualizado' : 'Guardado', '');
         this.cargar();
         this.showForm = false;
       } else {
@@ -171,7 +172,7 @@ export class CajaMantenimientoComponent implements OnInit {
       data: { idCaja: row.IdCaja, nombreCaja: row.Descripcion }
     });
     ref.afterClosed().subscribe(saved => {
-      if (saved) Swal.fire('Documentos actualizados', '', 'success');
+      if (saved) Notificar.exito('Documentos actualizados', '');
     });
   }
 }

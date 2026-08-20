@@ -10,6 +10,7 @@ import {
   RecetaProduccion, RecetaProduccionResumen
 } from 'src/app/models/produccion.models';
 import { ProduccionService } from 'src/app/services/produccion.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 type Vista = 'lista' | 'produccion' | 'receta';
 type Seccion = 'producciones' | 'recetas';
@@ -168,7 +169,7 @@ export class ProduccionMantenimientoComponent implements OnInit {
         this.guardando = false;
         if (!response.Success || !response.Data) { Swal.fire('No se pudo guardar', response.Message, 'error'); return; }
         this.cargarProduccion(response.Data);
-        Swal.fire('Producción guardada', 'Quedó generada y todavía no afecta el stock.', 'success');
+        Notificar.exito('Producción guardada', 'Quedó generada y todavía no afecta el stock.');
       },
       error: error => { this.guardando = false; this.error(error, 'No se pudo guardar la producción.'); }
     });
@@ -268,7 +269,7 @@ export class ProduccionMantenimientoComponent implements OnInit {
         if (!response.Success || !response.Data) { Swal.fire('No se pudo guardar', response.Message, 'error'); return; }
         this.cargarReceta(response.Data);
         this.recargarCatalogosYRecetas();
-        Swal.fire('Receta guardada', 'El costo del producto terminado fue recalculado.', 'success');
+        Notificar.exito('Receta guardada', 'El costo del producto terminado fue recalculado.');
       },
       error: error => { this.guardando = false; this.error(error, 'No se pudo guardar la receta.'); }
     });
@@ -334,7 +335,7 @@ export class ProduccionMantenimientoComponent implements OnInit {
         this.guardando = false;
         if (!response.Success || !response.Data) { Swal.fire('No se pudo completar', response.Message, 'error'); return; }
         this.cargarProduccion(response.Data);
-        Swal.fire(titulo, response.Message, 'success');
+        Notificar.exito(titulo, response.Message);
       },
       error: error => { this.guardando = false; this.error(error, 'No se pudo completar la operación.'); }
     });

@@ -14,6 +14,7 @@ import {
   SalidaInternaResumen
 } from 'src/app/models/salida-interna.models';
 import { SalidaInternaService } from 'src/app/services/salida-interna.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 interface SalidaInternaLinea extends SalidaInternaDetalleGuardar {
   Producto: string;
@@ -355,7 +356,7 @@ export class SalidaInternaMantenimientoComponent implements OnInit {
           return;
         }
         this.cargarFormulario(response.Data);
-        Swal.fire(titulo, mensaje, 'success');
+        Notificar.exito(titulo, mensaje);
       },
       error: error => {
         this.guardando = false;

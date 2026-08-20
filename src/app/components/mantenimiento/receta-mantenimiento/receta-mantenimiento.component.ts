@@ -20,6 +20,7 @@ import { AreaAlmacenService } from 'src/app/services/area-almacen.service';
 import { FamiliaService } from 'src/app/services/familia.service';
 import { RecetaService } from 'src/app/services/receta.service';
 import { ArticuloMantenimientoComponent } from '../articulo-mantenimiento/articulo-mantenimiento.component';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-receta-mantenimiento',
@@ -506,7 +507,7 @@ export class RecetaMantenimientoComponent implements OnInit {
             );
             return;
           }
-          Swal.fire('Receta eliminada', '', 'success');
+          Notificar.exito('Receta eliminada', '');
           this.cargarRecetas();
         },
         error: error => {

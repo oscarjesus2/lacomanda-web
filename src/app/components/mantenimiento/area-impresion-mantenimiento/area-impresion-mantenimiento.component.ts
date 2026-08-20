@@ -15,6 +15,7 @@ import { AreaImpresionService } from 'src/app/services/area-impresion.service';
 import { DeviceIdentifierService } from 'src/app/services/device-identifier.service';
 import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 import { TenantTextKey } from 'src/app/services/localization/tenant-texts.en';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 interface AreaImpresionEquipo extends AreaImpresion {
   NombreImpresoraGuardada: string;
@@ -264,7 +265,7 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
             return;
           }
           await this.cargar();
-          await Swal.fire('Área eliminada', '', 'success');
+          Notificar.exito('Área eliminada');
         },
         error: () => Swal.fire('Error', 'No se pudo eliminar', 'error'),
       });
