@@ -46,8 +46,30 @@ export class EstadoImpresionService {
   /** Documentos esperando a que vuelva la impresora. */
   readonly pendientes$ = this.qz.pendientes$;
 
-  /** El aviso previo se muestra una vez por sesion, no en cada carga. */
-  private avisoPrevioMostrado = false;
+  /** Clave del aplazamiento; se guarda por equipo, no por pestaña. */
+  private static readonly claveAviso = 'lacomanda.impresion.avisoAplazado';
+
+  /**
+   * Si el usuario aplazo el aviso, no se le vuelve a interrumpir en este
+   * equipo. Antes era una propiedad en memoria y el servicio es de raiz, asi
+   * que se reiniciaba en cada recarga: aplazarlo no servia de nada.
+   */
+  private get avisoPrevioAplazado(): boolean {
+    try {
+      return localStorage.getItem(EstadoImpresionService.claveAviso) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  private set avisoPrevioAplazado(valor: boolean) {
+    try {
+      localStorage.setItem(EstadoImpresionService.claveAviso, valor ? '1' : '0');
+    } catch {
+      // Modo privado o almacenamiento lleno: se pierde el aplazamiento, que es
+      // preferible a romper la comprobacion de impresion.
+    }
+  }
 
   /** Ultimo estado del permiso leido, solo para diagnostico en consola. */
   private ultimoPermiso: PermissionState | 'no-expuesto' = 'no-expuesto';
@@ -99,13 +121,21 @@ export class EstadoImpresionService {
       return this.publicar({ disponible: false, motivo: 'permiso-denegado' });
     }
 
-    if (permiso === 'prompt'
-        && !desdeGestoDelUsuario
-        && !await this.confirmarAvisoPrevio()) {
-      return this.publicar({ disponible: false, motivo: 'permiso-pendiente' });
-    }
-
+    // Se intenta conectar antes de explicar nada.
+    //
+    // Antes se avisaba en cuanto el permiso estaba en 'prompt', dando por hecho
+    // que el navegador iba a pedirlo. Pero 'prompt' solo significa "sin
+    // decidir", y cuando el sitio y QZ Tray estan los dos en localhost el
+    // permiso de red local ni siquiera hace falta: Chrome lo exige al alcanzar
+    // una direccion local desde un origen publico, no de local a local. Asi que
+    // el permiso se quedaba en 'prompt' para siempre, el aviso prometia un
+    // dialogo del navegador que no llegaba nunca, y reaparecia en cada carga
+    // aunque la impresion funcionase perfectamente.
     if (await this.qz.isQzTrayRunning()) {
+      // Al recuperarse se olvida el aplazamiento: si mas adelante vuelve a
+      // fallar, el usuario merece enterarse otra vez.
+      this.avisoPrevioAplazado = false;
+
       // Conectar no basta: QZ Tray acepta el WebSocket aunque no confie en el
       // sitio, y sin certificado cada impresion pide confirmacion a mano.
       return this.publicar({
@@ -117,9 +147,27 @@ export class EstadoImpresionService {
     // El navegador oculta el motivo real del fallo para que una web no pueda
     // escanear puertos, asi que se relee el permiso por si acaba de denegarse.
     const permisoTrasIntento = await this.leerPermisoRedLocal();
+    if (permisoTrasIntento === 'denied') {
+      return this.publicar({ disponible: false, motivo: 'permiso-denegado' });
+    }
+
+    // Aqui si merece la pena explicarse: no se ha podido conectar y el permiso
+    // sigue sin decidirse, de modo que puede ser la causa. El clic del usuario
+    // aporta ademas el gesto que Chrome necesita para mostrar su dialogo.
+    if (!desdeGestoDelUsuario && !await this.confirmarAvisoPrevio()) {
+      return this.publicar({ disponible: false, motivo: 'permiso-pendiente' });
+    }
+
+    if (await this.qz.isQzTrayRunning()) {
+      return this.publicar({
+        disponible: true,
+        certificadoConfigurado: await this.qz.tieneCertificadoConfigurado(),
+      });
+    }
+
     return this.publicar({
       disponible: false,
-      motivo: permisoTrasIntento === 'denied'
+      motivo: await this.leerPermisoRedLocal() === 'denied'
         ? 'permiso-denegado'
         : 'qz-no-disponible',
     });
@@ -153,19 +201,20 @@ export class EstadoImpresionService {
   private async confirmarAvisoPrevio(): Promise<boolean> {
     // Aunque lo aplace, no se le vuelve a interrumpir: el banner de la caja
     // queda como via de entrada para reintentarlo cuando le venga bien.
-    if (this.avisoPrevioMostrado) return true;
-    this.avisoPrevioMostrado = true;
+    if (this.avisoPrevioAplazado) return true;
+    this.avisoPrevioAplazado = true;
 
     const respuesta = await Swal.fire({
-      icon: 'info',
-      title: 'Permiso para la impresora',
+      icon: 'warning',
+      title: 'No se pudo conectar con la impresora',
       html: `
-        <p>LaComanda necesita conectarse con QZ Tray para imprimir los tickets
-        de esta caja.</p>
-        <p>A continuación tu navegador te pedirá
-        <strong>acceso a la red local</strong>: pulsa <strong>Permitir</strong>.</p>
+        <p>LaComanda no ha podido conectarse con QZ Tray para imprimir los
+        tickets de esta caja.</p>
+        <p>Comprueba que <strong>QZ Tray esté abierto</strong> en este equipo.
+        Si tu navegador pide <strong>acceso a la red local</strong>,
+        pulsa <strong>Permitir</strong>.</p>
       `,
-      confirmButtonText: 'Continuar',
+      confirmButtonText: 'Reintentar',
       showCancelButton: true,
       cancelButtonText: 'Ahora no',
     });
