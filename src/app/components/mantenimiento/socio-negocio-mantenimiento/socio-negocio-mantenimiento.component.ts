@@ -17,6 +17,7 @@ import {
 } from 'src/app/models/socionegocio.models';
 import { ProductoService } from 'src/app/services/product.service';
 import { SocioNegocioService } from 'src/app/services/socionegocio.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-socio-negocio-mantenimiento',
@@ -193,11 +194,8 @@ export class SocioNegocioMantenimientoComponent
         }
 
         this.showForm = false;
-        Swal.fire(
-          editing ? 'Socio actualizado' : 'Socio creado',
-          'La configuración de precios quedó guardada.',
-          'success'
-        );
+        Notificar.exito(editing ? 'Socio actualizado' : 'Socio creado',
+          'La configuración de precios quedó guardada.');
         this.cargar();
       },
       error: error => {
@@ -228,11 +226,8 @@ export class SocioNegocioMantenimientoComponent
 
       this.socioService.eliminar(row.IdSocioNegocio).subscribe({
         next: () => {
-          Swal.fire(
-            'Socio eliminado',
-            'El registro fue eliminado correctamente.',
-            'success'
-          );
+          Notificar.exito('Socio eliminado',
+            'El registro fue eliminado correctamente.');
           this.cargar();
         },
         error: error => Swal.fire(

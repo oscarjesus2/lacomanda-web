@@ -4,6 +4,7 @@ import { finalize, forkJoin } from 'rxjs';
 import { ConfiguracionReservas, EspacioReserva, HorarioReserva } from 'src/app/models/reservas.models';
 import { ReservasService } from 'src/app/services/reservas.service';
 import Swal from 'sweetalert2';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-reservas-mantenimiento',
@@ -59,7 +60,7 @@ export class ReservasMantenimientoComponent implements OnInit {
       .subscribe({
         next: response => {
           this.configuracion = response.Data;
-          Swal.fire({ icon: 'success', title: 'Configuración guardada', text: this.configuracion.Publicada ? 'Tu página de reservas ya está disponible.' : 'Los cambios se guardaron como configuración interna.', timer: 2200, showConfirmButton: false });
+          Notificar.exito('Configuración guardada', this.configuracion.Publicada ? 'Tu página de reservas ya está disponible.' : 'Los cambios se guardaron como configuración interna.');
         },
         error: error => this.error(error, 'No se pudo guardar la configuración.')
       });
@@ -73,14 +74,14 @@ export class ReservasMantenimientoComponent implements OnInit {
         next: response => {
           this.espacios = response.Data ?? [];
           if (this.configuracion) this.configuracion.MesasHabilitadas = this.espacios.filter(x => x.AceptaReservas).length;
-          Swal.fire({ icon: 'success', title: 'Mesas actualizadas', timer: 1600, showConfirmButton: false });
+          Notificar.exito('Mesas actualizadas');
         },
         error: error => this.error(error, 'No se pudieron guardar las capacidades.')
       });
   }
 
   copiarEnlace(): void {
-    navigator.clipboard.writeText(this.publicUrl).then(() => Swal.fire({ icon: 'success', title: 'Enlace copiado', timer: 1200, showConfirmButton: false }));
+    navigator.clipboard.writeText(this.publicUrl).then(() => Notificar.exito('Enlace copiado'));
   }
 
   cerrar(): void { this.dialogRef.close(); }

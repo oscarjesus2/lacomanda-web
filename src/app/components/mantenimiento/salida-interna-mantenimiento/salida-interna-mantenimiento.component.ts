@@ -254,11 +254,8 @@ export class SalidaInternaMantenimientoComponent implements OnInit {
           return;
         }
         this.cargarFormulario(response.Data);
-        Swal.fire(
-          'Salida generada',
-          'Revísela para descontar el stock y registrar el Kardex.',
-          'success'
-        );
+        Notificar.exito('Salida generada',
+          'Revísela para descontar el stock y registrar el Kardex.');
       },
       error: error => {
         this.guardando = false;

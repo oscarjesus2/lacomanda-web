@@ -12,6 +12,7 @@ import {
 } from 'src/app/models/almacen-maestro.models';
 import { AreaAlmacenService } from 'src/app/services/area-almacen.service';
 import { SubAreaAlmacenService } from 'src/app/services/sub-area-almacen.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-subarea-almacen-mantenimiento',
@@ -101,11 +102,8 @@ export class SubAreaAlmacenMantenimientoComponent implements OnInit {
           );
           return;
         }
-        Swal.fire(
-          esEdicion ? 'Subárea actualizada' : 'Subárea creada',
-          '',
-          'success'
-        );
+        Notificar.exito(esEdicion ? 'Subárea actualizada' : 'Subárea creada',
+          '');
         this.showForm = false;
         this.cargar();
       },

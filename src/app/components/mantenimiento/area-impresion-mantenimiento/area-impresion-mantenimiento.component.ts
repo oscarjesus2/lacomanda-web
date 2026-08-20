@@ -95,11 +95,8 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
       this.impresoraPredeterminada = resultado.Predeterminada;
       this.qzDisponible = true;
       if (mostrarResultado) {
-        await Swal.fire(
-          'Equipo comprobado',
-          `QZ encontró ${resultado.Impresoras.length} impresora(s) en este equipo.`,
-          'success',
-        );
+        Notificar.exito('Equipo comprobado',
+          `QZ encontró ${resultado.Impresoras.length} impresora(s) en este equipo.`);
       }
     } catch (error) {
       console.error('No se pudo consultar QZ Tray:', error);
@@ -198,11 +195,8 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
           'warning',
         );
       } else {
-        await Swal.fire(
-          'Equipo validado',
-          'Todas las impresoras configuradas existen en este equipo.',
-          'success',
-        );
+        Notificar.exito('Equipo validado',
+          'Todas las impresoras configuradas existen en este equipo.');
       }
     } catch (error: any) {
       await Swal.fire(
@@ -221,11 +215,8 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
     this.probandoAreaId = area.IdAreaImpresion;
     try {
       await this.qzTray.probarImpresora(area.NombreImpresora);
-      await Swal.fire(
-        'Prueba enviada',
-        `Se envió una prueba a la impresora de ${area.Descripcion}.`,
-        'success',
-      );
+      Notificar.exito('Prueba enviada',
+        `Se envió una prueba a la impresora de ${area.Descripcion}.`);
     } catch (error) {
       console.error('Falló la prueba de impresión:', error);
       await Swal.fire(
@@ -293,11 +284,8 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
         }
         this.showForm = false;
         await this.cargar();
-        await Swal.fire(
-          'Correcto',
-          esActualizacion ? 'Área actualizada' : 'Área creada',
-          'success',
-        );
+        Notificar.exito('Correcto',
+          esActualizacion ? 'Área actualizada' : 'Área creada');
       },
       error: () => Swal.fire('Error', 'No se pudo guardar', 'error'),
     });

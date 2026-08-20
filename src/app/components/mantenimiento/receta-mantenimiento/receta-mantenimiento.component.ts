@@ -465,11 +465,8 @@ export class RecetaMantenimientoComponent implements OnInit {
           );
           return;
         }
-        Swal.fire(
-          idReceta ? 'Receta actualizada' : 'Receta creada',
-          'Los costes fueron recalculados correctamente.',
-          'success'
-        );
+        Notificar.exito(idReceta ? 'Receta actualizada' : 'Receta creada',
+          'Los costes fueron recalculados correctamente.');
         this.volver();
         this.cargarRecetas();
       },

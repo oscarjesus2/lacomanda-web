@@ -126,11 +126,8 @@ export class ClienteMantenimientoComponent implements OnInit {
             this.cargarClientes();
             this.showForm = false;
 
-            Swal.fire(
-              'Cliente actualizado',
-              '',
-              'success'
-            );
+            Notificar.exito('Cliente actualizado',
+              '');
           } else {
             Swal.fire(
               'Error',
@@ -166,11 +163,8 @@ export class ClienteMantenimientoComponent implements OnInit {
           this.cargarClientes();
           this.showForm = false;
 
-          Swal.fire(
-            'Cliente creado',
-            '',
-            'success'
-          );
+          Notificar.exito('Cliente creado',
+            '');
         } else {
           Swal.fire(
             'Error',

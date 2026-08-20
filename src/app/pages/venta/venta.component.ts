@@ -87,6 +87,7 @@ import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service'
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 import { AgendaReservasDialogComponent } from 'src/app/components/reservas/agenda-reservas-dialog/agenda-reservas-dialog.component';
 import { ConfirmacionImpresionPedidosService } from 'src/app/services/confirmacion-impresion-pedidos.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-venta',
@@ -705,13 +706,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
         IdentificadorEstacion: this.storageService.getCurrentIP() || ''
       }));
       this.solicitudesQrPorEspacio.delete(espacio.IdEspacio);
-      await Swal.fire({
-        title: 'Mesa habilitada',
-        text: 'El cliente ya puede consultar la carta y enviar pedidos.',
-        icon: 'success',
-        timer: 1800,
-        showConfirmButton: false
-      });
+      Notificar.exito(
+        'Mesa habilitada',
+        'El cliente ya puede consultar la carta y enviar pedidos.');
     } catch (error: any) {
       await Swal.fire(
         'No se pudo confirmar',
@@ -1096,11 +1093,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
         if (result.isConfirmed) {
           // Eliminar el código
           oPedidoDet.NroCupon = "";
-          Swal.fire({
-            title: this.textCatalog.get('codeDeleted'),
-            icon: 'success',
-            confirmButtonText: this.textCatalog.get('accept')
-          });
+          Notificar.exito(this.textCatalog.get('codeDeleted'));
         }
       });
     } else {

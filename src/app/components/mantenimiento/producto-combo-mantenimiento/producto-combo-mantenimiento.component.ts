@@ -9,6 +9,7 @@ import {
   ProductoComboSeccionCatalogo,
 } from 'src/app/models/producto-combo.models';
 import { ProductoComboService } from 'src/app/services/producto-combo.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-producto-combo-mantenimiento',
@@ -211,11 +212,8 @@ export class ProductoComboMantenimientoComponent implements OnInit {
           if (seccion) {
             this.abrirSeccion(seccion);
           }
-          Swal.fire(
-            'Configuración guardada',
-            'La sección del combo se actualizó correctamente.',
-            'success'
-          );
+          Notificar.exito('Configuración guardada',
+            'La sección del combo se actualizó correctamente.');
         },
         error: () => Swal.fire(
           'Error',
@@ -266,11 +264,8 @@ export class ProductoComboMantenimientoComponent implements OnInit {
             if (seccion) {
               this.abrirSeccion(seccion);
             }
-            Swal.fire(
-              'Configuración eliminada',
-              '',
-              'success'
-            );
+            Notificar.exito('Configuración eliminada',
+              '');
           },
           error: () => Swal.fire(
             'Error',

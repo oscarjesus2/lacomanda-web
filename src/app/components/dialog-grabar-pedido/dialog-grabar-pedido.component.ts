@@ -10,6 +10,7 @@ import { PedidoService } from '../../services/pedido.service';
 import { DeviceCapabilitiesService } from '../../services/device-capabilities.service';
 import { QzTrayV224Service } from '../../services/qz-tray-v224.service';
 import { ImpresionDTO } from '../../interfaces/impresionDTO.interface';
+import { Notificar } from 'src/app/shared/notificaciones';
 @Component({
     selector: 'app-dialog-grabar-pedido',
     templateUrl: './dialog-grabar-pedido.component.html',
@@ -73,11 +74,8 @@ export class DialogEnviarPedidoComponent {
                         await this.imprimir(responseRegisterPedido.Data ?? []);
                     }
                     this.data.Resultado = "true";
-                    Swal.fire(
-                    'Good job!',
-                    'Se registro el pedido correctamente.',
-                    'success'
-                    )
+                    Notificar.exito('Good job!',
+                    'Se registro el pedido correctamente.')
                     this.dialogRef.close(this.data);
     
                 }else{

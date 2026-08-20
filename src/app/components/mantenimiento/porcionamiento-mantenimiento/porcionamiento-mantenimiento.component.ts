@@ -214,11 +214,8 @@ export class PorcionamientoMantenimientoComponent implements OnInit {
         }
         this.cargarOperacion(response.Data);
         this.recargarCatalogos();
-        Swal.fire(
-          'Porcionamiento registrado',
-          'Los stocks, costos de compra y movimientos de Kardex fueron actualizados.',
-          'success'
-        );
+        Notificar.exito('Porcionamiento registrado',
+          'Los stocks, costos de compra y movimientos de Kardex fueron actualizados.');
       },
       error: error => {
         this.guardando = false;

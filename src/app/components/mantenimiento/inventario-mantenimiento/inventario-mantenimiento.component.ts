@@ -144,11 +144,8 @@ export class InventarioMantenimientoComponent implements OnInit {
 
         this.showCreate = false;
         this.asignarInventario(response.Data);
-        Swal.fire(
-          'Inventario generado',
-          'Ya puede registrar el conteo físico.',
-          'success'
-        );
+        Notificar.exito('Inventario generado',
+          'Ya puede registrar el conteo físico.');
       },
       error: error => {
         this.guardando = false;
@@ -241,15 +238,12 @@ export class InventarioMantenimientoComponent implements OnInit {
           response.Data,
           subArea.IdSubAreaAlmacen
         );
-        Swal.fire(
-          response.Data.SubAreas.find(s =>
+        Notificar.exito(response.Data.SubAreas.find(s =>
             s.IdSubAreaAlmacen === subArea.IdSubAreaAlmacen
           )?.ConteoGuardado
             ? 'Conteo completo'
             : 'Borrador guardado',
-          '',
-          'success'
-        );
+          '');
       },
       error: error => {
         this.guardando = false;
@@ -367,11 +361,8 @@ export class InventarioMantenimientoComponent implements OnInit {
             return;
           }
           this.asignarInventario(response.Data);
-          Swal.fire(
-            'Inventario cerrado',
-            'El stock y el Kardex fueron actualizados.',
-            'success'
-          );
+          Notificar.exito('Inventario cerrado',
+            'El stock y el Kardex fueron actualizados.');
         },
         error: error => {
           this.guardando = false;

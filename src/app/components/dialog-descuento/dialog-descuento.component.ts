@@ -7,6 +7,7 @@ import { Descuento } from 'src/app/models/descuento.models';
 import { DescuentoService } from 'src/app/services/descuento.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import Swal from 'sweetalert2';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-dialog-descuento',
@@ -165,10 +166,18 @@ export class DialogDescuentoComponent {
   }
  
   showAlert(message: string, icon: 'success' | 'error' | 'warning') {
-    Swal.fire({
-      text: message,
-      icon: icon,
-      confirmButtonText: this.texts.get('accept')
-    });
+    // El éxito no puede salir igual que un fallo: se avisa con un toast que se
+    // va solo, mientras que error y advertencia sí esperan a que se lean.
+    if (icon === 'success') {
+      Notificar.exito(message);
+      return;
+    }
+
+    if (icon === 'warning') {
+      void Notificar.advertencia(this.texts.get('validation'), message);
+      return;
+    }
+
+    void Notificar.error(this.texts.get('error'), message);
   }
 }

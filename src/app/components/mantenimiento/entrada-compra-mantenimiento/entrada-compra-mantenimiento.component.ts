@@ -495,11 +495,8 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         const eraNota = !!this.notaOrigen;
         this.notaOrigen = null;
         this.soloLectura = false;
-        Swal.fire(
-          eraNota ? 'Nota guardada' : 'Compra guardada',
-          'El documento quedó generado. Revíselo para aplicar sus movimientos.',
-          'success'
-        );
+        Notificar.exito(eraNota ? 'Nota guardada' : 'Compra guardada',
+          'El documento quedó generado. Revíselo para aplicar sus movimientos.');
       },
       error: error => {
         this.guardando = false;
@@ -538,11 +535,8 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
           }
           this.cargarFormulario(response.Data);
           this.soloLectura = true;
-          Swal.fire(
-            'Compra revisada',
-            'Las existencias y costes quedaron actualizados.',
-            'success'
-          );
+          Notificar.exito('Compra revisada',
+            'Las existencias y costes quedaron actualizados.');
         },
         error: error => {
           this.guardando = false;
@@ -1046,11 +1040,8 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         this.cargarFormulario(response.Data);
         this.soloLectura = true;
         this.showForm = true;
-        Swal.fire(
-          'Canje realizado',
-          this.mensajeCanjeExitoso,
-          'success'
-        );
+        Notificar.exito('Canje realizado',
+          this.mensajeCanjeExitoso);
       },
       error: error => {
         this.guardando = false;

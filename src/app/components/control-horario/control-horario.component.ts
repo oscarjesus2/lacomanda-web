@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import { RegistroJornada } from 'src/app/models/control-horario.models';
 import { ControlHorarioService } from 'src/app/services/control-horario.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-control-horario',
@@ -108,14 +109,7 @@ export class ControlHorarioComponent implements OnInit, OnDestroy {
     operacion.pipe(finalize(() => this.procesando = false)).subscribe({
       next: response => {
         this.jornada = response.Data?.EstaAbierta ? response.Data : null;
-        Swal.fire({
-          toast: true,
-          position: 'bottom-end',
-          icon: 'success',
-          title: mensaje,
-          showConfirmButton: false,
-          timer: 2200,
-        });
+        Notificar.exito(mensaje);
       },
     });
   }

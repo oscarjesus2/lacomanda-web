@@ -12,6 +12,7 @@ import {
   ProveedorTipoIdentidad
 } from 'src/app/models/proveedor.models';
 import { ProveedorService } from 'src/app/services/proveedor.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-proveedor-mantenimiento',
@@ -124,11 +125,8 @@ export class ProveedorMantenimientoComponent implements OnInit {
           );
           return;
         }
-        Swal.fire(
-          esEdicion ? 'Proveedor actualizado' : 'Proveedor creado',
-          '',
-          'success'
-        );
+        Notificar.exito(esEdicion ? 'Proveedor actualizado' : 'Proveedor creado',
+          '');
         this.showForm = false;
         this.cargar();
       },

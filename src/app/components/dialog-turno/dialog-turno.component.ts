@@ -12,6 +12,7 @@ import { TurnoService } from '../../services/turno.service';
 import Swal from 'sweetalert2';
 import { firstValueFrom } from 'rxjs';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-dialog-turno',
@@ -140,11 +141,8 @@ export class DialogTurnoComponent implements OnInit {
 
       if (responseAbrirTurno) {
         await this.listarCajas(responseAbrirTurno.IdCaja);
-        await Swal.fire(
-          this.texts.get('shiftOpenedTitle'),
-          this.texts.get('registerAvailableForOperations'),
-          'success'
-        );
+        Notificar.exito(this.texts.get('shiftOpenedTitle'),
+          this.texts.get('registerAvailableForOperations'));
       }
     } finally {
       this.procesando = false;

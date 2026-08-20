@@ -12,6 +12,7 @@ import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 import { EnumTipoDocumento } from 'src/app/enums/enum';
 import { finalize } from 'rxjs/operators';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-dialog-ventasgenerales',
@@ -215,11 +216,8 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
         this.ventaService.anularDocumentoVenta(idVenta, motivo, anularPedido).subscribe(
           (response: any) => {
             this.spinnerService.hide();
-            Swal.fire(
-              this.texts.get('voided'),
-              this.texts.get('documentVoidedSuccessfully'),
-              'success'
-            );
+            Notificar.exito(this.texts.get('voided'),
+              this.texts.get('documentVoidedSuccessfully'));
             this.actualizarLista(); // Actualiza la lista después de la anulación
           },
           (error: any) => {

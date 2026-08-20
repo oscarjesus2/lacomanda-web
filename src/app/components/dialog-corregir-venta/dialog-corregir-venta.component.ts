@@ -19,6 +19,7 @@ import {
 } from 'src/app/services/tipo-identidad-pais.service';
 import { VentaService } from 'src/app/services/venta.service';
 import Swal from 'sweetalert2';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-dialog-corregir-venta',
@@ -477,14 +478,15 @@ export class DialogCorregirVentaComponent implements OnInit {
             return;
           }
 
-          Swal.fire(
+          // El aviso ya no bloquea, así que el diálogo se cierra en el acto y
+          // el toast se ve encima de la pantalla anterior.
+          Notificar.exito(
             this.texts.get('correctionApplied'),
-            response.Data.Mensaje,
-            'success',
-          ).then(() => this.dialogRef.close({
+            response.Data.Mensaje);
+          this.dialogRef.close({
             actualizado: true,
             resultado: response.Data,
-          }));
+          });
         },
         error: () => {
           this.guardando = false;

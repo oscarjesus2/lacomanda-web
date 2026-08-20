@@ -9,6 +9,7 @@ import {
   AreaAlmacenMaestro
 } from 'src/app/models/almacen-maestro.models';
 import { AreaAlmacenService } from 'src/app/services/area-almacen.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-area-almacen-mantenimiento',
@@ -82,11 +83,8 @@ export class AreaAlmacenMantenimientoComponent implements OnInit {
           );
           return;
         }
-        Swal.fire(
-          esEdicion ? 'Área actualizada' : 'Área creada',
-          '',
-          'success'
-        );
+        Notificar.exito(esEdicion ? 'Área actualizada' : 'Área creada',
+          '');
         this.showForm = false;
         this.cargar();
       },

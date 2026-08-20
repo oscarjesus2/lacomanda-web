@@ -20,6 +20,7 @@ import {
 } from 'src/app/interfaces/cerrarTurno.interface';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-dialog-cerrar-turno',
@@ -217,11 +218,8 @@ export class DialogCerrarTurnoComponent implements OnInit {
       this.cerrado = true;
       await this.imprimir(data.Impresiones);
 
-      Swal.fire(
-        this.texts.get('shiftCloseTitle'),
-        data.Mensaje || this.texts.get('shiftClosedSuccessfully'),
-        'success'
-      );
+      Notificar.exito(this.texts.get('shiftCloseTitle'),
+        data.Mensaje || this.texts.get('shiftClosedSuccessfully'));
       return;
     }
 
@@ -289,11 +287,8 @@ export class DialogCerrarTurnoComponent implements OnInit {
                 || item.NroCuenta !== pedido.NroCuenta
             );
 
-            Swal.fire(
-              this.texts.get('orderVoided'),
-              response.Message || this.texts.get('orderVoidedSuccessfully'),
-              'success'
-            );
+            Notificar.exito(this.texts.get('orderVoided'),
+              response.Message || this.texts.get('orderVoidedSuccessfully'));
           } finally {
             this.liberarProceso();
           }

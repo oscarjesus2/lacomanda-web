@@ -11,6 +11,7 @@ import {
 import { GrupoAlmacenService } from 'src/app/services/grupo-almacen.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { TenantTextKey } from 'src/app/services/localization/tenant-texts.en';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-grupo-almacen-mantenimiento',
@@ -116,11 +117,8 @@ export class GrupoAlmacenMantenimientoComponent implements OnInit {
           this.avisarError(response.Message, 'couldNotSaveGroup');
           return;
         }
-        Swal.fire(
-          this.textCatalog.get('saved'),
-          response.Message,
-          'success'
-        );
+        Notificar.exito(this.textCatalog.get('saved'),
+          response.Message);
         this.showForm = false;
         this.cargar();
       },
@@ -146,11 +144,8 @@ export class GrupoAlmacenMantenimientoComponent implements OnInit {
       this.service.eliminar(item.IdGrupo).subscribe({
         next: response => {
           if (response.Success) {
-            Swal.fire(
-              this.textCatalog.get('deleted'),
-              response.Message,
-              'success'
-            );
+            Notificar.exito(this.textCatalog.get('deleted'),
+              response.Message);
             this.cargar();
           } else {
             this.avisarError(response.Message, 'couldNotDeleteGroup');
