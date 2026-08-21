@@ -14,6 +14,8 @@ import {
   TenantTextParams,
 } from '../../services/localization/tenant-text-catalog.service';
 import { StorageService } from '../../services/storage.service';
+import { CARACTERISTICAS_LICENCIA } from '../../constants/caracteristicas-licencia';
+import { LicenciaTenantService } from '../../services/licencia-tenant.service';
 
 @Component({
   selector: 'app-asistente-estacion',
@@ -29,7 +31,8 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
   feedbackMessage = '';
 
   private availableStations: Estacion[] = [];
-  private onDashboard = false;
+  private onEligibleRoute = false;
+  private operationEnabled = false;
   private readonly subscriptions = new Subscription();
   private navigationTimer?: ReturnType<typeof setTimeout>;
 
@@ -40,6 +43,7 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
     private readonly deviceIdentifier: DeviceIdentifierService,
     private readonly stationRealtime: EstacionSessionRealtimeService,
     private readonly textCatalog: TenantTextCatalogService,
+    private readonly licenseService: LicenciaTenantService,
   ) {}
 
   ngOnInit(): void {
@@ -47,6 +51,15 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
       this.router.events.pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
       ).subscribe(event => this.handleRoute(event.urlAfterRedirects)),
+    );
+
+    this.subscriptions.add(
+      this.licenseService
+        .tieneCaracteristica(CARACTERISTICAS_LICENCIA.OperacionCaja)
+        .subscribe(enabled => {
+          this.operationEnabled = enabled;
+          this.handleRoute(this.router.url);
+        }),
     );
 
     this.handleRoute(this.router.url);
@@ -156,8 +169,11 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
 
   private handleRoute(url: string): void {
     const path = url.split('?')[0].split('#')[0];
-    this.onDashboard = path === '/dashboard';
-    if (!this.onDashboard) {
+    // Los planes básicos no tienen dashboard analítico y aterrizan directamente
+    // en Administración. El asistente debe seguir permitiendo vincular este
+    // equipo a una estación disponible desde esa pantalla.
+    this.onEligibleRoute = path === '/dashboard' || path === '/administracion';
+    if (!this.onEligibleRoute || !this.operationEnabled) {
       this.visible = false;
       return;
     }
@@ -220,7 +236,8 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
           station.Tipo === EstacionTipoEnum.CAJA
           || station.Tipo === EstacionTipoEnum.MOZO,
         );
-        this.visible = this.onDashboard
+        this.visible = this.onEligibleRoute
+          && this.operationEnabled
           && this.isEligible()
           && this.availableStations.length > 0;
         if (!this.visible) this.expanded = false;

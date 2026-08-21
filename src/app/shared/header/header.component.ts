@@ -57,10 +57,18 @@ export class HeaderComponent implements OnInit, OnDestroy {
   showCaja          = false;
   showMozo          = false;
   controlHorarioHabilitado = false;
+  private operacionCajaHabilitada = false;
+  private reportesAnaliticosHabilitados = false;
 
   private calcMenuVisibility(): void {
     const user = this.storageService.getCurrentUser();
-    if (!user) return;
+    if (!user) {
+      this.showDashboard = false;
+      this.showAdministracion = false;
+      this.showCaja = false;
+      this.showMozo = false;
+      return;
+    }
 
     const nivel   = user.IdNivel   as NivelUsuarioEnum;
     const estacion = user.TipoCompu as EstacionTipoEnum;
@@ -70,25 +78,21 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const isMozo   = nivel   === NivelUsuarioEnum.Mozo;
     const esCaja   = estacion === EstacionTipoEnum.CAJA;
     const esMozo   = estacion === EstacionTipoEnum.MOZO;
-    const sinConfig = !esCaja && !esMozo; // ADMINISTRADOR (0) o no definido
-
     if (isAdmin) {
-      // Se habilita al resolver la licencia; el dashboard pertenece al bloque
-      // de análisis avanzado y no debe parpadear en planes básicos.
-      this.showDashboard      = false;
+      this.showDashboard      = this.reportesAnaliticosHabilitados;
       this.showAdministracion = true;
-      this.showCaja           = esCaja;
-      this.showMozo           = esMozo;
+      this.showCaja           = esCaja && this.operacionCajaHabilitada;
+      this.showMozo           = esMozo && this.operacionCajaHabilitada;
     } else if (isCajero) {
       this.showDashboard      = false;
       this.showAdministracion = false;
-      this.showCaja           = esCaja;
+      this.showCaja           = esCaja && this.operacionCajaHabilitada;
       this.showMozo           = false;
     } else if (isMozo) {
       this.showDashboard      = false;
       this.showAdministracion = false;
       this.showCaja           = false;
-      this.showMozo           = esMozo;
+      this.showMozo           = esMozo && this.operacionCajaHabilitada;
     }
   }
 
@@ -319,11 +323,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .subscribe(habilitado => (this.controlHorarioHabilitado = habilitado));
 
     this.licenciaTenantService
+      .tieneCaracteristica(CARACTERISTICAS_LICENCIA.OperacionCaja)
+      .subscribe(habilitado => {
+        this.operacionCajaHabilitada = habilitado;
+        this.calcMenuVisibility();
+      });
+
+    this.licenciaTenantService
       .tieneCaracteristica(CARACTERISTICAS_LICENCIA.ReportesAnaliticos)
       .subscribe(habilitado => {
-        const usuario = this.storageService.getCurrentUser();
-        this.showDashboard =
-          usuario?.IdNivel === NivelUsuarioEnum.Administrador && habilitado;
+        this.reportesAnaliticosHabilitados = habilitado;
+        this.calcMenuVisibility();
       });
 
     // Turno + stats
