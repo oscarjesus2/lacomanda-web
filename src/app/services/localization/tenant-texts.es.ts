@@ -1050,7 +1050,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   dailyControl: 'Control Diario',
   preBillsNumber: 'N° de Precuentas',
   closingReports: 'Reportes en Cierre',
-  settlement: 'Liquidación',
+  settlement: 'Resumen de documentos',
   itemConsumption: 'Consumo de Artículo',
   dailyExpenses: 'Gastos Diarios',
   includeExpressInClosing: 'Incluir "Express" en Cierre',

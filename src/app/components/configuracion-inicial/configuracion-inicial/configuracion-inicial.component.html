@@ -54,7 +54,7 @@
     </div>
   </form>
 
-  <form *ngIf="!esModoInicial" [formGroup]="form" (ngSubmit)="guardar()">
+  <form *ngIf="!esModoInicial && licenciaCargada" [formGroup]="form" (ngSubmit)="guardar()">
 
     <!-- =========================
          1. DATOS DE NEGOCIO
@@ -145,7 +145,7 @@
         </mat-form-field>
 
         <!-- % Servicio -->
-        <mat-form-field appearance="fill" class="form-field">
+        <mat-form-field *ngIf="puedeServicio" appearance="fill" class="form-field">
           <mat-label>{{ 'servicePercent' | tenantText }}</mat-label>
           <input
             matInput
@@ -178,28 +178,21 @@
     <!-- =========================
          2. OPERACIÓN
     ========================== -->
-    <section class="card">
+    <section class="card" *ngIf="puedePrecuentas || puedeCambioEspacio">
       <h3>{{ 'operation' | tenantText }}</h3>
 
       <div class="toggles">
-        <mat-slide-toggle formControlName="Traslado">
-          {{ 'transfer' | tenantText }}
-        </mat-slide-toggle>
-
-        <mat-slide-toggle formControlName="Precuentas">
+        <mat-slide-toggle *ngIf="puedePrecuentas" formControlName="Precuentas">
           {{ 'allowPreBills' | tenantText }}
         </mat-slide-toggle>
 
-        <mat-slide-toggle formControlName="CambioEspacio">
+        <mat-slide-toggle *ngIf="puedeCambioEspacio" formControlName="CambioEspacio">
           {{ 'allowSpaceChange' | tenantText }}
-        </mat-slide-toggle>
-
-        <mat-slide-toggle formControlName="Diario">
-          {{ 'dailyControl' | tenantText }}
         </mat-slide-toggle>
 
         <!-- N° pre-cuentas, ligado al toggle -->
         <mat-form-field
+          *ngIf="puedePrecuentas"
           appearance="fill"
           class="nro-precuentas"
           [class.disabled]="!form.get('Precuentas')?.value">
@@ -216,7 +209,7 @@
     <!-- =========================
          3. REPORTES EN CIERRE
     ========================== -->
-    <section class="card">
+    <section class="card" *ngIf="puedeReportesCierre">
       <h3>{{ 'closingReports' | tenantText }}</h3>
 
       <div class="toggles">
@@ -232,7 +225,7 @@
           {{ 'settlement' | tenantText }}
         </mat-slide-toggle>
 
-        <mat-slide-toggle formControlName="ConsumoArticulo">
+        <mat-slide-toggle *ngIf="puedeConsumoArticulo" formControlName="ConsumoArticulo">
           {{ 'itemConsumption' | tenantText }}
         </mat-slide-toggle>
 
@@ -240,18 +233,13 @@
           {{ 'dailyExpenses' | tenantText }}
         </mat-slide-toggle>
 
-        <mat-slide-toggle formControlName="IncluirExpressEnCierre">
-          {{ 'includeExpressInClosing' | tenantText }}
-        </mat-slide-toggle>
       </div>
-
-      <div class="hint" [innerHTML]="'includeExpressHint' | tenantText"></div>
     </section>
 
     <!-- =========================
          4. CARACTERÍSTICAS
     ========================== -->
-    <section class="card">
+    <section class="card" *ngIf="puedeAnfitrionas">
       <h3>{{ 'features' | tenantText }}</h3>
 
       <mat-slide-toggle formControlName="Anfitrionas">
@@ -264,15 +252,15 @@
     <!-- =========================
          5. PRODUCTOS INTERNOS
     ========================== -->
-    <section class="card">
+    <section class="card" *ngIf="puedePropinas || puedeCargoDelivery">
       <h3>{{ 'internalProducts' | tenantText }}</h3>
 
       <div class="toggles">
-        <mat-slide-toggle formControlName="TieneProductoPropina">
+        <mat-slide-toggle *ngIf="puedePropinas" formControlName="TieneProductoPropina">
           {{ 'enablePosTips' | tenantText }}
         </mat-slide-toggle>
 
-        <mat-slide-toggle formControlName="TieneProductoPrecioDelivery">
+        <mat-slide-toggle *ngIf="puedeCargoDelivery" formControlName="TieneProductoPrecioDelivery">
           {{ 'enableDeliveryCharge' | tenantText }}
         </mat-slide-toggle>
       </div>
@@ -280,8 +268,8 @@
       <div class="hint">
         <span [innerHTML]="'internalProductsHint' | tenantText"></span>
         <ul>
-          <li>{{ 'registerPosTips' | tenantText }}</li>
-          <li>{{ 'applyDeliveryCharge' | tenantText }}</li>
+          <li *ngIf="puedePropinas">{{ 'registerPosTips' | tenantText }}</li>
+          <li *ngIf="puedeCargoDelivery">{{ 'applyDeliveryCharge' | tenantText }}</li>
         </ul>
       </div>
     </section>
@@ -289,7 +277,7 @@
     <!-- =========================
          6. DESCUENTOS INTERNOS
     ========================== -->
-    <section class="card">
+    <section class="card" *ngIf="puedeTragoCortesia">
       <h3>{{ 'internalDiscounts' | tenantText }}</h3>
 
       <div class="toggles">

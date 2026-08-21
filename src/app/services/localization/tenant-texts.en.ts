@@ -1045,7 +1045,7 @@ export const EN_TEXTS = {
   dailyControl: 'Daily control',
   preBillsNumber: 'Number of pre-bills',
   closingReports: 'Closing reports',
-  settlement: 'Settlement',
+  settlement: 'Document summary',
   itemConsumption: 'Item consumption',
   dailyExpenses: 'Daily expenses',
   includeExpressInClosing: 'Include "Express" in closing',

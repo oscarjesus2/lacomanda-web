@@ -9,6 +9,9 @@ import { Moneda } from 'src/app/models/moneda.models';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { combineLatest } from 'rxjs';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 
 @Component({
   selector: 'app-configuracion-inicial',
@@ -17,6 +20,16 @@ import { TenantTextCatalogService } from 'src/app/services/localization/tenant-t
 })
 export class ConfiguracionInicialComponent implements OnInit {
   readonly esModoInicial: boolean;
+  licenciaCargada = false;
+  puedePrecuentas = false;
+  puedeCambioEspacio = false;
+  puedeReportesCierre = false;
+  puedeConsumoArticulo = false;
+  puedeAnfitrionas = false;
+  puedePropinas = false;
+  puedeCargoDelivery = false;
+  puedeTragoCortesia = false;
+  puedeServicio = false;
   tiposIdentidadPais: TipoIdentidadPaisVM[] = [];
   tiposEnum = TipoIdentidadEnum;
   enumKeys = Object.keys(TipoIdentidadEnum).filter(k => isNaN(Number(k)));
@@ -73,6 +86,7 @@ export class ConfiguracionInicialComponent implements OnInit {
     private configSrv: ConfiguracionService,
     private tipIdPaisSrv: TipoIdentidadPaisService,
     private monedaSrv: MonedaService,
+    private licenciaSrv: LicenciaTenantService,
     private dialogRef: MatDialogRef<ConfiguracionInicialComponent>,
     private texts: TenantTextCatalogService,
     @Optional() @Inject(MAT_DIALOG_DATA)
@@ -82,7 +96,10 @@ export class ConfiguracionInicialComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.configSrv.get().subscribe(cfg => {
+    combineLatest([
+      this.configSrv.get(),
+      this.licenciaSrv.obtenerEstado(),
+    ]).subscribe(([cfg, estadoLicencia]) => {
       if (cfg) {
         this.form.patchValue(cfg);
         this.formInicial.patchValue({
@@ -92,6 +109,50 @@ export class ConfiguracionInicialComponent implements OnInit {
           Telefono: cfg.Telefono,
         });
       }
+
+      this.puedePrecuentas = this.licenciaSrv.evaluar(
+        estadoLicencia,
+        CARACTERISTICAS_LICENCIA.VentasPrecuenta,
+      );
+      this.puedeCambioEspacio = this.licenciaSrv.evaluar(
+        estadoLicencia,
+        CARACTERISTICAS_LICENCIA.VentasMesa,
+      );
+      this.puedeReportesCierre = this.licenciaSrv.evaluar(
+        estadoLicencia,
+        [
+          CARACTERISTICAS_LICENCIA.OperacionCaja,
+          CARACTERISTICAS_LICENCIA.OperacionReportes,
+        ],
+      );
+      this.puedeConsumoArticulo = this.licenciaSrv.evaluar(
+        estadoLicencia,
+        [
+          CARACTERISTICAS_LICENCIA.OperacionCaja,
+          CARACTERISTICAS_LICENCIA.OperacionReportes,
+          CARACTERISTICAS_LICENCIA.AlmacenGestion,
+        ],
+      );
+      this.puedeAnfitrionas = this.licenciaSrv.evaluar(
+        estadoLicencia,
+        CARACTERISTICAS_LICENCIA.ReportesComisionAnfitrionas,
+      );
+      this.puedePropinas = this.licenciaSrv.evaluar(
+        estadoLicencia,
+        CARACTERISTICAS_LICENCIA.OperacionCaja,
+      );
+      this.puedeCargoDelivery = this.licenciaSrv.evaluar(
+        estadoLicencia,
+        CARACTERISTICAS_LICENCIA.VentasDelivery,
+      );
+      this.puedeTragoCortesia = this.licenciaSrv.evaluar(
+        estadoLicencia,
+        CARACTERISTICAS_LICENCIA.VentasEntradas,
+      );
+      this.puedeServicio = this.puedePropinas;
+
+      this.normalizarSegunLicencia();
+      this.licenciaCargada = true;
 
       if (!this.esModoInicial) {
         const pais = this.form.get('PaisISO2')!.value;
@@ -117,6 +178,36 @@ export class ConfiguracionInicialComponent implements OnInit {
     // cuando cambia la moneda, sincronizar símbolo e ISO
     this.form.get('IdMoneda')!.valueChanges
       .subscribe(idMoneda => this.onMonedaChange(idMoneda));
+  }
+
+  private normalizarSegunLicencia(): void {
+    const valores: Partial<Configuracion> = {
+      // Son campos heredados que actualmente no activan ningún comportamiento.
+      Traslado: false,
+      Diario: false,
+      IncluirExpressEnCierre: false,
+    };
+
+    if (!this.puedePrecuentas) {
+      valores.Precuentas = false;
+      valores.NroPrecuentas = 0;
+    }
+    if (!this.puedeCambioEspacio) valores.CambioEspacio = false;
+    if (!this.puedeReportesCierre) {
+      valores.ResumenVenta = false;
+      valores.VentaPorProducto = false;
+      valores.Liquidacion = false;
+      valores.GastosDiarios = false;
+    }
+    if (!this.puedeConsumoArticulo) valores.ConsumoArticulo = false;
+    if (!this.puedeAnfitrionas) valores.Anfitrionas = false;
+    if (!this.puedePropinas) valores.TieneProductoPropina = false;
+    if (!this.puedeCargoDelivery) valores.TieneProductoPrecioDelivery = false;
+    if (!this.puedeTragoCortesia) valores.TieneDescuentoTragoCortesia = false;
+    if (!this.puedeServicio) valores.Servicio = 0;
+
+    this.form.patchValue(valores, { emitEvent: false });
+    this.applyBusinessRules();
   }
 
   private applyBusinessRules(): void {
