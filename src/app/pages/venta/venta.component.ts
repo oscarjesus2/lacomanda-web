@@ -2284,7 +2284,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       const success = await this.qzTrayService.printPDF(
         element.Documento,
         printerName,
-        false,
+        true,
         false,
         true,
         contextoLote

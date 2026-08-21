@@ -58,6 +58,14 @@ export class QzTrayV224Service {
   /** Evita que un reintento fallido vuelva a encolar el mismo documento. */
   private reintentandoCola = false;
 
+  /**
+   * Impresoras instaladas en este equipo. QZ obtiene la lista desde el sistema
+   * operativo; conservarla evita consultar el spooler antes de cada comanda.
+   */
+  private impresorasInstaladas = new Map<string, string>();
+  private cargaImpresorasInstaladas?: Promise<void>;
+  private impresorasCargadas = false;
+
   private readonly confianzaSubject = new BehaviorSubject<boolean | null>(null);
   /**
    * Si QZ Tray acepta las peticiones firmadas de este sitio. null mientras no
@@ -176,6 +184,11 @@ export class QzTrayV224Service {
 
         await qz.websocket.connect(); // Conectar con QZ Tray
 
+        // La lista pertenece a la conexión/equipo actual. Si QZ vuelve a
+        // conectarse se reconstruye para no conservar nombres obsoletos.
+        this.impresorasCargadas = false;
+        this.impresorasInstaladas.clear();
+
       } catch (error) {
         console.error('Error al conectar con QZ Tray:', error);
         throw error;
@@ -227,8 +240,18 @@ export class QzTrayV224Service {
         return true;
       }
 
+      const impresoraInstalada = await this.buscarImpresoraInstalada(impresora);
+      if (!impresoraInstalada && permitirImpresoraPredeterminadaComoRespaldo) {
+        console.warn(
+          `La impresora ${impresora} no está instalada en este equipo; se usará la predeterminada.`,
+        );
+        await this.printOnDefault(data);
+        this.registrarDocumentoImpreso(contexto);
+        return true;
+      }
+
       try {
-        await qz.print(qz.configs.create(impresora), data);
+        await qz.print(qz.configs.create(impresoraInstalada ?? impresora), data);
         this.registrarConfianza(true);
         console.log(`Imprimiendo en la impresora ${impresora}`);
         this.registrarDocumentoImpreso(contexto);
@@ -334,6 +357,50 @@ export class QzTrayV224Service {
     await qz.print(qz.configs.create(defaultPrinter), data);
     this.registrarConfianza(true);
     console.log(`Imprimiendo en la impresora predeterminada ${defaultPrinter}`);
+  }
+
+  private normalizarNombreImpresora(nombre: string): string {
+    return nombre.trim().toLocaleLowerCase();
+  }
+
+  /**
+   * Resuelve el nombre exacto informado por el sistema operativo. La primera
+   * comanda carga todas las impresoras y las siguientes consultan solo memoria.
+   * No se consulta el estado: una impresora instalada puede estar temporalmente
+   * apagada y el sistema operativo conservará sus trabajos en cola.
+   */
+  private async buscarImpresoraInstalada(nombre: string): Promise<string | null> {
+    await this.cargarImpresorasInstaladas();
+    const clave = this.normalizarNombreImpresora(nombre);
+    return this.impresorasInstaladas.get(clave) ?? null;
+  }
+
+  private async cargarImpresorasInstaladas(): Promise<void> {
+    if (this.impresorasCargadas) return;
+    if (this.cargaImpresorasInstaladas) {
+      await this.cargaImpresorasInstaladas;
+      return;
+    }
+
+    this.cargaImpresorasInstaladas = (async () => {
+      const resultado = await qz.printers.find();
+      const nombres = Array.isArray(resultado) ? resultado : [resultado];
+      const nuevas = new Map<string, string>();
+
+      nombres
+        .map(nombre => String(nombre ?? '').trim())
+        .filter(Boolean)
+        .forEach(nombre => nuevas.set(this.normalizarNombreImpresora(nombre), nombre));
+
+      this.impresorasInstaladas = nuevas;
+      this.impresorasCargadas = true;
+    })();
+
+    try {
+      await this.cargaImpresorasInstaladas;
+    } finally {
+      this.cargaImpresorasInstaladas = undefined;
+    }
   }
 
   private isPrinterNotFoundError(error: unknown): boolean {
