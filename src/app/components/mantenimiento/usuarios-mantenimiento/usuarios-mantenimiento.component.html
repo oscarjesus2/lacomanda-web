@@ -43,9 +43,12 @@
             <button mat-icon-button color="primary" (click)="onEdit(usuario)">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button color="warn" (click)="onDelete(usuario.IdUsuario)">
-              <mat-icon>delete</mat-icon>
-            </button>
+            <span [attr.title]="!usuario.PuedeEliminar ? ('userCannotBeDeleted' | tenantText) : null">
+              <button mat-icon-button color="warn" (click)="onDelete(usuario.IdUsuario)"
+                      [disabled]="!usuario.PuedeEliminar">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </span>
           </mat-cell>
         </ng-container>
 
@@ -63,7 +66,9 @@
       <div class="form-row">
         <mat-form-field appearance="fill">
           <mat-label>{{ 'username' | tenantText }}</mat-label>
-          <input matInput [(ngModel)]="usuario.NombreUsuario" name="username" required #username="ngModel">
+          <input matInput [(ngModel)]="usuario.NombreUsuario" name="username" required #username="ngModel"
+            [readonly]="!!usuario.IdUsuario">
+          <mat-hint *ngIf="usuario.IdUsuario">{{ 'usernameCannotBeChanged' | tenantText }}</mat-hint>
           <mat-error *ngIf="username.invalid && (username.dirty || username.touched)">
             {{ 'usernameRequired' | tenantText }}
           </mat-error>
@@ -71,36 +76,29 @@
 
         <mat-form-field appearance="fill">
           <mat-label>{{ 'email' | tenantText }}</mat-label>
-          <input matInput type="email" [(ngModel)]="usuario.Email" name="email" #email="ngModel"
+          <input matInput type="email" [(ngModel)]="usuario.Email" name="email" required #email="ngModel"
             pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$">
           <mat-icon matSuffix>email</mat-icon>
+          <mat-hint *ngIf="!usuario.IdUsuario">{{ 'newUserInvitationHint' | tenantText }}</mat-hint>
+          <mat-hint *ngIf="usuario.IdUsuario">{{ 'emailChangeRequiresVerification' | tenantText }}</mat-hint>
           <mat-error *ngIf="email.invalid && (email.dirty || email.touched)">
             {{ 'validEmailRequired' | tenantText }}
           </mat-error>
         </mat-form-field>
 
-        <!-- Contraseña solo al crear un usuario nuevo -->
-        <mat-form-field *ngIf="!usuario.IdUsuario" appearance="fill">
-          <mat-label>{{ 'password' | tenantText }}</mat-label>
-          <input matInput [type]="hide() ? 'password' : 'text'" [(ngModel)]="usuario.Contrasenia" name="password"
-            required #password="ngModel">
-          <button mat-icon-button matSuffix type="button" (click)="clickEvent($event)">
-            <mat-icon>{{hide() ? 'visibility_off' : 'visibility'}}</mat-icon>
-          </button>
-          <mat-error *ngIf="password.invalid && (password.dirty || password.touched)">
-            {{ 'passwordRequired' | tenantText }}
-          </mat-error>
-        </mat-form-field>
-
         <mat-form-field appearance="fill">
           <mat-label>{{ 'status' | tenantText }}</mat-label>
-          <mat-select [(ngModel)]="usuario.Activo" name="estado" required #estado="ngModel">
+          <mat-select [(ngModel)]="usuario.Activo" name="estado" required #estado="ngModel"
+            [disabled]="!!usuario.IdUsuario && usuario.Activo && !usuario.PuedeDesactivar">
             <mat-option [value]=true>{{ 'active' | tenantText }}</mat-option>
             <mat-option [value]=false>{{ 'inactive' | tenantText }}</mat-option>
           </mat-select>
           <mat-error *ngIf="estado.invalid && (estado.dirty || estado.touched)">
             {{ 'selectState' | tenantText }}
           </mat-error>
+          <mat-hint *ngIf="usuario.IdUsuario && usuario.Activo && !usuario.PuedeDesactivar">
+            {{ 'stateCannotBeChanged' | tenantText }}
+          </mat-hint>
         </mat-form-field>
       </div>
 
@@ -113,6 +111,7 @@
             [matAutocomplete]="auto"
             [(ngModel)]="usuario.IdEmpleado"
             (input)="onInputChange($event.target.value)"
+            [disabled]="!!usuario.IdUsuario && !usuario.PuedeEditarEmpleado"
             required
             name="empleado">
           <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayEmpleado">
@@ -123,12 +122,16 @@
           <mat-error *ngIf="!usuario.IdEmpleado">
             {{ 'selectValidEmployee' | tenantText }}
           </mat-error>
+          <mat-hint *ngIf="usuario.IdUsuario && !usuario.PuedeEditarEmpleado">
+            {{ 'employeeCannotBeChanged' | tenantText }}
+          </mat-hint>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>{{ 'level' | tenantText }}</mat-label>
           <mat-select [(ngModel)]="usuario.IdNivel" name="nivelusuario" required #nivelusuario="ngModel"
-            [compareWith]="compareNivel">
+            [compareWith]="compareNivel"
+            [disabled]="!!usuario.IdUsuario && !usuario.PuedeCambiarNivel">
             <mat-option *ngFor="let tipo of listNivelUsuario" [value]="tipo.IdNivel">
               {{tipo.Descripcion}}
             </mat-option>
@@ -136,6 +139,9 @@
           <mat-error *ngIf="nivelusuario.invalid && (nivelusuario.dirty || nivelusuario.touched)">
             {{ 'selectRole' | tenantText }}
           </mat-error>
+          <mat-hint *ngIf="usuario.IdUsuario && !usuario.PuedeCambiarNivel">
+            {{ 'levelCannotBeChanged' | tenantText }}
+          </mat-hint>
         </mat-form-field>
       </div>
 
@@ -145,24 +151,13 @@
         </button>
         <button mat-stroked-button type="button" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
 
-        <!-- Botón cambiar contraseña solo en edición -->
+        <!-- El administrador nunca escribe ni conoce la contraseña. -->
         <button *ngIf="usuario.IdUsuario" mat-stroked-button type="button"
                 class="usr-pwd-toggle-btn"
-                (click)="toggleCambiarPassword()">
-          <mat-icon>key</mat-icon>
-          {{ (showCambiarPassword ? 'cancelChange' : 'changePassword') | tenantText }}
-        </button>
-      </div>
-
-      <!-- Sección inline para cambiar contraseña (redirige al proveedor de identidad) -->
-      <div *ngIf="usuario.IdUsuario && showCambiarPassword" class="usr-pwd-section">
-        <p class="usr-pwd-section__title">{{ 'changePassword' | tenantText }}</p>
-        <p class="usr-pwd-section__hint">
-          {{ 'passwordChangeRedirectHint' | tenantText }}
-        </p>
-        <button mat-raised-button color="primary" type="button" (click)="guardarPassword()">
-          <mat-icon>key</mat-icon>
-          {{ 'changePassword' | tenantText }}
+                [disabled]="!usuario.Activo"
+                (click)="enviarRestablecimientoPassword()">
+          <mat-icon>forward_to_inbox</mat-icon>
+          {{ 'sendPasswordLink' | tenantText }}
         </button>
       </div>
     </form>

@@ -1,9 +1,9 @@
-import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Usuario } from '../../../models/usuario.models';
 
 import Swal from 'sweetalert2';
 import { MatDialogRef } from '@angular/material/dialog';
-import { NgForm, FormControl, Validators } from '@angular/forms';
+import { NgForm } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { NgxSpinnerService } from 'ngx-spinner';
@@ -12,8 +12,6 @@ import { EmpleadoService } from 'src/app/services/empleado.service';
 import { Empleado } from 'src/app/models/empleado.models';
 import { Nivel_UsuarioService } from 'src/app/services/nivel_usuario.service';
 import { Nivel_Usuario } from 'src/app/models/nivel_usuario.models';
-import { KeycloakService } from 'src/app/services/auth/keycloak.service';
-import { StorageService } from 'src/app/services/storage.service';
 import { Notificar } from 'src/app/shared/notificaciones';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
@@ -47,8 +45,6 @@ export class UsuariosMantenimientoComponent implements OnInit {
     private spinnerService: NgxSpinnerService,
     private empleadoService: EmpleadoService,
     private nivelUsuarioService: Nivel_UsuarioService,
-    private keycloak: KeycloakService,
-    private storage: StorageService,
     private licenciaTenantService: LicenciaTenantService) {}
     @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
       if (value) {
@@ -57,28 +53,43 @@ export class UsuariosMantenimientoComponent implements OnInit {
     }
 
   
-  // ── Visibilidad de la contraseña (solo para el alta de un nuevo usuario) ──
-  hide = signal(true);
-
-  clickEvent(event: MouseEvent) { this.hide.set(!this.hide()); event.stopPropagation(); }
-
-  // ── Cambio de contraseña ──────────────────────────────────────────────────
-  // El cambio se realiza en la página de Keycloak (UPDATE_PASSWORD). La
-  // contraseña nunca pasa por la app: solo se redirige al usuario autenticado.
-  showCambiarPassword: boolean = false;
-
-  toggleCambiarPassword(): void {
-    this.showCambiarPassword = !this.showCambiarPassword;
-  }
-
-  async guardarPassword(): Promise<void> {
-    const realm = this.storage.getCurrentSession()?.TenantID;
-    if (!realm) {
-      Swal.fire('Sesión', 'No hay una sesión activa.', 'warning');
+  async enviarRestablecimientoPassword(): Promise<void> {
+    if (this.usuarioForm?.dirty) {
+      await Swal.fire({
+        title: 'Guarda los cambios primero',
+        text: 'Antes de enviar el enlace, guarda los cambios del usuario para asegurar que llegue al correo correcto.',
+        icon: 'info',
+        confirmButtonText: 'Entendido',
+      });
       return;
     }
-    // Redirige a Keycloak para cambiar la contraseña del usuario autenticado.
-    await this.keycloak.beginPasswordUpdate(realm);
+
+    const confirmacion = await Swal.fire({
+      title: 'Enviar enlace de contraseña',
+      text: `Enviaremos a ${this.usuario.Email} un enlace seguro para establecer una nueva contraseña.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar enlace',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!confirmacion.isConfirmed) {
+      return;
+    }
+
+    this.spinnerService.show();
+    this.usuarioService
+      .solicitarRestablecimientoPassword(this.usuario.IdUsuario)
+      .subscribe({
+        next: response => {
+          this.spinnerService.hide();
+          Swal.fire(
+            'Enlace enviado',
+            response.Message || `Hemos enviado las instrucciones a ${this.usuario.Email}.`,
+            'success',
+          );
+        },
+        error: () => this.spinnerService.hide(),
+      });
   }
 
   ngOnInit(): void {
@@ -184,7 +195,7 @@ onInputChange(valor: string) {
     this.filteredusuarios.data = this.usuarios.filter(usuario =>
       usuario.NombreUsuario.toLowerCase().includes(filterValue) ||
       usuario.NivelDescripcion.toLowerCase().includes(filterValue) ||
-      usuario.NombreEmpleado.toLowerCase().includes(filterValue)
+      (usuario.NombreEmpleado || '').toLowerCase().includes(filterValue)
     );
   }
 
@@ -260,7 +271,7 @@ compareNivel(tipo1: Nivel_Usuario, tipo2: Nivel_Usuario): boolean {
   return tipo1 && tipo2 ? tipo1.IdNivel === tipo2.IdNivel: tipo1 === tipo2;
 }
 
-  onDelete(id: string): void {
+  onDelete(id: number): void {
     Swal.fire({
       title: '¿Estás seguro?',
       text: "No podrás revertir esto!",

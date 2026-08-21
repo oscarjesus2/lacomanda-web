@@ -43,7 +43,6 @@ export class UsuarioService {
   /** PUT /api/Usuario/{id} — actualiza datos sin contraseña */
   updateUsuario(usuario: Usuario): Observable<ApiResponse<Usuario>> {
     const dto: UsuarioUpdateDto = {
-      NombreUsuario: usuario.NombreUsuario,
       Email:         usuario.Email,
       Activo:        usuario.Activo,
       IdNivel:       usuario.IdNivel,
@@ -52,11 +51,18 @@ export class UsuarioService {
     return this.http.put<ApiResponse<Usuario>>(`${this.basePath}/${usuario.IdUsuario}`, dto);
   }
 
+  solicitarRestablecimientoPassword(idUsuario: number): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(
+      `${this.basePath}/${idUsuario}/restablecer-password`,
+      {},
+    );
+  }
+
   // cambiarPassword() (PUT .../cambiar-password) fue eliminado: el cambio de
   // contraseña se realiza ahora directamente en Keycloak (UPDATE_PASSWORD),
   // sin que la contraseña pase por el frontend ni por el backend.
 
-  deleteUsuario(id: string): Observable<void> {
+  deleteUsuario(id: number): Observable<void> {
     return this.http.delete<void>(`${this.basePath}/${id}`);
   }
 

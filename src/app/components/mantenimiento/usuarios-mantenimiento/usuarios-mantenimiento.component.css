@@ -9,25 +9,3 @@
 .usr-pwd-toggle-btn {
   margin-left: auto;
 }
-
-/* ── Sección cambio de contraseña ────────────────────────────── */
-.usr-pwd-section {
-  margin-top: 16px;
-  padding: 16px;
-  border: 1.5px dashed var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-alt, #f9f9f9);
-}
-
-.usr-pwd-section__title {
-  margin: 0 0 12px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.usr-pwd-mismatch {
-  color: var(--color-warn, #c62828) !important;
-}
