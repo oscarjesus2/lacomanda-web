@@ -143,6 +143,7 @@ export class EstacionSessionRealtimeService {
       allowOutsideClick: false,
       allowEscapeKey: false,
     });
+    this.reiniciarFlujoDeAcceso();
     this.revoking = false;
   }
 
@@ -156,14 +157,25 @@ export class EstacionSessionRealtimeService {
     this.storage.logout();
 
     await Swal.fire({
-      title: 'Tu sesión ya no es válida',
-      text: 'Vuelve a iniciar sesión para comprobar la vinculación de este equipo.',
-      icon: 'warning',
-      confirmButtonText: 'Ir a iniciar sesión',
+      title: 'Necesitamos que vuelvas a iniciar sesión',
+      text: 'Por seguridad, comprobaremos nuevamente tu acceso y la configuración de este equipo. Podrás continuar con normalidad al iniciar sesión.',
+      icon: 'info',
+      confirmButtonText: 'Volver a iniciar sesión',
       allowOutsideClick: false,
       allowEscapeKey: false,
     });
+    this.reiniciarFlujoDeAcceso();
     this.revoking = false;
+  }
+
+  /**
+   * `StorageService.logout()` ya navega a `/iniciar-sesion` antes de abrir el
+   * aviso. Por eso un segundo `router.navigate` no recrearía el componente.
+   * La navegación completa reinicia el flujo de Keycloak y reutiliza la
+   * sucursal recordada, sin dejar al usuario en la portada intermedia.
+   */
+  private reiniciarFlujoDeAcceso(): void {
+    window.location.replace(`${window.location.origin}/iniciar-sesion`);
   }
 
   private isAuthenticationError(error: unknown): boolean {

@@ -557,6 +557,8 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       confirmButtonText: 'Ir a iniciar sesión',
       allowEscapeKey: false,
       allowOutsideClick: false,
+    }).then(() => {
+      window.location.replace(`${window.location.origin}/iniciar-sesion`);
     }).finally(() => {
       this.stationRevokedDialogOpen = false;
     });
