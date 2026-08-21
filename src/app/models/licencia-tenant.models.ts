@@ -14,3 +14,12 @@ export interface LicenciaTenant {
   ModuloElegido?: string | null;
   Caracteristicas: CaracteristicaLicenciaTenant[];
 }
+
+export interface CuotaComprobantesMensuales {
+  Limite: number | null;
+  Utilizados: number;
+  Restantes: number | null;
+  Agotada: boolean;
+  PeriodoInicioUtc: string;
+  PeriodoFinUtc: string;
+}

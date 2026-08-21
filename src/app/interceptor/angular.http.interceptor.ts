@@ -300,9 +300,15 @@ export class ApiRequestInterceptor implements HttpInterceptor {
         return;
 
       case 403:
-        this.notificationService.showError(
-          'No tiene permisos para realizar esta acción.'
-        );
+        // Las denegaciones de licencia son reglas comerciales recuperables:
+        // conservar el mensaje del backend permite explicar qué característica
+        // falta o qué límite se agotó. Un 403 de autorización normal continúa
+        // presentándose como error.
+        if (this.isLicenseAccessError(error)) {
+          this.notificationService.showWarning(message);
+        } else {
+          this.notificationService.showError(message);
+        }
         return;
 
       case 404:
@@ -499,6 +505,12 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       'SUBSCRIPTION_CANCELLED',
       'SUBSCRIPTION_NOT_ACTIVE'
     ].includes(errorCode);
+  }
+
+  private isLicenseAccessError(error: HttpErrorResponse): boolean {
+    const body = error.error as ApiErrorResponse & { errorCode?: string };
+    const errorCode = body?.ErrorCode || body?.errorCode || '';
+    return errorCode.startsWith('LICENSE_');
   }
 
   private isStationAvailabilityRace(

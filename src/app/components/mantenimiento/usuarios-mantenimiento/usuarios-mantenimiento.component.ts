@@ -15,6 +15,8 @@ import { Nivel_Usuario } from 'src/app/models/nivel_usuario.models';
 import { KeycloakService } from 'src/app/services/auth/keycloak.service';
 import { StorageService } from 'src/app/services/storage.service';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 
 @Component({
   selector: 'app-usuarios-mantenimiento',
@@ -32,6 +34,12 @@ export class UsuariosMantenimientoComponent implements OnInit {
   showForm: boolean = false; // Controla la visibilidad del formulario
   displayedColumns: string[] = ['username', 'niveldescripcion','activo', 'actions'];
   empleadosFiltrados: Empleado[];
+  limiteUsuarios: number | null = null;
+  private usuarioEditadoEstabaActivo = false;
+
+  get usuariosActivos(): number {
+    return this.usuarios.filter(usuario => usuario.Activo).length;
+  }
  
   constructor(
     private dialogRef: MatDialogRef<UsuariosMantenimientoComponent >,
@@ -40,7 +48,8 @@ export class UsuariosMantenimientoComponent implements OnInit {
     private empleadoService: EmpleadoService,
     private nivelUsuarioService: Nivel_UsuarioService,
     private keycloak: KeycloakService,
-    private storage: StorageService) {}
+    private storage: StorageService,
+    private licenciaTenantService: LicenciaTenantService) {}
     @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
       if (value) {
         this.filteredusuarios.paginator = value;
@@ -73,6 +82,9 @@ export class UsuariosMantenimientoComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.licenciaTenantService
+      .obtenerLimite(CARACTERISTICAS_LICENCIA.LimiteUsuarios)
+      .subscribe(limite => (this.limiteUsuarios = limite));
     this.cargarusuarios();
     this.cargarEmpleados();
     this.cargarNivelUsuario();
@@ -190,6 +202,22 @@ onInputChange(valor: string) {
         return;
     }
 
+    const consumeCupo = !!this.usuario.Activo && (
+      !this.usuario.IdUsuario || !this.usuarioEditadoEstabaActivo
+    );
+    if (
+      consumeCupo &&
+      this.limiteUsuarios != null &&
+      this.usuariosActivos >= this.limiteUsuarios
+    ) {
+      Swal.fire(
+        'Límite de usuarios alcanzado',
+        `La licencia permite ${this.limiteUsuarios} usuarios activos. Desactiva uno o amplía la licencia antes de continuar.`,
+        'warning',
+      );
+      return;
+    }
+
     if (this.usuario.IdUsuario) {
         this.usuarioService.updateUsuario(this.usuario).subscribe(
             response => {
@@ -219,6 +247,7 @@ onInputChange(valor: string) {
 
 
 onEdit(usuario: Usuario): void {
+   this.usuarioEditadoEstabaActivo = !!usuario.Activo;
    this.usuario = { ...usuario, IdEmpleado: usuario.IdEmpleado != null ? Number(usuario.IdEmpleado) : null };
   this.showForm = true; // Mostrar formulario al editar
 }
@@ -251,6 +280,7 @@ compareNivel(tipo1: Nivel_Usuario, tipo2: Nivel_Usuario): boolean {
 
   resetForm(): void {
     this.usuario = new Usuario();
+    this.usuarioEditadoEstabaActivo = false;
     this.empleadosFiltrados = this.listEmpleado;
   }
 

@@ -2,7 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map, of, catchError, shareReplay } from 'rxjs';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
-import { LicenciaTenant } from '../models/licencia-tenant.models';
+import {
+  CuotaComprobantesMensuales,
+  LicenciaTenant,
+} from '../models/licencia-tenant.models';
 import {
   CARACTERISTICAS_LICENCIA,
   CodigoCaracteristica,
@@ -131,6 +134,15 @@ export class LicenciaTenantService {
             ?.Limite ?? null,
       ),
     );
+  }
+
+  /** Consumo real del mes; no se cachea porque cambia con cada emisión. */
+  obtenerCuotaComprobantes(): Observable<CuotaComprobantesMensuales> {
+    return this.http
+      .get<ApiResponse<CuotaComprobantesMensuales>>(
+        `${environment.apiUrl}/licencia/cuota-comprobantes`,
+      )
+      .pipe(map(respuesta => respuesta.Data));
   }
 
   /**

@@ -135,19 +135,19 @@
 
     <!-- Acciones laterales -->
     <div class="dv-actions">
-      <button class="dv-action-btn" [disabled]="isDocumentoInactivo">
+      <button *ngIf="comprobantesHabilitados" class="dv-action-btn" [disabled]="isDocumentoInactivo">
         <mat-icon>picture_as_pdf</mat-icon>
         {{ 'pdfAndXml' | tenantText }}
       </button>
-      <button class="dv-action-btn" [disabled]="isDocumentoInactivo" (click)="reImprimirDocumento()">
+      <button *ngIf="comprobantesHabilitados" class="dv-action-btn" [disabled]="isDocumentoInactivo" (click)="reImprimirDocumento()">
         <mat-icon>print</mat-icon>
         {{ 'reprint' | tenantText }}
       </button>
-      <button class="dv-action-btn" [disabled]="isDocumentoInactivo" (click)="corregirVenta()">
+      <button *ngIf="correccionHabilitada" class="dv-action-btn" [disabled]="isDocumentoInactivo" (click)="corregirVenta()">
         <mat-icon>fact_check</mat-icon>
         {{ 'correctIssuedSale' | tenantText }}
       </button>
-      <button class="dv-action-btn dv-action-btn--danger" [disabled]="isDocumentoInactivo" (click)="anularDocumento()">
+      <button *ngIf="correccionHabilitada" class="dv-action-btn dv-action-btn--danger" [disabled]="isDocumentoInactivo" (click)="anularDocumento()">
         <mat-icon>cancel</mat-icon>
         {{ 'void' | tenantText }}
       </button>
@@ -156,7 +156,7 @@
   </div>
 
   <!-- ── Motivo de anulación ──────────────────────────────────────────── -->
-  <div class="dv-motivo">
+  <div *ngIf="correccionHabilitada" class="dv-motivo">
     <input type="text" class="dv-motivo__input"
            [placeholder]="'voidReasonPlaceholder' | tenantText"
            [(ngModel)]="motivoAnulacion" />

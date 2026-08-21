@@ -13,6 +13,8 @@ import { EnumTipoDocumento } from 'src/app/enums/enum';
 import { finalize } from 'rxjs/operators';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 
 @Component({
   selector: 'app-dialog-ventasgenerales',
@@ -37,16 +39,36 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
   textoFiltro = '';
   campoSeleccionado = 'TipoDocumento';
   procesando = false;
+  comprobantesHabilitados = false;
+  correccionHabilitada = false;
+  cuotaComprobantesAgotada = false;
 
   constructor(
     public dialogRef: MatDialogRef<DialogVentasgeneralesComponent>,
     private ventaService: VentaService,
     private spinnerService: NgxSpinnerService,
     private dialog: MatDialog,
-    private texts: TenantTextCatalogService
+    private texts: TenantTextCatalogService,
+    private licenciaTenantService: LicenciaTenantService,
   ) { }
 
   ngOnInit(): void {
+    this.licenciaTenantService.obtenerEstado().subscribe(estado => {
+      this.comprobantesHabilitados = this.licenciaTenantService.evaluar(
+        estado,
+        CARACTERISTICAS_LICENCIA.OperacionComprobantes,
+      );
+      if (this.comprobantesHabilitados) {
+        this.cargarCuotaComprobantes();
+      }
+      this.correccionHabilitada = this.licenciaTenantService.evaluar(
+        estado,
+        [
+          CARACTERISTICAS_LICENCIA.OperacionComprobantes,
+          CARACTERISTICAS_LICENCIA.VentasCorreccionDocumentos,
+        ],
+      );
+    });
     this.columnDefs = [
       { key: 'Caja', label: this.texts.get('register'), width: 100 },
       { key: 'TipoDocumento', label: this.texts.get('documentType'), width: 130 },
@@ -145,12 +167,42 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
 
 
   OpenDialogEmitirVenta(): void {
+    if (!this.comprobantesHabilitados) {
+      Swal.fire(
+        'Funcionalidad no incluida',
+        'La licencia actual no incluye la emisión de comprobantes.',
+        'warning',
+      );
+      return;
+    }
+    if (this.cuotaComprobantesAgotada) {
+      Swal.fire(
+        'Cupo mensual agotado',
+        'La licencia alcanzó el máximo mensual de comprobantes.',
+        'warning',
+      );
+      return;
+    }
   
     const dialogEmitirVentaComponent = this.dialog.open(DialogEmitirVentaComponent, {
       disableClose: true,
       hasBackdrop: true,
       width: '900px',
       maxWidth: '95vw'
+    });
+
+    dialogEmitirVentaComponent.afterClosed().subscribe(() => {
+      this.cargarCuotaComprobantes();
+      this.loadVentas();
+    });
+  }
+
+  private cargarCuotaComprobantes(): void {
+    this.licenciaTenantService.obtenerCuotaComprobantes().subscribe({
+      next: cuota => (this.cuotaComprobantesAgotada = cuota.Agotada),
+      // El backend conserva la autoridad: un fallo transitorio al consultar el
+      // indicador no debe bloquear el botón con un estado posiblemente obsoleto.
+      error: () => (this.cuotaComprobantesAgotada = false),
     });
   }
 

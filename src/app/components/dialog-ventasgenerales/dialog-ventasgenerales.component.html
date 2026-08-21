@@ -90,16 +90,18 @@
         </button>
 
         <button
+          *ngIf="comprobantesHabilitados"
           mat-raised-button
           color="primary"
           type="button"
           (click)="OpenDialogEmitirVenta()"
-          [disabled]="procesando">
+          [disabled]="procesando || cuotaComprobantesAgotada">
           <mat-icon>receipt_long</mat-icon>
           {{ 'newSale' | tenantText }}
         </button>
 
         <button
+          *ngIf="correccionHabilitada"
           mat-raised-button
           color="primary"
           type="button"
@@ -202,12 +204,12 @@
             <span>{{ 'getPdfAndXml' | tenantText }}</span>
           </button>
 
-          <button mat-menu-item (click)="reImprimirDocumento()">
+          <button *ngIf="comprobantesHabilitados" mat-menu-item (click)="reImprimirDocumento()">
             <mat-icon>print</mat-icon>
             <span>{{ 'reprintDocument' | tenantText }}</span>
           </button>
 
-          <button mat-menu-item (click)="anularDocumento()">
+          <button *ngIf="correccionHabilitada" mat-menu-item (click)="anularDocumento()">
             <mat-icon>cancel</mat-icon>
             <span>{{ 'void' | tenantText }}</span>
           </button>

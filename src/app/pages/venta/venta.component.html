@@ -308,16 +308,16 @@
   <ng-container *ngIf="!isModoMozo">
 
     <div class="button-row">
-      <button [disabled]="!puedeOperarPedidoPersistido" (click)="aplicarDescuento()">
+      <button *ngIf="descuentosHabilitados" [disabled]="!puedeOperarPedidoPersistido" (click)="aplicarDescuento()">
         <fa-icon [icon]="faPercentage"></fa-icon>{{textDescuento}}
       </button>
-      <button [disabled]="!puedeOperarPedidoPersistido" (click)="ImprimirPrecuenta()">
+      <button *ngIf="precuentaHabilitada" [disabled]="!puedeOperarPedidoPersistido" (click)="ImprimirPrecuenta()">
         <fa-icon [icon]="faReceipt"></fa-icon> {{ 'preBill' | tenantText }}
       </button>
-      <button (click)="OpenDialogDocumentosEmitidos()">
+      <button *ngIf="reportesHabilitados" (click)="OpenDialogDocumentosEmitidos()">
         <fa-icon [icon]="faFileAlt"></fa-icon> {{ 'issuedDocuments' | tenantText }}
       </button>
-      <button (click)="openDialogReportes()">
+      <button *ngIf="reportesHabilitados" (click)="openDialogReportes()">
         <fa-icon [icon]="faChartPie"></fa-icon> {{ 'expensesReports' | tenantText }}
       </button>
     </div>
@@ -337,17 +337,17 @@
     </div>
 
     <div class="button-row">
-      <button *ngIf="mostrarBoleta"
-              [disabled]="!puedeOperarPedidoPersistido"
+      <button *ngIf="comprobantesHabilitados && mostrarBoleta"
+              [disabled]="!puedeOperarPedidoPersistido || comprobantesAgotados"
               (click)="OpenDialogEmitirComprobante(idTipoDocBoleta)">
         <fa-icon [icon]="faFileInvoiceDollar"></fa-icon> {{ textoBoleta }}
       </button>
-      <button *ngIf="mostrarFactura"
-              [disabled]="!puedeOperarPedidoPersistido"
+      <button *ngIf="comprobantesHabilitados && mostrarFactura"
+              [disabled]="!puedeOperarPedidoPersistido || comprobantesAgotados"
               (click)="OpenDialogEmitirComprobante(idTipoDocFactura)">
         <fa-icon [icon]="faFileInvoice"></fa-icon> {{ textoFactura }}
       </button>
-      <button [disabled]="!puedeOperarPedidoPersistido" (click)="OpenDialogEmitirComprobante(TipoDocumento.Express)">
+      <button *ngIf="comprobantesHabilitados" [disabled]="!puedeOperarPedidoPersistido || comprobantesAgotados" (click)="OpenDialogEmitirComprobante(TipoDocumento.Express)">
         <fa-icon [icon]="faReceipt"></fa-icon> {{ 'express' | tenantText }}
       </button>
       <button class="btn--primary-action" [disabled]="isEnviarPedidoDisabled" (click)="EnviarPedido()">
@@ -382,7 +382,7 @@
     </div>
 
     <div class="button-row">
-      <button [disabled]="isPrecuentaDisabled || !puedeOperarPedidoPersistido" (click)="ImprimirPrecuenta()">
+      <button *ngIf="precuentaHabilitada" [disabled]="isPrecuentaDisabled || !puedeOperarPedidoPersistido" (click)="ImprimirPrecuenta()">
         <fa-icon [icon]="faReceipt"></fa-icon> {{ 'preBill' | tenantText }}
       </button>
       <button [disabled]="isAnularPedidoDisabled" (click)="AnularPedido()">

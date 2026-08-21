@@ -21,6 +21,16 @@ export class StorageService {
   // ── Sesión ────────────────────────────────────────────────────────────────
 
   setCurrentSession(session: Session): void {
+    const tenantAnterior = this.currentSession?.TenantID?.trim().toLowerCase();
+    const tenantNuevo = session.TenantID?.trim().toLowerCase();
+
+    // La licencia pertenece al tenant, no al navegador. Al seleccionar otra
+    // sucursal/realm dentro de la misma SPA no se puede reutilizar el
+    // shareReplay de la sesión anterior.
+    if (tenantAnterior && tenantNuevo && tenantAnterior !== tenantNuevo) {
+      this.injector.get(LicenciaTenantService).invalidar();
+    }
+
     this.currentSession = session;
     this.store.setItem('currentSession', JSON.stringify(session));
   }
@@ -37,6 +47,7 @@ export class StorageService {
   removeCurrentSession(): void {
     this.store.removeItem('currentSession');
     this.currentSession = null;
+    this.injector.get(LicenciaTenantService).invalidar();
   }
 
   // ── Tokens ────────────────────────────────────────────────────────────────
@@ -85,12 +96,6 @@ export class StorageService {
     const refreshToken = this.getRefreshToken();
     const realm        = this.currentSession?.TenantID ?? '';
     this.removeCurrentSession();
-
-    // La licencia se cachea por sesión: sin esto, entrar con otro restaurante
-    // reutilizaría las características del anterior.
-    // Se resuelve de forma diferida porque LicenciaTenantService depende de
-    // HttpClient, cuyo interceptor depende a su vez de este servicio.
-    this.injector.get(LicenciaTenantService).invalidar();
 
     if (refreshToken && realm) {
       // Invalidar sesión en Keycloak (fire & forget — no bloqueamos la navegación)

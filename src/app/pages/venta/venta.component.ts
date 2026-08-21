@@ -85,6 +85,7 @@ import { AgenteImpresionLocalService } from 'src/app/services/agente-impresion-l
 import { EstadoImpresionService } from 'src/app/services/estado-impresion.service';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
+import { CuotaComprobantesMensuales } from 'src/app/models/licencia-tenant.models';
 import { AgendaReservasDialogComponent } from 'src/app/components/reservas/agenda-reservas-dialog/agenda-reservas-dialog.component';
 import { ConfirmacionImpresionPedidosService } from 'src/app/services/confirmacion-impresion-pedidos.service';
 import { Notificar } from 'src/app/shared/notificaciones';
@@ -205,6 +206,15 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedRow: PedidoDet;
   isAdmin = false;
   reservasHabilitadas = false;
+  comprobantesHabilitados = false;
+  precuentaHabilitada = false;
+  descuentosHabilitados = false;
+  reportesHabilitados = false;
+  cuotaComprobantes: CuotaComprobantesMensuales | null = null;
+
+  get comprobantesAgotados(): boolean {
+    return this.cuotaComprobantes?.Agotada ?? false;
+  }
   listaSociosNegocio: SocioNegocio[];
   public canalVentaEnum = CanalVentaEnum;
   idCanalVentaSelected: number = this.canalVentaEnum.ESPACIO;
@@ -434,9 +444,29 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   async ngOnInit() {
     this.confirmacionImpresionPedidos.iniciar();
     this.configuracionService.get().subscribe(cfg => this.config = cfg);
-    this.licenciaTenantService
-      .tieneCaracteristica(CARACTERISTICAS_LICENCIA.VentasReservasOnline)
-      .subscribe(habilitado => (this.reservasHabilitadas = habilitado));
+    this.licenciaTenantService.obtenerEstado().subscribe(estado => {
+      const permitido = (codigo: Parameters<LicenciaTenantService['evaluar']>[1]) =>
+        this.licenciaTenantService.evaluar(estado, codigo);
+
+      this.reservasHabilitadas = permitido(
+        CARACTERISTICAS_LICENCIA.VentasReservasOnline,
+      );
+      this.comprobantesHabilitados = permitido(
+        CARACTERISTICAS_LICENCIA.OperacionComprobantes,
+      );
+      if (this.comprobantesHabilitados) {
+        this.cargarCuotaComprobantes();
+      }
+      this.precuentaHabilitada = permitido(
+        CARACTERISTICAS_LICENCIA.VentasPrecuenta,
+      );
+      this.descuentosHabilitados = permitido(
+        CARACTERISTICAS_LICENCIA.VentasDescuentos,
+      );
+      this.reportesHabilitados = permitido(
+        CARACTERISTICAS_LICENCIA.OperacionReportes,
+      );
+    });
 
     this.enterFullScreen();
     if (this.deviceCapabilities.requiresLocalPrintBridge()) {
@@ -979,6 +1009,14 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       if (result.Accion === 'COBRAR_ENTREGA' && result.Pedido) {
+        if (!this.comprobantesHabilitados) {
+          Swal.fire(
+            'Funcionalidad no incluida',
+            'La licencia actual no incluye la emisión de comprobantes.',
+            'warning',
+          );
+          return;
+        }
         await this.openPedido(result.Pedido);
         if (this.idPedidoCobrar <= 0) {
           return;
@@ -2557,6 +2595,22 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 }
 
   OpenDialogEmitirComprobante(idTipoDoc: EnumTipoDocumento): void {
+    if (!this.comprobantesHabilitados) {
+      Swal.fire(
+        'Funcionalidad no incluida',
+        'La licencia actual no incluye la emisión de comprobantes.',
+        'warning',
+      );
+      return;
+    }
+    if (this.comprobantesAgotados) {
+      Swal.fire(
+        'Cupo mensual agotado',
+        'La licencia alcanzó el máximo mensual de comprobantes.',
+        'warning',
+      );
+      return;
+    }
     // Algunos flujos válidos (por ejemplo, cobrar una entrega) abren el diálogo
     // directamente; en todos los casos la condición indispensable es que el
     // pedido y su cuenta ya existan en el backend.
@@ -2592,8 +2646,16 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
        
 
        dialogEmitirComprobanteComponent.afterClosed().subscribe(Resultado => {
+        this.cargarCuotaComprobantes();
         this.RehacerPantalla();
       })
  
+  }
+
+  private cargarCuotaComprobantes(): void {
+    this.licenciaTenantService.obtenerCuotaComprobantes().subscribe({
+      next: cuota => (this.cuotaComprobantes = cuota),
+      error: () => (this.cuotaComprobantes = null),
+    });
   }
 }

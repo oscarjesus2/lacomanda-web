@@ -20,6 +20,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   error: 'Error',
   validation: 'Validación',
   saved: 'Guardado',
+  noResults: 'No se encontraron resultados.',
   deleted: 'Eliminado',
   yesDelete: 'Sí, eliminar',
   exit: 'Salir',

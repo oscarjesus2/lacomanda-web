@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
+import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { Familia } from '../../../models/familia.models';
 import { FamiliaService } from 'src/app/services/familia.service';
@@ -14,6 +15,16 @@ import { Notificar } from 'src/app/shared/notificaciones';
 })
 export class FamiliaMantenimientoComponent implements OnInit {
   @ViewChild('familiaForm') familiaForm: NgForm;
+
+  // El paginador vive dentro de un *ngIf, asi que se engancha por setter:
+  // cuando el listado se oculta para mostrar el formulario, Angular lo destruye
+  // y lo vuelve a crear al regresar.
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.filtered.paginator = value;
+    }
+  }
+
   familia: Familia = new Familia();
   familias: Familia[] = [];
   filtered = new MatTableDataSource<Familia>([]);

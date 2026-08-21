@@ -22,6 +22,8 @@ import { NivelUsuarioEnum } from 'src/app/enums/enum';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { DialogCorregirVentaComponent } from '../dialog-corregir-venta/dialog-corregir-venta.component';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 
 @Component({
   selector: 'app-dialog-documentos-emitidos',
@@ -46,6 +48,8 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
   displayedColumns: string[] = ['tipo', 'serie', 'numDoc', 'fecha', 'monto', 'cliente', 'numeroDoi', 'forr', 'estado'];
   dataSource = new MatTableDataSource<VentasDTO>();
   selectedRow: VentasDTO | null = null;
+  comprobantesHabilitados = false;
+  correccionHabilitada = false;
 
   get isDocumentoInactivo(): boolean {
     return !!this.selectedRow && this.selectedRow.Estado !== 'Generado';
@@ -64,6 +68,7 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
     public dialogRef: MatDialogRef<DialogDocumentosEmitidosComponent>,
     private qzTrayService: QzTrayV224Service,
     private texts: TenantTextCatalogService,
+    private licenciaTenantService: LicenciaTenantService,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.idTurno = data.idTurno;
@@ -73,6 +78,19 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
   idCaja: number;
 
   ngOnInit(): void {
+    this.licenciaTenantService.obtenerEstado().subscribe(estado => {
+      this.comprobantesHabilitados = this.licenciaTenantService.evaluar(
+        estado,
+        CARACTERISTICAS_LICENCIA.OperacionComprobantes,
+      );
+      this.correccionHabilitada = this.licenciaTenantService.evaluar(
+        estado,
+        [
+          CARACTERISTICAS_LICENCIA.OperacionComprobantes,
+          CARACTERISTICAS_LICENCIA.VentasCorreccionDocumentos,
+        ],
+      );
+    });
     this.loadTiposDocumento();
     this.loadMonedas();
     this.getVentasPorTurno(this.idTurno);

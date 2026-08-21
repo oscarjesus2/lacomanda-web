@@ -10,6 +10,9 @@
     <button mat-raised-button type="button" color="primary" (click)="nuevo()">
       {{ 'newStation' | tenantText }}
     </button>
+    <span class="license-usage-hint" *ngIf="limiteEstaciones != null">
+      Estaciones: {{ estaciones.length }} de {{ limiteEstaciones }}
+    </span>
 
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>{{ 'search' | tenantText }}</mat-label>

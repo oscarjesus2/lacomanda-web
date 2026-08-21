@@ -10,6 +10,9 @@
       <button mat-raised-button color="primary" (click)="nuevousuario()">
         {{ 'newUser' | tenantText }}
       </button>
+      <span class="license-usage-hint" *ngIf="limiteUsuarios != null">
+        Usuarios activos: {{ usuariosActivos }} de {{ limiteUsuarios }}
+      </span>
       <mat-form-field appearance="fill" class="full-width">
         <mat-label>{{ 'search' | tenantText }}</mat-label>
         <input matInput [(ngModel)]="filtrousuario" (ngModelChange)="applyFilter()"

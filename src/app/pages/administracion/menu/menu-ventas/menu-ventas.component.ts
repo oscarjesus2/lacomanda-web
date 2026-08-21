@@ -77,6 +77,21 @@ export class MenuVentasComponent implements OnInit {
     habilitadas: new Set<string>(),
   };
 
+  /**
+   * Ajustes comunes de los mantenimientos que caben en un diálogo acotado.
+   *
+   * Lo importante es fijar altura además de anchura: sin ella el diálogo crece
+   * con el contenido, la página saca scroll y el paginador se queda fuera de la
+   * vista. Cada llamada pone luego su propio ancho y alto.
+   */
+  private readonly configuracionMaestroCompacto = {
+    disableClose: true,
+    hasBackdrop: true,
+    maxWidth: 'calc(100vw - 32px)',
+    maxHeight: 'calc(100vh - 32px)',
+    panelClass: 'dialog-window--compact',
+  };
+
   ventasMenu = [
     {
       title: 'Maestros', titleKey: 'menuMasters',
@@ -107,7 +122,7 @@ export class MenuVentasComponent implements OnInit {
       children: [
         { title: 'Abrir Turno',      route: '/ventas/abrir-turno',        icon: 'lock_open',    label: 'Abrir turno',  titleKey: 'openShift',  labelKey: 'openShift',  feature: C.OperacionCaja },
         { title: 'Cerrar Turno',     route: '/ventas/cerrar-turno',       icon: 'lock',         label: 'Cerrar turno', titleKey: 'closeShift', labelKey: 'closeShift', feature: C.OperacionCaja },
-        { title: 'Listado de Ventas',route: '/ventas/cerrar-turno',       icon: 'receipt_long', label: 'Ventas',       titleKey: 'salesList',  labelKey: 'sales',      feature: C.OperacionCaja },
+        { title: 'Listado de Ventas',route: '/ventas/cerrar-turno',       icon: 'receipt_long', label: 'Ventas',       titleKey: 'salesList',  labelKey: 'sales',      feature: C.OperacionReportes },
         { title: 'Reservas online', route: '/ventas/reservas', icon: 'event_available', label: 'Reservas', feature: C.VentasReservasOnline }
       ]
     },
@@ -120,7 +135,7 @@ export class MenuVentasComponent implements OnInit {
         // MonitorComandasController apila las dos características, así que la
         // opción solo aparece cuando la licencia cubre ambas.
         { title: 'Trazabilidad de comandas', route: '/ventas/reportes/monitor-comandas', icon: 'account_tree', label: 'Monitor comandas', monitorComandas: true, feature: [C.OperacionReportes, C.ReportesSeguimientoComandas], grupoReporte: 'analisis' },
-        { title: 'Contable',           route: '/ventas/contable',           icon: 'calculate',  label: 'Contable',     titleKey: 'accounting',     labelKey: 'accounting', grupoReporte: 'analisis' },
+        { title: 'Contable',           route: '/ventas/contable',           icon: 'calculate',  label: 'Contable',     titleKey: 'accounting',     labelKey: 'accounting', feature: C.OperacionReportes, grupoReporte: 'analisis' },
         { title: 'Productividad por empleado', route: '/ventas/reportes/productividad-empleados', icon: 'groups', label: 'Productividad', reporte: 'productividad-empleados', feature: C.OperacionReportes, grupoReporte: 'analisis' },
         { title: 'Espacios y servicio', route: '/ventas/reportes/mesas-servicio', icon: 'table_restaurant', label: 'Espacios y servicio', reporte: 'mesas-servicio', feature: C.OperacionReportes, grupoReporte: 'analisis' },
         { title: 'Productos sin rotación', route: '/ventas/reportes/productos-sin-rotacion', icon: 'inventory', label: 'Sin rotación', reporte: 'productos-sin-rotacion', feature: C.OperacionReportes, grupoReporte: 'analisis' },
@@ -154,6 +169,10 @@ export class MenuVentasComponent implements OnInit {
   itemsVisibles(section: any): any[] {
     return section.children.filter((item: any) =>
       this.cubiertoPorLicencia(item.feature));
+  }
+
+  get seccionesVisibles(): any[] {
+    return this.ventasMenu.filter(section => this.itemsVisibles(section).length > 0);
   }
 
   /** Una opción sin `feature` no está sujeta a licencia. */
@@ -530,20 +549,23 @@ export class MenuVentasComponent implements OnInit {
   }
 
   OpenFamiliaMantenimientoComponent(): void {
-  
+
+    // Sin altura fija el diálogo crecía con el listado y sacaba scroll a la
+    // página. Acotarlo deja que la tabla ocupe el hueco y el paginador quede
+    // siempre visible al pie, como en el resto de maestros.
     const dialog = this.dialog.open(FamiliaMantenimientoComponent, {
-      disableClose: true,
-      hasBackdrop: true,
-      width: '600px',
+      ...this.configuracionMaestroCompacto,
+      width: '760px',
+      height: '560px',
     });
   }
 
   OpenSubFamiliaMantenimientoComponent(): void {
 
     const dialog = this.dialog.open(SubFamiliaMantenimientoComponent, {
-      disableClose: true,
-      hasBackdrop: true,
-      width: '600px',
+      ...this.configuracionMaestroCompacto,
+      width: '860px',
+      height: '620px',
     });
   }
 

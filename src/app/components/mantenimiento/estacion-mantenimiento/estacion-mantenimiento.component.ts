@@ -48,6 +48,7 @@ export class EstacionMantenimientoComponent implements OnInit {
   catalogoAlmacenCargado = false;
   cargandoDescargasStock = false;
   descargaStockHabilitada = false;
+  limiteEstaciones: number | null = null;
   areasAlmacen: AreaAlmacen[] = [];
   subAreasAlmacen: SubAreaAlmacen[] = [];
   descargasStockPorArea: Record<number, number | null> = {};
@@ -76,6 +77,9 @@ export class EstacionMantenimientoComponent implements OnInit {
     this.cargarEstaciones();
     this.cargarCajas();
     this.cargarLicenciaAlmacen();
+    this.licenciaTenantService
+      .obtenerLimite(CARACTERISTICAS_LICENCIA.LimiteEstaciones)
+      .subscribe(limite => (this.limiteEstaciones = limite));
   }
 
   get esEsteDispositivo(): boolean {
@@ -158,6 +162,17 @@ export class EstacionMantenimientoComponent implements OnInit {
   }
 
   nuevo(): void {
+    if (
+      this.limiteEstaciones != null &&
+      this.estaciones.length >= this.limiteEstaciones
+    ) {
+      Swal.fire(
+        'Límite de estaciones alcanzado',
+        `La licencia permite ${this.limiteEstaciones} estaciones. Elimina una estación o amplía la licencia antes de continuar.`,
+        'warning',
+      );
+      return;
+    }
     this.resetForm();
     this.inicializarDescargasStock();
     this.showForm = true;

@@ -19,6 +19,7 @@ export const EN_TEXTS = {
   error: 'Error',
   validation: 'Validation',
   saved: 'Saved',
+  noResults: 'No results found.',
   deleted: 'Deleted',
   yesDelete: 'Yes, delete',
   exit: 'Exit',

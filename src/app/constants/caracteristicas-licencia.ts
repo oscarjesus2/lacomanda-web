@@ -62,7 +62,10 @@ export const DEPENDENCIAS_CARACTERISTICA: Readonly<
   Partial<Record<CodigoCaracteristica, readonly CodigoCaracteristica[]>>
 > = {
   [CARACTERISTICAS_LICENCIA.VentasEntradas]: [CARACTERISTICAS_LICENCIA.VentasMesa],
+  [CARACTERISTICAS_LICENCIA.VentasPromociones]: [CARACTERISTICAS_LICENCIA.OperacionComprobantes],
+  [CARACTERISTICAS_LICENCIA.VentasReservasOnline]: [CARACTERISTICAS_LICENCIA.VentasMesa],
   [CARACTERISTICAS_LICENCIA.AlmacenCompras]: [CARACTERISTICAS_LICENCIA.AlmacenGestion],
+  [CARACTERISTICAS_LICENCIA.AlmacenCapturaDocumentosIa]: [CARACTERISTICAS_LICENCIA.AlmacenCompras],
   [CARACTERISTICAS_LICENCIA.AlmacenInventarios]: [CARACTERISTICAS_LICENCIA.AlmacenGestion],
   [CARACTERISTICAS_LICENCIA.AlmacenKardex]: [CARACTERISTICAS_LICENCIA.AlmacenGestion],
   [CARACTERISTICAS_LICENCIA.AlmacenRecetas]: [CARACTERISTICAS_LICENCIA.AlmacenGestion],
