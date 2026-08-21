@@ -73,7 +73,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const sinConfig = !esCaja && !esMozo; // ADMINISTRADOR (0) o no definido
 
     if (isAdmin) {
-      this.showDashboard      = true;
+      // Se habilita al resolver la licencia; el dashboard pertenece al bloque
+      // de análisis avanzado y no debe parpadear en planes básicos.
+      this.showDashboard      = false;
       this.showAdministracion = true;
       this.showCaja           = esCaja;
       this.showMozo           = esMozo;
@@ -232,7 +234,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   public reiniciar(): void {
     this.title = this.storageService.getCurrentNombreSucursal();
-    this.router.navigateByUrl('/dashboard');
+    this.router.navigateByUrl(
+      this.showDashboard ? '/dashboard' : '/administracion',
+    );
   }
 
   exitFullScreen() {
@@ -313,6 +317,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.licenciaTenantService
       .tieneCaracteristica(CARACTERISTICAS_LICENCIA.PersonalControlHorario)
       .subscribe(habilitado => (this.controlHorarioHabilitado = habilitado));
+
+    this.licenciaTenantService
+      .tieneCaracteristica(CARACTERISTICAS_LICENCIA.ReportesAnaliticos)
+      .subscribe(habilitado => {
+        const usuario = this.storageService.getCurrentUser();
+        this.showDashboard =
+          usuario?.IdNivel === NivelUsuarioEnum.Administrador && habilitado;
+      });
 
     // Turno + stats
     this.checkTurno();

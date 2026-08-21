@@ -5,7 +5,9 @@
       <div class="admin-page__header-accent"></div>
       <div>
         <h1 class="admin-page__title">{{ 'administration' | tenantText }}</h1>
-        <p class="admin-page__subtitle">{{ 'adminSubtitle' | tenantText }}</p>
+        <p class="admin-page__subtitle">
+          {{ (mostrarAlmacen ? 'adminSubtitle' : 'adminSubtitleSalesOnly') | tenantText }}
+        </p>
       </div>
     </header>
 
@@ -18,7 +20,7 @@
         <app-menu-ventas></app-menu-ventas>
       </article>
 
-      <article class="admin-card">
+      <article class="admin-card" *ngIf="mostrarAlmacen">
         <h2 class="admin-card__title">{{ 'warehouse' | tenantText }}</h2>
         <p class="admin-card__subtitle">
           {{ 'warehouseCardSubtitle' | tenantText }}

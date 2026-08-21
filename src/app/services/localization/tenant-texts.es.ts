@@ -1083,6 +1083,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
 
   // Página de administración y menús (administracion, menu-ventas, menu-almacen)
   adminSubtitle: 'Configura ventas, almacén y parámetros del sistema.',
+  adminSubtitleSalesOnly: 'Configura ventas y parámetros del sistema.',
   salesCardSubtitle: 'Operaciones, cierres y reportes',
   warehouse: 'Almacén',
   warehouseCardSubtitle: 'Productos, stock y compras',

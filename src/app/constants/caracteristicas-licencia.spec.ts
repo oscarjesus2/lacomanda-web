@@ -24,6 +24,15 @@ describe('catálogo central de características de licencia', () => {
     expect(resultado).toContain(CARACTERISTICAS_LICENCIA.VentasMesa);
   });
 
+  it('mantiene los análisis avanzados separados de los reportes básicos', () => {
+    const resultado = expandirExigencia(
+      CARACTERISTICAS_LICENCIA.ReportesAnaliticos,
+    );
+
+    expect(resultado).toContain(CARACTERISTICAS_LICENCIA.ReportesAnaliticos);
+    expect(resultado).toContain(CARACTERISTICAS_LICENCIA.OperacionReportes);
+  });
+
   it('no duplica características al combinar exigencias relacionadas', () => {
     const resultado = expandirExigencia([
       CARACTERISTICAS_LICENCIA.AlmacenCapturaDocumentosIa,

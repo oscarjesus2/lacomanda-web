@@ -35,7 +35,7 @@ const routes: Routes = [
   canActivate: [RoleGuard, LicenseGuard],
   data: {
     roles: ['admin'],
-    feature: CARACTERISTICAS_LICENCIA.OperacionReportes
+    feature: CARACTERISTICAS_LICENCIA.ReportesAnaliticos
   }
 },
 {

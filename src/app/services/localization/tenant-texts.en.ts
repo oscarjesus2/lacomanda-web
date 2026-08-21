@@ -1078,6 +1078,7 @@ export const EN_TEXTS = {
 
   // Administration page & menus (administracion, menu-ventas, menu-almacen)
   adminSubtitle: 'Configure sales, warehouse and system parameters.',
+  adminSubtitleSalesOnly: 'Configure sales and system parameters.',
   salesCardSubtitle: 'Operations, closings and reports',
   warehouse: 'Warehouse',
   warehouseCardSubtitle: 'Products, stock and purchases',
