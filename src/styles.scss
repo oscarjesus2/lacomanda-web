@@ -839,6 +839,27 @@
 .btn-danger-outline mat-icon { width: 18px; height: 18px; font-size: 18px; }
 .btn-compact { min-height: 34px; padding: 0 12px; font-size: .72rem; }
 
+/* Estado reutilizable para acciones asincronas iniciadas desde un boton. */
+.is-processing:disabled {
+  cursor: wait;
+  opacity: .82;
+}
+
+.button-processing-spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  flex: 0 0 1em;
+  border: 2px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: button-processing-spin .7s linear infinite;
+}
+
+@keyframes button-processing-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Control horario: estilos centralizados para fichaje y consulta administrativa. */
 .time-clock,
 .time-admin,

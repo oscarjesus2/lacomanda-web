@@ -222,6 +222,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   procesarPedido: boolean = false;
+  enviandoPedido: boolean = false;
   nombreCuenta: string = '';
   idEmpleadoLlevar : number = 0;
   constructor(
@@ -2132,6 +2133,10 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async EnviarPedido() {
+    if (this.enviandoPedido) {
+      return;
+    }
+
     if (this.espacioSelected.IdEspacio == null && this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) {
       Swal.fire(
         this.textCatalog.get('sendOrder'),
@@ -2153,9 +2158,11 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    this.enviandoPedido = true;
     this.spinnerService.show();
     this.procesarPedido = true;
-    if (this.listProductGrid.length > 0) {
+    try {
+      if (this.listProductGrid.length > 0) {
 
       var listPedidoDetails: PedidoDet[] = [];
 
@@ -2259,17 +2266,18 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
         this.MostrarOcultarPanelEspacio = true;
         this.MostrarOcultarPanelProducto = false;
       }
-      this.spinnerService.hide();
-    } else {
-      await Swal.fire({
-        icon: 'warning',
-        title: this.textCatalog.get('attention'),
-        text: this.textCatalog.get('noProductsEntered'),
-        confirmButtonText: this.textCatalog.get('ok'),
-      });
+      } else {
+        await Swal.fire({
+          icon: 'warning',
+          title: this.textCatalog.get('attention'),
+          text: this.textCatalog.get('noProductsEntered'),
+          confirmButtonText: this.textCatalog.get('ok'),
+        });
+      }
+    } finally {
+      this.enviandoPedido = false;
       this.spinnerService.hide();
     }
-
   }
 
   async imprimir(

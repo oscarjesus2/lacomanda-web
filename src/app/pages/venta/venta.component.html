@@ -350,8 +350,14 @@
       <button *ngIf="comprobantesHabilitados" [disabled]="!puedeOperarPedidoPersistido || comprobantesAgotados" (click)="OpenDialogEmitirComprobante(TipoDocumento.Express)">
         <fa-icon [icon]="faReceipt"></fa-icon> {{ 'express' | tenantText }}
       </button>
-      <button class="btn--primary-action" [disabled]="isEnviarPedidoDisabled" (click)="EnviarPedido()">
-        <fa-icon [icon]="faPaperPlane"></fa-icon> {{ 'sendOrder' | tenantText }}
+      <button class="btn--primary-action"
+              [class.is-processing]="enviandoPedido"
+              [disabled]="isEnviarPedidoDisabled || enviandoPedido"
+              [attr.aria-busy]="enviandoPedido"
+              (click)="EnviarPedido()">
+        <span *ngIf="enviandoPedido" class="button-processing-spinner" aria-hidden="true"></span>
+        <fa-icon *ngIf="!enviandoPedido" [icon]="faPaperPlane"></fa-icon>
+        {{ (enviandoPedido ? 'sendingOrder' : 'sendOrder') | tenantText }}
       </button>
       <button [disabled]="isBloquearDisabled" (click)="toggleBloquear()">
         <fa-icon [icon]="!procesarPedido ? faLock : faSync"></fa-icon>
@@ -376,8 +382,14 @@
       <button [disabled]="isPriorizarDespachoDisabled">
         <fa-icon [icon]="faList"></fa-icon> {{ 'prioritizeDispatch' | tenantText }}
       </button>
-      <button class="btn--primary-action" [disabled]="isEnviarPedidoDisabled" (click)="EnviarPedido()">
-        <fa-icon [icon]="faPaperPlane"></fa-icon> {{ 'sendOrder' | tenantText }}
+      <button class="btn--primary-action"
+              [class.is-processing]="enviandoPedido"
+              [disabled]="isEnviarPedidoDisabled || enviandoPedido"
+              [attr.aria-busy]="enviandoPedido"
+              (click)="EnviarPedido()">
+        <span *ngIf="enviandoPedido" class="button-processing-spinner" aria-hidden="true"></span>
+        <fa-icon *ngIf="!enviandoPedido" [icon]="faPaperPlane"></fa-icon>
+        {{ (enviandoPedido ? 'sendingOrder' : 'sendOrder') | tenantText }}
       </button>
     </div>
 

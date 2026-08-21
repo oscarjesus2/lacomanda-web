@@ -154,6 +154,7 @@ export const EN_TEXTS = {
   viewComplement: 'View complement',
   express: 'Express',
   sendOrder: 'Send order',
+  sendingOrder: 'Sending order…',
   noNewProductsToSend:
     'This order was already sent. Add new products before sending it again.',
   lock: 'Lock',
