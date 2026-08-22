@@ -89,6 +89,7 @@ import { CuotaComprobantesMensuales } from 'src/app/models/licencia-tenant.model
 import { AgendaReservasDialogComponent } from 'src/app/components/reservas/agenda-reservas-dialog/agenda-reservas-dialog.component';
 import { ConfirmacionImpresionPedidosService } from 'src/app/services/confirmacion-impresion-pedidos.service';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { DialogAnfitrionasComponent } from 'src/app/components/dialog-anfitrionas/dialog-anfitrionas.component';
 
 @Component({
   selector: 'app-venta',
@@ -1158,101 +1159,26 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ingresarCodigosAnfitrionas(oPedidoDet: PedidoDet) {
-    let codigoCounter = 1;  // Para llevar el control del número de códigos ingresados
-    const codigosAnfitriona: string[] = [];  // Almacena los códigos ingresados
+    const codigosActuales = (oPedidoDet.Anfitriona ?? '')
+      .split(',')
+      .map(codigo => codigo.trim().replace(/^ANFITRIONA\s+/i, ''))
+      .filter(codigo => !!codigo);
 
-    Swal.fire({
-      title: this.textCatalog.get('enterHostessCodes'),
-      html: `
-        <div id="inputs-container">
-          <div id="codigo-div1">
-            <input type="text" id="codigo1" class="swal2-input" placeholder="${this.textCatalog.get('codeLabel', { number: 1 })}" readonly>
-            <button type="button" class="remove-btn" id="remove1">${this.textCatalog.get('delete')}</button>
-          </div>
-        </div>
-        <button id="add-more" type="button" class="swal2-confirm swal2-styled" style="margin-top: 10px;">${this.textCatalog.get('addMore')}</button>
-      `,
-      focusConfirm: false,
-      preConfirm: () => {
-        // Recoger todos los inputs que contengan códigos
-        const codigos: string[] = [];
-        for (let i = 1; i <= codigoCounter; i++) {
-          const inputDiv = document.getElementById(`codigo-div${i}`);
-          if (inputDiv) {  // Asegurarse de que el div existe (si no ha sido eliminado)
-            const codigoInput = (document.getElementById(`codigo${i}`) as HTMLInputElement).value;
-            if (codigoInput) {
-              codigos.push(`ANFITRIONA ${codigoInput}`); // Agregar el prefijo "ANFITRIONA"
-            }
-          }
-        }
-        return codigos;  // Devuelve la lista de códigos con el prefijo
-      },
-      didOpen: () => {
-        // Manejar la lógica para agregar más inputs cuando se presiona "Agregar más"
-        const addMoreButton = document.getElementById('add-more');
-        addMoreButton?.addEventListener('click', () => {
-          codigoCounter++;
-          const inputsContainer = document.getElementById('inputs-container');
-          if (inputsContainer) {
-            const newDiv = document.createElement('div');
-            newDiv.id = `codigo-div${codigoCounter}`;
-            newDiv.innerHTML = `
-              <input type="text" id="codigo${codigoCounter}" class="swal2-input" placeholder="${this.textCatalog.get('codeLabel', { number: codigoCounter })}" readonly>
-              <button type="button" class="remove-btn" id="remove${codigoCounter}">${this.textCatalog.get('delete')}</button>
-            `;
-            inputsContainer.appendChild(newDiv);
-
-            // Agregar evento de eliminación al nuevo botón
-            const removeButton = document.getElementById(`remove${codigoCounter}`);
-            removeButton?.addEventListener('click', () => {
-              document.getElementById(`codigo-div${codigoCounter}`)?.remove();
-            });
-
-            // Abrir el teclado numérico personalizado para ingresar el nuevo código
-            this.openDialogMCant(codigoCounter);
-          }
-        });
-
-        // Abrir el teclado numérico para el primer código
-        this.openDialogMCant(1);
-      }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const codigos = result.value?.join(', '); // Convertir la lista en una cadena separada por comas
-        oPedidoDet.Anfitriona = codigos;
-      }
-    });
-  }
-
-
-  openDialogMCant(codigoIndex: number) {
-    // Ocultar el contenedor de SweetAlert2 antes de abrir el diálogo
-    const swalContainer = document.querySelector('.swal2-container') as HTMLElement;
-    if (swalContainer) {
-      swalContainer.style.display = 'none';  // Ocultar temporalmente SweetAlert2
-    }
-
-    // Abrir el DialogMCantComponent para ingresar el código
-    const dialogRef = this.dialog.open(DialogMCantComponent, {
-      width: '350px',
+    const dialogRef = this.dialog.open(DialogAnfitrionasComponent, {
+      width: '560px',
+      maxWidth: 'calc(100vw - 24px)',
+      autoFocus: 'input',
       data: {
-        title: this.textCatalog.get('enterHostessCode', { number: codigoIndex }),
-        hideNumber: false,
-        decimalActive: false
-      }
+        producto: oPedidoDet.Producto?.NombreCorto ?? '',
+        codigos: codigosActuales,
+      },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      // Volver a mostrar el contenedor de SweetAlert2 después de cerrar el diálogo
-      if (swalContainer) {
-        swalContainer.style.display = 'block';  // Restaurar la visibilidad de SweetAlert2
-      }
-
-      if (result && result.value) {
-        const inputElement = document.getElementById(`codigo${codigoIndex}`) as HTMLInputElement;
-        if (inputElement) {
-          inputElement.value = result.value;  // Asignar el valor ingresado al input correspondiente
-        }
+    dialogRef.afterClosed().subscribe((codigos: string[] | undefined) => {
+      if (codigos) {
+        oPedidoDet.Anfitriona = codigos
+          .map(codigo => `ANFITRIONA ${codigo}`)
+          .join(', ');
       }
     });
   }
@@ -2262,7 +2188,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
             await Swal.fire({
               icon: 'warning',
               title: 'Pedido guardado',
-              text: 'Una o más comandas quedaron pendientes de impresión. QZ volverá a intentarlo automáticamente; comprueba que las impresoras estén encendidas y disponibles.',
+              text: 'El pedido se guardó correctamente. Una o más comandas están pendientes de impresión. Comprueba que las impresoras estén encendidas; el sistema volverá a intentarlo automáticamente.',
               confirmButtonText: 'Entendido',
             });
           }

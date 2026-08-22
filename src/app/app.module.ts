@@ -60,6 +60,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSortModule } from '@angular/material/sort';
 import { DialogEmitirComprobanteComponent } from './components/dialog-emitir-comprobante/dialog-emitir-comprobante.component';
 import { DialogMCantComponent } from './components/dialog-mcant/dialog-mcant.component';
+import { DialogAnfitrionasComponent } from './components/dialog-anfitrionas/dialog-anfitrionas.component';
 
 
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -184,6 +185,7 @@ export const MY_DATE_FORMATS = {
     DialogVentasgeneralesComponent,
     DialogEmitirComprobanteComponent,
     DialogMCantComponent,
+    DialogAnfitrionasComponent,
     TransaccionesDiariasComponent,
     DialogEmitirVentaComponent,
     DialogReportecontableComponent,
