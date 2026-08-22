@@ -156,6 +156,12 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   express: 'Express',
   sendOrder: 'Enviar pedido',
   sendingOrder: 'Enviando pedido…',
+  emptyProductCatalogTitle: 'Aún no hay productos para mostrar',
+  emptyProductCatalogHelp:
+    'Crea una familia, una subfamilia y al menos un producto desde Administración para empezar a tomar pedidos.',
+  emptyProductSectionTitle: 'No hay productos en esta sección',
+  emptyProductSectionHelp:
+    'Selecciona otra familia o subfamilia, o asigna productos desde Administración.',
   noNewProductsToSend:
     'Este pedido ya está enviado. Añade productos nuevos antes de volver a enviarlo.',
   lock: 'Bloquear',

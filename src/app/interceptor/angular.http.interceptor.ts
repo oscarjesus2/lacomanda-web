@@ -59,6 +59,12 @@ export class ApiRequestInterceptor implements HttpInterceptor {
   /** Evita mostrar varios avisos cuando las cargas iniciales fallan a la vez. */
   private subscriptionBlockDialogOpen = false;
 
+  /** Evita repetir el aviso de cortesía en las cargas simultáneas. */
+  private subscriptionGraceDialogOpen = false;
+
+  private readonly SUBSCRIPTION_GRACE_HEADER =
+    'X-LaComanda-Subscription-Grace-Until';
+
   /** Evita repetir el cierre si varias consultas detectan a la vez la desvinculación. */
   private stationRevokedDialogOpen = false;
 
@@ -113,6 +119,7 @@ export class ApiRequestInterceptor implements HttpInterceptor {
         // Esperar una respuesta HTTP real.
         if (event instanceof HttpResponse) {
           this.backendStatus.markUp();
+          this.handleSubscriptionGrace(event);
         }
       }),
 
@@ -595,6 +602,52 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       window.location.assign(environment.customerPortalUrl);
     }).finally(() => {
       this.subscriptionBlockDialogOpen = false;
+    });
+  }
+
+  private handleSubscriptionGrace(response: HttpResponse<unknown>): void {
+    const rawGraceUntil = response.headers.get(
+      this.SUBSCRIPTION_GRACE_HEADER
+    );
+    if (!rawGraceUntil || this.subscriptionGraceDialogOpen) {
+      return;
+    }
+
+    const graceUntil = new Date(rawGraceUntil);
+    if (Number.isNaN(graceUntil.getTime()) || graceUntil <= new Date()) {
+      return;
+    }
+
+    const noticeKey = `lc_subscription_grace_${rawGraceUntil}`;
+    if (sessionStorage.getItem(noticeKey) === 'shown') {
+      return;
+    }
+
+    sessionStorage.setItem(noticeKey, 'shown');
+    this.subscriptionGraceDialogOpen = true;
+    const localGraceUntil = new Intl.DateTimeFormat(
+      navigator.language || 'es-ES',
+      {
+        dateStyle: 'long',
+        timeStyle: 'short',
+      }
+    ).format(graceUntil);
+
+    void Swal.fire({
+      icon: 'warning',
+      title: 'Tu suscripción venció',
+      html: `Puedes seguir trabajando con La Comanda hasta <strong>${localGraceUntil}</strong> para que tu restaurante no se detenga.<br><br>Regulariza el pago antes de esa hora para evitar la interrupción del servicio.`,
+      confirmButtonText: 'Regularizar ahora',
+      showCancelButton: true,
+      cancelButtonText: 'Continuar trabajando',
+      allowEscapeKey: false,
+      allowOutsideClick: false,
+    }).then(result => {
+      if (result.isConfirmed) {
+        window.location.assign(environment.customerPortalUrl);
+      }
+    }).finally(() => {
+      this.subscriptionGraceDialogOpen = false;
     });
   }
 

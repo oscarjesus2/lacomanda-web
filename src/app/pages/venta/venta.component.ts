@@ -1096,6 +1096,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async ListarSubFamilia_x_Familia(oFamilia: Familia) {
     this.selectedItemFamilia = oFamilia;
+    this.selectedItemSubFamilia = null;
     this.spinnerService.show();
     this.listProducts_x_SubFamilia = [];
     this.listSubFamilia_x_Familia = this.listSubFamilia.filter(x => x.IdFamilia === oFamilia.IdFamilia);
@@ -2034,8 +2035,15 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       this.descuentoAplicado = false;
     }
 
-    let oFamilia = this.listFamilia[0];
-    this.ListarSubFamilia_x_Familia(oFamilia);
+    const oFamilia = this.listFamilia?.[0];
+    if (oFamilia) {
+      this.ListarSubFamilia_x_Familia(oFamilia);
+    } else {
+      this.selectedItemFamilia = null;
+      this.selectedItemSubFamilia = null;
+      this.listSubFamilia_x_Familia = [];
+      this.listProducts_x_SubFamilia = [];
+    }
 
 
   }

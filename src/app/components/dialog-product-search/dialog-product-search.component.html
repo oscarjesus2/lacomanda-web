@@ -7,7 +7,8 @@
     <mat-label>{{ 'searchByProduct' | tenantText }}</mat-label>
     <mat-icon matPrefix class="ps-search-icon">search</mat-icon>
     <input matInput [(ngModel)]="filterText" (input)="filterProducts()"
-           [placeholder]="'typeToFilter' | tenantText" readonly />
+           [placeholder]="'typeToFilter' | tenantText"
+           autocomplete="off" />
   </mat-form-field>
 
   <!-- Tabla de resultados -->

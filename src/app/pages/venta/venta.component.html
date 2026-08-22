@@ -499,7 +499,40 @@
       </button>
     </div>
 
-    <div *ngIf="MostrarOcultarPanelProducto" class="products-grid">
+    <div *ngIf="!isLoadingEspacios
+                  && MostrarOcultarPanelProducto
+                  && ((listFamilia?.length || 0) === 0
+                    || (listSubFamilia?.length || 0) === 0
+                    || (listProducts?.length || 0) === 0)"
+         class="dialog-table-wrapper--fill dialog-table-state"
+         role="status">
+      <mat-icon>restaurant_menu</mat-icon>
+      <strong>{{ 'emptyProductCatalogTitle' | tenantText }}</strong>
+      <span>{{ 'emptyProductCatalogHelp' | tenantText }}</span>
+    </div>
+
+    <div *ngIf="!isLoadingEspacios
+                  && MostrarOcultarPanelProducto
+                  && (listFamilia?.length || 0) > 0
+                  && (listSubFamilia?.length || 0) > 0
+                  && (listProducts?.length || 0) > 0
+                  && (((selectedItemFamilia != null)
+                        && (listSubFamilia_x_Familia?.length || 0) === 0)
+                    || ((selectedItemSubFamilia != null)
+                        && (listProducts_x_SubFamilia?.length || 0) === 0))"
+         class="dialog-table-wrapper--fill dialog-table-state"
+         role="status">
+      <mat-icon>inventory_2</mat-icon>
+      <strong>{{ 'emptyProductSectionTitle' | tenantText }}</strong>
+      <span>{{ 'emptyProductSectionHelp' | tenantText }}</span>
+    </div>
+
+    <div *ngIf="MostrarOcultarPanelProducto
+                  && (listFamilia?.length || 0) > 0
+                  && (listSubFamilia?.length || 0) > 0
+                  && (listProducts?.length || 0) > 0
+                  && (listProducts_x_SubFamilia?.length || 0) > 0"
+         class="products-grid">
       <button *ngFor="let producto of listProducts_x_SubFamilia"
       [style.background-color]="getProductColor(producto.Color)"
       [style.visibility]="producto.Visible ? 'visible' : 'hidden'" (click)="AgregarProducto(producto)" [disabled]="isPanelProductoDisabled">

@@ -155,6 +155,12 @@ export const EN_TEXTS = {
   express: 'Express',
   sendOrder: 'Send order',
   sendingOrder: 'Sending order…',
+  emptyProductCatalogTitle: 'There are no products to display yet',
+  emptyProductCatalogHelp:
+    'Create a family, a subfamily and at least one product in Administration to start taking orders.',
+  emptyProductSectionTitle: 'There are no products in this section',
+  emptyProductSectionHelp:
+    'Select another family or subfamily, or assign products in Administration.',
   noNewProductsToSend:
     'This order was already sent. Add new products before sending it again.',
   lock: 'Lock',
