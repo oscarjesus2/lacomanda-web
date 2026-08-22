@@ -46,6 +46,8 @@ import { ReservasMantenimientoComponent } from 'src/app/components/mantenimiento
 import { ReportesTermicosAdministracionComponent } from 'src/app/components/mantenimiento/reportes-termicos-administracion/reportes-termicos-administracion.component';
 import { TipoReporteTermicoAdministracion } from 'src/app/models/reportes-termicos-administracion.models';
 import { MonitorComandasComponent } from 'src/app/components/mantenimiento/monitor-comandas/monitor-comandas.component';
+import { SunatConfigurationComponent } from 'src/app/components/mantenimiento/sunat-configuration/sunat-configuration.component';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
 
 @Component({
   selector: 'app-menu-ventas',
@@ -76,6 +78,7 @@ export class MenuVentasComponent implements OnInit {
     error: true,
     habilitadas: new Set<string>(),
   };
+  private paisISO2 = '';
 
   /**
    * Ajustes comunes de los mantenimientos que caben en un diálogo acotado.
@@ -151,7 +154,8 @@ export class MenuVentasComponent implements OnInit {
       title: 'Configuracion', titleKey: 'menuConfiguration',
       children: [
         { title: 'Configuración Inicial',      route: '/ventas/config-inicial',  icon: 'settings',  label: 'Config. inicial', titleKey: 'initialSetup',          labelKey: 'initialSetupShort' },
-        { title: 'Configurar esta estación',   route: '/ventas/config-estacion', icon: 'computer',  label: 'Esta estación',   titleKey: 'configureThisStation',  labelKey: 'thisStation'       }
+        { title: 'Configurar esta estación',   route: '/ventas/config-estacion', icon: 'computer',  label: 'Esta estación',   titleKey: 'configureThisStation',  labelKey: 'thisStation'       },
+        { title: 'Facturación electrónica SUNAT', route: '/ventas/configuracion-sunat', icon: 'verified_user', label: 'Facturación electrónica', feature: C.OperacionComprobantes, soloPeru: true }
       ]
     }
   ];
@@ -164,11 +168,13 @@ export class MenuVentasComponent implements OnInit {
     private TurnoService: TurnoService,
     private dataService: DataService,
     private licenciaTenantService: LicenciaTenantService,
+    private configuracionService: ConfiguracionService,
   ) { }
 
   itemsVisibles(section: any): any[] {
     return section.children.filter((item: any) =>
-      this.cubiertoPorLicencia(item.feature));
+      this.cubiertoPorLicencia(item.feature) &&
+      (!item.soloPeru || this.paisISO2 === 'PE'));
   }
 
   get seccionesVisibles(): any[] {
@@ -297,6 +303,10 @@ export class MenuVentasComponent implements OnInit {
     if (item.title === 'Configurar esta estación')
     {
       this.OpenConfigurarEstaEstacionComponent();
+    }
+    if (item.title === 'Facturación electrónica SUNAT')
+    {
+      this.OpenSunatConfigurationComponent();
     }
     if (item.title === 'Descuentos')
     {
@@ -625,10 +635,29 @@ export class MenuVentasComponent implements OnInit {
     });
   }
 
+  OpenSunatConfigurationComponent(): void {
+    this.dialog.open(SunatConfigurationComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: '900px',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100vh - 32px)',
+      panelClass: 'dialog-window--workspace',
+    });
+  }
+
   ngOnInit(): void {
     this.licenciaTenantService
       .obtenerEstado()
       .subscribe(estado => (this.estadoLicencia = estado));
+
+    const cachedConfiguration = this.configuracionService.snapshot;
+    if (cachedConfiguration) {
+      this.paisISO2 = (cachedConfiguration.PaisISO2 ?? '').toUpperCase();
+    }
+    this.configuracionService.config$.subscribe(configuration => {
+      this.paisISO2 = (configuration?.PaisISO2 ?? '').toUpperCase();
+    });
   }
 
 }
