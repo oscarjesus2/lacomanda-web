@@ -263,13 +263,11 @@ onEdit(usuario: Usuario): void {
   this.showForm = true; // Mostrar formulario al editar
 }
 
-compareEmpleado(tipo1: Empleado, tipo2: Empleado): boolean {
-    return tipo1 && tipo2 ? tipo1.IdEmpleado === tipo2.IdEmpleado: tipo1 === tipo2;
-}
-
-compareNivel(tipo1: Nivel_Usuario, tipo2: Nivel_Usuario): boolean {
-  return tipo1 && tipo2 ? tipo1.IdNivel === tipo2.IdNivel: tipo1 === tipo2;
-}
+  // compareNivel y compareEmpleado se retiraron: esperaban objetos, pero ambos
+  // selectores trabajan con identificadores. compareNivel llegaba a recibir dos
+  // números, leía .IdNivel en ellos —undefined en los dos—, y devolvía true
+  // para todas las opciones, de modo que el desplegable marcaba siempre la
+  // primera. compareEmpleado ni siquiera estaba enlazado en la plantilla.
 
   onDelete(id: number): void {
     Swal.fire({

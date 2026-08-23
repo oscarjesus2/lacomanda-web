@@ -129,8 +129,9 @@
 
         <mat-form-field appearance="fill">
           <mat-label>{{ 'level' | tenantText }}</mat-label>
+          <!-- Sin compareWith: tanto el modelo como el valor de cada opción son
+               el IdNivel, y para primitivos basta la comparación por defecto. -->
           <mat-select [(ngModel)]="usuario.IdNivel" name="nivelusuario" required #nivelusuario="ngModel"
-            [compareWith]="compareNivel"
             [disabled]="!!usuario.IdUsuario && !usuario.PuedeCambiarNivel">
             <mat-option *ngFor="let tipo of listNivelUsuario" [value]="tipo.IdNivel">
               {{tipo.Descripcion}}
