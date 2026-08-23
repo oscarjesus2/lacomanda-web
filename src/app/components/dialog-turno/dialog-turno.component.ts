@@ -13,6 +13,7 @@ import Swal from 'sweetalert2';
 import { firstValueFrom } from 'rxjs';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { MonedaService } from 'src/app/services/moneda.service';
 
 @Component({
   selector: 'app-dialog-turno',
@@ -23,6 +24,7 @@ export class DialogTurnoComponent implements OnInit {
   turnoAbierto = false;
   nroTurnoAbierto = 0;
   procesando = false;
+  tieneMultiplesMonedas = false;
   myForm: FormGroup;
   listCaja: CajaDto[] = [];
  
@@ -32,13 +34,14 @@ export class DialogTurnoComponent implements OnInit {
     private storageService: StorageService,
     private spinnerService: NgxSpinnerService,
     private cajaService: CajaService,
+    private monedaService: MonedaService,
     private turnoService: TurnoService,
     private texts: TenantTextCatalogService,
   ) {
     this.myForm = this.fb.group({
       fecha: [new Date(), [Validators.required]],
       caja: [null, [Validators.required]],
-      tipocambio: [null, [
+      tipocambio: [{ value: 1, disabled: true }, [
         Validators.required,
         Validators.min(0.0001),
         Validators.pattern(/^[0-9]+([.][0-9]+)?$/)
@@ -49,10 +52,16 @@ export class DialogTurnoComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     this.spinnerService.show();
     try {
+      await this.configurarTipoCambioPorMonedas();
       await this.listarCajas();
     } finally {
       this.spinnerService.hide();
     }
+  }
+
+  private async configurarTipoCambioPorMonedas(): Promise<void> {
+    const resp = await firstValueFrom(this.monedaService.getMoneda());
+    this.tieneMultiplesMonedas = (resp?.Data?.length ?? 0) > 1;
   }
 
   private async listarCajas(idCajaPreferida?: number): Promise<void> {
@@ -102,8 +111,14 @@ export class DialogTurnoComponent implements OnInit {
     } else {
       this.turnoAbierto = false;
       this.nroTurnoAbierto = 0;
-      this.myForm.get('tipocambio')!.enable({ emitEvent: false });
-      this.myForm.get('tipocambio')!.setValue(null);
+      const tipoCambio = this.myForm.get('tipocambio')!;
+      if (this.tieneMultiplesMonedas) {
+        tipoCambio.enable({ emitEvent: false });
+        tipoCambio.setValue(null);
+      } else {
+        tipoCambio.setValue(1);
+        tipoCambio.disable({ emitEvent: false });
+      }
       this.myForm.get('fecha')!.setValue(new Date());
     }
   }
