@@ -129,11 +129,12 @@ export class LoginComponent implements OnInit {
       return;
     }
 
-    // 4. ¿Hay una sucursal recordada? → ir DIRECTO al login de Keycloak, sin pedirla.
+    // 4. ¿Hay una sucursal recordada? Primero se valida contra las sucursales
+    //    publicadas para el host actual. La cookie se comparte entre subdominios
+    //    y puede pertenecer a otro restaurante abierto anteriormente.
     const recordada = this.readSucursal();
     if (recordada) {
-      this.spinnerService.show();
-      await this.loginWithTenant(recordada);
+      await this.loadTenants(recordada);
       return;
     }
 
@@ -182,6 +183,7 @@ export class LoginComponent implements OnInit {
       this.spinnerService.hide();
       this.loginValid = false;
       // Si falla el redirect con la sucursal recordada, se muestra el selector.
+      this.showSelector = true;
       if (!this.tenantDefault.length) this.loadTenants();
     }
   }
@@ -455,15 +457,17 @@ export class LoginComponent implements OnInit {
 
   // ── Tenants ───────────────────────────────────────────────────────────────
 
-  private async loadTenants(): Promise<void> {
-    // A partir de aquí sí queremos mostrar el selector de sucursal.
-    this.showSelector = true;
+  private async loadTenants(recordada?: PendingLogin): Promise<void> {
+    // Con una sucursal recordada el selector permanece oculto únicamente
+    // mientras comprobamos que realmente pertenece al dominio actual.
+    this.showSelector = !recordada;
     this.spinnerService.show();
     try {
       const resp    = await this.tenantService.getTenant().toPromise();
       const tenants = resp?.Data ?? [];
 
       if (!resp || resp.Success === false) {
+        this.showSelector = true;
         this.notificationService.showError(
           resp?.Message || this.textCatalog.get('couldNotLoadTenants')
         );
@@ -471,6 +475,7 @@ export class LoginComponent implements OnInit {
         return;
       }
       if (tenants.length === 0) {
+        this.showSelector = true;
         this.notificationService.showWarning(
           this.textCatalog.get('noTenantsAvailable')
         );
@@ -479,10 +484,41 @@ export class LoginComponent implements OnInit {
       }
 
       this.tenantDefault = tenants as any;
+
+      if (recordada) {
+        const tenantValido = this.tenantDefault.find(
+          tenant => tenant.TenantId?.trim().toLowerCase()
+            === recordada.TenantId.trim().toLowerCase(),
+        );
+
+        if (tenantValido) {
+          const pending = this.toPendingLogin(tenantValido);
+          this.saveSucursal(pending);
+          await this.loginWithTenant(pending);
+          return;
+        }
+
+        // La cookie corresponde a otro host/restaurante. Se descarta para no
+        // iniciar OAuth contra un realm ajeno al dominio que abrió el usuario.
+        this.clearSucursal();
+
+        // Si el dominio solo publica una sucursal, corregimos la selección y
+        // continuamos sin obligar al usuario a confirmar un dato inequívoco.
+        if (this.tenantDefault.length === 1) {
+          const pending = this.toPendingLogin(this.tenantDefault[0]);
+          this.saveSucursal(pending);
+          await this.loginWithTenant(pending);
+          return;
+        }
+
+        this.showSelector = true;
+      }
+
       if (this.tenantDefault.length === 1) {
         this.loginForm?.controls['tenant']?.setValue(this.tenantDefault[0]);
       }
     } catch {
+      this.showSelector = true;
       this.notificationService.showError(
         this.textCatalog.get('couldNotLoadTenantsRetry')
       );
@@ -490,6 +526,14 @@ export class LoginComponent implements OnInit {
     } finally {
       this.spinnerService.hide();
     }
+  }
+
+  private toPendingLogin(tenant: TenantDefault): PendingLogin {
+    return {
+      TenantId: tenant.TenantId,
+      Sucursal: tenant.Sucursal,
+      Cultura: tenant.Cultura,
+    };
   }
 }
 
