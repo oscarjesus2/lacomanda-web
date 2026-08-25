@@ -15,7 +15,9 @@ import { ImpresionDTO } from '../interfaces/impresionDTO.interface';
 import {
     PlanCorreccionVenta,
     PreparacionCorreccionVenta,
+    ResultadoAnulacionDocumentoVenta,
     ResultadoCorreccionVenta,
+    SolicitudAnulacionDocumentoVenta,
     SolicitudCorreccionVenta
 } from '../interfaces/correccion-venta.interface';
 
@@ -54,10 +56,13 @@ export class VentaService {
         return this.http.get<InformeContableInterface[]>(this.basePath+ 'InformeContableVenta/' + fechaInicial + '/' + fechaFinal+ '/' + serie+ '/' + tipoDoc);
     }
 
-    anularDocumentoVenta(idVenta: number, motivo: string, anularPedido: boolean):  Observable<ApiResponse<ImpresionDTO[]>>  {
-        const url = `${this.basePath}anulardocumentoventa/${idVenta}/${encodeURIComponent(motivo)}/${anularPedido}`;
-        return this.http.put< ApiResponse<ImpresionDTO[]>>(url, null);
-      }
+    anularDocumentoVenta(
+        idVenta: number,
+        solicitud: SolicitudAnulacionDocumentoVenta
+    ): Observable<ApiResponse<ResultadoAnulacionDocumentoVenta>> {
+        const url = `${this.basePath}anulardocumentoventa/${idVenta}`;
+        return this.http.put<ApiResponse<ResultadoAnulacionDocumentoVenta>>(url, solicitud);
+    }
       
   
     guardarDocumentoVenta(

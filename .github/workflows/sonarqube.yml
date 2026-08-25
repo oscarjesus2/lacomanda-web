@@ -11,6 +11,8 @@ on:
       - 'package-lock.json'
       - 'angular.json'
       - '.github/workflows/sonarqube.yml'
+      - 'dockerfiles/frontend/**'
+      - 'k8s-manifests/frontend/**'
   pull_request:
     branches:
       - develop

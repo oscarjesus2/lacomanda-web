@@ -15,6 +15,9 @@ import { TenantTextCatalogService } from 'src/app/services/localization/tenant-t
 import { Notificar } from 'src/app/shared/notificaciones';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { ResultadoAnulacionDocumentoVenta } from 'src/app/interfaces/correccion-venta.interface';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-dialog-ventasgenerales',
@@ -50,6 +53,7 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
     private dialog: MatDialog,
     private texts: TenantTextCatalogService,
     private licenciaTenantService: LicenciaTenantService,
+    private configuracionService: ConfiguracionService,
   ) { }
 
   ngOnInit(): void {
@@ -256,8 +260,13 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
       showCancelButton: true,
       confirmButtonText: this.texts.get('yesVoid'),
       cancelButtonText: this.texts.get('noCancel')
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
+        const documentoOtorgado = await this.solicitarEstadoEntregaDocumento();
+        if (documentoOtorgado === undefined) {
+          return;
+        }
+
         // Realiza la anulación de la venta
         const idVenta = this.ventaSeleccionada.IdVenta;
         const motivo = 'Anulado desde el módulo de integración.';
@@ -265,11 +274,17 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
 
         this.spinnerService.show(); // Mostrar spinner mientras se realiza la operación
 
-        this.ventaService.anularDocumentoVenta(idVenta, motivo, anularPedido).subscribe(
-          (response: any) => {
+        this.ventaService.anularDocumentoVenta(idVenta, {
+          Motivo: motivo,
+          AnularPedido: anularPedido,
+          DocumentoOtorgado: documentoOtorgado,
+        }).subscribe(
+          (response: ApiResponse<ResultadoAnulacionDocumentoVenta>) => {
             this.spinnerService.hide();
-            Notificar.exito(this.texts.get('voided'),
-              this.texts.get('documentVoidedSuccessfully'));
+            Notificar.exito(
+              this.texts.get('voided'),
+              response.Data?.Mensaje || this.texts.get('documentVoidedSuccessfully'),
+            );
             this.actualizarLista(); // Actualiza la lista después de la anulación
           },
           (error: any) => {
@@ -283,6 +298,47 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
         );
       }
     });
+  }
+
+  private async solicitarEstadoEntregaDocumento(): Promise<boolean | null | undefined> {
+    let paisISO2 = this.configuracionService.snapshot?.PaisISO2?.toUpperCase();
+
+    if (!paisISO2) {
+      try {
+        const configuracion = await firstValueFrom(this.configuracionService.get());
+        paisISO2 = configuracion?.PaisISO2?.toUpperCase();
+      } catch {
+        Swal.fire({
+          title: this.texts.get('error'),
+          text: this.texts.get('couldNotDetermineFiscalCountry'),
+          icon: 'error',
+          confirmButtonText: this.texts.get('ok'),
+        });
+        return undefined;
+      }
+    }
+
+    if (paisISO2 !== 'PE') {
+      return null;
+    }
+
+    const result = await Swal.fire({
+      title: this.texts.get('documentDeliveredQuestion'),
+      text: this.texts.get('documentDeliveredExplanation'),
+      icon: 'question',
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: this.texts.get('documentDeliveredYes'),
+      denyButtonText: this.texts.get('documentDeliveredNo'),
+      cancelButtonText: this.texts.get('cancel'),
+      allowOutsideClick: false,
+    });
+
+    if (result.isDismissed) {
+      return undefined;
+    }
+
+    return result.isConfirmed;
   }
   
 }

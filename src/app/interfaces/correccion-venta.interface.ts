@@ -82,3 +82,19 @@ export interface ResultadoCorreccionVenta {
   Estado: number;
   Mensaje: string;
 }
+
+export interface SolicitudAnulacionDocumentoVenta {
+  Motivo: string;
+  AnularPedido: boolean;
+  DocumentoOtorgado: boolean | null;
+}
+
+export interface ResultadoAnulacionDocumentoVenta {
+  IdCorreccionVenta: number;
+  IdVenta: number;
+  Anulada: boolean;
+  AccionFiscal: number;
+  IdNotaCredito?: number;
+  Mensaje: string;
+  FechaLimiteBaja?: string;
+}

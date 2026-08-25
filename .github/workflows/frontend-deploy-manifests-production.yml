@@ -1,9 +1,14 @@
 name: Frontend - Promote to Production (GKE)
 
+# Producción no construye ni vuelve a analizar: promociona el artefacto que ya
+# superó las pruebas y el quality gate al publicarse en staging, leyendo su
+# identificador de latest-frontend-image-tag.txt. Repetir el análisis aquí no
+# aportaría nada, porque la imagen desplegada es exactamente la misma.
 on:
   push:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   promote-to-production:
@@ -21,8 +26,14 @@ jobs:
       WORKLOAD_IDENTITY_PROVIDER: projects/161733769525/locations/global/workloadIdentityPools/github-pool/providers/github-pool
 
     steps:
+    # Con workflow_run, actions/checkout tomaría por defecto el último commit de
+    # la rama por defecto. Se fija master explícitamente porque el job hace
+    # después "git push origin master" y necesita estar sobre la rama, no en
+    # detached HEAD.
     - name: Checkout repo
       uses: actions/checkout@v4
+      with:
+        ref: master
 
     - name: Read staging image tag
       run: |

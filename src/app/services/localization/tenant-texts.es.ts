@@ -423,6 +423,13 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   voided: 'Anulado',
   documentVoidedSuccessfully: 'El documento se anuló con éxito.',
   couldNotVoidDocument: 'No se pudo anular el documento.',
+  documentDeliveredQuestion: '¿El comprobante fue entregado al cliente?',
+  documentDeliveredExplanation:
+    'Indícalo tal como ocurrió. En Perú, SUNAT exige una nota de crédito cuando el comprobante ya fue entregado o venció el plazo para comunicar la baja.',
+  documentDeliveredYes: 'Sí, fue entregado',
+  documentDeliveredNo: 'No fue entregado',
+  couldNotDetermineFiscalCountry:
+    'No se pudo verificar el país del restaurante. Inténtalo de nuevo antes de anular el comprobante.',
   paymentAndIssueDocument: 'Pago y emisión de comprobante',
   documentData: 'Datos del comprobante',
   series: 'Serie',

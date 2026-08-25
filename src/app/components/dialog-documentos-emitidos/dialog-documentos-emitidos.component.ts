@@ -24,6 +24,8 @@ import { DialogCorregirVentaComponent } from '../dialog-corregir-venta/dialog-co
 import { Notificar } from 'src/app/shared/notificaciones';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
+import { ResultadoAnulacionDocumentoVenta } from 'src/app/interfaces/correccion-venta.interface';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-dialog-documentos-emitidos',
@@ -273,12 +275,24 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
     });
   }
 
-  anularDocumentoVenta(IntIdVenta: number, anularPedido: boolean): void {
+  async anularDocumentoVenta(IntIdVenta: number, anularPedido: boolean): Promise<void> {
+    const documentoOtorgado = await this.solicitarEstadoEntregaDocumento();
+    if (documentoOtorgado === undefined) {
+      return;
+    }
+
     this.spinnerService.show();
-    this.ventaService.anularDocumentoVenta(IntIdVenta, this.motivoAnulacion, anularPedido).subscribe({
-      next: (response: ApiResponse<ImpresionDTO[]>) => {
+    this.ventaService.anularDocumentoVenta(IntIdVenta, {
+      Motivo: this.motivoAnulacion,
+      AnularPedido: anularPedido,
+      DocumentoOtorgado: documentoOtorgado,
+    }).subscribe({
+      next: (response: ApiResponse<ResultadoAnulacionDocumentoVenta>) => {
         if (response.Success) {
-          Notificar.exito(this.texts.get('voided'), this.texts.get('documentVoidedSuccessfully'));
+          Notificar.exito(
+            this.texts.get('voided'),
+            response.Data?.Mensaje || this.texts.get('documentVoidedSuccessfully'),
+          );
           this.getVentasPorTurno(this.idTurno);
           this.motivoAnulacion = '';
           this.selectedRow = null;
@@ -287,6 +301,47 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
       },
       error: () => this.spinnerService.hide()
     });
+  }
+
+  private async solicitarEstadoEntregaDocumento(): Promise<boolean | null | undefined> {
+    let paisISO2 = this.configuracionService.snapshot?.PaisISO2?.toUpperCase();
+
+    if (!paisISO2) {
+      try {
+        const configuracion = await firstValueFrom(this.configuracionService.get());
+        paisISO2 = configuracion?.PaisISO2?.toUpperCase();
+      } catch {
+        Swal.fire({
+          title: this.texts.get('error'),
+          text: this.texts.get('couldNotDetermineFiscalCountry'),
+          icon: 'error',
+          confirmButtonText: this.texts.get('ok'),
+        });
+        return undefined;
+      }
+    }
+
+    if (paisISO2 !== 'PE') {
+      return null;
+    }
+
+    const result = await Swal.fire({
+      title: this.texts.get('documentDeliveredQuestion'),
+      text: this.texts.get('documentDeliveredExplanation'),
+      icon: 'question',
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: this.texts.get('documentDeliveredYes'),
+      denyButtonText: this.texts.get('documentDeliveredNo'),
+      cancelButtonText: this.texts.get('cancel'),
+      allowOutsideClick: false,
+    });
+
+    if (result.isDismissed) {
+      return undefined;
+    }
+
+    return result.isConfirmed;
   }
 
   abrirTeclado(): void {

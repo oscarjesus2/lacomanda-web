@@ -418,6 +418,13 @@ export const EN_TEXTS = {
   voided: 'Voided',
   documentVoidedSuccessfully: 'The document was voided successfully.',
   couldNotVoidDocument: 'The document could not be voided.',
+  documentDeliveredQuestion: 'Was the sales document delivered to the customer?',
+  documentDeliveredExplanation:
+    'Answer according to what actually happened. In Peru, SUNAT requires a credit note when the document was delivered or the deadline to communicate its cancellation has expired.',
+  documentDeliveredYes: 'Yes, it was delivered',
+  documentDeliveredNo: 'No, it was not delivered',
+  couldNotDetermineFiscalCountry:
+    'The restaurant country could not be verified. Please try again before voiding the document.',
 
   // Payment and document issuing
   paymentAndIssueDocument: 'Payment and document issuing',

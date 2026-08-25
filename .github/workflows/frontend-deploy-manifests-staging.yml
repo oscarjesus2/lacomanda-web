@@ -1,19 +1,19 @@
 name: Frontend - Build & Deploy to Staging (GKE)
 
+# El despliegue a staging queda supeditado al control de calidad: se dispara
+# cuando "SonarQube - Analyze" ha terminado sobre develop y solo continúa si
+# concluyó en verde. Ese workflow ejecuta las pruebas unitarias con cobertura
+# antes del análisis, de modo que una regresión impide publicar la imagen.
 on:
-  push:
-    branches:
-      - develop
-    paths:
-      - 'dockerfiles/frontend/**'
-      - 'k8s-manifests/frontend/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'angular.json'
-      - 'src/**'
+  workflow_run:
+    workflows: ["SonarQube - Analyze"]
+    branches: [develop]
+    types: [completed]
+  workflow_dispatch:
 
 jobs:
   build-and-deploy-staging:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     concurrency: frontend-staging-${{ github.ref }}
     runs-on: ubuntu-latest
     permissions:
@@ -30,6 +30,8 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
+      with:
+        ref: develop
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v3
