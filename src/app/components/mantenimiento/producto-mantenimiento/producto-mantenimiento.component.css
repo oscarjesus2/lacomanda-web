@@ -17,6 +17,172 @@
   align-items: start;
 }
 
+.product-list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.product-list-actions button mat-icon {
+  margin-right: 6px;
+}
+
+/* ── Importación de carta con IA ────────────────────────────── */
+.menu-import-review {
+  display: grid;
+  gap: 14px;
+}
+
+.menu-import-review__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+}
+
+.menu-import-review__header h3 {
+  margin: 4px 0;
+  color: var(--color-primary-dark);
+  font-size: 1.1rem;
+}
+
+.menu-import-review__header p,
+.menu-import-review__safety,
+.menu-import-product__reason {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.menu-import-review__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-primary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.menu-import-review__eyebrow mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+.menu-import-review__summary {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.menu-import-review__summary strong {
+  color: var(--color-text);
+  font-size: 0.8rem;
+}
+
+.menu-import-review__notice,
+.menu-import-review__safety {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-warning-border, var(--color-border));
+  border-radius: var(--radius-md);
+  background: var(--color-warning-soft, var(--color-surface-warm));
+}
+
+.menu-import-review__notice mat-icon,
+.menu-import-review__safety mat-icon {
+  flex: 0 0 auto;
+  width: 19px;
+  height: 19px;
+  font-size: 19px;
+}
+
+.menu-import-review__notice ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-text);
+  font-size: 0.76rem;
+}
+
+.menu-import-review__safety {
+  border-color: var(--color-success-border, var(--color-border));
+  background: var(--color-success-soft, var(--color-surface));
+}
+
+.menu-import-review__list {
+  display: grid;
+  gap: 10px;
+}
+
+.menu-import-product {
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transition: opacity 160ms ease, border-color 160ms ease;
+}
+
+.menu-import-product--review {
+  border-color: var(--color-warning-border, var(--color-border));
+}
+
+.menu-import-product--disabled {
+  opacity: 0.62;
+  background: var(--color-surface-muted, var(--color-surface-warm));
+}
+
+.menu-import-product__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.menu-import-product__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.menu-import-product__reason {
+  margin: -2px 0 10px 30px;
+}
+
+.menu-import-product__fields {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.9fr) minmax(130px, 0.9fr)
+    minmax(150px, 1fr) minmax(90px, 0.55fr);
+  gap: 8px;
+}
+
+.menu-import-product__description {
+  grid-column: span 3;
+}
+
+.menu-import-review__actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
 .prod-advanced-toggle {
   grid-column: 1 / -1;
   display: flex;
@@ -156,5 +322,32 @@
   .prod-advanced-toggle {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .menu-import-review__header,
+  .menu-import-product__top {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .menu-import-review__summary {
+    justify-items: start;
+  }
+
+  .menu-import-product__badges {
+    justify-content: flex-start;
+  }
+
+  .menu-import-product__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-import-product__description {
+    grid-column: auto;
+  }
+
+  .menu-import-review__actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
   }
 }

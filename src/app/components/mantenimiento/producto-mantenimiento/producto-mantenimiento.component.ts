@@ -29,6 +29,13 @@ import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { UnidadMedida } from 'src/app/models/articulo.models';
 import { UnidadMedidaService } from 'src/app/services/unidad-medida.service';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { ImportacionCartaIaService } from 'src/app/services/importacion-carta-ia.service';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
+import {
+  CartaIaPrevisualizacion,
+  CartaIaProducto,
+} from 'src/app/models/importacion-carta-ia.models';
 
 @Component({
   selector: 'app-producto-mantenimiento',
@@ -49,6 +56,10 @@ export class ProductoMantenimientoComponent implements OnInit {
   productos: Producto[] = [];
   filtered = new MatTableDataSource<Producto>([]);
   filtro = '';
+  puedeImportarCartaIa = false;
+  procesandoCartaIa = false;
+  confirmandoCartaIa = false;
+  previsualizacionCarta: CartaIaPrevisualizacion | null = null;
 
   // catálogos
   colores: Color[] = [];
@@ -91,13 +102,24 @@ export class ProductoMantenimientoComponent implements OnInit {
     private spinner: NgxSpinnerService,
     private areaSrv: AreaImpresionService,
     private configuracionService: ConfiguracionService,
-    private unidadMedidaService: UnidadMedidaService
+    private unidadMedidaService: UnidadMedidaService,
+    private importacionCartaIaService: ImportacionCartaIaService,
+    private licenciaTenantService: LicenciaTenantService
   ) {}
 
   ngOnInit(): void {
     this.cargarTodo();
     this.cargarAreasImpresion();
     this.cargarConfiguracion();
+    this.cargarAccesoImportacionCartaIa();
+  }
+
+  private cargarAccesoImportacionCartaIa(): void {
+    this.licenciaTenantService
+      .tieneCaracteristica(
+        CARACTERISTICAS_LICENCIA.ProductosImportacionCartaIa,
+      )
+      .subscribe(habilitada => this.puedeImportarCartaIa = habilitada);
   }
 
   /** Determina qué campos opcionales se muestran según la configuración. */
@@ -217,6 +239,163 @@ export class ProductoMantenimientoComponent implements OnInit {
       String(x.Posicion || '').includes(f) ||
       (x.Activo ? 'activo' : 'inactivo').includes(f)
     );
+  }
+
+  analizarCarta(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const imagenes = Array.from(input.files ?? []);
+    input.value = '';
+
+    if (imagenes.length === 0) {
+      return;
+    }
+
+    if (imagenes.length > 8) {
+      Swal.fire(
+        'Demasiadas fotos',
+        'Selecciona un máximo de 8 fotos por lectura.',
+        'info',
+      );
+      return;
+    }
+
+    const tiposPermitidos = new Set([
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+    ]);
+    if (imagenes.some(imagen =>
+      !tiposPermitidos.has(imagen.type) || imagen.size > 8 * 1024 * 1024)) {
+      Swal.fire(
+        'Revisa las fotos',
+        'Cada archivo debe ser JPG, PNG o WEBP y pesar como máximo 8 MB.',
+        'info',
+      );
+      return;
+    }
+
+    this.procesandoCartaIa = true;
+    this.spinner.show();
+    this.importacionCartaIaService.previsualizar(imagenes).subscribe({
+      next: respuesta => {
+        this.procesandoCartaIa = false;
+        this.spinner.hide();
+        if (!respuesta.Success || !respuesta.Data) {
+          Swal.fire(
+            'No pudimos leer la carta',
+            respuesta.Message || 'Prueba con fotos más nítidas y bien encuadradas.',
+            'info',
+          );
+          return;
+        }
+
+        this.previsualizacionCarta = respuesta.Data;
+      },
+      error: error => {
+        this.procesandoCartaIa = false;
+        this.spinner.hide();
+        Swal.fire(
+          'No pudimos leer la carta',
+          error?.error?.Message ||
+            'Prueba con fotos más nítidas y bien encuadradas.',
+          'error',
+        );
+      },
+    });
+  }
+
+  cancelarImportacionCarta(): void {
+    this.previsualizacionCarta = null;
+  }
+
+  confirmarImportacionCarta(): void {
+    const previsualizacion = this.previsualizacionCarta;
+    if (!previsualizacion || this.cantidadProductosSeleccionados === 0) {
+      Swal.fire(
+        'Selecciona productos',
+        'Marca al menos un producto para crearlo.',
+        'info',
+      );
+      return;
+    }
+
+    const incompletos = previsualizacion.Productos.some(producto =>
+      producto.Seleccionado && (
+        !producto.Familia?.trim() ||
+        !producto.SubFamilia?.trim() ||
+        !producto.NombreCorto?.trim() ||
+        !producto.Descripcion?.trim() ||
+        producto.Precio === null ||
+        producto.Precio < 0
+      ));
+    if (incompletos) {
+      Swal.fire(
+        'Completa los datos pendientes',
+        'Revisa familia, subfamilia, nombre, descripción y precio de los productos seleccionados.',
+        'info',
+      );
+      return;
+    }
+
+    this.confirmandoCartaIa = true;
+    this.spinner.show();
+    this.importacionCartaIaService.confirmar({
+      IdOperacion: previsualizacion.IdOperacion,
+      Productos: previsualizacion.Productos,
+    }).subscribe({
+      next: respuesta => {
+        this.confirmandoCartaIa = false;
+        this.spinner.hide();
+        if (!respuesta.Success || !respuesta.Data) {
+          Swal.fire(
+            'No se pudo completar la importación',
+            respuesta.Message || 'Revisa los datos e inténtalo de nuevo.',
+            'error',
+          );
+          return;
+        }
+
+        const resultado = respuesta.Data;
+        this.previsualizacionCarta = null;
+        this.cargarTodo();
+        Swal.fire({
+          icon: 'success',
+          title: 'Carta importada',
+          html:
+            `<strong>${resultado.ProductosCreados}</strong> productos creados` +
+            `<br>${resultado.FamiliasCreadas} familias y ` +
+            `${resultado.SubFamiliasCreadas} subfamilias nuevas` +
+            (resultado.DuplicadosOmitidos > 0
+              ? `<br>${resultado.DuplicadosOmitidos} duplicados omitidos`
+              : ''),
+          confirmButtonText: 'Entendido',
+        });
+      },
+      error: error => {
+        this.confirmandoCartaIa = false;
+        this.spinner.hide();
+        Swal.fire(
+          'No se pudo completar la importación',
+          error?.error?.Message || 'Revisa los datos e inténtalo de nuevo.',
+          'error',
+        );
+      },
+    });
+  }
+
+  get cantidadProductosSeleccionados(): number {
+    return this.previsualizacionCarta?.Productos
+      .filter(producto => producto.Seleccionado).length ?? 0;
+  }
+
+  confianzaPorcentaje(producto?: CartaIaProducto): number {
+    const confianza = producto?.Confianza ??
+      this.previsualizacionCarta?.Confianza ?? 0;
+    return Math.round(confianza * 100);
+  }
+
+  trackProductoCarta(index: number, producto: CartaIaProducto): string {
+    return `${index}-${producto.NombreCorto}`;
   }
 
   nuevo(): void {

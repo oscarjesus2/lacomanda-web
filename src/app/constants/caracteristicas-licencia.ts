@@ -28,6 +28,7 @@ export const CARACTERISTICAS_LICENCIA = {
   VentasPromociones: 'ventas.promociones',
   DeliverySeguimiento: 'delivery.seguimiento',
   ProductosMenus: 'productos.menus',
+  ProductosImportacionCartaIa: 'productos.importacion_carta_ia',
   ReportesSeguimientoComandas: 'reportes.seguimiento_comandas',
   ReportesComisionAnfitrionas: 'reportes.comision_anfitrionas',
   LimiteUsuarios: 'limites.usuarios',
@@ -73,6 +74,7 @@ export const DEPENDENCIAS_CARACTERISTICA: Readonly<
   [CARACTERISTICAS_LICENCIA.AlmacenRecetas]: [CARACTERISTICAS_LICENCIA.AlmacenGestion],
   [CARACTERISTICAS_LICENCIA.DeliverySeguimiento]: [CARACTERISTICAS_LICENCIA.VentasDelivery],
   [CARACTERISTICAS_LICENCIA.ReportesComisionAnfitrionas]: [CARACTERISTICAS_LICENCIA.VentasEntradas],
+  [CARACTERISTICAS_LICENCIA.ProductosImportacionCartaIa]: [CARACTERISTICAS_LICENCIA.OperacionCaja],
 };
 
 /**
