@@ -14,7 +14,6 @@ on:
 
 jobs:
   build-and-deploy-staging:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     concurrency: frontend-staging-${{ github.ref }}
     runs-on: ubuntu-latest
     permissions:
