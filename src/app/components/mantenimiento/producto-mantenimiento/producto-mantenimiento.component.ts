@@ -123,6 +123,11 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   }
 
   private cargarAccesoImportacionCartaIa(): void {
+    // La licencia puede cambiar mientras la aplicación permanece abierta
+    // (activación, cambio de plan o despliegue de una nueva característica).
+    // Este mantenimiento necesita el estado vigente; una única consulta al
+    // abrirlo evita conservar durante toda la sesión la fotografía anterior.
+    this.licenciaTenantService.invalidar();
     this.licenciaTenantService
       .tieneCaracteristica(
         CARACTERISTICAS_LICENCIA.ProductosImportacionCartaIa,
