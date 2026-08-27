@@ -13,7 +13,6 @@ import { Notificar } from 'src/app/shared/notificaciones';
   selector: 'app-pago-cuenta-online-configuration',
   templateUrl: './pago-cuenta-online-configuration.component.html',
 })
-
 export class PagoCuentaOnlineConfigurationComponent implements OnInit {
   configuration: ConfiguracionPagoCuentaOnline | null = null;
   active = false;
