@@ -47,6 +47,7 @@ import { ReportesTermicosAdministracionComponent } from 'src/app/components/mant
 import { TipoReporteTermicoAdministracion } from 'src/app/models/reportes-termicos-administracion.models';
 import { MonitorComandasComponent } from 'src/app/components/mantenimiento/monitor-comandas/monitor-comandas.component';
 import { SunatConfigurationComponent } from 'src/app/components/mantenimiento/sunat-configuration/sunat-configuration.component';
+import { PagoCuentaOnlineConfigurationComponent } from 'src/app/components/mantenimiento/pago-cuenta-online-configuration/pago-cuenta-online-configuration.component';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 
 @Component({
@@ -155,7 +156,8 @@ export class MenuVentasComponent implements OnInit {
       children: [
         { title: 'Configuración Inicial',      route: '/ventas/config-inicial',  icon: 'settings',  label: 'Config. inicial', titleKey: 'initialSetup',          labelKey: 'initialSetupShort' },
         { title: 'Configurar esta estación',   route: '/ventas/config-estacion', icon: 'computer',  label: 'Esta estación',   titleKey: 'configureThisStation',  labelKey: 'thisStation'       },
-        { title: 'Facturación electrónica SUNAT', route: '/ventas/configuracion-sunat', icon: 'verified_user', label: 'Facturación electrónica', feature: C.OperacionComprobantes, soloPeru: true }
+        { title: 'Facturación electrónica SUNAT', route: '/ventas/configuracion-sunat', icon: 'verified_user', label: 'Facturación electrónica', feature: C.OperacionComprobantes, soloPeru: true },
+        { title: 'Cobro móvil de la cuenta', route: '/ventas/configuracion-pago-cuenta-online', icon: 'payments', label: 'Cobro móvil', feature: C.VentasPagoCuentaOnline, soloPagoMovil: true }
       ]
     }
   ];
@@ -174,7 +176,8 @@ export class MenuVentasComponent implements OnInit {
   itemsVisibles(section: any): any[] {
     return section.children.filter((item: any) =>
       this.cubiertoPorLicencia(item.feature) &&
-      (!item.soloPeru || this.paisISO2 === 'PE'));
+      (!item.soloPeru || this.paisISO2 === 'PE') &&
+      (!item.soloPagoMovil || ['ES', 'PE'].includes(this.paisISO2)));
   }
 
   get seccionesVisibles(): any[] {
@@ -307,6 +310,10 @@ export class MenuVentasComponent implements OnInit {
     if (item.title === 'Facturación electrónica SUNAT')
     {
       this.OpenSunatConfigurationComponent();
+    }
+    if (item.title === 'Cobro móvil de la cuenta')
+    {
+      this.OpenPagoCuentaOnlineConfigurationComponent();
     }
     if (item.title === 'Descuentos')
     {
@@ -640,6 +647,17 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '900px',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100vh - 32px)',
+      panelClass: 'dialog-window--workspace',
+    });
+  }
+
+  OpenPagoCuentaOnlineConfigurationComponent(): void {
+    this.dialog.open(PagoCuentaOnlineConfigurationComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: '980px',
       maxWidth: 'calc(100vw - 32px)',
       maxHeight: 'calc(100vh - 32px)',
       panelClass: 'dialog-window--workspace',

@@ -4,6 +4,7 @@ import {
   CartaPublicaMesaCliente,
   CartaMesaCliente,
   ComplementoCartaMesaCliente,
+  EstadoPagoCuentaMesa,
   EstadoAccesoMesa,
   ItemPedidoMesaCliente,
   MensajeAsistenteCartaMesaCliente,
@@ -51,6 +52,10 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   cargando = true;
   cargandoCarta = false;
   enviandoPedido = false;
+  iniciandoPago = false;
+  verificandoPago = false;
+  pagoCompletado = false;
+  estadoPagoTexto = '';
   mostrarCarrito = false;
   mostrarAcceso = false;
   mostrarAsistente = false;
@@ -67,6 +72,8 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   aviso = '';
   private readonly imagenesProducto = new Map<number, string>();
   private expiracionTimer?: ReturnType<typeof setTimeout>;
+  private pagoTimer?: ReturnType<typeof setTimeout>;
+  private pagoConsultas = 0;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -86,11 +93,15 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
 
     this.cargarCartaPublica();
     const token = sessionStorage.getItem(this.storageKey);
-    if (token) this.iniciarConsulta(token);
+    if (token) {
+      this.iniciarConsulta(token);
+      this.recuperarPagoPendiente(token);
+    }
   }
 
   ngOnDestroy(): void {
     this.limpiarExpiracion();
+    this.limpiarConsultaPago();
     void this.mesaClienteRealtime.detener();
     this.liberarImagenes();
     this.headerService.showHeader();
@@ -100,6 +111,7 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     this.limpiarExpiracion();
     void this.mesaClienteRealtime.detener();
     sessionStorage.removeItem(this.storageKey);
+    sessionStorage.removeItem(this.paymentStorageKey);
     this.estado = undefined;
     this.solicitud = undefined;
     this.error = '';
@@ -285,11 +297,39 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     });
   }
 
+  pagarCuenta(): void {
+    const token = sessionStorage.getItem(this.storageKey);
+    if (!token || !this.puedePagarCuenta || this.iniciandoPago) return;
+
+    this.iniciandoPago = true;
+    this.error = '';
+    this.mesaClienteService.crearCheckout(token, window.location.href).subscribe({
+      next: response => {
+        this.iniciandoPago = false;
+        sessionStorage.setItem(this.paymentStorageKey, response.Data.IdIntento);
+        window.location.assign(response.Data.UrlPago);
+      },
+      error: error => {
+        this.iniciandoPago = false;
+        this.error = error?.error?.Message
+          || error?.error?.Data
+          || 'No pudimos abrir el pago seguro. Inténtalo nuevamente.';
+      }
+    });
+  }
+
   get pendiente(): boolean {
     return (this.estado?.Estado || this.solicitud?.Estado) === 'Pendiente';
   }
 
   get activa(): boolean { return this.estado?.Estado === 'Activa'; }
+
+  get puedePagarCuenta(): boolean {
+    return this.activa
+      && this.estado?.PuedePagarCuentaOnline === true
+      && !!this.estado?.IdPedido
+      && !this.pagoCompletado;
+  }
 
   get finalizada(): boolean {
     return ['Rechazada', 'Expirada', 'Cerrada'].includes(this.estado?.Estado || '');
@@ -386,6 +426,79 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
         this.error = error?.error?.Message || 'La solicitud dejó de estar disponible.';
       }
     });
+  }
+
+  private recuperarPagoPendiente(token: string): void {
+    const idIntento = sessionStorage.getItem(this.paymentStorageKey);
+    if (!idIntento) return;
+
+    this.verificandoPago = true;
+    this.estadoPagoTexto = 'Estamos confirmando el pago con el banco…';
+    this.pagoConsultas = 0;
+    this.consultarEstadoPago(token, idIntento);
+  }
+
+  private consultarEstadoPago(token: string, idIntento: string): void {
+    this.limpiarConsultaPago();
+    this.mesaClienteService.consultarPago(token, idIntento).subscribe({
+      next: response => this.procesarEstadoPago(token, response.Data),
+      error: error => {
+        if (++this.pagoConsultas < 100) {
+          this.pagoTimer = setTimeout(
+            () => this.consultarEstadoPago(token, idIntento),
+            3000
+          );
+          return;
+        }
+
+        this.verificandoPago = false;
+        this.error = error?.error?.Message
+          || 'No pudimos confirmar el pago. Si ya pagaste, solicita ayuda al personal.';
+      }
+    });
+  }
+
+  private procesarEstadoPago(token: string, pago: EstadoPagoCuentaMesa): void {
+    if (pago.Estado === 'Aplicado') {
+      this.verificandoPago = false;
+      this.pagoCompletado = true;
+      this.estadoPagoTexto = 'Pago confirmado. Tu cuenta ha quedado cerrada correctamente.';
+      sessionStorage.removeItem(this.paymentStorageKey);
+      sessionStorage.removeItem(this.storageKey);
+      this.carrito = [];
+      this.mostrarCarrito = false;
+      return;
+    }
+
+    if (['Fallido', 'Expirado', 'Cancelado'].includes(pago.Estado)) {
+      this.verificandoPago = false;
+      sessionStorage.removeItem(this.paymentStorageKey);
+      this.error = pago.Estado === 'Cancelado'
+        ? 'El pago fue cancelado. Puedes volver a intentarlo cuando quieras.'
+        : 'El pago no pudo completarse. No se realizó ningún cobro confirmado.';
+      return;
+    }
+
+    this.verificandoPago = true;
+    this.estadoPagoTexto = pago.Estado === 'Pagado'
+      ? 'Pago recibido. Estamos cerrando tu cuenta…'
+      : 'Estamos confirmando el pago con el banco…';
+    if (++this.pagoConsultas < 200) {
+      this.pagoTimer = setTimeout(
+        () => this.consultarEstadoPago(token, pago.IdIntento),
+        3000
+      );
+      return;
+    }
+
+    this.verificandoPago = false;
+    this.error = 'La confirmación está tardando más de lo habitual. Si ya pagaste, solicita ayuda al personal.';
+  }
+
+  private limpiarConsultaPago(): void {
+    if (!this.pagoTimer) return;
+    clearTimeout(this.pagoTimer);
+    this.pagoTimer = undefined;
   }
 
   private programarExpiracion(token: string): void {
@@ -497,4 +610,6 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   }
 
   private get storageKey(): string { return `lacomanda-mesa-${this.codigoQr}`; }
+
+  private get paymentStorageKey(): string { return `lacomanda-pago-mesa-${this.codigoQr}`; }
 }

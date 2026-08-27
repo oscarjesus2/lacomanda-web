@@ -18,7 +18,7 @@ export interface EstadoAccesoMesa {
   CodigoVisual: string;
   ExpiraUtc: Date;
   PuedePedir: boolean;
-  PuedePagarConTarjeta: boolean;
+  PuedePagarCuentaOnline: boolean;
   IdPedido?: number;
   NroCuenta?: number;
 }
@@ -135,4 +135,22 @@ export interface PedidoMesaClienteResultado {
   IdPedido: number;
   NroCuenta: number;
   Total: number;
+}
+
+export interface CheckoutCuentaMesa {
+  IdIntento: string;
+  Proveedor: string;
+  Importe: number;
+  Moneda: string;
+  UrlPago: string;
+  ExpiraUtc: Date;
+}
+
+export interface EstadoPagoCuentaMesa {
+  IdIntento: string;
+  Estado: string;
+  Importe: number;
+  Moneda: string;
+  IdVenta?: number;
+  PagadoUtc?: Date;
 }

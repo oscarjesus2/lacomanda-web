@@ -39,6 +39,31 @@
     <small *ngIf="cartaPublica?.Direccion"><mat-icon>location_on</mat-icon>{{ cartaPublica?.Direccion }}</small>
   </section>
 
+  <section
+    *ngIf="cartaDisponible && (puedePagarCuenta || verificandoPago || pagoCompletado)"
+    class="mobile-payment"
+    [class.mobile-payment--success]="pagoCompletado"
+    aria-live="polite">
+    <div class="mobile-payment__icon">
+      <mat-icon [class.state-icon--spin]="verificandoPago">{{ pagoCompletado ? 'check_circle' : (verificandoPago ? 'sync' : 'account_balance_wallet') }}</mat-icon>
+    </div>
+    <div class="mobile-payment__content">
+      <strong>{{ pagoCompletado ? 'Cuenta pagada' : (verificandoPago ? 'Confirmando tu pago' : '¿Quieres pagar desde tu móvil?') }}</strong>
+      <span *ngIf="pagoCompletado || verificandoPago">{{ estadoPagoTexto }}</span>
+      <span *ngIf="puedePagarCuenta && !verificandoPago">
+        Paga de forma segura. El restaurante recibirá la confirmación automáticamente.
+      </span>
+    </div>
+    <button
+      *ngIf="puedePagarCuenta && !verificandoPago"
+      type="button"
+      [disabled]="iniciandoPago"
+      (click)="pagarCuenta()">
+      <mat-icon>{{ iniciandoPago ? 'progress_activity' : 'lock' }}</mat-icon>
+      {{ iniciandoPago ? 'Abriendo pago…' : 'Pagar mi cuenta' }}
+    </button>
+  </section>
+
   <section *ngIf="cartaDisponible" class="carta-layout">
     <nav class="categorias" aria-label="Categorías de la carta">
       <button type="button" [class.active]="categoriaActiva === undefined" (click)="seleccionarCategoria()">Todo</button>

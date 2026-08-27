@@ -6,9 +6,11 @@ import { ApiResponse } from '../interfaces/apirResponse.interface';
 import {
   CartaPublicaMesaCliente,
   CartaMesaCliente,
+  CheckoutCuentaMesa,
   ConsultarAsistenteCartaMesaCliente,
   ConfirmarSolicitudMesa,
   EstadoAccesoMesa,
+  EstadoPagoCuentaMesa,
   PedidoMesaClienteResultado,
   RegistrarPedidoMesaCliente,
   RespuestaAsistenteCartaMesaCliente,
@@ -76,6 +78,27 @@ export class MesaClienteService {
     return this.http.post<ApiResponse<PedidoMesaClienteResultado>>(
       `${this.basePath}/pedidos`,
       request,
+      { headers: this.tenantHeaders().set('X-Mesa-Token', token) }
+    );
+  }
+
+  crearCheckout(
+    token: string,
+    returnUrl: string
+  ): Observable<ApiResponse<CheckoutCuentaMesa>> {
+    return this.http.post<ApiResponse<CheckoutCuentaMesa>>(
+      `${this.basePath}/pagos/checkout`,
+      { ReturnUrl: returnUrl },
+      { headers: this.tenantHeaders().set('X-Mesa-Token', token) }
+    );
+  }
+
+  consultarPago(
+    token: string,
+    idIntento: string
+  ): Observable<ApiResponse<EstadoPagoCuentaMesa>> {
+    return this.http.get<ApiResponse<EstadoPagoCuentaMesa>>(
+      `${this.basePath}/pagos/${encodeURIComponent(idIntento)}`,
       { headers: this.tenantHeaders().set('X-Mesa-Token', token) }
     );
   }
