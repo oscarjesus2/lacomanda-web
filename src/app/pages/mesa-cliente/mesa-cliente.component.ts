@@ -81,6 +81,7 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   private expiracionTimer?: ReturnType<typeof setTimeout>;
   private pagoTimer?: ReturnType<typeof setTimeout>;
   private pagoConsultas = 0;
+  private idSesionContextoAsistente?: number;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -111,8 +112,7 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     this.limpiarConsultaPago();
     void this.mesaClienteRealtime.detener();
     this.liberarImagenes();
-    this.historialAsistente = [];
-    this.idsProductosRecomendados = [];
+    this.limpiarContextoAsistente();
     this.headerService.showHeader();
   }
 
@@ -123,6 +123,7 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     sessionStorage.removeItem(this.paymentStorageKey);
     this.estado = undefined;
     this.solicitud = undefined;
+    this.limpiarContextoAsistente();
     this.error = '';
     this.mostrarAcceso = true;
     this.solicitarAcceso();
@@ -198,10 +199,12 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
           Rol: 'assistant',
           Texto: response.Data.Respuesta
         });
-        if (!this.productoAsistente && response.Data.IdsProductosRecomendados?.length) {
-          this.idsProductosRecomendados = response.Data.IdsProductosRecomendados;
-          this.categoriaActiva = undefined;
-          this.cargarImagenesProductos();
+        if (!this.productoAsistente) {
+          this.idsProductosRecomendados = response.Data.IdsProductosRecomendados ?? [];
+          if (this.idsProductosRecomendados.length) {
+            this.categoriaActiva = undefined;
+            this.cargarImagenesProductos();
+          }
         }
       },
       error: error => {
@@ -437,6 +440,11 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     this.mesaClienteService.consultar(token).subscribe({
       next: response => {
         this.cargando = false;
+        if (this.idSesionContextoAsistente !== undefined
+          && this.idSesionContextoAsistente !== response.Data.IdSesion) {
+          this.limpiarContextoAsistente();
+        }
+        this.idSesionContextoAsistente = response.Data.IdSesion;
         this.estado = response.Data;
 
         if (this.pendiente) {
@@ -463,6 +471,7 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
         void this.mesaClienteRealtime.detener();
         this.cargando = false;
         sessionStorage.removeItem(this.storageKey);
+        this.limpiarContextoAsistente();
         this.error = error?.error?.Message || 'La solicitud dejó de estar disponible.';
       }
     });
@@ -507,6 +516,7 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
       sessionStorage.removeItem(this.storageKey);
       this.carrito = [];
       this.mostrarCarrito = false;
+      this.limpiarContextoAsistente();
       return;
     }
 
@@ -533,6 +543,16 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
 
     this.verificandoPago = false;
     this.error = 'La confirmación está tardando más de lo habitual. Si ya pagaste, solicita ayuda al personal.';
+  }
+
+  private limpiarContextoAsistente(): void {
+    this.historialAsistente = [];
+    this.idsProductosRecomendados = [];
+    this.productoAsistente = undefined;
+    this.preguntaAsistente = '';
+    this.errorAsistente = '';
+    this.mostrarAsistente = false;
+    this.idSesionContextoAsistente = undefined;
   }
 
   private limpiarConsultaPago(): void {
