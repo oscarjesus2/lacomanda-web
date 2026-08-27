@@ -132,7 +132,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {    
      this.appUpdateService.start();
-     this.estacionSessionRealtime.start();
+     this.actualizarRealtimePorRuta(this.router.url);
      const session = this.storageService.getCurrentSession();
      this.textCatalog.setCulture(
        session?.Cultura ?? session?.CulturaTenant,
@@ -141,12 +141,26 @@ export class AppComponent implements OnInit, OnDestroy {
      this.router.events.pipe(
        filter(event => event instanceof NavigationEnd)
      ).subscribe((event: NavigationEnd) => {
+       this.actualizarRealtimePorRuta(event.urlAfterRedirects);
        this.isOperationalRoute = event.urlAfterRedirects.startsWith('/caja')
          || event.urlAfterRedirects.startsWith('/mozo');
        this.operationalHeaderOpen = false;
        const newTitle = this.getTitle(event.urlAfterRedirects);
        this.dataService.updateVariable_TituloHeader(newTitle);
      });
+  }
+
+  private actualizarRealtimePorRuta(url: string): void {
+    if (this.esRutaPublicaComensal(url)) {
+      this.estacionSessionRealtime.stop();
+      return;
+    }
+
+    this.estacionSessionRealtime.start();
+  }
+
+  private esRutaPublicaComensal(url: string): boolean {
+    return url.startsWith('/mesa/') || url.startsWith('/reservas');
   }
 
   get canRevealOperationalHeader(): boolean {

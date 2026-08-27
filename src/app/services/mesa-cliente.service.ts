@@ -21,6 +21,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class MesaClienteService {
   private readonly basePath = `${environment.apiUrl}/mesa-cliente`;
+  private readonly publicRequestHeader = 'X-LaComanda-Public-Request';
 
   constructor(private readonly http: HttpClient) {}
 
@@ -127,6 +128,9 @@ export class MesaClienteService {
   }
 
   private tenantHeaders(): HttpHeaders {
-    return new HttpHeaders({ 'X-Tenant-Host': window.location.hostname });
+    return new HttpHeaders({
+      'X-Tenant-Host': window.location.hostname,
+      [this.publicRequestHeader]: 'true'
+    });
   }
 }

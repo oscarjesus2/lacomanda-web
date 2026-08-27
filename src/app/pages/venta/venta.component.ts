@@ -1365,7 +1365,10 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
           this.espacioSelected.NroPersonas = result.value;
           this.processPedido(true);
         } else {
-          return this.textCatalog.get('positiveNumberRequired');
+          // La selección de una mesa libre es provisional hasta confirmar
+          // el número de personas. Al salir, restauramos completamente el
+          // estado para que ninguna acción de mesa quede habilitada sin mesa.
+          this.limpiarPedido();
         }
       });
     }

@@ -37,6 +37,10 @@
     <h1>{{ cartaPublica?.Restaurante }}</h1>
     <p>Explora la carta con calma. Solo te pediremos autorización cuando decidas enviar un pedido.</p>
     <small *ngIf="cartaPublica?.Direccion"><mat-icon>location_on</mat-icon>{{ cartaPublica?.Direccion }}</small>
+    <button *ngIf="cartaPublica?.AsistenteIaDisponible" class="menu-hero__assistant" type="button" (click)="abrirAsistenteGeneral()">
+      <mat-icon>auto_awesome</mat-icon>
+      <span><strong>¿No sabes qué elegir?</strong><small>Cuéntame qué te apetece y te ayudo.</small></span>
+    </button>
   </section>
 
   <section
@@ -65,6 +69,11 @@
   </section>
 
   <section *ngIf="cartaDisponible" class="carta-layout">
+    <div *ngIf="idsProductosRecomendados.length" class="recommendation-banner" aria-live="polite">
+      <mat-icon>auto_awesome</mat-icon>
+      <span><strong>Selección preparada para ti</strong> Estos son los platos que mejor encajan con lo que buscas.</span>
+      <button type="button" (click)="limpiarRecomendaciones()">Ver toda la carta</button>
+    </div>
     <nav class="categorias" aria-label="Categorías de la carta">
       <button type="button" [class.active]="categoriaActiva === undefined" (click)="seleccionarCategoria()">Todo</button>
       <button *ngFor="let categoria of carta?.Categorias" type="button"
@@ -77,29 +86,31 @@
     <div *ngIf="cargandoCarta" class="loading-carta"><mat-spinner diameter="36"></mat-spinner>Cargando la carta…</div>
 
     <div *ngIf="!cargandoCarta && carta" class="productos-grid">
-      <button *ngFor="let producto of productosVisibles" class="producto-card" type="button"
-        (click)="editarProducto(producto)" [style.--product-color]="producto.Color">
-        <span class="producto-media">
-          <img *ngIf="imagenProducto(producto.IdProducto) as imagen" [src]="imagen"
-            [alt]="producto.Nombre" loading="lazy" decoding="async">
-          <mat-icon *ngIf="!imagenProducto(producto.IdProducto)">restaurant_menu</mat-icon>
-        </span>
-        <span class="producto-info">
-          <strong>{{ producto.Nombre }}</strong>
-          <small>{{ producto.Descripcion }}</small>
-          <em *ngIf="producto.Tipo === 1">Menú · Personalizable</em>
-          <em *ngIf="producto.Tipo === 2">Admite complementos</em>
-        </span>
-        <b>{{ carta.Moneda }} {{ producto.Precio | number:'1.2-2' }}</b>
-      </button>
+      <article *ngFor="let producto of productosVisibles" class="producto-card"
+        [style.--product-color]="producto.Color">
+        <button class="producto-card__open" type="button" (click)="editarProducto(producto)">
+          <span class="producto-media">
+            <img *ngIf="imagenProducto(producto.IdProducto) as imagen" [src]="imagen"
+              [alt]="producto.Nombre" loading="lazy" decoding="async">
+            <mat-icon *ngIf="!imagenProducto(producto.IdProducto)">restaurant_menu</mat-icon>
+          </span>
+          <span class="producto-info">
+            <strong>{{ producto.Nombre }}</strong>
+            <small>{{ producto.Descripcion }}</small>
+            <em *ngIf="producto.Tipo === 1">Menú · Personalizable</em>
+            <em *ngIf="producto.Tipo === 2">Admite complementos</em>
+          </span>
+          <b>{{ carta.Moneda }} {{ producto.Precio | number:'1.2-2' }}</b>
+        </button>
+        <button *ngIf="cartaPublica?.AsistenteIaDisponible" class="producto-card__assistant"
+          type="button" (click)="abrirAsistente(producto, $event)">
+          <mat-icon>auto_awesome</mat-icon>
+          Preguntar sobre este plato
+        </button>
+      </article>
       <p *ngIf="productosVisibles.length === 0" class="empty-products">No hay productos disponibles en esta categoría.</p>
     </div>
   </section>
-
-  <button *ngIf="cartaPublica?.AsistenteIaDisponible" class="assistant-fab" type="button" (click)="abrirAsistente()">
-    <mat-icon>auto_awesome</mat-icon>
-    <span>Pregúntame por la carta</span>
-  </button>
 
   <div *ngIf="aviso" class="toast-success">{{ aviso }}</div>
   <div *ngIf="cartaDisponible && error" class="toast-error" (click)="error = ''">{{ error }}</div>
@@ -198,27 +209,35 @@
     <aside class="assistant-panel" (click)="$event.stopPropagation()">
       <header>
         <div class="assistant-avatar"><mat-icon>auto_awesome</mat-icon></div>
-        <div><span>Asistente de la carta</span><strong>¿Qué te gustaría saber?</strong></div>
+        <div>
+          <span>{{ productoAsistente ? 'Pregunta sobre este plato' : 'Camarero virtual' }}</span>
+          <strong>{{ productoAsistente?.Nombre || 'Te ayudo a elegir' }}</strong>
+        </div>
         <button type="button" (click)="cerrarAsistente()"><mat-icon>close</mat-icon></button>
       </header>
       <div class="assistant-notice">
         <mat-icon>health_and_safety</mat-icon>
-        Soy un asistente con IA. Puedo orientarte sobre platos e ingredientes, pero ante alergias graves confirma siempre con el personal.
+        {{ productoAsistente
+          ? 'Puedo orientarte sobre este plato. Si una alergia es importante para ti, el equipo del restaurante puede confirmar el detalle antes de pedir.'
+          : 'Soy tu asistente de la carta. Cuéntame tus gustos, compara opciones conmigo y te recomendaré platos de este restaurante.' }}
       </div>
       <div class="assistant-messages">
         <div *ngIf="historialAsistente.length === 0" class="assistant-welcome">
-          <strong>Te ayudo a elegir</strong>
-          <p>Pregunta por alérgenos, ingredientes concretos, picante o preferencias. La receta privada del restaurante no se muestra.</p>
+          <strong>{{ productoAsistente ? 'Conoce mejor ' + productoAsistente.Nombre : '¿Qué te apetece hoy?' }}</strong>
+          <p>{{ productoAsistente
+            ? 'Pregunta por ingredientes, alérgenos, picante o cualquier duda sobre este plato.'
+            : 'Puedo recomendarte platos, ayudarte a comparar y preparar una selección según tus gustos.' }}</p>
           <button *ngFor="let sugerencia of sugerenciasAsistente" type="button" (click)="enviarPreguntaAsistente(sugerencia)">{{ sugerencia }}</button>
         </div>
         <p *ngFor="let mensaje of historialAsistente" class="assistant-message" [class.assistant-message--user]="mensaje.Rol === 'user'">
-          {{ mensaje.Contenido }}
+          {{ mensaje.Texto }}
         </p>
         <p *ngIf="consultandoAsistente" class="assistant-thinking"><span></span><span></span><span></span></p>
         <p *ngIf="errorAsistente" class="assistant-error">{{ errorAsistente }}</p>
       </div>
       <form class="assistant-composer" (ngSubmit)="enviarPreguntaAsistente()">
-        <input name="preguntaAsistente" maxlength="600" autocomplete="off" [(ngModel)]="preguntaAsistente" placeholder="Ej. ¿Contiene frutos secos?">
+        <input name="preguntaAsistente" maxlength="600" autocomplete="off" [(ngModel)]="preguntaAsistente"
+          [placeholder]="productoAsistente ? 'Pregunta sobre este plato' : 'Ej. Quiero algo suave para compartir'">
         <button type="submit" [disabled]="!preguntaAsistente.trim() || consultandoAsistente"><mat-icon>send</mat-icon></button>
       </form>
     </aside>

@@ -59,14 +59,21 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   mostrarCarrito = false;
   mostrarAcceso = false;
   mostrarAsistente = false;
+  productoAsistente?: ProductoCartaMesaCliente;
   consultandoAsistente = false;
   preguntaAsistente = '';
   errorAsistente = '';
   historialAsistente: MensajeAsistenteCartaMesaCliente[] = [];
-  readonly sugerenciasAsistente = [
-    '¿Qué opciones podrían ser adecuadas si no consumo gluten?',
-    '¿Este plato contiene frutos secos?',
-    'Busco algo suave y sin picante, ¿qué me recomiendas?'
+  idsProductosRecomendados: number[] = [];
+  private readonly sugerenciasProducto = [
+    '¿Qué ingredientes principales tiene?',
+    '¿Contiene frutos secos?',
+    '¿Es picante?'
+  ];
+  private readonly sugerenciasGenerales = [
+    'Quiero algo ligero, ¿qué me recomiendas?',
+    '¿Qué platos son buenos para compartir?',
+    'Ayúdame a elegir entre los platos más populares'
   ];
   error = '';
   aviso = '';
@@ -104,6 +111,8 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     this.limpiarConsultaPago();
     void this.mesaClienteRealtime.detener();
     this.liberarImagenes();
+    this.historialAsistente = [];
+    this.idsProductosRecomendados = [];
     this.headerService.showHeader();
   }
 
@@ -149,7 +158,18 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     return this.imagenesProducto.get(idProducto);
   }
 
-  abrirAsistente(): void {
+  abrirAsistente(producto: ProductoCartaMesaCliente, event?: Event): void {
+    event?.stopPropagation();
+    this.productoAsistente = producto;
+    this.preguntaAsistente = '';
+    this.errorAsistente = '';
+    this.mostrarAsistente = true;
+  }
+
+  abrirAsistenteGeneral(): void {
+    this.productoAsistente = undefined;
+    this.preguntaAsistente = '';
+    this.errorAsistente = '';
     this.mostrarAsistente = true;
   }
 
@@ -162,12 +182,13 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     const pregunta = (sugerencia || this.preguntaAsistente).trim();
     if (!pregunta || this.consultandoAsistente) return;
 
-    const historial = this.historialAsistente.slice(-6);
-    this.historialAsistente.push({ Rol: 'user', Contenido: pregunta });
+    const historial = this.historialAsistente.slice(-20);
+    this.historialAsistente.push({ Rol: 'user', Texto: pregunta });
     this.preguntaAsistente = '';
     this.errorAsistente = '';
     this.consultandoAsistente = true;
     this.mesaClienteService.consultarAsistente(this.codigoQr, {
+      IdProducto: this.productoAsistente?.IdProducto,
       Pregunta: pregunta,
       Historial: historial
     }).subscribe({
@@ -175,8 +196,13 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
         this.consultandoAsistente = false;
         this.historialAsistente.push({
           Rol: 'assistant',
-          Contenido: response.Data.Respuesta
+          Texto: response.Data.Respuesta
         });
+        if (!this.productoAsistente && response.Data.IdsProductosRecomendados?.length) {
+          this.idsProductosRecomendados = response.Data.IdsProductosRecomendados;
+          this.categoriaActiva = undefined;
+          this.cargarImagenesProductos();
+        }
       },
       error: error => {
         this.consultandoAsistente = false;
@@ -343,10 +369,24 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   get cartaDisponible(): boolean { return !!this.carta; }
 
   get productosVisibles(): ProductoCartaMesaCliente[] {
-    const productos = this.carta?.Productos || [];
+    let productos = this.carta?.Productos || [];
+    if (this.idsProductosRecomendados.length) {
+      const recomendados = new Set(this.idsProductosRecomendados);
+      productos = productos.filter(x => recomendados.has(x.IdProducto));
+    }
     return this.categoriaActiva
       ? productos.filter(x => x.IdSubFamilia === this.categoriaActiva)
       : productos;
+  }
+
+  get sugerenciasAsistente(): string[] {
+    return this.productoAsistente ? this.sugerenciasProducto : this.sugerenciasGenerales;
+  }
+
+  limpiarRecomendaciones(): void {
+    this.idsProductosRecomendados = [];
+    this.categoriaActiva = undefined;
+    this.cargarImagenesProductos();
   }
 
   get totalCarrito(): number {

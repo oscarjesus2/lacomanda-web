@@ -86,10 +86,11 @@ export interface CartaPublicaMesaCliente {
 
 export interface MensajeAsistenteCartaMesaCliente {
   Rol: 'user' | 'assistant';
-  Contenido: string;
+  Texto: string;
 }
 
 export interface ConsultarAsistenteCartaMesaCliente {
+  IdProducto?: number | null;
   Pregunta: string;
   Historial: MensajeAsistenteCartaMesaCliente[];
 }
@@ -97,7 +98,9 @@ export interface ConsultarAsistenteCartaMesaCliente {
 export interface RespuestaAsistenteCartaMesaCliente {
   Respuesta: string;
   EsOrientacionGeneral: boolean;
-  RecomiendaConsultarPersonal: boolean;
+  RequiereConfirmacionPersonal: boolean;
+  Advertencia: string;
+  IdsProductosRecomendados: number[];
 }
 
 export interface ComplementoCartaMesaCliente {

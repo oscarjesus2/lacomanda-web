@@ -65,6 +65,12 @@ export class ApiRequestInterceptor implements HttpInterceptor {
   private readonly SUBSCRIPTION_GRACE_HEADER =
     'X-LaComanda-Subscription-Grace-Until';
 
+  /**
+   * Marca interna para las peticiones del comensal. Se elimina antes de salir
+   * del navegador y evita que una sesión operativa anterior contamine el QR.
+   */
+  private readonly PUBLIC_REQUEST_HEADER = 'X-LaComanda-Public-Request';
+
   /** Evita repetir el cierre si varias consultas detectan a la vez la desvinculación. */
   private stationRevokedDialogOpen = false;
 
@@ -86,7 +92,15 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
 
-    const isUnauthenticatedEndpoint = this.isUnauthenticatedEndpoint(request);
+    const isPublicCustomerRequest = request.headers.has(this.PUBLIC_REQUEST_HEADER);
+    if (isPublicCustomerRequest) {
+      request = request.clone({
+        headers: request.headers.delete(this.PUBLIC_REQUEST_HEADER)
+      });
+    }
+
+    const isUnauthenticatedEndpoint = isPublicCustomerRequest
+      || this.isUnauthenticatedEndpoint(request);
 
     if (!isUnauthenticatedEndpoint) {
       request = this.addAuthHeaders(request);
