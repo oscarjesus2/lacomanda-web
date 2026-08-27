@@ -69,8 +69,35 @@ export interface ProductoCartaMesaCliente {
   Tipo: number;
   IdSubFamilia: number;
   Color: string;
+  TieneImagen: boolean;
   CantidadComplementos: number;
   SeccionesMenu: SeccionMenuCartaMesaCliente[];
+}
+
+export interface CartaPublicaMesaCliente {
+  Restaurante: string;
+  Direccion: string;
+  Ambiente: string;
+  Espacio: string;
+  Numero: number;
+  AsistenteIaDisponible: boolean;
+  Carta: CartaMesaCliente;
+}
+
+export interface MensajeAsistenteCartaMesaCliente {
+  Rol: 'user' | 'assistant';
+  Contenido: string;
+}
+
+export interface ConsultarAsistenteCartaMesaCliente {
+  Pregunta: string;
+  Historial: MensajeAsistenteCartaMesaCliente[];
+}
+
+export interface RespuestaAsistenteCartaMesaCliente {
+  Respuesta: string;
+  EsOrientacionGeneral: boolean;
+  RecomiendaConsultarPersonal: boolean;
 }
 
 export interface ComplementoCartaMesaCliente {

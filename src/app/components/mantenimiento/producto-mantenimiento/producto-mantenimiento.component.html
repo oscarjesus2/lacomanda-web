@@ -415,6 +415,28 @@
           : 'printAreas') | tenantText }}
       </p>
 
+      <section class="product-image-card">
+        <div class="product-image-card__preview" [class.product-image-card__preview--empty]="!imagenPrevisualizacion">
+          <img *ngIf="imagenPrevisualizacion" [src]="imagenPrevisualizacion" [alt]="p.NombreCorto || 'Producto'">
+          <mat-icon *ngIf="!imagenPrevisualizacion">add_photo_alternate</mat-icon>
+        </div>
+        <div class="product-image-card__content">
+          <strong>Foto para la carta digital</strong>
+          <p>Ayuda al comensal a reconocer el producto. Utiliza una imagen clara en JPG, PNG o WEBP.</p>
+          <div class="product-image-card__actions">
+            <label class="product-image-upload">
+              <mat-icon>upload</mat-icon>
+              {{ imagenPrevisualizacion ? 'Cambiar foto' : 'Elegir foto' }}
+              <input type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarImagen($event)">
+            </label>
+            <button *ngIf="imagenPrevisualizacion" mat-stroked-button type="button" color="warn" (click)="quitarImagen()">
+              <mat-icon>delete_outline</mat-icon> Quitar
+            </button>
+          </div>
+          <small>Máximo 5 MB. Se mostrará en la carta pública del QR.</small>
+        </div>
+      </section>
+
       <ng-container *ngIf="mostrarConfiguracionAvanzada">
       <div class="form-row">
         <mat-form-field class="form-field" appearance="fill">
@@ -715,7 +737,7 @@
 
     <!-- ── Acciones (span full width) ────────────────────────────────── -->
     <div class="prod-actions">
-      <button mat-raised-button color="primary">
+      <button mat-raised-button color="primary" [disabled]="guardandoImagen">
         {{ (p.IdProducto ? 'updateAction' : 'save') | tenantText }}
       </button>
       <button mat-stroked-button type="button" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>

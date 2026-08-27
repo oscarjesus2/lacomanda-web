@@ -4,11 +4,14 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import {
+  CartaPublicaMesaCliente,
   CartaMesaCliente,
+  ConsultarAsistenteCartaMesaCliente,
   ConfirmarSolicitudMesa,
   EstadoAccesoMesa,
   PedidoMesaClienteResultado,
   RegistrarPedidoMesaCliente,
+  RespuestaAsistenteCartaMesaCliente,
   SolicitudAccesoMesa,
   SolicitudMesaPendiente
 } from '../models/mesa-cliente.models';
@@ -18,6 +21,31 @@ export class MesaClienteService {
   private readonly basePath = `${environment.apiUrl}/mesa-cliente`;
 
   constructor(private readonly http: HttpClient) {}
+
+  consultarCartaPublica(codigoQr: string): Observable<ApiResponse<CartaPublicaMesaCliente>> {
+    return this.http.get<ApiResponse<CartaPublicaMesaCliente>>(
+      `${this.basePath}/carta-publica/${encodeURIComponent(codigoQr)}`,
+      { headers: this.tenantHeaders() }
+    );
+  }
+
+  consultarAsistente(
+    codigoQr: string,
+    request: ConsultarAsistenteCartaMesaCliente
+  ): Observable<ApiResponse<RespuestaAsistenteCartaMesaCliente>> {
+    return this.http.post<ApiResponse<RespuestaAsistenteCartaMesaCliente>>(
+      `${this.basePath}/carta-publica/${encodeURIComponent(codigoQr)}/asistente`,
+      request,
+      { headers: this.tenantHeaders() }
+    );
+  }
+
+  obtenerImagenProducto(codigoQr: string, idProducto: number): Observable<Blob> {
+    return this.http.get(
+      `${this.basePath}/carta-publica/${encodeURIComponent(codigoQr)}/productos/${idProducto}/imagen`,
+      { headers: this.tenantHeaders(), responseType: 'blob' }
+    );
+  }
 
   solicitar(codigoQr: string): Observable<ApiResponse<SolicitudAccesoMesa>> {
     return this.http.post<ApiResponse<SolicitudAccesoMesa>>(

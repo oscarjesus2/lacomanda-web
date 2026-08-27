@@ -45,6 +45,7 @@ export class Producto {
     public StockMaximo: number;
     public Inventario: boolean;
     public ControlDirectoStock: boolean;
+    public TieneImagen: boolean;
     ProductoAreaImpresion?: ProductoAreaImpresion[];
 
     constructor(init?: Partial<Producto>) {

@@ -1,10 +1,12 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
+  CartaPublicaMesaCliente,
   CartaMesaCliente,
   ComplementoCartaMesaCliente,
   EstadoAccesoMesa,
   ItemPedidoMesaCliente,
+  MensajeAsistenteCartaMesaCliente,
   ProductoCartaMesaCliente,
   SeccionMenuCartaMesaCliente,
   SolicitudAccesoMesa
@@ -39,6 +41,7 @@ interface LineaCarrito {
 })
 export class MesaClienteComponent implements OnInit, OnDestroy {
   codigoQr = '';
+  cartaPublica?: CartaPublicaMesaCliente;
   solicitud?: SolicitudAccesoMesa;
   estado?: EstadoAccesoMesa;
   carta?: CartaMesaCliente;
@@ -49,8 +52,20 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   cargandoCarta = false;
   enviandoPedido = false;
   mostrarCarrito = false;
+  mostrarAcceso = false;
+  mostrarAsistente = false;
+  consultandoAsistente = false;
+  preguntaAsistente = '';
+  errorAsistente = '';
+  historialAsistente: MensajeAsistenteCartaMesaCliente[] = [];
+  readonly sugerenciasAsistente = [
+    '¿Qué opciones podrían ser adecuadas si no consumo gluten?',
+    '¿Este plato contiene frutos secos?',
+    'Busco algo suave y sin picante, ¿qué me recomiendas?'
+  ];
   error = '';
   aviso = '';
+  private readonly imagenesProducto = new Map<number, string>();
   private expiracionTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
@@ -69,13 +84,15 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.cargarCartaPublica();
     const token = sessionStorage.getItem(this.storageKey);
-    token ? this.iniciarConsulta(token) : this.solicitarAcceso();
+    if (token) this.iniciarConsulta(token);
   }
 
   ngOnDestroy(): void {
     this.limpiarExpiracion();
     void this.mesaClienteRealtime.detener();
+    this.liberarImagenes();
     this.headerService.showHeader();
   }
 
@@ -85,14 +102,25 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     sessionStorage.removeItem(this.storageKey);
     this.estado = undefined;
     this.solicitud = undefined;
-    this.carta = undefined;
     this.error = '';
-    this.cargando = true;
+    this.mostrarAcceso = true;
     this.solicitarAcceso();
+  }
+
+  solicitarPedido(): void {
+    if (this.activa) {
+      this.aviso = 'Ya puedes seleccionar productos y enviar tu pedido.';
+      window.setTimeout(() => this.aviso = '', 2600);
+      return;
+    }
+    this.mostrarAcceso = true;
+    const token = sessionStorage.getItem(this.storageKey);
+    token ? this.iniciarConsulta(token) : this.solicitarAcceso();
   }
 
   seleccionarCategoria(idSubFamilia?: number): void {
     this.categoriaActiva = idSubFamilia;
+    this.cargarImagenesProductos();
   }
 
   editarProducto(producto: ProductoCartaMesaCliente): void {
@@ -103,6 +131,47 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
       complementos: [],
       opcionesMenu: []
     };
+  }
+
+  imagenProducto(idProducto: number): string | undefined {
+    return this.imagenesProducto.get(idProducto);
+  }
+
+  abrirAsistente(): void {
+    this.mostrarAsistente = true;
+  }
+
+  cerrarAsistente(): void {
+    this.mostrarAsistente = false;
+    this.errorAsistente = '';
+  }
+
+  enviarPreguntaAsistente(sugerencia?: string): void {
+    const pregunta = (sugerencia || this.preguntaAsistente).trim();
+    if (!pregunta || this.consultandoAsistente) return;
+
+    const historial = this.historialAsistente.slice(-6);
+    this.historialAsistente.push({ Rol: 'user', Contenido: pregunta });
+    this.preguntaAsistente = '';
+    this.errorAsistente = '';
+    this.consultandoAsistente = true;
+    this.mesaClienteService.consultarAsistente(this.codigoQr, {
+      Pregunta: pregunta,
+      Historial: historial
+    }).subscribe({
+      next: response => {
+        this.consultandoAsistente = false;
+        this.historialAsistente.push({
+          Rol: 'assistant',
+          Contenido: response.Data.Respuesta
+        });
+      },
+      error: error => {
+        this.consultandoAsistente = false;
+        this.errorAsistente = error?.error?.Message
+          || 'Ahora mismo no puedo responder. El personal del restaurante podrá ayudarte.';
+      }
+    });
   }
 
   cerrarEditor(): void { this.editor = undefined; }
@@ -227,9 +296,11 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   }
 
   get nombreEspacio(): string {
-    const origen = this.estado || this.solicitud;
+    const origen = this.estado || this.solicitud || this.cartaPublica;
     return origen ? `${origen.Espacio} ${origen.Numero}` : '';
   }
+
+  get cartaDisponible(): boolean { return !!this.carta; }
 
   get productosVisibles(): ProductoCartaMesaCliente[] {
     const productos = this.carta?.Productos || [];
@@ -262,6 +333,8 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   }
 
   private solicitarAcceso(): void {
+    if (this.pendiente) return;
+    this.cargando = true;
     this.mesaClienteService.solicitar(this.codigoQr).subscribe({
       next: response => {
         this.cargando = false;
@@ -346,6 +419,48 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
         this.error = error?.error?.Message || 'No pudimos cargar la carta.';
       }
     });
+  }
+
+  private cargarCartaPublica(): void {
+    this.cargandoCarta = true;
+    this.mesaClienteService.consultarCartaPublica(this.codigoQr).subscribe({
+      next: response => {
+        this.cargando = false;
+        this.cargandoCarta = false;
+        this.cartaPublica = response.Data;
+        this.carta = response.Data.Carta;
+        this.categoriaActiva = response.Data.Carta.Categorias[0]?.IdSubFamilia;
+        this.cargarImagenesProductos();
+      },
+      error: error => {
+        this.cargando = false;
+        this.cargandoCarta = false;
+        this.error = error?.error?.Message
+          || 'No pudimos abrir la carta de este restaurante.';
+      }
+    });
+  }
+
+  private cargarImagenesProductos(): void {
+    const productos = this.carta?.Productos.filter(x =>
+      x.TieneImagen &&
+      (!this.categoriaActiva || x.IdSubFamilia === this.categoriaActiva)
+    ) || [];
+    for (const producto of productos) {
+      if (this.imagenesProducto.has(producto.IdProducto)) continue;
+      this.mesaClienteService.obtenerImagenProducto(this.codigoQr, producto.IdProducto).subscribe({
+        next: imagen => this.imagenesProducto.set(
+          producto.IdProducto,
+          URL.createObjectURL(imagen)
+        ),
+        error: () => {}
+      });
+    }
+  }
+
+  private liberarImagenes(): void {
+    for (const imagen of this.imagenesProducto.values()) URL.revokeObjectURL(imagen);
+    this.imagenesProducto.clear();
   }
 
   private cambiarOpcion(opciones: OpcionCantidad[], idProducto: number, delta: number): void {

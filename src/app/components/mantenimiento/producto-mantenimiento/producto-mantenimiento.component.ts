@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -42,7 +42,7 @@ import {
   templateUrl: './producto-mantenimiento.component.html',
   styleUrls: ['./producto-mantenimiento.component.css']
 })
-export class ProductoMantenimientoComponent implements OnInit {
+export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   @ViewChild('productoForm') productoForm: NgForm;
   @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
     if (value) {
@@ -60,6 +60,10 @@ export class ProductoMantenimientoComponent implements OnInit {
   procesandoCartaIa = false;
   confirmandoCartaIa = false;
   previsualizacionCarta: CartaIaPrevisualizacion | null = null;
+  imagenSeleccionada?: File;
+  imagenPrevisualizacion?: string;
+  eliminarImagenPendiente = false;
+  guardandoImagen = false;
 
   // catálogos
   colores: Color[] = [];
@@ -112,6 +116,10 @@ export class ProductoMantenimientoComponent implements OnInit {
     this.cargarAreasImpresion();
     this.cargarConfiguracion();
     this.cargarAccesoImportacionCartaIa();
+  }
+
+  ngOnDestroy(): void {
+    this.liberarPrevisualizacionImagen();
   }
 
   private cargarAccesoImportacionCartaIa(): void {
@@ -405,6 +413,7 @@ export class ProductoMantenimientoComponent implements OnInit {
   }
 
   onEdit(row: Producto): void {
+    this.limpiarEdicionImagen();
     this.p = {
       ...row,
       ControlDirectoStock:
@@ -431,8 +440,40 @@ export class ProductoMantenimientoComponent implements OnInit {
 
     this.selectedAreas = (row.ProductoAreaImpresion || []).map(a => a.IdAreaImpresion);
 
+    if (row.TieneImagen) {
+      this.productoService.obtenerImagen(row.IdProducto).subscribe({
+        next: imagen => {
+          this.liberarPrevisualizacionImagen();
+          this.imagenPrevisualizacion = URL.createObjectURL(imagen);
+        },
+        error: () => {}
+      });
+    }
+
 
     this.showForm = true;
+  }
+
+  seleccionarImagen(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = '';
+    if (!archivo) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(archivo.type)
+        || archivo.size > 5 * 1024 * 1024) {
+      Swal.fire('Imagen no válida', 'Utiliza JPG, PNG o WEBP de hasta 5 MB.', 'info');
+      return;
+    }
+    this.liberarPrevisualizacionImagen();
+    this.imagenSeleccionada = archivo;
+    this.imagenPrevisualizacion = URL.createObjectURL(archivo);
+    this.eliminarImagenPendiente = false;
+  }
+
+  quitarImagen(): void {
+    this.liberarPrevisualizacionImagen();
+    this.imagenSeleccionada = undefined;
+    this.eliminarImagenPendiente = !!this.p.IdProducto && !!this.p.TieneImagen;
   }
 
   onDelete(id: number): void {
@@ -570,18 +611,21 @@ export class ProductoMantenimientoComponent implements OnInit {
 
     const obs = this.p.IdProducto ? this.productoService.actualizar(payload) : this.productoService.crear(payload);
 
+    const eraEdicion = !!this.p.IdProducto;
     obs.subscribe({
       next: (res) => {
         if (!res.Success) { Swal.fire('Error', res.Message || 'Operación no realizada', 'error'); return; }
-        this.cargarTodo(); this.showForm = false;
-        Notificar.exito('Ok', this.p.IdProducto ? 'Producto actualizado' : 'Producto creado');
+        const idProducto = res.Data?.IdProducto || this.p.IdProducto;
+        this.guardarImagenSiCorresponde(idProducto, eraEdicion);
       },
+      error: error => Swal.fire('Error', error?.error?.Message || 'No se pudo guardar el producto.', 'error')
     });
   }
 
   cancelar(): void { this.resetForm(); this.cargarTodo(); this.showForm = false; }
 
   resetForm(): void {
+    this.limpiarEdicionImagen();
     this.p = new Producto();
     this.mostrarConfiguracionAvanzada = false;
     this.configuracionAvanzadaHabilitada = false;
@@ -605,6 +649,50 @@ export class ProductoMantenimientoComponent implements OnInit {
     this.p.ControlDirectoStock = false;
     this.selectedAreas = [];
     this.seleccionarImpuestoGeneralSiCorresponde();
+  }
+
+  private guardarImagenSiCorresponde(idProducto: number, eraEdicion: boolean): void {
+    const finalizar = () => {
+      this.guardandoImagen = false;
+      this.cargarTodo();
+      this.showForm = false;
+      this.limpiarEdicionImagen();
+      Notificar.exito('Ok', eraEdicion ? 'Producto actualizado' : 'Producto creado');
+    };
+    if (!idProducto || (!this.imagenSeleccionada && !this.eliminarImagenPendiente)) {
+      finalizar();
+      return;
+    }
+
+    this.guardandoImagen = true;
+    const operacion = this.imagenSeleccionada
+      ? this.productoService.guardarImagen(idProducto, this.imagenSeleccionada)
+      : this.productoService.eliminarImagen(idProducto);
+    operacion.subscribe({
+      next: response => response.Success
+        ? finalizar()
+        : this.errorGuardandoImagen(response.Message),
+      error: error => this.errorGuardandoImagen(
+        error?.error?.Message || 'El producto se guardó, pero no se pudo guardar su imagen.'
+      )
+    });
+  }
+
+  private errorGuardandoImagen(mensaje: string): void {
+    this.guardandoImagen = false;
+    Swal.fire('Revisa la imagen', mensaje, 'warning');
+    this.cargarTodo();
+  }
+
+  private limpiarEdicionImagen(): void {
+    this.liberarPrevisualizacionImagen();
+    this.imagenSeleccionada = undefined;
+    this.eliminarImagenPendiente = false;
+  }
+
+  private liberarPrevisualizacionImagen(): void {
+    if (this.imagenPrevisualizacion) URL.revokeObjectURL(this.imagenPrevisualizacion);
+    this.imagenPrevisualizacion = undefined;
   }
 
   private limpiarAlmacenDirecto(): void {

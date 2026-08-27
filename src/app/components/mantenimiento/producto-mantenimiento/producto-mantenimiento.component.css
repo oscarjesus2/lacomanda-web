@@ -260,6 +260,33 @@
   border-top: 1px solid var(--color-border);
 }
 
+.product-image-card {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 16px;
+  padding: 14px;
+  margin-bottom: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+}
+
+.product-image-card__preview {
+  min-height: 132px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.product-image-card__preview img { width: 100%; height: 100%; object-fit: cover; }
+.product-image-card__preview--empty { display: grid; place-items: center; color: var(--color-text-muted); border: 1px dashed var(--color-border); }
+.product-image-card__preview--empty mat-icon { width: 42px; height: 42px; font-size: 42px; }
+.product-image-card__content { display: flex; flex-direction: column; justify-content: center; gap: 7px; }
+.product-image-card__content p, .product-image-card__content small { margin: 0; color: var(--color-text-muted); }
+.product-image-card__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.product-image-upload { min-height: 38px; display: inline-flex; align-items: center; gap: 7px; padding: 0 14px; border-radius: var(--radius-pill); color: var(--color-primary); background: var(--color-surface); border: 1px solid var(--color-border); font-weight: 700; cursor: pointer; }
+.product-image-upload input { display: none; }
+
 /* ── Áreas de impresión ──────────────────────────────────────── */
 .prod-areas-card {
   margin-top: 12px;
@@ -319,6 +346,8 @@
   .prod-col--right {
     padding-left: 0;
   }
+  .product-image-card { grid-template-columns: 1fr; }
+  .product-image-card__preview { min-height: 190px; }
   .prod-advanced-toggle {
     align-items: stretch;
     flex-direction: column;
