@@ -4,6 +4,7 @@ export class Producto {
 
     public Activo: boolean;
     public Descripcion: string;
+    public DescripcionCarta?: string;
     public IdProducto: number;
     public NombreCorto: string;
     public IdFamilia: number;

@@ -125,13 +125,25 @@
           </mat-form-field>
 
           <mat-form-field appearance="fill" class="menu-import-product__description">
-            <mat-label>Descripción</mat-label>
+            <mat-label>Nombre completo</mat-label>
             <input
               matInput
               [(ngModel)]="producto.Descripcion"
               maxlength="120"
               [disabled]="!producto.Seleccionado"
             >
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="menu-import-product__description">
+            <mat-label>Descripción para la carta</mat-label>
+            <textarea
+              matInput
+              rows="2"
+              [(ngModel)]="producto.DescripcionCarta"
+              maxlength="500"
+              [disabled]="!producto.Seleccionado"
+            ></textarea>
+            <mat-hint>Texto breve visible para el comensal.</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="fill">
@@ -453,6 +465,15 @@
             <mat-option [value]="true">{{ 'yes' | tenantText }}</mat-option>
             <mat-option [value]="false">{{ 'no' | tenantText }}</mat-option>
           </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field class="form-field form-field--wide" appearance="fill">
+          <mat-label>Descripción para la carta</mat-label>
+          <textarea matInput rows="3" [(ngModel)]="p.DescripcionCarta"
+                    name="descripcionCarta" maxlength="500"></textarea>
+          <mat-hint>Se mostrará bajo el nombre del producto y ayudará al asistente a recomendarlo.</mat-hint>
         </mat-form-field>
       </div>
 

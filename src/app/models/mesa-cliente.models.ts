@@ -63,7 +63,7 @@ export interface SeccionMenuCartaMesaCliente {
 export interface ProductoCartaMesaCliente {
   IdProducto: number;
   Nombre: string;
-  Descripcion: string;
+  DescripcionCarta: string;
   Precio: number;
   Moneda: string;
   Tipo: number;

@@ -96,7 +96,7 @@
           </span>
           <span class="producto-info">
             <strong>{{ producto.Nombre }}</strong>
-            <small>{{ producto.Descripcion }}</small>
+            <small *ngIf="producto.DescripcionCarta">{{ producto.DescripcionCarta }}</small>
             <em *ngIf="producto.Tipo === 1">Menú · Personalizable</em>
             <em *ngIf="producto.Tipo === 2">Admite complementos</em>
           </span>

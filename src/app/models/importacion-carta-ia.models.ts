@@ -6,6 +6,7 @@ export interface CartaIaProducto {
   IdProductoExistente: number | null;
   NombreCorto: string;
   Descripcion: string;
+  DescripcionCarta: string;
   Precio: number | null;
   Confianza: number;
   Seleccionado: boolean;
