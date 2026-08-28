@@ -177,11 +177,9 @@ export class AgenteImpresionPedidosService {
 
   private async imprimir(trabajo: TrabajoImpresion): Promise<boolean> {
     try {
-      const impreso = await this.qz.printPDF(
+      const impreso = await this.qz.printPDFDesdeColaServidor(
         trabajo.Documento,
         trabajo.NombreImpresora,
-        false,
-        false,
       );
       if (!impreso) {
         throw new Error('QZ no confirmo la impresion del documento.');

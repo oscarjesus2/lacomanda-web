@@ -213,6 +213,7 @@ export class QzTrayV224Service {
     desconectarAlFinalizar: boolean = true,
     permitirDialogoNativoComoRespaldo: boolean = true,
     contexto?: ContextoDocumentoImpresionPedido,
+    encolarFalloTransitorio: boolean = true,
   ): Promise<boolean> {
     // Distingue un problema de configuracion (QZ ausente o que nos rechaza) de
     // uno de la impresora. El primero no se arregla solo; el segundo si.
@@ -284,7 +285,7 @@ export class QzTrayV224Service {
       // reintenta solo. Abrir aqui el dialogo del navegador seria secuestrar
       // la pantalla del cajero a mitad de servicio para nada.
       if (puenteOperativo) {
-        if (!this.reintentandoCola) {
+        if (encolarFalloTransitorio && !this.reintentandoCola) {
           this.encolar(ByteTicket, printerName, contexto);
         }
         return false;
@@ -401,6 +402,29 @@ export class QzTrayV224Service {
     } finally {
       this.cargaImpresorasInstaladas = undefined;
     }
+  }
+
+  /**
+   * Imprime un trabajo cuya persistencia y reintentos pertenecen a la cola
+   * del backend. Evita duplicarlo también en la cola temporal del navegador.
+   *
+   * Si la impresora configurada no existe en este equipo se usa la
+   * predeterminada; si existe, QZ entrega el documento al spooler aunque la
+   * impresora esté temporalmente apagada.
+   */
+  async printPDFDesdeColaServidor(
+    documento: string,
+    impresora: string,
+  ): Promise<boolean> {
+    return this.printPDF(
+      documento,
+      impresora,
+      true,
+      false,
+      false,
+      undefined,
+      false,
+    );
   }
 
   private isPrinterNotFoundError(error: unknown): boolean {

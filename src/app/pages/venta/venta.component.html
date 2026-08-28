@@ -56,6 +56,14 @@
         <button *ngIf="reservasHabilitadas" type="button" class="channel-buttons__reservations" (click)="abrirAgendaReservas()">
           <mat-icon>event_available</mat-icon> Reservas
         </button>
+        <button *ngIf="solicitudesQrPendientes.length > 0"
+                type="button"
+                class="channel-buttons__qr-requests"
+                (click)="abrirSolicitudesMesa()">
+          <mat-icon>qr_code_scanner</mat-icon>
+          Solicitudes
+          <span class="channel-buttons__count">{{ solicitudesQrPendientes.length }}</span>
+        </button>
       </div>
     </div>
 

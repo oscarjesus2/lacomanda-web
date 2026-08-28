@@ -79,6 +79,7 @@ import { TenantTextCatalogService } from 'src/app/services/localization/tenant-t
 import { MesaClienteService } from 'src/app/services/mesa-cliente.service';
 import { SolicitudesMesaRealtimeService } from 'src/app/services/solicitudes-mesa-realtime.service';
 import { SolicitudMesaPendiente } from 'src/app/models/mesa-cliente.models';
+import { DialogSolicitudesMesaComponent } from 'src/app/components/dialog-solicitudes-mesa/dialog-solicitudes-mesa.component';
 import { DeviceCapabilitiesService } from 'src/app/services/device-capabilities.service';
 import { AgenteImpresionPedidosService } from 'src/app/services/agente-impresion-pedidos.service';
 import { AgenteImpresionLocalService } from 'src/app/services/agente-impresion-local.service';
@@ -132,6 +133,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   public listaEspacios_x_Ambiente: Espacios[];
   private solicitudesMesaSubscription?: Subscription;
   private solicitudesQrPorEspacio = new Map<number, SolicitudMesaPendiente>();
+  private solicitudesQrConocidas = new Set<number>();
+  private solicitudesMesaDialogRef?: MatDialogRef<DialogSolicitudesMesaComponent>;
+  public solicitudesQrPendientes: SolicitudMesaPendiente[] = [];
   public listaTipoPedidos: CanalVenta[];
   public listaPedidosPendientes: PedidoDeliveryDTO[] = [];
   public listaPedido_x_Canal: PedidoDeliveryDTO[];
@@ -694,10 +698,41 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.solicitudesMesaRealtime.iniciar();
     this.solicitudesMesaSubscription = this.solicitudesMesaRealtime.solicitudes$.subscribe({
       next: solicitudes => {
+        const nuevas = solicitudes.filter(
+          solicitud => !this.solicitudesQrConocidas.has(solicitud.IdSesion)
+        );
+
+        this.solicitudesQrPendientes = solicitudes;
         this.solicitudesQrPorEspacio = new Map(
           solicitudes.map(solicitud => [solicitud.IdEspacio, solicitud])
         );
+        this.solicitudesQrConocidas = new Set(
+          solicitudes.map(solicitud => solicitud.IdSesion)
+        );
+
+        if (nuevas.length > 0) {
+          this.abrirSolicitudesMesa();
+        }
       }
+    });
+  }
+
+  abrirSolicitudesMesa(): void {
+    if (this.solicitudesMesaDialogRef || !this.turnoAbierto) return;
+
+    this.solicitudesMesaDialogRef = this.dialog.open(DialogSolicitudesMesaComponent, {
+      disableClose: false,
+      hasBackdrop: true,
+      panelClass: 'dialog-window--workspace',
+      data: {
+        idCaja: this.turnoAbierto.IdCaja,
+        idTurno: this.turnoAbierto.IdTurno,
+        identificadorEstacion: this.storageService.getCurrentIP() || ''
+      }
+    });
+
+    this.solicitudesMesaDialogRef.afterClosed().subscribe(() => {
+      this.solicitudesMesaDialogRef = undefined;
     });
   }
 

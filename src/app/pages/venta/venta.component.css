@@ -165,6 +165,35 @@
   color: #fff5cf;
 }
 
+.channel-buttons .channel-buttons__qr-requests {
+  border-color: #ffd04c;
+  background: #fff4cc;
+  color: #711400;
+  animation: qrRequestPulse 1.5s ease-in-out infinite;
+}
+
+.channel-buttons .channel-buttons__qr-requests:hover {
+  background: #ffffff;
+  border-color: #ffd04c;
+}
+
+.channel-buttons__count {
+  display: inline-grid;
+  min-width: 20px;
+  height: 20px;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: #a00000;
+  color: #ffffff;
+  font-size: 11px;
+  line-height: 1;
+}
+
+@keyframes qrRequestPulse {
+  50% { box-shadow: 0 0 0 5px rgba(255, 208, 76, .2); }
+}
+
 /* ══════════════════════════════════════════════════════════════
    ZONA — INFO MESA / PEDIDO
 ══════════════════════════════════════════════════════════════ */
