@@ -13,6 +13,5 @@ spec:
     kind: ClusterIssuer
   dnsNames:
     - "lacomanda.store"
-    - "www.lacomanda.store"
     - "*.lacomanda.store"
     - "*.staging.lacomanda.store"
