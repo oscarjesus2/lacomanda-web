@@ -1,0 +1,113 @@
+name: Frontend - Build & Deploy to Staging
+
+# La imagen solo se construye cuando cambia el código o un archivo que forma
+# parte del build. Los cambios exclusivos de Kubernetes se atienden en
+# frontend-deploy-manifests-staging.yml.
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'src/**'
+      - 'dockerfiles/frontend/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'angular.json'
+      - 'ngsw-config.json'
+      - 'tsconfig*.json'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy-staging:
+    concurrency: frontend-staging-${{ github.ref }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      IMAGE_NAME: oscar020/frontend
+      PROJECT_ID: lacomanda-477709
+      GKE_CLUSTER: gke-eusw1-autopilot-01
+      GKE_LOCATION: europe-southwest1
+      GSA_EMAIL: gha-gke-deployer@lacomanda-477709.iam.gserviceaccount.com
+      WORKLOAD_IDENTITY_PROVIDER: projects/161733769525/locations/global/workloadIdentityPools/github-pool/providers/github-pool
+
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Generate image tags
+        run: |
+          SHORT_SHA=$(git rev-parse --short=7 HEAD)
+          IMAGE_TAG=$(date +%Y%m%d%H%M)-${SHORT_SHA}
+          STAGING_TAG=${IMAGE_TAG}-staging
+          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
+          echo "STAGING_TAG=$STAGING_TAG" >> "$GITHUB_ENV"
+
+      - name: Build and push staging image
+        run: |
+          docker build \
+            --build-arg BUILD_CONFIG=staging \
+            --build-arg APP_VERSION=$STAGING_TAG \
+            -t $IMAGE_NAME:$STAGING_TAG \
+            -f ./dockerfiles/frontend/Dockerfile .
+          docker push $IMAGE_NAME:$STAGING_TAG
+
+      - name: Install kustomize
+        run: |
+          KUSTOMIZE_VERSION=v5.4.3
+          curl -fsSL \
+            "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" \
+            -o kustomize.tar.gz
+          tar -xzf kustomize.tar.gz
+          sudo mv kustomize /usr/local/bin/
+          rm kustomize.tar.gz
+
+      - name: Record promoted artifact
+        run: |
+          echo "$IMAGE_TAG" > latest-frontend-image-tag.txt
+
+          pushd k8s-manifests/frontend/overlays/staging
+          kustomize edit set image "$IMAGE_NAME=$IMAGE_NAME:$STAGING_TAG"
+          popd
+
+          git config user.name "ci-bot"
+          git config user.email "ci@job.pe"
+          git add latest-frontend-image-tag.txt k8s-manifests/frontend/overlays/staging/kustomization.yaml
+          if ! git diff --cached --quiet; then
+            git commit -m "ci(frontend): update staging image -> $STAGING_TAG [skip ci]"
+            git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+            git push origin develop
+          fi
+
+      - name: Auth to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GSA_EMAIL }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_LOCATION }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Deploy image to staging
+        run: |
+          kustomize build k8s-manifests/frontend/overlays/staging | kubectl apply -f -
+          kubectl rollout status \
+            --namespace frontend-appweb-staging \
+            deployment/frontend \
+            --timeout=5m
