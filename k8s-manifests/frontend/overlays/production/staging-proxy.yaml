@@ -18,6 +18,7 @@ data:
       portal.staging.lacomanda.store portal-lacomanda.frontend-appweb-staging.svc.cluster.local:80;
       api.staging.lacomanda.store    backend-core.backend-core-staging.svc.cluster.local:80;
       auth.staging.lacomanda.store   keycloak.keycloak-staging.svc.cluster.local:8080;
+      auth.lacomanda.store           keycloak.keycloak-production.svc.cluster.local:8080;
       sonarqube.lacomanda.store      sonarqube-service.sonarqube.svc.cluster.local:9000;
       default                        frontend.frontend-appweb-staging.svc.cluster.local:80;
     }
