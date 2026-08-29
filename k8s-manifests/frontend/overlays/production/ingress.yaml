@@ -4,6 +4,7 @@ metadata:
   name: frontend-ingress
   annotations:
     kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.allow-http: "false"
     kubernetes.io/ingress.global-static-ip-name: "frontend-production-global-ip"
     networking.gke.io/frontend-config: "frontend-frontendconfig"
 spec:
@@ -16,6 +17,7 @@ spec:
         - "portal.lacomanda.store"
         - "app.lacomanda.store"
         - "*.lacomanda.store"
+        - "*.staging.lacomanda.store"
       secretName: wildcard-lacomanda-tls
   rules:
     # El portal mantiene su Deployment/Service en este mismo namespace para
@@ -70,5 +72,28 @@ spec:
             backend:
               service:
                 name: frontend
+                port:
+                  number: 80
+    # Todo staging comparte esta misma IP. El proxy resuelve el destino real
+    # dentro del cluster segun el host (frontend, portal, API o Keycloak).
+    - host: "*.staging.lacomanda.store"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: staging-proxy
+                port:
+                  number: 80
+    # SonarQube tambien reutiliza la IP productiva sin exponer otro LB.
+    - host: sonarqube.lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: staging-proxy
                 port:
                   number: 80

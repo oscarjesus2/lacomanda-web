@@ -6,10 +6,6 @@ namespace: frontend-appweb-staging
 resources:
 - ../../base
 - namespace.yaml
-- ingress.yaml
-- certificate.yaml
-- frontendconfig.yaml
-- sonarqube-proxy.yaml
 
 images:
 - name: oscar020/frontend

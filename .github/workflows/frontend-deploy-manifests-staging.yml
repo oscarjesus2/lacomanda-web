@@ -118,29 +118,10 @@ jobs:
           echo "No hay cambios en kustomization.yaml. Ya estaba actualizado."
         fi
 
-    - name: Verify wildcard certificate infrastructure
-      run: |
-        if ! kubectl get crd certificates.cert-manager.io >/dev/null 2>&1; then
-          echo "::error::Falta cert-manager. Ejecute el workflow de infraestructura 'Infrastructure - Install cert-manager and IONOS DNS'."
-          exit 1
-        fi
-
-        if ! kubectl get clusterissuer letsencrypt-ionos >/dev/null 2>&1; then
-          echo "::error::Falta el ClusterIssuer letsencrypt-ionos. Ejecute primero el workflow de cert-manager en infra-lacomanda-cluster."
-          exit 1
-        fi
-
-        kubectl wait --for=condition=Ready clusterissuer/letsencrypt-ionos --timeout=2m
-
     - name: Deploy to staging
       run: |
         kustomize build k8s-manifests/frontend/overlays/staging | kubectl apply -f -
         kubectl rollout status \
           --namespace frontend-appweb-staging \
-          deployment/sonarqube-proxy \
+          deployment/frontend \
           --timeout=5m
-        kubectl wait \
-          --namespace frontend-appweb-staging \
-          --for=condition=Ready \
-          certificate/wildcard-lacomanda \
-          --timeout=10m

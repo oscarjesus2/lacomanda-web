@@ -104,6 +104,14 @@ jobs:
     - name: Deploy to production
       run: |
         kustomize build k8s-manifests/frontend/overlays/production | kubectl apply -f -
+        kubectl rollout status \
+          --namespace frontend-appweb-production \
+          deployment/frontend \
+          --timeout=5m
+        kubectl rollout status \
+          --namespace frontend-appweb-production \
+          deployment/staging-proxy \
+          --timeout=5m
         kubectl wait \
           --namespace frontend-appweb-production \
           --for=condition=Ready \

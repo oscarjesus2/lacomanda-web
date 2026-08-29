@@ -9,8 +9,9 @@ resources:
   - ingress.yaml
   - certificate.yaml
   - frontendconfig.yaml
+  - staging-proxy.yaml
 
 images:
   - name: oscar020/frontend
     newName: oscar020/frontend
-    newTag: 20251025-prod
+    newTag: 202608291644-3148466-staging
