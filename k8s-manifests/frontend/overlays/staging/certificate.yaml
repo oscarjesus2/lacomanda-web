@@ -1,4 +1,4 @@
-# Certificado comodín (cert-manager + Let's Encrypt DNS-01 vía IONOS) para los
+# Certificado comodín para los
 # subdominios de tenant en staging. cert-manager crea el Secret wildcard-lacomanda-tls
 # que usa el ingress. Requiere el ClusterIssuer "letsencrypt-ionos" ya instalado
 # (ver infra-lacomanda-cluster/k8s-manifests/cert-manager/README.md).
