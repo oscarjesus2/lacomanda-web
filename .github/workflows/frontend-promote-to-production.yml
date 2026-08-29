@@ -1,9 +1,8 @@
 name: Frontend - Promote to Production (GKE)
 
-# Producción no construye ni vuelve a analizar: promociona el artefacto que ya
-# superó las pruebas y el quality gate al publicarse en staging, leyendo su
-# identificador de latest-frontend-image-tag.txt. Repetir el análisis aquí no
-# aportaría nada, porque la imagen desplegada es exactamente la misma.
+# Producción no construye: promociona exactamente el artefacto generado y
+# validado en staging, leyendo su identificador de
+# latest-frontend-image-tag.txt.
 on:
   push:
     branches:
