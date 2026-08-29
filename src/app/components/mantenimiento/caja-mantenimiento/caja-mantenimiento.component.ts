@@ -3,12 +3,14 @@ import { NgForm } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import Swal from 'sweetalert2';
-import { Caja } from 'src/app/models/caja.models';
+import { CajaDto } from 'src/app/models/caja.models';
 import { CajaService } from 'src/app/services/caja.service';
 import { CanalVentaService } from 'src/app/services/canal-venta.service';
 import { CajaDocumentosDialogComponent } from './caja-documentos-dialog/caja-documentos-dialog.component';
 import { CanalVenta } from 'src/app/models/canalventa.models';
+import { CanalVentaEnum } from 'src/app/enums/enum';
 import { faL } from '@fortawesome/free-solid-svg-icons';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-caja-mantenimiento',
@@ -18,13 +20,25 @@ import { faL } from '@fortawesome/free-solid-svg-icons';
 export class CajaMantenimientoComponent implements OnInit {
   @ViewChild('form') form: NgForm;
 
-  cajas: Caja[] = [];
-  filtered = new MatTableDataSource<Caja>([]);
+  cajas: CajaDto[] = [];
+  filtered = new MatTableDataSource<CajaDto>([]);
   filtro = '';
   showForm = false;
 
-  canales: CanalVenta[] = [];
-  m: Caja = this.blank();
+  canales: CanalVenta[] = [];        // canales activos incluidos en la licencia
+  canalesSeleccionados: number[] = []; // IDs de canales habilitados para la caja actual
+  m: CajaDto = this.blank();
+
+  /** Canales filtrados a los seleccionados — alimenta el dropdown "Canal por Defecto" */
+  get canalesHabilitados(): CanalVenta[] {
+    return this.canales.filter(c => this.canalesSeleccionados.includes(c.IdCanalVenta));
+  }
+
+  /** True cuando el canal Entradas está habilitado para la caja.
+   *  Solo entonces tiene sentido "Permitir pago a taxistas". */
+  get entradaSeleccionada(): boolean {
+    return this.canalesSeleccionados.includes(CanalVentaEnum.ENTRADAS);
+  }
 
   displayedColumns: string[] = ['descripcion','activo','cajaDefault','canal','nroPedido','actions'];
 
@@ -37,15 +51,17 @@ export class CajaMantenimientoComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
-    this.canalSrv.listarActivos().subscribe(x => this.canales = x);
+    this.canalSrv.listarDisponibles().subscribe(x => this.canales = x);
   }
 
-  private blank(): Caja {
+  private blank(): CajaDto {
     return {
       IdCaja: 0, TurnoAbierto: null, Descripcion: '', Activo: true, NroPedido: 0, CajaPorDefecto: false,
       UsuRegistro: 0, FecRegistro: '', IdCanalVentaDefecto: 0, UsuModi: undefined, FecModi: undefined,
+      IdCanalesVenta: [],
       EmitePrecuenta: true, EmiteComanda: true, EmiteDescuento: true, PermiteDividirPedido: true,
-      PermiteCierreParcial: false, EnvioElectronicoOnline: false, PrecuentaLlevarDeliveryAutomatica: false
+      PermiteCierreParcial: false, EnvioElectronicoOnline: false, PrecuentaLlevarDeliveryAutomatica: false,
+      PermitirPagoTaxistas: false
     };
   }
 
@@ -73,8 +89,43 @@ export class CajaMantenimientoComponent implements OnInit {
     );
   }
 
-  nuevo(): void { this.m = this.blank(); this.showForm = true; }
-  onEdit(row: Caja): void { this.m = { ...row }; this.showForm = true; }
+  isCanal(id: number): boolean {
+    return this.canalesSeleccionados.includes(id);
+  }
+
+  toggleCanal(id: number, checked: boolean): void {
+    if (checked) {
+      if (!this.canalesSeleccionados.includes(id)) {
+        this.canalesSeleccionados = [...this.canalesSeleccionados, id];
+      }
+    } else {
+      this.canalesSeleccionados = this.canalesSeleccionados.filter(x => x !== id);
+      // Si el canal desactivado era el default, limpiar
+      if (this.m.IdCanalVentaDefecto === id) {
+        this.m.IdCanalVentaDefecto = this.canalesSeleccionados[0] ?? 0;
+      }
+      // Si se quita el canal Entradas, no tiene sentido permitir pago a taxistas
+      if (id === CanalVentaEnum.ENTRADAS) {
+        this.m.PermitirPagoTaxistas = false;
+      }
+    }
+  }
+
+  nuevo(): void {
+    this.m = this.blank();
+    this.canalesSeleccionados = [];
+    this.showForm = true;
+  }
+
+  onEdit(row: CajaDto): void {
+    this.m = { ...row };
+    this.canalesSeleccionados = [];
+    // Cargar canales existentes de la caja
+    this.service.getCanalesVentaByCaja(row.IdCaja).subscribe(canales => {
+      this.canalesSeleccionados = canales.map(c => c.IdCanalVenta);
+    });
+    this.showForm = true;
+  }
 
   onDelete(id: number): void {
     Swal.fire({
@@ -83,7 +134,7 @@ export class CajaMantenimientoComponent implements OnInit {
     }).then(s => {
       if (s.isConfirmed) {
         this.service.eliminar(id).subscribe(r => {
-          if (r.Success) { this.cargar(); Swal.fire('Eliminado', '', 'success'); }
+          if (r.Success) { this.cargar(); Notificar.exito('Eliminado', ''); }
           else { Swal.fire('Error', r.Message || 'No se pudo eliminar', 'error'); }
         });
       }
@@ -96,11 +147,14 @@ export class CajaMantenimientoComponent implements OnInit {
 
   onSubmit(): void {
     if (this.form.invalid) { this.touchForm(); return; }
+    // Incluir los canales en el mismo DTO que va al Create/Update
+    this.m.IdCanalesVenta = [...this.canalesSeleccionados];
     const obs = this.m.IdCaja ? this.service.actualizar(this.m) : this.service.crear(this.m);
     obs.subscribe(r => {
       if (r.Success) {
-        Swal.fire(this.m.IdCaja ? 'Actualizado' : 'Guardado', '', 'success');
-        this.cargar(); this.showForm = false;
+        Notificar.exito(this.m.IdCaja ? 'Actualizado' : 'Guardado', '');
+        this.cargar();
+        this.showForm = false;
       } else {
         Swal.fire('Error', r.Message || 'Operación no realizada', 'error');
       }
@@ -112,13 +166,13 @@ export class CajaMantenimientoComponent implements OnInit {
       this.dialogRef.close();
     }
     
-  configurarDocumentos(row: Caja): void {
+  configurarDocumentos(row: CajaDto): void {
     const ref = this.dialog.open(CajaDocumentosDialogComponent, {
       width: '900px',
       data: { idCaja: row.IdCaja, nombreCaja: row.Descripcion }
     });
     ref.afterClosed().subscribe(saved => {
-      if (saved) Swal.fire('Documentos actualizados', '', 'success');
+      if (saved) Notificar.exito('Documentos actualizados', '');
     });
   }
 }

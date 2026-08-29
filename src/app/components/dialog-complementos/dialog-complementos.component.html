@@ -1,101 +1,130 @@
-<div class="complementos-container">
+<div class="mant-panel complementos-panel">
+
+  <!-- Botón cerrar (patrón mant-panel) -->
+  <button mat-icon-button class="close-button" (click)="cancelar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>{{ 'complements' | tenantText }}</h2>
+
   <div class="columnas">
-    <!-- Primera columna (Botones dinámicos) -->
+
+    <!-- Columna izquierda: botones de complementos configurados -->
     <div class="complementos-configurados">
+      <p class="col-header">{{ 'selectComplement' | tenantText }}</p>
       <div class="grid-buttons">
-	   <button *ngFor="let btn of listProductosComplementos" mat-button (click)="selectButton(btn)">
+        <button *ngFor="let btn of listProductosComplementos"
+                mat-button
+                (click)="selectButton(btn)">
           {{ btn.NombreCorto }} x{{ btn.FactorComplemento }}
-        </button></div>
+        </button>
+      </div>
     </div>
 
-    <!-- Segunda columna (Datos del producto) -->
+    <!-- Columna derecha: datos del producto y selección -->
     <div class="producto-info">
-      <!-- Producto y cantidad -->
+
+      <!-- Nombre del producto -->
       <div class="producto-linea">
-        <label>Producto:</label>
-        <input matInput [(ngModel)]="pedidodet.Producto.NombreCorto" readonly />
+        <label>{{ 'product' | tenantText }}</label>
+        <span class="producto-nombre">{{ pedidodet.Producto.NombreCorto }}</span>
       </div>
 
-      <!-- Cantidad y complementos en la siguiente línea -->
+      <!-- Qty + Cant. Complementos -->
       <div class="producto-cantidad-linea">
         <div class="qty-container">
-          <label>Qty:</label>
+          <label>{{ 'quantity' | tenantText }}</label>
           <input matInput [(ngModel)]="pedidodet.Cantidad" />
-          <button mat-icon-button color="primary" (click)="openDialogCant()" disabled="{{pedidodet.Item > 0 ? 'true': 'false'}}">
-            <mat-icon>add</mat-icon> <!-- Botón con icono de "+" -->
+          <button mat-icon-button
+                  color="primary"
+                  (click)="openDialogCant()"
+                  [disabled]="pedidodet.Item > 0">
+            <mat-icon>add</mat-icon>
           </button>
         </div>
         <div class="complementos1-container">
-          <label>Cant. Complem.:</label>
-          <input matInput [(ngModel)]="cantidadComplementos" />
+          <label>{{ 'addOnsQty' | tenantText }}</label>
+          <input matInput [(ngModel)]="cantidadComplementos" readonly />
         </div>
       </div>
 
-      <!-- Data Grid para productos agregados -->
+      <!-- Tabla de complementos seleccionados -->
       <div class="limited-height-table">
-      <mat-table [dataSource]="gridListaPedidoComplemento" class="mat-elevation-z8">
-        <ng-container matColumnDef="nombre">
-          <mat-header-cell *matHeaderCellDef class="ancho-producto"> Producto </mat-header-cell>
-          <mat-cell *matCellDef="let element" class="ancho-producto"> {{element.ProductoComplemento.NombreCorto}} </mat-cell>
-        </ng-container>
+        <mat-table [dataSource]="gridListaPedidoComplemento" class="mat-elevation-z8">
 
-        <ng-container matColumnDef="qty">
-          <mat-header-cell *matHeaderCellDef> Qty </mat-header-cell>
-          <mat-cell *matCellDef="let element"> {{element.Cantidad}} </mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="nombre">
+            <mat-header-cell *matHeaderCellDef class="ancho-producto">{{ 'product' | tenantText }}</mat-header-cell>
+            <mat-cell *matCellDef="let element" class="ancho-producto">
+              {{ element.ProductoComplemento.NombreCorto }}
+            </mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="ft">
-          <mat-header-cell *matHeaderCellDef> Ft </mat-header-cell>
-          <mat-cell *matCellDef="let element"> {{element.ProductoComplemento.FactorComplemento}} </mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="qty">
+            <mat-header-cell *matHeaderCellDef>{{ 'quantity' | tenantText }}</mat-header-cell>
+            <mat-cell *matCellDef="let element">{{ element.Cantidad }}</mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let element">
-            <!-- <mat-icon>add</mat-icon>  -->
+          <ng-container matColumnDef="ft">
+            <mat-header-cell *matHeaderCellDef>{{ 'factorShort' | tenantText }}</mat-header-cell>
+            <mat-cell *matCellDef="let element">
+              {{ element.ProductoComplemento.FactorComplemento }}
+            </mat-cell>
+          </ng-container>
 
-            <button mat-icon-button color="primary" matTooltip="Mas Opciones" [matMenuTriggerFor]="MasOpciones">
-              <mat-icon>more</mat-icon>
-            </button>
-            <mat-menu #MasOpciones="matMenu">
-              <button mat-icon-button color="primary" matTooltip="Aumantar Cantidad"
-              (click)="aumentarProductGrid(element)" disabled="{{element.ItemComple > 0 ? 'true': 'false'}}">
-              <mat-icon>add</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" matTooltip="Restar Cantidad" (click)="restarProductGrid(element)"
-              disabled="{{element.ItemComple > 0 ? 'true': 'false'}}">
-              <mat-icon>remove</mat-icon>
-            </button>
-              <button mat-icon-button color="accent" matTooltip="Eliminar" (click)="deleteProductGrid(element)">
-                <mat-icon>delete</mat-icon>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let element">
+              <button mat-icon-button
+                      color="primary"
+                      [matTooltip]="'moreOptions' | tenantText"
+                      [matMenuTriggerFor]="MasOpciones">
+                <mat-icon>more_horiz</mat-icon>
               </button>
-            </mat-menu>
-          </td>
-        </ng-container>
+              <mat-menu #MasOpciones="matMenu">
+                <button mat-menu-item
+                        (click)="aumentarProductGrid(element)"
+                        [disabled]="element.ItemComple > 0">
+                  <mat-icon>add</mat-icon> {{ 'increase' | tenantText }}
+                </button>
+                <button mat-menu-item
+                        (click)="restarProductGrid(element)"
+                        [disabled]="element.ItemComple > 0">
+                  <mat-icon>remove</mat-icon> {{ 'subtract' | tenantText }}
+                </button>
+                <button mat-menu-item (click)="deleteProductGrid(element)">
+                  <mat-icon color="warn">delete</mat-icon> {{ 'delete' | tenantText }}
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
 
-        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-      </mat-table>
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
       </div>
+
+      <!-- Indicadores de totales -->
       <div class="total-complementos">
-        <div>
-          <label>Complem. ingresados: </label>
-          <input matInput [(ngModel)]="totIngreso" readonly />
+        <div class="total-card"
+             [ngClass]="{
+               'total-card--ok':   total > 0 && totIngreso <= total,
+               'total-card--over': total > 0 && totIngreso > total
+             }">
+          <span class="total-card__label">{{ 'entered' | tenantText }}</span>
+          <span class="total-card__value">{{ totIngreso }}</span>
         </div>
-        <div>
-          <label>Limite de Complem.: </label>
-          <input matInput [(ngModel)]="total" readonly />
+        <div class="total-card total-card--neutral">
+          <span class="total-card__label">{{ 'limit' | tenantText }}</span>
+          <span class="total-card__value">{{ total }}</span>
         </div>
       </div>
 
-     <!-- Botones de Aceptar y Cancelar -->
+      <!-- Botones de acción -->
       <div class="botones-accion">
-        <!-- Añadir la clase 'aceptar' para el botón Aceptar -->
-        <button class="aceptar" (click)="aceptar()">Aceptar</button>
-        
-        <!-- Añadir la clase 'cancelar' para el botón Cancelar -->
-        <button class="cancelar" (click)="cancelar()">Cancelar</button>
+        <button class="aceptar" (click)="aceptar()">{{ 'accept' | tenantText }}</button>
+        <button class="cancelar" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
       </div>
+
     </div>
   </div>
 </div>

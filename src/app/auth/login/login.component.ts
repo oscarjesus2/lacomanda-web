@@ -1,21 +1,32 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { LoginService } from 'src/app/services/auth/login.service';
+import { KeycloakAuthService } from 'src/app/services/auth/keycloak-auth.service';
+import { KeycloakService } from 'src/app/services/auth/keycloak.service';
 import { StorageService } from 'src/app/services/storage.service';
+import { EstacionService } from 'src/app/services/estacion.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { NotificationService } from 'src/app/services/notification.service';
 import { Session } from 'src/app/models/session.models';
 import { TenantService } from 'src/app/services/tenant.service';
-import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mcant.component';
 import { MatDialog } from '@angular/material/dialog';
-import { LoginRequest } from 'src/app/services/auth/loginRequest';
 import { version } from 'src/environments/version';
-import Swal from 'sweetalert2';
 import { CookieService } from 'ngx-cookie-service';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { Configuracion } from 'src/app/models/configuracion.models';
 import { ConfiguracionInicialComponent } from 'src/app/components/configuracion-inicial/configuracion-inicial/configuracion-inicial.component';
+import { HeaderService } from 'src/app/services/header.service';
+import { EstacionTipoEnum } from 'src/app/enums/enum';
+import { UsuarioService } from 'src/app/services/usuario.service';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { Usuario } from 'src/app/models/usuario.models';
+import Swal from 'sweetalert2';
+
+interface PendingLogin {
+  TenantId: string;
+  Sucursal: string;
+  Cultura:  string;
+}
 
 @Component({
   selector: 'app-login',
@@ -23,71 +34,391 @@ import { ConfiguracionInicialComponent } from 'src/app/components/configuracion-
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
-  appVersion = version;
-  hide = true;
-  public loginValid = true;
-  public idNivel = '001';
-  public password = '';
-  identifierExists: boolean = false;
+  appVersion  = version;
+  isSubmitting = false;
+  loginValid  = true;
+  loginError  = '';
 
-  nivelUsuario: UsersDefault[] = [
-    { value: '001', nombreNivel: 'Administrador' },
-    { value: '002', nombreNivel: 'Cajero' },
-    { value: '003', nombreNivel: 'Mozo' }
-  ];
+  /**
+   * Solo se muestra el selector de sucursal cuando de verdad hace falta.
+   * Mientras se decide o se redirige a Keycloak permanece oculto, para no
+   * mostrar el selector por un instante (p. ej. al cerrar sesión).
+   */
+  showSelector = false;
+
+  /** true si ya existe la cookie clientUUID → no se pide identificador */
+  identifierExists = false;
+
   tenantDefault: TenantDefault[] = [];
   loginForm: FormGroup;
-  loginError: string = "";
   CurrentIP: string;
-
-  constructor(
-    private dialog: MatDialog,
-    private spinnerService: NgxSpinnerService,
-    private fb: FormBuilder,
-    private router: Router, 
-    private loginService: LoginService,
-    private storageService: StorageService,
-    private tenantService: TenantService,
-    private notificationService: NotificationService,
-    private cookieService: CookieService,
-    private configService: ConfiguracionService,
-  ) {}
 
   deferredPrompt: any;
   showInstallButton = false;
   isiOS = false;
 
+  /** Tenant elegido, persistido mientras dura el redirect a Keycloak. */
+  private static readonly PENDING_LOGIN_KEY = 'pendingLogin';
+  /**
+   * Sucursal recordada entre sesiones. Se guarda como cookie en el dominio
+   * padre (.lacomanda.store) para que la página de Keycloak (otro subdominio)
+   * también pueda leerla y mostrar la sucursal.
+   */
+  private static readonly SUCURSAL_COOKIE = 'lc_sucursal';
+
+  constructor(
+    private dialog: MatDialog,
+    private spinnerService: NgxSpinnerService,
+    private fb: FormBuilder,
+    private router: Router,
+    private keycloakAuth: KeycloakAuthService,
+    private keycloak: KeycloakService,
+    private storageService: StorageService,
+    private estacionService: EstacionService,
+    private tenantService: TenantService,
+    private notificationService: NotificationService,
+    private cookieService: CookieService,
+    private configService: ConfiguracionService,
+    private headerService: HeaderService,
+    private usuarioService: UsuarioService,
+    private textCatalog: TenantTextCatalogService,
+  ) {}
+
   @HostListener('window:beforeinstallprompt', ['$event'])
   onbeforeinstallprompt(e: Event) {
-    // Evitar que el navegador automáticamente muestre el prompt
     e.preventDefault();
     this.deferredPrompt = e;
-    this.showInstallButton = true; // Mostrar el botón de instalación
+    this.showInstallButton = true;
   }
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+  async ngOnInit(): Promise<void> {
+    this.headerService.hideHeader();
+    this.checkIfIos();
+
+    const clientUUID = this.cookieService.get('clientUUID');
+    if (clientUUID) {
+      this.identifierExists = true;
+      this.CurrentIP = clientUUID;
+    }
+
+    this.initForm();
+
+    // 1. ¿Volvemos del redirect de Keycloak? Completar el login antes de nada.
+    if (await this.tryCompleteRedirectLogin()) {
+      return;
+    }
+
+    // 2. ¿Piden cambiar de sucursal? (enlace "Cambiar sucursal" del login de Keycloak)
+    //    Se olvida la sucursal recordada y se muestra el selector.
+    if (new URLSearchParams(window.location.search).has('cambiar')) {
+      this.clearSucursal();
+      this.loadTenants();
+      return;
+    }
+
+    // 3. Sesión ya activa → navegar directo.
+    const currentSession = this.storageService.getCurrentSession();
+    if (currentSession) {
+      this.textCatalog.setCulture(
+        currentSession.Cultura ?? currentSession.CulturaTenant,
+      );
+      const route = this.keycloakAuth.getTargetRoute(currentSession.Token);
+      this.router.navigateByUrl(route);
+      return;
+    }
+
+    // 4. ¿Hay una sucursal recordada? Primero se valida contra las sucursales
+    //    publicadas para el host actual. La cookie se comparte entre subdominios
+    //    y puede pertenecer a otro restaurante abierto anteriormente.
+    const recordada = this.readSucursal();
+    if (recordada) {
+      await this.loadTenants(recordada);
+      return;
+    }
+
+    // 5. Primera vez → mostrar el selector de sucursal.
+    this.loadTenants();
+  }
+
+  // ── Form ──────────────────────────────────────────────────────────────────
+
+  initForm(): void {
+    // Las credenciales ya no se recogen aquí: solo se elige el tenant (sucursal).
+    this.loginForm = this.fb.group({
+      tenant: [null, Validators.required],
+    });
+  }
+
+  // ── Login (redirect a Keycloak) ─────────────────────────────────────────────
+
+  async login(): Promise<void> {
+    if (this.loginForm.invalid || this.isSubmitting) return;
+
+    const { tenant } = this.loginForm.getRawValue();
+    const pending: PendingLogin = {
+      TenantId: tenant.TenantId,
+      Sucursal: tenant.Sucursal,
+      Cultura:  tenant.Cultura,
+    };
+
+    // Recordar la sucursal para las próximas visitas (y para que Keycloak la lea).
+    this.saveSucursal(pending);
+
+    this.isSubmitting = true;
+    this.loginValid   = true;
+    this.spinnerService.show();
+    await this.loginWithTenant(pending);
+  }
+
+  /** Persiste el tenant y redirige el navegador al login de Keycloak de ese realm. */
+  private async loginWithTenant(pending: PendingLogin): Promise<void> {
+    localStorage.setItem(LoginComponent.PENDING_LOGIN_KEY, JSON.stringify(pending));
+    try {
+      await this.keycloak.login(pending.TenantId);
+    } catch {
+      localStorage.removeItem(LoginComponent.PENDING_LOGIN_KEY);
+      this.isSubmitting = false;
+      this.spinnerService.hide();
+      this.loginValid = false;
+      // Si falla el redirect con la sucursal recordada, se muestra el selector.
+      this.showSelector = true;
+      if (!this.tenantDefault.length) this.loadTenants();
+    }
+  }
+
+  // ── Sucursal recordada (cookie compartida con Keycloak) ─────────────────────
+
+  private cookieDomain(): string | undefined {
+    const host = window.location.hostname;
+    return host.endsWith('lacomanda.store') ? '.lacomanda.store' : undefined;
+  }
+
+  private saveSucursal(pending: PendingLogin): void {
+    this.cookieService.set(
+      LoginComponent.SUCURSAL_COOKIE,
+      JSON.stringify({ TenantId: pending.TenantId, Sucursal: pending.Sucursal, Cultura: pending.Cultura }),
+      { expires: 365, path: '/', domain: this.cookieDomain(), sameSite: 'Lax' },
+    );
+  }
+
+  private readSucursal(): PendingLogin | null {
+    const raw = this.cookieService.get(LoginComponent.SUCURSAL_COOKIE);
+    if (!raw) return null;
+    try {
+      const s = JSON.parse(raw);
+      return s?.TenantId ? { TenantId: s.TenantId, Sucursal: s.Sucursal ?? '', Cultura: s.Cultura ?? '' } : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private clearSucursal(): void {
+    this.cookieService.delete(LoginComponent.SUCURSAL_COOKIE, '/', this.cookieDomain());
+  }
+
+  /**
+   * Si la URL actual es el callback de Keycloak y hay un login pendiente,
+   * completa el intercambio de código (PKCE) y construye la sesión.
+   */
+  private async tryCompleteRedirectLogin(): Promise<boolean> {
+    const pendingRaw = localStorage.getItem(LoginComponent.PENDING_LOGIN_KEY);
+    if (!pendingRaw) return false;
+
+    const params = window.location.search + window.location.hash;
+    const hasCallback = /[?&#](code|state|session_state|error)=/.test(params);
+    if (!hasCallback) {
+      // Login pendiente sin callback (p. ej. el usuario volvió atrás) → limpiar.
+      localStorage.removeItem(LoginComponent.PENDING_LOGIN_KEY);
+      return false;
+    }
+
+    const pending = JSON.parse(pendingRaw) as PendingLogin;
+    this.spinnerService.show();
+
+    try {
+      const tokens = await this.keycloak.completeLogin(pending.TenantId);
+      localStorage.removeItem(LoginComponent.PENDING_LOGIN_KEY);
+
+      if (!tokens) {
+        this.spinnerService.hide();
+        this.loadTenants();
+        return false;
+      }
+
+      this.completarSesion(tokens.token, tokens.refreshToken, pending);
+      return true;
+    } catch {
+      localStorage.removeItem(LoginComponent.PENDING_LOGIN_KEY);
+      this.spinnerService.hide();
+      this.loginValid = false;
+      this.loadTenants();
+      return false;
+    }
+  }
+
+  /**
+   * Construye la sesión con los tokens de Keycloak y ejecuta la orquestación
+   * post-login (roles, estación, cultura, config y navegación).
+   */
+  private completarSesion(
+    token: string,
+    refreshToken: string,
+    pending: PendingLogin,
+  ): void {
+    const roles   = this.keycloakAuth.getRoles(token);
+    const usuario = this.keycloakAuth.buildUsuarioFromToken(token);
+
+    const isAdmin = roles.includes('admin');
+    const isCaja  = roles.includes('caja');
+    const isMozo  = roles.includes('mozo');
+    const hasRole = isAdmin || isCaja || isMozo;
+
+    if (!hasRole) {
+      this.spinnerService.hide();
+      this.notificationService.showWarning(this.textCatalog.get('noBusinessRole'));
+      this.loadTenants();
+      return;
+    }
+
+    if (this.CurrentIP) {
+      const session = new Session(
+        token,
+        refreshToken,
+        usuario,
+        this.CurrentIP,
+        pending.TenantId,
+        pending.Sucursal,
+        pending.Cultura,
+      );
+      this.storageService.setCurrentSession(session);
+      this.inicializarCulturaUsuario(session, usuario);
+
+      this.estacionService.getAll().subscribe({
+        next: (estResp) => {
+          this.spinnerService.hide();
+
+          const estaciones = estResp?.Data ?? [];
+          const estacion   = estaciones.find(e => e.IdentificadorUnico === this.CurrentIP);
+
+          if (!estacion) {
+            this.ensureConfigThenNavigate('/dashboard');
+            return;
+          }
+
+          usuario.TipoCompu = estacion.Tipo;
+          session.User      = usuario;
+          this.storageService.setCurrentSession(session);
+
+          if (estacion.Tipo === EstacionTipoEnum.CAJA) {
+            this.router.navigateByUrl('/caja');
+          } else if (estacion.Tipo === EstacionTipoEnum.MOZO) {
+            this.router.navigateByUrl('/mozo');
+          } else {
+            this.ensureConfigThenNavigate('/dashboard');
+          }
+        },
+        error: (error) => {
+          this.spinnerService.hide();
+          this.storageService.removeCurrentSession();
+          if (error?.status === 402) {
+            return;
+          }
+          this.notificationService.showError(this.textCatalog.get('couldNotLoadStations'));
+          this.loadTenants();
+        }
+      });
+
+    } else {
+      if (!isAdmin) {
+        this.spinnerService.hide();
+        Swal.fire({
+          title: this.textCatalog.get('stationNotConfigured'),
+          text: this.textCatalog.get('stationIdentifierMissing'),
+          icon: 'warning',
+          confirmButtonText: this.textCatalog.get('accept')
+        });
+        this.loadTenants();
+        return;
+      }
+
+      usuario.TipoCompu = EstacionTipoEnum.ADMINISTRADOR;
+      const session = new Session(
+        token,
+        refreshToken,
+        usuario,
+        this.CurrentIP,
+        pending.TenantId,
+        pending.Sucursal,
+        pending.Cultura,
+      );
+      this.storageService.setCurrentSession(session);
+      this.inicializarCulturaUsuario(session, usuario);
+
+      this.spinnerService.hide();
+      this.ensureConfigThenNavigate('/dashboard');
+    }
+  }
+
+  /**
+   * El tenant aporta la cultura inicial. La preferencia persistida del usuario,
+   * cuando existe, la reemplaza sin modificar el país ni sus reglas fiscales.
+   */
+  private inicializarCulturaUsuario(
+    session: Session,
+    usuario: Usuario,
+  ): void {
+    this.textCatalog.setCulture(session.Cultura);
+
+    this.usuarioService.getUsuarioActual().subscribe({
+      next: response => {
+        const perfil = response?.Data;
+        const activeSession = this.storageService.getCurrentSession();
+        if (!perfil || activeSession?.Token !== session.Token) {
+          return;
+        }
+
+        const token = usuario.Token;
+        const tipoCompu = usuario.TipoCompu;
+        Object.assign(usuario, perfil);
+        usuario.Token = token;
+        usuario.TipoCompu = tipoCompu;
+
+        session.User = usuario;
+        session.Cultura = perfil.Cultura || session.CulturaTenant;
+        this.storageService.setCurrentSession(session);
+        this.textCatalog.setCulture(session.Cultura);
+      },
+      error: () => {
+        this.textCatalog.setCulture(session.CulturaTenant);
+      },
+    });
+  }
+
+  // ── Config guard ──────────────────────────────────────────────────────────
 
   private isConfigValid(cfg: Configuracion | null | undefined): boolean {
     if (!cfg) return false;
     return !!cfg.RazonSocial && !!cfg.NombreComercial && !!cfg.Direccion &&
-          !!cfg.Telefono && !!cfg.NumeroIdentificacion && cfg.IdTipoIdentidad !== null && cfg.IdTipoIdentidad !== undefined;
+           !!cfg.Telefono && !!cfg.NumeroIdentificacion &&
+           cfg.IdTipoIdentidad !== null && cfg.IdTipoIdentidad !== undefined;
   }
 
   private ensureConfigThenNavigate(targetUrl: string): void {
     this.spinnerService.show();
     this.configService.get().subscribe({
       next: (cfg) => {
+        this.spinnerService.hide();
         if (this.isConfigValid(cfg)) {
-          this.spinnerService.hide();
           this.router.navigateByUrl(targetUrl);
         } else {
-          this.spinnerService.hide();
           const dialogRef = this.dialog.open(ConfiguracionInicialComponent, {
             width: '920px',
-            disableClose: true, // obliga a completar o cerrar sesión
-            data: { /* puedes pasar cfg si quieres */ }
+            disableClose: true,
+            data: { modoInicial: true },
           });
-
           dialogRef.afterClosed().subscribe((result) => {
-            // convenciones: true/'saved' => guardó; falsy => canceló/cerró
             if (result === true || result === 'saved') {
               this.router.navigateByUrl(targetUrl);
             } else {
@@ -98,209 +429,117 @@ export class LoginComponent implements OnInit {
       },
       error: () => {
         this.spinnerService.hide();
-        // Si falla la consulta de config, mejor no dejar entrar
         this.logoutAndReturnToLogin();
       }
     });
   }
 
   private logoutAndReturnToLogin(): void {
-    try {
-      this.storageService.logout?.();
-    } catch {}
-    this.cookieService.delete('clientUUID', this.CurrentIP);
-    this.router.navigateByUrl('/login');
+    try { this.storageService.logout?.(); } catch {}
+    this.router.navigateByUrl('/iniciar-sesion');
   }
 
-  ngOnInit(): void {
-    this.checkIfIos();
-    this.loadTenants();
+  // ── PWA ───────────────────────────────────────────────────────────────────
 
-    let clientUUID = this.cookieService.get('clientUUID');
-    if (clientUUID) {
-      this.identifierExists = true;
-      this.CurrentIP = clientUUID;
-    } else {
-      this.identifierExists = false;
-    }
-
-    this.initForm();
-    const currentSession = this.storageService.getCurrentSession();
-    if (currentSession) {
-      const currentUser = currentSession.User;
-      if (currentUser.IdNivel === 1) {
-        this.router.navigateByUrl('/dashboard');
-      } else if (currentUser.IdNivel === 2 || currentUser.IdNivel === 3) {
-        this.router.navigateByUrl('/ventas');
-      }
-    }
-  }
-
-  checkIfIos() {
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    this.isiOS = /iphone|ipad|ipod/.test(userAgent);
-    
+  checkIfIos(): void {
+    const ua = window.navigator.userAgent.toLowerCase();
+    this.isiOS = /iphone|ipad|ipod/.test(ua);
     if (this.isiOS && !window.navigator['standalone']) {
-      console.log("Not in standalone mode");
       this.showInstallButton = false;
-      alert('Para instalar la aplicación en iOS, abre el menú de compartir y selecciona "Agregar a la pantalla de inicio".');
+      alert(this.textCatalog.get('iosInstallHint'));
     }
   }
 
-  // Método para manejar la instalación en dispositivos compatibles
-  installPWA() {
+  installPWA(): void {
     this.deferredPrompt.prompt();
-    this.deferredPrompt.userChoice.then((choiceResult: any) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('El usuario aceptó la instalación');
-      } else {
-        console.log('El usuario rechazó la instalación');
-      }
-      this.deferredPrompt = null;
-    });
-  }
-  
-  async initForm() {
-    this.loginForm = this.fb.group({
-      tenant: [null, Validators.required],
-      idNivel: ['', Validators.required],
-      password: ['', Validators.required],
-      identifier: [{ value: '', disabled: true }, []], // Inicialmente deshabilitado
-    });
-  
-    // Suscribirse a cambios en idNivel
-    this.loginForm.get('idNivel').valueChanges.subscribe(value => {
-      this.toggleIdentifierField(value);
-    });
-  }
-  toggleIdentifierField(idNivelValue: string) {
-    const identifierControl = this.loginForm.get('identifier');
-
-    if ((idNivelValue === '003' || idNivelValue === '002') && !this.identifierExists) {
-      // Habilitar y hacer requerido el campo de identificador
-      identifierControl.enable();
-      identifierControl.setValidators([Validators.required]);
-    } else {
-      // Deshabilitar y limpiar el campo de identificador
-      identifierControl.disable();
-      identifierControl.clearValidators();
-      identifierControl.reset();
-    }
-
-    identifierControl.updateValueAndValidity();
-  }
-  
-
-  private async loadTenants(): Promise<void> {
-      this.spinnerService.show();
-      this.tenantDefault = await this.tenantService.getTenant().toPromise();
-      this.spinnerService.hide();
-
-        // Si solo hay un tenant, seleccionarlo automáticamente
-      if (this.tenantDefault.length === 1) {
-        this.loginForm.controls['tenant'].setValue(this.tenantDefault[0]);
-      }
-  }
-  
-  openPasswordDialog() {
-    const dialogRef = this.dialog.open(DialogMCantComponent, {
-      width: '350px',
-      data: { 
-        title: 'Ingresar Contraseña',
-        hideNumber: true, // Mostrar como contraseña (ocultar números)
-        decimalActive: false // No permitir punto decimal
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && result.value) {
-        this.password = result.value;
-        this.loginForm.controls['password'].setValue(this.password);
-        this.login();
-      }
-    });
+    this.deferredPrompt.userChoice.then(() => { this.deferredPrompt = null; });
   }
 
-  getMaskedPassword(): string {
-    return this.password ? this.password.replace(/./g, '*') : '';
-  }
+  // ── Tenants ───────────────────────────────────────────────────────────────
 
-  shouldShowIdentifierField(): boolean {
-    return (this.loginForm.get('idNivel').value === '003' || this.loginForm.get('idNivel').value === '002') && !this.identifierExists;
-  }
-
-  login() {
-    if (this.loginForm.invalid) {
-      this.notificationService.showWarning('Por favor complete todos los campos.');
-      return;
-    }
-
+  private async loadTenants(recordada?: PendingLogin): Promise<void> {
+    // Con una sucursal recordada el selector permanece oculto únicamente
+    // mientras comprobamos que realmente pertenece al dominio actual.
+    this.showSelector = !recordada;
     this.spinnerService.show();
-    
-    const formValues = this.loginForm.value;
-    const idNivel = formValues.idNivel;
-    const password = formValues.password;
-    const tenant = formValues.tenant; 
-    
-      // Manejar el identificador único para idNivel '003'
-      if (!this.identifierExists) {
-        this.CurrentIP = formValues.identifier;
-        const expirationDate = new Date();
-        expirationDate.setFullYear(expirationDate.getFullYear() + 10); // Establece la expiración en 10 años
-        this.cookieService.set('clientUUID', this.CurrentIP, expirationDate);
-        this.identifierExists = true;
+    try {
+      const resp    = await this.tenantService.getTenant().toPromise();
+      const tenants = resp?.Data ?? [];
+
+      if (!resp || resp.Success === false) {
+        this.showSelector = true;
+        this.notificationService.showError(
+          resp?.Message || this.textCatalog.get('couldNotLoadTenants')
+        );
+        this.loginForm?.get('tenant')?.disable();
+        return;
+      }
+      if (tenants.length === 0) {
+        this.showSelector = true;
+        this.notificationService.showWarning(
+          this.textCatalog.get('noTenantsAvailable')
+        );
+        this.loginForm?.get('tenant')?.disable();
+        return;
       }
 
-    const loginRequest: LoginRequest = {
-      IdNivel: idNivel,
-      Password: password,
-      Ip: this.CurrentIP || '-',   
-    };
+      this.tenantDefault = tenants as any;
 
-    this.loginService.login(loginRequest, tenant.TenantId).subscribe({
-      next: (userData) => {
-        console.log('Login correcto');
-        const session: Session = new Session(userData.Token, userData, this.CurrentIP, tenant.TenantId, tenant.Sucursal);
-        this.storageService.setCurrentSession(session);
-        if (userData.TipoCompu == 0 && this.storageService.getCurrentUser().IdNivel == 1) {
-          this.identifierExists = false;
-          this.cookieService.delete('clientUUID', this.CurrentIP);
-          this.ensureConfigThenNavigate('/dashboard');
-        } else if (userData.TipoCompu == 2) {
-            this.router.navigateByUrl('/caja');
-        } else if (userData.TipoCompu == 1) {
-            this.router.navigateByUrl('/mozo');
-        } else if (userData.TipoCompu == 3) {
-            this.router.navigateByUrl('/dashboard');
-        }else{
-          this.identifierExists = false;
-          this.cookieService.delete('clientUUID', this.CurrentIP);
-          Swal.fire({
-            title: 'Login',
-            text: 'El identificador ' + this.CurrentIP + ' no tiene un Tipo de Estación configurado.',
-            icon: 'warning',
-            confirmButtonText: 'OK'
-          });
+      if (recordada) {
+        const tenantValido = this.tenantDefault.find(
+          tenant => tenant.TenantId?.trim().toLowerCase()
+            === recordada.TenantId.trim().toLowerCase(),
+        );
+
+        if (tenantValido) {
+          const pending = this.toPendingLogin(tenantValido);
+          this.saveSucursal(pending);
+          await this.loginWithTenant(pending);
+          return;
         }
-        this.loginForm.reset();
-        this.spinnerService.hide();
-      },
-      error: (errorData) => {
-        this.loginValid = false;
-        this.notificationService.showError('Contraseña incorrecta');
-        this.loginError = errorData;
-        this.spinnerService.hide();
-      }
-    });
-  }
-}
 
-interface UsersDefault {
-  value: string;
-  nombreNivel: string;
+        // La cookie corresponde a otro host/restaurante. Se descarta para no
+        // iniciar OAuth contra un realm ajeno al dominio que abrió el usuario.
+        this.clearSucursal();
+
+        // Si el dominio solo publica una sucursal, corregimos la selección y
+        // continuamos sin obligar al usuario a confirmar un dato inequívoco.
+        if (this.tenantDefault.length === 1) {
+          const pending = this.toPendingLogin(this.tenantDefault[0]);
+          this.saveSucursal(pending);
+          await this.loginWithTenant(pending);
+          return;
+        }
+
+        this.showSelector = true;
+      }
+
+      if (this.tenantDefault.length === 1) {
+        this.loginForm?.controls['tenant']?.setValue(this.tenantDefault[0]);
+      }
+    } catch {
+      this.showSelector = true;
+      this.notificationService.showError(
+        this.textCatalog.get('couldNotLoadTenantsRetry')
+      );
+      this.loginForm?.get('tenant')?.disable();
+    } finally {
+      this.spinnerService.hide();
+    }
+  }
+
+  private toPendingLogin(tenant: TenantDefault): PendingLogin {
+    return {
+      TenantId: tenant.TenantId,
+      Sucursal: tenant.Sucursal,
+      Cultura: tenant.Cultura,
+    };
+  }
 }
 
 interface TenantDefault {
-  TenantId: string;
-  Sucursal: string;
+  TenantId:  string;
+  Sucursal:  string;
+  Cultura: string;
+  ZonaHorariaId: string;
 }

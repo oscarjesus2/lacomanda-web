@@ -1,0 +1,38 @@
+<section class="executive-widget">
+  <header class="executive-widget__header">
+    <div>
+      <span class="executive-widget__eyebrow">{{ 'profitability' | tenantText }}</span>
+      <h3 class="executive-widget__title">{{ 'marginEvolution' | tenantText }}</h3>
+      <p class="executive-widget__subtitle">{{ 'marginEvolutionSubtitle' | tenantText }}</p>
+    </div>
+    <div class="executive-legend">
+      <span><i class="executive-legend__swatch is-sale"></i>{{ 'analyzedSales' | tenantText }}</span>
+      <span><i class="executive-legend__swatch is-cost"></i>{{ 'historicalCost' | tenantText }}</span>
+      <span><i class="executive-legend__swatch is-margin"></i>{{ 'grossMargin' | tenantText }}</span>
+    </div>
+  </header>
+
+  <div class="executive-kpis executive-kpis--three" *ngIf="data">
+    <article class="executive-kpi">
+      <span>{{ 'analyzedSales' | tenantText }}</span>
+      <strong>{{ simboloMoneda }} {{ data.VentaAnalizada | number:'1.2-2' }}</strong>
+    </article>
+    <article class="executive-kpi">
+      <span>{{ 'historicalCost' | tenantText }}</span>
+      <strong>{{ simboloMoneda }} {{ data.CostoHistorico | number:'1.2-2' }}</strong>
+    </article>
+    <article class="executive-kpi is-emphasis">
+      <span>{{ 'grossMargin' | tenantText }}</span>
+      <strong>{{ simboloMoneda }} {{ data.Margen | number:'1.2-2' }}</strong>
+      <small>{{ data.MargenPorcentaje | number:'1.1-1' }}%</small>
+    </article>
+  </div>
+
+  <div class="executive-notice" *ngIf="data?.DocumentosSinCosto">
+    {{ 'incompleteCostData' | tenantText:{ count: data.DocumentosSinCosto, amount: (data.VentaSinCosto | number:'1.2-2') } }}
+  </div>
+  <div class="executive-chart" #chart></div>
+  <div class="executive-state" *ngIf="loading">{{ 'loading' | tenantText }}</div>
+  <div class="executive-state is-error" *ngIf="error">{{ 'reportLoadError' | tenantText }}</div>
+  <div class="executive-state" *ngIf="!loading && !error && data && !data.VentaTotal">{{ 'noDataForRange' | tenantText }}</div>
+</section>

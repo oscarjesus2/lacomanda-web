@@ -6,7 +6,7 @@ import Swal from 'sweetalert2/dist/sweetalert2.js';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { PedidoCab } from '../../models/pedido.models';
 import { PedidoDet } from '../../models/pedidodet.models';
-import { MesasService } from '../../services/mesas.service';
+import { EspaciosService } from '../../services/espacios.service';
 import { PedidoService } from '../../services/pedido.service';
 import { ProductGrid } from '../../models/product.grid.models';
 import { Producto } from 'src/app/models/product.models';
@@ -23,7 +23,7 @@ export class DialogVerPedidoComponent {
     public ListaProductosdisplayedColumns: string[] = ['nombrecorto', 'precio', 'cantidad', 'delete'];
     public GridListaPedidoDetProducto = new MatTableDataSource<PedidoDet>();
 
-    public HoraPedido: string = '';
+    public HoraPedido: Date | null = null;
     public IdPedido: string ='';
     public Mozo:string='';
     public Total: string='';
@@ -31,13 +31,13 @@ export class DialogVerPedidoComponent {
         public dialogRef: MatDialogRef<DialogVerPedidoComponent>,
         private storageService: StorageService,
         private pedidoService: PedidoService,
-        private mesasService: MesasService,
+        private espaciosService: EspaciosService,
         private spinnerService: NgxSpinnerService,
         @Inject(MAT_DIALOG_DATA) public data: DialogData) {  
             this.data.Resultado = false;
             var oPedidoDet: PedidoDet;
             var ListaPedidoDet: PedidoDet[] = [];
-            this.data.oPedidoMesa.forEach(data => {
+            this.data.oPedidoEspacio.forEach(data => {
               oPedidoDet = new PedidoDet(
                 {
                     Item: data.Item, IdPedido : data.IdPedido,
@@ -48,10 +48,10 @@ export class DialogVerPedidoComponent {
               ListaPedidoDet.push(oPedidoDet);
             });
 
-            var firstItem = data.oPedidoMesa[0];
+            var firstItem = data.oPedidoEspacio[0];
             this.Mozo = firstItem.Mozo;
             this.IdPedido = firstItem.IdPedido;
-            this.HoraPedido = firstItem.HoraPedido;
+            this.HoraPedido = firstItem.FechaApertura;
             this.Total= firstItem.Total;
             this.GridListaPedidoDetProducto.data= ListaPedidoDet;
         }
@@ -69,7 +69,7 @@ export class DialogVerPedidoComponent {
         try {
             this.spinnerService.show();
         
-            var listData: any[] = await this.mesasService.ImprimirPrecuenta(this.data.IdMesa).toPromise();
+            var listData: any[] = await this.espaciosService.ImprimirPrecuenta(this.data.IdEspacio).toPromise();
             this.data.Resultado = true;
             this.dialogRef.close(this.data);
         }catch(e){
@@ -90,9 +90,9 @@ export class DialogVerPedidoComponent {
 }
 
 export interface DialogData {
-    oPedidoMesa: any,
-    IdMesa: number,
-    Mesa: string,
+    oPedidoEspacio: any,
+    IdEspacio: number,
+    Espacio: string,
     Resultado: boolean,
 }
 

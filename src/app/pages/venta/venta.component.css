@@ -1,373 +1,1042 @@
+/* ============================================================
+   venta.component.css
+   Layout: dos columnas 50/50 — NO modificar estructura.
+   Estilos visuales usando design tokens de styles.scss.
+   ============================================================ */
+
+/* ══════════════════════════════════════════════════════════════
+   CONTENEDOR RAÍZ
+══════════════════════════════════════════════════════════════ */
 .container {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   height: 100vh;
   padding: 10px;
+  background-color: var(--color-bg);
+  box-sizing: border-box;
 }
-.admin-fab {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 1000;
-}
-.column-left, .column-right {
-  border: 1px solid #ccc;
-  padding: 10px;
+
+/* ══════════════════════════════════════════════════════════════
+   COLUMNAS
+══════════════════════════════════════════════════════════════ */
+.column-left,
+.column-right {
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+  padding: 10px;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   ZONA — CABECERA (turno, fecha, usuario, canal)
+══════════════════════════════════════════════════════════════ */
 .top-section {
   display: flex;
-  justify-content: space-between; /* Distribuye el contenido en dos partes: info y botones */
-  align-items: center; /* Alinea verticalmente el contenido */
-  background-color: #FFF3E0; /* Fondo cálido */
-  padding: 15px 20px; /* Espaciado interno */
-  border-radius: 10px; /* Bordes redondeados */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
-  font-size: 16px; /* Tamaño de la fuente */
-  margin-bottom: 20px; /* Espacio inferior */
-  color: #5D4037; /* Marrón oscuro para el texto */
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(120deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-md);
+  flex-shrink: 0;
 }
 
-.top-section label {
-  font-weight: bold; /* Negrita para el texto */
-}
-
-button:disabled {
-  background-color: #ccc; /* Cambia el fondo */
-  color: #666; /* Cambia el color del texto */
-  cursor: not-allowed; /* Cambia el cursor */
-  opacity: 0.7; /* Hace que se vea un poco más claro */
-}
-
-.channel-buttons {
+/* ── Info de sesión (turno, fecha, usuario) ────────────────── */
+.session-info {
   display: flex;
-  gap: 10px; /* Espacio entre los botones */
+  align-items: center;
+  gap: 0;
 }
 
-.channel-buttons button {
+.session-info__item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border-right: 1px solid rgba(255, 255, 255, 0.20);
+}
+
+.session-info__item:first-child {
+  padding-left: 0;
+}
+
+.session-info__item:last-child {
+  border-right: none;
+}
+
+.session-info__icon-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 15px;
-  background-color: #FF7043; /* Naranja cálido */
-  color: #FFFFFF;
-  border-radius: 8px; /* Bordes redondeados */
-  border: 2px solid transparent;
-  cursor: pointer;
-  font-size: 14px; /* Tamaño del texto */
-  font-weight: bold;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
-  transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
+  flex-shrink: 0;
 }
 
-.channel-buttons button fa-icon {
-  margin-right: 8px; /* Espacio entre el icono y el texto */
-  font-size: 18px; /* Tamaño del icono */
+.session-info__icon-wrap mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-light);
+}
+
+.session-info__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.session-info__label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.session-info__value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.session-info__badge {
+  display: inline-block;
+  background: var(--color-accent);
+  color: var(--color-text);
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  vertical-align: middle;
+  letter-spacing: 0.05em;
+}
+
+/* ── Botones de canal ──────────────────────────────────────── */
+.channel-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.channel-buttons button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: var(--transition-fast);
 }
 
 .channel-buttons button:hover {
-  background-color: #FF5722; /* Naranja más oscuro al hacer hover */
-  border-color: #FFA726; /* Borde visible en hover */
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada en hover */
+  background-color: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 .channel-buttons button:active {
-  background-color: #E64A19; /* Color más oscuro al hacer clic */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Reduce la sombra en clic */
+  transform: translateY(1px);
+  background-color: rgba(255, 255, 255, 0.10);
 }
 
+.channel-buttons button mat-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+}
 
+.channel-buttons .channel-buttons__reservations {
+  border-color: rgba(255, 208, 76, 0.75);
+  color: #fff5cf;
+}
+
+.channel-buttons .channel-buttons__qr-requests {
+  border-color: #ffd04c;
+  background: #fff4cc;
+  color: #711400;
+  animation: qrRequestPulse 1.5s ease-in-out infinite;
+}
+
+.channel-buttons .channel-buttons__qr-requests:hover {
+  background: #ffffff;
+  border-color: #ffd04c;
+}
+
+.channel-buttons__count {
+  display: inline-grid;
+  min-width: 20px;
+  height: 20px;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: #a00000;
+  color: #ffffff;
+  font-size: 11px;
+  line-height: 1;
+}
+
+@keyframes qrRequestPulse {
+  50% { box-shadow: 0 0 0 5px rgba(255, 208, 76, .2); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ZONA — INFO MESA / PEDIDO
+══════════════════════════════════════════════════════════════ */
+.table-info {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+  background: linear-gradient(120deg, rgba(249,168,37,0.10) 0%, var(--color-surface-warm) 55%);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+/* ── Tiempos de apertura / envío ───────────────────────────── */
+.tiempos-pedido {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  border-right: 1px solid var(--color-border);
+}
+
+.tiempos-pedido__chip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-warm);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.tiempos-pedido__chip mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-muted);
+}
+
+.tiempos-pedido__chip--envio {
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.tiempos-pedido__chip--envio mat-icon {
+  color: var(--color-success);
+}
+
+.tiempos-pedido__arrow {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-muted);
+}
+
+/* ── Items de info de mesa ─────────────────────────────────── */
+.table-info__item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border-right: 1px solid var(--color-border);
+}
+
+.table-info__item:first-child {
+  padding-left: 0;
+}
+
+.table-info__item:last-child {
+  border-right: none;
+}
+
+.table-info__icon-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(249, 168, 37, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.table-info__icon-wrap mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: var(--color-accent-dark);
+}
+
+.table-info__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.table-info__label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: var(--color-text-muted);
+}
+
+.table-info__value {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+/* Mesa / Pedido Nº — valor principal destacado */
+.table-info__value--primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  color: var(--color-primary-dark);
+}
+
+.table-info__chip {
+  display: inline-block;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.03em;
+}
+
+.table-info__cuenta {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ZONA — SECCIÓN MEDIA (tabla de productos del pedido)
+══════════════════════════════════════════════════════════════ */
 .middle-section {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .data-grid {
-  max-height: 60vh; /* Limita la altura máxima disponible para la tabla */
-  overflow-y: auto; /* Habilita el scroll vertical si el contenido excede la altura */
-  margin-bottom: 20px; /* Espacio inferior antes de los botones */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .data-grid table {
-  width: 100%; /* Asegura que la tabla ocupe todo el ancho disponible */
-  border-collapse: collapse; /* Combina los bordes de las celdas */
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.data-grid th, .data-grid td {
-  padding: 10px;
+.data-grid th,
+.data-grid td {
+  padding: 8px 10px;
   text-align: left;
-  border-bottom: 1px solid #ddd; /* Línea inferior en cada celda */
+  font-size: 13px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .data-grid th {
-  background-color: #FF7043; /* Fondo cálido para el encabezado */
-  color: white; /* Texto en blanco */
-  position: sticky; /* Fija el encabezado de la tabla al hacer scroll */
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  position: sticky;
   top: 0;
-  z-index: 1; /* Asegura que el encabezado esté por encima del contenido */
+  z-index: 1;
 }
 
+.data-grid tr:last-child td {
+  border-bottom: none;
+}
+
+.data-grid tr:hover td {
+  background-color: rgba(230, 81, 0, 0.04);
+}
+
+.selected-row {
+  background-color: color-mix(in srgb, var(--color-success) 10%, transparent) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ZONA — TOTALES
+══════════════════════════════════════════════════════════════ */
+.total-section {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: var(--color-surface-warm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+.total-section__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 8px 10px;
+  border-right: 1px solid var(--color-border);
+  gap: 2px;
+}
+
+.total-section__item:last-child {
+  border-right: none;
+}
+
+.total-section__label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: var(--color-text-muted);
+}
+
+.total-section__value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.total-section__value--discount {
+  color: var(--color-warn);
+}
+
+/* Item TOTAL — protagonista */
+.total-section__item--total {
+  background: var(--color-primary);
+  flex: 1.5;
+}
+
+.total-section__item--total .total-section__label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.total-section__value--total {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ZONA — FILAS DE BOTONES DE ACCIÓN (izquierda)
+══════════════════════════════════════════════════════════════ */
 .button-row {
   display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .button-row button {
-  padding: 10px;
-  background-color: #f1f1f1;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
   border: none;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+  white-space: nowrap;
 }
 
 .button-row button:hover {
-  background-color: #ccc;
+  background-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-md);
 }
 
+.button-row button:active {
+  transform: translateY(1px);
+}
+
+.button-row button:disabled {
+  background-color: var(--color-border);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Estado de error de carga (backend caído) ──────────────── */
+.carga-error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.carga-error__icon {
+  font-size: 56px;
+  width: 56px;
+  height: 56px;
+  color: var(--color-warn);
+  opacity: 0.7;
+}
+
+.carga-error__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.carga-error__sub {
+  font-size: 13px;
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.carga-error__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 10px 20px;
+  background: var(--color-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+}
+
+.carga-error__btn:hover {
+  background: var(--color-primary-dark);
+  box-shadow: var(--shadow-md);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   COLUMNA DERECHA — GRID DE MESAS / PEDIDOS
+══════════════════════════════════════════════════════════════ */
 .tables-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr); /* Cambiado a 7 columnas */
-  gap: 2px;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 4px;
   flex: 1;
+  min-height: 0;
 }
 
 .tables-grid button {
-  color: #333; /* Color del texto para el contraste */
-  padding: 12px 24px;
-  font-size: 14px;
-  border: 2px solid rgba(0, 0, 0, 0.1); /* Sutil borde */
-  border-radius: 8px; /* Bordes redondeados */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08); /* Sombra */
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background-color: var(--color-surface-warm);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition-fast);
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.tables-grid button.espacio-qr-pendiente {
+  position: relative;
+  border: 3px solid #ff9f00;
+  box-shadow: 0 0 0 4px rgba(255, 159, 0, .22), 0 8px 20px rgba(154, 77, 0, .2);
+  animation: mesaQrPulse 1.5s ease-in-out infinite;
+}
+
+.espacio-qr-alerta {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 24px;
+  padding: 3px 5px;
+  border-radius: 999px;
+  background: #a00000;
+  color: #fff;
+  font-size: 9px;
+  line-height: 1;
+  z-index: 2;
+}
+
+.espacio-qr-alerta mat-icon {
+  width: 15px;
+  height: 15px;
+  font-size: 15px;
+}
+
+@keyframes mesaQrPulse {
+  50% { box-shadow: 0 0 0 8px rgba(255, 159, 0, .09), 0 8px 20px rgba(154, 77, 0, .25); }
+}
+
+::ng-deep .swal-qr-code {
+  margin: 12px auto;
+  color: #9a1d08;
+  font: 800 32px/1 monospace;
+  letter-spacing: .16em;
 }
 
 .tables-grid button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.10); /* Sombra más intensa */
+  box-shadow: var(--shadow-md);
 }
 
 .tables-grid button:active {
   transform: translateY(0);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08); /* Restablece la sombra */
 }
 
-.tables-grid button div {
-  text-align: center;
+/* ── Skeleton cards (mientras cargan los datos) ────────────── */
+@keyframes mesa-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
 }
 
+.tables-grid__skeleton {
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--color-border)                                              25%,
+    color-mix(in srgb, var(--color-border) 40%, var(--color-surface)) 50%,
+    var(--color-border)                                              75%
+  );
+  background-size: 200% 100%;
+  animation: mesa-shimmer 1.4s ease-in-out infinite;
+  border: 1px solid var(--color-border);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   COLUMNA DERECHA — GRID DE PRODUCTOS
+══════════════════════════════════════════════════════════════ */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr); /* Los productos siguen siendo de 8 botones por fila */
-  gap: 2px;
+  grid-template-columns: repeat(8, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 4px;
   flex: 1;
+  min-height: 0;
 }
+
 .products-grid button {
- 
-  background-color: var(--secondary-color); /* Color de fondo */
-  color: var(--text-color); /* Color del texto */
-  border-radius: 5px;
   border: none;
-  display: flex; /* Usamos flexbox para alinear el contenido */
-  justify-content: center; /* Centramos horizontalmente */
-  align-items: center; /* Centramos verticalmente */
-  text-align: center; /* Aseguramos que el texto se centre */
-  font-size: 14px; /* Ajustar según tu necesidad */
-  padding: 5px; /* Espacio mínimo alrededor del texto */
-  line-height: 1.2; /* Ajuste de altura de línea para espaciar el texto */
-  white-space: normal; /* Permitir que el texto se divida en varias líneas */
-  overflow: hidden;
-  word-wrap: break-word; /* Permitir que las palabras largas se dividan */
-
-}
-
-.tables-grid button {
-  background-color: var(--secondary-color); /* Fondo */
-  color: var(--text-color); /* Color del texto */
-  border-radius: 5px;
-  border: none;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis; /* Muestra '...' si el texto es muy largo */
-  cursor: pointer;
-  display: flex; /* Usamos flex para alinear el texto */
-  justify-content: center; /* Centra horizontalmente */
-  align-items: center; /* Centra verticalmente */
-  font-size: 13px; /* Ajusta el tamaño del texto */
-  padding: 1 5px; /* Reduce el padding horizontal para aprovechar más el espacio */
-
-}
-
-.tables-grid button.active, .products-grid button:hover {
-  background-color: #4CAF50;
-  color: white;
-}
-
-/* Estilos para las filas de botones estáticos */
-.static-buttons-row {
-  display: flex;
-  justify-content: flex-start;
-  gap: 10px; /* Añade espacio entre los botones */
-  margin-top: 15px;
-}
-
-/* Estilos para los botones estáticos */
-.static-buttons-row button {
-  padding: 12px 20px; /* Aumenta el padding para hacer los botones más grandes */
-  background-color: #FF7043; /* Naranja cálido */
-  border: none;
-  cursor: pointer;
-  border-radius: 8px; /* Bordes redondeados */
-  color: #FFFFFF; /* Texto en blanco para mejor contraste */
-  font-size: 14px; /* Tamaño del texto */
-  font-weight: bold; /* Texto en negrita */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra sutil */
-  transition: background-color 0.3s, box-shadow 0.3s; /* Transiciones suaves */
-  /*text-transform: uppercase;  Texto en mayúsculas para darle un toque moderno */
-}
-
-.static-buttons-row button:hover {
-  background-color: #FF5722; /* Naranja más oscuro al hacer hover */
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada en hover */
-}
-
-.static-buttons-row button.selected {
-  background-color: #4CAF50; /* Color verde cuando está seleccionado */
-}
-
-/* Estilos específicos para el botón "Procesar Pedido" */
-.static-buttons-row button.process-pedido {
-  background-color: #FF9800; /* Color más llamativo */
-  font-size: 14px; /* Un poco más grande que el resto */
-  padding: 14px 24px; /* Padding más grande */
-  border: 2px solid #FFA726; /* Borde sólido que lo destaca */
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
-}
-
-.static-buttons-row button.process-pedido:hover {
-  background-color: #FFB74D; /* Un color más claro al hacer hover */
-  box-shadow: 0 8px 10px rgba(0, 0, 0, 0.3); /* Sombra más profunda al hacer hover */
-}
-
-/* Efecto adicional de clic */
-.static-buttons-row button:active {
-  background-color: #E64A19; /* Color más oscuro cuando se hace clic */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Reduce la sombra al hacer clic */
-}
-
-
-.table-info {
-  display: flex;
-  justify-content: space-between; /* Asegura que los elementos se distribuyan en toda la fila */
-  align-items: center; /* Alinea verticalmente los elementos */
-  gap: 20px; /* Espacio entre los elementos */
-   background-color: #FFF3E0; /* Fondo cálido */
-  padding: 15px 20px;
-  border-radius: 10px; /* Bordes redondeados */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
-  font-size: 16px;
-  margin-bottom: 20px;
-  color: #5D4037; /* Marrón oscuro */
-  flex-wrap: wrap; /* Permitir que los elementos se envuelvan si no caben en una fila */
-}
-
-.table-info label {
-  font-weight: bold;
-  margin-right: 15px; /* Espaciado entre el texto */
-}
-
-.table-info div {
-  display: flex;
-  align-items: center;
-  margin: 0; /* Remueve márgenes adicionales */
-}
-
-.table-info label,
-.table-info div {
-  flex: 1 1 auto; /* Asegura que los elementos se distribuyan uniformemente */
-  min-width: 150px; /* Ancho mínimo para evitar que los elementos se colapsen */
-}
-
-
-.table-info label span {
-  font-weight: normal; /* El contenido de la información no necesita ser en negrita */
-  margin-left: 5px; /* Espacio entre el título y el contenido */
-}
-
-.total-section {
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
-  justify-content: space-between; /* Espacio entre los elementos */
-  background-color: #FFF3E0; /* Fondo cálido */
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra sutil */
-  font-size: 16px;
-  margin-bottom: 20px;
-}
-
-.total-section label {
-  font-weight: bold;
-  color: #5D4037; /* Marrón oscuro */
-}
-
-.total-section input {
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #FF7043; /* Borde naranja cálido */
-  font-size: 16px;
-  width: 100px; /* Ancho fijo para los inputs */
-}
-
-.button-row {
-  display: flex;
-  justify-content: space-between; /* Espacio entre los botones */
-  gap: 10px; /* Añadir espacio entre los botones */
-  margin-top: 15px;
-}
-
-.button-row button {
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 20px;
-  background-color: #FF7043; /* Naranja cálido */
-  color: #FFFFFF;
-  border-radius: 8px;
-  border: 2px solid transparent;
+  text-align: center;
+  padding: 4px;
   cursor: pointer;
-  font-size: 14px; /* Tamaño del texto */
-  font-weight: bold;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
-  transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
+  line-height: 1.2;
+  white-space: normal;
+  overflow: hidden;
+  word-break: break-word;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition-fast);
 }
 
-.button-row button fa-icon {
-  margin-right: 8px; /* Espacio entre el icono y el texto */
-  font-size: 18px; /* Tamaño del icono */
+.products-grid button:hover {
+  filter: brightness(0.92);
+  box-shadow: var(--shadow-sm);
 }
 
-.button-row button:hover {
-  background-color: #FF5722; /* Naranja más oscuro al hacer hover */
-  border-color: #FFA726; /* Borde visible en hover */
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
+.products-grid button:active {
+  filter: brightness(0.85);
 }
 
-.button-row button:active {
-  background-color: #E64A19; /* Color más oscuro cuando se hace clic */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Reduce la sombra cuando se hace clic */
+/* ══════════════════════════════════════════════════════════════
+   COLUMNA DERECHA — BARRA INFERIOR (familias + subfamilias)
+══════════════════════════════════════════════════════════════ */
+.static-buttons-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 2px;
 }
 
-.selected-row {
-  background-color: #d1e7dd; /* Color de fondo para la fila seleccionada */
-  color: #000; /* Color de texto de la fila seleccionada */
+.static-buttons-row button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition-fast);
 }
 
+.static-buttons-row button:hover {
+  background-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.static-buttons-row button:active {
+  transform: translateY(1px);
+}
+
+.static-buttons-row button:disabled {
+  background-color: var(--color-border);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Seleccionado (familia / subfamilia activa) */
+.static-buttons-row button.selected {
+  background-color: var(--color-success);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Procesar Pedido — destacado */
+.static-buttons-row button.process-pedido {
+  background-color: var(--color-accent);
+  color: var(--color-text);
+  border: 2px solid var(--color-accent-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.static-buttons-row button.process-pedido:hover {
+  background-color: var(--color-accent-dark);
+  color: var(--color-text-light);
+}
+
+/* ── FAMILIA — fila principal, más protagonismo ─────────────── */
+.static-buttons-row--familia {
+  background: var(--color-primary-dark);
+  padding: 6px 8px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.static-buttons-row--familia button {
+  height: 38px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.80);
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+}
+
+.static-buttons-row--familia button:hover {
+  background: rgba(255, 255, 255, 0.20);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Familia ACTIVA — amber dorado, muy visible */
+.static-buttons-row--familia button.selected {
+  background: var(--color-accent) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-accent-dark) !important;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--color-accent) 50%, transparent) !important;
+  font-weight: 800;
+}
+
+/* Botón buscar — diferenciado */
+.static-buttons-row--familia .btn-buscar {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.30) !important;
+  color: rgba(255, 255, 255, 0.60) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+}
+
+.static-buttons-row--familia .btn-buscar:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #fff !important;
+}
+
+/* ── SUBFAMILIA — fila secundaria, más discreta ─────────────── */
+.static-buttons-container--subfamilia {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--color-primary-dark) 55%, transparent);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  padding: 4px 8px 6px;
+}
+
+.static-buttons-row--subfamilia {
+  gap: 5px;
+}
+
+.static-buttons-row--subfamilia button {
+  height: 30px;
+  font-size: 11px;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.65);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: var(--transition-fast);
+}
+
+.static-buttons-row--subfamilia button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Subfamilia ACTIVA — teal sólido */
+.static-buttons-row--subfamilia button.selected {
+  background: var(--color-primary-light) !important;
+  color: var(--color-primary-dark) !important;
+  border-color: var(--color-primary-light) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--color-primary-light) 40%, transparent) !important;
+}
+
+/* ── AMBIENTE — misma jerarquía que FAMILIA ─────────────────── */
+.static-buttons-row--ambiente {
+  background: var(--color-primary-dark);
+  padding: 6px 8px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.static-buttons-row--ambiente button {
+  height: 36px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.80);
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+}
+
+.static-buttons-row--ambiente button:hover {
+  background: rgba(255, 255, 255, 0.20);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Ambiente ACTIVO — amber dorado */
+.static-buttons-row--ambiente button.selected {
+  background: var(--color-accent) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-accent-dark) !important;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--color-accent) 50%, transparent) !important;
+  font-weight: 800;
+}
+
+/* ── ACCIONES DE MESA — fila subordinada oscura ─────────────── */
+.static-buttons-row--acciones {
+  background: color-mix(in srgb, var(--color-primary-dark) 55%, transparent);
+  padding: 5px 8px 7px;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  gap: 5px;
+}
+
+/* Todas las acciones: ghost sobre fondo oscuro */
+.static-buttons-row--acciones button {
+  height: 32px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.70);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.static-buttons-row--acciones button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.40);
+}
+
+.static-buttons-row--acciones button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Procesar Pedido / Nuevo Pedido — acción primaria, amber */
+.static-buttons-row--acciones button.process-pedido {
+  background: var(--color-accent) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-accent-dark) !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent) 40%, transparent) !important;
+}
+
+.static-buttons-row--acciones button.process-pedido:hover {
+  background: var(--color-accent-dark) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent) 55%, transparent) !important;
+}
+
+/* Contenedor de subfamilias — scroll horizontal (genérico legacy) */
 .static-buttons-container {
-  width: 750px; /* Ocupa el 100% del espacio de la segunda columna (que es el 50% de la pantalla) */
-  overflow-x: auto; /* Permite el desplazamiento horizontal si es necesario */
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
 }
 
+.static-buttons-container .static-buttons-row {
+  flex-wrap: nowrap;
+  padding-bottom: 2px;
+}
+
+/* ── Banner de modo traslado ───────────────────────────────── */
+.traslado-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  color: var(--color-text);
+  flex-shrink: 0;
+}
+
+.traslado-banner__icon {
+  color: var(--color-primary);
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  flex-shrink: 0;
+}
+
+.traslado-banner__text {
+  flex: 1;
+  line-height: 1.3;
+}
+
+.traslado-banner__cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--color-warn);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-warn);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition-fast);
+}
+
+.traslado-banner__cancel mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+}
+
+.traslado-banner__cancel:hover {
+  background: color-mix(in srgb, var(--color-warn) 10%, transparent);
+}
+
+/* Variante azul para Unir Cuenta */
+.traslado-banner--unir {
+  background: color-mix(in srgb, var(--color-info, #1976d2) 12%, var(--color-surface));
+  border-color: var(--color-info, #1976d2);
+}
+.traslado-banner--unir .traslado-banner__icon {
+  color: var(--color-info, #1976d2);
+}
+
+/* ── Botón acción principal (Enviar Pedido) ────────────────── */
+.btn--primary-action {
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%) !important;
+  color: var(--color-text) !important;
+  font-size: 13px !important;
+  box-shadow: 0 4px 12px rgba(249, 168, 37, 0.45) !important;
+  border: 2px solid var(--color-accent-dark) !important;
+}
+
+.btn--primary-action:hover:not(:disabled) {
+  box-shadow: 0 6px 18px rgba(249, 168, 37, 0.55) !important;
+  transform: translateY(-1px);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DISABLED GLOBAL
+══════════════════════════════════════════════════════════════ */
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

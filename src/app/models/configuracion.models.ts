@@ -18,7 +18,7 @@ export class Configuracion {
   PiePagina: string;
   Traslado: boolean;
   Precuentas: boolean;
-  CambioMesa: boolean;
+  CambioEspacio: boolean;
   Diario: boolean;
   NroPrecuentas: number;
   Anfitrionas: boolean;
@@ -31,5 +31,15 @@ export class Configuracion {
   TieneProductoPropina: boolean;
   TieneProductoPrecioDelivery: boolean;
   TieneDescuentoTragoCortesia: boolean;
-  Servicio: number;  
+  Servicio: number;
+  IdMoneda: string;
+  SimboloMoneda: string;
+  CodigoISO4217: string;
+}
+
+export interface ConfiguracionInicial {
+  RazonSocial: string;
+  NombreComercial: string;
+  Direccion: string;
+  Telefono: string;
 }

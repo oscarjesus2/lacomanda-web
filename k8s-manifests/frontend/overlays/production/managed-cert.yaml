@@ -1,7 +1,3 @@
-apiVersion: networking.gke.io/v1
-kind: ManagedCertificate
-metadata:
-  name: frontend-cert
-spec:
-  domains:
-    - app.lacomanda.store
+# Ya no se usa: el TLS de producción (app + tenants) lo cubre el cert comodín de
+# cert-manager (ver certificate.yaml + ingress.yaml). Este archivo está fuera del
+# kustomization y puede borrarse.

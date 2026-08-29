@@ -1,0 +1,38 @@
+// ============================================================
+// LaComanda – Angular Material Theme
+// Paleta: Deep Orange (calidez/restaurante) + Amber (dorado)
+// Ciencia del color: naranja-ámbar estimula el apetito,
+// crea urgencia y calidez — ideal para hostelería.
+// ============================================================
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+// PRIMARY: Deep Orange 800 — cálido, energético, apetitoso
+$LaComanda-primary: mat.define-palette(mat.$deep-orange-palette, 800, 600, 900);
+
+// ACCENT: Amber 600 — dorado cálido, premium
+$LaComanda-accent: mat.define-palette(mat.$amber-palette, 600, 400, 800);
+
+// WARN: Red 700
+$LaComanda-warn: mat.define-palette(mat.$red-palette, 700);
+
+$LaComanda-theme: mat.define-light-theme((
+  color: (
+    primary: $LaComanda-primary,
+    accent:  $LaComanda-accent,
+    warn:    $LaComanda-warn,
+  ),
+  typography: mat.define-typography-config(
+    $font-family: 'Roboto, "Helvetica Neue", sans-serif',
+  ),
+));
+
+@include mat.all-component-themes($LaComanda-theme);
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #FFF8F2;
+}

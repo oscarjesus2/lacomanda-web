@@ -3,6 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs';
 import { Cliente } from '../models/cliente.models';
 import { environment } from 'src/environments/environment';
+import { ApiResponse } from '../interfaces/apirResponse.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -12,13 +13,16 @@ export class ClienteService {
 
   constructor(private http: HttpClient) { }
 
-  ServicioBuscarCliente(numeroRuc: string, idTipoEntidad: string): Observable<Cliente[]> {
-    return this.http.get<[Cliente]>(this.basePath + '/servicio/' + numeroRuc + '/' + idTipoEntidad);
-  }
-  getClientes(): Observable<any> {
-    return this.http.get<any>(this.basePath);
+  buscarPorIdentidad(numeroIdentificacion: string, idTipoIdentidad: string): Observable<Cliente | null> {
+    return this.http.get<Cliente | null>(
+      this.basePath + '/identidad/' + numeroIdentificacion + '/' + idTipoIdentidad
+    );
   }
 
+  getClientes(): Observable<ApiResponse<Cliente[]>> {
+          return this.http.get<ApiResponse<Cliente[]>>(this.basePath);
+  }
+  
   getCliente(id: string): Observable<Cliente> {
     return this.http.get<Cliente>(`${this.basePath}/${id}`);
   }

@@ -1,195 +1,362 @@
-<div class="container">
-  <button mat-icon-button class="close-button" (click)="salir()">
+<div class="mant-panel cobranza-panel">
+  <button
+    mat-icon-button
+    class="close-button"
+    [attr.aria-label]="'closeDialog' | tenantText"
+    (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
-  <br>
-  <form [formGroup]="form">
-    <div>
-      <div class="form-row">
 
-        <mat-form-field appearance="outline" class="h1-field">
-          <mat-label>Tipo Documento</mat-label>
-          <mat-select formControlName="idTipoDoc" name="tipoDocumento" (selectionChange)="onTipoDocumentoChange()"  required>
+  <h2>{{ 'paymentAndIssueDocument' | tenantText }}</h2>
+
+  <div class="cobranza-panel__layout">
+
+    <!-- ══ COLUMNA IZQUIERDA: COMPROBANTE + CLIENTE ══════════════ -->
+    <div class="cobranza-panel__col-info">
+
+      <p class="cobranza-panel__col-label">{{ 'documentData' | tenantText }}</p>
+
+      <form [formGroup]="form" class="cobranza-panel__form">
+        <!-- Tipo Documento (fila propia, campo más importante) -->
+        <mat-form-field appearance="fill" class="form-field form-field--grow cobranza-panel__row--compact">
+          <mat-label>{{ 'documentType' | tenantText }}</mat-label>
+          <mat-select formControlName="idTipoDoc" name="tipoDocumento" (selectionChange)="onTipoDocumentoChange()" required>
             <mat-option *ngFor="let item of listTipoDocumento" [value]="item.IdTipoDocumento">
-              {{item.Descripcion}}
+              {{ item.Descripcion }}
             </mat-option>
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="serie-field">
-          <mat-label>Serie</mat-label>
-          <input matInput formControlName="serie" name="serie" [readonly]="!SerieEnabled">
-        </mat-form-field>
+        <!-- Serie + Número en la misma fila -->
+        <div class="form-row cobranza-panel__row--compact">
+          <mat-form-field appearance="fill" class="form-field cobranza-panel__field-serie">
+            <mat-label>{{ 'series' | tenantText }}</mat-label>
+            <input matInput formControlName="serie" name="serie" [readonly]="!SerieEnabled">
+          </mat-form-field>
 
-        <mat-form-field appearance="outline" class="numero-field">
-          <mat-label>Numero</mat-label>
-          <input matInput formControlName="lblcorrelativo" name="lblcorrelativo" [readonly]="!CorrelativoEnabled">
-        </mat-form-field>
+          <mat-form-field appearance="fill" class="form-field cobranza-panel__field-numero">
+            <mat-label>{{ 'number' | tenantText }}</mat-label>
+            <input matInput formControlName="lblcorrelativo" name="lblcorrelativo" [readonly]="!CorrelativoEnabled">
+          </mat-form-field>
+        </div>
+
+        <!-- BLOQUE CLIENTE -->
+        <!-- Para Factura Simplificada (ES): oculto por defecto hasta que el cajero lo active -->
+        <div formGroupName="cliente" *ngIf="!clienteOpcional || mostrarDatosCliente">
+
+          <!-- Cabecera con botón para cerrar el bloque (solo FS-ES) -->
+          <div *ngIf="clienteOpcional" class="fs-es-cliente-header">
+            <span class="fs-es-cliente-header__label">
+              {{ 'customerData' | tenantText }}
+            </span>
+            <button type="button" mat-icon-button class="fs-es-cliente-header__close"
+                    [matTooltip]="'removeCustomerData' | tenantText"
+                    (click)="ocultarClienteDatos()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          <div class="form-row cobranza-panel__row--compact">
+            <mat-form-field appearance="fill" class="form-field cobranza-panel__field-doc-cliente">
+              <mat-label>{{ 'customerDocumentType' | tenantText }}</mat-label>
+              <mat-select formControlName="tipoIdentidad" name="tipoDocumentoCliente"
+                (selectionChange)="tipoDocumentoClienteChange()">
+                <mat-option *ngFor="let item of listTipoDocumentoCliente" [value]="item.IdTipoIdentidad">
+                  {{ item.Abreviatura || item.Descripcion }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="form-field cobranza-panel__field-ruc">
+              <mat-label>{{ etiquetaCliente }}</mat-label>
+              <input matInput placeholder="123..." formControlName="ruc">
+              <mat-error *ngIf="form.get('cliente.ruc').hasError('required')">
+                {{ 'requiredField' | tenantText }}
+              </mat-error>
+              <mat-error *ngIf="form.get('cliente.ruc').hasError('pattern')">
+                {{
+                  'invalidExpectedFormat'
+                    | tenantText:{
+                        expected: selectedTipoIdentidad?.Mascara
+                          ? ('expectedFormat'
+                              | tenantText:{ mask: selectedTipoIdentidad.Mascara })
+                          : ''
+                      }
+                }}
+              </mat-error>
+              <mat-error *ngIf="form.get('cliente.ruc').hasError('invalidRUC')">
+                {{ 'invalidNumberForAmount' | tenantText }}
+              </mat-error>
+              <button mat-icon-button matSuffix (click)="buscarCliente()">
+                <mat-icon>search</mat-icon>
+              </button>
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="fill" class="form-field form-field--grow">
+            <mat-label>{{ 'customer' | tenantText }}</mat-label>
+            <input matInput formControlName="razonSocial" required>
+            <mat-error *ngIf="form.get('cliente.razonSocial').hasError('required')">
+              {{ 'requiredField' | tenantText }}
+            </mat-error>
+            <mat-error *ngIf="form.get('cliente.razonSocial').hasError('invalidRazonSocial')">
+              {{ 'miscellaneousCustomerRule' | tenantText }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="form-field form-field--grow">
+            <mat-label>{{ 'address' | tenantText }}</mat-label>
+            <input matInput formControlName="direccion">
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="form-field form-field--grow">
+            <mat-label>{{ 'email' | tenantText }}</mat-label>
+            <input matInput formControlName="correo" placeholder="pat@example.com" />
+            <mat-error *ngIf="form.get('cliente.correo').hasError('pattern')">
+              {{ 'invalidEmailFormat' | tenantText }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Botón para añadir datos del cliente (FS-ES, bloque oculto) -->
+        <button *ngIf="clienteOpcional && !mostrarDatosCliente"
+                type="button"
+                class="fs-es-cliente-btn"
+                (click)="toggleClienteDatos()">
+          <mat-icon>person_add</mat-icon>
+          {{ 'addCustomerData' | tenantText }}
+        </button>
+
+      </form>
+
+    </div>
+
+    <!-- ══ COLUMNA DERECHA: PAGOS ═════════════════════════════════ -->
+    <div class="cobranza-panel__col-pago">
+
+      <!-- TOTAL A PAGAR -->
+      <div class="cobranza-panel__total-banner">
+        <span class="cobranza-panel__total-banner-label">
+          {{ 'totalToPay' | tenantText }}
+        </span>
+        <span class="cobranza-panel__total-banner-value">
+          {{ config?.SimboloMoneda }} {{ (+lblmonto) | number:'1.2-2' }}
+        </span>
       </div>
 
-      <div formGroupName="cliente">
-      <div class="form-row">
-         <mat-form-field appearance="outline" class="flex-item">
-          <mat-label>Tipo Documento Cliente</mat-label>
-          <mat-select formControlName="tipoIdentidad" name="tipoDocumentoCliente" (selectionChange)="tipoDocumentoClienteChange()">
-            <mat-option *ngFor="let item of listTipoDocumentoCliente" [value]="item.IdTipoIdentidad">
-              {{item.Descripcion}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        
-        <mat-form-field appearance="outline" class="ruc-field">
-          <mat-label>{{etiquetaCliente}}</mat-label>
-          <input matInput placeholder="123..." formControlName="ruc">
-          <mat-error *ngIf="form.get('cliente.ruc').hasError('length')">Debe tener {{rucLength}} caracteres.</mat-error>
-          <mat-error *ngIf="form.get('cliente.ruc').hasError('required')">El campo es requerido.</mat-error>
-          <mat-error *ngIf="form.get('cliente.ruc').hasError('pattern')">Debe ser un número.</mat-error>
-          <mat-error *ngIf="form.get('cliente.ruc').hasError('invalidRUC')">Numero inválido.</mat-error>
-          <button mat-icon-button matSuffix (click)="buscarCliente()">
-            <mat-icon>search</mat-icon>
+      <!-- HERO: FALTA / VUELTO -->
+      <div class="cobranza-panel__hero"
+           [class.cobranza-panel__hero--falta]="!pagoCompleto"
+           [class.cobranza-panel__hero--completo]="pagoCompleto">
+        <div class="cobranza-panel__hero-left">
+          <span class="cobranza-panel__hero-label">{{ Label14 }}</span>
+          <span class="cobranza-panel__hero-value">
+            {{ config?.SimboloMoneda }} {{ (+lblvuelto) | number:'1.2-2' }}
+          </span>
+          <span class="cobranza-panel__hero-ref">
+            {{
+              'paidReference'
+                | tenantText:{
+                    symbol: config?.SimboloMoneda,
+                    total: ((+lblmonto) | number:'1.2-2'),
+                    paid: ((+lbltotal) | number:'1.2-2')
+                  }
+            }}
+          </span>
+        </div>
+        <div class="cobranza-panel__hero-right">
+          <span class="cobranza-panel__hero-pct">{{ getProgresoPago() | number:'1.0-0' }}%</span>
+          <div class="cobranza-panel__progress-track">
+            <div class="cobranza-panel__progress-fill"
+                 [style.width.%]="getProgresoPago()"
+                 [class.cobranza-panel__progress-fill--complete]="pagoCompleto">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD: PAGOS EN EFECTIVO -->
+      <div class="cobranza-panel__payment-card">
+        <div class="cobranza-panel__payment-card-header">
+          <span class="cobranza-panel__payment-card-title">
+            {{ 'cashPayments' | tenantText }}
+          </span>
+          <span class="cobranza-panel__payment-card-total cobranza-panel__payment-card-total--cash">
+            <mat-icon>payments</mat-icon>
+            {{ config?.SimboloMoneda }} {{ solesValue + (+lblcal) | number:'1.2-2' }}
+          </span>
+        </div>
+
+        <div class="cobranza-panel__cash-section">
+          <!-- EXACTO -->
+          <div class="cobranza-panel__exacto-row">
+            <button class="cp-btn cp-btn--exacto" (click)="SolesExacto()">
+              <mat-icon style="font-size:16px;width:16px;height:16px;line-height:16px;">flash_on</mat-icon>
+              {{ 'exact' | tenantText }}
+              <span class="cp-btn__badge">{{ 'automaticCharge' | tenantText }}</span>
+            </button>
+            <span class="cobranza-panel__exacto-hint">
+              {{
+                'exactCashHint'
+                  | tenantText:{
+                      symbol: config?.SimboloMoneda,
+                      amount: ((+lblmonto) | number:'1.2-2')
+                    }
+              }}
+            </span>
+          </div>
+
+          <!-- FILA MONEDA PRINCIPAL -->
+          <div class="cobranza-panel__cash-main-row">
+            <span class="cobranza-panel__cash-currency-label">
+              {{
+                monedaPrincipal?.Descripcion
+                  || config?.SimboloMoneda
+                  || ('currencyFallback' | tenantText)
+              }}
+            </span>
+            <button class="cp-btn cp-btn--preset" (click)="SolesPredefinido(20)">{{ config?.SimboloMoneda }} 20</button>
+            <button class="cp-btn cp-btn--preset" (click)="SolesPredefinido(50)">{{ config?.SimboloMoneda }} 50</button>
+            <button class="cp-btn cp-btn--preset" (click)="SolesPredefinido(100)">{{ config?.SimboloMoneda }} 100</button>
+            <button class="cp-btn cp-btn--preset" (click)="SolesPredefinido(200)">{{ config?.SimboloMoneda }} 200</button>
+            <button class="cp-btn cp-btn--main" (click)="obtenerSoles()">
+              {{ 'enter' | tenantText }}
+            </button>
+            <div class="cobranza-panel__value-chip cobranza-panel__value-chip--inline" *ngIf="solesValue > 0">
+              <span class="cobranza-panel__value-chip-label">{{ 'entered' | tenantText }}</span>
+              <span class="cobranza-panel__value-chip-val">{{ config?.SimboloMoneda }} {{ solesValue | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <!-- FILA MONEDA ALTERNATIVA -->
+          <div class="cobranza-panel__cash-alt-row" *ngIf="monedaAlternativa">
+            <button class="cp-btn cp-btn--alt" (click)="obtenerDolares()">{{ monedaAlternativa.Descripcion }}</button>
+            <span class="cobranza-panel__exchange-info">
+              {{ 'exchangeRateLabel' | tenantText }} <strong>{{ lblcambio }}</strong>
+            </span>
+            <div class="cobranza-panel__value-chip" *ngIf="dolaresValue > 0">
+              <span class="cobranza-panel__value-chip-label">{{ 'entered' | tenantText }}</span>
+              <span class="cobranza-panel__value-chip-val">{{ monedaAlternativa.Simbolo || '' }} {{ dolaresValue | number:'1.2-2' }}</span>
+            </div>
+            <div class="cobranza-panel__value-chip cobranza-panel__value-chip--accent">
+              <span class="cobranza-panel__value-chip-label">≈ {{ monedaPrincipal?.Descripcion }}</span>
+              <span class="cobranza-panel__value-chip-val">{{ config?.SimboloMoneda }} {{ lblcal }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD: PAGOS CON TARJETA -->
+      <div class="mant-table-card cobranza-panel__table-card">
+        <div class="cobranza-panel__payment-card-header">
+          <span class="cobranza-panel__payment-card-title">
+            {{ 'cardPayments' | tenantText }}
+          </span>
+          <span class="cobranza-panel__payment-card-total cobranza-panel__payment-card-total--card">
+            <mat-icon>credit_card</mat-icon>
+            {{ config?.SimboloMoneda }} {{ (+lblmontotarjeta) | number:'1.2-2' }}
+          </span>
+        </div>
+        <mat-table [dataSource]="dataSourcePago" class="mat-elevation-z8">
+          <ng-container matColumnDef="tarjeta">
+            <mat-header-cell *matHeaderCellDef>{{ 'card' | tenantText }}</mat-header-cell>
+            <mat-cell *matCellDef="let element">{{ element.Tarjeta?.Descripcion }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef>
+              <mat-form-field class="form-field cobranza-panel__field-tarjeta">
+                <mat-select
+                  [placeholder]="'card' | tenantText"
+                  [(ngModel)]="nuevoRegistro.Tarjeta"
+                  panelClass="cp-tarjeta-panel">
+                  <mat-option *ngFor="let value of listTarjeta" [value]="value">{{ value.Descripcion }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </mat-footer-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="autorizacion">
+            <mat-header-cell *matHeaderCellDef> AP </mat-header-cell>
+            <mat-cell *matCellDef="let element">{{ element.Autorizacion }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef>
+              <mat-form-field class="form-field cobranza-panel__field-compact">
+                <input matInput placeholder="AP" [(ngModel)]="nuevoRegistro.Autorizacion">
+              </mat-form-field>
+            </mat-footer-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="montoPagado">
+            <mat-header-cell *matHeaderCellDef>{{ 'paidAmount' | tenantText }}</mat-header-cell>
+            <mat-cell *matCellDef="let element">{{ element.MontoPagado }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef>
+              <mat-form-field class="form-field cobranza-panel__field-compact">
+                <input
+                  matInput
+                  [placeholder]="'paidAmount' | tenantText"
+                  type="number"
+                  [(ngModel)]="nuevoRegistro.MontoPagado">
+              </mat-form-field>
+            </mat-footer-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="propina">
+            <mat-header-cell *matHeaderCellDef>{{ 'tip' | tenantText }}</mat-header-cell>
+            <mat-cell *matCellDef="let element">{{ element.Propina }}</mat-cell>
+            <mat-footer-cell *matFooterCellDef>
+              <mat-form-field class="form-field cobranza-panel__field-compact">
+                <input
+                  matInput
+                  [placeholder]="'tip' | tenantText"
+                  type="number"
+                  [(ngModel)]="nuevoRegistro.Propina">
+              </mat-form-field>
+            </mat-footer-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
+            <mat-cell *matCellDef="let element" class="cobranza-panel__table-actions">
+              <button
+                mat-icon-button
+                color="warn"
+                [matTooltip]="'delete' | tenantText"
+                (click)="eliminarRegistro(element)">
+                <mat-icon>close</mat-icon>
+              </button>
+            </mat-cell>
+            <mat-footer-cell *matFooterCellDef class="cobranza-panel__table-actions">
+              <button class="cp-btn cp-btn--main cobranza-panel__add-btn" (click)="agregarRegistro()">
+                <mat-icon style="font-size:16px;width:16px;height:16px;line-height:16px">add</mat-icon>
+                {{ 'add' | tenantText }}
+              </button>
+            </mat-footer-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="empty">
+            <mat-footer-cell *matFooterCellDef colspan="5" class="cobranza-panel__empty-cell">
+              {{ 'noCardPayments' | tenantText }}
+            </mat-footer-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+          <mat-footer-row *matFooterRowDef="['empty']"
+                          class="cobranza-panel__empty-row"
+                          [class.cobranza-panel__empty-row--hidden]="dataSourcePago.data.length > 0">
+          </mat-footer-row>
+          <mat-footer-row *matFooterRowDef="displayedColumns" class="cobranza-panel__input-row"></mat-footer-row>
+        </mat-table>
+      </div>
+
+      <!-- COBRAR -->
+      <div class="cobranza-panel__results-row">
+        <div class="cobranza-panel__submit">
+          <button mat-raised-button color="primary"
+                  [disabled]="!pagoCompleto"
+                  (click)="cmdCobrarClick()">
+            <mat-icon>payment</mat-icon>
+            {{ 'charge' | tenantText }}
           </button>
-        </mat-form-field>
+        </div>
       </div>
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Cliente</mat-label>
-        <input matInput formControlName="razonSocial" required>
-        <mat-error *ngIf="form.get('cliente.razonSocial').hasError('required')">El campo es requerido.</mat-error>
-        <mat-error *ngIf="form.get('cliente.razonSocial').hasError('invalidRazonSocial')">
-          La razón social debe ser "Cliente Varios" cuando el RUC es 00000001.
-        </mat-error>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Dirección</mat-label>
-        <input matInput formControlName="direccion">
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Correo</mat-label>
-        <input matInput formControlName="correo" placeholder="pat@example.com"/>
-        <mat-error *ngIf="form.get('cliente.correo').hasError('pattern')">El formato del correo es incorrecto.</mat-error>
-      </mat-form-field>
-    </div>
-    </div>
-  </form>
-
-
-
-  <div class="d-flex align-items-center mb-3 cash-row">
-    <div class="cash-buttons">
-      <button class="button_azul" style="width: 80px;" (click)="SolesExacto()">Soles Exacto</button>
-      <button class="button_azul" style="width: 50px;" (click)="SolesPredefinido(20)">S/. 20</button>
-      <button class="button_azul" style="width: 50px;" (click)="SolesPredefinido(50)">S/. 50</button>
-      <button class="button_azul" style="width: 50px;" (click)="SolesPredefinido(100)">S/. 100</button>
-      <button class="button_azul" style="width: 50px;" (click)="SolesPredefinido(200)">S/. 200</button>
-    </div>
-    <div class="d-flex flex-column mr-3 align-buttons">
-      <button class="button_azul" style="width: 100px;" (click)="obtenerSoles()">Soles</button>
-      <button class="button_azul" style="width: 100px;" (click)="obtenerDolares()">Dolares</button>
-    </div>
-    <div class="d-flex flex-column mr-3 align-labels">
-      <div class="GrupoLabel">
-        <div> {{solesValue}}</div>
-      </div>
-      <div class="GrupoLabel">
-        <div>{{dolaresValue}}</div>
-      </div>
-    </div>
-    <div class="d-flex flex-column mr-3 align-labels">
-      <div class="GrupoLabel">
-        <div>{{lblcal}}</div>
-      </div>
-      <div class="GrupoLabel">
-        <div>{{lblcambio}}</div>
-      </div>
-    </div>
-  </div>
-  <div class="tabla-container">
-  <mat-table [dataSource]="dataSourcePago" class="mat-elevation-z8 mb-3">
-    <ng-container matColumnDef="tarjeta">
-      <mat-header-cell *matHeaderCellDef> Tarjeta </mat-header-cell>
-      <mat-cell *matCellDef="let element">{{ element.Tarjeta?.Descripcion }}  </mat-cell>
-      <mat-footer-cell *matFooterCellDef>
-        <mat-form-field style="min-width: 200px;">
-          <mat-select placeholder="Tarjeta" [(ngModel)]="nuevoRegistro.Tarjeta">
-            <mat-option *ngFor="let value of listTarjeta" [value]="value">{{ value.Descripcion }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </mat-footer-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="autorizacion">
-      <mat-header-cell *matHeaderCellDef> AP </mat-header-cell>
-      <mat-cell *matCellDef="let element"> {{element.Autorizacion}} </mat-cell>
-      <mat-footer-cell *matFooterCellDef>
-        <mat-form-field>
-          <input matInput placeholder="AP" [(ngModel)]="nuevoRegistro.Autorizacion">
-        </mat-form-field>
-      </mat-footer-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="montoPagado">
-      <mat-header-cell *matHeaderCellDef> Monto </mat-header-cell>
-      <mat-cell *matCellDef="let element"> {{element.MontoPagado}} </mat-cell>
-      <mat-footer-cell *matFooterCellDef>
-        <mat-form-field>
-          <input matInput placeholder="Monto" type="number" [(ngModel)]="nuevoRegistro.MontoPagado">
-        </mat-form-field>
-      </mat-footer-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="propina">
-      <mat-header-cell *matHeaderCellDef> Propina </mat-header-cell>
-      <mat-cell *matCellDef="let element"> {{element.Propina}} </mat-cell>
-      <mat-footer-cell *matFooterCellDef>
-        <mat-form-field>
-          <input matInput placeholder="Propina" type="number" [(ngModel)]="nuevoRegistro.Propina">
-        </mat-form-field>
-      </mat-footer-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="acciones">
-      <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
-      <mat-cell *matCellDef="let element">
-        <button mat-icon-button color="warn" matTooltip="Eliminar" (click)="eliminarRegistro(element)">
-          <mat-icon>remove</mat-icon>
-        </button>
-      </mat-cell>
-      <mat-footer-cell *matFooterCellDef>
-        <button mat-icon-button color="primary" matTooltip="Agregar" (click)="agregarRegistro(element)">
-          <mat-icon>add</mat-icon>
-        </button>
-      </mat-footer-cell>
-    </ng-container>
-
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-    <mat-footer-row *matFooterRowDef="displayedColumns"></mat-footer-row>
-  </mat-table>
-</div>
-  <div class="results-row d-flex justify-content-between">
-    <mat-form-field appearance="outline" class="flex-grow-1 mr-3">
-      <mat-label>Monto a Pagar</mat-label>
-      <input matInput type="text" [(ngModel)]="lblmonto" readonly>
-    </mat-form-field>
-    <mat-form-field appearance="outline" class="flex-grow-1 mr-3">
-      <mat-label>Tarjeta</mat-label>
-      <input matInput type="text" [(ngModel)]="lblmontotarjeta" readonly>
-    </mat-form-field>
-    <mat-form-field appearance="outline" class="flex-grow-1 mr-3">
-      <mat-label>Total Pago</mat-label>
-      <input matInput type="text" [(ngModel)]="lbltotal" readonly>
-    </mat-form-field>
-    <mat-form-field appearance="outline" class="flex-grow-1">
-      <mat-label>{{Label14}}</mat-label>
-      <input matInput type="text" [(ngModel)]="lblvuelto" readonly>
-    </mat-form-field>
-    <div class="example-button-container">
-      <a mat-fab extended (click)="cmdCobrarClick()">
-        <mat-icon>payment</mat-icon>
-        Cobrar
-      </a>
-    </div>
-  </div>
+    </div><!-- /col-pago -->
+  </div><!-- /layout -->
 </div>

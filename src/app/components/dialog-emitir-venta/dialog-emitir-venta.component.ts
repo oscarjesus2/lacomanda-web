@@ -9,7 +9,7 @@ import Swal from 'sweetalert2';
 import { NgxSpinnerService } from 'ngx-spinner';
 
 import { Producto } from 'src/app/models/product.models';
-import { Caja } from 'src/app/models/caja.models';
+import { CajaDto } from 'src/app/models/caja.models';
 import { ProductoService } from 'src/app/services/product.service';
 import { CajaService } from 'src/app/services/caja.service';
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
@@ -19,6 +19,7 @@ import { PedidoCab } from 'src/app/models/pedido.models';
 import { PedidoDet } from 'src/app/models/pedidodet.models';
 import { StorageService } from 'src/app/services/storage.service';
 import { Turno } from 'src/app/models/turno.models';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 
 export interface ProductElement {
   IdProducto: number;
@@ -33,7 +34,6 @@ export interface ProductElement {
   Tipo: number;
   ExclusivoParaAnfitriona: boolean;
   PermitirParaTragoCortesia: boolean; 
-  ImpuestoBolsa: number;
 }
 
 @Component({
@@ -52,7 +52,7 @@ export class DialogEmitirVentaComponent implements OnInit {
 
   bTurnoIndenpendiente: boolean = false;
   
-  listCaja: Caja[];
+  listCaja: CajaDto[];
   cajaSeleccionada: number = 0;
   monedaSeleccionada: string = 'SOLES';
   turnoAbierto: Turno = new Turno();
@@ -80,6 +80,7 @@ export class DialogEmitirVentaComponent implements OnInit {
     private cajaService: CajaService,
     private productoService: ProductoService,
     private spinnerService: NgxSpinnerService,
+    private texts: TenantTextCatalogService,
   ) {}
 
   private async initializeCaja(): Promise<void> {
@@ -117,7 +118,7 @@ export class DialogEmitirVentaComponent implements OnInit {
       await this.initializeCaja();
       await this.initializeProductos();
     } catch (e) {
-      Swal.fire('Algo anda mal', e.error, 'error');
+      Swal.fire(this.texts.get('unexpectedError'), e.error, 'error');
       console.log(e);
     } finally {
       this.spinnerService.hide();
@@ -133,7 +134,7 @@ export class DialogEmitirVentaComponent implements OnInit {
     return product ? product.NombreCorto : undefined;
   }
 
-  ValidarCaja(oCaja: Caja): void {
+  ValidarCaja(oCaja: CajaDto): void {
     if (oCaja.IdCaja != 0) {
       if (oCaja.TurnoAbierto != null) {
         this.turnoAbierto = oCaja.TurnoAbierto;
@@ -148,10 +149,10 @@ export class DialogEmitirVentaComponent implements OnInit {
         this.VentaEnabled = false;
       } else {
         Swal.fire({
-          title: 'Validación',
-          text: `Debe aperturar un turno de la ${oCaja.Descripcion} para poder emitir un comprobante de venta.`,
+          title: this.texts.get('validation'),
+          text: this.texts.get('mustOpenShiftToIssue', { register: oCaja.Descripcion }),
           icon: 'warning',
-          confirmButtonText: 'OK'
+          confirmButtonText: this.texts.get('ok')
         });
         this.cajaSeleccionada = 0;
         this.visibleInfoTurno = false;
@@ -175,7 +176,7 @@ export class DialogEmitirVentaComponent implements OnInit {
   AgregarItemGrid(product: Producto): void {
     let bSinPrecio = product.SinPrecio;
   
-    if (bSinPrecio === 1) {
+    if (bSinPrecio) {
       this.abrirDialogoCantidad(product).then(result => {
         if (result) {
           this.actualizarPrecioProducto(product, result);
@@ -190,7 +191,7 @@ export class DialogEmitirVentaComponent implements OnInit {
   }
 
   abrirDialogoCantidad(product: Producto): Promise<any> {
-    let sTitulo = product.MonedaVenta === 'SOL' ? 'Precio del Producto-SOLES' : 'Precio del Producto-DOLARES';
+    let sTitulo = product.IdMoneda === 'SOL' ? 'Precio del Producto-SOLES' : 'Precio del Producto-DOLARES';
     const dialogRef = this.dialog.open(DialogMCantComponent, {
       data: {
         title: sTitulo,
@@ -205,9 +206,9 @@ export class DialogEmitirVentaComponent implements OnInit {
   }
 
   actualizarPrecioProducto(product: Producto, result: any): void {
-    if (product.MonedaVenta === 'SOL' && this.monedaSeleccionada === 'DOLARES') {
+    if (product.IdMoneda === 'SOL' && this.monedaSeleccionada === 'DOLARES') {
       product.Precio = Math.round((result.value / parseFloat(this.tipoCambioCompra)) * 100) / 100;
-    } else if (product.MonedaVenta === 'DOL' && this.monedaSeleccionada === 'SOLES') {
+    } else if (product.IdMoneda === 'DOL' && this.monedaSeleccionada === 'SOLES') {
       product.Precio = Math.round((result.value * parseFloat(this.tipoCambioVenta)) * 100) / 100;
     } else {
       product.Precio = parseFloat(result.value);
@@ -225,11 +226,10 @@ export class DialogEmitirVentaComponent implements OnInit {
       CodDscto: '',
       NroCupon: '',
       MontoDscto: 0,
-      ImpuestoBolsa: product.ImpuestoBolsa,
       Tipo: product.Tipo,
       ExclusivoParaAnfitriona: product.ExclusivoParaAnfitriona,
       PermitirParaTragoCortesia: product.PermitirParaTragoCortesia,
-      Moneda: product.MonedaVenta
+      Moneda: product.IdMoneda
     };
   
     this.dataSource.data.push(newRow);
@@ -264,10 +264,10 @@ export class DialogEmitirVentaComponent implements OnInit {
     if (selectedProduct.Tipo === 1)
       {
         Swal.fire({
-          title: 'Validación',
-          text: `No se puede agregar una Cantidad desde esta opcion para un Producto Combo.`,
+          title: this.texts.get('validation'),
+          text: this.texts.get('cannotAddQtyCombo'),
           icon: 'warning',
-          confirmButtonText: 'OK'
+          confirmButtonText: this.texts.get('ok')
         });
         return;
       }
@@ -275,42 +275,42 @@ export class DialogEmitirVentaComponent implements OnInit {
       if (selectedProduct.Tipo === 2)
       {
         Swal.fire({
-          title: 'Validación',
-          text: `No se puede agregar una Cantidad desde esta opcion para un Producto que tiene Complementos.`,
+          title: this.texts.get('validation'),
+          text: this.texts.get('cannotAddQtyComplements'),
           icon: 'warning',
-          confirmButtonText: 'OK'
+          confirmButtonText: this.texts.get('ok')
         });
         return;
       }
 
-    if (selectedProduct.MonedaVenta === 'SOL' && this.monedaSeleccionada === 'DOLARES' && parseFloat(this.tipoCambioCompra) === 0) {
+    if (selectedProduct.IdMoneda === 'SOL' && this.monedaSeleccionada === 'DOLARES' && parseFloat(this.tipoCambioCompra) === 0) {
       Swal.fire({
-        title: 'Validación',
-        text: `El producto ${selectedProduct.NombreCorto} está en SOLES. Para realizar la venta en DOLARES es necesario ingresar el Tipo de Cambio COMPRA.`,
+        title: this.texts.get('validation'),
+        text: this.texts.get('productInSolesNeedBuyRate', { product: selectedProduct.NombreCorto }),
         icon: 'warning',
-        confirmButtonText: 'OK'
+        confirmButtonText: this.texts.get('ok')
       });
       return;
     }
 
-    if (selectedProduct.MonedaVenta === 'DOL' && this.monedaSeleccionada === 'SOLES' && parseFloat(this.tipoCambioVenta) === 0) {
+    if (selectedProduct.IdMoneda === 'DOL' && this.monedaSeleccionada === 'SOLES' && parseFloat(this.tipoCambioVenta) === 0) {
       Swal.fire({
-        title: 'Validación',
-        text: `El producto ${selectedProduct.NombreCorto} está en DOLARES. Para realizar la venta en SOLES es necesario ingresar el Tipo de Cambio VENTA.`,
+        title: this.texts.get('validation'),
+        text: this.texts.get('productInDollarsNeedSellRate', { product: selectedProduct.NombreCorto }),
         icon: 'warning',
-        confirmButtonText: 'OK'
+        confirmButtonText: this.texts.get('ok')
       });
       return;
     }
 
     if (!selectedProduct.EsServicio && selectedProduct.Stock === 0) {
       Swal.fire({
-        title: 'Validación',
-        text: 'El producto no tiene Stock. ¿Desea continuar de todas formas?',
+        title: this.texts.get('validation'),
+        text: this.texts.get('productNoStockContinue'),
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Sí',
-        cancelButtonText: 'No'
+        confirmButtonText: this.texts.get('yes'),
+        cancelButtonText: this.texts.get('no')
       }).then(result => {
         if (result.isConfirmed) {
           this.AgregarItemGrid(selectedProduct);
@@ -324,19 +324,17 @@ export class DialogEmitirVentaComponent implements OnInit {
   calcularTotales(): void {
     let totalAux = 0;
     let desctoAux = 0;
-    let impuestoBolsa = 0;
 
     this.dataSource.data.forEach(item => {
       totalAux += item.Total;
       desctoAux += item.MontoDscto;
-      impuestoBolsa += item.ImpuestoBolsa;
     });
 
     this.sumaImporte = totalAux;
     this.sumaDscto = desctoAux;
     this.sumaTotal = totalAux - desctoAux;
-    this.sumaImpuestoBolsa = impuestoBolsa;
-    this.sumaGranTotal = this.sumaTotal + impuestoBolsa;
+    this.sumaImpuestoBolsa = 0;
+    this.sumaGranTotal = this.sumaTotal;
   }
 
   salir(): void {
@@ -388,11 +386,11 @@ export class DialogEmitirVentaComponent implements OnInit {
     pedidoCab.Moneda = this.monedaSeleccionada.substring(0, 3);
     pedidoCab.TipoCambioVenta = parseFloat(this.tipoCambioVenta);
     pedidoCab.TipoCambioCompra = parseFloat(this.tipoCambioCompra);
-    pedidoCab.IdMesa = 9999;
+    pedidoCab.IdEspacio = 9999;
     pedidoCab.IdCaja = this.cajaSeleccionada;
     pedidoCab.NumPrecuentas = 0;
     pedidoCab.FechaPrecuenta = null;
-    pedidoCab.MesaPrecuenta = null;
+    pedidoCab.EspacioPrecuenta = null;
     pedidoCab.Observacion = this.observacionValue;
     pedidoCab.Dscto = this.sumaDscto;
     pedidoCab.Importe =  this.sumaImporte;
@@ -440,7 +438,6 @@ export class DialogEmitirVentaComponent implements OnInit {
       pedidoDet.Estado = 2;
       pedidoDet.NombreCuenta = "";
       pedidoDet.Division = 0;
-      pedidoDet.Impuesto1 = item.ImpuestoBolsa;
       correlativo++;
       oListaPedidoDet.push(pedidoDet);
     });
@@ -466,10 +463,10 @@ export class DialogEmitirVentaComponent implements OnInit {
     if (this.form.valid) {
       if (this.dataSource.data.length <= 0) {
         Swal.fire({
-          title: 'Validación',
-          text: `No ha ingresado ningún producto de venta.`,
+          title: this.texts.get('validation'),
+          text: this.texts.get('noSaleProductEntered'),
           icon: 'warning',
-          confirmButtonText: 'OK'
+          confirmButtonText: this.texts.get('ok')
         });
         return;
       }
@@ -478,8 +475,8 @@ export class DialogEmitirVentaComponent implements OnInit {
        const dialogTurno = this.dialog.open(DialogEmitirComprobanteComponent, {
          disableClose: true,
          hasBackdrop: true,
-         width: '705px', // Establece el ancho del diálogo
-         height: '800px', // Establece la altura del diálogo
+         width: '900px',
+         maxWidth: '95vw',
          data: { lblcambio: this.tipoCambioVenta, 
                  dblImporte: this.sumaImporte,
                  dblDscto: this.sumaDscto,

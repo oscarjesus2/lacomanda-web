@@ -1,126 +1,149 @@
-<div class="component-container">
-    <button mat-icon-button class="close-button" (click)="onExitClick()">
-        <mat-icon>close</mat-icon>
+<div class="mant-panel dc-panel">
+
+  <button mat-icon-button class="close-button" (click)="onExitClick()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>{{ 'splitAccount' | tenantText }}</h2>
+
+  <!-- ── Vista 1: Cuentas y productos ────────────────────────────── -->
+  <ng-container *ngIf="mostrarPrimeraVista">
+
+    <!-- Acciones + info de mesa -->
+    <div class="dc-topbar">
+      <div class="dc-topbar__actions">
+        <button class="dc-btn dc-btn--primary" (click)="onAddClick()">
+          <mat-icon>add</mat-icon> {{ 'newAccount' | tenantText }}
+        </button>
+        <button class="dc-btn dc-btn--secondary" (click)="onShowClick()">
+          <mat-icon>receipt_long</mat-icon> {{ 'showOrder' | tenantText }}
+        </button>
+      </div>
+
+      <div class="dc-stats">
+        <div class="dc-stat">
+          <span class="dc-stat__label">{{ 'space' | tenantText }}</span>
+          <span class="dc-stat__value">{{ espacioSelected.Descripcion }} {{ espacioSelected.Numero }}</span>
+        </div>
+        <div class="dc-stat dc-stat--total">
+          <span class="dc-stat__label">{{ 'total' | tenantText }}</span>
+          <span class="dc-stat__value">{{ monedaSimbolo }} {{ sumaGranTotal | number:'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grillas -->
+    <div class="dc-grids">
+
+      <!-- Cuentas -->
+      <div class="dc-grid">
+        <h3 class="dc-grid__title">{{ 'accounts' | tenantText }}</h3>
+        <div class="dc-table-wrap">
+          <table mat-table [dataSource]="distinctPedidos" class="dc-table">
+            <ng-container matColumnDef="NombreCuenta">
+              <th mat-header-cell *matHeaderCellDef>{{ 'customer' | tenantText }}</th>
+              <td mat-cell *matCellDef="let e">{{ e.NombreCuenta }}</td>
+            </ng-container>
+            <ng-container matColumnDef="NroCuenta">
+              <th mat-header-cell *matHeaderCellDef>{{ 'accountNumber' | tenantText }}</th>
+              <td mat-cell *matCellDef="let e">{{ e.NroCuenta }}</td>
+            </ng-container>
+            <ng-container matColumnDef="Actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let e">
+                <button mat-icon-button color="warn" [matTooltip]="'delete' | tenantText" (click)="EliminarCuenta(e)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumnsCuenta"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumnsCuenta;"
+                (click)="selectCuenta(row)"
+                [class.dc-row--selected]="selectedRowCuenta === row"></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Productos de la cuenta seleccionada -->
+      <div class="dc-grid">
+        <h3 class="dc-grid__title">{{ 'products' | tenantText }}</h3>
+        <div class="dc-table-wrap">
+          <table mat-table [dataSource]="productosPedidoCuenta" class="dc-table">
+            <ng-container matColumnDef="Producto">
+              <th mat-header-cell *matHeaderCellDef>{{ 'product' | tenantText }}</th>
+              <td mat-cell *matCellDef="let e">{{ e.NombreCorto }}</td>
+            </ng-container>
+            <ng-container matColumnDef="Cantidad">
+              <th mat-header-cell *matHeaderCellDef>{{ 'quantityFull' | tenantText }}</th>
+              <td mat-cell *matCellDef="let e">{{ e.Cantidad }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </ng-container>
+
+  <!-- ── Vista 2: Mover productos entre cuentas ───────────────────── -->
+  <ng-container *ngIf="mostrarSegundaVista">
+
+    <div class="dc-grids">
+
+      <!-- Cuenta origen -->
+      <div class="dc-grid">
+        <h3 class="dc-grid__title">{{ nombreCuentaOrigen }}</h3>
+        <p class="dc-grid__subtitle">{{ 'tapProductToMove' | tenantText }}</p>
+        <div class="dc-table-wrap">
+          <table mat-table [dataSource]="pedidoCuentaOrigen" class="dc-table">
+            <ng-container matColumnDef="Producto">
+              <th mat-header-cell *matHeaderCellDef>{{ 'product' | tenantText }}</th>
+              <td mat-cell *matCellDef="let e">{{ e.NombreCorto }}</td>
+            </ng-container>
+            <ng-container matColumnDef="Cantidad">
+              <th mat-header-cell *matHeaderCellDef>{{ 'quantityFull' | tenantText }}</th>
+              <td mat-cell *matCellDef="let e">{{ e.Cantidad }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                (click)="moverProducto(row)"
+                [class.dc-row--selected]="selectedRowOrigen === row"></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cuenta destino -->
+      <div class="dc-grid">
+        <h3 class="dc-grid__title">{{ nombreCuentaDestino }}</h3>
+        <p class="dc-grid__subtitle">{{ 'tapProductToReturn' | tenantText }}</p>
+        <div class="dc-table-wrap">
+          <table mat-table [dataSource]="productosNuevaCuenta" class="dc-table">
+            <ng-container matColumnDef="Producto">
+              <th mat-header-cell *matHeaderCellDef>{{ 'product' | tenantText }}</th>
+              <td mat-cell *matCellDef="let e">{{ e.NombreCorto }}</td>
+            </ng-container>
+            <ng-container matColumnDef="Cantidad">
+              <th mat-header-cell *matHeaderCellDef>{{ 'quantityFull' | tenantText }}</th>
+              <td mat-cell *matCellDef="let e">{{ e.Cantidad }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                (click)="removerProducto(row)"
+                [class.dc-row--selected]="selectedRowDestino === row"></tr>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="dc-actions">
+      <button class="dc-btn dc-btn--secondary" (click)="onCancelClick()">{{ 'cancel' | tenantText }}</button>
+      <button class="dc-btn dc-btn--primary" (click)="onAcceptClick()">
+        <mat-icon>check</mat-icon> {{ 'confirm' | tenantText }}
       </button>
-      <br>
-    <h2>División de Cuenta</h2>
-    <br>
-    <div *ngIf="mostrarPrimeraVista">
-        <div class="button-row">
-            <button (click)="onAddClick()">Nuevo Cuenta</button>
-            <button  (click)="onShowClick()">Mostrar Pedido</button>
-        </div>
-        <br>
-        <!-- Información de la mesa -->
-        <div class="mesa-info">
-            <span>  Mesa Nº: {{ mesaSelected.Descripcion + ' ' + mesaSelected.Numero }}</span>
-            <span>Total: {{ sumaGranTotal | currency:'PEN'  }}</span>
-            <span>ICBPER: {{ sumaImpuestoBolsa | currency:'PEN'  }}</span>
-        </div>
     </div>
 
-    <!-- Primera vista: Mostrar pedido completo -->
-    <div *ngIf="mostrarPrimeraVista" class="grids-container">
-        <!-- Botones de acciones principales -->
+  </ng-container>
 
-
-        <!-- Grilla Izquierda: Pedido completo -->
-        <div class="grid">
-            <h3>Cuentas</h3>
-            <table mat-table [dataSource]="distinctPedidos" class="mat-elevation-z8">
-                <ng-container matColumnDef="NombreCuenta">
-                    <th mat-header-cell *matHeaderCellDef> Cliente </th>
-                    <td mat-cell *matCellDef="let element"> {{ element.NombreCuenta }} </td>
-                </ng-container>
-
-                <ng-container matColumnDef="NroCuenta">
-                    <th mat-header-cell *matHeaderCellDef> NroCuenta </th>
-                    <td mat-cell *matCellDef="let element"> {{ element.NroCuenta }} </td>
-                </ng-container>
-                <ng-container matColumnDef="Actions">
-                    <th mat-header-cell *matHeaderCellDef></th>
-                    <td mat-cell *matCellDef="let element">
-                        <button mat-icon-button color="accent" matTooltip="Eliminar" (click)="EliminarCuenta(element)">
-                            <mat-icon>delete</mat-icon>
-                        </button>
-                </ng-container>
-
-
-                <tr mat-header-row *matHeaderRowDef="displayedColumnsCuenta"></tr>
-                <tr mat-row *matRowDef="let row; columns: displayedColumnsCuenta;" (click)="selectCuenta(row)"
-                    [class.selected-row]="selectedRowCuenta === row"></tr>
-            </table>
-        </div>
-
-        <!-- Grilla Derecha: Productos del pedido seleccionado -->
-        <div class="grid">
-            <h3>Productos</h3>
-            <table mat-table [dataSource]="productosPedidoCuenta" class="mat-elevation-z8">
-                <ng-container matColumnDef="Producto">
-                    <th mat-header-cell *matHeaderCellDef> Producto </th>
-                    <td mat-cell *matCellDef="let element"> {{ element.NombreCorto }} </td>
-                </ng-container>
-
-                <ng-container matColumnDef="Cantidad">
-                    <th mat-header-cell *matHeaderCellDef> Cantidad </th>
-                    <td mat-cell *matCellDef="let element"> {{ element.Cantidad }} </td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-            </table>
-        </div>
-    </div>
-
-    <!-- Segunda vista: Modificar cuentas -->
-    <div *ngIf="mostrarSegundaVista" class="modify-accounts-view">
-        <div class="grids-container">
-            <!-- Grilla Izquierda: Productos de la cuenta original -->
-            <div class="grid">
-                <h3>{{nombreCuentaOrigen}}</h3>
-                <h3>Productos en Cuenta Origen</h3>
-                <table mat-table [dataSource]="pedidoCuentaOrigen" class="mat-elevation-z8">
-                    <ng-container matColumnDef="Producto">
-                        <th mat-header-cell *matHeaderCellDef> Producto </th>
-                        <td mat-cell *matCellDef="let element"> {{ element.NombreCorto }} </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="Cantidad">
-                        <th mat-header-cell *matHeaderCellDef> Cantidad </th>
-                        <td mat-cell *matCellDef="let element"> {{ element.Cantidad }} </td>
-                    </ng-container>
-
-                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                    <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="moverProducto(row)"
-                        [class.selected-row]="selectedRowOrigen === row"></tr>
-                </table>
-            </div>
-            <!-- Grilla Derecha: Nueva cuenta -->
-            <div class="grid">
-                <h3>{{nombreCuentaDestino}}</h3>
-                <h3>Nueva Cuenta</h3>
-                <table mat-table [dataSource]="productosNuevaCuenta" class="mat-elevation-z8">
-                    <ng-container matColumnDef="Producto">
-                        <th mat-header-cell *matHeaderCellDef> Producto </th>
-                        <td mat-cell *matCellDef="let element"> {{ element.NombreCorto }} </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="Cantidad">
-                        <th mat-header-cell *matHeaderCellDef> Cantidad </th>
-                        <td mat-cell *matCellDef="let element"> {{ element.Cantidad }} </td>
-                    </ng-container>
-
-                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                    <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="removerProducto(row)"
-                        [class.selected-row]="selectedRowDestino === row"></tr>
-                </table>
-            </div>
-        </div>
-
-        <!-- Botones de Aceptar y Cancelar -->
-        <div class="button-row">
-            <button  (click)="onAcceptClick()">Aceptar</button>
-            <button (click)="onCancelClick()">Cancelar</button>
-        </div>
-    </div>
 </div>

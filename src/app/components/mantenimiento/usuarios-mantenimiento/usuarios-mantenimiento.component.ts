@@ -1,9 +1,9 @@
-import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Usuario } from '../../../models/usuario.models';
 
 import Swal from 'sweetalert2';
 import { MatDialogRef } from '@angular/material/dialog';
-import { NgForm, FormControl, Validators } from '@angular/forms';
+import { NgForm } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { NgxSpinnerService } from 'ngx-spinner';
@@ -12,6 +12,9 @@ import { EmpleadoService } from 'src/app/services/empleado.service';
 import { Empleado } from 'src/app/models/empleado.models';
 import { Nivel_UsuarioService } from 'src/app/services/nivel_usuario.service';
 import { Nivel_Usuario } from 'src/app/models/nivel_usuario.models';
+import { Notificar } from 'src/app/shared/notificaciones';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 
 @Component({
   selector: 'app-usuarios-mantenimiento',
@@ -29,30 +32,73 @@ export class UsuariosMantenimientoComponent implements OnInit {
   showForm: boolean = false; // Controla la visibilidad del formulario
   displayedColumns: string[] = ['username', 'niveldescripcion','activo', 'actions'];
   empleadosFiltrados: Empleado[];
+  limiteUsuarios: number | null = null;
+  private usuarioEditadoEstabaActivo = false;
+
+  get usuariosActivos(): number {
+    return this.usuarios.filter(usuario => usuario.Activo).length;
+  }
  
   constructor(
     private dialogRef: MatDialogRef<UsuariosMantenimientoComponent >,
     private usuarioService: UsuarioService,
     private spinnerService: NgxSpinnerService,
     private empleadoService: EmpleadoService,
-    private nivelUsuarioService: Nivel_UsuarioService) {}
-    @ViewChild(MatPaginator) paginator: MatPaginator;
+    private nivelUsuarioService: Nivel_UsuarioService,
+    private licenciaTenantService: LicenciaTenantService) {}
+    @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+      if (value) {
+        this.filteredusuarios.paginator = value;
+      }
+    }
 
   
-  hide = signal(true);
-  clickEvent(event: MouseEvent) {
-    this.hide.set(!this.hide());
-    event.stopPropagation();
+  async enviarRestablecimientoPassword(): Promise<void> {
+    if (this.usuarioForm?.dirty) {
+      await Swal.fire({
+        title: 'Guarda los cambios primero',
+        text: 'Antes de enviar el enlace, guarda los cambios del usuario para asegurar que llegue al correo correcto.',
+        icon: 'info',
+        confirmButtonText: 'Entendido',
+      });
+      return;
+    }
+
+    const confirmacion = await Swal.fire({
+      title: 'Enviar enlace de contraseña',
+      text: `Enviaremos a ${this.usuario.Email} un enlace seguro para establecer una nueva contraseña.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar enlace',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!confirmacion.isConfirmed) {
+      return;
+    }
+
+    this.spinnerService.show();
+    this.usuarioService
+      .solicitarRestablecimientoPassword(this.usuario.IdUsuario)
+      .subscribe({
+        next: response => {
+          this.spinnerService.hide();
+          Swal.fire(
+            'Enlace enviado',
+            response.Message || `Hemos enviado las instrucciones a ${this.usuario.Email}.`,
+            'success',
+          );
+        },
+        error: () => this.spinnerService.hide(),
+      });
   }
 
   ngOnInit(): void {
+    this.licenciaTenantService
+      .obtenerLimite(CARACTERISTICAS_LICENCIA.LimiteUsuarios)
+      .subscribe(limite => (this.limiteUsuarios = limite));
     this.cargarusuarios();
     this.cargarEmpleados();
     this.cargarNivelUsuario();
-  }
-
-  ngAfterViewInit() {
-    this.filteredusuarios.paginator = this.paginator;
   }
 
   cargarusuarios(): void {
@@ -69,7 +115,6 @@ export class UsuariosMantenimientoComponent implements OnInit {
       Swal.fire('Error', response.Message || 'Error al cargar los usuarios', 'error');
     }
     this.spinnerService.hide();
-    this.filteredusuarios.paginator = this.paginator;
   });
 }
 
@@ -150,7 +195,7 @@ onInputChange(valor: string) {
     this.filteredusuarios.data = this.usuarios.filter(usuario =>
       usuario.NombreUsuario.toLowerCase().includes(filterValue) ||
       usuario.NivelDescripcion.toLowerCase().includes(filterValue) ||
-      usuario.NombreEmpleado.toLowerCase().includes(filterValue)
+      (usuario.NombreEmpleado || '').toLowerCase().includes(filterValue)
     );
   }
 
@@ -168,13 +213,29 @@ onInputChange(valor: string) {
         return;
     }
 
+    const consumeCupo = !!this.usuario.Activo && (
+      !this.usuario.IdUsuario || !this.usuarioEditadoEstabaActivo
+    );
+    if (
+      consumeCupo &&
+      this.limiteUsuarios != null &&
+      this.usuariosActivos >= this.limiteUsuarios
+    ) {
+      Swal.fire(
+        'Límite de usuarios alcanzado',
+        `La licencia permite ${this.limiteUsuarios} usuarios activos. Desactiva uno o amplía la licencia antes de continuar.`,
+        'warning',
+      );
+      return;
+    }
+
     if (this.usuario.IdUsuario) {
         this.usuarioService.updateUsuario(this.usuario).subscribe(
             response => {
                 if (response.Success) {
                     this.cargarusuarios();
                     this.showForm = false; // Ocultar formulario al guardar
-                    Swal.fire('usuario actualizado', '', 'success');
+                    Notificar.exito('usuario actualizado', '');
                 } else {
                     Swal.fire('Error', response.Message || 'Error al actualizar el usuario', 'error');
                 }
@@ -186,7 +247,7 @@ onInputChange(valor: string) {
                 if (response.Success) {
                     this.cargarusuarios();
                     this.showForm = false; // Ocultar formulario al guardar
-                    Swal.fire('usuario creado', '', 'success');
+                    Notificar.exito('usuario creado', '');
                 } else {
                     Swal.fire('Error', response.Message || 'Error al crear el usuario', 'error');
                 }
@@ -197,19 +258,18 @@ onInputChange(valor: string) {
 
 
 onEdit(usuario: Usuario): void {
+   this.usuarioEditadoEstabaActivo = !!usuario.Activo;
    this.usuario = { ...usuario, IdEmpleado: usuario.IdEmpleado != null ? Number(usuario.IdEmpleado) : null };
   this.showForm = true; // Mostrar formulario al editar
 }
 
-compareEmpleado(tipo1: Empleado, tipo2: Empleado): boolean {
-    return tipo1 && tipo2 ? tipo1.IdEmpleado === tipo2.IdEmpleado: tipo1 === tipo2;
-}
+  // compareNivel y compareEmpleado se retiraron: esperaban objetos, pero ambos
+  // selectores trabajan con identificadores. compareNivel llegaba a recibir dos
+  // números, leía .IdNivel en ellos —undefined en los dos—, y devolvía true
+  // para todas las opciones, de modo que el desplegable marcaba siempre la
+  // primera. compareEmpleado ni siquiera estaba enlazado en la plantilla.
 
-compareNivel(tipo1: Nivel_Usuario, tipo2: Nivel_Usuario): boolean {
-  return tipo1 && tipo2 ? tipo1.IdNivel === tipo2.IdNivel: tipo1 === tipo2;
-}
-
-  onDelete(id: string): void {
+  onDelete(id: number): void {
     Swal.fire({
       title: '¿Estás seguro?',
       text: "No podrás revertir esto!",
@@ -221,7 +281,7 @@ compareNivel(tipo1: Nivel_Usuario, tipo2: Nivel_Usuario): boolean {
       if (result.isConfirmed) {
         this.usuarioService.deleteUsuario(id).subscribe(() => {
           this.cargarusuarios();
-          Swal.fire('usuario eliminado', '', 'success');
+          Notificar.exito('usuario eliminado', '');
         });
       }
     });
@@ -229,6 +289,7 @@ compareNivel(tipo1: Nivel_Usuario, tipo2: Nivel_Usuario): boolean {
 
   resetForm(): void {
     this.usuario = new Usuario();
+    this.usuarioEditadoEstabaActivo = false;
     this.empleadosFiltrados = this.listEmpleado;
   }
 

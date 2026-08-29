@@ -1,0 +1,513 @@
+<div class="mant-panel dialog-panel--workspace">
+  <button mat-icon-button class="close-button" aria-label="Cerrar" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>Mantenimiento de recetas</h2>
+
+  <ng-container *ngIf="!showForm && !showReport">
+    <div class="dialog-toolbar">
+      <div class="dialog-toolbar__filters dialog-toolbar__filters--single">
+        <mat-form-field appearance="fill">
+          <mat-label>Buscar producto</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            matInput
+            [(ngModel)]="filtro"
+            (ngModelChange)="aplicarFiltro()"
+            placeholder="Producto, con receta o sin receta"
+          >
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-toolbar__status">
+        <mat-icon>info</mat-icon>
+        <span>
+          Se muestran los productos activos que tienen habilitado
+          “Controla receta” en Productos.
+        </span>
+      </div>
+
+      <div class="dialog-toolbar__actions">
+        <button mat-stroked-button color="primary" type="button" (click)="abrirReporte()">
+          <mat-icon>assessment</mat-icon>
+          Reporte de recetas
+        </button>
+      </div>
+    </div>
+
+    <div class="dialog-workspace-content">
+      <div class="dialog-table-card">
+        <div class="dialog-table-wrapper--fill">
+          <mat-table [dataSource]="dataSource" class="dialog-table--wide">
+            <ng-container matColumnDef="producto">
+              <mat-header-cell *matHeaderCellDef>Producto</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.Producto }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="precioVenta">
+              <mat-header-cell *matHeaderCellDef>Precio venta</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                {{ row.PrecioVenta | number:'1.2-2' }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="mesa">
+              <mat-header-cell *matHeaderCellDef>Costo mesa</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                {{ row.CostoMesa | number:'1.3-3' }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="llevar">
+              <mat-header-cell *matHeaderCellDef>Costo llevar</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                {{ row.CostoLlevar | number:'1.3-3' }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="delivery">
+              <mat-header-cell *matHeaderCellDef>Costo delivery</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                {{ row.CostoDelivery | number:'1.3-3' }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="estado">
+              <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <span
+                  class="status-pill"
+                  [class.status-pill--inactive]="!row.TieneRecetaRegistrada"
+                >
+                  {{ row.TieneRecetaRegistrada ? 'Con receta' : 'Sin receta' }}
+                </span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+              <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  [attr.aria-label]="row.TieneRecetaRegistrada ? 'Editar receta' : 'Crear receta'"
+                  [matTooltip]="row.TieneRecetaRegistrada ? 'Editar receta' : 'Crear receta'"
+                  (click)="abrir(row)"
+                >
+                  <mat-icon>{{ row.TieneRecetaRegistrada ? 'edit' : 'add_circle' }}</mat-icon>
+                </button>
+                <button
+                  *ngIf="row.TieneRecetaRegistrada"
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  aria-label="Consultar reporte"
+                  matTooltip="Consultar reporte"
+                  (click)="abrirReporte(row)"
+                >
+                  <mat-icon>assessment</mat-icon>
+                </button>
+                <button
+                  *ngIf="row.TieneRecetaRegistrada"
+                  mat-icon-button
+                  color="warn"
+                  type="button"
+                  aria-label="Eliminar receta"
+                  matTooltip="Eliminar receta"
+                  (click)="eliminar(row)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+          </mat-table>
+
+          <div class="dialog-empty-state" *ngIf="!cargando && dataSource.data.length === 0">
+            <mat-icon>menu_book</mat-icon>
+            <span>
+              No hay productos disponibles. Habilite “Controla receta”
+              desde el mantenimiento de Productos.
+            </span>
+          </div>
+        </div>
+
+        <mat-paginator
+          [length]="dataSource.data.length"
+          [pageSize]="10"
+          [pageSizeOptions]="[10, 20, 50]"
+          showFirstLastButtons
+        ></mat-paginator>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="showReport">
+    <div class="dialog-toolbar">
+      <div class="dialog-toolbar__footer">
+        <button mat-stroked-button type="button" (click)="volverReporte()">
+          <mat-icon>arrow_back</mat-icon>
+          Volver
+        </button>
+
+        <button
+          mat-stroked-button
+          color="primary"
+          type="button"
+          [disabled]="reporte.length === 0"
+          (click)="exportarReporte()"
+        >
+          <mat-icon>download</mat-icon>
+          Exportar a Excel
+        </button>
+      </div>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">Consulta de recetas</h3>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Consultar por</mat-label>
+            <mat-select
+              [(ngModel)]="tipoReporte"
+              (selectionChange)="cambiarTipoReporte()"
+            >
+              <mat-option value="todos">Todas las recetas</mat-option>
+              <mat-option value="producto">Producto</mat-option>
+              <mat-option value="familia">Familia</mat-option>
+              <mat-option value="insumo">Artículo o insumo</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" *ngIf="tipoReporte === 'producto'">
+            <mat-label>Producto</mat-label>
+            <mat-select [(ngModel)]="idProductoReporte">
+              <mat-option
+                *ngFor="let receta of recetas"
+                [value]="receta.IdProducto"
+                [disabled]="!receta.TieneRecetaRegistrada"
+              >
+                {{ receta.Producto }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" *ngIf="tipoReporte === 'familia'">
+            <mat-label>Familia</mat-label>
+            <mat-select [(ngModel)]="idFamiliaReporte">
+              <mat-option
+                *ngFor="let familia of familias"
+                [value]="familia.IdFamilia"
+              >
+                {{ familia.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" *ngIf="tipoReporte === 'insumo'">
+            <mat-label>Artículo o insumo</mat-label>
+            <mat-select [(ngModel)]="idArticuloReporte">
+              <mat-option
+                *ngFor="let articulo of articulos"
+                [value]="articulo.IdProducto"
+              >
+                {{ articulo.Codigo }} ·
+                {{ articulo.DescripcionCompra || articulo.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <div class="dialog-toolbar__actions">
+            <button mat-raised-button color="primary" type="button" (click)="consultarReporte()">
+              <mat-icon>search</mat-icon>
+              Consultar
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="dialog-workspace-content">
+      <div class="dialog-table-card">
+        <div class="dialog-table-wrapper--fill">
+          <table class="dialog-data-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th class="is-numeric">Costo mesa</th>
+                <th class="is-numeric">Costo llevar</th>
+                <th class="is-numeric">Costo delivery</th>
+                <th>Artículo</th>
+                <th>Unidad</th>
+                <th>Tipo</th>
+                <th class="is-numeric">Factor</th>
+                <th class="is-numeric">Mesa</th>
+                <th class="is-numeric">Llevar</th>
+                <th class="is-numeric">Delivery</th>
+                <th class="is-numeric">Precio</th>
+                <th>Área</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let fila of reporte">
+                <td>{{ fila.Producto }}</td>
+                <td class="is-numeric">{{ fila.CostoMesa | number:'1.0-3' }}</td>
+                <td class="is-numeric">{{ fila.CostoLlevar | number:'1.0-3' }}</td>
+                <td class="is-numeric">{{ fila.CostoDelivery | number:'1.0-3' }}</td>
+                <td>{{ fila.Articulo }}</td>
+                <td>{{ fila.Unidad }}</td>
+                <td>{{ fila.Tipo }}</td>
+                <td class="is-numeric">{{ fila.Factor | number:'1.0-4' }}</td>
+                <td class="is-numeric">{{ fila.CantidadMesa | number:'1.0-4' }}</td>
+                <td class="is-numeric">{{ fila.CantidadLlevar | number:'1.0-4' }}</td>
+                <td class="is-numeric">{{ fila.CantidadDelivery | number:'1.0-4' }}</td>
+                <td class="is-numeric">{{ fila.Precio | number:'1.0-4' }}</td>
+                <td>{{ fila.Area }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="dialog-empty-state" *ngIf="!cargando && reporte.length === 0">
+            <mat-icon>assessment</mat-icon>
+            <span>No hay recetas para el criterio seleccionado.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <form
+    *ngIf="showForm && recetaSeleccionada"
+    class="dialog-form dialog-form--workspace"
+    (ngSubmit)="guardar()"
+  >
+    <div class="dialog-form-scroll">
+      <div class="dialog-summary">
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">Producto</span>
+          <span class="dialog-summary__value">{{ recetaSeleccionada.Producto }}</span>
+        </div>
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">Precio de venta</span>
+          <span class="dialog-summary__value">
+            {{ recetaSeleccionada.PrecioVenta | number:'1.2-2' }}
+          </span>
+        </div>
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">Costo mesa</span>
+          <span class="dialog-summary__value">
+            {{ costo('mesa') | number:'1.3-3' }}
+            ({{ porcentaje(costo('mesa')) | number:'1.0-2' }} %)
+          </span>
+        </div>
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">Costo llevar</span>
+          <span class="dialog-summary__value">
+            {{ costo('llevar') | number:'1.3-3' }}
+            ({{ porcentaje(costo('llevar')) | number:'1.0-2' }} %)
+          </span>
+        </div>
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">Costo delivery</span>
+          <span class="dialog-summary__value">
+            {{ costo('delivery') | number:'1.3-3' }}
+            ({{ porcentaje(costo('delivery')) | number:'1.0-2' }} %)
+          </span>
+        </div>
+      </div>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          {{ indiceDetalleEditado === null ? 'Agregar artículo' : 'Modificar artículo' }}
+        </h3>
+
+        <div class="dialog-toolbar__actions">
+          <button
+            mat-stroked-button
+            color="primary"
+            type="button"
+            (click)="nuevoArticulo()"
+          >
+            <mat-icon>add</mat-icon>
+            Nuevo artículo o insumo
+          </button>
+        </div>
+
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+            <mat-label>Artículo o insumo</mat-label>
+            <mat-select
+              name="articulo"
+              [(ngModel)]="detalleActual.IdArticulo"
+              required
+            >
+              <mat-option
+                *ngFor="let articulo of articulos"
+                [value]="articulo.IdProducto"
+              >
+                {{ articulo.Codigo }} ·
+                {{ articulo.DescripcionCompra || articulo.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Área de descarga</mat-label>
+            <mat-select
+              name="area"
+              [(ngModel)]="detalleActual.IdArea"
+              required
+            >
+              <mat-option *ngFor="let area of areas" [value]="area.IdArea">
+                {{ area.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Unidad</mat-label>
+            <mat-select
+              name="tipoUnidad"
+              [(ngModel)]="detalleActual.TipoUnidad"
+              required
+            >
+              <mat-option [value]="1">
+                Almacén · {{ articuloSeleccionado()?.UnidadStock || 'Sin unidad' }}
+              </mat-option>
+              <mat-option [value]="2" [disabled]="!tieneUnidadReceta()">
+                Receta · {{ articuloSeleccionado()?.UnidadReceta || 'No configurada' }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Cantidad mesa</mat-label>
+            <input
+              matInput
+              name="cantidadMesa"
+              type="number"
+              min="0"
+              step="0.0001"
+              [(ngModel)]="detalleActual.CantidadMesa"
+            >
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Cantidad llevar</mat-label>
+            <input
+              matInput
+              name="cantidadLlevar"
+              type="number"
+              min="0"
+              step="0.0001"
+              [(ngModel)]="detalleActual.CantidadLlevar"
+            >
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Cantidad delivery</mat-label>
+            <input
+              matInput
+              name="cantidadDelivery"
+              type="number"
+              min="0"
+              step="0.0001"
+              [(ngModel)]="detalleActual.CantidadDelivery"
+            >
+          </mat-form-field>
+        </div>
+
+        <div class="dialog-toolbar__actions">
+          <button mat-raised-button color="primary" type="button" (click)="agregarDetalle()">
+            <mat-icon>{{ indiceDetalleEditado === null ? 'add' : 'check' }}</mat-icon>
+            {{ indiceDetalleEditado === null ? 'Agregar' : 'Aplicar cambio' }}
+          </button>
+          <button
+            *ngIf="indiceDetalleEditado !== null"
+            mat-stroked-button
+            type="button"
+            (click)="cancelarDetalle()"
+          >
+            Cancelar edición
+          </button>
+        </div>
+      </section>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">Detalle de la receta</h3>
+
+        <div class="dialog-table-wrapper">
+          <table class="dialog-data-table">
+            <thead>
+              <tr>
+                <th>Artículo</th>
+                <th>Unidad</th>
+                <th>Área</th>
+                <th class="is-numeric">Precio</th>
+                <th class="is-numeric">Mesa</th>
+                <th class="is-numeric">Llevar</th>
+                <th class="is-numeric">Delivery</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let detalle of detalles; let i = index">
+                <td>{{ detalle.Articulo }}</td>
+                <td>
+                  {{ detalle.Unidad }}
+                  <small *ngIf="detalle.TipoUnidad === 2">
+                    · factor {{ detalle.Factor | number:'1.0-4' }}
+                  </small>
+                </td>
+                <td>{{ detalle.Area }}</td>
+                <td class="is-numeric">{{ detalle.Precio | number:'1.0-4' }}</td>
+                <td class="is-numeric">{{ detalle.CantidadMesa | number:'1.0-4' }}</td>
+                <td class="is-numeric">{{ detalle.CantidadLlevar | number:'1.0-4' }}</td>
+                <td class="is-numeric">{{ detalle.CantidadDelivery | number:'1.0-4' }}</td>
+                <td>
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    type="button"
+                    aria-label="Editar artículo"
+                    (click)="editarDetalle(i)"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    type="button"
+                    aria-label="Quitar artículo"
+                    (click)="eliminarDetalle(i)"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="dialog-empty-state" *ngIf="detalles.length === 0">
+          <mat-icon>receipt_long</mat-icon>
+          <span>Agregue al menos un artículo para completar la receta.</span>
+        </div>
+      </section>
+    </div>
+
+    <div class="dialog-actions">
+      <button mat-stroked-button type="button" (click)="volver()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="guardando">
+        <mat-icon>save</mat-icon>
+        Guardar receta
+      </button>
+    </div>
+  </form>
+</div>

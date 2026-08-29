@@ -1,0 +1,172 @@
+<div class="mant-panel dialog-panel--workspace">
+  <button mat-icon-button class="close-button" aria-label="Cerrar" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>
+    {{ (showForm
+          ? (idGrupo ? 'editWarehouseGroup' : 'newWarehouseGroup')
+          : 'warehouseGroups') | tenantText }}
+  </h2>
+
+  <ng-container *ngIf="!showForm">
+    <div class="dialog-toolbar">
+      <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+        <mat-form-field appearance="fill">
+          <mat-label>{{ 'searchGroup' | tenantText }}</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            matInput
+            [(ngModel)]="filtro"
+            (ngModelChange)="aplicarFiltro()"
+            [placeholder]="'description' | tenantText"
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>{{ 'type' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="filtroTipo" (ngModelChange)="cargar()">
+            <mat-option value="">{{ 'allTypes' | tenantText }}</mat-option>
+            <mat-option *ngFor="let tipo of tipos" [value]="tipo.valor">
+              {{ tipo.clave | tenantText }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-toolbar__actions">
+        <button mat-raised-button color="primary" type="button" (click)="nuevo()">
+          <mat-icon>add</mat-icon>
+          {{ 'newWarehouseGroup' | tenantText }}
+        </button>
+      </div>
+    </div>
+
+    <div class="dialog-workspace-content">
+      <div class="dialog-table-card">
+        <div class="dialog-table-wrapper--fill">
+          <mat-table [dataSource]="dataSource">
+            <ng-container matColumnDef="descripcion">
+              <mat-header-cell *matHeaderCellDef>{{ 'description' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.Descripcion }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="tipo">
+              <mat-header-cell *matHeaderCellDef>{{ 'type' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ claveTipo(row.TipoGrupo) | tenantText }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="estado">
+              <mat-header-cell *matHeaderCellDef>{{ 'status' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <span class="status-pill" [class.status-pill--inactive]="!row.Activo">
+                  {{ (row.Activo ? 'active' : 'inactive') | tenantText }}
+                </span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+              <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  [attr.aria-label]="'edit' | tenantText"
+                  (click)="editar(row)"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  type="button"
+                  [attr.aria-label]="'delete' | tenantText"
+                  (click)="eliminar(row)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+          </mat-table>
+
+          <div class="dialog-empty-state" *ngIf="dataSource.filteredData.length === 0">
+            <mat-icon>category</mat-icon>
+            <span>{{ 'noWarehouseGroupsFound' | tenantText }}</span>
+          </div>
+        </div>
+
+        <mat-paginator
+          [pageSize]="10"
+          [pageSizeOptions]="[10, 20, 50]"
+          showFirstLastButtons
+        ></mat-paginator>
+      </div>
+    </div>
+  </ng-container>
+
+  <form
+    *ngIf="showForm"
+    class="dialog-form dialog-form--workspace"
+    (ngSubmit)="guardar()"
+  >
+    <div class="dialog-form-scroll">
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>category</mat-icon>
+          {{ 'groupData' | tenantText }}
+        </h3>
+
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+            <mat-label>{{ 'description' | tenantText }}</mat-label>
+            <input
+              matInput
+              name="descripcion"
+              [(ngModel)]="descripcion"
+              maxlength="100"
+              required
+            >
+            <mat-error>{{ 'groupDescriptionRequired' | tenantText }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>{{ 'type' | tenantText }}</mat-label>
+            <mat-select name="tipoGrupo" [(ngModel)]="tipoGrupo" required>
+              <mat-option *ngFor="let tipo of tipos" [value]="tipo.valor">
+                {{ tipo.clave | tenantText }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>{{ 'status' | tenantText }}</mat-label>
+            <mat-select name="activo" [(ngModel)]="activo" required>
+              <mat-option [value]="true">{{ 'active' | tenantText }}</mat-option>
+              <mat-option [value]="false">{{ 'inactive' | tenantText }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- Nota al pie, en el mismo tono que el aviso de Control horario:
+             explica la consecuencia justo donde se decide, sin interrumpir. -->
+        <p class="dialog-form-section__hint">
+          {{ 'warehouseGroupsHint' | tenantText }}
+        </p>
+      </section>
+    </div>
+
+    <div class="dialog-actions">
+      <button mat-stroked-button type="button" (click)="volver()" [disabled]="guardando">
+        {{ 'cancel' | tenantText }}
+      </button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="guardando">
+        <mat-icon>save</mat-icon>
+        {{ (idGrupo ? 'update' : 'save') | tenantText }}
+      </button>
+    </div>
+  </form>
+</div>

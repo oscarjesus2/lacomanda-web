@@ -1,22 +1,159 @@
-.sidenav-container {
-    height: 100%;
-  }
-  
-  .sidenav {
-    width: 200px;
-  }
-  
-  .sidenav .mat-toolbar {
-    background: inherit;
-  }
-  
-  .mat-toolbar.mat-primary {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-  }
-  
-  .example-spacer {
-    flex: 1 1 auto;
-  }
-   
+/* ============================================================
+   header.component.css — nuevos elementos (chips + reloj)
+   Los estilos base del toolbar están en styles.scss
+   ============================================================ */
+
+/* ── Separador vertical ────────────────────────────────────── */
+.app-header__sep {
+  width: 1px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.18);
+  margin: 0 12px;
+  flex-shrink: 0;
+}
+
+/* ── Contenedor de chips ───────────────────────────────────── */
+.app-header__info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ── Chip base ─────────────────────────────────────────────── */
+.app-header__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.app-header__chip-icon {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+  line-height: 14px !important;
+}
+
+/* Chip turno activo — amber cálido */
+.app-header__chip--turno {
+  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 50%, transparent);
+  color: var(--color-accent);
+}
+
+/* Punto verde pulsante */
+.app-header__chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-success);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 60%, transparent);
+  animation: pulse-dot 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-dot {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 60%, transparent); }
+  50%  { box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-success) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 0%, transparent); }
+}
+
+/* Chip sin turno — gris apagado */
+.app-header__chip--inactive {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Chip usuario — blanco suave */
+.app-header__chip--user {
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: var(--header-muted);
+}
+
+.app-header__chip--time-control {
+  border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  color: #fff3c4;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.app-header__chip--time-control:hover {
+  background: color-mix(in srgb, var(--color-accent) 27%, transparent);
+  transform: translateY(-1px);
+}
+
+/* ── Stat cards del turno ──────────────────────────────────── */
+.app-header__stat-sep {
+  width: 1px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.14);
+  flex-shrink: 0;
+  margin: 0 4px;
+}
+
+.app-header__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  gap: 1px;
+  white-space: nowrap;
+}
+
+.app-header__stat-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--header-text);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-header__stat-label {
+  font-size: 0.55rem;
+  color: rgba(255, 255, 255, 0.50);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ── Reloj ─────────────────────────────────────────────────── */
+.app-header__clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  margin-right: 16px;
+  line-height: 1;
+}
+
+.app-header__clock-time {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--header-text);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-header__clock-date {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.60);
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+  text-transform: capitalize;
+}

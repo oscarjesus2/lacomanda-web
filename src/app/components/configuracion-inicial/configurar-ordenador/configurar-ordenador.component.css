@@ -1,21 +1,18 @@
-.empleado-mantenimiento {
-  max-width: 720px;
-  margin: 32px auto;
-  padding: 20px;
-  background: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0,0,0,.08);
-  font-family: 'Roboto', sans-serif;
+.actions-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.empleado-mantenimiento h2 {
-  text-align: center;
-  color: #3f51b5;
-  margin-bottom: 18px;
+.info {
+  background: var(--color-surface-warm);
+  border: 1px solid var(--color-border);
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: var(--color-text);
 }
-
 .card {
-  background: #fff;
+  background: var(--color-surface);
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0 2px 6px rgba(0,0,0,.06);
@@ -25,30 +22,4 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
-}
-
-.full { width: 100%; }
-
-.actions-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.info {
-  background: #fafafa;
-  border: 1px solid #eee;
-  padding: 10px 12px;
-  border-radius: 6px;
-  color: #333;
-}
-
-.info .muted {
-  color: #666;
-  font-size: .92rem;
-}
-
-.footer {
-  display: flex;
-  justify-content: flex-end;
 }

@@ -1,0 +1,13 @@
+<div class="mant-panel dialog-panel--workspace reservations-admin reservations-agenda-dialog">
+  <button class="close-button" type="button" (click)="cerrar()"><mat-icon>close</mat-icon></button>
+  <div class="mant-title reservations-admin__title">
+    <span><mat-icon>event_available</mat-icon></span>
+    <div>
+      {{ puedeGestionar ? 'Gestión de reservas' : 'Consulta de reservas' }}
+      <small>{{ puedeGestionar ? 'Confirma reservas y registra la llegada de los clientes.' : 'Revisa las próximas reservas y el estado de cada una.' }}</small>
+    </div>
+  </div>
+  <div class="reservations-admin__body reservations-admin__body--agenda">
+    <app-agenda-reservas [puedeGestionar]="puedeGestionar"></app-agenda-reservas>
+  </div>
+</div>

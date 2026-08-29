@@ -1,68 +1,102 @@
-<div class="center-content">
+<div class="mant-panel dialog-panel dialog-panel--compact">
+  <button
+    mat-icon-button
+    class="close-button"
+    type="button"
+    [attr.aria-label]="'closeDialog' | tenantText"
+    (click)="salir()"
+    [disabled]="procesando">
+    <mat-icon>close</mat-icon>
+  </button>
 
-    <form class="example-form" [formGroup]="myForm" novalidate>
-              
-        
-        <h2 *ngIf="TurnoAbierto"> TURNO APERTURADO {{NroTurnoAbierto}}</h2>
-        <h2 *ngIf="!TurnoAbierto">APERTURAR TURNO</h2>
-        <table class="example-full-width" cellspacing="1">
-            <tr>
+  <h2>{{ 'openShift' | tenantText }}</h2>
 
-                <td><mat-form-field class="example-full-width">
-                        <mat-label>Caja</mat-label>
-                        <mat-select matInput [formControl]="myForm.get('caja')">
-                            <mat-option *ngFor="let item of listCaja" [value]="item.IdCaja" (click)="ValidarTurnoAbierto(item)">
-                                {{item.Descripcion}}
-                            </mat-option>
-                        </mat-select>
-                        <mat-error *ngIf="myForm.get('caja').hasError('required')">
-                            Caja es requerida
-                        </mat-error>
-                    </mat-form-field>
-                </td>
-                <td>
-                    <mat-form-field class="example-full-width">
-                        <mat-label>Tipo de Cambio</mat-label>
-                        <input matInput [formControl]="myForm.get('tipocambio')">
-                        <mat-error *ngIf="myForm.get('tipocambio').hasError('required')">
-                            Tipo de Cambio es requerido
-                        </mat-error>
-                        <mat-error *ngIf="myForm.get('tipocambio').hasError('pattern')">
-                            Por favor, ingrese un Tipo de Cambio valido.
-                        </mat-error>
-                        <mat-error *ngIf="myForm.get('tipocambio').hasError('maxlength')">
-                            Maximo 5 caracteres
-                        </mat-error>
-                    </mat-form-field>
+  <div
+    class="dialog-notice dialog-notice--success"
+    role="status"
+    aria-live="polite"
+    *ngIf="turnoAbierto">
+    <mat-icon>check_circle</mat-icon>
+    <div class="dialog-notice__content">
+      <span class="dialog-notice__title">
+        {{ 'shiftOpened' | tenantText:{ number: nroTurnoAbierto } }}
+      </span>
+      <span class="dialog-notice__text">
+        {{ 'registerAlreadyOperational' | tenantText }}
+      </span>
+    </div>
+  </div>
 
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <mat-form-field appearance="fill">
-                    <mat-label>Fecha Trabajo</mat-label>
-                    <input matInput [readonly]="true"
-                            [value]="myForm.get('fecha')?.value | date:'yyyy-MM-dd HH:mm:ss'">
-                    </mat-form-field>
-                </td>
-                <td></td>
-            </tr>
-        </table>
+  <form class="dialog-form" [formGroup]="myForm" novalidate>
 
-   
-        <div class="example-button-row">
-            <button [disabled]="myForm.invalid" mat-fab extended color="accent" (click)="saveData()">
-                <mat-icon>lock_open</mat-icon>
-                Aperturar
-            </button>
-            <button mat-fab extended color="accent" (click)="salir()">
-                <mat-icon>exit_to_app</mat-icon>
-                Salir
-            </button>
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>{{ 'register' | tenantText }}</mat-label>
+        <mat-select
+          [formControl]="myForm.get('caja')"
+          (selectionChange)="onCajaSeleccionada($event.value)"
+          [disabled]="procesando">
+          <mat-option
+            *ngFor="let item of listCaja"
+            [value]="item.IdCaja">
+            {{ item.Descripcion }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="myForm.get('caja')?.hasError('required')">
+          {{ 'selectRegister' | tenantText }}
+        </mat-error>
+      </mat-form-field>
 
-        </div>
-        <br>
- 
-    </form>
-   
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>{{ 'exchangeRate' | tenantText }}</mat-label>
+        <input
+          matInput
+          type="number"
+          inputmode="decimal"
+          min="0.0001"
+          step="0.0001"
+          [formControl]="myForm.get('tipocambio')" />
+        <mat-error *ngIf="myForm.get('tipocambio')?.hasError('required')">
+          {{ 'enterExchangeRate' | tenantText }}
+        </mat-error>
+        <mat-error
+          *ngIf="myForm.get('tipocambio')?.hasError('min')
+            || myForm.get('tipocambio')?.hasError('pattern')">
+          {{ 'enterPositiveValue' | tenantText }}
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>{{ 'workDate' | tenantText }}</mat-label>
+        <input
+          matInput
+          readonly
+          [value]="myForm.get('fecha')?.value | date: 'dd/MM/yyyy HH:mm'" />
+      </mat-form-field>
+    </div>
+
+    <div class="dialog-actions">
+      <button
+        *ngIf="!turnoAbierto"
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="abrirTurno()"
+        [disabled]="myForm.invalid || procesando">
+        <mat-icon>lock_open</mat-icon>
+        <span>{{ 'openAction' | tenantText }}</span>
+      </button>
+
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="salir()"
+        [disabled]="procesando">
+        <mat-icon>exit_to_app</mat-icon>
+        <span>{{ 'exit' | tenantText }}</span>
+      </button>
+    </div>
+  </form>
 </div>

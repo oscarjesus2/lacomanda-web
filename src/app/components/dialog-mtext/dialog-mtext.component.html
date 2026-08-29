@@ -1,18 +1,39 @@
-<div class="m-text-touch-container">
-  <h1>{{ title }}</h1>
-  <div class="display">
-    <input type="text" [(ngModel)]="inputValue" readonly />
+<div class="mant-panel mt-panel">
+
+  <button mat-icon-button class="close-button" (click)="cancel()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2 *ngIf="title">{{ title }}</h2>
+
+  <div class="mt-display">
+    <input type="text" [(ngModel)]="inputValue" readonly placeholder="..." />
   </div>
 
-  <div class="keypad">
-    <div *ngFor="let row of keyRows">
-      <button *ngFor="let key of row" [ngClass]="{'space': key === 'Espacio'}" (click)="onKeyClick(key)">{{ key }}</button>
+  <div class="mt-keypad">
+    <div *ngFor="let row of keyRows" class="mt-keypad__row">
+      <button
+        *ngFor="let key of row"
+        class="mt-key"
+        [class.mt-key--esc]="key === 'ESC'"
+        [class.mt-key--space]="key === 'Espacio'"
+        [class.mt-key--pct]="key === '%'"
+        (click)="onKeyClick(key)">
+        {{ key }}
+      </button>
     </div>
   </div>
 
-  <div class="actions">
-    <button (click)="clear()">Borrar</button>
-    <button (click)="accept()">Aceptar</button>
-    <button (click)="cancel()">Salir</button>
+  <div class="mt-actions">
+    <button class="mt-btn mt-btn--warn" (click)="clear()">
+      <mat-icon>backspace</mat-icon> {{ 'clear' | tenantText }}
+    </button>
+    <button class="mt-btn mt-btn--primary" (click)="accept()">
+      <mat-icon>check</mat-icon> {{ 'accept' | tenantText }}
+    </button>
+    <button class="mt-btn mt-btn--secondary" (click)="cancel()">
+      {{ 'exit' | tenantText }}
+    </button>
   </div>
+
 </div>

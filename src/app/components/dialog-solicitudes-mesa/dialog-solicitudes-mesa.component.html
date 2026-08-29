@@ -1,0 +1,12 @@
+<div class="qr-dialog">
+  <button mat-icon-button class="close-button" aria-label="Cerrar" (click)="cerrar()"><mat-icon>close</mat-icon></button>
+  <h2>SOLICITUDES DESDE MESA</h2>
+  <p class="subtitle">Confirma únicamente cuando veas al cliente en el espacio y su código coincida.</p>
+  <div *ngIf="cargando" class="empty-state">Buscando solicitudes…</div>
+  <div *ngIf="!cargando && solicitudes.length === 0" class="empty-state"><mat-icon>qr_code_scanner</mat-icon><strong>No hay solicitudes pendientes</strong><span>Esta ventana se actualiza automáticamente.</span></div>
+  <article *ngFor="let solicitud of solicitudes" class="request-card">
+    <div><span class="environment">{{ solicitud.Ambiente }}</span><h3>{{ solicitud.Espacio }} {{ solicitud.Numero }}</h3><small>Solicitado {{ solicitud.FechaSolicitudUtc | date:'HH:mm:ss' }}</small></div>
+    <div class="request-code">{{ solicitud.CodigoVisual }}</div>
+    <div class="request-actions"><button mat-stroked-button color="warn" [disabled]="procesando === solicitud.IdSesion" (click)="rechazar(solicitud)">RECHAZAR</button><button mat-raised-button color="primary" [disabled]="procesando === solicitud.IdSesion" (click)="confirmar(solicitud)">CONFIRMAR</button></div>
+  </article>
+</div>

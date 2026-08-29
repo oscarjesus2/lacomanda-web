@@ -1,0 +1,304 @@
+/* ==========================================================
+   dialog-reportes — panel de gastos y reportes
+   Hereda mant-panel del global
+   ========================================================== */
+
+.rpt-panel {
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 540px;
+}
+
+/* ── Tabs ────────────────────────────────────────────────── */
+.rpt-tabs {
+  margin-top: 8px;
+}
+
+/* Forzar color de pestañas con design tokens */
+::ng-deep .rpt-tabs .mat-mdc-tab-labels {
+  background: var(--color-surface-warm);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+::ng-deep .rpt-tabs .mat-mdc-tab .mdc-tab__text-label {
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+::ng-deep .rpt-tabs .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+  color: var(--color-primary);
+}
+
+::ng-deep .rpt-tabs .mdc-tab-indicator__content--underline {
+  border-color: var(--color-primary) !important;
+}
+
+/* ── Contenido de cada tab ───────────────────────────────── */
+.rpt-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0 4px;
+}
+
+/* ── Sección interna ─────────────────────────────────────── */
+.rpt-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rpt-section__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rpt-section__header mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  color: var(--color-primary);
+}
+
+/* ── Refresh button ──────────────────────────────────────── */
+.rpt-refresh {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.rpt-refresh mat-icon {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  line-height: 16px !important;
+  color: var(--color-text-muted) !important;
+}
+
+.rpt-refresh:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.rpt-refresh:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Stats de cobros ─────────────────────────────────────── */
+.rpt-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.rpt-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+  border: 1px solid var(--color-border);
+}
+
+.rpt-stat__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.rpt-stat__value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--color-text);
+}
+
+.rpt-stat__value--ok   { color: var(--color-success, #388e3c); }
+.rpt-stat__value--warn { color: var(--color-warn); }
+.rpt-stat__value--total {
+  color: var(--color-primary-dark);
+  font-size: 1.4rem;
+}
+
+.rpt-stat--total {
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+/* ── Loading ─────────────────────────────────────────────── */
+.rpt-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.rpt-loading__icon {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Botones de reporte (acción grande) ──────────────────── */
+.rpt-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rpt-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 130px;
+  min-height: 80px;
+  padding: 12px 8px;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+  color: var(--color-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-align: center;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.rpt-action-btn mat-icon {
+  font-size: 26px;
+  width: 26px;
+  height: 26px;
+  line-height: 26px;
+  color: var(--color-primary);
+}
+
+.rpt-action-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.rpt-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Filtros (checkboxes) ────────────────────────────────── */
+.rpt-filter-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding-top: 4px;
+  font-size: 0.82rem;
+}
+
+/* ── Vista previa PDF ────────────────────────────────────── */
+.rpt-pdf-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* Toma toda la altura disponible en el panel */
+  flex: 1;
+  min-height: 0;
+}
+
+.rpt-pdf-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.rpt-pdf-toolbar__icon {
+  color: var(--color-warn);
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+}
+
+.rpt-pdf-toolbar__title {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.rpt-pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid transparent;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.rpt-pdf-btn mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+}
+
+.rpt-pdf-btn--print {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  border-color: var(--color-primary-dark);
+}
+.rpt-pdf-btn--print:hover { background: var(--color-primary-dark); }
+
+.rpt-pdf-btn--close {
+  background: transparent;
+  border-color: var(--color-border-strong);
+  color: var(--color-text-muted);
+}
+.rpt-pdf-btn--close:hover {
+  border-color: var(--color-warn);
+  color: var(--color-warn);
+}
+
+.rpt-pdf-frame {
+  flex: 1;
+  width: 100%;
+  min-height: 500px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}

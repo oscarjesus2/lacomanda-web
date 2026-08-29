@@ -15,11 +15,12 @@ import { EmpleadoService } from 'src/app/services/empleado.service';
 import { Cargo } from 'src/app/models/cargo.models';
 import { EntradaCabService } from 'src/app/services/entradacab.service';
 import { Empleado } from 'src/app/models/empleado.models';
-import { EntradaCab } from 'src/app/models/entradacab.models';
-import { EntradaDet } from 'src/app/models/entradadet.models';
 import { DescuentoCodigo } from 'src/app/models/descuentocodigo.models';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { MonedaService } from 'src/app/services/moneda.service';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-dialog-pagar-taxista',
@@ -37,6 +38,7 @@ export class DialogPagarTaxistaComponent {
   telefono: string = '';
   color: string = 'rojo';
   totalPagar: number = 0;
+  monedaSimbolo: string = '';
 
   // Tabla de datos
   displayedColumns: string[] = ['tipoDoc', 'serie', 'numero', 'importe', 'dscto', 'total', 'codigoPromo', 'activo', 'fechaReg'];
@@ -52,19 +54,45 @@ export class DialogPagarTaxistaComponent {
     private router: Router,
     private empleadoService: EmpleadoService,
     private entradaCabService: EntradaCabService,
+    private configuracionService: ConfiguracionService,
+    private monedaService: MonedaService,
     private qzTrayService: QzTrayV224Service
   ) { }
+
+  /** Filtro local de la tabla por Código Promocional. */
+  filtrarPorCodigo(valor: string): void {
+    this.dataSource.filterPredicate = (data: VentasDTO, filter: string) =>
+      (data.CodigoPromocional ?? '').toLowerCase().includes(filter);
+    this.dataSource.filter = (valor ?? '').trim().toLowerCase();
+  }
+
+  /** Carga el símbolo de moneda desde la configuración central. */
+  private loadMoneda(): void {
+    this.configuracionService.get().subscribe({
+      next: (cfg) => {
+        const obs = cfg?.PaisISO2
+          ? this.monedaService.getMonedaPorPais(cfg.PaisISO2)
+          : this.monedaService.getMoneda();
+        obs.subscribe({
+          next: (resp) => { this.monedaSimbolo = resp?.Data?.[0]?.Simbolo ?? ''; },
+          error: ()    => {}
+        });
+      },
+      error: () => {}
+    });
+  }
 
 
   async ngOnInit() {
 
+    this.loadMoneda();
     this.spinnerService.show();
 
     try {
       // Primer servicio que necesita ejecutarse antes de otros
       this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
-        if (data != null) {
-          this.turnoAbierto = data;
+        if (data?.Data != null) {
+          this.turnoAbierto = data.Data;
 
           this.listarTragosGratis();
           this.spinnerService.hide();
@@ -199,70 +227,21 @@ export class DialogPagarTaxistaComponent {
       empleado.Dni = this.dni;
       empleado.Telefono= this.telefono;
       empleado.Direccion= null;  // Verificar si se necesita un valor por defecto
-      empleado.Cargo= new Cargo({ IdCargo: 15, Descripcion: '' }); // Asegúrate de que Cargo está definido correctamente
+      empleado.EsTaxista = true;
       empleado.Activo = 1;  // O 1 si Activo es un número
       empleado.IdSocioNegocio = 0;
       empleado.Placa = this.placa;
       empleado.Color = this.color;
 
-      var entrada = new EntradaCab();
-      entrada.NumDocumento = "RI";
-      entrada.IdTipoDocumento = "RI";
-      entrada.FechaEmision = this.turnoAbierto.FechaTrabajo;
-      entrada.FechaRecepcion = this.turnoAbierto.FechaTrabajo;
-      entrada.IdProveedor = "00001";
-      entrada.IdTipoMovi = 8;
-      entrada.IdSubTipoMovi = 3;
-      entrada.IdMoneda = "SO";
-      entrada.ValorCompra = this.totalPagar;
-      entrada.Isc = 0;
-      entrada.Igv = 0;
-      entrada.TotalCompra = this.totalPagar;
-      entrada.Observacion = "COMISION TAXISTA " + empleado.Nombre + " / PLACA " +  empleado.Placa + " / COLOR " + empleado.Color;
-      entrada.IdTienda = 'backend';
-      entrada.MontoPagado = 0;
-      entrada.IdTipoCambio = 0;
-      entrada.TasaCambio = 0;
-      entrada.FechaPago = null;
-      entrada.Calculo = 1;
-      entrada.IdCaja = this.turnoAbierto.IdCaja;
-      entrada.IdTurno = this.turnoAbierto.IdTurno;
-      entrada.Opcion = 1;
-      entrada.UsuReg = this.storageService.getCurrentUser().IdUsuario;
-      entrada.IdEmpleado = this.storageService.getCurrentUser().IdEmpleado;
-      entrada.NumGastoDia = 0;
-      entrada.Estado = 2;
-      entrada.EstadoPago = 1;
-
-      var listaEntradaDet: EntradaDet[] = [];
-      var entradaDet= new EntradaDet();
-
-      entradaDet.IdEntrada = 0;
-      entradaDet.IdArticulo = 838;
-      entradaDet.Cantidad = 1;
-      entradaDet.Precio = this.totalPagar;
-      entradaDet.IdUnidad = "UN";
-      entradaDet.ValorCompra = this.totalPagar;
-      entradaDet.PorcIsc = 0;
-      entradaDet.Isc = 0;
-      entradaDet.PorcIgv = 0;
-      entradaDet.Igv = 0;
-      entradaDet.Subtotal = this.totalPagar;
-      entradaDet.IdImpuesto = null;
-      entradaDet.IdImpuesto2 = null;
-      entradaDet.IdArea = null;
-      listaEntradaDet.push(entradaDet);
-
-      entrada.ListaEntradaDet = listaEntradaDet;
-
-
+      // El Recibo Interno (RI), su detalle y la observación los arma el backend según las
+      // reglas heredadas. El front solo envía el taxista, la venta, el monto y la caja del turno.
       this.spinnerService.show();
-      this.entradaCabService.GrabarEgresoTaxista(empleado, entrada, this.selectedRow.IdVenta).subscribe({
+      this.entradaCabService.GrabarEgresoTaxista(empleado, this.selectedRow.IdVenta, this.totalPagar, this.turnoAbierto.IdCaja).subscribe({
         next: (response) => {
           this.spinnerService.hide();
           // Manejar la respuesta del servidor
           if (response.Success) {
-            Swal.fire('Éxito', 'Se grabaron los datos correctamente.', 'success');
+            Notificar.exito('Éxito', 'Se grabaron los datos correctamente.');
             this.imprimir(response.Data);
             this.limpiarFormulario();
             this.listarTragosGratis(); // Refrescar la lista de tragos gratis

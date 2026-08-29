@@ -1,37 +1,57 @@
-<div class="report" style="position: relative; min-height: 200px;">
-    <ngx-spinner bdColor="rgba(128, 128, 128, 0.8)"
+<div class="report report-panel">
+
+  <ngx-spinner
+    bdColor="rgba(0, 0, 0, 0.35)"
     size="medium"
     color="#fff"
     type="ball-scale-multiple"
-    name="anulacionesSpinner">
-    <p style="font-size: 20px; color: rgb(71, 68, 68)">Cargando...</p></ngx-spinner>
-      <h2>Anulaciones</h2>
+    name="anulacionesSpinner"
+    class="report-panel__spinner"
+  >
+    <p>{{ 'loadingVoids' | tenantText }}</p>
+  </ngx-spinner>
 
-      <div class="chart" #chart></div>
-      <h3>{{selectedProducto}}</h3>
-  
-        <table class="data-table">
-        <thead>
-            <tr>
-            <th>Motivo</th>
-            <th>Doc</th>
-            <th>Qty</th>
-            <th>Precio</th>
-            <th>Autoriza</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let item of filteredData">
-            <td>{{ item.Motivo }}</td>
-            <td>{{ item.Documento }}</td>
-            <td>{{ item.Cantidad }}</td>
-            <td>{{ item.Precio }}</td>
-            <td>{{ item.Autoriza }}</td>
-            </tr>
-        </tbody>
-        </table>
-
+  <header class="report-panel__header">
+    <div>
+      <h3 class="report-panel__title">{{ 'voids' | tenantText }}</h3>
+      <p class="report-panel__subtitle">
+        {{ 'byProductAndReason' | tenantText }}
+      </p>
     </div>
+  </header>
 
+  <div class="report-panel__chart-container">
+    <div class="report-panel__chart chart" #chart></div>
 
+    <div class="report-panel__empty" *ngIf="sinDatos">
+      {{ 'noDataForRange' | tenantText }}
+    </div>
+  </div>
 
+  <h4 class="report-panel__table-title">
+    {{ selectedProducto }}
+  </h4>
+
+  <div class="report-panel__table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>{{ 'reason' | tenantText }}</th>
+          <th>{{ 'document' | tenantText }}</th>
+          <th>{{ 'quantityFull' | tenantText }}</th>
+          <th>{{ 'price' | tenantText }}</th>
+          <th>{{ 'authorizedBy' | tenantText }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredData">
+          <td>{{ item.Motivo }}</td>
+          <td>{{ item.Documento }}</td>
+          <td>{{ item.Cantidad }}</td>
+          <td>{{ item.Precio }}</td>
+          <td>{{ item.Autoriza }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

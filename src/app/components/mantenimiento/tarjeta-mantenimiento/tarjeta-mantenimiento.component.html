@@ -1,0 +1,120 @@
+<div class="mant-panel">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>Mantenimiento de tarjetas</h2>
+
+  <!-- ══ LISTA ══════════════════════════════════════════════ -->
+  <div *ngIf="!showForm">
+    <button mat-raised-button color="primary" (click)="nuevo()">
+      <mat-icon>add</mat-icon> Nueva tarjeta
+    </button>
+
+    <mat-form-field appearance="fill" class="full-width mant-search">
+      <mat-label>{{ 'search' | tenantText }}</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="aplicarFiltro()"
+             placeholder="Descripción o socio de negocio">
+    </mat-form-field>
+
+    <div class="mant-table-card">
+      <mat-table [dataSource]="data">
+
+        <ng-container matColumnDef="descripcion">
+          <mat-header-cell *matHeaderCellDef>{{ 'description' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let r">{{ r.Descripcion }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="socio">
+          <mat-header-cell *matHeaderCellDef>Socio de negocio</mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            <span [class.trj-na]="r.IdSocioNegocio == null">
+              {{ socioLabel(r.IdSocioNegocio) }}
+            </span>
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="orden">
+          <mat-header-cell *matHeaderCellDef>Orden</mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            <span [class.trj-na]="r.Orden == null">{{ r.Orden ?? '—' }}</span>
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            <button mat-icon-button color="primary" (click)="onEdit(r)" [matTooltip]="'edit' | tenantText">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="onDelete(r)" [matTooltip]="'delete' | tenantText">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell trj-empty" [attr.colspan]="displayedColumns.length">
+            No hay tarjetas registradas.
+          </td>
+        </tr>
+      </mat-table>
+
+      <mat-paginator [pageSize]="10" [pageSizeOptions]="[10, 20, 50]"></mat-paginator>
+    </div>
+  </div>
+
+  <!-- ══ FORMULARIO ════════════════════════════════════════ -->
+  <form *ngIf="showForm" #form="ngForm" (ngSubmit)="onSubmit()">
+    <h3 class="trj-form-title">
+      <mat-icon>{{ tarjeta.IdTarjeta ? 'edit' : 'add_circle' }}</mat-icon>
+      {{ tarjeta.IdTarjeta ? 'Editar tarjeta' : 'Nueva tarjeta' }}
+    </h3>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>{{ 'description' | tenantText }}</mat-label>
+      <input matInput [(ngModel)]="tarjeta.Descripcion" name="descripcion"
+             required maxlength="100" #desc="ngModel">
+      <mat-error *ngIf="desc.invalid && (desc.dirty || desc.touched)">
+        {{ 'descriptionRequired' | tenantText }}
+      </mat-error>
+    </mat-form-field>
+
+    <div class="form-row">
+      <mat-form-field appearance="fill" class="form-field">
+        <mat-label>Socio de negocio</mat-label>
+        <mat-select [(ngModel)]="tarjeta.IdSocioNegocio" name="socio">
+          <mat-option [value]="null">Ninguno</mat-option>
+          <mat-option *ngFor="let s of sociosNegocio" [value]="s.IdSocioNegocio">
+            {{ s.Descripcion }}
+          </mat-option>
+        </mat-select>
+        <mat-hint>Opcional. Cada socio admite una sola tarjeta.</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="form-field">
+        <mat-label>Orden</mat-label>
+        <input matInput type="number" min="0" step="1"
+               [(ngModel)]="tarjeta.Orden" name="orden" #orden="ngModel">
+        <mat-hint>Posición en la lista de cobro.</mat-hint>
+        <mat-error *ngIf="orden.invalid && (orden.dirty || orden.touched)">
+          Introduce un número igual o mayor que 0.
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="mant-form-actions">
+      <button mat-raised-button color="primary" type="submit" [disabled]="guardando">
+        <mat-icon>save</mat-icon>
+        {{ tarjeta.IdTarjeta ? ('updateAction' | tenantText) : ('save' | tenantText) }}
+      </button>
+      <button mat-stroked-button type="button" (click)="cancelar()" [disabled]="guardando">
+        <mat-icon>close</mat-icon> {{ 'cancel' | tenantText }}
+      </button>
+    </div>
+  </form>
+</div>

@@ -9,4 +9,5 @@ export class CajaTipoDocumento {
   PreguntarParaImprimir: boolean;
   Activo: boolean;
   Mascara: string;      // viene de TipoDocumentoPais
+  PaisISO2?: string;
   }

@@ -1,0 +1,46 @@
+<section class="time-correction">
+  <header class="time-correction__header">
+    <div>
+      <span>Corrección auditada</span>
+      <h2>{{ jornada.Empleado }}</h2>
+      <p>El registro original quedará conservado en el historial.</p>
+    </div>
+    <button type="button" mat-icon-button aria-label="Cerrar" (click)="cancelar()"><mat-icon>close</mat-icon></button>
+  </header>
+
+  <div class="time-correction__body">
+    <div class="time-correction__grid">
+      <label>Entrada<input type="datetime-local" [(ngModel)]="inicioLocal"></label>
+      <label>Salida<input type="datetime-local" [(ngModel)]="finLocal"></label>
+    </div>
+
+    <div class="time-correction__breaks">
+      <div class="time-correction__section-title">
+        <div><strong>Pausas</strong><span>Añade, corrige o elimina intervalos.</span></div>
+        <button type="button" class="btn-secondary btn-compact" (click)="agregarPausa()">
+          <mat-icon>add</mat-icon> Añadir pausa
+        </button>
+      </div>
+      <div class="time-correction__break" *ngFor="let pausa of pausas; let i = index">
+        <label>Inicio<input type="datetime-local" [(ngModel)]="pausa.InicioLocal"></label>
+        <label>Fin<input type="datetime-local" [(ngModel)]="pausa.FinLocal"></label>
+        <button type="button" mat-icon-button aria-label="Eliminar pausa" (click)="quitarPausa(i)"><mat-icon>delete_outline</mat-icon></button>
+      </div>
+      <p class="time-correction__empty" *ngIf="pausas.length === 0">No hay pausas registradas.</p>
+    </div>
+
+    <label class="time-correction__reason">
+      Motivo de la corrección
+      <textarea rows="3" maxlength="500" [(ngModel)]="motivo"
+                placeholder="Ej.: El empleado olvidó registrar la salida y se verificó con el responsable."></textarea>
+    </label>
+    <p class="time-correction__error" *ngIf="error"><mat-icon>error_outline</mat-icon>{{ error }}</p>
+  </div>
+
+  <footer class="time-correction__footer">
+    <button type="button" class="btn-secondary" [disabled]="guardando" (click)="cancelar()">Cancelar</button>
+    <button type="button" class="btn-primary" [disabled]="guardando" (click)="guardar()">
+      <mat-icon>verified</mat-icon>{{ guardando ? 'Guardando…' : 'Guardar corrección' }}
+    </button>
+  </footer>
+</section>

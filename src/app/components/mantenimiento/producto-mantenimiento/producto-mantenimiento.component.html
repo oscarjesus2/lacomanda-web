@@ -1,264 +1,768 @@
-<button mat-icon-button class="close-button" (click)="salir()"><mat-icon>close</mat-icon></button>
+<div class="mant-panel prod-panel">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
 
-<div class="empleado-mantenimiento">
-  <h2>Mantenimiento de Productos</h2>
+  <h2>{{ 'maintenanceProducts' | tenantText }}</h2>
 
-  <!-- LISTA -->
-  <div class="empleados-list" *ngIf="!showForm">
-    <button mat-raised-button color="primary" (click)="nuevo()">Nuevo Producto</button>
+  <section
+    *ngIf="previsualizacionCarta"
+    class="menu-import-review"
+  >
+    <div class="menu-import-review__header">
+      <div>
+        <span class="menu-import-review__eyebrow">
+          <mat-icon>auto_awesome</mat-icon>
+          Lectura inteligente
+        </span>
+        <h3>Revisa los productos de tu carta</h3>
+        <p>
+          La IA preparó un borrador. Corrige lo necesario y desmarca lo que no
+          quieras crear todavía.
+        </p>
+      </div>
+      <div class="menu-import-review__summary">
+        <span class="status-badge">
+          Confianza {{ confianzaPorcentaje() }} %
+        </span>
+        <strong>{{ cantidadProductosSeleccionados }} seleccionados</strong>
+      </div>
+    </div>
+
+    <div
+      class="menu-import-review__notice"
+      *ngIf="previsualizacionCarta.Advertencias.length"
+    >
+      <mat-icon>info</mat-icon>
+      <ul>
+        <li *ngFor="let advertencia of previsualizacionCarta.Advertencias">
+          {{ advertencia }}
+        </li>
+      </ul>
+    </div>
+
+    <p class="menu-import-review__safety">
+      <mat-icon>verified_user</mat-icon>
+      Aquí solo se preparan datos comerciales. Recetas, stock, impuestos
+      especiales y áreas de impresión se configuran después, cuando corresponda.
+    </p>
+
+    <div
+      class="dialog-empty-state"
+      *ngIf="previsualizacionCarta.Productos.length === 0"
+    >
+      <mat-icon>no_photography</mat-icon>
+      <strong>No encontramos productos legibles</strong>
+      <span>Prueba con fotos nítidas, completas y tomadas de frente.</span>
+    </div>
+
+    <div class="menu-import-review__list">
+      <article
+        class="menu-import-product"
+        [class.menu-import-product--disabled]="!producto.Seleccionado"
+        [class.menu-import-product--review]="producto.RequiereRevision"
+        *ngFor="let producto of previsualizacionCarta.Productos; let i = index; trackBy: trackProductoCarta"
+      >
+        <div class="menu-import-product__top">
+          <mat-checkbox [(ngModel)]="producto.Seleccionado">
+            Producto {{ i + 1 }}
+          </mat-checkbox>
+          <div class="menu-import-product__badges">
+            <span class="status-badge">
+              {{ confianzaPorcentaje(producto) }} % confianza
+            </span>
+            <span
+              class="status-badge status-badge--warning"
+              *ngIf="producto.RequiereRevision"
+            >
+              Revisar
+            </span>
+            <span
+              class="status-badge status-badge--danger"
+              *ngIf="producto.IdProductoExistente"
+            >
+              Posible duplicado
+            </span>
+          </div>
+        </div>
+
+        <p
+          class="menu-import-product__reason"
+          *ngIf="producto.MotivoRevision"
+        >
+          {{ producto.MotivoRevision }}
+        </p>
+
+        <div class="menu-import-product__fields">
+          <mat-form-field appearance="fill">
+            <mat-label>Familia</mat-label>
+            <input
+              matInput
+              [(ngModel)]="producto.Familia"
+              maxlength="100"
+              [disabled]="!producto.Seleccionado"
+            >
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Subfamilia</mat-label>
+            <input
+              matInput
+              [(ngModel)]="producto.SubFamilia"
+              maxlength="100"
+              [disabled]="!producto.Seleccionado"
+            >
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Nombre corto</mat-label>
+            <input
+              matInput
+              [(ngModel)]="producto.NombreCorto"
+              maxlength="50"
+              [disabled]="!producto.Seleccionado"
+            >
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="menu-import-product__description">
+            <mat-label>Nombre completo</mat-label>
+            <input
+              matInput
+              [(ngModel)]="producto.Descripcion"
+              maxlength="120"
+              [disabled]="!producto.Seleccionado"
+            >
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="menu-import-product__description">
+            <mat-label>Descripción para la carta</mat-label>
+            <textarea
+              matInput
+              rows="2"
+              [(ngModel)]="producto.DescripcionCarta"
+              maxlength="500"
+              [disabled]="!producto.Seleccionado"
+            ></textarea>
+            <mat-hint>Texto breve visible para el comensal.</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Precio ({{ previsualizacionCarta.IdMoneda }})</mat-label>
+            <input
+              matInput
+              type="number"
+              min="0"
+              step="0.01"
+              [(ngModel)]="producto.Precio"
+              [disabled]="!producto.Seleccionado"
+            >
+          </mat-form-field>
+        </div>
+      </article>
+    </div>
+
+    <div class="menu-import-review__actions">
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="confirmandoCartaIa"
+        (click)="cancelarImportacionCarta()"
+      >
+        Cancelar
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        [disabled]="confirmandoCartaIa || cantidadProductosSeleccionados === 0"
+        (click)="confirmarImportacionCarta()"
+      >
+        <mat-icon>playlist_add_check</mat-icon>
+        Crear {{ cantidadProductosSeleccionados }} productos
+      </button>
+    </div>
+  </section>
+
+  <!-- ══ LISTA ══════════════════════════════════════════════════════════ -->
+  <div class="empleados-list" *ngIf="!showForm && !previsualizacionCarta">
+    <div class="product-list-actions">
+      <button mat-raised-button color="primary" (click)="nuevo()">
+        <mat-icon>add</mat-icon>
+        {{ 'newProduct' | tenantText }}
+      </button>
+      <button
+        *ngIf="puedeImportarCartaIa"
+        mat-stroked-button
+        color="primary"
+        type="button"
+        [disabled]="procesandoCartaIa"
+        (click)="cartaInput.click()"
+      >
+        <mat-icon>auto_awesome</mat-icon>
+        Crear productos desde mi carta
+      </button>
+      <input
+        #cartaInput
+        hidden
+        type="file"
+        multiple
+        accept="image/jpeg,image/png,image/webp"
+        (change)="analizarCarta($event)"
+      >
+    </div>
 
     <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Buscar</mat-label>
-      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Nombre, descripción, precio, posición...">
+      <mat-label>{{ 'search' | tenantText }}</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()"
+             [placeholder]="'searchProduct' | tenantText">
     </mat-form-field>
 
-    <mat-table [dataSource]="filtered" class="mat-elevation-z8">
-      <ng-container matColumnDef="nombre">
-        <mat-header-cell *matHeaderCellDef> Nombre </mat-header-cell>
-        <mat-cell *matCellDef="let r"> {{ r.NombreCorto }} </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="descripcion">
-        <mat-header-cell *matHeaderCellDef> Descripción </mat-header-cell>
-        <mat-cell *matCellDef="let r"> {{ r.Descripcion }} </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="precio">
-        <mat-header-cell *matHeaderCellDef> Precio </mat-header-cell>
-        <mat-cell *matCellDef="let r"> {{ r.Precio | number:'1.2-2' }} </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="tipo">
-        <mat-header-cell *matHeaderCellDef> Tipo </mat-header-cell>
-        <mat-cell *matCellDef="let r">
-          {{ r.Tipo === 0 ? 'Carta' :r.Tipo === 1 ? 'Menú' : r.Tipo === 2 ? 'Con complementos' : 'Complemento' }}
-        </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="visible">
-        <mat-header-cell *matHeaderCellDef> Visible </mat-header-cell>
-        <mat-cell *matCellDef="let r"> {{ r.Visible ? 'Sí' : 'No' }} </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="activo">
-        <mat-header-cell *matHeaderCellDef> Activo </mat-header-cell>
-        <mat-cell *matCellDef="let r"> {{ r.Activo ? 'Sí' : 'No' }} </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="posicion">
-        <mat-header-cell *matHeaderCellDef> Posición </mat-header-cell>
-        <mat-cell *matCellDef="let r"> {{ r.Posicion }} </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
-        <mat-cell *matCellDef="let r">
-          <button mat-icon-button color="primary" (click)="onEdit(r)"><mat-icon>edit</mat-icon></button>
-          <button mat-icon-button color="warn" (click)="onDelete(r.IdProducto)"><mat-icon>delete</mat-icon></button>
-        </mat-cell>
-      </ng-container>
-
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-    </mat-table>
-    <mat-paginator [length]="productos.length" [pageSize]="5" [pageSizeOptions]="[5,10,20]"></mat-paginator>
+    <div class="mant-table-card">
+      <mat-table [dataSource]="filtered" class="mat-elevation-z8">
+        <ng-container matColumnDef="nombre">
+          <mat-header-cell *matHeaderCellDef> {{ 'name' | tenantText }} </mat-header-cell>
+          <mat-cell *matCellDef="let r"> {{ r.NombreCorto }} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="descripcion">
+          <mat-header-cell *matHeaderCellDef> {{ 'description' | tenantText }} </mat-header-cell>
+          <mat-cell *matCellDef="let r"> {{ r.Descripcion }} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="precio">
+          <mat-header-cell *matHeaderCellDef> {{ 'price' | tenantText }} </mat-header-cell>
+          <mat-cell *matCellDef="let r"> {{ r.Precio | number:'1.2-2' }} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="tipo">
+          <mat-header-cell *matHeaderCellDef> {{ 'type' | tenantText }} </mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            {{ (r.Tipo === 0 ? 'productTypeMenuCard' : r.Tipo === 1 ? 'productTypeMenu' : r.Tipo === 2 ? 'productTypeWithComplements' : 'productTypeComplement') | tenantText }}
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="visible">
+          <mat-header-cell *matHeaderCellDef> {{ 'visible' | tenantText }} </mat-header-cell>
+          <mat-cell *matCellDef="let r"> {{ (r.Visible ? 'yes' : 'no') | tenantText }} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="activo">
+          <mat-header-cell *matHeaderCellDef> {{ 'active' | tenantText }} </mat-header-cell>
+          <mat-cell *matCellDef="let r"> {{ (r.Activo ? 'yes' : 'no') | tenantText }} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="posicion">
+          <mat-header-cell *matHeaderCellDef> {{ 'position' | tenantText }} </mat-header-cell>
+          <mat-cell *matCellDef="let r"> {{ r.Posicion }} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef> {{ 'actions' | tenantText }} </mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            <button mat-icon-button color="primary" (click)="onEdit(r)"><mat-icon>edit</mat-icon></button>
+            <button mat-icon-button color="warn" (click)="onDelete(r.IdProducto)"><mat-icon>delete</mat-icon></button>
+          </mat-cell>
+        </ng-container>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      </mat-table>
+      <mat-paginator [length]="productos.length" [pageSize]="5" [pageSizeOptions]="[5,10,20]"></mat-paginator>
+    </div>
   </div>
 
-  <!-- FORM -->
-  <form *ngIf="showForm" #productoForm="ngForm" (ngSubmit)="onSubmit()">
+  <!-- ══ FORM: layout 2 columnas ════════════════════════════════════════ -->
+  <form *ngIf="showForm" #productoForm="ngForm" (ngSubmit)="onSubmit()" class="prod-form-grid">
 
-    <div class="form-row">
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Nombre corto</mat-label>
-        <input matInput [(ngModel)]="p.NombreCorto" name="nombre" required #nombre="ngModel">
-        <mat-error *ngIf="nombre.invalid && (nombre.dirty || nombre.touched)">Requerido.</mat-error>
-      </mat-form-field>
-
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Descripción</mat-label>
-        <input matInput [(ngModel)]="p.Descripcion" name="descripcion" required #descripcion="ngModel">
-        <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">Requerido.</mat-error>
-      </mat-form-field>
-    </div>
-
-    <div class="form-row">
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Precio</mat-label>
-        <input matInput type="number" [(ngModel)]="p.Precio" name="precio" min="0" step="0.01" [required]="!p.SinPrecio" #precio="ngModel">
-        <mat-error *ngIf="precio.invalid && (precio.dirty || precio.touched)">Precio inválido.</mat-error>
-      </mat-form-field>
-
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Moneda</mat-label>
-        <mat-select [(ngModel)]="p.IdMoneda" name="moneda" required #moneda="ngModel">
-          <mat-option *ngFor="let m of monedas" [value]="m.IdMoneda">{{ m.Descripcion }}</mat-option>
-        </mat-select>
-        <mat-error *ngIf="moneda.invalid && (moneda.dirty || moneda.touched)">Requerido.</mat-error>
-      </mat-form-field>
-
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Color</mat-label>
-        <mat-select [(ngModel)]="p.IdColor" name="color" required #color="ngModel">
-          <mat-option *ngFor="let c of colores" [value]="c.IdColor">{{ c.Descripcion }}</mat-option>
-        </mat-select>
-        <mat-error *ngIf="color.invalid && (color.dirty || color.touched)">Requerido.</mat-error>
-      </mat-form-field>
-    </div>
-
-    <div class="form-row">
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Familia</mat-label>
-        <mat-select [(ngModel)]="p.IdFamilia" name="familia" (selectionChange)="onFamiliaChange()" required #familia="ngModel">
-          <mat-option *ngFor="let f of familias" [value]="f.IdFamilia">{{ f.Descripcion }}</mat-option>
-        </mat-select>
-        <mat-error *ngIf="familia.invalid && (familia.dirty || familia.touched)">Requerido.</mat-error>
-      </mat-form-field>
-
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>SubFamilia</mat-label>
-        <mat-select [(ngModel)]="p.IdSubFamilia" name="subfamilia" required #subfamilia="ngModel">
-          <mat-option *ngFor="let sf of subfamilias" [value]="sf.IdSubFamilia">{{ sf.Descripcion }}</mat-option>
-        </mat-select>
-        <mat-error *ngIf="subfamilia.invalid && (subfamilia.dirty || subfamilia.touched)">Requerido.</mat-error>
-      </mat-form-field>
-
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Grupo</mat-label>
-        <mat-select [(ngModel)]="p.IdGrupoVenta" name="grupo" required #grupo="ngModel">
-          <mat-option *ngFor="let g of grupos" [value]="g.IdGrupo">{{ g.Descripcion }}</mat-option>
-        </mat-select>
-        <mat-error *ngIf="grupo.invalid && (grupo.dirty || grupo.touched)">Requerido.</mat-error>
-      </mat-form-field>
-    </div>
-
-    <div class="form-row">
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Tipo</mat-label>
-        <mat-select [(ngModel)]="p.Tipo" name="tipo" required #tipo="ngModel">
-          <mat-option [value]="0">Carta</mat-option>
-          <mat-option [value]="1">Menú</mat-option>
-          <mat-option [value]="2">Con complementos</mat-option>
-          <mat-option [value]="3">Complemento</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field class="form-field" appearance="fill" *ngIf="p.Tipo === 1">
-        <mat-label>Sección de Menu</mat-label>
-        <mat-select [(ngModel)]="p.IdSeccionMenu" name="clasecombo" required #clasecombo="ngModel">
-          <mat-option *ngFor="let cc of seccionMenu" [value]="cc.IdSeccionMenu">{{ cc.Descripcion }}</mat-option>
-        </mat-select>
-        <mat-error *ngIf="clasecombo.invalid && (clasecombo.dirty || clasecombo.touched)">Requerido para Menú.</mat-error>
-      </mat-form-field>
-
-      <mat-form-field class="form-field" appearance="fill" *ngIf="p.Tipo === 2">
-        <mat-label>Cantidad de complementos</mat-label>
-        <input matInput type="number" [(ngModel)]="p.Qty" name="qty" min="1" required #qty="ngModel">
-        <mat-error *ngIf="qty.invalid && (qty.dirty || qty.touched)">Requerido para Tipo=2.</mat-error>
-      </mat-form-field>
-
-      <mat-form-field class="form-field" appearance="fill" *ngIf="p.Tipo === 3">
-        <mat-label>Factor Complemento</mat-label>
-        <input matInput type="number" step="0.01" [(ngModel)]="p.FactorComplemento" name="factor" min="0.01" required #factor="ngModel">
-        <mat-error *ngIf="factor.invalid && (factor.dirty || factor.touched)">> 0 (2 decimales).</mat-error>
-      </mat-form-field>
-    </div>
-
-    <div class="form-row" *ngIf="p.Tipo === 3">
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Posición Complemento</mat-label>
-        <input matInput [value]="p.PosicionComplemento || ''" name="poscomp" readonly placeholder="Seleccione posición 6×5">
-      </mat-form-field>
-      <button mat-raised-button color="primary" type="button" (click)="abrirSelectorPosicionComplemento()">
-        Elegir posición complemento (6×5)
+    <div class="prod-advanced-toggle">
+      <div>
+        <p class="prod-advanced-toggle__title">
+          {{ 'advancedConfiguration' | tenantText }}
+        </p>
+        <p class="prod-advanced-toggle__hint">
+          {{ 'advancedConfigurationHint' | tenantText }}
+        </p>
+      </div>
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="toggleConfiguracionAvanzada()"
+      >
+        <mat-icon>{{ mostrarConfiguracionAvanzada ? 'expand_less' : 'tune' }}</mat-icon>
+        {{ (mostrarConfiguracionAvanzada
+          ? 'hideAdvancedConfiguration'
+          : 'showAdvancedConfiguration') | tenantText }}
       </button>
     </div>
 
-    <div class="form-row">
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Posición</mat-label>
-        <input matInput [value]="p.Posicion || ''" name="posicion" readonly placeholder="Seleccione posición 8×9">
-      </mat-form-field>
-      <button mat-raised-button color="primary" type="button" (click)="abrirSelectorPosicion()">Elegir posición (8×9)</button>
+    <!-- ── Columna izquierda: identificación y clasificación ──────────── -->
+    <div class="prod-col prod-col--left">
+      <p class="prod-col-label">{{ 'idAndClassification' | tenantText }}</p>
 
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Precio mínimo</mat-label>
-        <input matInput type="number" step="0.01" [(ngModel)]="p.PrecioMinimo" name="preciomin" [required]="p.SinPrecio" #preciomin="ngModel">
-        <mat-error *ngIf="preciomin.invalid && (preciomin.dirty || preciomin.touched)">Requerido si "SinPrecio".</mat-error>
-      </mat-form-field>
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'shortName' | tenantText }}</mat-label>
+          <input matInput [(ngModel)]="p.NombreCorto" name="nombre" required #nombre="ngModel">
+          <mat-error *ngIf="nombre.invalid && (nombre.dirty || nombre.touched)">{{ 'required' | tenantText }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'description' | tenantText }}</mat-label>
+          <input matInput [(ngModel)]="p.Descripcion" name="descripcion" required #descripcion="ngModel">
+          <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">{{ 'required' | tenantText }}</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'price' | tenantText }}</mat-label>
+          <input matInput type="number" [(ngModel)]="p.Precio" name="precio"
+                 min="0" step="0.01" [required]="!p.SinPrecio" #precio="ngModel">
+          <mat-error *ngIf="precio.invalid && (precio.dirty || precio.touched)">{{ 'invalidPrice' | tenantText }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'currency' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="p.IdMoneda" name="moneda" required #moneda="ngModel">
+            <mat-option *ngFor="let m of monedas" [value]="m.IdMoneda">{{ m.Descripcion }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="moneda.invalid && (moneda.dirty || moneda.touched)">{{ 'required' | tenantText }}</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'color' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="p.IdColor" name="color" required #color="ngModel">
+            <mat-option *ngFor="let c of colores" [value]="c.IdColor">{{ c.Descripcion }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="color.invalid && (color.dirty || color.touched)">{{ 'required' | tenantText }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'family' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="p.IdFamilia" name="familia"
+                      (selectionChange)="onFamiliaChange()" required #familia="ngModel">
+            <mat-option *ngFor="let f of familias" [value]="f.IdFamilia">{{ f.Descripcion }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="familia.invalid && (familia.dirty || familia.touched)">{{ 'required' | tenantText }}</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'subfamily' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="p.IdSubFamilia" name="subfamilia" required #subfamilia="ngModel">
+            <mat-option *ngFor="let sf of subfamilias" [value]="sf.IdSubFamilia">{{ sf.Descripcion }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="subfamilia.invalid && (subfamilia.dirty || subfamilia.touched)">{{ 'required' | tenantText }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'group' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="p.IdGrupoVenta" name="grupo" required #grupo="ngModel">
+            <mat-option *ngFor="let g of grupos" [value]="g.IdGrupo">{{ g.Descripcion }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="grupo.invalid && (grupo.dirty || grupo.touched)">{{ 'required' | tenantText }}</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'type' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="p.Tipo" name="tipo" required #tipo="ngModel">
+            <mat-option [value]="0">{{ 'productTypeMenuCard' | tenantText }}</mat-option>
+            <mat-option [value]="1">{{ 'productTypeMenu' | tenantText }}</mat-option>
+            <mat-option [value]="2">{{ 'productTypeWithComplements' | tenantText }}</mat-option>
+            <mat-option [value]="3">{{ 'productTypeComplement' | tenantText }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="fill" *ngIf="p.Tipo === 1">
+          <mat-label>{{ 'menuSection' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="p.IdClaseCombo" name="clasecombo" required #clasecombo="ngModel">
+            <mat-option [value]="0">{{ 'mainCombo' | tenantText }}</mat-option>
+            <mat-option *ngFor="let cc of seccionMenu" [value]="cc.IdSeccionMenu">{{ cc.Descripcion }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="clasecombo.invalid && (clasecombo.dirty || clasecombo.touched)">{{ 'requiredForMenu' | tenantText }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="fill" *ngIf="p.Tipo === 2">
+          <mat-label>{{ 'complementsQuantity' | tenantText }}</mat-label>
+          <input matInput type="number" [(ngModel)]="p.Qty" name="qty" min="1" required #qty="ngModel">
+          <mat-error *ngIf="qty.invalid && (qty.dirty || qty.touched)">{{ 'requiredForType2' | tenantText }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="form-field" appearance="fill" *ngIf="p.Tipo === 3">
+          <mat-label>{{ 'complementFactor' | tenantText }}</mat-label>
+          <input matInput type="number" step="0.01" [(ngModel)]="p.FactorComplemento"
+                 name="factor" min="0.01" required #factor="ngModel">
+          <mat-error *ngIf="factor.invalid && (factor.dirty || factor.touched)">{{ 'complementFactorHint' | tenantText }}</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row" *ngIf="p.Tipo === 3">
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'complementPosition' | tenantText }}</mat-label>
+          <input matInput [value]="p.PosicionComplemento || ''" name="poscomp"
+                 readonly [placeholder]="'selectPosition6x5' | tenantText">
+        </mat-form-field>
+        <button mat-raised-button color="primary" type="button"
+                (click)="abrirSelectorPosicionComplemento()">
+          {{ 'choosePosition6x5' | tenantText }}
+        </button>
+      </div>
+
+      <div class="form-row prod-posicion-row">
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'position' | tenantText }}</mat-label>
+          <input matInput [value]="p.Posicion || ''" name="posicion"
+                 readonly [placeholder]="'selectPosition8x9' | tenantText">
+        </mat-form-field>
+        <button mat-raised-button color="primary" type="button"
+                class="prod-posicion-btn" (click)="abrirSelectorPosicion()">
+          {{ 'choosePosition8x9' | tenantText }}
+        </button>
+
+      </div>
     </div>
 
-    <div class="form-row">
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Visible</mat-label>
-        <mat-select [(ngModel)]="p.Visible" name="visible" required #visible="ngModel">
-          <mat-option [value]="true">Sí</mat-option>
-          <mat-option [value]="false">No</mat-option>
-        </mat-select>
-      </mat-form-field>
+    <!-- ── Columna derecha: configuración y áreas ─────────────────────── -->
+    <div class="prod-col prod-col--right">
+      <p class="prod-col-label">
+        {{ (mostrarConfiguracionAvanzada
+          ? 'configAndPrintAreas'
+          : 'printAreas') | tenantText }}
+      </p>
 
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Activo</mat-label>
-        <mat-select [(ngModel)]="p.Activo" name="activo" required #activo="ngModel">
-          <mat-option [value]="true">Sí</mat-option>
-          <mat-option [value]="false">No</mat-option>
-        </mat-select>
-      </mat-form-field>
+      <section class="product-image-card">
+        <div class="product-image-card__preview" [class.product-image-card__preview--empty]="!imagenPrevisualizacion">
+          <img *ngIf="imagenPrevisualizacion" [src]="imagenPrevisualizacion" [alt]="p.NombreCorto || 'Producto'">
+          <mat-icon *ngIf="!imagenPrevisualizacion">add_photo_alternate</mat-icon>
+        </div>
+        <div class="product-image-card__content">
+          <strong>Foto para la carta digital</strong>
+          <p>Ayuda al comensal a reconocer el producto. Utiliza una imagen clara en JPG, PNG o WEBP.</p>
+          <div class="product-image-card__actions">
+            <label class="product-image-upload">
+              <mat-icon>upload</mat-icon>
+              {{ imagenPrevisualizacion ? 'Cambiar foto' : 'Elegir foto' }}
+              <input type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarImagen($event)">
+            </label>
+            <button *ngIf="imagenPrevisualizacion" mat-stroked-button type="button" color="warn" (click)="quitarImagen()">
+              <mat-icon>delete_outline</mat-icon> Quitar
+            </button>
+          </div>
+          <small>Máximo 5 MB. Se mostrará en la carta pública del QR.</small>
+        </div>
+      </section>
 
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Impuesto</mat-label>
-        <mat-select [(ngModel)]="p.IdImpuestoPais" name="impuesto" required #impuesto="ngModel">
-          <mat-option *ngFor="let g of impuestoPais" [value]="g.IdImpuestoPais">{{ g.Descripcion }}</mat-option>
-        </mat-select>
-        <mat-error *ngIf="impuesto.invalid && (impuesto.dirty || impuesto.touched)">Requerido.</mat-error>
-      </mat-form-field>
+      <ng-container *ngIf="mostrarConfiguracionAvanzada">
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'visible' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="p.Visible" name="visible" required #visible="ngModel">
+            <mat-option [value]="true">{{ 'yes' | tenantText }}</mat-option>
+            <mat-option [value]="false">{{ 'no' | tenantText }}</mat-option>
+          </mat-select>
+        </mat-form-field>
 
-    </div>
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'active' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="p.Activo" name="activo" required #activo="ngModel">
+            <mat-option [value]="true">{{ 'yes' | tenantText }}</mat-option>
+            <mat-option [value]="false">{{ 'no' | tenantText }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
 
-    <div class="form-row">
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Sin Precio</mat-label>
-        <mat-select [(ngModel)]="p.SinPrecio" name="sinprecio" required #sinprecio="ngModel">
-          <mat-option [value]="true">Sí</mat-option>
-          <mat-option [value]="false">No</mat-option>
-        </mat-select>
-      </mat-form-field>
+      <div class="form-row">
+        <mat-form-field class="form-field form-field--wide" appearance="fill">
+          <mat-label>Descripción para la carta</mat-label>
+          <textarea matInput rows="3" [(ngModel)]="p.DescripcionCarta"
+                    name="descripcionCarta" maxlength="500"></textarea>
+          <mat-hint>Se mostrará bajo el nombre del producto y ayudará al asistente a recomendarlo.</mat-hint>
+        </mat-form-field>
+      </div>
 
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Exclusivo Anfitriona</mat-label>
-        <mat-select [(ngModel)]="p.ExclusivoParaAnfitriona" name="excanf" required>
-          <mat-option [value]="true">Sí</mat-option>
-          <mat-option [value]="false">No</mat-option>
-        </mat-select>
-      </mat-form-field>
+      <div class="form-row">
+        <mat-form-field class="form-field form-field--grow" appearance="fill">
+          <mat-label>{{ 'tax' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="p.IdImpuestoPais" name="impuesto" required #impuesto="ngModel">
+            <mat-option *ngFor="let g of impuestoPais" [value]="g.IdImpuestoPais">{{ g.Descripcion }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="impuesto.invalid && (impuesto.dirty || impuesto.touched)">{{ 'required' | tenantText }}</mat-error>
+        </mat-form-field>
+      </div>
 
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Permite Trago Cortesía</mat-label>
-        <mat-select [(ngModel)]="p.PermitirParaTragoCortesia" name="cortesia" required>
-          <mat-option [value]="true">Sí</mat-option>
-          <mat-option [value]="false">No</mat-option>
-        </mat-select>
-      </mat-form-field>
-    </div>
-    <div class="form-row">
-      <section class="card" style="margin-top:10px;">
-        <h3>Áreas de impresión</h3>
+      <div class="form-row">
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>Clase</mat-label>
+          <mat-select
+            [(ngModel)]="p.EsServicio"
+            name="esServicio"
+            (selectionChange)="cambiarServicio()"
+            required
+          >
+            <mat-option [value]="false">Producto</mat-option>
+            <mat-option [value]="true">Servicio</mat-option>
+          </mat-select>
+        </mat-form-field>
 
-        <!-- ngModel standalone: no interfiere con tu NgForm -->
+        <mat-form-field class="form-field" appearance="fill">
+          <mat-label>{{ 'noPrice' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="p.SinPrecio" name="sinprecio" required #sinprecio="ngModel">
+            <mat-option [value]="true">{{ 'yes' | tenantText }}</mat-option>
+            <mat-option [value]="false">{{ 'no' | tenantText }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field
+          *ngIf="p.SinPrecio"
+          class="form-field"
+          appearance="fill"
+        >
+          <mat-label>{{ 'minimumPrice' | tenantText }}</mat-label>
+          <input
+            matInput
+            type="number"
+            step="0.01"
+            [(ngModel)]="p.PrecioMinimo"
+            name="preciomin"
+            required
+            #preciomin="ngModel"
+          >
+          <mat-error
+            *ngIf="preciomin.invalid && (preciomin.dirty || preciomin.touched)"
+          >
+            {{ 'requiredIfNoPrice' | tenantText }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field
+          class="form-field"
+          appearance="fill"
+          *ngIf="!p.EsServicio"
+        >
+          <mat-label>Controla receta</mat-label>
+          <mat-select
+            [(ngModel)]="p.TieneReceta"
+            name="tieneReceta"
+            (selectionChange)="cambiarControlReceta()"
+            required
+          >
+            <mat-option [value]="true">Sí</mat-option>
+            <mat-option [value]="false">No</mat-option>
+          </mat-select>
+          <mat-hint>Permite configurar sus artículos y costes en Recetas.</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field
+          *ngIf="!p.EsServicio && !p.TieneReceta"
+          class="form-field"
+          appearance="fill"
+        >
+          <mat-label>{{ 'directStockControl' | tenantText }}</mat-label>
+          <mat-select
+            [(ngModel)]="p.ControlDirectoStock"
+            name="controlDirectoStock"
+            (selectionChange)="cambiarControlDirectoStock()"
+            required
+          >
+            <mat-option [value]="true">{{ 'yes' | tenantText }}</mat-option>
+            <mat-option [value]="false">{{ 'no' | tenantText }}</mat-option>
+          </mat-select>
+          <mat-hint>{{ 'directStockControlHint' | tenantText }}</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field *ngIf="mostrarAnfitriona" class="form-field" appearance="fill">
+          <mat-label>{{ 'exclusiveHostess' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="p.ExclusivoParaAnfitriona" name="excanf" required>
+            <mat-option [value]="true">{{ 'yes' | tenantText }}</mat-option>
+            <mat-option [value]="false">{{ 'no' | tenantText }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row" *ngIf="mostrarTragoCortesia">
+        <mat-form-field class="form-field form-field--grow" appearance="fill">
+          <mat-label>{{ 'allowsCourtesyDrink' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="p.PermitirParaTragoCortesia" name="cortesia" required>
+            <mat-option [value]="true">{{ 'yes' | tenantText }}</mat-option>
+            <mat-option [value]="false">{{ 'no' | tenantText }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- Áreas de impresión -->
+      </ng-container>
+
+      <div class="prod-areas-card">
+        <p class="prod-areas-title">{{ 'printAreas' | tenantText }}</p>
         <mat-selection-list
           [(ngModel)]="selectedAreas"
           [ngModelOptions]="{ standalone: true }"
+          class="prod-areas-list"
         >
           <mat-list-option *ngFor="let a of areas" [value]="a.IdAreaImpresion">
-            {{ a.Descripcion }} <span class="muted">({{ a.NombreImpresora }})</span>
+            {{ a.Descripcion }}
+            <span class="prod-areas-impresora">{{ a.NombreImpresora }}</span>
           </mat-list-option>
         </mat-selection-list>
-
-        <mat-hint>Selecciona una o varias áreas donde se imprimirá la comanda de este producto.</mat-hint>
-      </section>
+        <p class="prod-areas-hint">{{ 'printAreasHint' | tenantText }}</p>
+      </div>
     </div>
-          
 
-    <button mat-raised-button color="primary">{{ p.IdProducto ? 'Actualizar' : 'Guardar' }}</button>
-    <button mat-raised-button color="warn" type="button" (click)="cancelar()">Cancelar</button>
+    <section
+      *ngIf="mostrarConfiguracionAvanzada && p.ControlDirectoStock"
+      class="dialog-form-section dialog-form-section--full"
+    >
+      <h3 class="dialog-form-section__title">
+        <mat-icon>inventory_2</mat-icon>
+        Control directo de stock
+      </h3>
+      <p class="dialog-form-section__hint">
+        Al vender este producto se descontará directamente su propio stock.
+        La subárea se resuelve cruzando el stock del artículo con las descargas
+        habilitadas para la estación.
+      </p>
+
+      <div class="dialog-form-grid">
+        <mat-form-field
+          appearance="fill"
+          class="dialog-form-grid__wide"
+        >
+          <mat-label>Descripción de compra</mat-label>
+          <input
+            matInput
+            [(ngModel)]="p.DescripcionCompra"
+            name="descripcionCompra"
+            maxlength="100"
+            [placeholder]="p.Descripcion || 'Descripción para almacén'"
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Precio de compra</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="p.PrecioCompra"
+            name="precioCompra"
+            required
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Grupo de almacén</mat-label>
+          <mat-select
+            [(ngModel)]="p.IdGrupoCompra"
+            name="grupoCompra"
+            required
+          >
+            <mat-option
+              *ngFor="let grupoAlmacen of gruposAlmacen"
+              [value]="grupoAlmacen.IdGrupo"
+            >
+              {{ grupoAlmacen.Descripcion }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>Clasificación usada en compras e inventario.</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Unidad de compra/stock</mat-label>
+          <mat-select
+            [(ngModel)]="p.IdUnidadStock"
+            name="unidadStock"
+            (selectionChange)="cambiarUnidadStock()"
+            required
+          >
+            <mat-option
+              *ngFor="let unidad of unidadesMedida"
+              [value]="unidad.IdUnidad"
+            >
+              {{ unidad.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Unidad de venta/consumo</mat-label>
+          <mat-select
+            [(ngModel)]="p.IdUnidadReceta"
+            name="unidadConsumo"
+            (selectionChange)="cambiarUnidadConsumo()"
+          >
+            <mat-option [value]="null">
+              Igual que la unidad de stock
+            </mat-option>
+            <mat-option
+              *ngFor="let unidad of unidadesMedida"
+              [value]="unidad.IdUnidad"
+            >
+              {{ unidad.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" *ngIf="usaConversionUnidad()">
+          <mat-label>Unidades por compra</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0.0001"
+            step="0.0001"
+            [(ngModel)]="p.FactorReceta"
+            name="factorReceta"
+            required
+          >
+          <mat-hint>
+            Cuántas unidades de venta contiene una unidad de compra.
+          </mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Stock mínimo</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="p.StockMinimo"
+            name="stockMinimo"
+            required
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Stock máximo</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="p.StockMaximo"
+            name="stockMaximo"
+            required
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Incluir en inventario</mat-label>
+          <mat-select
+            [(ngModel)]="p.Inventario"
+            name="inventario"
+            required
+          >
+            <mat-option [value]="true">Sí</mat-option>
+            <mat-option [value]="false">No</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </section>
+
+    <!-- ── Acciones (span full width) ────────────────────────────────── -->
+    <div class="prod-actions">
+      <button mat-raised-button color="primary" [disabled]="guardandoImagen">
+        {{ (p.IdProducto ? 'updateAction' : 'save') | tenantText }}
+      </button>
+      <button mat-stroked-button type="button" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
+    </div>
+
   </form>
 </div>

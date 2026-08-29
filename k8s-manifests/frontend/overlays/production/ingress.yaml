@@ -4,11 +4,55 @@ metadata:
   name: frontend-ingress
   annotations:
     kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.allow-http: "false"
     kubernetes.io/ingress.global-static-ip-name: "frontend-production-global-ip"
-    networking.gke.io/managed-certificates: "frontend-cert"
     networking.gke.io/frontend-config: "frontend-frontendconfig"
 spec:
+  # TLS por cert-manager. El certificado incluye el apex para redirigirlo al
+  # portal y el wildcard para portal, app y los subdominios de tenant.
+  tls:
+    - hosts:
+        - "lacomanda.store"
+        - "www.lacomanda.store"
+        - "portal.lacomanda.store"
+        - "app.lacomanda.store"
+        - "*.lacomanda.store"
+        - "*.staging.lacomanda.store"
+      secretName: wildcard-lacomanda-tls
   rules:
+    # El portal mantiene su Deployment/Service en este mismo namespace para
+    # compartir el Load Balancer y la IP de producción del frontend.
+    - host: portal.lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portal-lacomanda
+                port:
+                  number: 80
+    # Nginx del portal responde 308 para conservar el dominio anterior.
+    - host: lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portal-lacomanda
+                port:
+                  number: 80
+    - host: www.lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portal-lacomanda
+                port:
+                  number: 80
     - host: app.lacomanda.store
       http:
         paths:
@@ -17,5 +61,39 @@ spec:
             backend:
               service:
                 name: frontend
+                port:
+                  number: 80
+    # Subdominios de tenant (<tenant>.lacomanda.store) → mismo frontend.
+    - host: "*.lacomanda.store"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+    # Todo staging comparte esta misma IP. El proxy resuelve el destino real
+    # dentro del cluster segun el host (frontend, portal, API o Keycloak).
+    - host: "*.staging.lacomanda.store"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: staging-proxy
+                port:
+                  number: 80
+    # SonarQube tambien reutiliza la IP productiva sin exponer otro LB.
+    - host: sonarqube.lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: staging-proxy
                 port:
                   number: 80

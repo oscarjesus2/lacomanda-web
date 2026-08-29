@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, inject, HostListener, AfterViewInit, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, inject, HostListener, AfterViewInit, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 
@@ -15,12 +15,12 @@ import { DialogObservacionComponent } from '../../components/dialog-observacion/
 //Models
 import { Producto } from '../../models/product.models';
 import { Ambiente } from '../../models/ambiente.models';
-import { Mesas } from '../../models/mesas.models';
+import { Espacios } from '../../models/espacios.models';
 import { ProductGrid } from '../../models/product.grid.models';
 import { Empleado } from '../../models/empleado.models';
 import { PedidoDet } from '../../models/pedidodet.models';
 import { Observacion } from '../../models/observacion.models';
-import { PedidoCab } from '../../models/pedido.models';
+import { ModoImpresionPedido, PedidoCab } from '../../models/pedido.models';
 import { Familia } from '../../models/familia.models';
 import { SubFamilia } from '../../models/subfamilia.models';
 import { Usuario } from '../../models/usuario.models';
@@ -28,7 +28,7 @@ import { Usuario } from '../../models/usuario.models';
 // Servicios
 import { StorageService } from '../../services/storage.service';
 import { ProductoService } from '../../services/product.service';
-import { MesasService } from '../../services/mesas.service';
+import { EspaciosService } from '../../services/espacios.service';
 import { FamiliaService } from '../../services/familia.service';
 import { AmbienteService } from '../../services/ambiente.service';
 import { ObservacionService } from '../../services/observacion.service';
@@ -37,49 +37,85 @@ import { TurnoService } from '../../services/turno.service';
 import { EmpleadoService } from '../../services/empleado.service';
 import { SocioNegocioService } from '../../services/socionegocio.service';
 import { Turno } from 'src/app/models/turno.models';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { DialogEmitirComprobanteComponent } from 'src/app/components/dialog-emitir-comprobante/dialog-emitir-comprobante.component';
 import { HeaderService } from 'src/app/services/header.service';
 import { faFileInvoiceDollar, faFileInvoice, faPercentage, faFileAlt, faChartPie } from '@fortawesome/free-solid-svg-icons';
 import { faUtensils, faShoppingBag, faTruck, faSync, faConciergeBell, faEye, faList, faPaperPlane, faReceipt, faTimes, faLock, faRunning, faWalking , faL } from '@fortawesome/free-solid-svg-icons';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
-import { PedidoMesaDTO } from 'src/app/interfaces/pedidomesaDTO.interface';
+import { PedidoEspacioDTO } from 'src/app/interfaces/pedidoespacioDTO.interface';
 import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mcant.component';
 import { DialogComplementosComponent } from 'src/app/components/dialog-complementos/dialog-complementos.component';
+import { DialogMenuComponent } from 'src/app/components/dialog-menu/dialog-menu.component';
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 // import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, lastValueFrom, Subscription } from 'rxjs';
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { DialogMTextComponent } from 'src/app/components/dialog-mtext/dialog-mtext.component';
 import { AnularProductoYComplementoDTO } from 'src/app/interfaces/anularProductoYComplementoDTO.interface';
 import { DialogProductSearchComponent } from 'src/app/components/dialog-product-search/dialog-product-search.component';
-import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
+import { ContextoDocumentoImpresionPedido, QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 import { PedidoDeliveryDTO } from 'src/app/interfaces/pedidoDTO.interface';
 import { SocioNegocio } from 'src/app/models/socionegocio.models';
 import { Cliente } from 'src/app/models/cliente.models';
 import { DialogDividirCuentaComponent } from 'src/app/components/dialog-dividir-cuenta/dialog-dividir-cuenta.component';
+import { DialogReportesComponent } from 'src/app/components/dialog-reportes/dialog-reportes.component';
 import { EnumTipoDocumento, NivelUsuarioEnum } from 'src/app/enums/enum';
 import { DialogDescuentoComponent } from 'src/app/components/dialog-descuento/dialog-descuento.component';
 import { PedidoDescuentoDTO } from 'src/app/interfaces/pedidoDescuentoDTO.interface';
-import { CanalVentaService } from 'src/app/services/canal-venta.service';
+import { TrasladarProductoDTO } from 'src/app/interfaces/trasladarProductoDTO.interface';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { Configuracion } from 'src/app/models/configuracion.models';
 import { CanalVenta } from 'src/app/models/canalventa.models';
+import { CajaService } from 'src/app/services/caja.service';
+import { CajaTipoDocumento } from 'src/app/models/caja-tipo-documento.model';
 import { DialogEntradasComponent } from 'src/app/components/dialog-entradas/dialog-entradas.component';
 import { DialogDocumentosEmitidosComponent } from 'src/app/components/dialog-documentos-emitidos/dialog-documentos-emitidos.component';
 import { CanalVentaEnum } from 'src/app/enums/enum';
+import { DialogDeliveryComponent } from 'src/app/components/dialog-delivery/dialog-delivery.component';
+import { DeliveryDialogResult } from 'src/app/models/delivery.models';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { MesaClienteService } from 'src/app/services/mesa-cliente.service';
+import { SolicitudesMesaRealtimeService } from 'src/app/services/solicitudes-mesa-realtime.service';
+import { SolicitudMesaPendiente } from 'src/app/models/mesa-cliente.models';
+import { DialogSolicitudesMesaComponent } from 'src/app/components/dialog-solicitudes-mesa/dialog-solicitudes-mesa.component';
+import { DeviceCapabilitiesService } from 'src/app/services/device-capabilities.service';
+import { AgenteImpresionPedidosService } from 'src/app/services/agente-impresion-pedidos.service';
+import { AgenteImpresionLocalService } from 'src/app/services/agente-impresion-local.service';
+import { EstadoImpresionService } from 'src/app/services/estado-impresion.service';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
+import { CuotaComprobantesMensuales } from 'src/app/models/licencia-tenant.models';
+import { AgendaReservasDialogComponent } from 'src/app/components/reservas/agenda-reservas-dialog/agenda-reservas-dialog.component';
+import { ConfirmacionImpresionPedidosService } from 'src/app/services/confirmacion-impresion-pedidos.service';
+import { Notificar } from 'src/app/shared/notificaciones';
+import { DialogAnfitrionasComponent } from 'src/app/components/dialog-anfitrionas/dialog-anfitrionas.component';
 
 @Component({
   selector: 'app-venta',
   templateUrl: './venta.component.html',
-  styleUrls: ['./venta.component.css']
+  styleUrls: [
+    './venta.component.css',
+    './venta.component.responsive.css'
+  ]
 })
 
-export class VentaComponent implements OnInit, AfterViewInit {
+export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
+  public vistaCompacta: 'catalogo' | 'pedido' = 'catalogo';
+
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
   isEdited: boolean;
   elementArr: any = [].fill(0);
   public turnoAbierto: Turno;
   public user: Usuario;
+  public config: Configuracion | null = null;
+
+  /** Interruptor maestro: la cortesía solo aplica si está habilitada en la config global,
+   *  aunque un producto haya quedado configurado con PermitirParaTragoCortesia = true. */
+  get tragoCortesiaHabilitado(): boolean {
+    return !!this.config?.TieneDescuentoTragoCortesia;
+  }
   public displayedColumns: string[] = ['NombreProducto', 'Precio', 'Cantidad', 'actions'];
   public ListaProductosdisplayedColumns: string[] = ['icoObs', 'nombrecorto', 'precio', 'add', 'cantidad', 'remove', 'actions'];
   public DEFAULT_ID = 0;
@@ -93,10 +129,15 @@ export class VentaComponent implements OnInit, AfterViewInit {
   public selectedValue: string;
   public displayValueAmbiente: string;
   public selectedValueDos: string;
-  public listaMesasTotal: Mesas[];
-  public listaMesas_x_Ambiente: Mesas[];
+  public listaEspaciosTotal: Espacios[];
+  public listaEspacios_x_Ambiente: Espacios[];
+  private solicitudesMesaSubscription?: Subscription;
+  private solicitudesQrPorEspacio = new Map<number, SolicitudMesaPendiente>();
+  private solicitudesQrConocidas = new Set<number>();
+  private solicitudesMesaDialogRef?: MatDialogRef<DialogSolicitudesMesaComponent>;
+  public solicitudesQrPendientes: SolicitudMesaPendiente[] = [];
   public listaTipoPedidos: CanalVenta[];
-  public listaPedidosPendientes: PedidoDeliveryDTO[];
+  public listaPedidosPendientes: PedidoDeliveryDTO[] = [];
   public listaPedido_x_Canal: PedidoDeliveryDTO[];
 
   public listEmpleados: Empleado[];
@@ -107,7 +148,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
   public idPedidoCobrar: number = 0;
   public nroCuentaCobrar: number = 0;
 
-  public horaPedido: string = "";
+  public numeroPedido: string = "";
+  public fechaApertura: Date | null = null;
   public userLoged: any = { id: "", username: "" };
 
   public listProductGrid: PedidoDet[] = [];
@@ -115,23 +157,43 @@ export class VentaComponent implements OnInit, AfterViewInit {
   // public ListaPedidoDetProducto: PedidoDet[] = [];
 
   public MostrarOcultarPanelProducto: Boolean;
-  public MostrarOcultarPanelMesa: Boolean;
+  public MostrarOcultarPanelEspacio: Boolean;
   public MostrarOcultarPanelPedido: Boolean;
-  public mozoSelected: Empleado;
+  public mozoSelected: Empleado | undefined;
   public clienteSelected: Cliente;
   public socioNegocioSelected: SocioNegocio;
-  public mesaSelected: Mesas;
+  private preciosSocioNegocio = new Map<number, number>();
+  public espacioSelected: Espacios;
 
   public RehacerPantallaRefresh: string = "";
   selectedItemFamilia: any = null;
   selectedItemSubFamilia: any = null;
 
-  aplicarFiltroCambioMesa: boolean = false;
-  aplicarFiltroUnirMesa: boolean = false;
+  aplicarFiltroCambioEspacio: boolean = false;
+  aplicarFiltroUnirEspacio: boolean = false;
+  aplicarFiltroTrasladoProducto: boolean = false;
+  aplicarFiltroTrasladarAEspacio: boolean = false;
+
+  /** true mientras los datos iniciales no han terminado de cargarse */
+  isLoadingEspacios: boolean = true;
+  /** Array de 21 items para skeleton grid (3 filas × 7 col) */
+  readonly skeletonItems = Array(21).fill(0);
+  /** true cuando la carga inicial falló (backend caído) */
+  errorCargaInicial: boolean = false;
+  productoParaTraslado: PedidoDet | null = null;
   ambienteActual: Ambiente | null = null;
-  textDescuento: string ='Descuento';
+  private descuentoAplicado = false;
+
+  get textDescuento(): string {
+    return this.textCatalog.get(
+      this.descuentoAplicado ? 'removeDiscount' : 'discount',
+    );
+  }
   isBuscarProductoDisabled= false;
-  isEntrada = false;
+  isEntrada    = false;
+  isEspacio    = false;  // ocultos hasta que se cargue la configuración de la caja
+  isParaLlevar = false;
+  isDelivery   = false;
   isCanalVentaDisabled = false;
   isPanelProductoDisabled = false;
   isComboDisabled = false;
@@ -140,16 +202,32 @@ export class VentaComponent implements OnInit, AfterViewInit {
   isEnviarPedidoDisabled = false;
 
   isAnularPedidoDisabled = false;
+  isPrecuentaDisabled    = false;
+
+  /** true cuando la ruta activa es /mozo; false en /caja */
+  isModoMozo = false;
   isReImprimirDisabled = false;
   isBloquearDisabled = false;
   selectedRow: PedidoDet;
   isAdmin = false;
+  reservasHabilitadas = false;
+  comprobantesHabilitados = false;
+  precuentaHabilitada = false;
+  descuentosHabilitados = false;
+  reportesHabilitados = false;
+  cuotaComprobantes: CuotaComprobantesMensuales | null = null;
+
+  get comprobantesAgotados(): boolean {
+    return this.cuotaComprobantes?.Agotada ?? false;
+  }
   listaSociosNegocio: SocioNegocio[];
   public canalVentaEnum = CanalVentaEnum;
-  idCanalVentaSelected: number = this.canalVentaEnum.MESA;
+  idCanalVentaSelected: number = this.canalVentaEnum.ESPACIO;
+  idCanalVentaDefectoCaja: number = 0;  // canal por defecto configurado en la caja activa
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   procesarPedido: boolean = false;
+  enviandoPedido: boolean = false;
   nombreCuenta: string = '';
   idEmpleadoLlevar : number = 0;
   constructor(
@@ -158,38 +236,58 @@ export class VentaComponent implements OnInit, AfterViewInit {
     private productService: ProductoService,
     private TurnoService: TurnoService,
     private ambienteService: AmbienteService,
-    private mesasService: MesasService,
+    private espaciosService: EspaciosService,
     private empleadoService: EmpleadoService,
     private observacionService: ObservacionService,
     private socioNegocioService: SocioNegocioService,
     private pedidoService: PedidoService,
-    private tipoPedidoService: CanalVentaService,
-    private dialogMesa: MatDialog,
+    private cajaService: CajaService,
+    private dialogEspacio: MatDialog,
     private dialogComprobante: MatDialog,
     private dialog: MatDialog,
     private spinnerService: NgxSpinnerService,
     private qzTrayService: QzTrayV224Service,
     private familiaService: FamiliaService,
     private headerService: HeaderService,
-    private usuarioService: UsuarioService) {
+    private usuarioService: UsuarioService,
+    private configuracionService: ConfiguracionService,
+    private textCatalog: TenantTextCatalogService,
+    private mesaClienteService: MesaClienteService,
+    private solicitudesMesaRealtime: SolicitudesMesaRealtimeService,
+    private deviceCapabilities: DeviceCapabilitiesService,
+    private agenteImpresionPedidos: AgenteImpresionPedidosService,
+    private agenteImpresionLocal: AgenteImpresionLocalService,
+    private estadoImpresion: EstadoImpresionService,
+    private licenciaTenantService: LicenciaTenantService,
+    private confirmacionImpresionPedidos: ConfirmacionImpresionPedidosService,
+    private activatedRoute: ActivatedRoute) {
 
 
-    this.MostrarOcultarPanelMesa = true;
+    this.MostrarOcultarPanelEspacio = true;
     this.MostrarOcultarPanelProducto = false;
     this.mozoSelected = new Empleado;
     this.clienteSelected = new Cliente;
     this.socioNegocioSelected = new SocioNegocio;
-    this.mesaSelected = new Mesas;
+    this.espacioSelected = new Espacios;
     this.MostrarOcultarPanelPedido = false;
     this.RehacerPantallaRefresh = 'Refresh';
 
     const user = this.storageService.getCurrentUser?.();
     this.isAdmin = !!user && user.IdNivel === 1;
+    this.isModoMozo = this.router.url.startsWith('/mozo');
     console.log(user)
   }
 
-  TipoDocumento = EnumTipoDocumento; 
+  TipoDocumento = EnumTipoDocumento;
   sumaTotal: number = 0;
+
+  // Botones Factura / Boleta — controlados por tipos de documento configurados en la caja
+  mostrarFactura  = false;
+  mostrarBoleta   = false;
+  textoFactura    = 'Factura';
+  textoBoleta     = 'Boleta';
+  idTipoDocFactura: EnumTipoDocumento = EnumTipoDocumento.FacturaVenta;
+  idTipoDocBoleta:  EnumTipoDocumento = EnumTipoDocumento.BoletaVenta;
   sumaDscto: number = 0;
   sumaImporte: number = 0;
   sumaImpuestoBolsa: number = 0;
@@ -212,7 +310,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   faTimes = faTimes;
   faLock = faLock;
   faRunning = faRunning;
-  mesas: { name: string; active: boolean; price: number, indice: number }[] = [];
+  espacios: { name: string; active: boolean; price: number, indice: number }[] = [];
 
   toggleBloquear() {
     if (!this.procesarPedido) {
@@ -223,20 +321,8 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
   
-  goAdmin() {
-    this.router.navigateByUrl('/administracion');
-  }
-
-  // Atajo de teclado: Ctrl + Alt + A
-  @HostListener('document:keydown', ['$event'])
-  onKeydown(e: KeyboardEvent) {
-    if (this.isAdmin && e.ctrlKey && e.altKey && (e.key.toLowerCase() === 'a')) {
-      e.preventDefault();
-      this.goAdmin();
-    }
-  }
-
   ngOnDestroy() {
+    this.solicitudesMesaSubscription?.unsubscribe();
     this.headerService.showHeader(); // Mostrar el header al salir
   }
 
@@ -263,6 +349,50 @@ export class VentaComponent implements OnInit, AfterViewInit {
     }
   }
 
+  /** Calcula visibilidad y texto de los botones Factura y Boleta */
+  calcularBotonesDocumento(docs: CajaTipoDocumento[]): void {
+    const E = EnumTipoDocumento;
+
+    // ── FACTURA ──────────────────────────────────────────────────
+    const docFactura = docs.find(d => d.IdTipoDocumento === E.FacturaVenta)
+                    ?? docs.find(d => d.IdTipoDocumento === E.FacturaManual);
+    this.mostrarFactura  = !!docFactura;
+    this.textoFactura    = docFactura?.Descripcion ?? 'Factura';
+    this.idTipoDocFactura = docFactura?.IdTipoDocumento as EnumTipoDocumento ?? E.FacturaVenta;
+
+    // ── BOLETA ───────────────────────────────────────────────────
+    // Prioridad: BoletaVenta(2) → FacturaSimplificada(5) → BoletaManual(8)
+    const docBoleta = docs.find(d => d.IdTipoDocumento === E.BoletaVenta)
+                   ?? docs.find(d => d.IdTipoDocumento === E.FacturaSimplificada)
+                   ?? docs.find(d => d.IdTipoDocumento === E.BoletaManual);
+    this.mostrarBoleta  = !!docBoleta;
+    this.textoBoleta    = docBoleta?.Descripcion ?? 'Boleta';
+    this.idTipoDocBoleta = docBoleta?.IdTipoDocumento as EnumTipoDocumento ?? E.BoletaVenta;
+  }
+
+  /** Actualiza los flags de visibilidad de cada botón de canal según lo configurado en la caja */
+  actualizarFlagsCanales(): void {
+    const ids = this.listaTipoPedidos.map(c => c.IdCanalVenta);
+    // Si viene vacío (sin configuración) mostramos todos
+    if (ids.length === 0) {
+      this.isEspacio = this.isParaLlevar = this.isDelivery = true;
+      this.isEntrada = false;
+      return;
+    }
+    this.isEspacio    = ids.includes(this.canalVentaEnum.ESPACIO);
+    this.isParaLlevar = ids.includes(this.canalVentaEnum.PARA_LLEVAR);
+    this.isDelivery   = ids.includes(this.canalVentaEnum.DELIVERY);
+    this.isEntrada    = ids.includes(this.canalVentaEnum.ENTRADAS);
+
+    // Si el canal activo no está habilitado para esta caja, activar el canal por defecto
+    if (!ids.includes(this.idCanalVentaSelected) && this.listaTipoPedidos.length > 0) {
+      const defecto = ids.includes(this.idCanalVentaDefectoCaja)
+        ? this.idCanalVentaDefectoCaja
+        : this.listaTipoPedidos[0].IdCanalVenta;   // fallback: primero disponible
+      this.canalVenta(defecto);
+    }
+  }
+
   canalVenta(idCanalVenta: number): void {
     this.limpiarPedido();
     this.idCanalVentaSelected = idCanalVenta;
@@ -271,6 +401,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
     } else {
       this.listaPedido_x_Canal = this.listaPedidosPendientes.filter(x => x.Estado === 1 && x.IdCanalVenta === idCanalVenta);
     }
+  }
+
+  seleccionarCanalDelivery(): void {
+    this.canalVenta(this.canalVentaEnum.DELIVERY);
+    this.openDialogoDelivery();
   }
 
   scrollToBottom(): void {
@@ -303,33 +438,72 @@ export class VentaComponent implements OnInit, AfterViewInit {
     const elem = document.documentElement;
 
     if (elem.requestFullscreen) {
-      elem.requestFullscreen();
+      // Sin gesto previo del usuario el navegador rechaza la promesa. No
+      // afecta a la venta, pero sin capturarla ensucia la consola con un
+      // "Permissions check failed" que despista al depurar otras cosas.
+      elem.requestFullscreen().catch(() => { });
     } else {
       console.warn("Pantalla completa no es soportada por este navegador.");
     }
   }
 
   async ngOnInit() {
+    this.confirmacionImpresionPedidos.iniciar();
+    this.configuracionService.get().subscribe(cfg => this.config = cfg);
+    this.licenciaTenantService.obtenerEstado().subscribe(estado => {
+      const permitido = (codigo: Parameters<LicenciaTenantService['evaluar']>[1]) =>
+        this.licenciaTenantService.evaluar(estado, codigo);
+
+      this.reservasHabilitadas = permitido(
+        CARACTERISTICAS_LICENCIA.VentasReservasOnline,
+      );
+      this.comprobantesHabilitados = permitido(
+        CARACTERISTICAS_LICENCIA.OperacionComprobantes,
+      );
+      if (this.comprobantesHabilitados) {
+        this.cargarCuotaComprobantes();
+      }
+      this.precuentaHabilitada = permitido(
+        CARACTERISTICAS_LICENCIA.VentasPrecuenta,
+      );
+      this.descuentosHabilitados = permitido(
+        CARACTERISTICAS_LICENCIA.VentasDescuentos,
+      );
+      this.reportesHabilitados = permitido(
+        CARACTERISTICAS_LICENCIA.OperacionReportes,
+      );
+    });
+
     this.enterFullScreen();
-    const isRunning = await this.qzTrayService.isQzTrayRunning();
-    if (!isRunning) {
-      this.router.navigate(['/qz-tray-required']);
-      return;
-    } 
+    if (this.deviceCapabilities.requiresLocalPrintBridge()) {
+      // Sin impresion directa la caja sigue operativa: los tickets salen por el
+      // dialogo del navegador y el banner avisa de que falta configurarla.
+      const impresion = await this.estadoImpresion.comprobar();
+      if (impresion.disponible) {
+        // El programa instalado es el agente principal. Mientras aun no exista,
+        // esta sesion de venta funciona como respaldo para pedidos de moviles/QR.
+        const agenteInstalado = await this.agenteImpresionLocal
+          .configurarSiEstaInstalado();
+        if (!agenteInstalado) {
+          await this.agenteImpresionPedidos.iniciar();
+        }
+      }
+    }
     this.spinnerService.show();
     this.headerService.hideHeader();
 
     try {
       console.log("antes");
       this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
-        if (data != null) {
-          this.turnoAbierto = data;
+        if (data?.Data != null) {
+          this.turnoAbierto = data.Data;
+          this.iniciarSolicitudesMesaEnTiempoReal();
 
           // Aquí se ejecutan los demás servicios en paralelo una vez que se ha obtenido el turno abierto
           forkJoin({
             listProductoVenta: this.productService.getProductosParaVenta(this.storageService.getCurrentIP()),
             listProductosTablero: this.productService.getAllProductosTablero(),
-            listaMesasTotal: this.mesasService.GetAllMesasConPedidos(),
+            listaEspaciosTotal: this.espaciosService.GetAllEspaciosConPedidos(),
             responsePedidos: this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno),
             responseEmpleados: this.empleadoService.getAllEmpleados(),
             listAmbiente: this.ambienteService.getAllAmbiente(),
@@ -337,21 +511,30 @@ export class VentaComponent implements OnInit, AfterViewInit {
             listSubFamilia: this.familiaService.getSubFamilias(),
             listObservacion: this.observacionService.getAllObservacion(),
             responseSocioNegocio: this.socioNegocioService.getSocioNegocios(),
-            responseTipoPedidos: this.tipoPedidoService.listarActivos(),
+            responseTipoPedidos: this.cajaService.getCanalesVentaByCaja(data.Data.IdCaja),
+            cajaDatos: this.cajaService.getCaja(data.Data.IdCaja),
+            tiposDocumentoCaja: this.cajaService.getTipoDocumentoByCaja(data.Data.IdCaja),
           }).subscribe(results => {
              console.log("despues");
             // Asignación de resultados
             this.listProductoVenta = results.listProductoVenta;
             this.listProducts = results.listProductosTablero.Data;
-            this.listaMesasTotal = results.listaMesasTotal.Data;
+            this.listaEspaciosTotal = results.listaEspaciosTotal.Data;
 
             if (results.responsePedidos.Success) {
               this.listaPedidosPendientes = results.responsePedidos.Data;
             }
 
+            // Guardar el canal por defecto de la caja
+            this.idCanalVentaDefectoCaja = results.cajaDatos?.Data?.IdCanalVentaDefecto ?? 0;
+
+            // Calcular visibilidad y texto de botones Factura / Boleta
+            this.calcularBotonesDocumento(results.tiposDocumentoCaja);
+
+            // La caja solo opera con los canales que el cliente le asignó y
+            // que siguen incluidos en la licencia vigente.
             this.listaTipoPedidos = results.responseTipoPedidos;
-            const tipoPedidoEntrada: CanalVenta = this.listaTipoPedidos.find(item => item.IdCanalVenta == 4);
-            this.isEntrada = (tipoPedidoEntrada!=null);
+            this.actualizarFlagsCanales();
         
 
             if (results.responseEmpleados.Success) {
@@ -370,9 +553,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
             // Seleccionar mozo
             this.mozoSelected.IdEmpleado = this.storageService.getCurrentSession().User.IdEmpleado;
 
-            // Mostrar mesas por ambiente
-            const result: Ambiente = this.listAmbiente.find(item => item.Estado == 1);
-            this.MostrarMesas_x_Ambiente(result);
+            // Mostrar espacios por ambiente
+            const result = this.listAmbiente.find(item => item.Estado == 1);
+            if (result) this.MostrarEspacios_x_Ambiente(result);
 
             // Configurar usuario logueado
             this.userLoged = {
@@ -380,15 +563,16 @@ export class VentaComponent implements OnInit, AfterViewInit {
               username: this.storageService.getCurrentSession().User.NombreUsuario
             };
 
-            // Mostrar panel de mesa
-            this.MostrarOcultarPanelMesa = true;
-            console.log("aqui")
+            // Mostrar panel de espacio
+            this.MostrarOcultarPanelEspacio = true;
+            this.isLoadingEspacios = false;
             // Ocultar spinner
             this.spinnerService.hide();
-          }, error => {
-            // Manejo de errores en el subscribe
+          }, () => {
+            // Error en la carga inicial (generalmente backend caído)
             this.spinnerService.hide();
-            this.salir();
+            this.isLoadingEspacios = false;
+            this.errorCargaInicial = true;
           });
 
         } else {
@@ -396,9 +580,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
           this.spinnerService.hide();
           Swal.fire({
             icon: 'warning',
-            title: 'No hay un turno abierto para esta estación.',
-            text: 'El componente se cerrará.',
-            confirmButtonText: 'Aceptar'
+            title: this.textCatalog.get('noOpenShiftForStation'),
+            text: this.textCatalog.get('componentWillClose'),
+            confirmButtonText: this.textCatalog.get('accept')
           }).then(() => {
             if (this.storageService.getCurrentUser().IdNivel == 1) {
               this.router.navigate(['/dashboard']);
@@ -421,323 +605,375 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
 
 
-  async MostrarMesas_x_Ambiente(ambiente: Ambiente) {
+  async MostrarEspacios_x_Ambiente(ambiente: Ambiente) {
     this.spinnerService.show();
 
     this.ambienteActual = ambiente;
-    if (this.aplicarFiltroCambioMesa) {
-      this.listaMesas_x_Ambiente = this.listaMesasTotal
+    if (this.aplicarFiltroCambioEspacio) {
+      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
         .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
-        .map(mesa => {
-          if ([1, 3, 4].includes(mesa.Ocupado)) {
-            mesa.Visible = false;
+        .map(espacio => {
+          if ([1, 3, 4].includes(espacio.Ocupado)) {
+            espacio.Visible = false;
           }
-          else if (mesa.Ocupado === 2) {
-            mesa.Color = "White";
+          else if (espacio.Ocupado === 2) {
+            espacio.Color = "White";
           }
-          else if (mesa.Ocupado === 5) {
-            mesa.Color = "LightCyan";
+          else if (espacio.Ocupado === 5) {
+            espacio.Color = "LightCyan";
           }
           else {
-            mesa.Color = "White";
+            espacio.Color = "White";
           }
-          return mesa;
+          return espacio;
         });
-    } else if (this.aplicarFiltroUnirMesa) {
-      this.listaMesas_x_Ambiente = this.listaMesasTotal
+    } else if (this.aplicarFiltroUnirEspacio) {
+      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
         .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
-        .map(mesa => {
-          if ([1].includes(mesa.Ocupado) && this.mesaSelected.IdMesa != mesa.IdMesa) {
-            mesa.Visible = true;
+        .map(espacio => {
+          if ([1, 4].includes(espacio.Ocupado) && this.espacioSelected.IdEspacio != espacio.IdEspacio) {
+            espacio.Visible = true;
           }
           else {
-            mesa.Visible = false;
+            espacio.Visible = false;
           }
-          return mesa;
+          return espacio;
+        });
+    } else if (this.aplicarFiltroTrasladoProducto) {
+      // Mostrar todas las mesas excepto la actual; fantasmas (Numero=0) permanecen ocultas
+      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
+        .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
+        .map(espacio => {
+          espacio.Visible = espacio.Numero > 0 && espacio.IdEspacio !== this.espacioSelected.IdEspacio;
+          return espacio;
+        });
+    } else if (this.aplicarFiltroTrasladarAEspacio) {
+      // Solo mesas libres (Ocupado===0); fantasmas (Numero=0) permanecen ocultas
+      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
+        .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
+        .map(espacio => {
+          espacio.Visible = espacio.Numero > 0 && espacio.Ocupado === 0;
+          return espacio;
         });
     } else {
-      this.listaMesas_x_Ambiente = this.listaMesasTotal.filter(x => x.IdAmbiente === ambiente.IdAmbiente);
+      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal.filter(x => x.IdAmbiente === ambiente.IdAmbiente);
     }
     this.displayValueAmbiente = ambiente.Descripcion;
     this.spinnerService.hide();
   }
 
-  async UnirMesa() {
+  async UnirEspacio() {
 
-    if (this.mesaSelected.IdMesa == null) {
+    if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
-        'Unir Mesa',
-        'Debe seleccionar una mesa.',
+        this.textCatalog.get('mergeSpace'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
     }
-    this.aplicarFiltroUnirMesa = true;
+    this.aplicarFiltroUnirEspacio = true;
     this.procesarPedido = true;
     if (this.ambienteActual) {
-      await this.MostrarMesas_x_Ambiente(this.ambienteActual);
+      await this.MostrarEspacios_x_Ambiente(this.ambienteActual);
     }
     this.RehacerPantallaRefresh === 'RehacerPantalla';
   }
 
-  async CambiarMesa() {
+  /** true cuando hay una mesa activa seleccionada */
+  get mesaSeleccionada(): boolean {
+    return !!this.espacioSelected?.IdEspacio;
+  }
 
-    if (this.mesaSelected.IdMesa == null) {
+  seleccionarVistaCompacta(vista: 'catalogo' | 'pedido'): void {
+    this.vistaCompacta = vista;
+  }
+
+  solicitudQrPendiente(espacio: Espacios): SolicitudMesaPendiente | undefined {
+    return this.solicitudesQrPorEspacio.get(espacio.IdEspacio);
+  }
+
+  private iniciarSolicitudesMesaEnTiempoReal(): void {
+    this.solicitudesMesaSubscription?.unsubscribe();
+    this.solicitudesMesaRealtime.iniciar();
+    this.solicitudesMesaSubscription = this.solicitudesMesaRealtime.solicitudes$.subscribe({
+      next: solicitudes => {
+        const nuevas = solicitudes.filter(
+          solicitud => !this.solicitudesQrConocidas.has(solicitud.IdSesion)
+        );
+
+        this.solicitudesQrPendientes = solicitudes;
+        this.solicitudesQrPorEspacio = new Map(
+          solicitudes.map(solicitud => [solicitud.IdEspacio, solicitud])
+        );
+        this.solicitudesQrConocidas = new Set(
+          solicitudes.map(solicitud => solicitud.IdSesion)
+        );
+
+        if (nuevas.length > 0) {
+          this.abrirSolicitudesMesa();
+        }
+      }
+    });
+  }
+
+  abrirSolicitudesMesa(): void {
+    if (this.solicitudesMesaDialogRef || !this.turnoAbierto) return;
+
+    this.solicitudesMesaDialogRef = this.dialog.open(DialogSolicitudesMesaComponent, {
+      disableClose: false,
+      hasBackdrop: true,
+      panelClass: 'dialog-window--workspace',
+      data: {
+        idCaja: this.turnoAbierto.IdCaja,
+        idTurno: this.turnoAbierto.IdTurno,
+        identificadorEstacion: this.storageService.getCurrentIP() || ''
+      }
+    });
+
+    this.solicitudesMesaDialogRef.afterClosed().subscribe(() => {
+      this.solicitudesMesaDialogRef = undefined;
+    });
+  }
+
+  private async confirmarSolicitudQr(
+    espacio: Espacios,
+    solicitud: SolicitudMesaPendiente
+  ): Promise<void> {
+    const confirmacion = await Swal.fire({
+      title: `Confirmar ${espacio.Descripcion} ${espacio.Numero}`,
+      html: `
+        <p>Comprueba que el cliente muestra este mismo código:</p>
+        <div class="swal-qr-code">${solicitud.CodigoVisual}</div>
+        <p>Indica cuántas personas ocuparán el espacio.</p>`,
+      input: 'number',
+      inputValue: 1,
+      inputAttributes: { min: '1', max: '99', step: '1' },
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Confirmar acceso',
+      cancelButtonText: 'Cancelar',
+      preConfirm: value => {
+        const pax = Number(value);
+        if (!Number.isInteger(pax) || pax < 1 || pax > 99) {
+          Swal.showValidationMessage('Ingresa una cantidad válida de personas.');
+          return false;
+        }
+        return pax;
+      }
+    });
+
+    if (!confirmacion.isConfirmed) return;
+
+    try {
+      await lastValueFrom(this.mesaClienteService.confirmar(solicitud.IdSesion, {
+        IdCaja: this.turnoAbierto.IdCaja,
+        IdTurno: this.turnoAbierto.IdTurno,
+        NroPax: Number(confirmacion.value),
+        IdentificadorEstacion: this.storageService.getCurrentIP() || ''
+      }));
+      this.solicitudesQrPorEspacio.delete(espacio.IdEspacio);
+      Notificar.exito(
+        'Mesa habilitada',
+        'El cliente ya puede consultar la carta y enviar pedidos.');
+    } catch (error: any) {
+      await Swal.fire(
+        'No se pudo confirmar',
+        error?.error?.Message || 'Actualiza la pantalla e inténtalo nuevamente.',
+        'error'
+      );
+    }
+  }
+
+  /** El pedido ya existe en el backend y tiene una cuenta válida. */
+  get pedidoPersistido(): boolean {
+    return Number(this.idPedidoCobrar) > 0 && Number(this.nroCuentaCobrar) > 0;
+  }
+
+  /** Las operaciones comerciales requieren un pedido ya guardado y en procesamiento. */
+  get puedeOperarPedidoPersistido(): boolean {
+    return this.procesarPedido && this.pedidoPersistido;
+  }
+
+  /** true cuando hay un pedido de llevar/delivery cargado */
+  get pedidoLlevarSeleccionado(): boolean {
+    return this.idPedidoCobrar > 0 && this.idCanalVentaSelected !== this.canalVentaEnum.ESPACIO;
+  }
+
+  async CambiarMozo(): Promise<void> {
+    const title = this.textCatalog.get('changeOrderAttendant');
+
+    if (!this.mesaSeleccionada) {
+      Swal.fire(title, this.textCatalog.get('selectSpace'), 'info');
+      return;
+    }
+    if (!this.isAdmin) {
       Swal.fire(
-        'Cambiar Mesa',
-        'Debe seleccionar una mesa.',
+        title,
+        this.textCatalog.get('onlyAdminCanChangeOrderAttendant'),
+        'warning',
+      );
+      return;
+    }
+
+    const inputOptions: Record<string, string> = {};
+    (this.listEmpleados || []).forEach(emp => {
+      inputOptions[emp.IdEmpleado] = emp.Nombre;
+    });
+
+    const { value: idEmpleado } = await Swal.fire<string>({
+      title,
+      input: 'select',
+      inputOptions,
+      inputPlaceholder: this.textCatalog.get('selectOrderAttendant'),
+      inputValue: this.mozoSelected?.IdEmpleado?.toString() ?? '',
+      showCancelButton: true,
+      confirmButtonText: this.textCatalog.get('change'),
+      cancelButtonText: this.textCatalog.get('cancel'),
+      inputValidator: (value) => {
+        if (!value) {
+          return this.textCatalog.get('orderAttendantRequired');
+        }
+        return null;
+      }
+    });
+
+    if (!idEmpleado) return;
+
+    try {
+      this.spinnerService.show();
+      const response = await lastValueFrom(
+        this.pedidoService.CambiarMozo(this.idPedidoCobrar, this.nroCuentaCobrar, Number(idEmpleado))
+      );
+      if (response.Success) {
+        this.mozoSelected = this.getMozoByMozoId(Number(idEmpleado));
+        this.RehacerPantalla();
+      } else {
+        Swal.fire(
+          this.textCatalog.get('error'),
+          this.textCatalog.get('couldNotChangeOrderAttendant'),
+          'error',
+        );
+      }
+    } catch (e) {
+      Swal.fire(
+        this.textCatalog.get('error'),
+        this.textCatalog.get('unexpectedOrderAttendantChangeError'),
+        'error',
+      );
+    } finally {
+      this.spinnerService.hide();
+    }
+  }
+
+  async CambiarEspacio() {
+
+    if (this.espacioSelected.IdEspacio == null) {
+      Swal.fire(
+        this.textCatalog.get('changeSpaceTitle'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
     }
-    this.aplicarFiltroCambioMesa = true;
+    this.aplicarFiltroCambioEspacio = true;
     this.procesarPedido = true;
     if (this.ambienteActual) {
-      await this.MostrarMesas_x_Ambiente(this.ambienteActual);
+      await this.MostrarEspacios_x_Ambiente(this.ambienteActual);
     }
     this.RehacerPantallaRefresh === 'RehacerPantalla';
   }
 
-  NuevoPedidoLlevar() {
+  NuevoPedidoLlevar(): void {
     this.limpiarPedido();
 
-    const maxBotones = 6;  // Máximo número de botones permitidos
-    let nombreCliente = '';  // Variable para almacenar el nombre ingresado
-    let socioNegocioSeleccionado: SocioNegocio | null = null;  // Variable para almacenar el SocioNegocio seleccionado
-
-    const estilos = `
-    .custom-deny-button {
-      background-color: #e0e0e0 !important;  /* Fondo gris claro */
-      color: black !important;  /* Texto negro */
-      border: 2px solid transparent !important;  /* Sin borde */
-      border-radius: 12px !important;  /* Bordes redondeados */
-      padding: 12px 24px !important;  /* Espaciado interno */
-      font-size: 16px !important;  /* Tamaño de texto */
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;  /* Sombra suave */
-      transition: background-color 0.3s ease !important;  /* Transición suave */
+    if (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) {
+      this.openDialogoDelivery();
+      return;
     }
 
-    .custom-deny-button:hover {
-      background-color: #b0b0b0 !important;  /* Color más oscuro al hacer hover */
-    }
-
-    .custom-confirm-button {
-      background-color: #4caf50 !important;  /* Fondo verde */
-      color: white !important;  /* Texto blanco */
-      border: 2px solid transparent !important;  /* Sin borde */
-      border-radius: 12px !important;  /* Bordes redondeados */
-      padding: 12px 24px !important;  /* Espaciado interno */
-      font-size: 16px !important;  /* Tamaño de texto */
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;  /* Sombra suave */
-      transition: background-color 0.3s ease !important;  /* Transición suave */
-    }
-
-    .custom-confirm-button:hover {
-      background-color: #43a047 !important;  /* Verde más oscuro al hacer hover */
-    }
-
-    .custom-cancel-button {
-      background-color: #f44336 !important;  /* Fondo rojo claro */
-      color: white !important;  /* Texto blanco */
-      border: 2px solid transparent !important;  /* Sin borde */
-      border-radius: 12px !important;  /* Bordes redondeados */
-      padding: 12px 24px !important;  /* Espaciado interno */
-      font-size: 16px !important;  /* Tamaño de texto */
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;  /* Sombra suave */
-      transition: background-color 0.3s ease !important;  /* Transición suave */
-    }
-
-    .custom-cancel-button:hover {
-      background-color: #e53935 !important;  /* Rojo más oscuro al hacer hover */
-    }
-  `;
-
-    const styleSheet = document.createElement("style");
-    styleSheet.type = "text/css";
-    styleSheet.innerText = estilos;
-    document.head.appendChild(styleSheet);
-
-    const buttonDelivery = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ?
-      `<button id="btn-custom" style="
-    display: inline-block;
-    height: 50px;
-    margin: 5px;
-    background-color: #26a69a;
-    color: white;
-    border: 2px solid transparent;
-    border-radius: 8px;
-    font-size: 13px;
-    text-align: center;
-    vertical-align: middle;
-    cursor: pointer;
-    transition: background-color 0.3s, border-color 0.3s;">
-      Delivery
-    </button>`: ``;
-
-    // Generar los botones dinámicamente
-    const buttonsHTML = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? this.listaSociosNegocio.map((boton, index) =>
-      `<button class="swal2-confirm swal2-styled dynamic-btn" id="boton-${index}" data-descripcion="${boton.Descripcion}"
-          style="
-          display: inline-block;
-          height: 50px;
-          margin: 5px;
-          background-color: #ff7043;
-          color: white;
-          border: 2px solid transparent;
-          border-radius: 8px;
-          font-size: 13px;
-          text-align: center;
-          vertical-align: middle;
-          cursor: pointer;
-          transition: background-color 0.3s, border-color 0.3s;">
-          ${boton.Descripcion}
-        </button>`
-    ).join('') : '';
-
-
-    // Llenar con botones vacíos si hay menos de 6 opciones
-    const emptyButtons = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? Array.from({ length: maxBotones - this.listaSociosNegocio.length })
-      .map(() => `<button class="swal2-confirm swal2-styled dynamic-btn" style="visibility: hidden;"></button>`)
-      .join('') : '';
-
-    const title = (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? 'Seleccione una opción' : 'Nombre de Cliente';
-    const mostrarSwal = () => {
-      Swal.fire({
-        title: title,
-        html: `
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 5px;">
-            ${buttonDelivery + buttonsHTML + emptyButtons}
-          </div>
-          <br>
-          <input type="text" id="nombreCliente" class="swal2-input" placeholder="Ingrese el nombre del cliente"  value="${nombreCliente}" style="font-size: 14px;">
-          <br>
-          <button id="abrirTecladoDigital" class="swal2-confirm swal2-styled dynamic-btn" 
-            style="
-            font-size: 12px; 
-            height: 50px; 
-            background-color: #ff7043; 
-            color: white; 
-            border: 2px solid transparent; 
-            border-radius: 8px; 
-            text-align: center;">
-            Teclado Digital
-          </button>
-        `,
+    void Swal.fire({
+        title: this.textCatalog.get('customerName'),
+        input: 'text',
+        inputPlaceholder: this.textCatalog.get('customerNamePlaceholder'),
         showCancelButton: true,
-        showLoaderOnConfirm: true,
-        cancelButtonText: 'Cancelar',
-        confirmButtonText: 'Aceptar',
         showDenyButton: true,
-        denyButtonText: 'Sin Nombre',
-        customClass: {
-          denyButton: 'custom-deny-button',  // Clase personalizada para el botón "Sin Nombre"
-          confirmButton: 'custom-confirm-button',  // Clase personalizada para el botón "Aceptar"
-          cancelButton: 'custom-cancel-button'  // Clase personalizada para el botón "Cancelar"
-        },
-        preConfirm: () => {
-          const nombreClienteInput = (Swal.getPopup().querySelector('#nombreCliente') as HTMLInputElement).value;
-          if (!nombreClienteInput.trim()) {
-            Swal.showValidationMessage('Debe ingresar el nombre del cliente');
-          }
-          if (!socioNegocioSeleccionado && (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY)) {
-            Swal.showValidationMessage('Debe seleccionar una opción');
-          }
-          return { nombreCliente: nombreClienteInput, socioNegocioSeleccionado };
+        cancelButtonText: this.textCatalog.get('cancel'),
+        confirmButtonText: this.textCatalog.get('accept'),
+        denyButtonText: this.textCatalog.get('unnamedCustomer'),
+        inputValidator: value => {
+          return value?.trim()
+            ? undefined
+            : this.textCatalog.get('customerNameRequired');
         }
-      }).then((result) => {
-        if (result.isConfirmed) {
-          console.log('isConfirmed');
-          this.mesaSelected.NroPersonas = 0;
-          if (this.idCanalVentaSelected === this.canalVentaEnum.PARA_LLEVAR){
-            this.clienteSelected.RazonSocial = result.value.nombreCliente;
-          }
-          if (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY){
-            this.clienteSelected.RazonSocial = result.value.socioNegocioSeleccionado.Descripcion + "-" + result.value.nombreCliente;
-            this.socioNegocioSelected = result.value.socioNegocioSeleccionado;
-          }
-
-          this.processPedido(true);
-          console.log('Botón seleccionado:', result.value.botonSeleccionado);
-        } else if (result.isDenied) {
-          console.log('isDenied');
-          this.clienteSelected.RazonSocial = "Sin nombre";
-          this.processPedido(true);
-          console.log('Nombre del cliente: (sin nombre)');
+      }).then(result => {
+        if (!result.isConfirmed && !result.isDenied) {
+          return;
         }
+
+        this.espacioSelected.NroPersonas = 0;
+        this.clienteSelected.RazonSocial = result.isDenied
+          ? 'Sin nombre'
+          : String(result.value).trim();
+        void this.processPedido(true);
       });
-
-      document.getElementById('abrirTecladoDigital')?.addEventListener('click', () => {
-        Swal.close();
-        this.abrirTecladoDigital();
-      });
-
-      document.getElementById('btn-custom')?.addEventListener('click', () => {
-        Swal.close();
-        this.openDialogoDelivery();
-      });
-
-      // Asignar comportamiento a los botones dinámicos
-      this.listaSociosNegocio.forEach((boton, index) => {
-        const botonElement = document.getElementById(`boton-${index}`);
-        botonElement?.addEventListener('click', () => {
-          // Limpiar la selección previa, asegurarse de que los elementos existen
-          document.querySelectorAll('.dynamic-btn').forEach(btn => {
-            if (btn instanceof HTMLElement) {
-              btn.style.backgroundColor = '#ff7043';
-              btn.style.borderColor = 'transparent';
-            }
-          });
-
-          // Marcar el botón como seleccionado
-          botonElement.style.backgroundColor = '#e64a19'; // Cambiar color de fondo al ser seleccionado
-          botonElement.style.borderColor = '#fbc531'; // Cambiar color del borde al ser seleccionado
-          socioNegocioSeleccionado = boton;    // Almacenar el botón seleccionado
-          console.log(`Botón seleccionado: ${socioNegocioSeleccionado.Descripcion}`);
-        });
-      });
-    };
-
-    mostrarSwal();  // Mostrar el Swal al iniciar
   }
 
   dividirCuenta(): void {
 
-    if (this.mesaSelected.IdMesa == null) {
+    if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
-        'Cambiar Mesa',
-        'Debe seleccionar una mesa.',
+        this.textCatalog.get('changeSpaceTitle'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
     }
 
-    this.openDialogoDividirCuenta(this.mesaSelected, this.idPedidoCobrar)
+    this.openDialogoDividirCuenta(this.espacioSelected, this.idPedidoCobrar)
 
   }
 
-  openDialogoDividirCuenta(mesaSelected: Mesas, idPedido: number): void {
+  openDialogoDividirCuenta(espacioSelected: Espacios, idPedido: number): void {
     const dialogRef = this.dialog.open(DialogDividirCuentaComponent, {
-      width: '800px',
-      height: '800px',
-      data: { idPedido, mesaSelected }
+      width: '860px',
+      maxWidth: '96vw',
+      maxHeight: '92vh',
+      data: { idPedido, espacioSelected }
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
         this.limpiarPedido();
-        const listData = await this.pedidoService.FindPedidoByIdPedidoNroCuenta(result.idPedido, result.nroCuenta).toPromise();
+        const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdPedidoNroCuenta(result.idPedido, result.nroCuenta));
 
         if (listData.Data.length > 0) {
-          this.mesaSelected = mesaSelected;
+          this.espacioSelected = espacioSelected;
           this.nombreCuenta = " - " + result.nombreCuenta;
           this.rellenarHeaderPedido(listData.Data);
           this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
           this.actualizarDatosGrilla();
         } else {
-          await this.showWarningAndReloadMesas('No existe el pedido en la cuenta.');
+          await this.showWarningAndReloadEspacios('No existe el pedido en la cuenta.');
         }
       } else {
-        this.listaMesasTotal = (await this.mesasService.GetAllMesasConPedidos().toPromise()).Data;
+        this.listaEspaciosTotal = (await lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos())).Data;
+        if (this.ambienteActual) {
+          await this.MostrarEspacios_x_Ambiente(this.ambienteActual);
+        }
+      }
+    });
+  }
+
+  openDialogReportes(): void {
+    this.dialog.open(DialogReportesComponent, {
+      width: '700px',
+      maxWidth: '96vw',
+      maxHeight: '92vh',
+      data: {
+        idTurno: this.turnoAbierto?.IdTurno,
+        config: this.config,
+        isAdmin: this.isAdmin
       }
     });
   }
@@ -750,8 +986,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
     var descuentoMaximo = itemPedidoDet.Subtotal;
 
     const dialogRef = this.dialog.open(DialogDescuentoComponent, {
-      width: '800px',
-      height: '500px',
+      width: '720px',
+      maxWidth: '96vw',
+      maxHeight: '90vh',
       data: { idProducto, nombreCorto, descuentoTotal, descuentoMaximo }
     });
 
@@ -770,16 +1007,16 @@ export class VentaComponent implements OnInit, AfterViewInit {
         
         this.spinnerService.show();
         await this.pedidoService.AplicarDescuento(pedidoDescuentoDTO).subscribe(async ()=>{
-            const listData = await this.pedidoService.FindPedidoByIdPedidoNroCuenta(this.idPedidoCobrar, this.nroCuentaCobrar).toPromise();
+        const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdPedidoNroCuenta(this.idPedidoCobrar, this.nroCuentaCobrar));
 
           if (listData.Data.length > 0) {
             this.rellenarHeaderPedido(listData.Data);
             this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
             this.actualizarDatosGrilla();
             this.isPanelProductoDisabled = true;
-            this.textDescuento = 'Quitar Descuento';
+            this.descuentoAplicado = true;
           } else {
-            await this.showWarningAndReloadMesas('No existe el pedido en la cuenta.');
+            await this.showWarningAndReloadEspacios('No existe el pedido en la cuenta.');
           }
           this.spinnerService.hide();
         })
@@ -790,27 +1027,94 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
   openDialogoDelivery(): void {
-
-  }
-  
-  abrirTecladoDigital() {
-    const dialogRef = this.dialog.open(DialogMTextComponent, {
-      width: '800px',
-      data: { title: 'Ingrese el nombre del cliente' }
+    const dialogRef = this.dialog.open(DialogDeliveryComponent, {
+      width: 'calc(100vw - 32px)',
+      maxWidth: '1180px',
+      height: 'calc(100vh - 32px)',
+      maxHeight: '820px',
+      panelClass: 'delivery-dialog-container',
+      disableClose: true,
+      data: {
+        SociosNegocio: this.listaSociosNegocio ?? [],
+        IdTurno: this.turnoAbierto?.IdTurno ?? 0
+      }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        // Almacenar el nombre ingresado
-        const nombreIngresado = result.value;
-        if (nombreIngresado) {
-          this.NuevoPedidoLlevar();  // Reabrir el Swal con el valor ingresado
-          const inputNombreCliente = Swal.getPopup().querySelector('#nombreCliente') as HTMLInputElement;
-          inputNombreCliente.value = nombreIngresado;
+    dialogRef.afterClosed().subscribe(async (result?: DeliveryDialogResult) => {
+      if (!result) {
+        return;
+      }
+
+      if (result.Accion === 'COBRAR_ENTREGA' && result.Pedido) {
+        if (!this.comprobantesHabilitados) {
+          Swal.fire(
+            'Funcionalidad no incluida',
+            'La licencia actual no incluye la emisión de comprobantes.',
+            'warning',
+          );
+          return;
         }
+        await this.openPedido(result.Pedido);
+        if (this.idPedidoCobrar <= 0) {
+          return;
+        }
+
+        const idTipoDocumento = this.mostrarBoleta
+          ? this.idTipoDocBoleta
+          : (this.mostrarFactura
+              ? this.idTipoDocFactura
+              : EnumTipoDocumento.Express);
+        this.OpenDialogEmitirComprobante(idTipoDocumento);
+        return;
+      }
+
+      const destino = result.Cliente;
+      if (result.Modalidad === 'TELEFONO' && destino) {
+        this.clienteSelected = new Cliente({
+          IdCliente: String(destino.IdCliente),
+          ItemDelivery: destino.Item,
+          RazonSocial: destino.NombresDelivery,
+          Direccion: destino.DireccionDelivery,
+          DireccionDelivery: destino.DireccionDelivery,
+          Referencia: destino.ReferenciaDelivery,
+          ReferenciaDelivery: destino.ReferenciaDelivery,
+          NumeroIdentificacion: destino.NumeroIdentificacion,
+          IdTipoIdentidad: destino.IdTipoIdentidad,
+          Email: destino.CorreoDelivery,
+          CorreoDelivery: destino.CorreoDelivery,
+          Telefono: destino.TelefonoDelivery,
+          AnexoDelivery: destino.AnexoDelivery,
+          PrecioDelivery: destino.PrecioDelivery
+        });
+        this.socioNegocioSelected = new SocioNegocio();
       } else {
-        // Si se cancela el teclado, vuelve a abrir el Swal sin cambios
-        this.NuevoPedidoLlevar();
+        this.clienteSelected = new Cliente({
+          IdCliente: '',
+          ItemDelivery: 0,
+          RazonSocial: result.NombreCliente,
+          Direccion: '',
+          DireccionDelivery: '',
+          Referencia: '',
+          ReferenciaDelivery: '',
+          Telefono: '',
+          AnexoDelivery: '',
+          PrecioDelivery: 0
+        });
+        this.socioNegocioSelected = result.SocioNegocio
+          ? new SocioNegocio(result.SocioNegocio)
+          : new SocioNegocio();
+      }
+      this.preciosSocioNegocio = new Map(
+        result.PreciosSocioNegocio.map(item => [item.IdProducto, item.Precio])
+      );
+      this.espacioSelected.NroPersonas = 0;
+      void this.processPedido(true);
+
+      if (destino?.PrecioDelivery > 0 && result.ProductoCargoDelivery) {
+        this.procesarAgregarProducto(new Producto({
+          ...result.ProductoCargoDelivery,
+          Precio: destino.PrecioDelivery
+        }));
       }
     });
   }
@@ -828,11 +1132,12 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async ListarSubFamilia_x_Familia(oFamilia: Familia) {
     this.selectedItemFamilia = oFamilia;
+    this.selectedItemSubFamilia = null;
     this.spinnerService.show();
     this.listProducts_x_SubFamilia = [];
     this.listSubFamilia_x_Familia = this.listSubFamilia.filter(x => x.IdFamilia === oFamilia.IdFamilia);
     let oSubFamilia = this.listSubFamilia_x_Familia.find((item) => (item.IdFamilia === oFamilia.IdFamilia));
-    this.ListarProductos_x_SubFamilia(oSubFamilia);
+    if (oSubFamilia) this.ListarProductos_x_SubFamilia(oSubFamilia);
     this.spinnerService.hide();
   }
 
@@ -847,23 +1152,24 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
   ingresarCodigoCortesia(oPedidoDet: PedidoDet) {
+    // Respeta el interruptor maestro: si la cortesía está deshabilitada en la
+    // configuración, no se permite aunque el producto la tenga configurada.
+    if (!this.tragoCortesiaHabilitado) {
+      return;
+    }
     if (oPedidoDet.NroCupon) {
       // Si ya hay un código ingresado, mostrarlo en un SweetAlert con opción de eliminarlo
       Swal.fire({
-        title: 'Código de cortesía ingresado',
-        text: `El código ingresado es: ${oPedidoDet.NroCupon}`,
+        title: this.textCatalog.get('courtesyCodeEntered'),
+        text: this.textCatalog.get('enteredCode', { code: oPedidoDet.NroCupon }),
         showCancelButton: true,
-        confirmButtonText: 'Eliminar código',
-        cancelButtonText: 'Mantener código'
+        confirmButtonText: this.textCatalog.get('deleteCode'),
+        cancelButtonText: this.textCatalog.get('keepCode')
       }).then((result) => {
         if (result.isConfirmed) {
           // Eliminar el código
           oPedidoDet.NroCupon = "";
-          Swal.fire({
-            title: 'Código eliminado',
-            icon: 'success',
-            confirmButtonText: 'OK'
-          });
+          Notificar.exito(this.textCatalog.get('codeDeleted'));
         }
       });
     } else {
@@ -871,7 +1177,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       const dialogRef = this.dialog.open(DialogMCantComponent, {
         width: '350px',
         data: {
-          title: 'Ingresar Código de Cortesía',
+          title: this.textCatalog.get('enterCourtesyCode'),
           hideNumber: false, // Mostrar los números
           decimalActive: false, // Desactivar el punto decimal si solo se permiten enteros
         }
@@ -888,109 +1194,36 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
   ingresarCodigosAnfitrionas(oPedidoDet: PedidoDet) {
-    let codigoCounter = 1;  // Para llevar el control del número de códigos ingresados
-    const codigosAnfitriona: string[] = [];  // Almacena los códigos ingresados
+    const codigosActuales = (oPedidoDet.Anfitriona ?? '')
+      .split(',')
+      .map(codigo => codigo.trim().replace(/^ANFITRIONA\s+/i, ''))
+      .filter(codigo => !!codigo);
 
-    Swal.fire({
-      title: 'Ingresar códigos de Anfitrionas',
-      html: `
-        <div id="inputs-container">
-          <div id="codigo-div1">
-            <input type="text" id="codigo1" class="swal2-input" placeholder="Código 1" readonly>
-            <button type="button" class="remove-btn" id="remove1">Eliminar</button>
-          </div>
-        </div>
-        <button id="add-more" type="button" class="swal2-confirm swal2-styled" style="margin-top: 10px;">Agregar más</button>
-      `,
-      focusConfirm: false,
-      preConfirm: () => {
-        // Recoger todos los inputs que contengan códigos
-        const codigos: string[] = [];
-        for (let i = 1; i <= codigoCounter; i++) {
-          const inputDiv = document.getElementById(`codigo-div${i}`);
-          if (inputDiv) {  // Asegurarse de que el div existe (si no ha sido eliminado)
-            const codigoInput = (document.getElementById(`codigo${i}`) as HTMLInputElement).value;
-            if (codigoInput) {
-              codigos.push(`ANFITRIONA ${codigoInput}`); // Agregar el prefijo "ANFITRIONA"
-            }
-          }
-        }
-        return codigos;  // Devuelve la lista de códigos con el prefijo
-      },
-      didOpen: () => {
-        // Manejar la lógica para agregar más inputs cuando se presiona "Agregar más"
-        const addMoreButton = document.getElementById('add-more');
-        addMoreButton?.addEventListener('click', () => {
-          codigoCounter++;
-          const inputsContainer = document.getElementById('inputs-container');
-          if (inputsContainer) {
-            const newDiv = document.createElement('div');
-            newDiv.id = `codigo-div${codigoCounter}`;
-            newDiv.innerHTML = `
-              <input type="text" id="codigo${codigoCounter}" class="swal2-input" placeholder="Código ${codigoCounter}" readonly>
-              <button type="button" class="remove-btn" id="remove${codigoCounter}">Eliminar</button>
-            `;
-            inputsContainer.appendChild(newDiv);
-
-            // Agregar evento de eliminación al nuevo botón
-            const removeButton = document.getElementById(`remove${codigoCounter}`);
-            removeButton?.addEventListener('click', () => {
-              document.getElementById(`codigo-div${codigoCounter}`)?.remove();
-            });
-
-            // Abrir el teclado numérico personalizado para ingresar el nuevo código
-            this.openDialogMCant(codigoCounter);
-          }
-        });
-
-        // Abrir el teclado numérico para el primer código
-        this.openDialogMCant(1);
-      }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const codigos = result.value?.join(', '); // Convertir la lista en una cadena separada por comas
-        oPedidoDet.Anfitriona = codigos;
-      }
-    });
-  }
-
-
-  openDialogMCant(codigoIndex: number) {
-    // Ocultar el contenedor de SweetAlert2 antes de abrir el diálogo
-    const swalContainer = document.querySelector('.swal2-container') as HTMLElement;
-    if (swalContainer) {
-      swalContainer.style.display = 'none';  // Ocultar temporalmente SweetAlert2
-    }
-
-    // Abrir el DialogMCantComponent para ingresar el código
-    const dialogRef = this.dialog.open(DialogMCantComponent, {
-      width: '350px',
+    const dialogRef = this.dialog.open(DialogAnfitrionasComponent, {
+      width: '560px',
+      maxWidth: 'calc(100vw - 24px)',
+      autoFocus: 'input',
       data: {
-        title: `Ingresar Código de Anfitriona ${codigoIndex}`,
-        hideNumber: false,
-        decimalActive: false
-      }
+        producto: oPedidoDet.Producto?.NombreCorto ?? '',
+        codigos: codigosActuales,
+      },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      // Volver a mostrar el contenedor de SweetAlert2 después de cerrar el diálogo
-      if (swalContainer) {
-        swalContainer.style.display = 'block';  // Restaurar la visibilidad de SweetAlert2
-      }
-
-      if (result && result.value) {
-        const inputElement = document.getElementById(`codigo${codigoIndex}`) as HTMLInputElement;
-        if (inputElement) {
-          inputElement.value = result.value;  // Asignar el valor ingresado al input correspondiente
-        }
+    dialogRef.afterClosed().subscribe((codigos: string[] | undefined) => {
+      if (codigos) {
+        oPedidoDet.Anfitriona = codigos
+          .map(codigo => `ANFITRIONA ${codigo}`)
+          .join(', ');
       }
     });
   }
 
 
-  async openPedido(pedido: PedidoDeliveryDTO) {
+  async openPedido(
+    pedido: Pick<PedidoDeliveryDTO, 'IdPedido' | 'NroCuenta'>
+  ) {
     this.limpiarPedido();
-    const listData: ApiResponse<PedidoMesaDTO[]> = await this.pedidoService.FindPedidoByIdPedidoNroCuenta(pedido.IdPedido, pedido.NroCuenta).toPromise();
+    const listData: ApiResponse<PedidoEspacioDTO[]> = await lastValueFrom(this.pedidoService.FindPedidoByIdPedidoNroCuenta(pedido.IdPedido, pedido.NroCuenta));
     if (listData.Data.length > 0) {
       this.rellenarHeaderPedido(listData.Data);
       this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
@@ -999,85 +1232,218 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
 
       Swal.fire(
-        'Ups.!',
-        'No existe el pedido.',
+        this.textCatalog.get('error'),
+        this.textCatalog.get('orderNotFound'),
         'warning'
       );
-      this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno).toPromise();
+      lastValueFrom(this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno));
     }
   }
 
-  async openDialogMesa(mesa: Mesas) {
+  async openDialogEspacio(espacio: Espacios) {
     this.spinnerService.show();
 
-    if (mesa.Ocupado === 0 || mesa.Ocupado === 2) {
-      await this.handleMesaDisponible(mesa);
-    } else if (mesa.Ocupado === 1 || mesa.Ocupado === 4) {
-      await this.handleMesaOcupada(mesa);
+    if (this.aplicarFiltroTrasladoProducto) {
+      await this.ejecutarTraslado(espacio);
+      this.spinnerService.hide();
+      return;
+    }
+
+    if (this.aplicarFiltroTrasladarAEspacio) {
+      await this.ejecutarTrasladarAEspacio(espacio);
+      this.spinnerService.hide();
+      return;
+    }
+
+    const solicitudQr = this.solicitudQrPendiente(espacio);
+    if (solicitudQr) {
+      this.spinnerService.hide();
+      await this.confirmarSolicitudQr(espacio, solicitudQr);
+      return;
+    }
+
+    if (espacio.Ocupado === 0 || espacio.Ocupado === 2) {
+      await this.handleEspacioDisponible(espacio);
+    } else if (espacio.Ocupado === 1 || espacio.Ocupado === 4) {
+      await this.handleEspacioOcupada(espacio);
     } else {
-      await this.handleMesaDividirCuenta(mesa);
+      await this.handleEspacioDividirCuenta(espacio);
     }
 
     this.RehacerPantallaRefresh = 'RehacerPantalla';
     this.spinnerService.hide();
   }
 
-  async handleMesaDisponible(mesa: Mesas) {
-    if (this.aplicarFiltroCambioMesa) {
-      const response = await this.mesasService.CambiarMesa(this.mesaSelected.IdMesa, mesa.IdMesa).toPromise();
+  iniciarTraslado(producto: PedidoDet): void {
+    if (this.espacioSelected.IdEspacio == null) {
+      Swal.fire(
+        this.textCatalog.get('productTransfer'),
+        this.textCatalog.get('selectTable'),
+        'info'
+      );
+      return;
+    }
+    this.productoParaTraslado = producto;
+    this.aplicarFiltroTrasladoProducto = true;
+    this.MostrarOcultarPanelEspacio = true;
+    this.MostrarOcultarPanelProducto = false;
+    if (this.ambienteActual) {
+      this.MostrarEspacios_x_Ambiente(this.ambienteActual);
+    }
+  }
+
+  cancelarTraslado(): void {
+    this.productoParaTraslado = null;
+    this.aplicarFiltroTrasladoProducto = false;
+    if (this.ambienteActual) {
+      this.MostrarEspacios_x_Ambiente(this.ambienteActual);
+    }
+  }
+
+  iniciarTrasladarAEspacio(): void {
+    if (this.idPedidoCobrar <= 0) {
+      Swal.fire(
+        this.textCatalog.get('transferToTable'),
+        this.textCatalog.get('selectOrder'),
+        'info'
+      );
+      return;
+    }
+    this.aplicarFiltroTrasladarAEspacio = true;
+    this.MostrarOcultarPanelEspacio = true;
+    this.MostrarOcultarPanelProducto = false;
+    const ambienteBase = this.ambienteActual
+      ?? this.listAmbiente?.find(a => a.Estado === 1)
+      ?? this.listAmbiente?.[0];
+    if (ambienteBase) this.MostrarEspacios_x_Ambiente(ambienteBase);
+  }
+
+  cancelarTrasladarAEspacio(): void {
+    this.aplicarFiltroTrasladarAEspacio = false;
+    if (this.ambienteActual) {
+      this.MostrarEspacios_x_Ambiente(this.ambienteActual);
+    }
+  }
+
+  async ejecutarTrasladarAEspacio(espacio: Espacios): Promise<void> {
+    try {
+      const response = await lastValueFrom(this.pedidoService.TrasladarAEspacio(this.idPedidoCobrar, espacio.IdEspacio));
+      if (response.Success) {
+        this.aplicarFiltroTrasladarAEspacio = false;
+        this.RehacerPantalla();
+      } else {
+        Swal.fire(
+          this.textCatalog.get('transferToTable'),
+          response.Message || this.textCatalog.get('couldNotMoveOrder'),
+          'warning'
+        );
+      }
+    } catch {
+      Swal.fire(
+        this.textCatalog.get('error'),
+        this.textCatalog.get('errorMovingOrder'),
+        'error'
+      );
+    }
+  }
+
+  async ejecutarTraslado(espacioDestino: Espacios): Promise<void> {
+    const p = this.productoParaTraslado!;
+    const dto: TrasladarProductoDTO = {
+      IdPedido: p.IdPedido,
+      NroCuenta: p.NroCuenta,
+      Item: p.Item,
+      IdEspacioDestino: espacioDestino.IdEspacio
+    };
+    try {
+      const response = await lastValueFrom(this.pedidoService.TrasladarProducto(dto));
+      if (response.Success) {
+        this.productoParaTraslado = null;
+        this.aplicarFiltroTrasladoProducto = false;
+        this.RehacerPantalla();
+      } else {
+        Swal.fire(
+          this.textCatalog.get('productTransfer'),
+          this.textCatalog.get('couldNotTransferProduct'),
+          'warning'
+        );
+      }
+    } catch (e) {
+      Swal.fire(
+        this.textCatalog.get('error'),
+        this.textCatalog.get('errorMovingProduct'),
+        'error'
+      );
+    }
+  }
+
+  async handleEspacioDisponible(espacio: Espacios) {
+    if (this.aplicarFiltroCambioEspacio) {
+      const response = await lastValueFrom(this.espaciosService.CambiarEspacio(this.espacioSelected.IdEspacio, espacio.IdEspacio));
       if (response.Data) this.RehacerPantalla();
     } else {
       this.limpiarPedido();
       this.mozoSelected = this.getMozoByMozoId(this.storageService.getCurrentSession().User.IdEmpleado);
-      this.mesaSelected = mesa;
+      this.espacioSelected = espacio;
 
       const dialogRef = this.dialog.open(DialogMCantComponent, {
         width: '350px',
-        data: { title: 'Ingrese Nro Pax', hideNumber: false, decimalActive: false }
+        data: {
+          title: this.textCatalog.get('enterGuestCount'),
+          hideNumber: false,
+          decimalActive: false
+        }
       });
 
       dialogRef.afterClosed().subscribe((result) => {
         if (result?.value && result.value > 0) {
-          this.mesaSelected.NroPersonas = result.value;
+          this.espacioSelected.NroPersonas = result.value;
           this.processPedido(true);
         } else {
-          return 'Debe ingresar un número válido mayor que 0';
+          // La selección de una mesa libre es provisional hasta confirmar
+          // el número de personas. Al salir, restauramos completamente el
+          // estado para que ninguna acción de mesa quede habilitada sin mesa.
+          this.limpiarPedido();
         }
       });
     }
   }
 
-  async handleMesaOcupada(mesa: Mesas) {
-    if (this.aplicarFiltroUnirMesa) {
-      const response = await this.mesasService.UnirMesa(this.mesaSelected.IdMesa, mesa.IdMesa, this.storageService.getCurrentSession().User.IdUsuario).toPromise();
+  async handleEspacioOcupada(espacio: Espacios) {
+    if (this.aplicarFiltroUnirEspacio) {
+      const response = await lastValueFrom(this.espaciosService.UnirEspacio(this.espacioSelected.IdEspacio, espacio.IdEspacio, this.storageService.getCurrentSession().User.IdUsuario));
       if (response.Data) this.RehacerPantalla();
     } else {
       this.limpiarPedido();
-      const listData = await this.pedidoService.FindPedidoByIdMesa(mesa.IdMesa).toPromise();
+      const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdEspacio(espacio.IdEspacio));
       if (listData.Data.length > 0) {
-        this.mesaSelected = mesa;
+        this.espacioSelected = espacio;
         this.rellenarHeaderPedido(listData.Data);
         this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
         this.actualizarDatosGrilla();
       } else {
-        await this.showWarningAndReloadMesas('No existe el pedido en la mesa.');
+        await this.showWarningAndReloadEspacios(
+          this.textCatalog.get('orderNotFoundInSpace')
+        );
       }
     }
   }
 
-  async handleMesaDividirCuenta(mesa: Mesas) {
+  async handleEspacioDividirCuenta(espacio: Espacios) {
     this.limpiarPedido();
-    const listData = await this.pedidoService.FindPedidoByIdMesa(mesa.IdMesa).toPromise();
+    const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdEspacio(espacio.IdEspacio));
     if (listData.Data.length > 0) {
-      this.openDialogoDividirCuenta(mesa, listData.Data[0].IdPedido);
+      this.openDialogoDividirCuenta(espacio, listData.Data[0].IdPedido);
     } else {
-      await this.showWarningAndReloadMesas('No existe el pedido en la mesa.');
+      await this.showWarningAndReloadEspacios(
+        this.textCatalog.get('orderNotFoundInSpace')
+      );
     }
   }
 
-  async showWarningAndReloadMesas(message: string) {
-    Swal.fire('Ups.!', message, 'warning');
-    this.listaMesasTotal = (await this.mesasService.GetAllMesasConPedidos().toPromise()).Data;
+  async showWarningAndReloadEspacios(message: string) {
+    Swal.fire(this.textCatalog.get('validation'), message, 'warning');
+    this.listaEspaciosTotal = (await lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos())).Data;
   }
 
 
@@ -1099,20 +1465,20 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.sumaGranTotal = parseFloat((this.sumaTotal + impuestoBolsa).toFixed(2));
   }
 
-  async openDialogVerPedido(IdMesa: number) {
+  async openDialogVerPedido(IdEspacio: number) {
     try {
       this.spinnerService.show();
 
-      const listData: ApiResponse<PedidoMesaDTO[]> = await this.pedidoService.FindPedidoByIdMesa(IdMesa).toPromise();
+      const listData: ApiResponse<PedidoEspacioDTO[]> = await lastValueFrom(this.pedidoService.FindPedidoByIdEspacio(IdEspacio));
 
       if (listData.Data.length > 0) {
         // this.rellenarHeaderPedido(listData);
 
-        const dialogEnviarPedidoRef = this.dialogMesa.open(DialogVerPedidoComponent, {
+        const dialogEnviarPedidoRef = this.dialogEspacio.open(DialogVerPedidoComponent, {
           disableClose: true,
           hasBackdrop: true,
           width: '400px',
-          data: { oPedidoMesa: listData.Data, IdMesa: IdMesa, Mesa: this.mesaSelected.Descripcion + ' ' + this.mesaSelected.Numero }
+          data: { oPedidoEspacio: listData.Data, IdEspacio: IdEspacio, Espacio: this.espacioSelected.Descripcion + ' ' + this.espacioSelected.Numero }
         });
 
         dialogEnviarPedidoRef.afterClosed().subscribe(data => {
@@ -1125,17 +1491,17 @@ export class VentaComponent implements OnInit, AfterViewInit {
       } else {
 
         Swal.fire(
-          'Ups.!',
-          'No existe el pedido en la mesa.',
+          this.textCatalog.get('validation'),
+          this.textCatalog.get('orderNotFoundInSpace'),
           'warning'
         );
-        this.listaMesasTotal = (await this.mesasService.GetAllMesasConPedidos().toPromise()).Data;
+        this.listaEspaciosTotal = (await lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos())).Data;
       }
 
 
     } catch (e) {
       Swal.fire(
-        'Algo anda mal',
+        this.textCatalog.get('unexpectedError'),
         e.error,
         'error'
       )
@@ -1151,15 +1517,15 @@ export class VentaComponent implements OnInit, AfterViewInit {
     try {
       if (oPedidoDet.Cantidad == 0) {
         Swal.fire(
-          'Ups.!',
-          'Agregue primero la cantidad.',
+          this.textCatalog.get('validation'),
+          this.textCatalog.get('addQuantityFirst'),
           'warning'
         );
       } else {
         this.spinnerService.show();
 
 
-        const dialogEnviarPedidoRef = this.dialogMesa.open(DialogObservacionComponent, {
+        const dialogEnviarPedidoRef = this.dialogEspacio.open(DialogObservacionComponent, {
           hasBackdrop: true,
           width: '700px',
           data: { ListaObservacion: this.listObservacion.filter(x => x.Activo == 1), Observaciones: oPedidoDet.Observacion, NombreCorto: oPedidoDet.Producto.NombreCorto }
@@ -1171,7 +1537,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       }
     } catch (e) {
       Swal.fire(
-        'Algo anda mal',
+        this.textCatalog.get('unexpectedError'),
         e.error,
         'error'
       )
@@ -1187,12 +1553,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async aumentarProductGrid(oPedidoDet: PedidoDet) {
 
+    if (oPedidoDet.Producto.Tipo === 1 || oPedidoDet.Producto.Tipo === 2) {
+      return;
+    }
 
     oPedidoDet.Cantidad += 1;
-
-    if (oPedidoDet.Producto.EsProductoBolsa) {
-      oPedidoDet.Impuesto1 = oPedidoDet.Producto.ImpuestoBolsa * oPedidoDet.Cantidad;
-    }
 
     var dSubDescuento = (oPedidoDet.MontoDescuento / oPedidoDet.Cantidad);
     var dSubtotal = oPedidoDet.Cantidad * oPedidoDet.Precio;
@@ -1205,12 +1570,12 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async restarProductGrid(pedidoDet: PedidoDet) {
 
+    if (pedidoDet.Producto.Tipo === 1 || pedidoDet.Producto.Tipo === 2) {
+      return;
+    }
 
     if (pedidoDet.Cantidad > 1) {
       pedidoDet.Cantidad -= 1;
-      if (pedidoDet.Producto.EsProductoBolsa) {
-        pedidoDet.Impuesto1 = pedidoDet.Producto.ImpuestoBolsa * pedidoDet.Cantidad;
-      }
 
       var dSubDescuento = (pedidoDet.MontoDescuento / pedidoDet.Cantidad);
       var dSubtotal = pedidoDet.Cantidad * pedidoDet.Precio;
@@ -1236,7 +1601,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
   async realizarEliminacion(pedidoDet: PedidoDet, motivoAnulacion: string, idUsuAnula: number) {
 
     var pedidoDelete: AnularProductoYComplementoDTO = {
-      IdMesa: this.mesaSelected.IdMesa,
+      IdEspacio: this.espacioSelected.IdEspacio,
       NroCuenta: pedidoDet.NroCuenta,
       UsuAnula: idUsuAnula,
       MotivoAnula: motivoAnulacion,
@@ -1247,14 +1612,16 @@ export class VentaComponent implements OnInit, AfterViewInit {
     };
 
     this.spinnerService.show();
-    var responseService: ApiResponse<ImpresionDTO[]> = await this.pedidoService.AnularProductoYComplemento(pedidoDelete).toPromise();
+    var responseService: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.AnularProductoYComplemento(pedidoDelete));
 
     if (responseService.Success == true) {
       const contador = await this.imprimir(responseService.Data);
 
-      if (contador === responseService.Data.length) {
-        const pedido = responseService.Data[0];
-        this.pedidoService.ActualizarNumAnulaItemImpresion(pedido.IdPedido, pedido.Item).subscribe(response => {
+      if (responseService.Data.length > 0 && contador === responseService.Data.length) {
+        this.pedidoService.ActualizarNumAnulaItemImpresion(
+          pedidoDet.IdPedido,
+          pedidoDet.NroCuenta,
+          pedidoDet.Item).subscribe(response => {
           console.log('Envios actualizados correctamente', response);
         }, error => {
           console.error('Error al actualizar los envíos', error);
@@ -1279,7 +1646,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
         // Usar DialogMTextTouchComponent para el motivo de anulación
         const dialogRef = this.dialog.open(DialogMTextComponent, {
           width: '800px',
-          data: { title: `¿Está seguro de eliminar el producto ${pedidoDet.Producto.NombreCorto}?` }
+          data: {
+            title: this.textCatalog.get('confirmDeleteProduct', {
+              product: pedidoDet.Producto.NombreCorto
+            })
+          }
         });
 
         dialogRef.afterClosed().subscribe(result => {
@@ -1294,7 +1665,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
         const dialogRef = this.dialog.open(DialogMCantComponent, {
           width: '350px',
           data: {
-            title: 'Ingresar Código de Administrador',
+            title: this.textCatalog.get('enterAdministratorCode'),
             hideNumber: true,
             decimalActive: false
           }
@@ -1310,7 +1681,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
                   // Mostrar el DialogMTextTouchComponent para el motivo de anulación
                   const motivoRef = this.dialog.open(DialogMTextComponent, {
                     width: '800px',
-                    data: { title: `¿Está seguro de eliminar el producto ${pedidoDet.Producto.NombreCorto}?` }
+                    data: {
+                      title: this.textCatalog.get('confirmDeleteProduct', {
+                        product: pedidoDet.Producto.NombreCorto
+                      })
+                    }
                   });
 
                   motivoRef.afterClosed().subscribe(result => {
@@ -1324,10 +1699,10 @@ export class VentaComponent implements OnInit, AfterViewInit {
                 } else {
 
                   Swal.fire({
-                    title: 'Código inválido',
-                    text: 'El código ingresado no es correcto.',
+                    title: this.textCatalog.get('invalidCode'),
+                    text: this.textCatalog.get('incorrectCode'),
                     icon: 'error',
-                    confirmButtonText: 'OK'
+                    confirmButtonText: this.textCatalog.get('accept')
                   });
                 }
               }
@@ -1345,13 +1720,20 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
 
   public AgregarProducto(product: Producto): void {
+    const precioSocio = this.preciosSocioNegocio.get(product.IdProducto);
+    if (precioSocio !== undefined) {
+      product = new Producto({
+        ...product,
+        Precio: precioSocio
+      });
+    }
 
     // Verificar si el producto tiene el flag SinPrecio
-    if (product.SinPrecio == 1) {
+    if (product.SinPrecio) {
       const dialogRef = this.dialog.open(DialogMCantComponent, {
         width: '350px',
         data: {
-          title: 'Ingresar Precio',
+          title: this.textCatalog.get('enterPrice'),
           hideNumber: false, // Mostrar los números
           decimalActive: true // Activar el punto decimal si el precio permite decimales
         }
@@ -1382,6 +1764,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       NombreCuenta: "Pedido Inicial",
       Producto: new Producto(product),
       PedidoComplemento: [],
+      PedidoMenu: [],
       Precio: product.Precio,
       Cantidad: 1,
       Subtotal: 1 * product.Precio,
@@ -1391,14 +1774,40 @@ export class VentaComponent implements OnInit, AfterViewInit {
       Ip: this.storageService.getCurrentIP()
     });
 
-    // Verificar si el producto tiene complementos
-    if (product.Tipo == 2) {
+    if (product.Tipo == 1) {
+      this.AgregarProductoMenu(pedidoDet);
+    } else if (product.Tipo == 2) {
       this.AgregarProductoComplemento(pedidoDet);
     }
 
     // Agregar el producto al grid de productos
     this.listProductGrid.push(pedidoDet);
     this.actualizarDatosGrilla();
+  }
+
+  AgregarProductoMenu(pedidodet: PedidoDet): void {
+    const dialogRef = this.dialog.open(DialogMenuComponent, {
+      hasBackdrop: true,
+      panelClass: 'dialog-window--workspace',
+      data: { pedidodet },
+    });
+
+    dialogRef.afterClosed().subscribe(item => {
+      if (item?.pedidodet) {
+        item.pedidodet.Subtotal =
+          item.pedidodet.Cantidad * item.pedidodet.Precio;
+        this.actualizarDatosGrilla();
+        return;
+      }
+
+      if (pedidodet.Item === 0) {
+        const removeIndex = this.listProductGrid.indexOf(pedidodet);
+        if (removeIndex >= 0) {
+          this.listProductGrid.splice(removeIndex, 1);
+          this.actualizarDatosGrilla();
+        }
+      }
+    });
   }
 
   AgregarProductoComplemento(pedidodet: PedidoDet) {
@@ -1450,10 +1859,10 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
   async AnularPedido() {
 
-    if (this.mesaSelected.IdMesa == null) {
+    if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
-        'Anular Pedido',
-        'Debe seleccionar una mesa.',
+        this.textCatalog.get('cancelOrder'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
@@ -1465,14 +1874,18 @@ export class VentaComponent implements OnInit, AfterViewInit {
       // Usar DialogMTextTouchComponent para el motivo de anulación
       const dialogRef = this.dialog.open(DialogMTextComponent, {
         width: '800px',
-        data: { title: `¿Está seguro de anular el pedido de ${this.mesaSelected.Descripcion} ${this.mesaSelected.Numero}?` }
+        data: {
+          title: this.textCatalog.get('confirmVoidSpaceOrder', {
+            space: `${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}`
+          })
+        }
       });
 
       dialogRef.afterClosed().subscribe(result => {
 
         if (result && result.value) {
           const motivoAnulacion = result.value;
-          this.RealizarAnulacionPedido(this.mesaSelected, motivoAnulacion, this.storageService.getCurrentSession().User.IdUsuario);
+          this.RealizarAnulacionPedido(this.espacioSelected, motivoAnulacion, this.storageService.getCurrentSession().User.IdUsuario);
         }
       });
     } else {
@@ -1480,7 +1893,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
       const dialogRef = this.dialog.open(DialogMCantComponent, {
         width: '350px',
         data: {
-          title: 'Ingresar Código de Administrador',
+          title: this.textCatalog.get('enterAdministratorCode'),
           hideNumber: true,
           decimalActive: false
         }
@@ -1496,7 +1909,11 @@ export class VentaComponent implements OnInit, AfterViewInit {
                 // Mostrar el DialogMTextTouchComponent para el motivo de anulación
                 const motivoRef = this.dialog.open(DialogMTextComponent, {
                   width: '800px',
-                  data: { title: `¿Está seguro de anulado el pedido de ${this.mesaSelected.Descripcion} ${this.mesaSelected.Numero}?` }
+                  data: {
+                    title: this.textCatalog.get('confirmVoidSpaceOrder', {
+                      space: `${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}`
+                    })
+                  }
                 });
 
                 motivoRef.afterClosed().subscribe(result => {
@@ -1504,16 +1921,16 @@ export class VentaComponent implements OnInit, AfterViewInit {
                   if (result && result.value) {
                     const motivoAnulacion = result.value;
 
-                    this.RealizarAnulacionPedido(this.mesaSelected, motivoAnulacion, response.Data.IdUsuario);
+                    this.RealizarAnulacionPedido(this.espacioSelected, motivoAnulacion, response.Data.IdUsuario);
                   }
                 });
               } else {
 
                 Swal.fire({
-                  title: 'Código inválido',
-                  text: 'El código ingresado no es correcto.',
+                  title: this.textCatalog.get('invalidCode'),
+                  text: this.textCatalog.get('incorrectCode'),
                   icon: 'error',
-                  confirmButtonText: 'OK'
+                  confirmButtonText: this.textCatalog.get('accept')
                 });
               }
             }
@@ -1524,9 +1941,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
 
-  async RealizarAnulacionPedido(mesa: Mesas, motivoAnulacion: string, idUsuAnula: number) {
+  async RealizarAnulacionPedido(espacio: Espacios, motivoAnulacion: string, idUsuAnula: number) {
     this.spinnerService.show();
-    var responseService: ApiResponse<ImpresionDTO[]> = await this.pedidoService.AnularPedido(mesa.IdMesa, idUsuAnula, motivoAnulacion, this.storageService.getCurrentIP()).toPromise();
+    var responseService: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.AnularPedido(espacio.IdEspacio, idUsuAnula, motivoAnulacion, this.storageService.getCurrentIP()));
 
     if (responseService.Success == true) {
       const contador = await this.imprimir(responseService.Data);
@@ -1546,21 +1963,21 @@ export class VentaComponent implements OnInit, AfterViewInit {
   }
 
   scrollLeft() {
-    const container = document.querySelector('.static-buttons-row');
-    container.scrollLeft -= 100;
+    const container = document.querySelector<HTMLElement>('.static-buttons-row');
+    if (container) container.scrollLeft -= 100;
   }
 
   scrollRight() {
-    const container = document.querySelector('.static-buttons-row');
-    container.scrollLeft += 100;
+    const container = document.querySelector<HTMLElement>('.static-buttons-row');
+    if (container) container.scrollLeft += 100;
   }
 
   async processPedido(verPanelProducto: boolean) {
 
-    if (this.mesaSelected.IdMesa == null && this.idCanalVentaSelected === this.canalVentaEnum.MESA) {
+    if (this.espacioSelected.IdEspacio == null && this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) {
       Swal.fire(
-        'Procesar Pedido',
-        'Debe seleccionar una mesa.',
+        this.textCatalog.get('processOrderTitle'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
@@ -1570,20 +1987,27 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.isComboDisabled = false;
     this.isVerComplementoDisabled = false;
     this.isReImprimirDisabled = false;
-    this.MostrarOcultarPanelMesa = !verPanelProducto;
+    this.MostrarOcultarPanelEspacio = !verPanelProducto;
     this.MostrarOcultarPanelProducto = verPanelProducto;
     this.isCanalVentaDisabled = true;
 
     if (this.sumaDscto > 0) {
       this.isPanelProductoDisabled = true;
-      this.textDescuento = 'Quitar Descuento';
+      this.descuentoAplicado = true;
     } else {
       this.isPanelProductoDisabled = false;
-      this.textDescuento = 'Descuento';
+      this.descuentoAplicado = false;
     }
 
-    let oFamilia = this.listFamilia[0];
-    this.ListarSubFamilia_x_Familia(oFamilia);
+    const oFamilia = this.listFamilia?.[0];
+    if (oFamilia) {
+      this.ListarSubFamilia_x_Familia(oFamilia);
+    } else {
+      this.selectedItemFamilia = null;
+      this.selectedItemSubFamilia = null;
+      this.listSubFamilia_x_Familia = [];
+      this.listProducts_x_SubFamilia = [];
+    }
 
 
   }
@@ -1595,8 +2019,21 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.AgregarProductoComplemento(this.selectedRow);
   }
 
-   aplicarDescuento(){
-    if (this.textDescuento === "Quitar Descuento") {
+  VerMenu(): void {
+    if (!this.selectedRow || this.selectedRow.Producto?.Tipo !== 1) {
+      return;
+    }
+
+    this.AgregarProductoMenu(this.selectedRow);
+  }
+
+   aplicarDescuento(): void {
+    if (!this.puedeOperarPedidoPersistido) {
+      this.informarPedidoRequerido();
+      return;
+    }
+
+    if (this.descuentoAplicado) {
       this.quitarDescuento();
     }else{
       this.openDialogoDescuento(this.selectedRow);
@@ -1606,26 +2043,28 @@ export class VentaComponent implements OnInit, AfterViewInit {
    quitarDescuento() {
     
       Swal.fire({
-        title: '¿Está seguro de quitar el descuento?',
+        title: this.textCatalog.get('confirmRemoveDiscount'),
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Sí',
-        cancelButtonText: 'No'
+        confirmButtonText: this.textCatalog.get('yes'),
+        cancelButtonText: this.textCatalog.get('no')
       }).then((result) => {
         if (result.isConfirmed) {
             this.pedidoService.QuitarDescuento(this.idPedidoCobrar, this.nroCuentaCobrar).subscribe(async () => {
-              const listData = await this.pedidoService.FindPedidoByIdPedidoNroCuenta(this.idPedidoCobrar, this.nroCuentaCobrar).toPromise();
+              const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdPedidoNroCuenta(this.idPedidoCobrar, this.nroCuentaCobrar));
 
               if (listData.Data.length > 0) {
                 this.rellenarHeaderPedido(listData.Data);
                 this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
                 this.actualizarDatosGrilla();
               } else {
-                await this.showWarningAndReloadMesas('No existe el pedido en la cuenta.');
+                await this.showWarningAndReloadEspacios(
+                  this.textCatalog.get('orderNotFoundInAccount')
+                );
               }
             });
   
-          this.textDescuento = "Descuento"; // Restablecer el texto del combo
+          this.descuentoAplicado = false;
           this.isPanelProductoDisabled = false;
         } else {
           return; 
@@ -1635,16 +2074,21 @@ export class VentaComponent implements OnInit, AfterViewInit {
   
 
   async ImprimirPrecuenta() {
-    if (this.mesaSelected.IdMesa == null) {
+    if (!this.puedeOperarPedidoPersistido) {
+      this.informarPedidoRequerido();
+      return;
+    }
+
+    if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
-        'Imprimir Precuenta',
-        'Debe seleccionar una mesa.',
+        this.textCatalog.get('printPreBill'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
     }
 
-    var responseRegisterPedido: ApiResponse<ImpresionDTO[]> = await this.pedidoService.ImprimirPrecuenta(this.idPedidoCobrar, this.nroCuentaCobrar).toPromise();
+    var responseRegisterPedido: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.ImprimirPrecuenta(this.idPedidoCobrar, this.nroCuentaCobrar));
 
     if (responseRegisterPedido.Success) {
       this.imprimir(responseRegisterPedido.Data);
@@ -1652,19 +2096,45 @@ export class VentaComponent implements OnInit, AfterViewInit {
     }
   }
 
+  private informarPedidoRequerido(): void {
+    Swal.fire(
+      this.textCatalog.get('validation'),
+      this.textCatalog.get('savedOrderRequiredForOperation'),
+      'info'
+    );
+  }
+
   async EnviarPedido() {
-    if (this.mesaSelected.IdMesa == null && this.idCanalVentaSelected === this.canalVentaEnum.MESA) {
+    if (this.enviandoPedido) {
+      return;
+    }
+
+    if (this.espacioSelected.IdEspacio == null && this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) {
       Swal.fire(
-        'Enviar Pedido',
-        'Debe seleccionar una mesa.',
+        this.textCatalog.get('sendOrder'),
+        this.textCatalog.get('selectSpace'),
         'info'
       );
       return;
     }
 
+    // Reenviar un pedido sin productos nuevos no aporta nada y ademas el
+    // backend lo interpretaba como pedido vacio, dandolo por cobrado.
+    if (this.listProductGrid.length > 0
+        && !this.listProductGrid.some(item => !item.Item)) {
+      Swal.fire(
+        this.textCatalog.get('sendOrder'),
+        this.textCatalog.get('noNewProductsToSend'),
+        'info'
+      );
+      return;
+    }
+
+    this.enviandoPedido = true;
     this.spinnerService.show();
     this.procesarPedido = true;
-    if (this.listProductGrid.length > 0) {
+    try {
+      if (this.listProductGrid.length > 0) {
 
       var listPedidoDetails: PedidoDet[] = [];
 
@@ -1685,6 +2155,7 @@ export class VentaComponent implements OnInit, AfterViewInit {
             Ip: this.storageService.getCurrentIP(),
             NombreCuenta: itemGrid.NombreCuenta,
             PedidoComplemento: itemGrid.PedidoComplemento,
+            PedidoMenu: itemGrid.PedidoMenu,
             Estado:1
           }
         );
@@ -1694,21 +2165,40 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
       var pedido: PedidoCab = new PedidoCab(
         {
-          IdEmpleado: (this.idCanalVentaSelected != this.canalVentaEnum.MESA) ? this.idEmpleadoLlevar : this.mozoSelected?.IdEmpleado,
+          IdEmpleado: (this.idCanalVentaSelected != this.canalVentaEnum.ESPACIO) ? this.idEmpleadoLlevar : this.mozoSelected?.IdEmpleado,
           IdPedido: this.idPedidoCobrar == 0 ? this.DEFAULT_ID : this.idPedidoCobrar,
           NroCuenta: this.nroCuentaCobrar == 0 ? this.DEFAULT_ID : this.nroCuentaCobrar,
           Total: this.getTotalByListProductGrid(),
           Importe: this.getTotalByListProductGrid(),
           UsuReg: this.storageService.getCurrentSession().User.IdUsuario,
           UsuMod: this.storageService.getCurrentSession().User.IdUsuario,
-          IdMesa: (this.idCanalVentaSelected === this.canalVentaEnum.MESA) ? this.mesaSelected.IdMesa : 9999,
-          Mesa: (this.idCanalVentaSelected === this.canalVentaEnum.MESA) ? this.mesaSelected.Mesa : '',
-          NroPax: (this.idCanalVentaSelected === this.canalVentaEnum.MESA) ? this.mesaSelected.NroPersonas : 0,
+          IdEspacio: (this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) ? this.espacioSelected.IdEspacio : 9999,
+          Espacio: (this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) ? this.espacioSelected.Espacio : '',
+          NroPax: (this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) ? this.espacioSelected.NroPersonas : 0,
           IdCaja: this.turnoAbierto.IdCaja,
+          ModoImpresion: this.deviceCapabilities.requiresLocalPrintBridge()
+            ? ModoImpresionPedido.DirectaQz
+            : ModoImpresionPedido.ColaAgente,
           IdTurno: this.turnoAbierto.IdTurno,
-          Moneda: "SOL",
-          IdSocioNegocio: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY ) ? this.socioNegocioSelected.IdSocioNegocio : 0,
-          Cliente: (this.idCanalVentaSelected === this.canalVentaEnum.MESA) ? this.listProductGrid[0]?.Anfitriona : this.clienteSelected.RazonSocial, /*solo para trago gratis */
+          Moneda: this.config?.IdMoneda ?? 'SOL',
+          IdSocioNegocio: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY)
+            ? (this.socioNegocioSelected.IdSocioNegocio ?? 0)
+            : 0,
+          IdClienteDelivery: (
+            this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY
+            && Number(this.clienteSelected.IdCliente) > 0
+          ) ? Number(this.clienteSelected.IdCliente) : null,
+          ItemClienteDelivery: (
+            this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY
+            && this.clienteSelected.ItemDelivery > 0
+          ) ? this.clienteSelected.ItemDelivery : null,
+          TelefonoDelivery: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY)
+            ? this.clienteSelected.Telefono
+            : null,
+          AnexoDelivery: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY)
+            ? this.clienteSelected.AnexoDelivery
+            : null,
+          Cliente: (this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) ? this.listProductGrid[0]?.Anfitriona : this.clienteSelected.RazonSocial, /*solo para trago gratis */
           Direccion: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? this.clienteSelected.DireccionDelivery : '', /*solo para delivery*/
           Referencia: (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) ? this.clienteSelected.ReferenciaDelivery : '', /*solo para delivery*/
           IdCanalVenta: this.idCanalVentaSelected,
@@ -1717,46 +2207,73 @@ export class VentaComponent implements OnInit, AfterViewInit {
         }
       );
 
-      var responseRegisterPedido: ApiResponse<ImpresionDTO[]> = await this.pedidoService.GrabarPedido(pedido).toPromise();
+      var responseRegisterPedido: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.GrabarPedido(pedido));
 
       if (responseRegisterPedido.Success) {
-
-        this.imprimirPedido(responseRegisterPedido);
+        if (pedido.ModoImpresion === ModoImpresionPedido.DirectaQz) {
+          const impresiones = responseRegisterPedido.Data ?? [];
+          const referencia = impresiones[0];
+          const contextoLote = referencia && impresiones.length > 0
+            ? {
+                loteId: `${referencia.IdPedido}-${referencia.NroCuenta}-${Date.now()}`,
+                idPedido: referencia.IdPedido,
+                nroCuenta: referencia.NroCuenta,
+                totalDocumentos: impresiones.length,
+              }
+            : undefined;
+          const impresas = await this.imprimir(impresiones, contextoLote);
+          if (impresas !== impresiones.length) {
+            await Swal.fire({
+              icon: 'warning',
+              title: 'Pedido guardado',
+              text: 'El pedido se guardó correctamente. Una o más comandas están pendientes de impresión. Comprueba que las impresoras estén encendidas; el sistema volverá a intentarlo automáticamente.',
+              confirmButtonText: 'Entendido',
+            });
+          }
+        }
         this.limpiarPedido();
         this.procesarPedido = false;
         this.RehacerPantalla();
 
-        this.MostrarOcultarPanelMesa = true;
+        this.MostrarOcultarPanelEspacio = true;
         this.MostrarOcultarPanelProducto = false;
       }
+      } else {
+        await Swal.fire({
+          icon: 'warning',
+          title: this.textCatalog.get('attention'),
+          text: this.textCatalog.get('noProductsEntered'),
+          confirmButtonText: this.textCatalog.get('ok'),
+        });
+      }
+    } finally {
+      this.enviandoPedido = false;
       this.spinnerService.hide();
-    } else {
-      Swal.fire('Oops...', 'No ha ingresado ningun producto.', 'error')
-      this.spinnerService.hide();
-    }
-
-  }
-
-  async imprimirPedido(responseRegisterPedido: ApiResponse<ImpresionDTO[]>) {
-    const contador = await this.imprimir(responseRegisterPedido.Data);
-
-    if (contador === responseRegisterPedido.Data.length) {
-      const pedido = responseRegisterPedido.Data[0];
-      this.pedidoService.ActualizarEnviosDeImpresion(pedido.IdPedido, pedido.NroCuenta).subscribe(response => {
-        console.log('Envios actualizados correctamente', response);
-      }, error => {
-        console.error('Error al actualizar los envíos', error);
-      });
     }
   }
 
-
-  async imprimir(listImpresionDTO: ImpresionDTO[]): Promise<number> {
+  async imprimir(
+    listImpresionDTO: ImpresionDTO[],
+    contextoLote?: Omit<ContextoDocumentoImpresionPedido, 'documentoId'>,
+  ): Promise<number> {
     let contador: number = 0;
 
-    for (const element of listImpresionDTO) {
+    for (let index = 0; index < listImpresionDTO.length; index++) {
+      const element = listImpresionDTO[index];
       const printerName = element.NombreImpresora;
-      const success = await this.qzTrayService.printPDF(element.Documento, printerName);
+      const success = await this.qzTrayService.printPDF(
+        element.Documento,
+        printerName,
+        true,
+        false,
+        true,
+        contextoLote
+          ? {
+              ...contextoLote,
+              documentoId: `${index}-${element.Item}-${printerName}`,
+            }
+          : undefined,
+      );
       if (success) {
         contador += 1;
       }
@@ -1783,21 +2300,22 @@ export class VentaComponent implements OnInit, AfterViewInit {
         };
 
         const dialogProcessComprobante = this.dialogComprobante.open(DialogEmitirComprobanteComponent, {
-          width: '400px',
+          width: '900px',
+          maxWidth: '95vw',
           data: dataSet,
           hasBackdrop: true
         });
 
-        var resultDialog: any = await dialogProcessComprobante.afterClosed().toPromise();
-        this.listaMesasTotal = (await this.mesasService.GetAllMesasConPedidos().toPromise()).Data;
+        var resultDialog: any = await lastValueFrom(dialogProcessComprobante.afterClosed());
+        this.listaEspaciosTotal = (await lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos())).Data;
         this.limpiarPedido();
-        this.MostrarOcultarPanelMesa = true;
+        this.MostrarOcultarPanelEspacio = true;
         this.MostrarOcultarPanelProducto = false;
       } else {
-        alert('No guardo todos los productos de la grilla.')
+        alert(this.textCatalog.get('allProductsMustBeSaved'));
       }
     } else {
-      alert('Debe tener todo el pedido guardado.')
+      alert(this.textCatalog.get('orderMustBeSaved'));
     }
   }
 
@@ -1806,20 +2324,25 @@ export class VentaComponent implements OnInit, AfterViewInit {
       this.spinnerService.show();
       this.enterFullScreen();
 
-      this.aplicarFiltroCambioMesa = false;
-      this.aplicarFiltroUnirMesa = false;
-      // Actualizar mesas
-      this.mesasService.GetAllMesasConPedidos().toPromise().then(data => {
-        this.listaMesasTotal = data.Data;
-        let result: Ambiente;
-        result = this.listAmbiente.find(item => item.Estado == 1);
-        this.MostrarMesas_x_Ambiente(result);
+      this.aplicarFiltroCambioEspacio = false;
+      this.aplicarFiltroUnirEspacio = false;
+      this.aplicarFiltroTrasladoProducto = false;
+      this.aplicarFiltroTrasladarAEspacio = false;
+      this.productoParaTraslado = null;
+      // Actualizar espacios (skeleton mientras recarga)
+      this.isLoadingEspacios = true;
+      lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos()).then(data => {
+        this.listaEspaciosTotal = data.Data;
+        const result = this.listAmbiente.find(item => item.Estado == 1);
+        if (result) this.MostrarEspacios_x_Ambiente(result);
+        this.isLoadingEspacios = false;
       }).catch(error => {
-        console.error('Error al obtener mesas', error);
+        console.error('Error al obtener espacios', error);
+        this.isLoadingEspacios = false;
       });
 
       // Actualizar pedidos
-      this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno).toPromise().then(responsePedidos => {
+      lastValueFrom(this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno)).then(responsePedidos => {
         if (responsePedidos.Success) {
           this.listaPedidosPendientes = responsePedidos.Data;
         }
@@ -1830,14 +2353,14 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
       // Limpieza de la pantalla y actualización de paneles
       this.limpiarPedido();
-      this.MostrarOcultarPanelMesa = true;
+      this.MostrarOcultarPanelEspacio = true;
       this.MostrarOcultarPanelProducto = false;
       this.RehacerPantallaRefresh = 'Refresh';
       this.isCanalVentaDisabled = false;
     } catch (error) {
       Swal.fire(
-        'Good job!',
-        'Error interno, actualice.',
+        this.textCatalog.get('error'),
+        this.textCatalog.get('internalErrorRefresh'),
         'error'
       );
     } finally {
@@ -1847,15 +2370,29 @@ export class VentaComponent implements OnInit, AfterViewInit {
 
 
 
-  private getMozoByMozoId(idMozo: number): Empleado {
-    let result: Empleado;
-    this.listEmpleados.forEach(Mozo => {
-      if (idMozo === Mozo.IdEmpleado) {
-        result = Mozo;
-      }
-    });
+  /** Devuelve el símbolo de moneda para un producto.
+   *  Usa la moneda del producto si coincide con la config; de lo contrario el símbolo por defecto. */
+  getSimboloProducto(monedaVenta: string): string {
+    return this.config?.SimboloMoneda || '-';
+  }
 
-    return result;
+  /**
+   * Extrae solo el valor de background-color del campo Color del producto.
+   * El campo puede venir como "background-color: #FF0000" o simplemente "#FF0000" o "red".
+   * Esto evita que estilos de posicionamiento u otros lleguen al botón.
+   */
+  getProductColor(colorStyle: string): string {
+    if (!colorStyle) return '';
+    // Si viene con "background-color:", extrae solo el valor
+    const match = colorStyle.match(/background-color\s*:\s*([^;]+)/i);
+    if (match) return match[1].trim();
+    // Si viene como color directo (ej: "#FF0000" o "red"), retornarlo tal cual
+    return colorStyle.trim();
+  }
+
+
+  private getMozoByMozoId(idMozo: number): Empleado | undefined {
+    return this.listEmpleados.find(Mozo => idMozo === Mozo.IdEmpleado);
   }
 
   private getTotalByListProductGrid(): number {
@@ -1874,19 +2411,20 @@ export class VentaComponent implements OnInit, AfterViewInit {
     this.actualizarDatosGrilla();
     this.gridListaPedidoDetProducto.data = [];
     this.mozoSelected = new Empleado;
-    this.mesaSelected = new Mesas;
+    this.espacioSelected = new Espacios;
     this.procesarPedido = false;
     this.idPedidoCobrar = 0;
     this.nroCuentaCobrar = 0;
-    this.horaPedido = '';
+    this.fechaApertura = null;
     this.nombreCuenta = '';
-    this.mesaSelected.NroPersonas = 0;
+    this.espacioSelected.NroPersonas = 0;
     this.clienteSelected = new Cliente;
     this.socioNegocioSelected = new SocioNegocio;
+    this.preciosSocioNegocio.clear();
   }
 
 
-  private getPedidoDetByResponse(listData: PedidoMesaDTO[]): PedidoDet[] {
+  private getPedidoDetByResponse(listData: PedidoEspacioDTO[]): PedidoDet[] {
 
     var oPedidoDet: PedidoDet;
     var result: PedidoDet[] = [];
@@ -1903,7 +2441,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
             ExclusivoParaAnfitriona: data.ExclusivoParaAnfitriona,
             Qty: data.Qty,
             FactorComplemento: data.FactorComplemento,
-            PermitirParaTragoCortesia: data.PermitirParaTragoCortesia
+            PermitirParaTragoCortesia: data.PermitirParaTragoCortesia,
+            Tipo: data.Tipo,
+            IdClaseCombo: data.IdSeccionMenu
           }),
           Precio: data.Precio,
           Cantidad: data.Cantidad,
@@ -1914,7 +2454,9 @@ export class VentaComponent implements OnInit, AfterViewInit {
           MontoDescuento: data.MontoDescuento,
           NroCupon: data.NroCupon,
           Ip: data.Ip,
-          PedidoComplemento: data.PedidoComplemento
+          PedidoComplemento: data.PedidoComplemento ?? [],
+          PedidoMenu: data.PedidoMenu ?? [],
+          FechaEnvio: data.FechaEnvio
         }
       );
       result.push(oPedidoDet);
@@ -1923,14 +2465,45 @@ export class VentaComponent implements OnInit, AfterViewInit {
     return result;
   }
 
-  private rellenarHeaderPedido(listData: PedidoMesaDTO[]): void {
+  private rellenarHeaderPedido(listData: PedidoEspacioDTO[]): void {
     var firstItem = listData[0];
-    this.mesaSelected.NroPersonas = firstItem.NroPax;
+    this.espacioSelected.NroPersonas = firstItem.NroPax;
     this.mozoSelected = this.getMozoByMozoId(firstItem.IdEmpleado);
-    this.clienteSelected.RazonSocial = firstItem.Cliente;
+    this.clienteSelected = new Cliente({
+      IdCliente: firstItem.IdClienteDelivery?.toString() ?? '',
+      ItemDelivery: firstItem.ItemClienteDelivery ?? 0,
+      RazonSocial: firstItem.Cliente,
+      Direccion: firstItem.Direccion,
+      DireccionDelivery: firstItem.Direccion,
+      Referencia: firstItem.Referencia,
+      ReferenciaDelivery: firstItem.Referencia,
+      Telefono: firstItem.TelefonoDelivery,
+      AnexoDelivery: firstItem.AnexoDelivery
+    });
+    this.socioNegocioSelected = this.listaSociosNegocio?.find(
+      socio => socio.IdSocioNegocio === firstItem.IdSocioNegocio
+    ) ?? new SocioNegocio();
     this.idPedidoCobrar = firstItem.IdPedido;
     this.nroCuentaCobrar = firstItem.NroCuenta;
-    this.horaPedido = firstItem.HoraPedido;
+    this.fechaApertura = firstItem.FechaApertura;
+    this.numeroPedido = firstItem.NroPedido;
+  }
+
+  abrirAgendaReservas(): void {
+    this.dialog.open(AgendaReservasDialogComponent, {
+      disableClose: false,
+      hasBackdrop: true,
+      panelClass: 'dialog-window--workspace'
+    });
+  }
+
+  /** Reintentar carga completa tras un error de backend en el inicio */
+  reintentarCargaInicial(): void {
+    const ruta = this.isModoMozo ? '/mozo' : '/caja';
+    // Navegar fuera y volver fuerza el re-init completo del componente
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+      this.router.navigate([ruta]);
+    });
   }
 
   async Refresh(): Promise<void> {
@@ -1938,24 +2511,23 @@ export class VentaComponent implements OnInit, AfterViewInit {
       this.spinnerService.show();
 
       // Ejecutar las solicitudes en paralelo
-      const [productsData, mesasData, pedidoResponse] = await Promise.all([
-        this.productService.getAllProductosTablero().toPromise(),
-        this.mesasService.GetAllMesasConPedidos().toPromise(),
-        this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno).toPromise()
+      const [productsData, espaciosData, pedidoResponse] = await Promise.all([
+        lastValueFrom(this.productService.getAllProductosTablero()),
+        lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos()),
+        lastValueFrom(this.pedidoService.ObtenerPedidosByIdTurno(this.turnoAbierto.IdTurno))
       ]);
 
       // Actualizar los datos con los resultados obtenidos
       this.listProducts = productsData.Data;
-      this.listaMesasTotal = mesasData.Data;
+      this.listaEspaciosTotal = espaciosData.Data;
 
       if (pedidoResponse.Success) {
         this.listaPedidosPendientes = pedidoResponse.Data;
       }
 
-      // Mostrar las mesas en el ambiente correspondiente
-      let result: Ambiente;
-      result = this.listAmbiente.find(item => item.Estado == 1);
-      this.MostrarMesas_x_Ambiente(result);
+      // Mostrar las espacios en el ambiente correspondiente
+      const result = this.listAmbiente.find(item => item.Estado == 1);
+      if (result) this.MostrarEspacios_x_Ambiente(result);
 
     } catch (error) {
       console.error('Error al refrescar los datos', error);
@@ -1990,9 +2562,10 @@ export class VentaComponent implements OnInit, AfterViewInit {
     const dialogDocumentosEmitidosComponent = this.dialog.open(DialogDocumentosEmitidosComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '1005px', // Establece el ancho del diálogo
-      height: '670,y6t7 iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiikkkkkkkkkikkiikiiiiiiiiiiiiiiiiiiiiiiiiiiiiijjjjjjjjjjjjjjijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjlllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll asxd546px', // Establece la altura del diálogo
-      data: { idTurno }
+      width: '1060px',
+      maxWidth: '96vw',
+      maxHeight: '92vh',
+      data: { idTurno, idCaja: this.turnoAbierto.IdCaja }
     });
     
 
@@ -2002,13 +2575,39 @@ export class VentaComponent implements OnInit, AfterViewInit {
 }
 
   OpenDialogEmitirComprobante(idTipoDoc: EnumTipoDocumento): void {
-    
+    if (!this.comprobantesHabilitados) {
+      Swal.fire(
+        'Funcionalidad no incluida',
+        'La licencia actual no incluye la emisión de comprobantes.',
+        'warning',
+      );
+      return;
+    }
+    if (this.comprobantesAgotados) {
+      Swal.fire(
+        'Cupo mensual agotado',
+        'La licencia alcanzó el máximo mensual de comprobantes.',
+        'warning',
+      );
+      return;
+    }
+    // Algunos flujos válidos (por ejemplo, cobrar una entrega) abren el diálogo
+    // directamente; en todos los casos la condición indispensable es que el
+    // pedido y su cuenta ya existan en el backend.
+    if (!this.pedidoPersistido) {
+      Swal.fire(
+        this.textCatalog.get('validation'),
+        this.textCatalog.get('orderMustBeSaved'),
+        'info'
+      );
+      return;
+    }
 
        const dialogEmitirComprobanteComponent = this.dialog.open(DialogEmitirComprobanteComponent, {
          disableClose: true,
          hasBackdrop: true,
-         width: '705px', // Establece el ancho del diálogo
-         height: '915px', // Establece la altura del diálogo
+         width: '900px',
+         maxWidth: '95vw',
          data: { lblcambio: this.turnoAbierto.TipoCambioVenta, 
                  dblImporte: this.sumaImporte,
                  dblDscto: this.sumaDscto,
@@ -2027,8 +2626,16 @@ export class VentaComponent implements OnInit, AfterViewInit {
        
 
        dialogEmitirComprobanteComponent.afterClosed().subscribe(Resultado => {
+        this.cargarCuotaComprobantes();
         this.RehacerPantalla();
       })
  
+  }
+
+  private cargarCuotaComprobantes(): void {
+    this.licenciaTenantService.obtenerCuotaComprobantes().subscribe({
+      next: cuota => (this.cuotaComprobantes = cuota),
+      error: () => (this.cuotaComprobantes = null),
+    });
   }
 }

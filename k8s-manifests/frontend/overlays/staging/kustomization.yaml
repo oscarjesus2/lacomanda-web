@@ -6,11 +6,8 @@ namespace: frontend-appweb-staging
 resources:
 - ../../base
 - namespace.yaml
-- ingress.yaml
-- managed-cert.yaml
-- frontendconfig.yaml
 
 images:
 - name: oscar020/frontend
   newName: oscar020/frontend
-  newTag: 202510252045-35faa92-staging
+  newTag: 202608292047-6a7d5fa-staging

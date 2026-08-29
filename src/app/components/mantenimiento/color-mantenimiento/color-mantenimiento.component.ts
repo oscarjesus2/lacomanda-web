@@ -5,6 +5,8 @@ import { MatDialogRef } from '@angular/material/dialog';
 import Swal from 'sweetalert2';
 import { Color } from 'src/app/models/color.models';
 import { ColorService } from 'src/app/services/color.service';
+import { MatPaginator } from '@angular/material/paginator';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-color-mantenimiento',
@@ -13,7 +15,12 @@ import { ColorService } from 'src/app/services/color.service';
 })
 export class ColorMantenimientoComponent implements OnInit {
   @ViewChild('form') form: NgForm;
-
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.filtered.paginator = value;
+    }
+  }
+  
   colores: Color[] = [];
   filtered = new MatTableDataSource<Color>([]);
   filtro = '';
@@ -38,7 +45,6 @@ export class ColorMantenimientoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void { this.cargar(); }
-
   cargar(): void {
     this.service.getColores().subscribe(r => {
       if (r.Success) {
@@ -115,7 +121,7 @@ export class ColorMantenimientoComponent implements OnInit {
     }).then(s => {
       if (s.isConfirmed) {
         this.service.eliminar(id).subscribe(r => {
-          if (r.Success) { this.cargar(); Swal.fire('Eliminado', '', 'success'); }
+          if (r.Success) { this.cargar(); Notificar.exito('Eliminado', ''); }
           else { Swal.fire('Error', r.Message || 'No se pudo eliminar', 'error'); }
         });
       }
@@ -131,7 +137,7 @@ export class ColorMantenimientoComponent implements OnInit {
     const obs = this.c.IdColor ? this.service.actualizar(this.c) : this.service.crear(this.c);
     obs.subscribe(r => {
       if (r.Success) {
-        Swal.fire(this.c.IdColor ? 'Actualizado' : 'Guardado', '', 'success');
+        Notificar.exito(this.c.IdColor ? 'Actualizado' : 'Guardado', '');
         this.cargar(); this.showForm = false;
       } else {
         Swal.fire('Error', r.Message || 'Operación no realizada', 'error');

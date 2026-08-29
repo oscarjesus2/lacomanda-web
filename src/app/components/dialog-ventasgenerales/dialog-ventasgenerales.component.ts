@@ -1,107 +1,167 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { VentaService } from '../../services/venta.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import Swal from 'sweetalert2';
 import { VentasInterface } from 'src/app/interfaces/ventas.interface';
-import { CajaService } from 'src/app/services/caja.service';
-import { Caja } from 'src/app/models/caja.models';
 import { DialogEmitirVentaComponent } from '../dialog-emitir-venta/dialog-emitir-venta.component';
 import { MatPaginator } from '@angular/material/paginator';
-import { StorageService } from 'src/app/services/storage.service';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
+import { EnumTipoDocumento } from 'src/app/enums/enum';
+import { finalize } from 'rxjs/operators';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { Notificar } from 'src/app/shared/notificaciones';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { ResultadoAnulacionDocumentoVenta } from 'src/app/interfaces/correccion-venta.interface';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-dialog-ventasgenerales',
   templateUrl: './dialog-ventasgenerales.component.html',
   styleUrls: ['./dialog-ventasgenerales.component.css']
 })
-export class DialogVentasgeneralesComponent implements OnInit {
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  listCaja: Caja[];
+export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
   ventas: VentasInterface[] = [];
   dataSource = new MatTableDataSource<VentasInterface>([]);
-  displayedColumns: string[] = [
-    'Caja', 'TipoDocumento', 'Documento', 'Cliente', 'FechaVenta',
-    'Moneda', 'Dscto', 'Inafecto', 'ValorVenta', 'IGV', 'Servicio',
-    'ICBPER', 'Total', 'EstadoDescripcion', 'EstadoPago'
-  ];
+  columnDefs: Array<{
+    key: string;
+    label: string;
+    width: number;
+    numeric?: boolean;
+  }> = [];
+
+  displayedColumns: string[] = [];
   ventaSeleccionada: VentasInterface | null = null;
-  listarTodosLosTurnos: boolean = false;
-  listarDI: boolean = false;
-  textoFiltro: string = '';
-  campoSeleccionado: string = 'TipoDocumento';
+  listarTodosLosTurnos = false;
+  incluirVentasExpress = false;
+  textoFiltro = '';
+  campoSeleccionado = 'TipoDocumento';
+  procesando = false;
+  comprobantesHabilitados = false;
+  correccionHabilitada = false;
+  cuotaComprobantesAgotada = false;
 
   constructor(
     public dialogRef: MatDialogRef<DialogVentasgeneralesComponent>,
     private ventaService: VentaService,
     private spinnerService: NgxSpinnerService,
-    private storageService: StorageService,
-    public dialog: MatDialog
+    private dialog: MatDialog,
+    private texts: TenantTextCatalogService,
+    private licenciaTenantService: LicenciaTenantService,
+    private configuracionService: ConfiguracionService,
   ) { }
 
   ngOnInit(): void {
+    this.licenciaTenantService.obtenerEstado().subscribe(estado => {
+      this.comprobantesHabilitados = this.licenciaTenantService.evaluar(
+        estado,
+        CARACTERISTICAS_LICENCIA.OperacionComprobantes,
+      );
+      if (this.comprobantesHabilitados) {
+        this.cargarCuotaComprobantes();
+      }
+      this.correccionHabilitada = this.licenciaTenantService.evaluar(
+        estado,
+        [
+          CARACTERISTICAS_LICENCIA.OperacionComprobantes,
+          CARACTERISTICAS_LICENCIA.VentasCorreccionDocumentos,
+        ],
+      );
+    });
+    this.columnDefs = [
+      { key: 'Caja', label: this.texts.get('register'), width: 100 },
+      { key: 'TipoDocumento', label: this.texts.get('documentType'), width: 130 },
+      { key: 'Documento', label: this.texts.get('documentNumber'), width: 130 },
+      { key: 'Cliente', label: this.texts.get('customer'), width: 230 },
+      { key: 'FechaVenta', label: this.texts.get('date'), width: 110 },
+      { key: 'Moneda', label: this.texts.get('currency'), width: 80 },
+      { key: 'Dscto', label: this.texts.get('discount'), width: 100, numeric: true },
+      { key: 'Total', label: this.texts.get('total'), width: 110, numeric: true },
+      { key: 'EstadoDescripcion', label: this.texts.get('state'), width: 120 },
+      { key: 'acciones', label: this.texts.get('options'), width: 80 }
+    ];
+    this.displayedColumns = this.columnDefs.map(column => column.key);
     this.loadVentas();
   }
 
-  ngAfterViewInit() {
+  ngAfterViewInit(): void {
     this.dataSource.paginator = this.paginator;
   }
-  loadVentas() {
-    const turno = this.listarTodosLosTurnos ? 0 : 1;
-    const di = this.listarDI ? 1 : 0;
-    this.getListadoVentas(turno, di);
-  }
 
-  handleNoTurnoAbiertoError() {
-    this.spinnerService.hide();
-    Swal.fire('Error', 'No se encontró la caja 001 o no tiene turno abierto', 'error');
+  loadVentas(): void {
+    const soloTurnoAbierto = this.listarTodosLosTurnos ? 0 : 1;
+    const incluirExpress = this.incluirVentasExpress
+      ? EnumTipoDocumento.Express
+      : 0;
+    this.getListadoVentas(soloTurnoAbierto, incluirExpress);
   }
   
-  getListadoVentas(soloTurnoAbierto: number, incluirDI: number) {
-    this.ventaService.getListadoVentas(soloTurnoAbierto, incluirDI).subscribe(
-      data => {
-        console.log('Datos recibidos:', data); // Agrega esto para verificar la estructura de los datos
-        this.ventas = data;
-        this.dataSource.data = data;
-        this.dataSource.paginator = this.paginator; 
+  private getListadoVentas(
+    soloTurnoAbierto: number,
+    incluirExpress: number
+  ): void {
+    this.procesando = true;
+    this.spinnerService.show();
+
+    this.ventaService.getListadoVentas(soloTurnoAbierto, incluirExpress)
+      .pipe(
+        finalize(() => {
+          this.procesando = false;
+          this.spinnerService.hide();
+        })
+      )
+      .subscribe({
+      next: (data) => {
+        this.ventas = data ?? [];
+        this.ventaSeleccionada = null;
         this.aplicarFiltro();
-        this.spinnerService.hide();
       },
-      error => {
-        console.error('Error al cargar ventas:', error);
-        Swal.fire('Algo anda mal', 'Error al cargar ventas', 'error');
-        this.spinnerService.hide();
-      }
-    );
+      // El interceptor global muestra los errores HTTP.
+      error: () => {}
+    });
   }
 
-  aplicarFiltro() {
+  aplicarFiltro(): void {
     if (!this.textoFiltro || !this.campoSeleccionado) {
       this.dataSource.data = this.ventas;
-      this.dataSource.paginator = this.paginator; 
     } else {
-      this.dataSource.data = this.ventas.filter(venta =>
-        venta[this.campoSeleccionado].toString().toLowerCase().includes(this.textoFiltro.toLowerCase())
-      );
-      this.dataSource.paginator = this.paginator; 
+      const filtro = this.textoFiltro.trim().toLocaleLowerCase();
+      this.dataSource.data = this.ventas.filter(venta => {
+        const valor = venta[this.campoSeleccionado];
+        return String(valor ?? '').toLocaleLowerCase().includes(filtro);
+      });
     }
+
+    this.dataSource.paginator = this.paginator;
+    this.paginator?.firstPage();
   }
 
+  limpiarFiltro(): void {
+    this.textoFiltro = '';
+    this.aplicarFiltro();
+  }
+
+  trackVenta(_: number, venta: VentasInterface): number {
+    return venta.IdVenta;
+  }
 
   actualizarLista(): void {
-    this.spinnerService.show(); 
     this.loadVentas();
   }
 
   seleccionarVenta(row: VentasInterface): void {
     this.ventaSeleccionada = row;
-    console.log('Fila seleccionada: ', row);
   }
 
   onNoClick(): void {
+    if (this.procesando) {
+      return;
+    }
     this.dialogRef.close();
   }
 
@@ -111,26 +171,52 @@ export class DialogVentasgeneralesComponent implements OnInit {
 
 
   OpenDialogEmitirVenta(): void {
+    if (!this.comprobantesHabilitados) {
+      Swal.fire(
+        'Funcionalidad no incluida',
+        'La licencia actual no incluye la emisión de comprobantes.',
+        'warning',
+      );
+      return;
+    }
+    if (this.cuotaComprobantesAgotada) {
+      Swal.fire(
+        'Cupo mensual agotado',
+        'La licencia alcanzó el máximo mensual de comprobantes.',
+        'warning',
+      );
+      return;
+    }
   
     const dialogEmitirVentaComponent = this.dialog.open(DialogEmitirVentaComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '900px', // Establece el ancho del diálogo
-      height: '610px', // Establece la altura del diálogo
-      // minWidth: '300px', // Establece el ancho mínimo del diálogo
-      // minHeight: '300px', // Establece la altura mínima del diálogo
-      // maxWidth: '80vw', // Establece el ancho máximo del diálogo en porcentaje de la ventana
-      // maxHeight: '80vh' // Establece la altura máxima del diálogo en porcentaje de la ventana
+      width: '900px',
+      maxWidth: '95vw'
+    });
+
+    dialogEmitirVentaComponent.afterClosed().subscribe(() => {
+      this.cargarCuotaComprobantes();
+      this.loadVentas();
+    });
+  }
+
+  private cargarCuotaComprobantes(): void {
+    this.licenciaTenantService.obtenerCuotaComprobantes().subscribe({
+      next: cuota => (this.cuotaComprobantesAgotada = cuota.Agotada),
+      // El backend conserva la autoridad: un fallo transitorio al consultar el
+      // indicador no debe bloquear el botón con un estado posiblemente obsoleto.
+      error: () => (this.cuotaComprobantesAgotada = false),
     });
   }
 
   reImprimirDocumento() {
     if (!this.ventaSeleccionada) {
       Swal.fire({
-        title: 'ReImprimir',
-        text: 'Seleccione un documento',
+        title: this.texts.get('reprint'),
+        text: this.texts.get('selectDocument'),
         icon: 'warning',
-        confirmButtonText: 'OK'
+        confirmButtonText: this.texts.get('accept')
       });
       return;
     }
@@ -156,41 +242,103 @@ export class DialogVentasgeneralesComponent implements OnInit {
 
   anularDocumento(): void {
     if (!this.ventaSeleccionada) {
-      Swal.fire('Error', 'Debe seleccionar una venta para anular', 'error');
+      Swal.fire(
+        this.texts.get('error'),
+        this.texts.get('selectSaleToVoid'),
+        'error'
+      );
       return;
     }
 
     // Confirmación de la anulación
     Swal.fire({
-      title: '¿Está seguro de anular el documento seleccionado ' + this.ventaSeleccionada.Documento +  '?',
-      text: 'Esta acción no se puede deshacer.',
+      title: this.texts.get('confirmVoidDocument', {
+        document: this.ventaSeleccionada.Documento
+      }),
+      text: this.texts.get('actionCannotBeUndone'),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Sí, anular',
-      cancelButtonText: 'No, cancelar'
-    }).then((result) => {
+      confirmButtonText: this.texts.get('yesVoid'),
+      cancelButtonText: this.texts.get('noCancel')
+    }).then(async (result) => {
       if (result.isConfirmed) {
+        const documentoOtorgado = await this.solicitarEstadoEntregaDocumento();
+        if (documentoOtorgado === undefined) {
+          return;
+        }
+
         // Realiza la anulación de la venta
         const idVenta = this.ventaSeleccionada.IdVenta;
         const motivo = 'Anulado desde el módulo de integración.';
-        const usuAnula = this.storageService.getCurrentSession().User.IdUsuario; // Debes reemplazar esto con el usuario actual
         const anularPedido = true; // Reemplaza si es necesario
 
         this.spinnerService.show(); // Mostrar spinner mientras se realiza la operación
 
-        this.ventaService.anularDocumentoVenta(idVenta, motivo, usuAnula, anularPedido).subscribe(
-          (response: any) => {
+        this.ventaService.anularDocumentoVenta(idVenta, {
+          Motivo: motivo,
+          AnularPedido: anularPedido,
+          DocumentoOtorgado: documentoOtorgado,
+        }).subscribe(
+          (response: ApiResponse<ResultadoAnulacionDocumentoVenta>) => {
             this.spinnerService.hide();
-            Swal.fire('Anulado', 'El documento se anuló con éxito', 'success');
+            Notificar.exito(
+              this.texts.get('voided'),
+              response.Data?.Mensaje || this.texts.get('documentVoidedSuccessfully'),
+            );
             this.actualizarLista(); // Actualiza la lista después de la anulación
           },
           (error: any) => {
             this.spinnerService.hide();
-            Swal.fire('Error', 'No se pudo anular el documento', 'error');
+            Swal.fire(
+              this.texts.get('error'),
+              this.texts.get('couldNotVoidDocument'),
+              'error'
+            );
           }
         );
       }
     });
+  }
+
+  private async solicitarEstadoEntregaDocumento(): Promise<boolean | null | undefined> {
+    let paisISO2 = this.configuracionService.snapshot?.PaisISO2?.toUpperCase();
+
+    if (!paisISO2) {
+      try {
+        const configuracion = await firstValueFrom(this.configuracionService.get());
+        paisISO2 = configuracion?.PaisISO2?.toUpperCase();
+      } catch {
+        Swal.fire({
+          title: this.texts.get('error'),
+          text: this.texts.get('couldNotDetermineFiscalCountry'),
+          icon: 'error',
+          confirmButtonText: this.texts.get('ok'),
+        });
+        return undefined;
+      }
+    }
+
+    if (paisISO2 !== 'PE') {
+      return null;
+    }
+
+    const result = await Swal.fire({
+      title: this.texts.get('documentDeliveredQuestion'),
+      text: this.texts.get('documentDeliveredExplanation'),
+      icon: 'question',
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: this.texts.get('documentDeliveredYes'),
+      denyButtonText: this.texts.get('documentDeliveredNo'),
+      cancelButtonText: this.texts.get('cancel'),
+      allowOutsideClick: false,
+    });
+
+    if (result.isDismissed) {
+      return undefined;
+    }
+
+    return result.isConfirmed;
   }
   
 }

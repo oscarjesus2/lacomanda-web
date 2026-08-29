@@ -8,10 +8,14 @@ export class Pago {
     Autorizacion: string;
     Tarjeta: Tarjeta;
     Vuelto: number;
+    IdTarjeta: number;
     Propina: number;
     MontoVenta: number;
     MontoPagado: number;
-    IdTipoPago: string;
+    MontoRecibido?: number;
+    TipoCambio?: number;
+    IdTipoPago: number;
+    IdMoneda: string;
     IdVenta: number;
     
     constructor(init?: Partial<Pago>) {

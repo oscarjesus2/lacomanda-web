@@ -1,0 +1,46 @@
+/* ── Búsqueda ─────────────────────────────────────────────── */
+.mant-search {
+  margin-top: 12px;
+}
+
+/* ── Título sección form ──────────────────────────────────── */
+.trj-form-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 16px;
+}
+
+.trj-form-title mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+}
+
+/* ── Fila de campos ───────────────────────────────────────── */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.form-row .form-field {
+  flex: 1 1 220px;
+  /* Los hints tienen alturas distintas: sin esto el grid estira los campos. */
+  align-self: start;
+}
+
+/* ── Celdas sin valor ─────────────────────────────────────── */
+.trj-na {
+  color: var(--color-text-muted, #8b7c73);
+}
+
+.trj-empty {
+  padding: 18px;
+  text-align: center;
+  color: var(--color-text-muted, #8b7c73);
+}

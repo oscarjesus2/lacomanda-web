@@ -1,11 +1,16 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 import { VentasDTO } from 'src/app/interfaces/ventas.interface';
+import { CajaTipoDocumento } from 'src/app/models/caja-tipo-documento.model';
+import { Moneda } from 'src/app/models/moneda.models';
 import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 import { StorageService } from 'src/app/services/storage.service';
+import { CajaTipoDocumentoService } from 'src/app/services/caja-tipo-documento.service';
+import { MonedaService } from 'src/app/services/moneda.service';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { VentaService } from 'src/app/services/venta.service';
 import Swal from 'sweetalert2';
@@ -14,271 +19,361 @@ import { Usuario } from 'src/app/models/usuario.models';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { DialogMTextComponent } from '../dialog-mtext/dialog-mtext.component';
 import { NivelUsuarioEnum } from 'src/app/enums/enum';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { DialogCorregirVentaComponent } from '../dialog-corregir-venta/dialog-corregir-venta.component';
+import { Notificar } from 'src/app/shared/notificaciones';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
+import { ResultadoAnulacionDocumentoVenta } from 'src/app/interfaces/correccion-venta.interface';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-dialog-documentos-emitidos',
   templateUrl: './dialog-documentos-emitidos.component.html',
   styleUrls: ['./dialog-documentos-emitidos.component.css']
 })
-export class DialogDocumentosEmitidosComponent {
+export class DialogDocumentosEmitidosComponent implements OnInit {
 
+  // ── Filtros ───────────────────────────────────────────────────────────────
+  /** Tipos de documento configurados en la caja actual (solo Activo=true) */
+  tiposDocumento: CajaTipoDocumento[] = [];
+  /** Monedas dinámicas por país (Soles, Dólares, Euros, etc.) */
+  monedas: Moneda[] = [];
 
-  selectedFirstRow: string = 'todos'; // Inicialmente seleccionado "Todos" en la primera fila
-  selectedSecondRow: string = 'todos'; // Inicialmente seleccionado "Todos" en la segunda fila
-
-  // Datos de la grilla (puedes reemplazar esto por datos dinámicos)
-  displayedColumns: string[] = ['tipo', 'serie', 'numDoc', 'fecha', 'monto', 'cliente', 'numeroDoi', 'forr'];
-  dataSource = new MatTableDataSource<VentasDTO>(); 
-  idTurno: number;
-  filterTipo: string = ''; // Filtro para Tipo ('TK' para Boleta, 'FT' para Factura, etc.)
-  filterFormaPago: string = ''; // Filtro para FormaPago ('Soles', 'Dolares', etc.)
-  selectedRow: VentasDTO;
-  nroDocumento: string = '';
+  /** IdTipoDocumento seleccionado; '' = todos */
+  filterTipoId: string    = '';
+  filterFormaPago: string = '';
+  nroDocumento: string    = '';
   motivoAnulacion: string = '';
-  idUsuarioAdmin: number;
 
-  constructor(private ventaService: VentaService,
+  // ── Tabla ─────────────────────────────────────────────────────────────────
+  displayedColumns: string[] = ['tipo', 'serie', 'numDoc', 'fecha', 'monto', 'cliente', 'numeroDoi', 'forr', 'estado'];
+  dataSource = new MatTableDataSource<VentasDTO>();
+  selectedRow: VentasDTO | null = null;
+  comprobantesHabilitados = false;
+  correccionHabilitada = false;
+
+  get isDocumentoInactivo(): boolean {
+    return !!this.selectedRow && this.selectedRow.Estado !== 'Generado';
+  }
+  idTurno: number;
+
+  constructor(
+    private ventaService: VentaService,
     private usuarioService: UsuarioService,
+    private cajaTipoDocumentoService: CajaTipoDocumentoService,
+    private monedaService: MonedaService,
+    private configuracionService: ConfiguracionService,
     private spinnerService: NgxSpinnerService,
     private storageService: StorageService,
     public dialog: MatDialog,
     public dialogRef: MatDialogRef<DialogDocumentosEmitidosComponent>,
     private qzTrayService: QzTrayV224Service,
+    private texts: TenantTextCatalogService,
+    private licenciaTenantService: LicenciaTenantService,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.idTurno = data.idTurno;
-  }
-  ngOnInit(): void {
-    this.getVentasPorTurno(this.idTurno); 
+    this.idCaja  = data.idCaja;
   }
 
-  
-  selectRow(row: any) {
-    this.selectedRow = row; // Asigna la fila seleccionada a la propiedad
+  idCaja: number;
+
+  ngOnInit(): void {
+    this.licenciaTenantService.obtenerEstado().subscribe(estado => {
+      this.comprobantesHabilitados = this.licenciaTenantService.evaluar(
+        estado,
+        CARACTERISTICAS_LICENCIA.OperacionComprobantes,
+      );
+      this.correccionHabilitada = this.licenciaTenantService.evaluar(
+        estado,
+        [
+          CARACTERISTICAS_LICENCIA.OperacionComprobantes,
+          CARACTERISTICAS_LICENCIA.VentasCorreccionDocumentos,
+        ],
+      );
+    });
+    this.loadTiposDocumento();
+    this.loadMonedas();
+    this.getVentasPorTurno(this.idTurno);
   }
-  
+
+  // ── Tipos de documento de la caja ────────────────────────────────────────
+
+  loadTiposDocumento(): void {
+    this.cajaTipoDocumentoService.GetTiposDocumentos(this.idCaja).subscribe({
+      next: (docs) => {
+        // Solo mostrar los tipos activos configurados en esta caja
+        this.tiposDocumento = (docs ?? []).filter(d => d.Activo);
+      },
+      error: () => { this.tiposDocumento = []; }
+    });
+  }
+
+  // ── Monedas por país ──────────────────────────────────────────────────────
+
+  loadMonedas(): void {
+    this.configuracionService.get().subscribe({
+      next: (cfg) => {
+        const paisISO2 = cfg?.PaisISO2;
+        const obs = paisISO2
+          ? this.monedaService.getMonedaPorPais(paisISO2)
+          : this.monedaService.getMoneda();
+        obs.subscribe({
+          next: (resp) => { this.monedas = resp?.Data ?? []; },
+          error: ()    => { this.monedas = []; }
+        });
+      },
+      error: () => {
+        this.monedaService.getMoneda().subscribe({
+          next: (resp) => { this.monedas = resp?.Data ?? []; },
+          error: ()    => { this.monedas = []; }
+        });
+      }
+    });
+  }
+
+  // ── Selección de filtros ──────────────────────────────────────────────────
+
+  selectTipoDoc(tipo: CajaTipoDocumento | null): void {
+    this.filterTipoId = tipo ? tipo.IdTipoDocumento.toString() : '';
+    this.selectedRow  = null;
+    this.applyFilter();
+  }
+
+  selectFormaPago(formaPago: string): void {
+    this.filterFormaPago = formaPago === 'todos' ? '' : formaPago;
+    this.selectedRow     = null;
+    this.applyFilter();
+  }
+
+  selectCredito(): void {
+    // Filtro especial: documentos al crédito (EstadoPago pendiente o similar)
+    // Mantener lógica original — se puede extender según el modelo de negocio
+    this.filterTipoId    = 'credito';
+    this.selectedRow     = null;
+    this.applyFilter();
+  }
+
+  applyFilter(): void {
+    this.dataSource.filterPredicate = (data: VentasDTO) => {
+      const tipoMatch = this.filterTipoId === '' ||
+                        this.filterTipoId === 'credito'
+                          ? true  // crédito: sin filtro de tipo (se filtra por estado si aplica)
+                          : data.IdTipoDocumento === this.filterTipoId;
+
+      const pagoMatch = this.filterFormaPago === '' || data.FormaPago === this.filterFormaPago;
+      const nroMatch  = this.nroDocumento === ''    || data.NroDoc.includes(this.nroDocumento);
+      return tipoMatch && pagoMatch && nroMatch;
+    };
+    this.dataSource.filter = 'apply';
+  }
+
+  onNroDocumentoChange(): void { this.applyFilter(); }
+
+  // ── Datos ─────────────────────────────────────────────────────────────────
+
+  selectRow(row: VentasDTO): void { this.selectedRow = row; }
+
   getVentasPorTurno(idTurno: number): void {
     this.ventaService.getVentasTurno(idTurno).subscribe((response: ApiResponse<VentasDTO[]>) => {
       if (response.Success) {
-        this.dataSource.data = response.Data; // Llena la tabla con los datos
+        this.dataSource.data = response.Data;
         this.applyFilter();
       } else {
         console.error('Error al obtener los datos', response.Message);
       }
     });
-  } 
-  async imprimir(listImpresionDTO: ImpresionDTO[]): Promise<number> {
-    let contador: number = 0;
+  }
 
+  // ── Acciones ──────────────────────────────────────────────────────────────
+
+  async imprimir(listImpresionDTO: ImpresionDTO[]): Promise<number> {
+    let contador = 0;
     for (const element of listImpresionDTO) {
-      const printerName = element.NombreImpresora;
-      const success = await this.qzTrayService.printPDF(element.Documento, printerName);
-      if (success) {
-        contador += 1;
-      }
+      const success = await this.qzTrayService.printPDF(element.Documento, element.NombreImpresora);
+      if (success) contador++;
     }
     return contador;
   }
 
-  reImprimirDocumento() {
-    if (!this.selectedRow) {
-      Swal.fire({
-        title: 'Anular',
-        text: 'Seleccione un documento',
-        icon: 'warning',
-        confirmButtonText: 'OK'
-      });
-      return;
-    }
-
-    this.ventaService.getImpresionComprobanteVenta(this.selectedRow.IdVenta, 1).subscribe((response: ApiResponse<ImpresionDTO[]>) => {
-      if (response.Success) {
-        this.imprimir(response.Data);
-      } else {
-        console.error('Error al obtener los datos', response.Message);
+  reImprimirDocumento(): void {
+    if (!this.selectedRow) { this.alertSeleccione(); return; }
+    this.ventaService.getImpresionComprobanteVenta(this.selectedRow.IdVenta, 1).subscribe({
+      next: (response: ApiResponse<ImpresionDTO[]>) => {
+        if (response.Success) this.imprimir(response.Data);
       }
     });
   }
 
-  // Función para seleccionar un botón en la primera fila
-  selectFirstRow(tipo: string): void {
-    this.filterTipo = tipo === 'todos' ? '' : tipo; // Si es "todos", quitamos el filtro
-    this.applyFilter(); // Aplicar el filtro
-    this.selectedRow = null;
-  }
-
-  // Filtrar según la forma de pago (segunda fila de botones)
-  selectSecondRow(formaPago: string): void {
-    this.filterFormaPago = formaPago === 'todos' ? '' : formaPago; // Si es "todos", quitamos el filtro
-    this.applyFilter(); // Aplicar el filtro
-    this.selectedRow = null;
-  }
-
-
-  applyFilter(): void {
-    this.dataSource.filterPredicate = (data: VentasDTO, filter: string) => {
-      const tipoMatches = this.filterTipo === '' || data.Tipo === this.filterTipo;
-      const formaPagoMatches = this.filterFormaPago === '' || data.FormaPago === this.filterFormaPago;
-      const nroDocumentoMatches = this.nroDocumento === '' || data.NroDoc.includes(this.nroDocumento); 
-      return tipoMatches && formaPagoMatches && nroDocumentoMatches; // Debe cumplir con ambos filtros
-    };
-
-    this.dataSource.filter = 'apply'; // Disparar el filtro (no importa el valor, solo se necesita un cambio en el filtro para aplicarlo)
-  }
-
-  anularDocumento() {
+  corregirVenta(): void {
     if (!this.selectedRow) {
+      this.alertSeleccione();
+      return;
+    }
+
+    if (this.storageService.getCurrentUser().IdNivel
+        !== NivelUsuarioEnum.Administrador) {
       Swal.fire({
-        title: 'Anular',
-        text: 'Seleccione un documento',
-        icon: 'warning',
-        confirmButtonText: 'OK'
+        title: this.texts.get('attention'),
+        text: this.texts.get('noPermissionEnterAdminKey'),
+        icon: 'error',
+        confirmButtonText: this.texts.get('ok'),
       });
       return;
     }
 
-    const IntIdVenta = this.selectedRow.IdVenta;
-    const idTipoPedido = this.selectedRow.IdTipoPedido;
-    let idUsuarioAnula = 0;
-  
-    if (this.motivoAnulacion === "") {
-      Swal.fire({
-        title: 'Anular',
-        text: 'Ingrese el Motivo de Anulación del Documento',
-        icon: 'warning',
-        confirmButtonText: 'OK'
-      });
+    const dialogRef = this.dialog.open(DialogCorregirVentaComponent, {
+      width: '92vw',
+      maxWidth: '1120px',
+      data: { idVenta: this.selectedRow.IdVenta },
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.actualizado) {
+        this.getVentasPorTurno(this.idTurno);
+        this.selectedRow = null;
+      }
+    });
+  }
+
+  anularDocumento(): void {
+    if (!this.selectedRow) { this.alertSeleccione(); return; }
+    if (!this.motivoAnulacion) {
+      Swal.fire({ title: this.texts.get('void'), text: this.texts.get('enterVoidReasonMsg'), icon: 'warning', confirmButtonText: this.texts.get('ok') });
       return;
     }
-  
+
+    const IntIdVenta    = this.selectedRow.IdVenta;
+    const idTipoPedido  = this.selectedRow.IdTipoPedido;
+    let   idUsuarioAnula = 0;
+
     if (this.storageService.getCurrentUser().IdNivel !== 1) {
-      Swal.fire({
-        title: 'Anular',
-        text: 'No tiene permiso para ANULAR. Ingresa la Clave del Administrador',
-        icon: 'error',
-        confirmButtonText: 'OK'
-      }).then(async () => {
-        idUsuarioAnula = await this.abrirModalClaveAnula();  // Ahora esperamos a que se resuelva la promesa
-        this.confirmarAnulacion(IntIdVenta, idTipoPedido, idUsuarioAnula);
-      });
+      Swal.fire({ title: this.texts.get('void'), text: this.texts.get('noPermissionEnterAdminKey'), icon: 'error', confirmButtonText: this.texts.get('ok') })
+        .then(async () => {
+          idUsuarioAnula = 0
+          this.confirmarAnulacion(IntIdVenta, idTipoPedido, idUsuarioAnula);
+        });
     } else {
-      idUsuarioAnula = this.storageService.getCurrentUser().IdUsuario;
+      idUsuarioAnula = 0
       this.confirmarAnulacion(IntIdVenta, idTipoPedido, idUsuarioAnula);
     }
   }
-  
-  confirmarAnulacion(IntIdVenta: number, idTipoPedido: string, idUsuarioAnula: number) {
-    Swal.fire({
-      title: 'Anulación',
-      text: '¿Está seguro de Anular el Documento seleccionado?',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Sí',
-      cancelButtonText: 'No'
+
+  confirmarAnulacion(IntIdVenta: number, idTipoPedido: string, idUsuarioAnula: number): void {
+    Swal.fire({ title: this.texts.get('void'), text: this.texts.get('confirmVoidThisDocument'), icon: 'question',
+      showCancelButton: true, confirmButtonText: this.texts.get('yes'), cancelButtonText: this.texts.get('no')
     }).then((result) => {
-      if (result.isConfirmed) {
-        if (idTipoPedido === "004") {
-          this.anularDocumentoVenta(IntIdVenta, idUsuarioAnula, true);
-        } else {
-          Swal.fire({
-            title: 'Anular Pedido',
-            text: '¿Desea Anular también el Pedido del Documento?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí',
-            cancelButtonText: 'No'
-          }).then((result) => {
-            const anularPedido = result.isConfirmed;
-            this.anularDocumentoVenta(IntIdVenta, idUsuarioAnula, anularPedido);
-          });
-        }
+      if (!result.isConfirmed) return;
+      if (idTipoPedido === '004') {
+        this.anularDocumentoVenta(IntIdVenta, true);
+      } else {
+        Swal.fire({ title: this.texts.get('voidOrderTitleSimple'), text: this.texts.get('alsoVoidOrder'), icon: 'warning',
+          showCancelButton: true, confirmButtonText: this.texts.get('yes'), cancelButtonText: this.texts.get('no')
+        }).then(r => this.anularDocumentoVenta(IntIdVenta, r.isConfirmed));
       }
     });
   }
-  
-  anularDocumentoVenta(IntIdVenta: number, idUsuarioAnula: number, anularPedido: boolean) {
+
+  async anularDocumentoVenta(IntIdVenta: number, anularPedido: boolean): Promise<void> {
+    const documentoOtorgado = await this.solicitarEstadoEntregaDocumento();
+    if (documentoOtorgado === undefined) {
+      return;
+    }
+
     this.spinnerService.show();
-    this.ventaService.anularDocumentoVenta(IntIdVenta, this.motivoAnulacion, idUsuarioAnula, anularPedido).subscribe(
-      (response: ApiResponse<ImpresionDTO[]>) => {
+    this.ventaService.anularDocumentoVenta(IntIdVenta, {
+      Motivo: this.motivoAnulacion,
+      AnularPedido: anularPedido,
+      DocumentoOtorgado: documentoOtorgado,
+    }).subscribe({
+      next: (response: ApiResponse<ResultadoAnulacionDocumentoVenta>) => {
         if (response.Success) {
-          Swal.fire('Anulado', 'El documento se anuló con éxito', 'success');
-          this.getVentasPorTurno(this.idTurno); 
-          this.motivoAnulacion='';
+          Notificar.exito(
+            this.texts.get('voided'),
+            response.Data?.Mensaje || this.texts.get('documentVoidedSuccessfully'),
+          );
+          this.getVentasPorTurno(this.idTurno);
+          this.motivoAnulacion = '';
           this.selectedRow = null;
         }
         this.spinnerService.hide();
       },
-      () => {
-        this.spinnerService.hide();
-      }
-    );
+      error: () => this.spinnerService.hide()
+    });
   }
-  
-  abrirTeclado(): void {
-    const dialogRef = this.dialog.open(DialogMTextComponent, {
-      width: '800px',
-      data: { texto: '' } // Puedes pasar algún valor inicial si lo deseas
+
+  private async solicitarEstadoEntregaDocumento(): Promise<boolean | null | undefined> {
+    let paisISO2 = this.configuracionService.snapshot?.PaisISO2?.toUpperCase();
+
+    if (!paisISO2) {
+      try {
+        const configuracion = await firstValueFrom(this.configuracionService.get());
+        paisISO2 = configuracion?.PaisISO2?.toUpperCase();
+      } catch {
+        Swal.fire({
+          title: this.texts.get('error'),
+          text: this.texts.get('couldNotDetermineFiscalCountry'),
+          icon: 'error',
+          confirmButtonText: this.texts.get('ok'),
+        });
+        return undefined;
+      }
+    }
+
+    if (paisISO2 !== 'PE') {
+      return null;
+    }
+
+    const result = await Swal.fire({
+      title: this.texts.get('documentDeliveredQuestion'),
+      text: this.texts.get('documentDeliveredExplanation'),
+      icon: 'question',
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: this.texts.get('documentDeliveredYes'),
+      denyButtonText: this.texts.get('documentDeliveredNo'),
+      cancelButtonText: this.texts.get('cancel'),
+      allowOutsideClick: false,
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        // Agrega el texto ingresado por el usuario a las observaciones
-        this.motivoAnulacion = result.value ;
-      }
-    });
+    if (result.isDismissed) {
+      return undefined;
+    }
+
+    return result.isConfirmed;
   }
-  
-  // Método para abrir el modal de clave de anulación
+
+  abrirTeclado(): void {
+    const dialogRef = this.dialog.open(DialogMTextComponent, { width: '800px', data: { texto: '' } });
+    dialogRef.afterClosed().subscribe(result => { if (result) this.motivoAnulacion = result.value; });
+  }
+
   abrirModalClaveAnula(): Promise<number> {
     return new Promise((resolve) => {
       const dialogRef = this.dialog.open(DialogMCantComponent, {
         width: '350px',
-        data: {
-          title: 'Ingresar Código de Administrador',
-          hideNumber: true,
-          decimalActive: false
-        }
+        data: { title: this.texts.get('administratorCode'), hideNumber: true, decimalActive: false }
       });
-  
       dialogRef.afterClosed().subscribe(result => {
-        if (result && result.value) {
-          const codigoAdmin = result.value;
-  
-          // Validar el código del administrador llamando a la API
-          this.usuarioService.getUsuarioAuth(NivelUsuarioEnum.Administrador, codigoAdmin).subscribe((response: ApiResponse<Usuario>) => {
-            if (response.Success && response.Data) {
-              resolve(response.Data.IdUsuario);  // Devolvemos el valor
-            } else {
-              Swal.fire({
-                title: 'Código inválido',
-                text: 'El código ingresado no es correcto.',
-                icon: 'error',
-                confirmButtonText: 'OK'
-              });
-              resolve(-1); // Código inválido
+        if (result?.value) {
+          this.usuarioService.getUsuarioAuth(NivelUsuarioEnum.Administrador, result.value).subscribe({
+            next: (response: ApiResponse<Usuario>) => {
+              if (response.Success && response.Data) resolve(response.Data.IdUsuario);
+              else { Swal.fire(this.texts.get('invalidCode'), '', 'error'); resolve(-1); }
             }
           });
         } else {
-          Swal.fire({
-            title: 'Operación cancelada',
-            text: 'No se ingresó ningún código.',
-            icon: 'info',
-            confirmButtonText: 'OK'
-          });
-          resolve(-1);  // Modal cancelado
+          Swal.fire(this.texts.get('operationCancelled'), '', 'info');
+          resolve(-1);
         }
       });
     });
   }
-  
-  
-  
 
-  onNroDocumentoChange(): void {
-    this.applyFilter(); // Aplicar el filtro cada vez que cambie el número de documento
+  private alertSeleccione(): void {
+    Swal.fire({ title: this.texts.get('attention'), text: this.texts.get('selectDocument'), icon: 'warning', confirmButtonText: this.texts.get('ok') });
   }
 
-  salir() {
-    this.dialogRef.close();
-   }
+  salir(): void { this.dialogRef.close(); }
 }

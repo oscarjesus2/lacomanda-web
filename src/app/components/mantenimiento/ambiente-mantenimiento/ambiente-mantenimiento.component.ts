@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
@@ -12,15 +12,20 @@ import { AmbienteService } from 'src/app/services/ambiente.service';
 // Reutiliza el selector genérico de posiciones:
 import { PosicionSelectorDialogComponent, PosicionSelectorData } from '../../posicion-selector-dialog/posicion-selector-dialog.component';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-ambiente-mantenimiento',
   templateUrl: './ambiente-mantenimiento.component.html',
   styleUrls: ['./ambiente-mantenimiento.component.css']
 })
-export class AmbienteMantenimientoComponent implements OnInit, AfterViewInit {
+export class AmbienteMantenimientoComponent implements OnInit {
   @ViewChild('ambienteForm') ambienteForm: NgForm;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.filteredAmbientes.paginator = value;
+    }
+  }
 
   showForm = false;
 
@@ -46,10 +51,6 @@ export class AmbienteMantenimientoComponent implements OnInit, AfterViewInit {
     this.cargarAmbientes();
   }
 
-  ngAfterViewInit(): void {
-    this.filteredAmbientes.paginator = this.paginator;
-  }
-
   cargarAmbientes(): void {
     this.spinner.show();
     this.ambienteService.getAllAmbiente().subscribe({
@@ -61,7 +62,6 @@ export class AmbienteMantenimientoComponent implements OnInit, AfterViewInit {
           Swal.fire('Error', res.Message || 'Error al cargar ambientes', 'error');
         }
         this.spinner.hide();
-        this.filteredAmbientes.paginator = this.paginator;
       },
       error: () => {
         this.spinner.hide();
@@ -106,7 +106,7 @@ export class AmbienteMantenimientoComponent implements OnInit, AfterViewInit {
               return;
             }
             this.cargarAmbientes();
-            Swal.fire('Ambiente eliminado', '', 'success');
+            Notificar.exito('Ambiente eliminado', '');
           },
           error: () => Swal.fire('Error', 'No se pudo eliminar', 'error')
         });
@@ -128,7 +128,7 @@ export class AmbienteMantenimientoComponent implements OnInit, AfterViewInit {
     };
 
     const ref = this.dialog.open(PosicionSelectorDialogComponent, {
-      width: '560px',
+      width: '600px',
       data
     });
 
@@ -173,7 +173,7 @@ export class AmbienteMantenimientoComponent implements OnInit, AfterViewInit {
           }
           this.cargarAmbientes();
           this.showForm = false;
-          Swal.fire('Ambiente actualizado', '', 'success');
+          Notificar.exito('Ambiente actualizado', '');
         },
         error: () => Swal.fire('Error', 'No se pudo actualizar', 'error')
       });
@@ -186,7 +186,7 @@ export class AmbienteMantenimientoComponent implements OnInit, AfterViewInit {
           }
           this.cargarAmbientes();
           this.showForm = false;
-          Swal.fire('Ambiente creado', '', 'success');
+          Notificar.exito('Ambiente creado', '');
         },
         error: () => Swal.fire('Error', 'No se pudo crear', 'error')
       });

@@ -1,28 +1,46 @@
-<h3 class="titulo-dialog">Seleccionar posición</h3>
-
-<div class="legend">
-  <span class="badge libre"></span> Libre
-  <span class="badge ocupada"></span> Ocupada
-  <span class="badge elegida"></span> Elegida
-</div>
-
-<div class="grid"
-     [style.gridTemplateColumns]="'repeat(' + data.cols + ', auto)'">
-  <button
-    *ngFor="let n of grid"
-    mat-button
-    class="cell"
-    [class.occupied]="isTaken(n)"
-    [class.selected]="selected === n"
-    (click)="pick(n)"
-    [disabled]="isTaken(n)"
-    [matTooltip]="'Posición ' + n"
-  >
-    {{ n }}
+<div class="mant-panel pos-panel">
+  <!-- CERRAR -->
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="cancel()">
+    <mat-icon>close</mat-icon>
   </button>
-</div>
 
-<div class="dialog-actions">
-  <button mat-raised-button color="primary" (click)="confirm()" [disabled]="!selected">Aceptar</button>
-  <button mat-raised-button color="warn" (click)="cancel()">Cancelar</button>
+  <h3 class="pos-panel__title">{{ 'selectPositionTitle' | tenantText }}</h3>
+
+  <div class="pos-panel__legend">
+    <span class="pos-badge pos-badge--free"></span> {{ 'free' | tenantText }}
+    <span class="pos-badge pos-badge--taken"></span> {{ 'occupied' | tenantText }}
+    <span class="pos-badge pos-badge--selected"></span> {{ 'selected' | tenantText }}
+  </div>
+
+  <div
+    class="pos-grid"
+    [style.gridTemplateColumns]="'repeat(' + data.cols + ', auto)'"
+  >
+    <button
+      *ngFor="let n of grid"
+      mat-button
+      class="pos-cell"
+      [class.pos-cell--taken]="isTaken(n)"
+      [class.pos-cell--selected]="selected === n"
+      (click)="pick(n)"
+      [disabled]="isTaken(n)"
+      [matTooltip]="('position' | tenantText) + ' ' + n"
+    >
+      {{ n }}
+    </button>
+  </div>
+
+  <div class="pos-panel__actions">
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="confirm()"
+      [disabled]="!selected"
+    >
+      {{ 'accept' | tenantText }}
+    </button>
+    <button mat-stroked-button (click)="cancel()">
+      {{ 'cancel' | tenantText }}
+    </button>
+  </div>
 </div>

@@ -9,8 +9,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { EnumTipoIdentidad } from 'src/app/enums/enum';
 import { EmpleadoService } from 'src/app/services/empleado.service';
-import { CargoService } from 'src/app/services/cargo.service';
-import { Cargo } from 'src/app/models/cargo.models';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 
 @Component({
@@ -24,25 +23,23 @@ export class EmpleadoMantenimientoComponent implements OnInit {
   empleados: Empleado[] = [];
   filteredEmpleados= new MatTableDataSource<Empleado>([]);
   filtroEmpleado: string = '';
-  listCargo: Cargo[] = [];
   showForm: boolean = false; // Controla la visibilidad del formulario
   displayedColumns: string[] = ['nombre','dni', 'direccion',  'telefono', 'actions'];
   
   constructor(
     private dialogRef: MatDialogRef<EmpleadoMantenimientoComponent >,
     private empleadoService: EmpleadoService,
-    private spinnerService: NgxSpinnerService,
-    private cargoService: CargoService) {}
-    @ViewChild(MatPaginator) paginator: MatPaginator;
+    private spinnerService: NgxSpinnerService) {}
+    @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+      if (value) {
+        this.filteredEmpleados.paginator = value;
+      }
+    }
 
     
   ngOnInit(): void {
     this.cargarEmpleados();
-    this.cargarCargos();
-  }
 
-  ngAfterViewInit() {
-    this.filteredEmpleados.paginator = this.paginator;
   }
 
   cargarEmpleados(): void {
@@ -55,21 +52,8 @@ export class EmpleadoMantenimientoComponent implements OnInit {
             Swal.fire('Error', response.Message || 'Error al cargar los empleados', 'error');
         }
         this.spinnerService.hide();
-        this.filteredEmpleados.paginator = this.paginator; // Reasigna el paginador
     });
 }
-  cargarCargos(): void {
-    this.spinnerService.show();   
-    this.cargoService.getCargos().subscribe(response => {
-      if (response.Success) {
-        this.listCargo = response.Data;
-        this.spinnerService.hide();
-    } else {
-      this.spinnerService.hide();
-        Swal.fire('Error', response.Message || 'Error al cargar los cargos', 'error');
-    }
-    });
-  }
 
   nuevoEmpleado(): void {
     this.resetForm();
@@ -109,7 +93,7 @@ export class EmpleadoMantenimientoComponent implements OnInit {
                 if (response.Success) {
                     this.cargarEmpleados();
                     this.showForm = false; // Ocultar formulario al guardar
-                    Swal.fire('Empleado actualizado', '', 'success');
+                    Notificar.exito('Empleado actualizado', '');
                 } else {
                     Swal.fire('Error', response.Message || 'Error al actualizar el empleado', 'error');
                 }
@@ -121,7 +105,7 @@ export class EmpleadoMantenimientoComponent implements OnInit {
                 if (response.Success) {
                     this.cargarEmpleados();
                     this.showForm = false; // Ocultar formulario al guardar
-                    Swal.fire('Empleado creado', '', 'success');
+                    Notificar.exito('Empleado creado', '');
                 } else {
                     Swal.fire('Error', response.Message || 'Error al crear el empleado', 'error');
                 }
@@ -136,9 +120,6 @@ export class EmpleadoMantenimientoComponent implements OnInit {
     this.showForm = true; // Mostrar formulario al editar
   }
 
-  compareCargo(tipo1: Cargo, tipo2: Cargo): boolean {
-    return tipo1 && tipo2 ? tipo1.IdCargo === tipo2.IdCargo: tipo1 === tipo2;
-}
 
   onDelete(id: string): void {
     Swal.fire({
@@ -152,7 +133,7 @@ export class EmpleadoMantenimientoComponent implements OnInit {
       if (result.isConfirmed) {
         this.empleadoService.deleteEmpleado(id).subscribe(() => {
           this.cargarEmpleados();
-          Swal.fire('Empleado eliminado', '', 'success');
+          Notificar.exito('Empleado eliminado', '');
         });
       }
     });

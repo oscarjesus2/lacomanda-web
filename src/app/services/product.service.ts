@@ -6,6 +6,7 @@ import { PedidoDet } from '../models/pedidodet.models';
 import { ProductSave } from '../models/product.save.models';
 import { environment } from 'src/environments/environment';  // Importa el entorno correspondiente
 import { ApiResponse } from '../interfaces/apirResponse.interface';
+import { EntradaProducto } from '../interfaces/entradaProducto.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -18,6 +19,11 @@ export class ProductoService {
 
     getProductosParaVenta(ip: string): Observable<Producto[]> {
         return this.http.get<Producto[]>(this.basePath + '/ListarProductosParaVenta/' + ip);
+    }
+
+    // Productos de tipo Entrada (canal ENTRADAS). El endpoint devuelve el array directo.
+    getEntradas(): Observable<EntradaProducto[]> {
+        return this.http.get<EntradaProducto[]>(`${this.basePath}/entradas`);
     }
 
     getAllProductosTablero(): Observable<ApiResponse<Producto[]>> {
@@ -43,6 +49,20 @@ export class ProductoService {
     }
     eliminar(id: number): Observable<ApiResponse<boolean>> {
         return this.http.delete<ApiResponse<boolean>>(`${this.basePath}/${id}`);
+    }
+
+    obtenerImagen(id: number): Observable<Blob> {
+        return this.http.get(`${this.basePath}/${id}/imagen`, { responseType: 'blob' });
+    }
+
+    guardarImagen(id: number, archivo: File): Observable<ApiResponse<boolean>> {
+        const formData = new FormData();
+        formData.append('archivo', archivo, archivo.name);
+        return this.http.put<ApiResponse<boolean>>(`${this.basePath}/${id}/imagen`, formData);
+    }
+
+    eliminarImagen(id: number): Observable<ApiResponse<boolean>> {
+        return this.http.delete<ApiResponse<boolean>>(`${this.basePath}/${id}/imagen`);
     }
 
 }

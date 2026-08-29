@@ -1,153 +1,247 @@
-/* Contenedor principal en horizontal */
-.custom-toggle-container {
+/* ============================================================
+   dashboard.component.css
+   ============================================================ */
+
+.dashboard {
+  min-height: 100vh;
   display: flex;
-  flex-wrap: wrap; /* Ajusta elementos si no caben en una fila */
-  gap: 20px; /* Espaciado entre toggles */
-  justify-content: flex-start;
+  flex-direction: column;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
-/* Estilo para el toggle */
-.custom-toggle {
+.dashboard__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 18px;
+  width: 100%;
+}
+
+/* ── Título de página (mismo patrón que admin) ─────────────── */
+.dashboard__header {
   display: flex;
   align-items: center;
+  gap: 12px;
+  padding: 18px 22px 14px;
+}
+
+.dashboard__header-accent {
+  width: 4px;
+  height: 32px;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, var(--color-primary), var(--color-primary-light));
+  flex-shrink: 0;
+}
+
+.dashboard__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--color-primary-dark);
+  line-height: 1;
+}
+
+.dashboard__subtitle {
+  margin: 4px 0 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* ── Barra de filtros ──────────────────────────────────────── */
+.dashboard__filters {
+  margin: 0 22px 18px;
+  padding: 14px 18px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Controles de fecha ────────────────────────────────────── */
+.dashboard__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  margin-top: 10px;
+  align-items: flex-end;
+}
+
+.dashboard__field {
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  max-width: 240px;
+}
+
+.dashboard__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.dashboard__input {
+  height: 38px;
+  border-radius: var(--radius-pill);
+  padding: 0 14px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface-warm);
+  color: var(--color-text);
+  font-size: 0.88rem;
+  outline: none;
+  transition: var(--transition-fast);
+}
+
+.dashboard__input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(249, 168, 37, 0.22);
+  background: var(--color-surface);
+}
+
+/* ── Toggles ───────────────────────────────────────────────── */
+.dashboard__toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.dash-toggle {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 16px 7px 58px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-warm);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-xs);
   cursor: pointer;
   user-select: none;
-  padding: 5px 10px;
-  border-radius: 5px;
-  transition: background-color 0.3s, color 0.3s;
+  transition: var(--transition-fast);
 }
 
-
-/* Estilo por defecto */
-.custom-toggle {
-  color: white; /* Color del texto */
+.dash-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary-light);
 }
 
-/* Checkbox (oculto) */
-.custom-toggle input[type='checkbox'] {
+.dash-toggle input[type='checkbox'] {
   position: absolute;
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-/* La "barra deslizante" */
-.custom-toggle .slider {
-  position: relative;
+.dash-toggle__slider {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 40px;
   height: 20px;
-  background-color: #07f787;
-  border-radius: 20px;
-  transition: background-color 0.3s;
-  margin-right: 10px; /* Espacio entre toggle y texto */
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+  border: 1px solid var(--color-border-strong);
+  transition: var(--transition-normal);
 }
 
-
-/* Cambiar el círculo dentro del toggle */
-.custom-toggle .slider::before {
+.dash-toggle__slider::before {
   content: '';
   position: absolute;
+  top: 50%;
+  left: 2px;
+  transform: translateY(-50%);
   width: 16px;
   height: 16px;
-  background-color: white;
   border-radius: 50%;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.3s;
-}
- 
-/* Cambiar color del círculo cuando está seleccionado */
-.custom-toggle input[type='checkbox']:checked + .slider::before {
-  background-color: #4caf50; /* Color del círculo al seleccionar */
-  transform: translateX(20px); /* Deslizar círculo a la derecha */
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-normal);
 }
 
-/* Estilo del texto */
-.custom-toggle .toggle-label {
-  color: white; /* Cambiar color del texto */
-  margin-left: 35px;
+.dash-toggle__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text);
 }
 
-
-.container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+.dash-toggle input[type='checkbox']:checked + .dash-toggle__slider {
+  background: linear-gradient(120deg, var(--color-primary-dark), var(--color-primary));
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(0, 121, 107, 0.35);
 }
 
-header {
-  background-color: #2c3e50;
-  color: white;
-  padding: 1rem 2rem;
-  text-align: center;
-}
-header h1 {
-  color: white;
-}
-header label {
-  display: block;
-  margin: 10px 0 5px;
+.dash-toggle input[type='checkbox']:checked + .dash-toggle__slider::before {
+  transform: translate(20px, -50%);
 }
 
-header input {
-  width: calc(100% - 22px);
-  padding: 10px;
-  margin-bottom: 10px;
-  border: none;
-  border-radius: 4px;
+.dash-toggle:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
 }
 
-.focus:focus {
-  background-color: darkgrey;
-}
-
-main {
+/* ── Grid de reportes ──────────────────────────────────────── */
+.dashboard__grid {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
-  background-color: cornflowerblue;
+  grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+  gap: 18px;
+  padding: 0 22px 28px;
 }
 
-.report {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1rem;
+/* ── Card de reporte ───────────────────────────────────────── */
+.dashboard-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--color-primary);
+  box-shadow: var(--shadow-md);
+  padding: 16px;
   display: flex;
   flex-direction: column;
+  transition: var(--transition-normal);
 }
 
-.report h2 {
-  margin-top: 0;
-  font-size: 1.25rem;
-  color: #34495e;
+.dashboard-card--wide {
+  grid-column: 1 / -1;
 }
 
-.chart {
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.dashboard-card__chart {
   flex: 1;
-  height: 200px;
-  background-color: #ecf0f1;
-  border-radius: 4px;
+  min-height: 240px;
+  background: var(--color-surface-warm);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  padding: 6px;
 }
 
-footer {
-  background-color: #2c3e50;
-  color: white;
+/* ── Footer ────────────────────────────────────────────────── */
+.dashboard__footer {
+  padding: 14px 18px 18px;
   text-align: center;
-  padding: 1rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
 }
 
+/* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  header {
-    padding: 1rem;
-  }
-  main {
-    grid-template-columns: 1fr;
-  }
-  .container {
-    margin: 0;
-  }
+  .dashboard__filters { top: 56px; padding: 12px 14px 14px; }
+  .dashboard__grid { grid-template-columns: 1fr; padding: 14px; }
+  .dashboard__controls { flex-direction: column; align-items: stretch; }
+  .dashboard__field { max-width: 100%; }
 }

@@ -1,0 +1,177 @@
+<div class="mant-panel dialog-panel dialog-panel--wide">
+
+  <button
+    mat-icon-button
+    class="close-button"
+    type="button"
+    [attr.aria-label]="'closeDialog' | tenantText"
+    (click)="salir()"
+    [disabled]="procesando">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>{{ 'closeShift' | tenantText }}</h2>
+
+  <!-- Caja -->
+  <div class="form-row">
+    <mat-form-field class="form-field" appearance="fill">
+      <mat-label>{{ 'register' | tenantText }}</mat-label>
+      <mat-select
+        [(ngModel)]="idCajaSel"
+        name="caja"
+        (ngModelChange)="onCajaChange()"
+        [disabled]="procesando">
+        <mat-option *ngFor="let item of listCaja" [value]="item.IdCaja">
+          {{ item.Descripcion }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Datos del turno -->
+  <div class="dialog-summary" *ngIf="turno; else sinTurno">
+    <div class="dialog-summary__item">
+      <span class="dialog-summary__label">{{ 'shiftNumber' | tenantText }}</span>
+      <span class="dialog-summary__value">{{ turno.NroTurno }}</span>
+    </div>
+    <div class="dialog-summary__item">
+      <span class="dialog-summary__label">{{ 'startDate' | tenantText }}</span>
+      <span class="dialog-summary__value">
+        {{ (turno.FechaInicio || turno.FechaTrabajo) | date:'dd/MM/yyyy HH:mm' }}
+      </span>
+    </div>
+    <div class="dialog-summary__item">
+      <span class="dialog-summary__label">{{ 'currentDate' | tenantText }}</span>
+      <span class="dialog-summary__value">{{ fechaCierre | date:'dd/MM/yyyy HH:mm' }}</span>
+    </div>
+    <div class="dialog-summary__item">
+      <span class="dialog-summary__label">{{ 'exchangeRate' | tenantText }}</span>
+      <span class="dialog-summary__value">{{ turno.TipoCambio || turno.TipoCambioVenta || '—' }}</span>
+    </div>
+    <div class="dialog-summary__item">
+      <span class="dialog-summary__label">{{ 'status' | tenantText }}</span>
+      <span class="status-badge" [class.status-badge--danger]="cerrado || !turnoAbierto">
+        {{
+          (cerrado
+            ? 'shiftClosed'
+            : (turnoAbierto ? 'openStatus' : 'closedStatus')) | tenantText
+        }}
+      </span>
+    </div>
+  </div>
+
+  <ng-template #sinTurno>
+    <p class="dialog-empty-state" role="status">
+      <mat-icon>info</mat-icon>
+      {{ 'selectOpenShiftRegister' | tenantText }}
+    </p>
+  </ng-template>
+
+  <div class="dialog-option" *ngIf="permiteParcial && turnoAbierto && !cerrado">
+    <mat-checkbox
+      [(ngModel)]="esParcial"
+      name="parcial"
+      [disabled]="procesando">
+      <span class="dialog-option__content">
+        <span class="dialog-option__title">{{ 'partialClose' | tenantText }}</span>
+        <span class="dialog-option__hint">
+          {{ 'partialCloseHint' | tenantText }}
+        </span>
+      </span>
+    </mat-checkbox>
+  </div>
+
+  <section
+    class="dialog-alert"
+    role="alert"
+    aria-live="polite"
+    *ngIf="pedidosPendientes.length > 0">
+    <div class="dialog-alert__header">
+      <mat-icon>warning</mat-icon>
+      <div>
+        <h3>
+          {{
+            'pendingOrdersTitle'
+              | tenantText:{ count: pedidosPendientes.length }
+          }}
+        </h3>
+        <p>
+          {{ 'pendingOrdersExplanation' | tenantText }}
+        </p>
+      </div>
+    </div>
+
+    <div class="dialog-table-wrapper">
+      <table class="dialog-data-table">
+        <thead>
+          <tr>
+            <th>{{ 'order' | tenantText }}</th>
+            <th>{{ 'account' | tenantText }}</th>
+            <th>{{ 'spaceOrChannel' | tenantText }}</th>
+            <th>{{ 'orderAttendant' | tenantText }}</th>
+            <th>{{ 'date' | tenantText }}</th>
+            <th class="is-numeric">{{ 'amount' | tenantText }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let pedido of pedidosPendientes">
+            <td>{{ pedido.NroPedido }}</td>
+            <td>{{ pedido.NroCuenta }}</td>
+            <td>{{ pedido.Espacio || pedido.CanalVenta || '—' }}</td>
+            <td>{{ pedido.Empleado || '—' }}</td>
+            <td>{{ pedido.FechaPedido | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td class="is-numeric">
+              {{ pedido.MontoPendiente | number:'1.2-2' }}
+            </td>
+            <td>
+              <button
+                mat-stroked-button
+                color="warn"
+                type="button"
+                (click)="anularPedidoPendiente(pedido)"
+                [disabled]="procesando">
+                <mat-icon>delete_outline</mat-icon>
+                {{ 'void' | tenantText }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Acciones -->
+  <div class="dialog-actions">
+    <button mat-raised-button color="primary" type="button"
+            (click)="cerrarTurno()"
+            [disabled]="!turnoAbierto || cerrado || procesando">
+      <mat-icon>
+        {{
+          procesando
+            ? 'hourglass_top'
+            : (pedidosPendientes.length > 0 ? 'refresh' : 'lock')
+        }}
+      </mat-icon>
+      <span>
+        {{
+          (procesando
+            ? 'closingShift'
+            : (pedidosPendientes.length > 0
+              ? 'revalidateClose'
+              : 'closeShift')) | tenantText
+        }}
+      </span>
+    </button>
+
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="salir()"
+      [disabled]="procesando">
+      <mat-icon>exit_to_app</mat-icon>
+      <span>{{ 'exit' | tenantText }}</span>
+    </button>
+  </div>
+
+</div>

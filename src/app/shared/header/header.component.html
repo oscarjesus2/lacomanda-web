@@ -1,47 +1,139 @@
-<mat-toolbar color="primary">
+<mat-toolbar class="app-header">
 
-    <button type="button" aria-label="Toggle sidenav" mat-icon-button [matMenuTriggerFor]="afterMenu" *ngIf="true">
-      <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+  <!-- IZQUIERDA: menú + marca -->
+  <div class="app-header__left">
+    <button mat-icon-button class="app-header__menu-btn"
+            [attr.aria-label]="'openMenu' | tenantText"
+            [matMenuTriggerFor]="afterMenu">
+      <mat-icon>menu</mat-icon>
     </button>
-    <mat-menu #afterMenu="matMenu" xPosition="after">
-  
-    <mat-nav-list>
-      <!-- <button mat-menu-item [matMenuTriggerFor]="Turno" >Turno</button>
-      <mat-menu #Turno="matMenu">
-        <mat-nav-list> 
-          <a mat-list-item (click)="OpenDialogTurno();">Abrir</a>
-          <a mat-list-item >Cerrar</a>
-        </mat-nav-list>
-      </mat-menu> -->
-      <button mat-menu-item  (click)="Dashboard();" >Dashboard</button>
-      <button mat-menu-item  (click)="Administracion();" >Administracion</button>
-      <button mat-menu-item  (click)="Caja();">Caja</button>
-      <button mat-menu-item  (click)="Mozo();">Mozo</button>
-
-    </mat-nav-list>
-  
-      <!-- <button mat-menu-item [matMenuTriggerFor]="Turno" >Turno</button>
-  
-      <button mat-menu-item href="/ventas">Caja</button>
-      <button mat-menu-item href="/administracion" >Administracion</button> -->
-    </mat-menu>
-    <span>{{ title }}</span>
-    <!-- Esto sirve para la 3 linea orizontales esten a la izquierda -->
-    <span class="example-spacer"></span>
- 
-    <div class="label-user" *ngIf="userLoginOn && turnoOpenShare">
-      {{ sDatosUsuarioTurno }}
+    <div class="app-header__brand">
+      <div class="app-header__brand-title">{{ nombreSucursal }}</div>
+      <div class="app-header__brand-subtitle">
+        LaComanda · {{ 'restaurant' | tenantText }}
+      </div>
     </div>
-      <!-- <div class="label-user" *ngIf="userLoginOn && !turnoOpenShare">
-      No existe turno abierto - Usuario : {{ userLoged.username }}
-    </div> -->
-    <span class="example-spacer"></span>
-  
-    <button mat-icon-button class="example-icon" aria-label="Example icon-button with menu icon"
-      (click)="reiniciar()">
+  </div>
+
+  <!-- SEPARADOR -->
+  <div class="app-header__sep"></div>
+
+  <!-- CENTRO: turno · stats · usuario -->
+  <div class="app-header__info">
+
+    <!-- Turno activo -->
+    <div class="app-header__chip app-header__chip--turno" *ngIf="turnoActivo">
+      <span class="app-header__chip-dot"></span>
+      <mat-icon class="app-header__chip-icon">schedule</mat-icon>
+      <span>{{ 'shift' | tenantText }} #{{ turnoNumero }}</span>
+    </div>
+
+    <!-- Sin turno -->
+    <div class="app-header__chip app-header__chip--inactive" *ngIf="!turnoActivo">
+      <mat-icon class="app-header__chip-icon">schedule</mat-icon>
+      <span>{{ 'noShift' | tenantText }}</span>
+    </div>
+
+    <!-- Stats (solo cuando hay turno) -->
+    <ng-container *ngIf="turnoActivo">
+      <div class="app-header__stat-sep"></div>
+
+      <div class="app-header__stat">
+        <span class="app-header__stat-value">{{ config?.SimboloMoneda }} {{ totalVentaTurno | number:'1.0-0' }}</span>
+        <span class="app-header__stat-label">{{ 'shiftSales' | tenantText }}</span>
+      </div>
+
+      <div class="app-header__stat">
+        <span class="app-header__stat-value">{{ nroPedidos }}</span>
+        <span class="app-header__stat-label">{{ 'orders' | tenantText }}</span>
+      </div>
+
+      <div class="app-header__stat">
+        <span class="app-header__stat-value">{{ config?.SimboloMoneda }} {{ ticketMedio | number:'1.1-1' }}</span>
+        <span class="app-header__stat-label">{{ 'averageTicket' | tenantText }}</span>
+      </div>
+
+      <div class="app-header__stat-sep"></div>
+    </ng-container>
+
+    <!-- Usuario -->
+    <div class="app-header__chip app-header__chip--user" *ngIf="nombreUsuario">
+      <mat-icon class="app-header__chip-icon">person</mat-icon>
+      <span>{{ nombreUsuario }}</span>
+    </div>
+
+    <button
+      *ngIf="controlHorarioHabilitado"
+      type="button"
+      class="app-header__chip app-header__chip--time-control"
+      (click)="OpenControlHorario()"
+      [matTooltip]="'timeTracking' | tenantText">
+      <mat-icon class="app-header__chip-icon">schedule</mat-icon>
+      <span>{{ 'timeTracking' | tenantText }}</span>
+    </button>
+
+  </div>
+
+  <!-- RELOJ -->
+  <div class="app-header__clock">
+    <span class="app-header__clock-time">{{ currentTime }}</span>
+    <span class="app-header__clock-date">{{ currentDate }}</span>
+  </div>
+
+  <!-- DERECHA: home + salir -->
+  <div class="app-header__right">
+    <button mat-icon-button class="app-header__icon-btn"
+            [matTooltip]="'language' | tenantText"
+            [attr.aria-label]="'language' | tenantText"
+            [matMenuTriggerFor]="languageMenu">
+      <mat-icon>language</mat-icon>
+    </button>
+    <button mat-icon-button class="app-header__icon-btn"
+            [matTooltip]="'home' | tenantText" (click)="reiniciar()">
       <mat-icon>home</mat-icon>
     </button>
-    <button mat-icon-button matTooltip="Salir" (click)="SalirSistemas()">
-      <mat-icon>exit_to_app</mat-icon>
+    <button class="app-header__logout-btn"
+            [matTooltip]="'logout' | tenantText"
+            (click)="onLogout()">
+      <mat-icon class="app-header__logout-icon">exit_to_app</mat-icon>
+      <span>{{ 'logout' | tenantText }}</span>
     </button>
-  </mat-toolbar>
+  </div>
+
+</mat-toolbar>
+
+<!-- MENÚ PRINCIPAL -->
+<mat-menu #afterMenu="matMenu" xPosition="after">
+  <button mat-menu-item *ngIf="showDashboard" (click)="Dashboard()">
+    <mat-icon>dashboard</mat-icon><span>{{ 'dashboard' | tenantText }}</span>
+  </button>
+  <button mat-menu-item *ngIf="showAdministracion" (click)="Administracion()">
+    <mat-icon>settings</mat-icon><span>{{ 'administration' | tenantText }}</span>
+  </button>
+  <button mat-menu-item *ngIf="showCaja" (click)="Caja()">
+    <mat-icon>point_of_sale</mat-icon><span>{{ 'register' | tenantText }}</span>
+  </button>
+  <button mat-menu-item *ngIf="showMozo" (click)="Mozo()">
+    <mat-icon>restaurant</mat-icon>
+    <span>{{ 'orderAttendant' | tenantText }}</span>
+  </button>
+  <button mat-menu-item *ngIf="controlHorarioHabilitado" (click)="OpenControlHorario()">
+    <mat-icon>schedule</mat-icon><span>{{ 'timeTracking' | tenantText }}</span>
+  </button>
+</mat-menu>
+
+<mat-menu #languageMenu="matMenu" xPosition="before">
+  <button mat-menu-item (click)="cambiarCultura(null)">
+    <mat-icon>business</mat-icon>
+    <span>{{ 'useTenantLanguage' | tenantText }}</span>
+  </button>
+  <button mat-menu-item (click)="cambiarCultura('es-PE')">
+    <mat-icon>translate</mat-icon><span>Español (Perú)</span>
+  </button>
+  <button mat-menu-item (click)="cambiarCultura('es-ES')">
+    <mat-icon>translate</mat-icon><span>Español (España)</span>
+  </button>
+  <button mat-menu-item (click)="cambiarCultura('en')">
+    <mat-icon>translate</mat-icon><span>English</span>
+  </button>
+</mat-menu>

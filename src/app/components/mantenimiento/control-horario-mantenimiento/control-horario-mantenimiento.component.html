@@ -1,0 +1,60 @@
+<section class="time-admin">
+  <header class="time-admin__header">
+    <div>
+      <span class="time-admin__eyebrow">Personal y cumplimiento</span>
+      <h2>CONTROL HORARIO</h2>
+      <p>Consulta fichajes, exporta la información y corrige incidencias sin perder el registro original.</p>
+    </div>
+    <button type="button" mat-icon-button aria-label="Cerrar" (click)="cerrar()"><mat-icon>close</mat-icon></button>
+  </header>
+
+  <div class="time-admin__filters">
+    <label>Desde<input type="date" [(ngModel)]="fechaDesde"></label>
+    <label>Hasta<input type="date" [(ngModel)]="fechaHasta"></label>
+    <label>Empleado
+      <select [(ngModel)]="idEmpleado">
+        <option [ngValue]="null">Todos los empleados</option>
+        <option *ngFor="let empleado of empleados" [ngValue]="empleado.IdEmpleado">{{ empleado.Nombre }}</option>
+      </select>
+    </label>
+    <div class="time-admin__filter-actions">
+      <button type="button" class="btn-secondary" [disabled]="cargando || !resultado?.Registros?.length" (click)="exportarCsv()">
+        <mat-icon>download</mat-icon> Exportar CSV
+      </button>
+      <button type="button" class="btn-primary" [disabled]="cargando" (click)="consultar()">
+        <mat-icon>search</mat-icon> Consultar
+      </button>
+    </div>
+  </div>
+
+  <div class="time-admin__summary" *ngIf="resultado as resumen">
+    <article><span>REGISTROS</span><strong>{{ resumen.Registros.length }}</strong></article>
+    <article><span>TRABAJO EFECTIVO</span><strong>{{ duracion(resumen.TotalMinutosTrabajados) }}</strong></article>
+    <article><span>PAUSAS</span><strong>{{ duracion(resumen.TotalMinutosPausa) }}</strong></article>
+    <article [class.time-admin__summary-warning]="resumen.RegistrosCorregidos > 0"><span>CORREGIDOS</span><strong>{{ resumen.RegistrosCorregidos }}</strong></article>
+  </div>
+
+  <div class="time-admin__table-wrap">
+    <table class="time-admin__table" *ngIf="resultado?.Registros?.length; else sinDatos">
+      <thead><tr><th>Empleado</th><th>Entrada</th><th>Salida</th><th>Pausas</th><th>Trabajo efectivo</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+        <tr *ngFor="let jornada of resultado?.Registros">
+          <td><strong>{{ jornada.Empleado }}</strong><small *ngIf="jornada.TieneCorrecciones"><mat-icon>history</mat-icon> Corregido</small></td>
+          <td>{{ jornada.InicioUtc | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ jornada.FinUtc ? (jornada.FinUtc | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+          <td>{{ jornada.MinutosPausa }} min</td>
+          <td><strong>{{ duracion(jornada.MinutosTrabajados) }}</strong></td>
+          <td><span class="time-admin__status" [class.time-admin__status--open]="jornada.EstaAbierta">{{ jornada.EstaAbierta ? 'EN CURSO' : 'FINALIZADA' }}</span></td>
+          <td><button type="button" mat-icon-button [disabled]="jornada.EstaAbierta" matTooltip="Corregir registro" (click)="corregir(jornada)"><mat-icon>edit_calendar</mat-icon></button></td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #sinDatos>
+      <div class="time-admin__empty">
+        <mat-icon>{{ cargando ? 'hourglass_top' : 'event_busy' }}</mat-icon>
+        <strong>{{ cargando ? 'Consultando registros…' : 'No hay fichajes en el periodo' }}</strong>
+        <span *ngIf="!cargando">Prueba con otro empleado o rango de fechas.</span>
+      </div>
+    </ng-template>
+  </div>
+</section>

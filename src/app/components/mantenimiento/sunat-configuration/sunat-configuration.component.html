@@ -1,0 +1,125 @@
+<div class="mant-panel dialog-panel--workspace dialog-panel--dense">
+  <button mat-icon-button class="close-button" type="button" aria-label="Cerrar" (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>Facturación electrónica SUNAT</h2>
+
+  <div class="dialog-empty-state" *ngIf="loading">
+    <mat-icon>hourglass_top</mat-icon>
+    <span>Cargando la configuración del restaurante…</span>
+  </div>
+
+  <form class="dialog-form dialog-form--workspace" *ngIf="!loading && configuration" (ngSubmit)="save()">
+    <div class="dialog-form-scroll">
+      <div class="dialog-notice" [class.dialog-notice--success]="configuration.CertificadoVigente">
+        <mat-icon>{{ configuration.CertificadoVigente ? 'verified_user' : 'info' }}</mat-icon>
+        <div class="dialog-notice__content">
+          <strong class="dialog-notice__title">{{ statusLabel }}</strong>
+          <span class="dialog-notice__text" *ngIf="!configuration.CertificadoConfigurado">
+            Completa estos datos antes de habilitar el envío automático de comprobantes a SUNAT.
+          </span>
+          <span class="dialog-notice__text" *ngIf="configuration.CertificadoConfigurado">
+            SUNAT utilizará este certificado y las credenciales SOL exclusivamente para este restaurante.
+          </span>
+        </div>
+      </div>
+
+      <div class="dialog-summary">
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">RUC del restaurante</span>
+          <strong class="dialog-summary__value">{{ configuration.Ruc || 'Pendiente' }}</strong>
+        </div>
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">Estado</span>
+          <span
+            class="status-badge"
+            [class.status-badge--danger]="configuration.CertificadoConfigurado && !configuration.CertificadoVigente"
+            [class.status-badge--warning]="!configuration.CertificadoConfigurado">
+            {{ statusLabel }}
+          </span>
+        </div>
+        <div class="dialog-summary__item" *ngIf="configuration.CertificadoConfigurado">
+          <span class="dialog-summary__label">Certificado</span>
+          <strong class="dialog-summary__value">{{ configuration.NombreCertificado }}</strong>
+        </div>
+        <div class="dialog-summary__item" *ngIf="configuration.CertificadoValidoHastaUtc">
+          <span class="dialog-summary__label">Válido hasta</span>
+          <strong class="dialog-summary__value">
+            {{ configuration.CertificadoValidoHastaUtc | date:'dd/MM/yyyy HH:mm' }}
+          </strong>
+        </div>
+      </div>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>business</mat-icon>
+          Datos SUNAT
+        </h3>
+        <p class="dialog-form-section__hint">
+          Usa las credenciales SOL creadas para el RUC de este restaurante. La clave nunca volverá a mostrarse.
+        </p>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Ubigeo del domicilio fiscal</mat-label>
+            <input matInput name="ubigeo" [(ngModel)]="ubigeo" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" required>
+            <mat-hint>Exactamente 6 números.</mat-hint>
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Usuario SOL</mat-label>
+            <input matInput name="solUser" [(ngModel)]="solUser" maxlength="100" autocomplete="username" required>
+            <mat-hint>Puedes escribir solo el usuario; no es necesario anteponer el RUC.</mat-hint>
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Clave SOL</mat-label>
+            <input matInput name="solPassword" [(ngModel)]="solPassword" type="password" autocomplete="new-password" required>
+            <mat-hint *ngIf="configuration.ClaveSolConfigurada">Escríbela nuevamente para reemplazar la configuración.</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>workspace_premium</mat-icon>
+          Certificado digital
+        </h3>
+        <p class="dialog-form-section__hint">
+          Selecciona el archivo PFX o P12 vigente del contribuyente. Quedará almacenado de forma privada y separado por restaurante.
+        </p>
+        <div class="dialog-option">
+          <div class="dialog-option__content">
+            <strong class="dialog-option__title">{{ certificate?.name || 'Selecciona el certificado digital' }}</strong>
+            <span class="dialog-option__hint">PFX o P12 · máximo 2 MB.</span>
+            <input
+              #certificateSelector
+              type="file"
+              hidden
+              accept=".pfx,.p12,application/x-pkcs12"
+              (change)="selectCertificate($event)">
+            <div class="dialog-form-action">
+              <button mat-stroked-button type="button" (click)="certificateSelector.click()">
+                <mat-icon>upload_file</mat-icon>
+                {{ certificate ? 'Cambiar certificado' : 'Elegir certificado' }}
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Contraseña del certificado</mat-label>
+            <input matInput name="certificatePassword" [(ngModel)]="certificatePassword" type="password" autocomplete="new-password" required>
+            <mat-hint>Se guarda cifrada y nunca se muestra en pantalla.</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+    </div>
+
+    <div class="dialog-form-actions">
+      <button mat-stroked-button type="button" (click)="close()">Cancelar</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="saving || !readyToSave">
+        <mat-icon>save</mat-icon>
+        {{ saving ? 'Guardando…' : 'Guardar configuración' }}
+      </button>
+    </div>
+  </form>
+</div>

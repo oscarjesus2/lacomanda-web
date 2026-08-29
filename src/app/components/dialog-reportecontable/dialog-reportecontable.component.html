@@ -1,56 +1,77 @@
-<button mat-icon-button class="close-button" (click)="onNoClick()">
-  <mat-icon>close</mat-icon>
-</button>
-<br>
-<div class="container">
-  <h1 class="header">Informe Contable</h1>
+<div class="mant-panel rcont-panel">
 
-  <div class="select-container">
-    <select id="select-type" class="select-basic" [(ngModel)]="tipoInformeSeleccionado"
-      (change)="onTipoInformeChange($event)" required #tipoInformeInput="ngModel">>
-      <option value="Ventas">Ventas</option>
-      <option value="Compras">Compras</option>
-    </select>
-    <mat-error *ngIf="tipoInformeInput.invalid && tipoInformeInput.touched">
-      El tipo de informe es requerido
-    </mat-error>
+  <button mat-icon-button class="close-button" (click)="onNoClick()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>{{ 'accountingReport' | tenantText }}</h2>
+
+  <!-- Tipo de informe (segmentado) -->
+  <div class="rcont-field">
+    <span class="rcont-label">{{ 'reportType' | tenantText }}</span>
+    <mat-button-toggle-group class="rcont-toggle"
+                             [(ngModel)]="tipoInformeSeleccionado"
+                             name="tipoInforme"
+                             (change)="onTipoInformeChange()">
+      <mat-button-toggle value="Ventas">
+        <mat-icon>point_of_sale</mat-icon> {{ 'sales' | tenantText }}
+      </mat-button-toggle>
+      <mat-button-toggle value="Compras">
+        <mat-icon>shopping_cart</mat-icon> {{ 'purchases' | tenantText }}
+      </mat-button-toggle>
+    </mat-button-toggle-group>
   </div>
 
-  <div class="date-container">
-    <div class="date-input">
-      <label for="fecha-inicial">Fecha Inicial</label>
-      <input type="date" id="fecha-inicial" [(ngModel)]="fechaInicial" required #fechaInicialInput="ngModel">
-      <mat-error *ngIf="fechaInicialInput.invalid && fechaInicialInput.touched">
-        La fecha inicial es requerida
-      </mat-error>
+  <!-- Rango de fechas -->
+  <div class="rcont-grid">
+    <div class="rcont-field">
+      <label for="fecha-inicial" class="rcont-label">{{ 'initialDate' | tenantText }}</label>
+      <input id="fecha-inicial" type="date" class="rcont-input"
+             [(ngModel)]="fechaInicial" [max]="fechaFinal">
     </div>
-    <div class="date-input">
-      <label for="fecha-final">Fecha Final</label>
-      <input type="date" id="fecha-final" [(ngModel)]="fechaFinal" required #fechaFinalInput="ngModel">
-      <mat-error *ngIf="fechaFinalInput.invalid && fechaFinalInput.touched">
-        La fecha final es requerida
-      </mat-error>
+    <div class="rcont-field">
+      <label for="fecha-final" class="rcont-label">{{ 'finalDate' | tenantText }}</label>
+      <input id="fecha-final" type="date" class="rcont-input"
+             [(ngModel)]="fechaFinal" [min]="fechaInicial">
     </div>
   </div>
 
-  <div class="filter-container">
-    <select class="select-filter" [(ngModel)]="tipoDocumentoSeleccionado">
-      <option *ngFor="let opcion of listTipoDocumentoVentas" [value]="opcion.IdTipoDoc">
-        {{ opcion.Descripcion }}
-      </option>
-    </select>
-    <select class="select-filter" [(ngModel)]="serieSeleccionada">
-      <option *ngFor="let opcion of listSeries" [value]="opcion.Serie">
-        {{ opcion.Descripcion }}
-      </option>
-    </select>
+  <p class="rcont-error" *ngIf="fechaInicial && fechaFinal && !rangoValido">
+    <mat-icon>error_outline</mat-icon>
+    {{ 'endDateBeforeStart' | tenantText }}
+  </p>
+
+  <!-- Filtros -->
+  <div class="rcont-grid">
+    <mat-form-field class="form-field" appearance="fill">
+      <mat-label>{{ 'documentType' | tenantText }}</mat-label>
+      <mat-select [(ngModel)]="tipoDocumentoSeleccionado" name="tipoDoc">
+        <mat-option value="0">{{ 'allMasculine' | tenantText }}</mat-option>
+        <mat-option *ngFor="let opcion of listTipoDocumentoVentas" [value]="opcion.IdTipoDoc">
+          {{ opcion.Descripcion }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field class="form-field" appearance="fill" *ngIf="mostrarSerie">
+      <mat-label>{{ 'series' | tenantText }}</mat-label>
+      <mat-select [(ngModel)]="serieSeleccionada" name="serie">
+        <mat-option value="0">{{ 'allFeminine' | tenantText }}</mat-option>
+        <mat-option *ngFor="let opcion of listSeries" [value]="opcion.Serie">
+          {{ opcion.Descripcion }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
   </div>
 
-  <div class="export-button-container">
-    <button class="export-button" (click)="validarFormulario(fechaInicialInput, fechaFinalInput, tipoInformeInput)"
-      [disabled]="fechaInicialInput.invalid || fechaFinalInput.invalid || tipoInformeInput.invalid">
-      <mat-icon>download</mat-icon>
-      Exportar a Excel
+  <!-- Acción -->
+  <div class="rcont-actions">
+    <button mat-raised-button class="rcont-export" type="button"
+            (click)="validarFormularioExport()"
+            [disabled]="!rangoValido || exportando">
+      <mat-icon [class.rcont-spin]="exportando">{{ exportando ? 'sync' : 'download' }}</mat-icon>
+      {{ (exportando ? 'exporting' : 'exportToExcel') | tenantText }}
     </button>
   </div>
+
 </div>

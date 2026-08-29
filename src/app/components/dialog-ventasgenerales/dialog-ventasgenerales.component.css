@@ -1,170 +1,42 @@
-dialog-ventasgenerales.component.css
 
-  
-.close-button {
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  z-index: 1000;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.close-button mat-icon {
-  font-size: 24px;
-  color: #757575;  /* Color gris medio */
-}
-
-.close-button:hover mat-icon {
-  color: #212121;  /* Color más oscuro al pasar el mouse */
-}
-
-.ventas-generales-container {
-  padding: 30px;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  box-sizing: border-box;
-  overflow: hidden; 
-}
-
-.filters {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
-}
-
-.filters input[type="text"],
-.filters select {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.btn-actualizar {
-  padding: 10px 15px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.btn-actualizar:hover {
-  background-color: #45a049;
-}
-
-.table-buttons-container {
-  flex: 1; /* Hace que este contenedor ocupe todo el espacio restante */
-  display: flex;
-  overflow: hidden;
-}
-
-.ventas-table-container {
-  flex: 1;
-  overflow-y: auto; /* Permite el scroll vertical en la tabla */
-  margin-right: 20px;
-}
 
 .ventas-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  min-width: 1160px;
+  table-layout: fixed;
 }
 
-.ventas-table th,
-.ventas-table td {
-								
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
+.ventas-table .mat-mdc-header-cell,
+.ventas-table .mat-mdc-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 8px 10px;
 }
 
-.ventas-table th {
-  background-color: #f8f8f8;
-  font-weight: bold;
-  color: #333;
+.ventas-table .is-numeric {
+  text-align: right;
 }
 
-.buttons {
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
+.ventas-table .mat-column-acciones {
+  text-align: center;
 }
 
-.buttons button {
-  margin-top: 10px;
-  padding: 12px 20px;
-  width: 220px;
-  text-align: left;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s, box-shadow 0.3s;
-  font-size: 14px;
+.ventas-table .status-badge {
+  display: inline-flex;
 }
 
-.buttons button:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.ventas-table .dialog-empty-state {
+  justify-content: center;
+  margin: 18px;
+  white-space: normal;
 }
 
-.btn-salir {
-  background-color: #f44336;
-  color: white;
-}
-
-.btn-emitir-comprobante,
-.btn-nota-credito,
-.btn-modificar-doc,
-.btn-modificacion-pagos,
-.btn-pdf-xml,
-.btn-reimprimir-doc {
-			 
-  background-color: #2196F3;
-  color: white;
-}
-
-.btn-anular {
-  background-color: #FF9800;
-  color: white;
-}
-
-.selected {
-  background-color: #e3f2fd;
+.ventas-table .selected .mat-mdc-cell,
+.mat-mdc-row.selected .mat-mdc-cell {
+  background: var(--color-surface-warm);
 }
 
 .mat-mdc-row:hover .mat-mdc-cell {
-  background-color: #f5f5f5;
-}
-
-.mat-mdc-row .mat-mdc-cell {
-  border-bottom: 1px solid #e0e0e0;
-  transition: background-color 0.3s;
-				  
-}
-
-
-							 
-.close-button {
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  z-index: 1000;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.close-button mat-icon {
-  font-size: 24px;
-  color: #757575;  /* Color gris medio */
-}
-
-.close-button:hover mat-icon {
-  color: #212121;  /* Color más oscuro al pasar el mouse */
+  background-color: var(--color-bg);
 }

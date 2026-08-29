@@ -1,0 +1,41 @@
+<section class="executive-widget">
+  <header class="executive-widget__header">
+    <div>
+      <span class="executive-widget__eyebrow">{{ 'executiveAnalysis' | tenantText }}</span>
+      <h3 class="executive-widget__title">{{ 'comparisonSales' | tenantText }}</h3>
+      <p class="executive-widget__subtitle">{{ 'comparisonSalesSubtitle' | tenantText }}</p>
+    </div>
+    <div class="executive-legend">
+      <span><i class="executive-legend__swatch is-primary"></i>{{ 'currentPeriod' | tenantText }}</span>
+      <span><i class="executive-legend__swatch is-previous"></i>{{ 'previousPeriod' | tenantText }}</span>
+    </div>
+  </header>
+
+  <div class="executive-kpis" *ngIf="data">
+    <article class="executive-kpi">
+      <span>{{ 'sales' | tenantText }}</span>
+      <strong>{{ simboloMoneda }} {{ data.Actual.VentaTotal | number:'1.2-2' }}</strong>
+      <small [ngClass]="variacionClase(data.VariacionVentaPorcentaje)">{{ data.VariacionVentaPorcentaje == null ? '—' : (data.VariacionVentaPorcentaje | number:'1.1-1') + '%' }}</small>
+    </article>
+    <article class="executive-kpi">
+      <span>{{ 'documentsCount' | tenantText }}</span>
+      <strong>{{ data.Actual.Documentos }}</strong>
+      <small [ngClass]="variacionClase(data.VariacionDocumentosPorcentaje)">{{ data.VariacionDocumentosPorcentaje == null ? '—' : (data.VariacionDocumentosPorcentaje | number:'1.1-1') + '%' }}</small>
+    </article>
+    <article class="executive-kpi">
+      <span>{{ 'averageTicket' | tenantText }}</span>
+      <strong>{{ simboloMoneda }} {{ data.Actual.TicketMedio | number:'1.2-2' }}</strong>
+      <small [ngClass]="variacionClase(data.VariacionTicketPorcentaje)">{{ data.VariacionTicketPorcentaje == null ? '—' : (data.VariacionTicketPorcentaje | number:'1.1-1') + '%' }}</small>
+    </article>
+    <article class="executive-kpi">
+      <span>{{ 'grossMargin' | tenantText }}</span>
+      <strong>{{ simboloMoneda }} {{ data.Actual.Margen | number:'1.2-2' }}</strong>
+      <small [ngClass]="variacionClase(data.VariacionMargenPorcentaje)">{{ data.VariacionMargenPorcentaje == null ? '—' : (data.VariacionMargenPorcentaje | number:'1.1-1') + '%' }}</small>
+    </article>
+  </div>
+
+  <div class="executive-chart" #chart></div>
+  <div class="executive-state" *ngIf="loading">{{ 'loading' | tenantText }}</div>
+  <div class="executive-state is-error" *ngIf="error">{{ 'reportLoadError' | tenantText }}</div>
+  <div class="executive-state" *ngIf="!loading && !error && data && !data.Actual.VentaTotal && !data.Anterior.VentaTotal">{{ 'noDataForRange' | tenantText }}</div>
+</section>

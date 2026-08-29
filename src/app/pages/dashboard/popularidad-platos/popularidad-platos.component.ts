@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { NgxSpinnerService } from 'ngx-spinner';
 import * as d3 from 'd3';
 import Swal from 'sweetalert2';
@@ -12,15 +12,20 @@ import { StorageService } from 'src/app/services/storage.service';
   templateUrl: './popularidad-platos.component.html',
   styleUrls: ['./popularidad-platos.component.css']
 })
-export class PopularidadPlatosComponent implements OnInit, OnChanges {
+export class PopularidadPlatosComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('chart', { static: true }) private chartContainer: ElementRef;
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
+  private svgRoot: any;
   private svg: any;
   private margin = { top: 20, right: 20, bottom: 30, left: 90 };
   private width: number;
   private height: number;
   private tooltip: any;
+  private lastData: any[] = [];
+  private resizeObserver?: ResizeObserver;
+  private resizePending = false;
+  sinDatos = false;
   reportType: number=1;
   constructor(private spinnerService: NgxSpinnerService, private ventaService: VentaService, private storageService: StorageService) { }
 
@@ -31,6 +36,7 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges {
     this.height = 300 - this.margin.top - this.margin.bottom;
 
     this.createSvg();
+    this.observeResize();
     this.tooltip = d3.select('body').append('div')
       .attr('class', 'tooltip')
       .style('opacity', 0)
@@ -69,6 +75,7 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges {
 
       // Ordenar datos por cantidad de manera descendente
       data.sort((a, b) => b.Cantidad - a.Cantidad);
+      this.sinDatos = !data || data.length === 0;
       this.spinnerService.hide('popularidadPlatoSpinner');
       this.updateChart(data);
 
@@ -82,10 +89,12 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges {
   }
 
   private createSvg(): void {
-    this.svg = d3.select(this.chartContainer.nativeElement)
+    this.svgRoot = d3.select(this.chartContainer.nativeElement)
       .append('svg')
       .attr('width', this.width + this.margin.left + this.margin.right)
-      .attr('height', this.height + this.margin.top + this.margin.bottom)
+      .attr('height', this.height + this.margin.top + this.margin.bottom);
+
+    this.svg = this.svgRoot
       .append('g')
       .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
 
@@ -96,7 +105,36 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges {
       .attr('class', 'y-axis');
   }
 
+  /** Redibuja las barras al cambiar el ancho (columna completa ↔ media).
+   *  El alto es fijo (300), así que solo recalculamos el ancho. */
+  private observeResize(): void {
+    if (typeof ResizeObserver === 'undefined') { return; }
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.resizePending) { return; }
+      this.resizePending = true;
+      requestAnimationFrame(() => {
+        this.resizePending = false;
+        this.onResize();
+      });
+    });
+    this.resizeObserver.observe(this.chartContainer.nativeElement);
+  }
+
+  private onResize(): void {
+    const w = this.chartContainer.nativeElement.clientWidth - this.margin.left - this.margin.right;
+    if (w <= 0 || w === this.width) { return; }
+    this.width = w;
+    this.svgRoot.attr('width', this.width + this.margin.left + this.margin.right);
+    if (this.lastData?.length) { this.updateChart(this.lastData); }
+  }
+
+  ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
+    if (this.tooltip) { this.tooltip.remove(); }
+  }
+
   private updateChart(data: any[]): void {
+    this.lastData = data;
     const x = d3.scaleLinear()
       .domain([0, d3.max(data, d => d.Cantidad) || 100])
       .range([0, this.width]);

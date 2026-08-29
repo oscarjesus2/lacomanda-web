@@ -1,0 +1,321 @@
+<div
+  class="mant-panel dialog-panel dialog-panel--wide"
+  [class.dialog-panel--dense]="tipoCorreccion !== tipoPagos">
+  <button
+    mat-icon-button
+    class="close-button"
+    [attr.aria-label]="'closeDialog' | tenantText"
+    (click)="cancelar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>{{ 'correctIssuedSale' | tenantText }}</h2>
+
+  <div *ngIf="cargando" class="dialog-notice">
+    <mat-icon>hourglass_top</mat-icon>
+    <div class="dialog-notice__content">
+      <span class="dialog-notice__title">
+        {{ 'loadingDocumentCorrection' | tenantText }}
+      </span>
+    </div>
+  </div>
+
+  <ng-container *ngIf="preparacion as venta">
+    <div class="dialog-summary">
+      <div class="dialog-summary__item">
+        <span class="dialog-summary__label">
+          {{ 'documentType' | tenantText }}
+        </span>
+        <span class="dialog-summary__value">{{ venta.TipoDocumento }}</span>
+      </div>
+      <div class="dialog-summary__item">
+        <span class="dialog-summary__label">
+          {{ 'documentNumber' | tenantText }}
+        </span>
+        <span class="dialog-summary__value">
+          {{ venta.Serie }}-{{ venta.NumDocumento }}
+        </span>
+      </div>
+      <div class="dialog-summary__item">
+        <span class="dialog-summary__label">{{ 'date' | tenantText }}</span>
+        <span class="dialog-summary__value">
+          {{ venta.FechaEmision | date:'dd/MM/yyyy' }}
+        </span>
+      </div>
+      <div class="dialog-summary__item">
+        <span class="dialog-summary__label">{{ 'total' | tenantText }}</span>
+        <span class="dialog-summary__value">
+          {{ venta.Total | number:'1.2-2' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="dialog-notice">
+      <mat-icon>info</mat-icon>
+      <div class="dialog-notice__content">
+        <span class="dialog-notice__title">
+          {{ 'correctIssuedSaleHint' | tenantText }}
+        </span>
+        <span class="dialog-notice__text">
+          {{ 'correctionKeepsAuditTrail' | tenantText }}
+        </span>
+      </div>
+    </div>
+
+    <div class="dialog-form">
+      <mat-radio-group
+        class="form-row"
+        [(ngModel)]="tipoCorreccion"
+        (ngModelChange)="cambiarTipoCorreccion()">
+        <mat-radio-button class="dialog-option form-field" [value]="tipoPagos">
+          <span class="dialog-option__content">
+            <span class="dialog-option__title">
+              {{ 'correctionPayments' | tenantText }}
+            </span>
+            <span class="dialog-option__hint">
+              {{ 'correctionPaymentsHint' | tenantText }}
+            </span>
+          </span>
+        </mat-radio-button>
+        <mat-radio-button class="dialog-option form-field" [value]="tipoCliente">
+          <span class="dialog-option__content">
+            <span class="dialog-option__title">
+              {{ 'correctionCustomer' | tenantText }}
+            </span>
+            <span class="dialog-option__hint">
+              {{ 'correctionCustomerHint' | tenantText }}
+            </span>
+          </span>
+        </mat-radio-button>
+        <mat-radio-button class="dialog-option form-field" [value]="tipoDocumento">
+          <span class="dialog-option__content">
+            <span class="dialog-option__title">
+              {{ 'correctionDocumentType' | tenantText }}
+            </span>
+            <span class="dialog-option__hint">
+              {{ 'correctionDocumentTypeHint' | tenantText }}
+            </span>
+          </span>
+        </mat-radio-button>
+      </mat-radio-group>
+
+      <ng-container *ngIf="tipoCorreccion === tipoPagos">
+        <div class="dialog-table-wrapper">
+          <table class="dialog-data-table">
+            <thead>
+              <tr>
+                <th>{{ 'paymentMethodShort' | tenantText }}</th>
+                <th class="is-numeric">{{ 'paidAmount' | tenantText }}</th>
+                <th class="is-numeric">{{ 'changeDue' | tenantText }}</th>
+                <th>{{ 'card' | tenantText }}</th>
+                <th>{{ 'authorization' | tenantText }}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let pago of pagos; let i = index">
+                <td>
+                  <mat-form-field>
+                    <mat-select
+                      [(ngModel)]="pago.IdTipoPago"
+                      (selectionChange)="cambiarFormaPago(pago)">
+                      <mat-option
+                        *ngFor="let forma of formasPago"
+                        [value]="forma.id">
+                        {{ forma.key | tenantText }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </td>
+                <td class="is-numeric">
+                  <mat-form-field>
+                    <input
+                      matInput
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      [ngModel]="pago.MontoPagado"
+                      (ngModelChange)="actualizarMontoPago(pago, $event)">
+                  </mat-form-field>
+                </td>
+                <td class="is-numeric">
+                  <mat-form-field>
+                    <input
+                      matInput
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      readonly
+                      [ngModel]="pago.Vuelto">
+                  </mat-form-field>
+                  <span *ngIf="pago.IdTipoPago !== 1">—</span>
+                </td>
+                <td>
+                  <mat-form-field *ngIf="pago.IdTipoPago === 3">
+                    <mat-select [(ngModel)]="pago.IdTarjeta">
+                      <mat-option
+                        *ngFor="let tarjeta of tarjetas"
+                        [value]="tarjeta.IdTarjeta">
+                        {{ tarjeta.Descripcion }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <span *ngIf="pago.IdTipoPago !== 3">—</span>
+                </td>
+                <td>
+                  <mat-form-field *ngIf="pago.IdTipoPago === 3">
+                    <input matInput [(ngModel)]="pago.Autorizacion">
+                  </mat-form-field>
+                  <span *ngIf="pago.IdTipoPago !== 3">—</span>
+                </td>
+                <td>
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    [attr.aria-label]="'remove' | tenantText"
+                    (click)="eliminarPago(i)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="form-row">
+          <button mat-stroked-button color="primary" (click)="agregarPago()">
+            <mat-icon>add</mat-icon>
+            {{ 'addPaymentMethod' | tenantText }}
+          </button>
+          <div class="dialog-summary form-field">
+            <div class="dialog-summary__item">
+              <span class="dialog-summary__label">
+                {{ 'paymentNetTotal' | tenantText }}
+              </span>
+              <span class="dialog-summary__value">
+                {{ totalPagos | number:'1.2-2' }}
+              </span>
+            </div>
+            <div class="dialog-summary__item">
+              <span class="dialog-summary__label">
+                {{
+                  (diferenciaPagos < -0.01 ? 'paymentExcess' : 'remaining')
+                    | tenantText
+                }}
+              </span>
+              <span class="dialog-summary__value">
+                {{ saldoPagos | number:'1.2-2' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="tipoCorreccion !== tipoPagos">
+        <div *ngIf="tipoCorreccion === tipoDocumento" class="form-row">
+          <mat-form-field class="form-field">
+            <mat-label>{{ 'targetDocumentType' | tenantText }}</mat-label>
+            <mat-select
+              [(ngModel)]="idTipoDocumentoDestino"
+              (selectionChange)="cambiarDocumentoDestino()">
+              <mat-option
+                *ngFor="let documento of documentosDestino"
+                [value]="documento.IdTipoDocumento">
+                {{ documento.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="form-field">
+            <mat-label>{{ 'identityType' | tenantText }}</mat-label>
+            <mat-select [(ngModel)]="cliente.IdTipoIdentidad">
+              <mat-option
+                *ngFor="let tipo of tiposIdentidadDisponibles"
+                [value]="tipo.IdTipoIdentidad">
+                {{ tipo.Abreviatura || tipo.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field class="form-field">
+            <mat-label>{{ 'identityNumber' | tenantText }}</mat-label>
+            <input
+              matInput
+              #numeroIdentificacion="ngModel"
+              [(ngModel)]="cliente.NumeroIdentificacion"
+              [required]="
+                requiereIdentidadFiscal() || !!patronIdentificacionCliente
+              "
+              [pattern]="patronIdentificacionCliente">
+            <mat-error
+              *ngIf="
+                numeroIdentificacion.invalid
+                && (intentoRevisar || numeroIdentificacion.touched)
+                && errorIdentificacionCliente
+              ">
+              {{ errorIdentificacionCliente }}
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="form-field--grow">
+            <mat-label>{{ 'businessName' | tenantText }}</mat-label>
+            <input matInput [(ngModel)]="cliente.RazonSocial">
+          </mat-form-field>
+        </div>
+        <div class="form-row">
+          <mat-form-field class="form-field--grow">
+            <mat-label>{{ 'address' | tenantText }}</mat-label>
+            <input matInput [(ngModel)]="cliente.Direccion">
+          </mat-form-field>
+          <mat-form-field class="form-field">
+            <mat-label>{{ 'email' | tenantText }}</mat-label>
+            <input matInput type="email" [(ngModel)]="cliente.Correo">
+          </mat-form-field>
+        </div>
+      </ng-container>
+
+      <mat-checkbox
+        *ngIf="esPeruOnline && tipoCorreccion !== tipoPagos"
+        class="dialog-option"
+        [(ngModel)]="documentoOtorgado">
+        <span class="dialog-option__content">
+          <span class="dialog-option__title">
+            {{ 'documentGivenToCustomer' | tenantText }}
+          </span>
+          <span class="dialog-option__hint">
+            {{ 'documentGivenToCustomerHint' | tenantText }}
+          </span>
+        </span>
+      </mat-checkbox>
+
+      <mat-form-field class="full-width">
+        <mat-label>{{ 'reason' | tenantText }}</mat-label>
+        <textarea
+          matInput
+          [rows]="tipoCorreccion === tipoPagos ? 3 : 2"
+          minlength="3"
+          required
+          [(ngModel)]="motivo"
+          [placeholder]="'correctionReasonPlaceholder' | tenantText">
+        </textarea>
+        <mat-error *ngIf="intentoRevisar && motivo.trim().length < 3">
+          {{ 'correctionReasonRequired' | tenantText }}
+        </mat-error>
+      </mat-form-field>
+
+      <div class="dialog-actions">
+        <button mat-stroked-button (click)="cancelar()">
+          {{ 'cancel' | tenantText }}
+        </button>
+        <button
+          mat-flat-button
+          color="primary"
+          [disabled]="cargando || guardando"
+          (click)="revisarYAplicar()">
+          <mat-icon>fact_check</mat-icon>
+          {{ (guardando ? 'saving' : 'reviewCorrection') | tenantText }}
+        </button>
+      </div>
+    </div>
+  </ng-container>
+</div>

@@ -1,46 +1,54 @@
-  <button mat-icon-button class="close-button" (click)="salir()">
+<div class="mant-panel">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
-  <div class="usuario-mantenimiento">
-    <h2>Mantenimiento de usuarios</h2>
+
+    <h2>{{ 'maintenanceUsers' | tenantText }}</h2>
 
     <!-- Lista de usuarios, visible por defecto -->
     <div class="usuarios-list" *ngIf="!showForm">
       <button mat-raised-button color="primary" (click)="nuevousuario()">
-        Nuevo usuario
+        {{ 'newUser' | tenantText }}
       </button>
+      <span class="license-usage-hint" *ngIf="limiteUsuarios != null">
+        Usuarios activos: {{ usuariosActivos }} de {{ limiteUsuarios }}
+      </span>
       <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Buscar</mat-label>
+        <mat-label>{{ 'search' | tenantText }}</mat-label>
         <input matInput [(ngModel)]="filtrousuario" (ngModelChange)="applyFilter()"
-          placeholder="Buscar por nombre de usuario, nivel de usuario, etc.">
+          [placeholder]="'searchUser' | tenantText">
       </mat-form-field>
+      <div class="mant-table-card">
       <mat-table [dataSource]="filteredusuarios" class="mat-elevation-z8">
         <!-- RUC Column -->
         <ng-container matColumnDef="username">
-          <mat-header-cell *matHeaderCellDef> Nombre de Usuario</mat-header-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'username' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let usuario"> {{usuario.NombreUsuario}} </mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="niveldescripcion">
-          <mat-header-cell *matHeaderCellDef> Nivel </mat-header-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'level' | tenantText }} </mat-header-cell>
           <mat-cell *matCellDef="let usuario"> {{usuario.NivelDescripcion}} </mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="activo">
-          <mat-header-cell *matHeaderCellDef> Activo </mat-header-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'active' | tenantText }} </mat-header-cell>
           <mat-cell *matCellDef="let usuario"> {{usuario.Activo}} </mat-cell>
         </ng-container>
 
         <!-- Actions Column -->
         <ng-container matColumnDef="actions">
-          <mat-header-cell *matHeaderCellDef> Acciones </mat-header-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'actions' | tenantText }} </mat-header-cell>
           <mat-cell *matCellDef="let usuario">
             <button mat-icon-button color="primary" (click)="onEdit(usuario)">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button color="warn" (click)="onDelete(usuario.IdUsuario)">
-              <mat-icon>delete</mat-icon>
-            </button>
+            <span [attr.title]="!usuario.PuedeEliminar ? ('userCannotBeDeleted' | tenantText) : null">
+              <button mat-icon-button color="warn" (click)="onDelete(usuario.IdUsuario)"
+                      [disabled]="!usuario.PuedeEliminar">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </span>
           </mat-cell>
         </ng-container>
 
@@ -50,53 +58,60 @@
       </mat-table>
       <mat-paginator [length]="usuarios.length" [pageSize]="5" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
     </div>
+    </div>
 
     <!-- Formulario de usuario, visible solo cuando showForm es true -->
     <form *ngIf="showForm" #usuarioForm="ngForm" (ngSubmit)="onSubmit()">
       <!-- Primera línea: Tipo Identidad y RUC -->
       <div class="form-row">
         <mat-form-field appearance="fill">
-          <mat-label>Nombre de Usuario</mat-label>
-          <input matInput [(ngModel)]="usuario.NombreUsuario" name="username" required #username="ngModel">
+          <mat-label>{{ 'username' | tenantText }}</mat-label>
+          <input matInput [(ngModel)]="usuario.NombreUsuario" name="username" required #username="ngModel"
+            [readonly]="!!usuario.IdUsuario">
+          <mat-hint *ngIf="usuario.IdUsuario">{{ 'usernameCannotBeChanged' | tenantText }}</mat-hint>
           <mat-error *ngIf="username.invalid && (username.dirty || username.touched)">
-            El nombre de Usuario es requerido.
+            {{ 'usernameRequired' | tenantText }}
           </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
-          <mat-label>Password</mat-label>
-          <input matInput [type]="hide() ? 'password' : 'text'" [(ngModel)]="usuario.Contrasenia" name="password"
-            required #password="ngModel">
-          <button mat-icon-button matSuffix type="button" (click)="clickEvent($event)" [attr.aria-label]="'Hide password'"
-            [attr.aria-pressed]="hide()">
-            <mat-icon>{{hide() ? 'visibility_off' : 'visibility'}}</mat-icon>
-          </button>
-          <mat-error *ngIf="password.invalid && (password.dirty || password.touched)">
-            El password es requerido.
+          <mat-label>{{ 'email' | tenantText }}</mat-label>
+          <input matInput type="email" [(ngModel)]="usuario.Email" name="email" required #email="ngModel"
+            pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$">
+          <mat-icon matSuffix>email</mat-icon>
+          <mat-hint *ngIf="!usuario.IdUsuario">{{ 'newUserInvitationHint' | tenantText }}</mat-hint>
+          <mat-hint *ngIf="usuario.IdUsuario">{{ 'emailChangeRequiresVerification' | tenantText }}</mat-hint>
+          <mat-error *ngIf="email.invalid && (email.dirty || email.touched)">
+            {{ 'validEmailRequired' | tenantText }}
           </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
-          <mat-label>Estado</mat-label>
-          <mat-select [(ngModel)]="usuario.Activo" name="estado" required #estado="ngModel">
-            <mat-option [value]=true>Activo</mat-option>
-            <mat-option [value]=false>Inactivo</mat-option>
+          <mat-label>{{ 'status' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="usuario.Activo" name="estado" required #estado="ngModel"
+            [disabled]="!!usuario.IdUsuario && usuario.Activo && !usuario.PuedeDesactivar">
+            <mat-option [value]=true>{{ 'active' | tenantText }}</mat-option>
+            <mat-option [value]=false>{{ 'inactive' | tenantText }}</mat-option>
           </mat-select>
           <mat-error *ngIf="estado.invalid && (estado.dirty || estado.touched)">
-            Seleccione un estado.
+            {{ 'selectState' | tenantText }}
           </mat-error>
+          <mat-hint *ngIf="usuario.IdUsuario && usuario.Activo && !usuario.PuedeDesactivar">
+            {{ 'stateCannotBeChanged' | tenantText }}
+          </mat-hint>
         </mat-form-field>
       </div>
 
       <div class="form-row">
         <mat-form-field class="form-field" appearance="fill">
-          <mat-label>Empleado</mat-label>
-          <input 
-            type="text" 
-            matInput 
-            [matAutocomplete]="auto" 
-            [(ngModel)]="usuario.IdEmpleado" 
+          <mat-label>{{ 'employee' | tenantText }}</mat-label>
+          <input
+            type="text"
+            matInput
+            [matAutocomplete]="auto"
+            [(ngModel)]="usuario.IdEmpleado"
             (input)="onInputChange($event.target.value)"
+            [disabled]="!!usuario.IdUsuario && !usuario.PuedeEditarEmpleado"
             required
             name="empleado">
           <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayEmpleado">
@@ -105,27 +120,46 @@
             </mat-option>
           </mat-autocomplete>
           <mat-error *ngIf="!usuario.IdEmpleado">
-            Seleccione un empleado válido.
+            {{ 'selectValidEmployee' | tenantText }}
           </mat-error>
+          <mat-hint *ngIf="usuario.IdUsuario && !usuario.PuedeEditarEmpleado">
+            {{ 'employeeCannotBeChanged' | tenantText }}
+          </mat-hint>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
-          <mat-label>Nivel</mat-label>
+          <mat-label>{{ 'level' | tenantText }}</mat-label>
+          <!-- Sin compareWith: tanto el modelo como el valor de cada opción son
+               el IdNivel, y para primitivos basta la comparación por defecto. -->
           <mat-select [(ngModel)]="usuario.IdNivel" name="nivelusuario" required #nivelusuario="ngModel"
-            [compareWith]="compareNivel">
+            [disabled]="!!usuario.IdUsuario && !usuario.PuedeCambiarNivel">
             <mat-option *ngFor="let tipo of listNivelUsuario" [value]="tipo.IdNivel">
               {{tipo.Descripcion}}
             </mat-option>
           </mat-select>
           <mat-error *ngIf="nivelusuario.invalid && (nivelusuario.dirty || nivelusuario.touched)">
-            Seleccione un cargo.
+            {{ 'selectRole' | tenantText }}
           </mat-error>
+          <mat-hint *ngIf="usuario.IdUsuario && !usuario.PuedeCambiarNivel">
+            {{ 'levelCannotBeChanged' | tenantText }}
+          </mat-hint>
         </mat-form-field>
       </div>
 
-      <button mat-raised-button color="primary">
-        {{ usuario.IdUsuario ? 'Actualizar' : 'Guardar' }}
-      </button>
-      <button mat-raised-button color="warn" (click)="cancelar()">Cancelar</button>
+      <div class="form-actions">
+        <button mat-raised-button color="primary">
+          {{ (usuario.IdUsuario ? 'updateAction' : 'save') | tenantText }}
+        </button>
+        <button mat-stroked-button type="button" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
+
+        <!-- El administrador nunca escribe ni conoce la contraseña. -->
+        <button *ngIf="usuario.IdUsuario" mat-stroked-button type="button"
+                class="usr-pwd-toggle-btn"
+                [disabled]="!usuario.Activo"
+                (click)="enviarRestablecimientoPassword()">
+          <mat-icon>forward_to_inbox</mat-icon>
+          {{ 'sendPasswordLink' | tenantText }}
+        </button>
+      </div>
     </form>
   </div>

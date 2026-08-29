@@ -1,14 +1,46 @@
-<div class="report" style="position: relative; min-height: 200px;">
-  <ngx-spinner bdColor="rgba(128, 128, 128, 0.8)"
-  size="medium"
-  color="#fff"
-  type="ball-scale-multiple"
-  name="canalVentaSpinner">
-  <p style="font-size: 20px; color: rgb(71, 68, 68)">Cargando...</p></ngx-spinner>
-    <h2>Ventas por Canal</h2>
-    <div  class="totalVenta">Total Venta Mesa : S/. {{totalVentaMesa}}</div> 
-    <div  class="totalVenta">Total Venta Llevar : S/. {{totalVentaLlevar}}</div>
-    <div  class="totalVenta">Total Venta Delivery: S/. {{totalVentaDelivery}}</div>
+<div class="report report-panel">
 
-    <div #chart class="chart" id="chart-ventas-diarias"></div>
+  <ngx-spinner
+    bdColor="rgba(0, 0, 0, 0.35)"
+    size="medium"
+    color="#fff"
+    type="ball-scale-multiple"
+    name="canalVentaSpinner"
+    class="report-panel__spinner"
+  >
+    <p>{{ 'loadingChannels' | tenantText }}</p>
+  </ngx-spinner>
+
+  <header class="report-panel__header">
+    <div>
+      <h3 class="report-panel__title">{{ 'salesByChannel' | tenantText }}</h3>
+      <p class="report-panel__subtitle">
+        {{ 'spaceTakeawayDelivery' | tenantText }}
+      </p>
+    </div>
+  </header>
+
+  <section class="report-panel__summary-group">
+    <div class="report-panel__summary-chip">
+      {{ 'space' | tenantText }}: {{ monedaSimbolo }} {{ totalVentaEspacio | number:'1.2-2' }}
+    </div>
+    <div class="report-panel__summary-chip">
+      {{ 'takeaway' | tenantText }}: {{ monedaSimbolo }} {{ totalVentaLlevar | number:'1.2-2' }}
+    </div>
+    <div class="report-panel__summary-chip">
+      {{ 'delivery' | tenantText }}: {{ monedaSimbolo }} {{ totalVentaDelivery | number:'1.2-2' }}
+    </div>
+  </section>
+
+  <div class="report-panel__chart-container">
+    <div
+      #chart
+      class="report-panel__chart"
+      id="chart-ventas-diarias"
+    ></div>
+
+    <div class="report-panel__empty" *ngIf="sinDatos">
+      {{ 'noDataForRange' | tenantText }}
+    </div>
   </div>
+</div>

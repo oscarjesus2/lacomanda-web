@@ -1,0 +1,36 @@
+<section class="reservations-agenda" [class.is-readonly]="!puedeGestionar">
+  <div class="reservations-info reservations-info--readonly" *ngIf="!puedeGestionar">
+    <mat-icon>visibility</mat-icon>
+    <span>Modo consulta. Puedes revisar las reservas y su estado; la confirmación y la atención corresponden a Caja o Administración.</span>
+  </div>
+
+  <div class="dialog-toolbar">
+    <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+      <mat-form-field appearance="fill"><mat-label>Desde</mat-label><input matInput type="date" [(ngModel)]="fechaDesde"></mat-form-field>
+      <mat-form-field appearance="fill"><mat-label>Hasta</mat-label><input matInput type="date" [(ngModel)]="fechaHasta"></mat-form-field>
+      <mat-form-field appearance="fill"><mat-label>Estado</mat-label><mat-select [(ngModel)]="estado"><mat-option value="">Todos</mat-option><mat-option *ngFor="let item of estados" [value]="item">{{ item }}</mat-option></mat-select></mat-form-field>
+    </div>
+    <div class="dialog-toolbar__actions"><button mat-raised-button color="primary" type="button" (click)="consultar()"><mat-icon>search</mat-icon> Consultar</button></div>
+  </div>
+
+  <div class="reservations-admin__metrics">
+    <span><strong>{{ reservas.length }}</strong> reservas</span>
+    <span class="is-pending"><strong>{{ contarEstado('Pendiente') }}</strong> por confirmar</span>
+    <span class="is-confirmed"><strong>{{ contarEstado('Confirmada') }}</strong> confirmadas</span>
+    <span><strong>{{ contarEstado('Sentada') }}</strong> en mesa</span>
+  </div>
+
+  <div class="reservations-admin__agenda" *ngIf="reservas.length; else emptyAgenda">
+    <article class="reservation-card" *ngFor="let reserva of reservas" [attr.data-status]="reserva.Estado">
+      <div class="reservation-card__time"><strong>{{ fechaHoraLocal(reserva.InicioUtc) }}</strong><span>{{ reserva.Ambiente }} · {{ reserva.Mesa }}</span></div>
+      <div class="reservation-card__guest"><strong>{{ reserva.ClienteNombre }}</strong><span><mat-icon>groups</mat-icon>{{ reserva.Personas }} · <mat-icon>email</mat-icon>{{ reserva.ClienteEmail }}<ng-container *ngIf="reserva.ClienteTelefono"> · <mat-icon>phone</mat-icon>{{ reserva.ClienteTelefono }}</ng-container></span></div>
+      <div class="reservation-card__code"><span>{{ reserva.Codigo }}</span><small>{{ reserva.Estado }}</small></div>
+      <div class="reservation-card__actions" *ngIf="puedeGestionar"><button mat-stroked-button type="button" *ngFor="let accion of acciones(reserva)" (click)="cambiarEstado(reserva, accion.estado)"><mat-icon>{{ accion.icono }}</mat-icon>{{ accion.etiqueta }}</button></div>
+      <p *ngIf="reserva.NotasCliente" class="reservation-card__note"><mat-icon>notes</mat-icon>{{ reserva.NotasCliente }}</p>
+    </article>
+  </div>
+
+  <ng-template #emptyAgenda><div class="reservations-empty"><mat-icon>event_busy</mat-icon><strong>No hay reservas en este rango</strong><span>Cuando llegue una reserva online aparecerá aquí.</span></div></ng-template>
+
+  <div class="reservations-loading" *ngIf="cargando"><span></span><strong>Cargando reservas…</strong></div>
+</section>

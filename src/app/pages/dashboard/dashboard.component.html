@@ -1,62 +1,127 @@
-<div class="container">
-  <header>
-    <h1>Dashboard de Reportes para Restaurantes</h1>
-    <label for="fecha-inicial">Fecha Inicial : </label>
-    <input type="date" id="fecha-inicial" [(ngModel)]="fechaInicial" (change)="onFechaInicialChange()"
-      [min]="minFechaFinal">
-    <label for="fecha-final">Fecha Final : </label>
-    <input type="date" id="fecha-final" [(ngModel)]="fechaFinal" [min]="minFechaFinal" [max]="maxFechaFinal"
-      (change)="onFechaFinalChange()">
+<div class="dashboard">
+<div class="dashboard__inner">
 
-      <div class="custom-toggle-container">
-        <label class="custom-toggle" *ngFor="let rep of reportes">
-          <input
-            type="checkbox"
-            [(ngModel)]="rep.visible"
-            (change)="updateVisibleReportes()"
-          />
-          <span class="slider"></span>
-          <span class="toggle-label">{{ rep.titulo }}</span>
-        </label>
-      </div>
-      
+  <!-- TÍTULO DE PÁGINA -->
+  <header class="dashboard__header">
+    <div class="dashboard__header-accent"></div>
+    <div>
+      <h1 class="dashboard__title">{{ 'reportsDashboard' | tenantText }}</h1>
+      <p class="dashboard__subtitle">{{ 'dashboardSubtitle' | tenantText }}</p>
+    </div>
   </header>
 
-  <main>
-    <div *ngFor="let rep of visibleReportes">
-        <div class="report">
-          <div class="chart">
-            <ng-container [ngSwitch]="rep.componente">
-              <app-ventas-diarias *ngSwitchCase="'ventas-diarias'" [fechaInicial]="fechaInicial"
-                [fechaFinal]="fechaFinal"></app-ventas-diarias>
-              <app-popularidad-platos *ngSwitchCase="'popularidad-platos'" [fechaInicial]="fechaInicial"
-                [fechaFinal]="fechaFinal"></app-popularidad-platos>
-              <app-horas-pico *ngSwitchCase="'horas-pico'" [fechaInicial]="fechaInicial"
-                [fechaFinal]="fechaFinal"></app-horas-pico>
-              <app-canal-venta *ngSwitchCase="'canal-venta'" [fechaInicial]="fechaInicial"
-                [fechaFinal]="fechaFinal"></app-canal-venta>
-              <app-anulaciones *ngSwitchCase="'anulaciones'" [fechaInicial]="fechaInicial"
-                [fechaFinal]="fechaFinal"></app-anulaciones>
-              <!-- Agrega más casos aquí conforme tengas más reportes -->
-            </ng-container>
-          </div>
-        </div>
+  <!-- BARRA DE FILTROS -->
+  <section class="dashboard__filters">
+
+    <div class="dashboard__controls">
+
+      <div class="dashboard__field">
+        <label for="fecha-inicial" class="dashboard__label">{{ 'initialDate' | tenantText }}</label>
+        <input
+          type="date"
+          id="fecha-inicial"
+          [(ngModel)]="fechaInicial"
+          (change)="onFechaInicialChange()"
+          [min]="minFechaFinal"
+          class="dashboard__input"
+        />
+      </div>
+
+      <div class="dashboard__field">
+        <label for="fecha-final" class="dashboard__label">{{ 'finalDate' | tenantText }}</label>
+        <input
+          type="date"
+          id="fecha-final"
+          [(ngModel)]="fechaFinal"
+          [min]="minFechaFinal"
+          [max]="maxFechaFinal"
+          (change)="onFechaFinalChange()"
+          class="dashboard__input"
+        />
+      </div>
+
     </div>
 
-    <!-- <div class="report">
-      <div class="chart"><app-ventas-diarias [fechaInicial]="fechaInicial" [fechaFinal]="fechaFinal"></app-ventas-diarias></div>
+    <!-- TOGGLES DE REPORTES -->
+    <div class="dashboard__toggles">
+      <label class="dash-toggle" *ngFor="let rep of reportes">
+        <input
+          type="checkbox"
+          [(ngModel)]="rep.visible"
+          (change)="updateVisibleReportes()"
+        />
+        <span class="dash-toggle__slider"></span>
+        <span class="dash-toggle__label">{{ rep.tituloKey | tenantText }}</span>
+      </label>
     </div>
-    <div class="report">
-      <div class="chart"><app-popularidad-platos [fechaInicial]="fechaInicial" [fechaFinal]="fechaFinal"></app-popularidad-platos></div>
-    </div>
-    <div class="report">
-      <div class="chart"><app-horas-pico [fechaInicial]="fechaInicial" [fechaFinal]="fechaFinal"></app-horas-pico></div>
-    </div>
-    <div class="report">
-      <div class="chart"><app-canal-venta [fechaInicial]="fechaInicial" [fechaFinal]="fechaFinal"></app-canal-venta></div>
-    </div>  -->
+
+  </section>
+
+  <!-- GRID DE REPORTES -->
+  <main class="dashboard__grid">
+    <article
+      class="dashboard-card"
+      [class.dashboard-card--wide]="rep.wide"
+      *ngFor="let rep of visibleReportes"
+    >
+      <div class="dashboard-card__chart">
+        <ng-container [ngSwitch]="rep.componente">
+
+          <app-ventas-diarias
+            *ngSwitchCase="'ventas-diarias'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-ventas-diarias>
+
+          <app-popularidad-platos
+            *ngSwitchCase="'popularidad-platos'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-popularidad-platos>
+
+          <app-horas-pico
+            *ngSwitchCase="'horas-pico'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-horas-pico>
+
+          <app-canal-venta
+            *ngSwitchCase="'canal-venta'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-canal-venta>
+
+          <app-anulaciones
+            *ngSwitchCase="'anulaciones'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-anulaciones>
+
+          <app-comparativo-ventas
+            *ngSwitchCase="'comparativo-ventas'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-comparativo-ventas>
+
+          <app-evolucion-margen
+            *ngSwitchCase="'evolucion-margen'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-evolucion-margen>
+
+          <app-metodos-pago-dashboard
+            *ngSwitchCase="'metodos-pago-dashboard'"
+            [fechaInicial]="fechaInicial"
+            [fechaFinal]="fechaFinal">
+          </app-metodos-pago-dashboard>
+
+        </ng-container>
+      </div>
+    </article>
   </main>
-  <footer>
-    <p>© 2024 Dashboard de Restaurantes. Todos los derechos reservados.</p>
+  
+</div>
+  <footer class="dashboard__footer">
+    <p>{{ 'dashboardFooter' | tenantText }}</p>
   </footer>
 </div>

@@ -1,94 +1,184 @@
-<button mat-icon-button class="close-button" (click)="salir()">
-  <mat-icon>close</mat-icon>
-</button>
+<div class="mant-panel">
+  <button mat-icon-button type="button" class="close-button"
+          [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
 
-<div class="empleado-mantenimiento">
-  <h2>Mantenimiento de Estaciones</h2>
+  <h2>{{ 'maintenanceStations' | tenantText }}</h2>
 
-  <!-- Lista -->
   <div *ngIf="!showForm" class="empleados-list">
-    <button mat-raised-button color="primary" (click)="nuevo()">Nueva Estación</button>
+    <button mat-raised-button type="button" color="primary" (click)="nuevo()">
+      {{ 'newStation' | tenantText }}
+    </button>
+    <span class="license-usage-hint" *ngIf="limiteEstaciones != null">
+      Estaciones: {{ estaciones.length }} de {{ limiteEstaciones }}
+    </span>
 
     <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Buscar</mat-label>
-      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()" placeholder="Buscar por nombre o IdentificadorUnico">
+      <mat-label>{{ 'search' | tenantText }}</mat-label>
+      <input matInput [(ngModel)]="filtro" (ngModelChange)="applyFilter()"
+             [placeholder]="'searchStation' | tenantText">
     </mat-form-field>
 
-    <mat-table [dataSource]="filteredEstaciones" class="mat-elevation-z8">
-      <ng-container matColumnDef="descripcion">
-        <mat-header-cell *matHeaderCellDef>Descripción</mat-header-cell>
-        <mat-cell *matCellDef="let r">{{ r.Descripcion }}</mat-cell>
-      </ng-container>
+    <div class="mant-table-card">
+      <mat-table [dataSource]="filteredEstaciones" class="mat-elevation-z8">
+        <ng-container matColumnDef="descripcion">
+          <mat-header-cell *matHeaderCellDef>{{ 'description' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let r">{{ r.Descripcion }}</mat-cell>
+        </ng-container>
 
-      <ng-container matColumnDef="identificadorUnico">
-        <mat-header-cell *matHeaderCellDef>Identificador Único</mat-header-cell>
-        <mat-cell *matCellDef="let r">{{ r.IdentificadorUnico }}</mat-cell>
-      </ng-container>
+        <ng-container matColumnDef="identificadorUnico">
+          <mat-header-cell *matHeaderCellDef>DISPOSITIVO</mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            <span class="device-status"
+                  [class.device-current]="estadoDispositivo(r) === 'Este dispositivo'"
+                  [class.device-unassigned]="estadoDispositivo(r) === 'Sin dispositivo'">
+              <mat-icon>{{ iconoDispositivo(r) }}</mat-icon>
+              {{ estadoDispositivo(r) }}
+            </span>
+          </mat-cell>
+        </ng-container>
 
-      <ng-container matColumnDef="caja">
-        <mat-header-cell *matHeaderCellDef>Caja</mat-header-cell>
-        <mat-cell *matCellDef="let r">
-           {{ cajaMap[r.IdCaja] || r.IdCaja }}
-        </mat-cell>
-      </ng-container>
+        <ng-container matColumnDef="caja">
+          <mat-header-cell *matHeaderCellDef>{{ 'register' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let r">{{ cajaMap[r.IdCaja] || r.IdCaja }}</mat-cell>
+        </ng-container>
 
-      <ng-container matColumnDef="tipo">
-        <mat-header-cell *matHeaderCellDef>Tipo</mat-header-cell>
-        <mat-cell *matCellDef="let r">
-          {{ tipoMap[r.Tipo] || r.Tipo }}
-        </mat-cell>
-      </ng-container>
+        <ng-container matColumnDef="tipo">
+          <mat-header-cell *matHeaderCellDef>{{ 'type' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let r">{{ tipoMap[r.Tipo] || r.Tipo }}</mat-cell>
+        </ng-container>
 
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
-        <mat-cell *matCellDef="let r">
-          <button mat-icon-button color="primary" (click)="onEdit(r)">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="onDelete(r.IdEstacion)">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-cell>
-      </ng-container>
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            <button mat-icon-button type="button" color="primary" (click)="onEdit(r)"
+                    aria-label="Editar estación">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button type="button" color="warn" (click)="onDelete(r.IdEstacion)"
+                    aria-label="Eliminar estación">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
 
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-    </mat-table>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      </mat-table>
 
-    <mat-paginator [length]="estaciones.length" [pageSize]="5" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
+      <mat-paginator [length]="filteredEstaciones.data.length" [pageSize]="5"
+                     [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
+    </div>
   </div>
 
-  <!-- Form -->
-  <form *ngIf="showForm" #estacionForm="ngForm" (ngSubmit)="onSubmit()">
+  <form *ngIf="showForm" #estacionForm="ngForm" (ngSubmit)="onSubmit()" class="station-form">
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Tipo Caja</mat-label>
+        <mat-label>{{ 'stationType' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="estacion.Tipo" name="tipo" required>
           <mat-option *ngFor="let t of tipos" [value]="t.value">{{ t.label }}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Caja Asignada</mat-label>
+        <mat-label>{{ 'assignedRegister' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="estacion.IdCaja" name="idCaja" required>
           <mat-option *ngFor="let c of listCajas" [value]="c.IdCaja">{{ c.Descripcion }}</mat-option>
         </mat-select>
       </mat-form-field>
     </div>
 
-    <div class="form-row">
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>Descripción</mat-label>
-        <input matInput [(ngModel)]="estacion.Descripcion" name="descripcion" required>
-      </mat-form-field>
+    <mat-form-field class="full-width" appearance="fill">
+      <mat-label>{{ 'description' | tenantText }}</mat-label>
+      <input matInput [(ngModel)]="estacion.Descripcion" name="descripcion" required>
+    </mat-form-field>
 
-      <mat-form-field class="form-field" appearance="fill">
-        <mat-label>IdentificadorUnico</mat-label>
-        <input matInput [(ngModel)]="estacion.IdentificadorUnico" name="hostname" required>
-      </mat-form-field>
+    <section *ngIf="almacenHabilitado" class="stock-discharge-card">
+      <div class="stock-discharge-heading">
+        <span class="stock-discharge-icon"><mat-icon>inventory_2</mat-icon></span>
+        <div>
+          <h3>Descarga de stock</h3>
+          <p>
+            Configúralo solo si controlas existencias. Si no vas a controlar stock,
+            puedes omitir esta sección y comenzar a vender normalmente.
+          </p>
+        </div>
+      </div>
+
+      <div *ngIf="cargandoDescargasStock" class="stock-discharge-loading">
+        Cargando configuración…
+      </div>
+
+      <div *ngIf="!catalogoAlmacenCargado" class="stock-discharge-loading">
+        Cargando áreas y subáreas…
+      </div>
+
+      <div *ngIf="catalogoAlmacenCargado && !cargandoDescargasStock && !areasAlmacen.length"
+           class="stock-discharge-warning">
+        <strong>No existen áreas de almacén activas.</strong>
+        No necesitas crearlas para comenzar a vender; configúralas únicamente cuando
+        decidas controlar el stock.
+      </div>
+
+      <mat-checkbox
+        *ngIf="catalogoAlmacenCargado && !cargandoDescargasStock && areasAlmacen.length"
+        [(ngModel)]="descargaStockHabilitada"
+        name="descargaStockHabilitada"
+        [disabled]="guardando"
+        class="stock-discharge-toggle">
+        Descontar stock automáticamente desde esta estación
+      </mat-checkbox>
+
+      <div *ngIf="catalogoAlmacenCargado && !cargandoDescargasStock && areasAlmacen.length && descargaStockHabilitada"
+           class="stock-discharge-grid">
+        <div *ngFor="let area of areasAlmacen" class="stock-discharge-field">
+          <mat-form-field appearance="fill">
+            <mat-label>{{ area.Descripcion }}</mat-label>
+            <mat-select [(ngModel)]="descargasStockPorArea[area.IdArea]"
+                        [name]="'descargaStock' + area.IdArea"
+                        required>
+              <mat-option *ngFor="let subArea of subAreasPorArea(area.IdArea)"
+                          [value]="subArea.IdSubAreaAlmacen">
+                {{ subArea.Descripcion }}
+              </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="subAreasPorArea(area.IdArea).length">
+              Subárea que asumirá el consumo de {{ area.Descripcion }}
+            </mat-hint>
+          </mat-form-field>
+          <small *ngIf="!subAreasPorArea(area.IdArea).length"
+                 class="stock-discharge-error">
+            Esta área no tiene subáreas activas.
+          </small>
+        </div>
+      </div>
+    </section>
+
+    <section class="device-link-card"
+             [class.device-link-current]="esEsteDispositivo || seVincularaEsteDispositivo">
+      <div class="device-link-icon">
+        <mat-icon>{{ esEsteDispositivo || seVincularaEsteDispositivo ? 'devices' : 'add_to_queue' }}</mat-icon>
+      </div>
+      <div class="device-link-copy">
+        <h3>Dispositivo de esta estación</h3>
+        <p>{{ textoVinculacion }}</p>
+      </div>
+      <button mat-stroked-button color="primary" type="button" (click)="usarEsteDispositivo()"
+              [disabled]="guardando || (esEsteDispositivo && !seVincularaEsteDispositivo)">
+        <mat-icon>link</mat-icon>
+        {{ textoAccionDispositivo }}
+      </button>
+    </section>
+
+    <div class="form-actions">
+      <button mat-raised-button type="submit" color="primary"
+              [disabled]="guardando || !configuracionDescargaStockValida">
+        {{ (estacion.IdEstacion ? 'updateAction' : 'save') | tenantText }}
+      </button>
+      <button mat-stroked-button type="button" (click)="cancelar()" [disabled]="guardando">
+        {{ 'cancel' | tenantText }}
+      </button>
     </div>
-
-    <button mat-raised-button color="primary">{{ estacion.IdEstacion ? 'Actualizar' : 'Guardar' }}</button>
-    <button mat-raised-button color="warn" type="button" (click)="cancelar()">Cancelar</button>
   </form>
 </div>

@@ -1,225 +1,509 @@
-.ventas-de-entradas-container {
-    max-width: 900px;
-    margin: auto;
-    padding: 20px;
-    background-color: #fdfdfd;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    font-family: 'Poppins', sans-serif; /* Fuente moderna */
-  }
-  
-  h2 {
-    text-align: center;
-    color: #333;
-    font-size: 2rem;
-    margin-bottom: 20px;
-    font-weight: 600;
-    letter-spacing: 1px;
-  }
-  
-  .buttons-row {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 20px;
-  }
-  
-  .entry-button {
-    background-color: #ffe6b3; /* Tonos cálidos */
-    color: #333;
-    padding: 12px 20px;
-    border-radius: 10px;
-    font-size: 16px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .entry-button:hover {
-    background-color: #ffcc80; /* Color de hover */
-    transform: translateY(-2px); /* Animación al hacer hover */
-  }
-  
-  .entry-button.selected {
-    background-color: #ffb84d;
-    border-bottom: 3px solid #ff8c00; /* Resaltar el botón seleccionado */
-  }
-  
-  .entry-type-section {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 30px;
-  }
-  
-  .entry-type {
-    background-color: #fff;
-    padding: 25px;
-    border: 1px solid #ccc;
-    border-radius: 15px;
-    width: 220px;
-    text-align: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  
-  .entry-type.selected {
-    box-shadow: 0 0 20px rgba(255, 128, 0, 0.5);
-  }
-  
-  .sumar-button {
-    background-color: #118f4a;
-    color: #fff;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  .descuento-button {
-    background-color: #ff6666;
-    color: #fff;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .descuento-button:hover {
-    background-color: #e63946;
-    transform: translateY(-2px); /* Animación */
-  }
-  
-  .tragos-section {
-    background-color: #fff;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 15px;
-    width: 220px;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  
-  .tragos-input {
-    width: 80px;
-    padding: 8px;
-    font-size: 18px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    text-align: center;
-  }
-  
-  .actions-section {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 30px;
-  }
-  
-  .action-button {
-    background-color: #ffeb99;
-    color: #333;
-    border: none;
-    padding: 12px 25px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .action-button:hover {
-    background-color: #ffd966;
-    transform: translateY(-2px);
-  }
-  
-  .payment-section {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-  }
-  
-  .payment-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 20px;
-    background-color: #FF7043; /* Naranja cálido */
-    color: #FFFFFF;
-    border-radius: 8px;
-    border: 2px solid transparent;
-    cursor: pointer;
-    font-size: 14px; /* Tamaño del texto */
-    font-weight: bold;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
-    transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
-  }
-  .entry-button-process {
-    background-color: #FF7043; /* Naranja cálido */
-    color: #FFFFFF;
-    padding: 12px 20px;
-    border-radius: 10px;
-    font-size: 16px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .selected {
-    border: 2px solid #ff8c00;
-    background-color: #fff7e6;
-  }
-  
-  .total-section {
-    display: flex;
-    align-items: center;
-    margin-top: 10px;
-    justify-content: space-between; /* Espacio entre los elementos */
-    background-color: #FFF3E0; /* Fondo cálido */
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra sutil */
-    font-size: 16px;
-    margin-bottom: 20px;
-  }
-  
-  .total-section label {
-    font-weight: bold;
-    color: #5D4037; /* Marrón oscuro */
-  }
-  
-  .total-section input {
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #FF7043; /* Borde naranja cálido */
-    font-size: 16px;
-    width: 100px; /* Ancho fijo para los inputs */
+/* ============================================================
+   VENTAS DE ENTRADAS
+   Estilos apoyados 100% en los design tokens globales
+   (ver styles.scss). El panel usa la base .mant-panel:
+   borde superior de acento, radio-xl, título sticky en
+   mayúsculas y .close-button global.
+   ============================================================ */
+
+/* El diálogo se abre con width:'800px' (ver venta.component.ts).
+   Hacemos que el panel llene exactamente ese ancho en vez del
+   width:fit-content del estándar global, para que los grids con
+   auto-fit no lo empujen más ancho que el pane y aparezca scroll. */
+.entradas-panel {
+  width: 100% !important;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Iconos Material a tamaño consistente dentro del diálogo */
+.entradas-panel mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+}
+
+/* ---------- Selector de tipo (tabs) ---------- */
+.entradas-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.entradas-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  min-height: 74px;
+  padding: 12px 10px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+  color: var(--color-text);
+
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+  text-align: center;
+  text-transform: uppercase;
+
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition-fast);
+}
+
+.entradas-tab:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--color-primary-light);
+}
+
+/* Contador en pill sobre cada tab */
+.entradas-tab__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+}
+
+/* Seleccionado — acento ámbar del sistema */
+.entradas-tab--selected {
+  background: var(--color-accent);
+  border-color: var(--color-accent-dark);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.entradas-tab--selected .entradas-tab__count {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: transparent;
+}
+
+/* Botones de "Procesar" — acción principal */
+.entradas-tab--process {
+  background: var(--color-primary);
+  border-color: transparent;
+  color: var(--color-text-light);
+}
+
+.entradas-tab--process mat-icon {
+  color: var(--color-text-light);
+}
+
+.entradas-tab--process:hover {
+  background: var(--color-primary-dark);
+  border-color: transparent;
+}
+
+/* ---------- Tarjetas: Nacional / Internacional / Tragos ---------- */
+.entradas-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.entradas-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  padding: 18px 18px 20px;
+
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.entradas-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.entradas-card--selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(191, 54, 12, 0.15), var(--shadow-md);
+}
+
+.entradas-card--tragos {
+  cursor: default;
+  background: var(--color-surface-warm);
+}
+
+.entradas-card--tragos:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Cabecera de la card: nombre + precio base */
+.entradas-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.entradas-card__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--color-text);
+}
+
+.entradas-card__price {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(191, 54, 12, 0.08);
+  border: 1px solid rgba(191, 54, 12, 0.18);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.entradas-card__head-icon {
+  flex-shrink: 0;
+  color: var(--color-accent-dark);
+}
+
+/* Bloque central: contador grande */
+.entradas-card__count-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 62px;
+}
+
+.entradas-card__count {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-primary-dark);
+}
+
+.entradas-card__count-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* Acciones dentro de la card */
+.entradas-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.entradas-card__newprice {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+/* Botón sumar (+) — acción primaria de la card */
+.entradas-btn-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-success);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition-fast);
+}
+
+.entradas-btn-add mat-icon {
+  color: #fff;
+}
+
+.entradas-btn-add:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Botón descuento — secundario, contorneado (menos ruido visual) */
+.entradas-btn-discount {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--color-warn);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-warn);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.entradas-btn-discount mat-icon {
+  color: var(--color-warn);
+}
+
+.entradas-btn-discount:hover {
+  background: var(--color-warn);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.entradas-btn-discount:hover mat-icon {
+  color: #fff;
+}
+
+.entradas-tragos-input {
+  width: 90px;
+  padding: 8px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--color-primary-dark);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+}
+
+.entradas-tragos-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(191, 54, 12, 0.15);
+}
+
+/* ---------- Acciones secundarias + taxista ---------- */
+.entradas-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 28px;
+  margin-bottom: 22px;
+}
+
+.entradas-secondary__actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Botón neutro / secundario (pill contorneado) */
+.entradas-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 20px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-warm);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.entradas-btn-ghost mat-icon {
+  color: var(--color-text-muted);
+}
+
+.entradas-btn-ghost:hover {
+  background: var(--color-bg);
+  border-color: var(--color-primary-light);
+  transform: translateY(-1px);
+}
+
+/* Taxista como control tipo tarjeta clickeable */
+.entradas-taxista {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-warm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.entradas-taxista:hover {
+  border-color: var(--color-primary-light);
+}
+
+.entradas-taxista input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.entradas-taxista__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.entradas-taxista__title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.entradas-taxista__hint {
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Totales ---------- */
+.entradas-total {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 20px;
+  align-items: stretch;
+
+  padding: 6px;
+  margin-bottom: 22px;
+
+  background: var(--color-surface-warm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+}
+
+.entradas-total__item {
+  flex: 1 1 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+}
+
+.entradas-total__item label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.entradas-total__value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+/* Total destacado como bloque primario */
+.entradas-total__item--main {
+  background: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.entradas-total__item--main label {
+  color: rgba(255, 248, 240, 0.85);
+}
+
+.entradas-total__item--main .entradas-total__value {
+  color: var(--color-text-light);
+  font-size: 1.35rem;
+}
+
+/* ---------- Botones de pago ---------- */
+.entradas-pay {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.entradas-btn-pay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+}
+
+.entradas-btn-pay mat-icon {
+  color: var(--color-text-light);
+}
+
+.entradas-btn-pay:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.entradas-btn-pay--alt {
+  background: var(--color-accent-dark);
+  color: var(--color-text);
+}
+
+.entradas-btn-pay--alt mat-icon {
+  color: var(--color-text);
+}
+
+.entradas-btn-pay--alt:hover {
+  background: var(--color-accent);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .entradas-secondary {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .checkbox-container {
-    display: inline-block;
-    margin-left: 20px;
-    vertical-align: middle;
+  .entradas-total__item--main {
+    flex-basis: 100%;
   }
-  
-  .checkbox-container input[type="checkbox"] {
-    margin-right: 10px;
-  }
-  .close-button {
-    position: absolute;
-    top: 0px;
-    right: 0px;
-    z-index: 1000;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .close-button mat-icon {
-    font-size: 24px;
-    color: #757575;  /* Color gris medio */
-  }
-  
-  .close-button:hover mat-icon {
-    color: #212121;  /* Color más oscuro al pasar el mouse */
-  }
-  
+}

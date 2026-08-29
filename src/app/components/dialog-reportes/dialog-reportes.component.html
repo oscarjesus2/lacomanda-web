@@ -1,0 +1,544 @@
+<div
+  class="mant-panel rpt-panel"
+  [class.dialog-panel--workspace]="!!pdfUrl || !!vistaReporte">
+
+  <button mat-icon-button class="close-button" (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>
+    {{
+      (
+        vistaReporte === 'comandas'
+          ? 'orderTracking'
+          : vistaReporte === 'anfitriona'
+            ? 'hostessCommission'
+            : 'expensesReports'
+      ) | tenantText
+    }}
+  </h2>
+
+  <!-- ══ VISTA PREVIA PDF (ocupa todo el panel cuando está activa) ══ -->
+  <div class="rpt-pdf-viewer" *ngIf="pdfUrl">
+    <div class="rpt-pdf-toolbar">
+      <mat-icon class="rpt-pdf-toolbar__icon">picture_as_pdf</mat-icon>
+      <span class="rpt-pdf-toolbar__title">{{ pdfTitulo }} — {{ 'shift' | tenantText }} {{ idTurno }}</span>
+      <button class="rpt-pdf-btn rpt-pdf-btn--print" (click)="imprimirPdf()" [matTooltip]="'openPrint' | tenantText">
+        <mat-icon>print</mat-icon> {{ 'print' | tenantText }}
+      </button>
+      <button class="rpt-pdf-btn rpt-pdf-btn--close" (click)="cerrarPdf()">
+        <mat-icon>close</mat-icon> {{ 'closeView' | tenantText }}
+      </button>
+    </div>
+    <iframe class="rpt-pdf-frame" [src]="pdfUrl" type="application/pdf"></iframe>
+  </div>
+
+  <!-- ══ REPORTES DE SEGUIMIENTO ══ -->
+  <div class="rpt-data-view" *ngIf="!pdfUrl && vistaReporte">
+    <div class="rpt-data-toolbar">
+      <button mat-stroked-button type="button" (click)="volverAReportes()">
+        <mat-icon>arrow_back</mat-icon>
+        {{ 'back' | tenantText }}
+      </button>
+      <div class="rpt-data-toolbar__period">
+        <mat-icon>{{ modoFiltro === 'turno' ? 'point_of_sale' : 'date_range' }}</mat-icon>
+        <span *ngIf="modoFiltro === 'turno'">
+          {{ 'shift' | tenantText }} {{ idTurno }}
+        </span>
+        <span *ngIf="modoFiltro === 'fechas'">
+          {{ fechaDesde }} — {{ fechaHasta }}
+        </span>
+      </div>
+      <span class="rpt-data-toolbar__spacer"></span>
+      <button mat-stroked-button type="button"
+              (click)="exportarReporte()"
+              [disabled]="loadingReporte ||
+                (vistaReporte === 'comandas' ? !seguimiento : !comisionAnfitriona)">
+        <mat-icon>download</mat-icon>
+        {{ 'exportToExcel' | tenantText }}
+      </button>
+    </div>
+
+    <div class="rpt-report-filters">
+      <mat-button-toggle-group
+        [value]="modoFiltro"
+        (change)="cambiarModoFiltro($event.value)">
+        <mat-button-toggle value="turno">
+          {{ 'currentShift' | tenantText }}
+        </mat-button-toggle>
+        <mat-button-toggle value="fechas">
+          {{ 'dateRange' | tenantText }}
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+
+      <div class="rpt-date-filter" *ngIf="modoFiltro === 'fechas'">
+        <label>
+          <span>{{ 'initialDate' | tenantText }}</span>
+          <input type="date" [(ngModel)]="fechaDesde" [max]="fechaHasta">
+        </label>
+        <label>
+          <span>{{ 'finalDate' | tenantText }}</span>
+          <input type="date" [(ngModel)]="fechaHasta" [min]="fechaDesde">
+        </label>
+      </div>
+
+      <button mat-raised-button color="primary" type="button"
+              (click)="consultarReporte()"
+              [disabled]="loadingReporte || (modoFiltro === 'fechas' && !rangoValido)">
+        <mat-icon>search</mat-icon>
+        {{ 'search' | tenantText }}
+      </button>
+    </div>
+
+    <div class="rpt-loading rpt-loading--center" *ngIf="loadingReporte">
+      <mat-icon class="rpt-loading__icon">hourglass_empty</mat-icon>
+      <span>{{ 'loading' | tenantText }}</span>
+    </div>
+
+    <!-- Seguimiento: resumen, anulados y descuentos -->
+    <ng-container *ngIf="!loadingReporte && vistaReporte === 'comandas' && seguimiento">
+      <div class="rpt-stats rpt-stats--tracking">
+        <div class="rpt-stat">
+          <span class="rpt-stat__label">{{ 'commands' | tenantText }}</span>
+          <span class="rpt-stat__value">{{ seguimiento.CantidadComandas }}</span>
+        </div>
+        <div class="rpt-stat">
+          <span class="rpt-stat__label">{{ 'paid' | tenantText }}</span>
+          <span class="rpt-stat__value rpt-stat__value--ok">
+            {{ simbolo }} {{ seguimiento.TotalPagado | number:'1.2-2' }}
+          </span>
+        </div>
+        <div class="rpt-stat">
+          <span class="rpt-stat__label">{{ 'pending' | tenantText }}</span>
+          <span class="rpt-stat__value rpt-stat__value--warn">
+            {{ simbolo }} {{ seguimiento.TotalPendiente | number:'1.2-2' }}
+          </span>
+        </div>
+        <div class="rpt-stat">
+          <span class="rpt-stat__label">{{ 'voidedOrdersAmount' | tenantText }}</span>
+          <span class="rpt-stat__value">
+            {{ simbolo }} {{ seguimiento.TotalAnulado | number:'1.2-2' }}
+          </span>
+        </div>
+        <div class="rpt-stat">
+          <span class="rpt-stat__label">{{ 'voidedProductsAmount' | tenantText }}</span>
+          <span class="rpt-stat__value">
+            {{ simbolo }} {{ seguimiento.TotalProductosAnulados | number:'1.2-2' }}
+          </span>
+        </div>
+        <div class="rpt-stat">
+          <span class="rpt-stat__label">{{ 'discounts' | tenantText }}</span>
+          <span class="rpt-stat__value">
+            {{ simbolo }} {{ seguimiento.TotalDescuentos | number:'1.2-2' }}
+          </span>
+        </div>
+      </div>
+
+      <mat-tab-group class="rpt-tabs rpt-result-tabs" animationDuration="150ms">
+        <mat-tab [label]="'commands' | tenantText">
+          <div class="mant-table-card rpt-table-card">
+            <div class="rpt-table-scroll">
+              <mat-table [dataSource]="seguimiento.Comandas">
+                <ng-container matColumnDef="IdTurno">
+                  <mat-header-cell *matHeaderCellDef>{{ 'shift' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.IdTurno }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="FechaTrabajo">
+                  <mat-header-cell *matHeaderCellDef>{{ 'workDate' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.FechaTrabajo | date:'dd/MM/yyyy' }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="TipoPedido">
+                  <mat-header-cell *matHeaderCellDef>{{ 'orderType' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.TipoPedido }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="NroPedido">
+                  <mat-header-cell *matHeaderCellDef>{{ 'commandNumber' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.NroPedido }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="NroCuenta">
+                  <mat-header-cell *matHeaderCellDef>{{ 'account' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.NroCuenta }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="Mesa">
+                  <mat-header-cell *matHeaderCellDef>{{ 'table' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.Mesa || '—' }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="NroPax">
+                  <mat-header-cell *matHeaderCellDef>Pax</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.NroPax }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="Mozo">
+                  <mat-header-cell *matHeaderCellDef>{{ 'waiter' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.Mozo }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="Descuento">
+                  <mat-header-cell *matHeaderCellDef>{{ 'discount' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.Descuento | number:'1.2-2' }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="Total">
+                  <mat-header-cell *matHeaderCellDef>{{ 'total' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.Total | number:'1.2-2' }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="Estado">
+                  <mat-header-cell *matHeaderCellDef>{{ 'status' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.Estado }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="UsuarioRegistra">
+                  <mat-header-cell *matHeaderCellDef>{{ 'registeredBy' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.UsuarioRegistra }}</mat-cell>
+                </ng-container>
+                <mat-header-row *matHeaderRowDef="columnasComandas; sticky: true"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: columnasComandas"></mat-row>
+              </mat-table>
+            </div>
+            <div class="rpt-empty" *ngIf="seguimiento.Comandas.length === 0">
+              {{ 'noDataForFilter' | tenantText }}
+            </div>
+          </div>
+        </mat-tab>
+
+        <mat-tab [label]="'voidedProducts' | tenantText">
+          <div class="mant-table-card rpt-table-card">
+            <div class="rpt-table-scroll">
+              <mat-table [dataSource]="seguimiento.ProductosAnulados">
+                <ng-container matColumnDef="IdTurno">
+                  <mat-header-cell *matHeaderCellDef>{{ 'shift' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.IdTurno }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="FechaTrabajo">
+                  <mat-header-cell *matHeaderCellDef>{{ 'workDate' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.FechaTrabajo | date:'dd/MM/yyyy' }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="TipoPedido">
+                  <mat-header-cell *matHeaderCellDef>{{ 'orderType' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.TipoPedido }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="NroPedido">
+                  <mat-header-cell *matHeaderCellDef>{{ 'commandNumber' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.NroPedido }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="NroCuenta">
+                  <mat-header-cell *matHeaderCellDef>{{ 'account' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.NroCuenta }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="Producto">
+                  <mat-header-cell *matHeaderCellDef>{{ 'product' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.Producto }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="Cantidad">
+                  <mat-header-cell *matHeaderCellDef>{{ 'quantity' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.Cantidad }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="Subtotal">
+                  <mat-header-cell *matHeaderCellDef>{{ 'subtotal' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.Subtotal | number:'1.2-2' }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="UsuarioAnula">
+                  <mat-header-cell *matHeaderCellDef>{{ 'voidedBy' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.UsuarioAnula }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="FechaAnula">
+                  <mat-header-cell *matHeaderCellDef>{{ 'voidedAt' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.FechaAnula | date:'dd/MM/yyyy HH:mm' }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="MotivoAnula">
+                  <mat-header-cell *matHeaderCellDef>{{ 'reason' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.MotivoAnula }}</mat-cell>
+                </ng-container>
+                <mat-header-row *matHeaderRowDef="columnasAnulados; sticky: true"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: columnasAnulados"></mat-row>
+              </mat-table>
+            </div>
+            <div class="rpt-empty" *ngIf="seguimiento.ProductosAnulados.length === 0">
+              {{ 'noDataForFilter' | tenantText }}
+            </div>
+          </div>
+        </mat-tab>
+
+        <mat-tab [label]="'discounts' | tenantText">
+          <div class="mant-table-card rpt-table-card">
+            <div class="rpt-table-scroll">
+              <mat-table [dataSource]="seguimiento.Descuentos">
+                <ng-container matColumnDef="IdTurno">
+                  <mat-header-cell *matHeaderCellDef>{{ 'shift' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.IdTurno }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="FechaTrabajo">
+                  <mat-header-cell *matHeaderCellDef>{{ 'workDate' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.FechaTrabajo | date:'dd/MM/yyyy' }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="TipoPedido">
+                  <mat-header-cell *matHeaderCellDef>{{ 'orderType' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.TipoPedido }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="NroPedido">
+                  <mat-header-cell *matHeaderCellDef>{{ 'commandNumber' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.NroPedido }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="TipoDescuento">
+                  <mat-header-cell *matHeaderCellDef>{{ 'discountType' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.TipoDescuento }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="Producto">
+                  <mat-header-cell *matHeaderCellDef>{{ 'product' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.Producto }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="Cantidad">
+                  <mat-header-cell *matHeaderCellDef>{{ 'quantity' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.Cantidad }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="Subtotal">
+                  <mat-header-cell *matHeaderCellDef>{{ 'subtotal' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.Subtotal | number:'1.2-2' }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="MontoDescuento">
+                  <mat-header-cell *matHeaderCellDef>{{ 'discount' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.MontoDescuento | number:'1.2-2' }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="Estado">
+                  <mat-header-cell *matHeaderCellDef>{{ 'status' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.Estado }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="UsuarioDescuento">
+                  <mat-header-cell *matHeaderCellDef>{{ 'authorizedBy' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.UsuarioDescuento }}</mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="FechaDescuento">
+                  <mat-header-cell *matHeaderCellDef>{{ 'authorizedAt' | tenantText }}</mat-header-cell>
+                  <mat-cell *matCellDef="let row">{{ row.FechaDescuento | date:'dd/MM/yyyy HH:mm' }}</mat-cell>
+                </ng-container>
+                <mat-header-row *matHeaderRowDef="columnasDescuentos; sticky: true"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: columnasDescuentos"></mat-row>
+              </mat-table>
+            </div>
+            <div class="rpt-empty" *ngIf="seguimiento.Descuentos.length === 0">
+              {{ 'noDataForFilter' | tenantText }}
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </ng-container>
+
+    <!-- Comisión anfitriona -->
+    <ng-container *ngIf="!loadingReporte && vistaReporte === 'anfitriona' && comisionAnfitriona">
+      <div class="rpt-stats">
+        <div class="rpt-stat">
+          <span class="rpt-stat__label">{{ 'hostessCards' | tenantText }}</span>
+          <span class="rpt-stat__value">{{ comisionAnfitriona.CantidadFichas }}</span>
+        </div>
+        <div class="rpt-stat rpt-stat--total">
+          <span class="rpt-stat__label">{{ 'assignedAmount' | tenantText }}</span>
+          <span class="rpt-stat__value rpt-stat__value--total">
+            {{ simbolo }} {{ comisionAnfitriona.TotalAsignado | number:'1.2-2' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="mant-table-card rpt-table-card">
+        <div class="rpt-table-scroll">
+          <mat-table [dataSource]="comisionAnfitriona.Detalles">
+            <ng-container matColumnDef="IdTurno">
+              <mat-header-cell *matHeaderCellDef>{{ 'shift' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.IdTurno }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="FechaTrabajo">
+              <mat-header-cell *matHeaderCellDef>{{ 'workDate' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.FechaTrabajo | date:'dd/MM/yyyy' }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="NroPedido">
+              <mat-header-cell *matHeaderCellDef>{{ 'commandNumber' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.NroPedido }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="NroCuenta">
+              <mat-header-cell *matHeaderCellDef>{{ 'account' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.NroCuenta }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="Anfitrionas">
+              <mat-header-cell *matHeaderCellDef>{{ 'hostesses' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.Anfitrionas }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="CantidadAnfitrionas">
+              <mat-header-cell *matHeaderCellDef>{{ 'cards' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.CantidadAnfitrionas }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="Producto">
+              <mat-header-cell *matHeaderCellDef>{{ 'product' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.Producto }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="Precio">
+              <mat-header-cell *matHeaderCellDef>{{ 'price' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.Precio | number:'1.2-2' }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="Cantidad">
+              <mat-header-cell *matHeaderCellDef>{{ 'quantity' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.Cantidad }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="ImporteNeto">
+              <mat-header-cell *matHeaderCellDef>{{ 'netAmount' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.ImporteNeto | number:'1.2-2' }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="ImportePorAnfitriona">
+              <mat-header-cell *matHeaderCellDef>{{ 'amountPerHostess' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.ImportePorAnfitriona | number:'1.2-2' }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="NumeroReimpresiones">
+              <mat-header-cell *matHeaderCellDef>{{ 'reprints' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.NumeroReimpresiones }}</mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="TipoIngreso">
+              <mat-header-cell *matHeaderCellDef>{{ 'incomeType' | tenantText }}</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.TipoIngreso }}</mat-cell>
+            </ng-container>
+            <mat-header-row *matHeaderRowDef="columnasAnfitriona; sticky: true"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: columnasAnfitriona"></mat-row>
+          </mat-table>
+        </div>
+        <div class="rpt-empty" *ngIf="comisionAnfitriona.Detalles.length === 0">
+          {{ 'noDataForFilter' | tenantText }}
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- ══ TABS — se ocultan mientras otro reporte está visible ══ -->
+  <mat-tab-group class="rpt-tabs" animationDuration="150ms" *ngIf="!pdfUrl && !vistaReporte">
+
+    <!-- ── TAB 1 — VENTAS ──────────────────────────────── -->
+    <mat-tab [label]="'sales' | tenantText">
+      <div class="rpt-tab-content">
+
+        <!-- Resumen de cobros -->
+        <div class="rpt-section">
+          <div class="rpt-section__header">
+            <mat-icon>summarize</mat-icon>
+            <span>{{ 'collectionsSummary' | tenantText }} — {{ 'shift' | tenantText }} {{ idTurno }}</span>
+            <button class="rpt-refresh" (click)="loadResumen()" [disabled]="loadingResumen" [matTooltip]="'update' | tenantText">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </div>
+
+          <div class="rpt-stats" *ngIf="!loadingResumen; else loadingTpl">
+            <div class="rpt-stat">
+              <span class="rpt-stat__label">{{ 'collected' | tenantText }}</span>
+              <span class="rpt-stat__value rpt-stat__value--ok">
+                {{ simbolo }} {{ (resumen?.TotalCobrado ?? 0) | number:'1.2-2' }}
+              </span>
+            </div>
+            <div class="rpt-stat">
+              <span class="rpt-stat__label">{{ 'pendingCollection' | tenantText }}</span>
+              <span class="rpt-stat__value rpt-stat__value--warn">
+                {{ simbolo }} {{ (resumen?.TotalPorCobrar ?? 0) | number:'1.2-2' }}
+              </span>
+            </div>
+            <div class="rpt-stat rpt-stat--total">
+              <span class="rpt-stat__label">{{ 'total' | tenantText }}</span>
+              <span class="rpt-stat__value rpt-stat__value--total">
+                {{ simbolo }} {{ (resumen?.Total ?? 0) | number:'1.2-2' }}
+              </span>
+            </div>
+          </div>
+
+          <ng-template #loadingTpl>
+            <div class="rpt-loading">
+              <mat-icon class="rpt-loading__icon">hourglass_empty</mat-icon>
+              <span>{{ 'loading' | tenantText }}</span>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Reportes de ventas -->
+        <div class="rpt-section">
+          <div class="rpt-section__header">
+            <mat-icon>bar_chart</mat-icon>
+            <span>{{ 'salesReports' | tenantText }}</span>
+          </div>
+          <div class="rpt-actions">
+            <button class="rpt-action-btn"
+                    [disabled]="!!loadingPdf || !isAdmin"
+                    (click)="verVentasPorProducto()"
+                    [matTooltip]="(!isAdmin ? 'adminsOnly' : 'viewPdf') | tenantText">
+              <mat-icon>{{ loadingPdf === 'ventas-producto' ? 'hourglass_empty' : 'inventory_2' }}</mat-icon>
+              <span>{{ (loadingPdf === 'ventas-producto' ? 'generating' : 'salesByProduct') | tenantText }}</span>
+            </button>
+            <button class="rpt-action-btn"
+                    [disabled]="!!loadingPdf || !isAdmin"
+                    (click)="verResumenVenta()"
+                    [matTooltip]="(!isAdmin ? 'adminsOnly' : 'viewPdf') | tenantText">
+              <mat-icon>{{ loadingPdf === 'resumen-venta' ? 'hourglass_empty' : 'receipt' }}</mat-icon>
+              <span>{{ (loadingPdf === 'resumen-venta' ? 'generating' : 'salesSummary') | tenantText }}</span>
+            </button>
+            <button class="rpt-action-btn"
+                    [disabled]="!!loadingPdf || !isAdmin"
+                    (click)="verResuDocumentos()"
+                    [matTooltip]="(!isAdmin ? 'adminsOnly' : 'viewPdf') | tenantText">
+              <mat-icon>{{ loadingPdf === 'resu-documentos' ? 'hourglass_empty' : 'description' }}</mat-icon>
+              <span>{{ (loadingPdf === 'resu-documentos' ? 'generating' : 'documentsSummary') | tenantText }}</span>
+            </button>
+          </div>
+          <div class="rpt-filter-row">
+            <mat-checkbox disabled>{{ 'onlyElectronicDocs' | tenantText }}</mat-checkbox>
+            <mat-checkbox disabled>{{ 'onlyExpress' | tenantText }}</mat-checkbox>
+          </div>
+        </div>
+
+      </div>
+    </mat-tab>
+
+    <!-- ── TAB 2 — EGRESOS ─────────────────────────────── -->
+    <mat-tab [label]="'expenses' | tenantText">
+      <div class="rpt-tab-content">
+        <div class="rpt-section">
+          <div class="rpt-section__header">
+            <mat-icon>payments</mat-icon>
+            <span>{{ 'shiftExpenses' | tenantText }}</span>
+          </div>
+          <div class="rpt-actions">
+            <button class="rpt-action-btn" disabled>
+              <mat-icon>edit_note</mat-icon>
+              <span>{{ 'expenseEntry' | tenantText }}</span>
+            </button>
+            <button class="rpt-action-btn" disabled>
+              <mat-icon>list_alt</mat-icon>
+              <span>{{ 'detailedReport' | tenantText }}</span>
+            </button>
+            <button class="rpt-action-btn" disabled>
+              <mat-icon>segment</mat-icon>
+              <span>{{ 'summaryReport' | tenantText }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ── TAB 3 — SEGUIMIENTO ─────────────────────────── -->
+    <mat-tab [label]="'tracking' | tenantText">
+      <div class="rpt-tab-content">
+        <div class="rpt-section">
+          <div class="rpt-section__header">
+            <mat-icon>track_changes</mat-icon>
+            <span>{{ 'orderTracking' | tenantText }}</span>
+          </div>
+          <div class="rpt-actions">
+            <button class="rpt-action-btn"
+                    [disabled]="!isAdmin"
+                    (click)="abrirSeguimientoComandas()"
+                    [matTooltip]="(!isAdmin ? 'adminsOnly' : 'orderTracking') | tenantText">
+              <mat-icon>assignment</mat-icon>
+              <span>{{ 'orderTracking' | tenantText }}</span>
+            </button>
+            <button class="rpt-action-btn"
+                    *ngIf="config?.Anfitrionas"
+                    [disabled]="!isAdmin"
+                    (click)="abrirComisionAnfitriona()"
+                    [matTooltip]="(!isAdmin ? 'adminsOnly' : 'hostessCommission') | tenantText">
+              <mat-icon>woman</mat-icon>
+              <span>{{ 'hostessCommission' | tenantText }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+
+</div>

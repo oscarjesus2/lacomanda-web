@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { NgxSpinnerService } from 'ngx-spinner';
 import * as d3 from 'd3';
 import Swal from 'sweetalert2';
@@ -6,33 +6,40 @@ import { VentaService } from '../../../services/venta.service';
 import { ventadiariasemanalmensual } from 'src/app/models/ventadiariasemanalmensual.models';
 import { formatDate } from '@angular/common';
 import { StorageService } from 'src/app/services/storage.service';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
 
 @Component({
   selector: 'app-ventas-diarias',
   templateUrl: './ventas-diarias.component.html',
   styleUrls: ['./ventas-diarias.component.css']
 })
-export class VentasDiariasComponent implements OnInit, OnChanges  {
-  @ViewChild('chart', { static: true }) 
-  
+export class VentasDiariasComponent implements OnInit, OnChanges, OnDestroy  {
+  @ViewChild('chart', { static: true })
+
   private chartContainer: ElementRef;
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
   totalVenta: number;
+  sinDatos = false;
+  monedaSimbolo = '';
   reportType: string = 'diarias';
   private data: ventadiariasemanalmensual[];
+  private svgRoot;
   private svg;
   private width: number;
   private height: number;
   private radius: number;
+  private resizeObserver?: ResizeObserver;
+  private resizePending = false;
 
   private color;
   private tooltip;
 
   constructor(
-    private spinnerService: NgxSpinnerService, 
+    private spinnerService: NgxSpinnerService,
     private ventaService: VentaService,
-    private storageService: StorageService,) { }
+    private storageService: StorageService,
+    private configuracionService: ConfiguracionService,) { }
 
   ngOnInit(): void {
     try {
@@ -41,6 +48,8 @@ export class VentasDiariasComponent implements OnInit, OnChanges  {
       this.radius = Math.min(this.width, this.height) / 2;
   
       this.initSvg();
+      this.observeResize();
+      this.configuracionService.get().subscribe(cfg => this.monedaSimbolo = cfg?.SimboloMoneda ?? '');
       if (this.fechaInicial && this.fechaFinal) {
         const fechaInicialStr = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US');
         const fechaFinalStr = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US');
@@ -71,10 +80,12 @@ export class VentasDiariasComponent implements OnInit, OnChanges  {
   private initSvg() {
     this.color = d3.scaleOrdinal(d3.schemeCategory10);
 
-    this.svg = d3.select(this.chartContainer.nativeElement)
+    this.svgRoot = d3.select(this.chartContainer.nativeElement)
       .append('svg')
       .attr('width', this.width)
-      .attr('height', this.height)
+      .attr('height', this.height);
+
+    this.svg = this.svgRoot
       .append('g')
       .attr('transform', `translate(${this.width / 2},${this.height / 2})`);
 
@@ -93,10 +104,47 @@ export class VentasDiariasComponent implements OnInit, OnChanges  {
       .style('opacity', 0);
   }
 
+  /** Redibuja el gráfico cuando el contenedor cambia de tamaño
+   *  (p. ej. al abrir/cerrar otro panel y pasar de columna completa a media). */
+  private observeResize(): void {
+    if (typeof ResizeObserver === 'undefined') { return; }
+    this.resizeObserver = new ResizeObserver(() => {
+      // requestAnimationFrame evita el warning "ResizeObserver loop" y agrupa cambios.
+      if (this.resizePending) { return; }
+      this.resizePending = true;
+      requestAnimationFrame(() => {
+        this.resizePending = false;
+        this.onResize();
+      });
+    });
+    this.resizeObserver.observe(this.chartContainer.nativeElement);
+  }
+
+  private onResize(): void {
+    const w = this.chartContainer.nativeElement.clientWidth;
+    // Solo reaccionamos al ancho (lo fija la columna). La altura se mantiene
+    // estable: escribir la altura desde el contenido creaba un bucle infinito.
+    if (!w || w === this.width) { return; }
+
+    this.width = w;
+    this.radius = Math.min(this.width, this.height) / 2;
+
+    this.svgRoot.attr('width', this.width).attr('height', this.height);
+    this.svg.attr('transform', `translate(${this.width / 2},${this.height / 2})`);
+
+    if (this.data) { this.updateChart(); }
+  }
+
+  ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
+    if (this.tooltip) { this.tooltip.remove(); }
+  }
+
   async getVentaDiariasSemanalMensual(tipo: number, fechaInicial: string, fechaFinal: string) {
     this.spinnerService.show('ventaDiariaSpinner');
       const data = await this.ventaService.getVentaDiariasSemanalMensual(tipo, fechaInicial, fechaFinal).toPromise();
       this.data = data;
+      this.sinDatos = !this.data || this.data.length === 0;
       this.totalVenta = this.data.reduce((acc, venta) => acc + venta.Total, 0);
       this.spinnerService.hide('ventaDiariaSpinner');
       this.updateChart();

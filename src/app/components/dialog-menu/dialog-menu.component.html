@@ -1,0 +1,258 @@
+<div class="mant-panel dialog-panel dialog-panel--workspace">
+  <button
+    type="button"
+    mat-icon-button
+    class="close-button"
+    (click)="cancelar()"
+    [attr.aria-label]="'close' | tenantText">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>{{ 'menuSelection' | tenantText }}</h2>
+
+  <div
+    class="dialog-notice"
+    [class.dialog-notice--success]="soloLectura">
+    <mat-icon>{{ soloLectura ? 'visibility' : 'restaurant_menu' }}</mat-icon>
+    <div class="dialog-notice__content">
+      <strong class="dialog-notice__title">
+        {{ pedidodet.Producto.NombreCorto }}
+      </strong>
+      <span class="dialog-notice__text">
+        {{ (soloLectura ? 'menuReadOnlyHint' : 'menuSelectionHint') | tenantText }}
+      </span>
+    </div>
+  </div>
+
+  <div class="dialog-empty-state" *ngIf="cargando">
+    <mat-icon>hourglass_top</mat-icon>
+    <span>{{ 'loading' | tenantText }}</span>
+  </div>
+
+  <ng-container *ngIf="!cargando && configuracion.Secciones.length">
+    <div class="form-row menu-summary-row">
+      <mat-form-field class="form-field" appearance="fill">
+        <mat-label>{{ 'menuQuantity' | tenantText }}</mat-label>
+        <input
+          matInput
+          type="number"
+          min="1"
+          step="1"
+          [disabled]="soloLectura"
+          [(ngModel)]="cantidadMenu"
+          (ngModelChange)="normalizarCantidadMenu($event)" />
+      </mat-form-field>
+
+      <div class="dialog-summary form-field form-field--grow">
+        <div
+          class="dialog-summary__item"
+          *ngFor="let seccion of configuracion.Secciones; trackBy: trackSeccion">
+          <span class="dialog-summary__label">{{ seccion.Descripcion }}</span>
+          <strong class="dialog-summary__value">
+            {{ cantidadSeleccionada(seccion) }} /
+            {{ cantidadRequerida(seccion) }}
+          </strong>
+          <span
+            class="status-badge"
+            [class.status-badge--danger]="!seccionCompleta(seccion)">
+            {{
+              (seccionCompleta(seccion)
+                ? 'sectionComplete'
+                : 'sectionPending') | tenantText
+            }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-toolbar">
+      <span class="dialog-summary__label">{{ 'menuSections' | tenantText }}</span>
+      <div class="dialog-toolbar__options menu-sections">
+        <mat-button-toggle-group
+          [value]="seccionSeleccionada?.IdSeccionMenu"
+          [attr.aria-label]="'menuSections' | tenantText">
+          <mat-button-toggle
+            *ngFor="let seccion of configuracion.Secciones; trackBy: trackSeccion"
+            [value]="seccion.IdSeccionMenu"
+            (click)="seleccionarSeccion(seccion)">
+            {{ seccion.Descripcion }}
+            <mat-icon *ngIf="seccionCompleta(seccion)">check_circle</mat-icon>
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+    </div>
+
+    <div
+      class="dialog-workspace-content menu-workspace"
+      *ngIf="seccionSeleccionada as seccion">
+      <section class="dialog-table-card menu-column" *ngIf="!soloLectura">
+        <div class="menu-column__header">
+          <span class="dialog-summary__label">
+            {{ 'chooseMenuOptions' | tenantText }}
+          </span>
+          <div class="dialog-toolbar__status">
+            <mat-icon>rule</mat-icon>
+            <span>
+              {{ 'selectedQuantity' | tenantText }}:
+              {{ cantidadSeleccionada(seccion) }}
+              · {{ 'requiredQuantity' | tenantText }}:
+              {{ cantidadRequerida(seccion) }}
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="dialog-table-wrapper dialog-table-wrapper--fill"
+          *ngIf="opcionesDisponibles(seccion).length">
+          <table class="dialog-data-table menu-table">
+            <thead>
+              <tr>
+                <th>{{ 'product' | tenantText }}</th>
+                <th>ID</th>
+                <th>{{ 'actions' | tenantText }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="
+                  let producto of opcionesDisponibles(seccion);
+                  trackBy: trackProducto
+                ">
+                <td>{{ producto.Nombre }}</td>
+                <td>#{{ producto.IdProducto }}</td>
+                <td>
+                  <button
+                    type="button"
+                    mat-raised-button
+                    color="primary"
+                    [disabled]="
+                      cantidadSeleccionada(seccion) >=
+                      cantidadRequerida(seccion)
+                    "
+                    (click)="agregarOpcion(seccion, producto)">
+                    <mat-icon>add</mat-icon>
+                    {{ 'add' | tenantText }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          class="dialog-empty-state"
+          *ngIf="opcionesDisponibles(seccion).length === 0">
+          <mat-icon>inventory_2</mat-icon>
+          <span>{{ 'noMenuOptions' | tenantText }}</span>
+        </div>
+      </section>
+
+      <section class="dialog-table-card menu-column">
+        <div class="menu-column__header">
+          <span class="dialog-summary__label">
+            {{ 'selectedMenuOptions' | tenantText }}
+          </span>
+          <div class="dialog-toolbar__status">
+            <mat-icon>checklist</mat-icon>
+            <span>
+              {{ cantidadSeleccionada(seccion) }} /
+              {{ cantidadRequerida(seccion) }}
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="dialog-table-wrapper dialog-table-wrapper--fill"
+          *ngIf="seleccionesDeSeccion(seccion).length">
+          <table class="dialog-data-table menu-table">
+            <thead>
+              <tr>
+                <th>{{ 'product' | tenantText }}</th>
+                <th>{{ 'quantity' | tenantText }}</th>
+                <th>{{ 'observation' | tenantText }}</th>
+                <th *ngIf="!soloLectura">{{ 'actions' | tenantText }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="
+                  let seleccion of seleccionesDeSeccion(seccion);
+                  trackBy: trackSeleccion
+                ">
+                <td>{{ nombreProducto(seleccion) }}</td>
+                <td>{{ seleccion.Cantidad }}</td>
+                <td>
+                  <mat-form-field class="menu-observation" appearance="fill">
+                    <input
+                      matInput
+                      maxlength="250"
+                      [disabled]="soloLectura || seleccion.ItemMenu > 0"
+                      [(ngModel)]="seleccion.Observacion" />
+                  </mat-form-field>
+                </td>
+                <td *ngIf="!soloLectura">
+                  <button
+                    type="button"
+                    mat-icon-button
+                    color="primary"
+                    [disabled]="
+                      seleccion.ItemMenu > 0 ||
+                      cantidadSeleccionada(seccion) >=
+                        cantidadRequerida(seccion)
+                    "
+                    (click)="aumentar(seccion, seleccion)"
+                    [attr.aria-label]="'increase' | tenantText">
+                    <mat-icon>add</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    color="primary"
+                    [disabled]="seleccion.ItemMenu > 0"
+                    (click)="disminuir(seleccion)"
+                    [attr.aria-label]="'subtract' | tenantText">
+                    <mat-icon>remove</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    color="warn"
+                    [disabled]="seleccion.ItemMenu > 0"
+                    (click)="quitar(seleccion)"
+                    [attr.aria-label]="'remove' | tenantText">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          class="dialog-empty-state"
+          *ngIf="seleccionesDeSeccion(seccion).length === 0">
+          <mat-icon>checklist</mat-icon>
+          <span>{{ 'completeAllMenuSections' | tenantText }}</span>
+        </div>
+      </section>
+    </div>
+
+    <div class="dialog-actions">
+      <button
+        type="button"
+        mat-stroked-button
+        *ngIf="!soloLectura"
+        (click)="cancelar()">
+        {{ 'cancel' | tenantText }}
+      </button>
+      <button
+        type="button"
+        mat-raised-button
+        color="primary"
+        (click)="aceptar()">
+        <mat-icon>{{ soloLectura ? 'close' : 'check' }}</mat-icon>
+        {{ (soloLectura ? 'close' : 'accept') | tenantText }}
+      </button>
+    </div>
+  </ng-container>
+</div>

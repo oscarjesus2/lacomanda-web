@@ -3,7 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { Observable, map } from 'rxjs';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
-import { AreaImpresion } from '../models/area-impresion.models';
+import {
+  ActualizarValidacionesAreaImpresionDispositivo,
+  AreaImpresion,
+  ValidacionAreaImpresionDispositivo,
+} from '../models/area-impresion.models';
 
 @Injectable({ providedIn: 'root' })
 export class AreaImpresionService {
@@ -26,5 +30,25 @@ export class AreaImpresionService {
 
   eliminar(id: number): Observable<ApiResponse<boolean>> {
     return this.http.delete<ApiResponse<boolean>>(`${this.base}/${id}`);
+  }
+
+  obtenerValidacionesDispositivo(
+    identificadorDispositivo: string,
+  ): Observable<ValidacionAreaImpresionDispositivo[]> {
+    const identificador = encodeURIComponent(identificadorDispositivo);
+    return this.http.get<ApiResponse<ValidacionAreaImpresionDispositivo[]>>(
+      `${this.base}/dispositivos/${identificador}/validaciones`,
+    ).pipe(map(r => r.Data ?? []));
+  }
+
+  guardarValidacionesDispositivo(
+    identificadorDispositivo: string,
+    validaciones: ActualizarValidacionesAreaImpresionDispositivo,
+  ): Observable<ApiResponse<ValidacionAreaImpresionDispositivo[]>> {
+    const identificador = encodeURIComponent(identificadorDispositivo);
+    return this.http.put<ApiResponse<ValidacionAreaImpresionDispositivo[]>>(
+      `${this.base}/dispositivos/${identificador}/validaciones`,
+      validaciones,
+    );
   }
 }

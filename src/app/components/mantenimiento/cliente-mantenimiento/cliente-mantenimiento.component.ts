@@ -10,6 +10,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { EnumTipoIdentidad } from 'src/app/enums/enum';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 
 @Component({
@@ -33,16 +34,16 @@ export class ClienteMantenimientoComponent implements OnInit {
     private clienteService: ClienteService,
     private spinnerService: NgxSpinnerService,
     private tipoDocClienteService: TipoDocClienteService) {}
-    @ViewChild(MatPaginator) paginator: MatPaginator;
+    @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+      if (value) {
+        this.filteredClientes.paginator = value;
+      }
+    }
 
     
   ngOnInit(): void {
     this.cargarClientes();
     this.cargarTiposDocCliente();
-  }
-
-  ngAfterViewInit() {
-    this.filteredClientes.paginator = this.paginator;
   }
 
   cargarClientes(): void {
@@ -92,95 +93,196 @@ export class ClienteMantenimientoComponent implements OnInit {
 
 
   onSubmit(): void {
-    if (this.clienteForm.invalid) {
-      this.markFormTouchedAndDirty(this.clienteForm);
-      return;
-    }
-    if (this.cliente.IdCliente) {
-        this.clienteService.updateCliente(this.cliente).subscribe(response => {
-            if (response.Success) {
-                this.cargarClientes();
-                this.showForm = false; // Ocultar formulario al guardar
-                Swal.fire('Cliente actualizado', '', 'success');
-            } else {
-                Swal.fire('Error', response.Message || 'Error al actualizar el cliente', 'error');
-            }
-        });
-    } else {
-        this.clienteService.createCliente(this.cliente).subscribe(response => {
-            if (response.Success) {
-                this.cargarClientes();
-                this.showForm = false; // Ocultar formulario al guardar
-                Swal.fire('Cliente creado', '', 'success');
-            } else {
-                Swal.fire('Error', response.message || 'Error al crear el cliente', 'error');
-            }
-        });
-    }
+  if (this.clienteForm.invalid) {
+    this.markFormTouchedAndDirty(this.clienteForm);
+
+    const camposInvalidos = Object.entries(
+      this.clienteForm.controls
+    )
+      .filter(([, control]) => control.invalid)
+      .map(([nombre]) => nombre);
+
+    console.log(
+      'Campos inválidos:',
+      camposInvalidos
+    );
+
+    Swal.fire({
+      title: 'Formulario incompleto',
+      text: 'Revisa los campos marcados en rojo.',
+      icon: 'warning',
+      confirmButtonText: 'Aceptar'
+    });
+
+    return;
+  }
+
+  if (this.cliente.IdCliente) {
+    this.clienteService
+      .updateCliente(this.cliente)
+      .subscribe({
+        next: response => {
+          if (response.Success) {
+            this.cargarClientes();
+            this.showForm = false;
+
+            Notificar.exito('Cliente actualizado',
+              '');
+          } else {
+            Swal.fire(
+              'Error',
+              response.Message ||
+                'Error al actualizar el cliente',
+              'error'
+            );
+          }
+        },
+        error: error => {
+          console.error(
+            'Error actualizando cliente:',
+            error
+          );
+
+          Swal.fire(
+            'Error',
+            error?.error?.Message ||
+              'No se pudo actualizar el cliente.',
+            'error'
+          );
+        }
+      });
+
+    return;
+  }
+
+  this.clienteService
+    .createCliente(this.cliente)
+    .subscribe({
+      next: response => {
+        if (response.Success) {
+          this.cargarClientes();
+          this.showForm = false;
+
+          Notificar.exito('Cliente creado',
+            '');
+        } else {
+          Swal.fire(
+            'Error',
+            response.Message ||
+              'Error al crear el cliente',
+            'error'
+          );
+        }
+      },
+      error: error => {
+        console.error(
+          'Error creando cliente:',
+          error
+        );
+
+        Swal.fire(
+          'Error',
+          error?.error?.Message ||
+            'No se pudo crear el cliente.',
+          'error'
+        );
+      }
+    });
 }
 
 buscarCliente(): void {
+  const numeroIdentificacion =
+    this.cliente.NumeroIdentificacion?.trim().toUpperCase();
 
-  const ruc = this.cliente.NumeroIdentificacion;
+  const idTipoIdentidad =
+    this.cliente.IdTipoIdentidad;
 
-  if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc.length != 8) {
-    Swal.fire({
-      title: 'Validación',
-      text: `El DNI debe tener 8 caracteres.`,
-      icon: 'warning',
-      confirmButtonText: 'OK'
-    });
-    return;
-  } else if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.RUC && ruc.length != 11) {
-    Swal.fire({
-      title: 'Validación',
-      text: `El RUC debe tener 11 caracteres.`,
-      icon: 'warning',
-      confirmButtonText: 'OK'
-    });
-    return;
-  } else if (this.cliente.TipoIdentidad.IdTipoIdentidad === EnumTipoIdentidad.DNI && ruc == '00000001') {
+  if (!idTipoIdentidad) {
+    Swal.fire(
+      'Validación',
+      'Selecciona un tipo de identidad.',
+      'warning'
+    );
+
     return;
   }
 
-  this.clienteService.ServicioBuscarCliente(ruc, this.cliente.TipoIdentidad.IdTipoIdentidad).subscribe(
-    (clienteBuscar: any) => {
-      if (clienteBuscar) {
-        if (clienteBuscar.RazonSocial) {
-            this.cliente.NumeroIdentificacion = clienteBuscar.Ruc;
-            this.cliente.RazonSocial = clienteBuscar.RazonSocial;
-            this.cliente.Direccion = clienteBuscar.Direccion;
-            this.cliente.Correo = clienteBuscar.Correo;
-        } else {
-          Swal.fire({
-            title: 'Validación',
-            text: `No se encontró el Cliente .`,
-            icon: 'warning',
-            confirmButtonText: 'OK'
-          });
-          this.cliente.IdCliente = '';
-          this.cliente.NumeroIdentificacion = '';
-            this.cliente.RazonSocial = '';
-            this.cliente.Direccion = '';
-            this.cliente.Correo = '';
-    
-        }
-      } else {
-        Swal.fire({
-          title: 'Validación',
-          text: `Vuelve a realizar la búsqueda. Tiempo de espera agotado.`,
-          icon: 'warning',
-          confirmButtonText: 'OK'
-        });
-      }
-    }
+  if (!numeroIdentificacion) {
+    Swal.fire(
+      'Validación',
+      'Introduce el número de identificación.',
+      'warning'
+    );
+
+    return;
+  }
+
+  const tipoIdentidad = this.tiposDocCliente.find(
+    tipo => tipo.IdTipoIdentidad === idTipoIdentidad
   );
+
+  if (
+    tipoIdentidad?.RegexValidacion &&
+    !new RegExp(tipoIdentidad.RegexValidacion)
+      .test(numeroIdentificacion)
+  ) {
+    Swal.fire(
+      'Validación',
+      `El formato del ${
+        tipoIdentidad.Abreviatura ||
+        tipoIdentidad.Descripcion
+      } no es válido.`,
+      'warning'
+    );
+
+    return;
+  }
+
+  this.cliente.NumeroIdentificacion =
+    numeroIdentificacion;
+
+  this.clienteService
+    .buscarPorIdentidad(
+      numeroIdentificacion,
+      idTipoIdentidad
+    )
+    .subscribe((clienteBuscar: any) => {
+      if (clienteBuscar?.RazonSocial) {
+        this.cliente.NumeroIdentificacion =
+          clienteBuscar.NumeroIdentificacion ??
+          numeroIdentificacion;
+
+        this.cliente.RazonSocial =
+          clienteBuscar.RazonSocial ?? '';
+
+        this.cliente.Direccion =
+          clienteBuscar.Direccion ?? '';
+
+        this.cliente.Referencia =
+          clienteBuscar.Referencia ?? '';
+
+        this.cliente.Email =
+          clienteBuscar.Email ?? '';
+
+        return;
+      }
+
+      Swal.fire(
+        'Validación',
+        'No se encontró el cliente.',
+        'warning'
+      );
+    });
 }
 
   onEdit(cliente: Cliente): void {
-    this.cliente = { ...cliente };
-    this.showForm = true; // Mostrar formulario al editar
-  }
+  this.cliente = { ...cliente };
+  this.showForm = true;
+
+  this.onTipoIdentidadChange(
+    this.cliente.IdTipoIdentidad
+  );
+}
 
   compareTiposDocCliente(tipo1: TipoIdentidad, tipo2: TipoIdentidad): boolean {
     return tipo1 && tipo2 ? tipo1.IdTipoIdentidad === tipo2.IdTipoIdentidad : tipo1 === tipo2;
@@ -198,7 +300,7 @@ buscarCliente(): void {
       if (result.isConfirmed) {
         this.clienteService.deleteCliente(id).subscribe(() => {
           this.cargarClientes();
-          Swal.fire('Cliente eliminado', '', 'success');
+          Notificar.exito('Cliente eliminado', '');
         });
       }
     });
@@ -221,21 +323,39 @@ buscarCliente(): void {
   maxLength: number = 11;
   pattern: string = '^[0-9]{8,11}$';  // Default pattern, adjusted dynamically
 
-  onTipoIdentidadChange(tipoIdentidad): void {
-    this.etiquetaCliente = tipoIdentidad.Descripcion;
-    if (tipoIdentidad.Descripcion === 'DNI') {
-      this.pattern = '^[0-9]{8}$';
-      this.maxLength = 8;
-      this.errorMessage = 'El DNI debe tener 8 dígitos.';
-    } else if (tipoIdentidad.Descripcion === 'RUC') {
-      this.pattern = '^[0-9]{11}$';
-      this.maxLength = 11;
-      this.errorMessage = 'El RUC debe tener 11 dígitos.';
-    } else {
-      this.pattern = '^[0-9]{8,}$';
-      this.maxLength = 20;  // Set to an arbitrary large number
-      this.errorMessage = 'El documento debe tener más de 8 dígitos.';
-    }
+  onTipoIdentidadChange(idTipoIdentidad: string): void {
+  const tipoIdentidad = this.tiposDocCliente.find(
+    tipo => tipo.IdTipoIdentidad === idTipoIdentidad
+  );
+
+  if (!tipoIdentidad) {
+    this.etiquetaCliente = '';
+    this.pattern = '.*';
+    this.maxLength = 20;
+    this.errorMessage = '';
+    return;
   }
+
+  this.etiquetaCliente =
+    tipoIdentidad.Abreviatura ||
+    tipoIdentidad.Descripcion;
+
+  this.pattern = tipoIdentidad.RegexValidacion || '.*';
+
+  switch (tipoIdentidad.IdTipoIdentidad) {
+    case 'DNI':
+    case 'NIE':
+    case 'NIF':
+      this.maxLength = 9;
+      break;
+
+    default:
+      this.maxLength = 20;
+      break;
+  }
+
+  this.errorMessage =
+    `El formato del ${this.etiquetaCliente} no es válido.`;
+}
   
 }

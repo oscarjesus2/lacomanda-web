@@ -1,0 +1,532 @@
+<div class="mant-panel delivery-panel">
+  <button
+    mat-icon-button
+    class="close-button"
+    [attr.aria-label]="'closeDialog' | tenantText"
+    (click)="salir()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <div class="delivery-heading">
+    <div>
+      <h2>
+        {{
+          (vista === 'NUEVO' ? 'newDelivery' : 'deliveryOperationsTitle')
+            | tenantText
+        }}
+      </h2>
+      <p>
+        {{
+          (vista === 'NUEVO' ? 'chooseDeliveryOrigin' : 'deliveryOperationsHint')
+            | tenantText
+        }}
+      </p>
+    </div>
+    <span class="delivery-heading__status">
+      <mat-icon>two_wheeler</mat-icon>
+      <ng-container *ngIf="vista === 'NUEVO'; else pendingCount">
+        {{ 'businessPartnersCount' | tenantText:{ count: data.SociosNegocio.length } }}
+      </ng-container>
+      <ng-template #pendingCount>
+        {{ 'pendingOwnDeliveries' | tenantText:{ count: pedidosPendientes.length } }}
+      </ng-template>
+    </span>
+  </div>
+
+  <div class="delivery-view-selector" role="tablist">
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="vista === 'NUEVO'"
+      [class.delivery-view-selector__button--active]="vista === 'NUEVO'"
+      (click)="seleccionarVista('NUEVO')">
+      <mat-icon>add_shopping_cart</mat-icon>
+      {{ 'newDeliveryOrderTab' | tenantText }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="vista === 'OPERACION'"
+      [class.delivery-view-selector__button--active]="vista === 'OPERACION'"
+      (click)="seleccionarVista('OPERACION')">
+      <mat-icon>delivery_dining</mat-icon>
+      {{ 'deliveryOperationsTab' | tenantText }}
+    </button>
+  </div>
+
+  <div
+    *ngIf="vista === 'NUEVO'"
+    class="delivery-mode-selector"
+    role="group"
+    [attr.aria-label]="'deliveryMode' | tenantText">
+    <button
+      type="button"
+      class="delivery-result delivery-mode"
+      [class.delivery-result--selected]="modalidad === 'TELEFONO'"
+      (click)="seleccionarModalidad('TELEFONO')">
+      <span class="delivery-result__icon"><mat-icon>phone_in_talk</mat-icon></span>
+      <span class="delivery-result__content">
+        <strong>{{ 'phoneDelivery' | tenantText }}</strong>
+        <small>{{ 'phoneDeliveryHint' | tenantText }}</small>
+      </span>
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+
+    <button
+      type="button"
+      class="delivery-result delivery-mode"
+      [class.delivery-result--selected]="modalidad === 'SOCIO_NEGOCIO'"
+      [disabled]="data.SociosNegocio.length === 0"
+      (click)="seleccionarModalidad('SOCIO_NEGOCIO')">
+      <span class="delivery-result__icon"><mat-icon>storefront</mat-icon></span>
+      <span class="delivery-result__content">
+        <strong>{{ 'businessPartnerOrder' | tenantText }}</strong>
+        <small *ngIf="data.SociosNegocio.length > 0">
+          {{ 'businessPartnerExamples' | tenantText }}
+        </small>
+        <small *ngIf="data.SociosNegocio.length === 0">
+          {{ 'noBusinessPartners' | tenantText }}
+        </small>
+      </span>
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <div
+    class="delivery-placeholder delivery-mode-empty"
+    *ngIf="vista === 'NUEVO' && !modalidad">
+    <mat-icon>touch_app</mat-icon>
+    <strong>{{ 'selectDeliveryMode' | tenantText }}</strong>
+    <span>{{ 'selectDeliveryModeHint' | tenantText }}</span>
+  </div>
+
+  <section
+    class="delivery-partner"
+    *ngIf="vista === 'NUEVO' && modalidad === 'SOCIO_NEGOCIO'">
+    <div class="delivery-section-title">
+      <span>{{ 'externalOrderData' | tenantText }}</span>
+      <small>{{ 'noPhoneRecordForExternalOrder' | tenantText }}</small>
+    </div>
+
+    <form [formGroup]="socioForm" novalidate>
+      <div class="delivery-partner__content">
+        <div>
+          <label class="delivery-control-label">
+            {{ 'businessPartner' | tenantText }}
+          </label>
+          <div class="delivery-partner-options">
+            <button
+              *ngFor="let socio of data.SociosNegocio"
+              type="button"
+              class="delivery-partner-option"
+              [class.delivery-partner-option--selected]="
+                socioForm.get('IdSocioNegocio')?.value === socio.IdSocioNegocio"
+              (click)="socioForm.patchValue({ IdSocioNegocio: socio.IdSocioNegocio })">
+              <mat-icon>delivery_dining</mat-icon>
+              <span>{{ socio.Descripcion }}</span>
+            </button>
+          </div>
+          <p class="delivery-field-error"
+             *ngIf="socioForm.get('IdSocioNegocio')?.touched
+                    && socioForm.get('IdSocioNegocio')?.invalid">
+            {{ 'selectOriginBusinessPartner' | tenantText }}
+          </p>
+        </div>
+
+        <div class="delivery-partner-customer">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'customerName' | tenantText }}</mat-label>
+            <input matInput formControlName="NombreCliente" autocomplete="name">
+            <mat-error>{{ 'customerNameRequired' | tenantText }}</mat-error>
+          </mat-form-field>
+          <button mat-stroked-button type="button" (click)="usarClienteVarios()">
+            <mat-icon>person_off</mat-icon>
+            {{ 'unnamedCustomer' | tenantText }}
+          </button>
+        </div>
+
+        <div class="delivery-partner-note">
+          <mat-icon>info</mat-icon>
+          <span>{{ 'businessPartnerPricesHint' | tenantText }}</span>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <ng-container *ngIf="vista === 'NUEVO' && modalidad === 'TELEFONO'">
+    <div class="delivery-search">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'deliverySearchLabel' | tenantText }}</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          [(ngModel)]="termino"
+          [ngModelOptions]="{standalone: true}"
+          (keyup.enter)="buscar()"
+          autocomplete="off">
+        <button
+          *ngIf="termino"
+          mat-icon-button
+          matSuffix
+          type="button"
+          [attr.aria-label]="'clearSearch' | tenantText"
+          (click)="limpiarBusqueda()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+      <button mat-stroked-button type="button" (click)="buscar()" [disabled]="cargando">
+        <mat-icon>search</mat-icon>
+        {{ 'search' | tenantText }}
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="nuevo()" [disabled]="cargando">
+        <mat-icon>person_add</mat-icon>
+        {{ 'newDestination' | tenantText }}
+      </button>
+    </div>
+
+    <div class="delivery-workspace">
+      <section
+        class="delivery-results"
+        [attr.aria-label]="'destinationsFound' | tenantText">
+        <div class="delivery-section-title">
+          <span>{{ 'destinations' | tenantText }}</span>
+          <small>{{ 'foundCount' | tenantText:{ count: clientes.length } }}</small>
+        </div>
+
+        <div class="delivery-loading" *ngIf="cargando">
+          <mat-icon>hourglass_top</mat-icon>
+          {{ 'loadingCustomers' | tenantText }}
+        </div>
+
+        <div class="delivery-empty" *ngIf="!cargando && clientes.length === 0">
+          <mat-icon>location_off</mat-icon>
+          <strong>{{ 'noDestinationFound' | tenantText }}</strong>
+          <span>{{ 'registerWithoutLeavingSale' | tenantText }}</span>
+          <button mat-stroked-button type="button" (click)="nuevo()" [disabled]="cargando">
+            {{ 'registerDestination' | tenantText }}
+          </button>
+        </div>
+
+        <div class="delivery-result-list" *ngIf="!cargando && clientes.length > 0">
+          <button
+            type="button"
+            class="delivery-result"
+            *ngFor="let cliente of clientes"
+            [class.delivery-result--selected]="
+              clienteSeleccionado?.IdCliente === cliente.IdCliente
+              && clienteSeleccionado?.Item === cliente.Item"
+            (click)="seleccionar(cliente)">
+            <span class="delivery-result__icon"><mat-icon>person_pin_circle</mat-icon></span>
+            <span class="delivery-result__content">
+              <strong>{{ cliente.NombresDelivery }}</strong>
+              <span>
+                {{ cliente.TelefonoDelivery }}
+                <ng-container *ngIf="cliente.AnexoDelivery"> · {{ cliente.AnexoDelivery }}</ng-container>
+              </span>
+              <span>{{ cliente.DireccionDelivery }}</span>
+            </span>
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      </section>
+
+      <section class="delivery-detail">
+        <div class="delivery-placeholder" *ngIf="!formularioActivo">
+          <mat-icon>touch_app</mat-icon>
+          <strong>{{ 'selectDestination' | tenantText }}</strong>
+          <span>{{ 'createDestinationHint' | tenantText }}</span>
+        </div>
+
+        <form [formGroup]="form" *ngIf="formularioActivo" novalidate>
+          <div class="delivery-section-title">
+            <span>
+              {{
+                (clienteSeleccionado
+                  ? 'deliveryData'
+                  : (clienteOrigen ? 'newCustomerAddress' : 'newDestinationTitle'))
+                  | tenantText
+              }}
+            </span>
+            <small *ngIf="clienteSeleccionado">
+              {{
+                'customerAddressReference'
+                  | tenantText:{
+                      customer: clienteSeleccionado.IdCliente,
+                      address: clienteSeleccionado.Item
+                    }
+              }}
+            </small>
+            <small *ngIf="clienteOrigen">
+              {{
+                'customerReference'
+                  | tenantText:{
+                      customer: clienteOrigen.IdCliente,
+                      name: clienteOrigen.RazonSocial
+                    }
+              }}
+            </small>
+          </div>
+
+          <button
+            *ngIf="clienteSeleccionado"
+            mat-stroked-button
+            type="button"
+            class="delivery-new-address"
+            (click)="nuevaDireccionParaCliente()">
+            <mat-icon>add_location_alt</mat-icon>
+            {{ 'addAnotherAddress' | tenantText }}
+          </button>
+
+          <div class="delivery-form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'phone' | tenantText }}</mat-label>
+              <input matInput formControlName="TelefonoDelivery" inputmode="tel" autocomplete="tel">
+              <mat-error>{{ 'phoneValidation' | tenantText }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'shortInstruction' | tenantText }}</mat-label>
+              <input matInput formControlName="AnexoDelivery">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="delivery-field--wide">
+              <mat-label>{{ 'recipientName' | tenantText }}</mat-label>
+              <input matInput formControlName="NombresDelivery" autocomplete="name">
+              <mat-error>{{ 'nameRequired' | tenantText }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="delivery-field--wide">
+              <mat-label>{{ 'deliveryAddress' | tenantText }}</mat-label>
+              <input matInput formControlName="DireccionDelivery" autocomplete="street-address">
+              <mat-error>{{ 'addressRequired' | tenantText }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="delivery-field--wide">
+              <mat-label>{{ 'reference' | tenantText }}</mat-label>
+              <input matInput formControlName="ReferenciaDelivery">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'deliveryPrice' | tenantText }}</mat-label>
+              <input matInput type="number" min="0" step="0.01" formControlName="PrecioDelivery">
+              <mat-hint *ngIf="contexto.ProductoCargoDelivery">
+                {{
+                  'deliveryProductAdded'
+                    | tenantText:{ product: contexto.ProductoCargoDelivery.NombreCorto }
+                }}
+              </mat-hint>
+              <mat-error *ngIf="form.get('PrecioDelivery')?.hasError('productoNoConfigurado')">
+                {{ 'configureDeliveryProduct' | tenantText }}
+              </mat-error>
+              <mat-error *ngIf="form.get('PrecioDelivery')?.hasError('min')">
+                {{ 'priceCannotBeNegative' | tenantText }}
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'identityType' | tenantText }}</mat-label>
+              <mat-select formControlName="IdTipoIdentidad">
+                <mat-option *ngFor="let tipo of tiposIdentidad" [value]="tipo.IdTipoIdentidad">
+                  {{ tipo.Abreviatura || tipo.Descripcion }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'identityNumber' | tenantText }}</mat-label>
+              <input matInput formControlName="NumeroIdentificacion">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="delivery-field--wide">
+              <mat-label>{{ 'businessNameOrCustomer' | tenantText }}</mat-label>
+              <input matInput formControlName="RazonSocial">
+              <mat-error>{{ 'fieldRequired' | tenantText }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="delivery-field--wide">
+              <mat-label>{{ 'email' | tenantText }}</mat-label>
+              <input matInput formControlName="CorreoDelivery" type="email" autocomplete="email">
+              <mat-error>{{ 'validEmailRequired' | tenantText }}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="delivery-history" *ngIf="clienteSeleccionado">
+            <div class="delivery-section-title">
+              <span>{{ 'recentOrders' | tenantText }}</span>
+              <small>{{ 'deliverySalesHistory' | tenantText }}</small>
+            </div>
+
+            <div class="delivery-loading delivery-loading--compact" *ngIf="cargandoHistorial">
+              {{ 'loadingHistory' | tenantText }}
+            </div>
+            <div class="delivery-history__empty" *ngIf="!cargandoHistorial && historial.length === 0">
+              {{ 'noDeliverySales' | tenantText }}
+            </div>
+            <div class="delivery-history__list" *ngIf="!cargandoHistorial && historial.length > 0">
+              <article *ngFor="let venta of historial" class="delivery-history__item">
+                <div>
+                  <strong>{{ venta.Documento }}</strong>
+                  <span>{{ venta.Fecha | date:'dd/MM/yyyy':'UTC' }}</span>
+                </div>
+                <span>
+                  {{ 'productsCount' | tenantText:{ count: venta.Detalles.length } }}
+                </span>
+                <strong>{{ venta.Total | number:'1.2-2' }}</strong>
+              </article>
+            </div>
+          </div>
+        </form>
+      </section>
+    </div>
+  </ng-container>
+
+  <section class="delivery-operations" *ngIf="vista === 'OPERACION'">
+    <div class="delivery-operations__toolbar">
+      <div>
+        <strong>{{ 'pendingDeliveryOrders' | tenantText }}</strong>
+        <span>{{ 'pendingDeliveryOrdersHint' | tenantText }}</span>
+      </div>
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="cargandoOperacion || !!asignandoPedido"
+        (click)="cargarOperacion()">
+        <mat-icon>refresh</mat-icon>
+        {{ 'refresh' | tenantText }}
+      </button>
+    </div>
+
+    <div class="delivery-loading" *ngIf="cargandoOperacion">
+      <mat-icon>hourglass_top</mat-icon>
+      {{ 'loadingPendingDeliveries' | tenantText }}
+    </div>
+
+    <div
+      class="delivery-empty"
+      *ngIf="!cargandoOperacion && pedidosPendientes.length === 0">
+      <mat-icon>task_alt</mat-icon>
+      <strong>{{ 'noPendingDeliveries' | tenantText }}</strong>
+      <span>{{ 'noPendingDeliveriesHint' | tenantText }}</span>
+    </div>
+
+    <div
+      class="delivery-operation-list"
+      *ngIf="!cargandoOperacion && pedidosPendientes.length > 0">
+      <article
+        class="delivery-operation-card"
+        *ngFor="let pedido of pedidosPendientes">
+        <header>
+          <div class="delivery-operation-card__order">
+            <span>{{ 'order' | tenantText }} #{{ pedido.NroPedido }}</span>
+            <strong>{{ pedido.Cliente }}</strong>
+          </div>
+          <strong class="delivery-operation-card__total">
+            {{ pedido.Total | number:'1.2-2' }}
+          </strong>
+        </header>
+
+        <div class="delivery-operation-card__destination">
+          <span>
+            <mat-icon>location_on</mat-icon>
+            {{ pedido.Direccion || ('noAddress' | tenantText) }}
+          </span>
+          <span *ngIf="pedido.Telefono">
+            <mat-icon>phone</mat-icon>
+            {{ pedido.Telefono }}
+          </span>
+        </div>
+
+        <div class="delivery-operation-card__assignment">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'ownDriver' | tenantText }}</mat-label>
+            <mat-select
+              [ngModel]="motorizadoSeleccionado[clavePedido(pedido)]"
+              [ngModelOptions]="{standalone: true}"
+              (ngModelChange)="motorizadoCambio(pedido, $event)">
+              <mat-option
+                *ngFor="let motorizado of motorizados"
+                [value]="motorizado.IdEmpleado">
+                {{ motorizado.Nombre }}
+              </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="motorizados.length === 0">
+              {{ 'noDriversAvailable' | tenantText }}
+            </mat-hint>
+          </mat-form-field>
+
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="
+              !motorizadoSeleccionado[clavePedido(pedido)]
+              || asignacionSinCambios(pedido)
+              || !!asignandoPedido"
+            (click)="asignarMotorizado(pedido)">
+            <mat-icon>two_wheeler</mat-icon>
+            {{
+              (asignandoPedido === clavePedido(pedido)
+                ? 'assigningDriver'
+                : 'assignDriver') | tenantText
+            }}
+          </button>
+        </div>
+
+        <div
+          class="delivery-operation-card__assigned"
+          *ngIf="pedido.IdMotorizado">
+          <mat-icon>check_circle</mat-icon>
+          <span>
+            {{ 'assignedDriver' | tenantText }}:
+            <strong>{{ pedido.Motorizado }}</strong>
+          </span>
+        </div>
+
+        <div
+          class="delivery-operation-card__paid"
+          *ngIf="pedido.PagoRegistrado">
+          <mat-icon>paid</mat-icon>
+          <span>{{ 'deliveryPaymentAlreadyRegistered' | tenantText }}</span>
+        </div>
+
+        <button
+          *ngIf="!pedido.PagoRegistrado"
+          mat-flat-button
+          color="primary"
+          type="button"
+          class="delivery-operation-card__confirm"
+          [disabled]="!pedido.IdMotorizado || !!asignandoPedido"
+          (click)="confirmarEntrega(pedido)">
+          <mat-icon>payments</mat-icon>
+          {{ 'confirmDeliveryAndCharge' | tenantText }}
+        </button>
+      </article>
+    </div>
+  </section>
+
+  <div class="dialog-actions">
+    <button mat-stroked-button type="button" (click)="salir()">
+      <mat-icon>arrow_back</mat-icon>
+      {{ (vista === 'OPERACION' ? 'close' : 'cancel') | tenantText }}
+    </button>
+    <button
+      *ngIf="vista === 'NUEVO' && modalidad === 'TELEFONO'"
+      mat-flat-button
+      color="primary"
+      type="button"
+      [disabled]="!formularioActivo || guardando"
+      (click)="guardarYContinuar()">
+      <mat-icon>arrow_forward</mat-icon>
+      {{ (guardando ? 'saving' : 'continueToOrder') | tenantText }}
+    </button>
+    <button
+      *ngIf="vista === 'NUEVO' && modalidad === 'SOCIO_NEGOCIO'"
+      mat-flat-button
+      color="primary"
+      type="button"
+      [disabled]="guardando"
+      (click)="continuarPorSocio()">
+      <mat-icon>arrow_forward</mat-icon>
+      {{ (guardando ? 'checkingPrices' : 'continueToOrder') | tenantText }}
+    </button>
+  </div>
+</div>

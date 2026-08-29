@@ -1,0 +1,233 @@
+<div class="mant-panel dialog-panel dialog-panel--workspace">
+  <button
+    type="button"
+    mat-icon-button
+    class="close-button"
+    (click)="salir()"
+    [attr.aria-label]="'close' | tenantText">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>{{ 'combosConfig' | tenantText }}</h2>
+
+  <div class="dialog-notice">
+    <mat-icon>tune</mat-icon>
+    <div class="dialog-notice__content">
+      <strong class="dialog-notice__title">
+        {{ 'comboMaintenanceEyebrow' | tenantText }}
+      </strong>
+      <span class="dialog-notice__text">
+        {{ 'comboMaintenanceHint' | tenantText }}
+      </span>
+    </div>
+  </div>
+
+  <div class="dialog-empty-state" *ngIf="cargando">
+    <mat-icon>hourglass_top</mat-icon>
+    <span>{{ 'loading' | tenantText }}</span>
+  </div>
+
+  <ng-container *ngIf="!cargando">
+    <div class="form-row">
+      <mat-form-field class="form-field form-field--grow" appearance="fill">
+        <mat-label>{{ 'selectMainCombo' | tenantText }}</mat-label>
+        <mat-select
+          [(ngModel)]="idProductoCombo"
+          (selectionChange)="seleccionarCombo()">
+          <mat-option
+            *ngFor="let combo of combos; trackBy: trackProducto"
+            [value]="combo.IdProducto">
+            {{ combo.Nombre }}
+            <span *ngIf="!combo.Activo"> · {{ 'inactive' | tenantText }}</span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="dialog-summary form-field" *ngIf="comboSeleccionado">
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">{{ 'mainCombo' | tenantText }}</span>
+          <strong class="dialog-summary__value">{{ comboSeleccionado.Nombre }}</strong>
+        </div>
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">ID</span>
+          <strong class="dialog-summary__value">#{{ comboSeleccionado.IdProducto }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-empty-state" *ngIf="combos.length === 0">
+      <mat-icon>info</mat-icon>
+      <div class="dialog-notice__content">
+        <strong class="dialog-notice__title">{{ 'noMainCombos' | tenantText }}</strong>
+        <span class="dialog-notice__text">{{ 'createMainComboHint' | tenantText }}</span>
+      </div>
+    </div>
+
+    <div class="dialog-toolbar" *ngIf="idProductoCombo">
+      <span class="dialog-summary__label">{{ 'comboSections' | tenantText }}</span>
+      <div class="dialog-toolbar__options combo-sections">
+        <mat-button-toggle-group
+          [value]="idSeccionMenu"
+          [attr.aria-label]="'comboSections' | tenantText">
+          <mat-button-toggle
+            *ngFor="let seccion of secciones"
+            [value]="seccion.IdSeccionMenu"
+            (click)="abrirSeccion(seccion)">
+            {{ seccion.Descripcion }}
+            <mat-icon *ngIf="estaConfigurada(seccion.IdSeccionMenu)">check_circle</mat-icon>
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+    </div>
+
+    <div
+      class="dialog-workspace-content combo-workspace"
+      *ngIf="idProductoCombo && seccionSeleccionada">
+      <section class="dialog-table-card combo-column">
+        <div class="combo-column__header">
+          <div class="form-row">
+            <div class="form-field">
+              <span class="dialog-summary__label">
+                {{ 'availableProducts' | tenantText }}
+              </span>
+              <div class="dialog-toolbar__status">
+                <mat-icon>inventory_2</mat-icon>
+                <span>
+                  {{ productosFiltrados.length }}
+                  {{ 'products' | tenantText | lowercase }}
+                </span>
+              </div>
+            </div>
+
+            <mat-form-field class="form-field" appearance="fill">
+              <mat-label>{{ 'search' | tenantText }}</mat-label>
+              <input matInput [(ngModel)]="filtro" />
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div
+          class="dialog-table-wrapper dialog-table-wrapper--fill combo-column__table"
+          *ngIf="productosFiltrados.length > 0">
+          <table class="dialog-data-table">
+            <thead>
+              <tr>
+                <th class="combo-check-column"></th>
+                <th>{{ 'products' | tenantText }}</th>
+                <th>ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let producto of productosFiltrados; trackBy: trackProducto">
+                <td class="combo-check-column">
+                  <mat-checkbox
+                    [checked]="estaSeleccionado(producto.IdProducto)"
+                    (change)="alternarProducto(producto, $event.checked)"
+                    [attr.aria-label]="producto.Nombre">
+                  </mat-checkbox>
+                </td>
+                <td>{{ producto.Nombre }}</td>
+                <td>#{{ producto.IdProducto }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="dialog-empty-state" *ngIf="productosFiltrados.length === 0">
+          <mat-icon>inventory_2</mat-icon>
+          <span>{{ 'noProductsForComboSection' | tenantText }}</span>
+        </div>
+      </section>
+
+      <section class="dialog-table-card combo-column">
+        <div class="combo-column__header">
+          <div class="form-row">
+            <div class="form-field">
+              <span class="dialog-summary__label">
+                {{ 'sectionConfiguration' | tenantText }}
+              </span>
+              <strong class="dialog-summary__value">
+                {{ seccionSeleccionada.Descripcion }}
+              </strong>
+              <div class="dialog-toolbar__status">
+                <mat-icon>checklist</mat-icon>
+                <span>
+                  {{ seleccionados.length }}
+                  {{ 'selectedProducts' | tenantText }}
+                </span>
+              </div>
+            </div>
+
+            <mat-form-field class="form-field" appearance="fill">
+              <mat-label>{{ 'allowedQuantity' | tenantText }}</mat-label>
+              <input
+                matInput
+                type="number"
+                min="1"
+                step="1"
+                [(ngModel)]="cantidad" />
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div
+          class="dialog-table-wrapper dialog-table-wrapper--fill combo-column__table"
+          *ngIf="productosSeleccionados.length > 0">
+          <table class="dialog-data-table">
+            <thead>
+              <tr>
+                <th>{{ 'selectedProducts' | tenantText }}</th>
+                <th>ID</th>
+                <th>{{ 'actions' | tenantText }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let producto of productosSeleccionados; trackBy: trackProducto">
+                <td>{{ producto.Nombre }}</td>
+                <td>#{{ producto.IdProducto }}</td>
+                <td>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    color="warn"
+                    (click)="quitarProducto(producto.IdProducto)"
+                    [attr.aria-label]="'remove' | tenantText">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="dialog-empty-state" *ngIf="productosSeleccionados.length === 0">
+          <mat-icon>checklist</mat-icon>
+          <span>{{ 'selectComboProductsHint' | tenantText }}</span>
+        </div>
+
+        <div class="dialog-actions combo-column__actions">
+          <button
+            type="button"
+            mat-stroked-button
+            color="warn"
+            [disabled]="guardando || !seccionConfigurada"
+            (click)="eliminarSeccion()">
+            <mat-icon>delete_outline</mat-icon>
+            {{ 'deleteSectionConfig' | tenantText }}
+          </button>
+
+          <button
+            type="button"
+            mat-raised-button
+            color="primary"
+            [disabled]="guardando"
+            (click)="guardar()">
+            <mat-icon>save</mat-icon>
+            {{ 'saveSection' | tenantText }}
+          </button>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+</div>

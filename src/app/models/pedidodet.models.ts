@@ -1,10 +1,12 @@
 import { PedidoComplemento } from "./pedidocomplemento.models";
+import { PedidoMenu } from "./pedidomenu.models";
 import { Producto } from "./product.models";
 
 export class PedidoDet {
 
     public Producto: Producto;
     public PedidoComplemento: PedidoComplemento[];
+    public PedidoMenu: PedidoMenu[];
     public IdPedido: number;
     public Item: number;
     public Precio: number;
@@ -28,6 +30,7 @@ export class PedidoDet {
     public NombreCuenta: string;
     public Division: number;
     public Impuesto1: number;
+    public FechaEnvio: Date | null;
     constructor(init?: Partial<PedidoDet>) {
         Object.assign(this, init);
     }

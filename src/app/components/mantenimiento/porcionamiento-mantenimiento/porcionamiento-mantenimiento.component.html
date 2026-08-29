@@ -1,0 +1,466 @@
+<div class="mant-panel dialog-panel--workspace">
+  <button mat-icon-button class="close-button" aria-label="Cerrar" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>
+    {{ vista === 'lista'
+      ? 'Porcionamientos'
+      : vista === 'configuracion'
+        ? 'Configuración de porcionamiento'
+        : (porcionamiento ? 'Porcionamiento N.º ' + porcionamiento.IdPorcionamiento : 'Nuevo porcionamiento') }}
+  </h2>
+
+  <ng-container *ngIf="vista === 'lista'">
+    <div class="dialog-toolbar">
+      <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+        <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide">
+          <mat-label>Buscar</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [(ngModel)]="filtro.Buscar" (keyup.enter)="buscar()"
+                 placeholder="Número, artículo o subárea">
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Estado</mat-label>
+          <mat-select [(ngModel)]="filtro.Estado">
+            <mat-option [value]="null">Todos</mat-option>
+            <mat-option [value]="1">Generado</mat-option>
+            <mat-option [value]="2">Anulado</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Subárea</mat-label>
+          <mat-select [(ngModel)]="filtro.IdSubAreaAlmacen">
+            <mat-option [value]="null">Todas</mat-option>
+            <mat-option *ngFor="let item of catalogos?.SubAreas" [value]="item.Id">
+              {{ item.AreaAlmacen }} · {{ item.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="fill">
+          <mat-label>Desde</mat-label>
+          <input matInput [matDatepicker]="fechaInicio" [(ngModel)]="filtro.FechaInicio">
+          <mat-datepicker-toggle matSuffix [for]="fechaInicio"></mat-datepicker-toggle>
+          <mat-datepicker #fechaInicio></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Hasta</mat-label>
+          <input matInput [matDatepicker]="fechaFin" [(ngModel)]="filtro.FechaFin">
+          <mat-datepicker-toggle matSuffix [for]="fechaFin"></mat-datepicker-toggle>
+          <mat-datepicker #fechaFin></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-toolbar__footer">
+        <span class="dialog-toolbar__status">
+          <mat-icon>content_cut</mat-icon>
+          {{ dataSource.data.length }} porcionamientos encontrados
+        </span>
+        <div class="dialog-toolbar__actions">
+          <button mat-stroked-button type="button" (click)="abrirConfiguracion()" [disabled]="!catalogos">
+            <mat-icon>settings</mat-icon>
+            Configurar relaciones
+          </button>
+          <button mat-stroked-button color="primary" type="button" (click)="buscar()" [disabled]="cargando">
+            <mat-icon>search</mat-icon>
+            Buscar
+          </button>
+          <button mat-raised-button color="primary" type="button" (click)="nuevo()" [disabled]="!catalogos">
+            <mat-icon>add</mat-icon>
+            Nuevo porcionamiento
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-workspace-content">
+      <div class="dialog-table-card">
+        <div class="dialog-table-wrapper--fill">
+          <mat-table [dataSource]="dataSource" class="dialog-table--wide">
+            <ng-container matColumnDef="numero">
+              <mat-header-cell *matHeaderCellDef>N.º</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.IdPorcionamiento }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="fecha">
+              <mat-header-cell *matHeaderCellDef>Fecha</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.Fecha | date:'dd/MM/yyyy HH:mm' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="subarea">
+              <mat-header-cell *matHeaderCellDef>Subárea</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.AreaAlmacen }} · {{ row.SubAreaAlmacen }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="origen">
+              <mat-header-cell *matHeaderCellDef>Artículo origen</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.ProductoOrigen }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="bruta">
+              <mat-header-cell *matHeaderCellDef>Cant. bruta</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.CantidadBruta | number:'1.0-3' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="util">
+              <mat-header-cell *matHeaderCellDef>Cant. útil</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.CantidadUtil | number:'1.0-3' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="merma">
+              <mat-header-cell *matHeaderCellDef>Merma</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.Merma | number:'1.0-3' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="estado">
+              <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <span class="status-pill" [class.status-pill--inactive]="row.Estado === 2">
+                  {{ row.EstadoDescripcion }}
+                </span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+              <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <button mat-icon-button color="primary" type="button" aria-label="Ver porcionamiento"
+                        (click)="abrir(row)">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+          </mat-table>
+
+          <div class="dialog-empty-state" *ngIf="!cargando && dataSource.data.length === 0">
+            <mat-icon>content_cut</mat-icon>
+            <span>No existen porcionamientos para los filtros indicados.</span>
+          </div>
+        </div>
+
+        <mat-paginator [length]="dataSource.data.length" [pageSize]="25"
+                       [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons>
+        </mat-paginator>
+      </div>
+    </div>
+  </ng-container>
+
+  <form *ngIf="vista === 'operacion'" class="dialog-form-workspace" (ngSubmit)="crear()">
+    <div class="dialog-detail-header">
+      <button mat-stroked-button type="button" (click)="volver()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </button>
+      <div class="dialog-detail-header__title">
+        <strong>{{ porcionamiento ? 'Detalle del porcionamiento' : 'Transformación del artículo' }}</strong>
+        <span *ngIf="porcionamiento" class="status-pill"
+              [class.status-pill--inactive]="porcionamiento.Estado === 2">
+          {{ porcionamiento.EstadoDescripcion }}
+        </span>
+      </div>
+    </div>
+
+    <div class="dialog-form-section">
+      <h3><mat-icon>inventory_2</mat-icon> Artículo que se porcionará</h3>
+      <div class="dialog-form-grid dialog-form-grid--3">
+        <mat-form-field appearance="fill">
+          <mat-label>Subárea de almacén</mat-label>
+          <mat-select [(ngModel)]="formulario.IdSubAreaAlmacen" name="subarea"
+                      [disabled]="!!porcionamiento" required>
+            <mat-option *ngFor="let item of catalogos?.SubAreas" [value]="item.Id">
+              {{ item.AreaAlmacen }} · {{ item.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Artículo origen</mat-label>
+          <mat-select [(ngModel)]="formulario.IdProductoOrigen" name="productoOrigen"
+                      (selectionChange)="cambiarOrigen()" [disabled]="!!porcionamiento" required>
+            <mat-option *ngFor="let item of origenesDisponibles" [value]="item.IdProducto">
+              {{ item.Descripcion }}
+            </mat-option>
+          </mat-select>
+          <mat-hint *ngIf="!porcionamiento && articuloOrigen">
+            Stock: {{ stockOrigen | number:'1.0-3' }} {{ articuloOrigen.UnidadMedida }}
+          </mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Fecha</mat-label>
+          <input matInput [matDatepicker]="fechaOperacion" [(ngModel)]="formulario.Fecha"
+                 name="fechaOperacion" [disabled]="!!porcionamiento" required>
+          <mat-datepicker-toggle matSuffix [for]="fechaOperacion"></mat-datepicker-toggle>
+          <mat-datepicker #fechaOperacion></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Cantidad bruta</mat-label>
+          <input matInput type="number" min="0.001" step="0.001"
+                 [(ngModel)]="formulario.CantidadBruta" name="cantidadBruta"
+                 [disabled]="!!porcionamiento" required>
+          <span matSuffix>{{ articuloOrigen?.UnidadMedida }}</span>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Precio de compra</mat-label>
+          <input matInput [value]="porcionamiento?.PrecioOrigen || articuloOrigen?.PrecioCompra || 0"
+                 disabled>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Costo total</mat-label>
+          <input matInput [value]="porcionamiento?.CostoTotal || costoTotal | number:'1.2-3'" disabled>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="dialog-form-section" *ngIf="!porcionamiento">
+      <h3><mat-icon>call_split</mat-icon> Agregar producto obtenido</h3>
+      <div class="dialog-form-grid dialog-form-grid--3">
+        <mat-form-field appearance="fill">
+          <mat-label>Producto configurado</mat-label>
+          <mat-select [(ngModel)]="idProductoAgregar" name="productoAgregar"
+                      [disabled]="!formulario.IdProductoOrigen">
+            <mat-option *ngFor="let item of productosConfiguradosDisponibles" [value]="item.IdProducto">
+              {{ item.Producto }} · Ideal {{ item.FactorIdeal | number:'1.0-3' }} {{ item.UnidadMedida }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div class="dialog-form-action">
+          <button mat-stroked-button color="primary" type="button" (click)="agregarProducto()">
+            <mat-icon>add</mat-icon>
+            Agregar producto
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-table-card dialog-table-card--detail">
+      <div class="dialog-table-wrapper--fill">
+        <table class="dialog-detail-table">
+          <thead>
+            <tr>
+              <th>Producto obtenido</th>
+              <th>Unidad</th>
+              <th>Cantidad de origen</th>
+              <th>Cantidad producida</th>
+              <th>Factor</th>
+              <th>Costo unitario</th>
+              <th *ngIf="!porcionamiento">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let linea of lineas; let i = index">
+              <td>{{ linea.Producto }}</td>
+              <td>{{ linea.UnidadMedida }}</td>
+              <td>
+                <input *ngIf="!porcionamiento" class="dialog-inline-number" type="number" min="0.001"
+                       step="0.001" [(ngModel)]="linea.CantidadOrigen" [name]="'origen' + i">
+                <span *ngIf="porcionamiento">{{ linea.CantidadOrigen | number:'1.0-3' }}</span>
+              </td>
+              <td>
+                <input *ngIf="!porcionamiento" class="dialog-inline-number" type="number" min="0.001"
+                       step="0.001" [(ngModel)]="linea.CantidadProducida" [name]="'producida' + i">
+                <span *ngIf="porcionamiento">{{ linea.CantidadProducida | number:'1.0-3' }}</span>
+              </td>
+              <td>
+                {{ (porcionamiento ? linea.FactorIdeal : factor(linea)) | number:'1.0-3' }}
+                <small *ngIf="!porcionamiento && linea.FactorIdeal > 0">
+                  (ideal {{ linea.FactorIdeal | number:'1.0-3' }})
+                </small>
+              </td>
+              <td>{{ (porcionamiento ? linea.PrecioUnitario : costoPorcion(linea)) | number:'1.2-3' }}</td>
+              <td *ngIf="!porcionamiento">
+                <button mat-icon-button color="warn" type="button" aria-label="Quitar producto"
+                        (click)="quitarProducto(i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="lineas.length === 0">
+              <td [attr.colspan]="porcionamiento ? 6 : 7" class="dialog-empty-cell">
+                Agregue al menos un producto obtenido.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="dialog-summary-grid">
+      <div class="dialog-summary-card">
+        <span class="dialog-summary-card__label">Cantidad bruta</span>
+        <strong>{{ formulario.CantidadBruta | number:'1.0-3' }}</strong>
+      </div>
+      <div class="dialog-summary-card">
+        <span class="dialog-summary-card__label">Cantidad útil</span>
+        <strong>{{ porcionamiento?.CantidadUtil || cantidadUtil | number:'1.0-3' }}</strong>
+      </div>
+      <div class="dialog-summary-card dialog-summary-card--danger">
+        <span class="dialog-summary-card__label">Merma</span>
+        <strong>{{ porcionamiento?.Merma || merma | number:'1.0-3' }}</strong>
+      </div>
+      <div class="dialog-summary-card">
+        <span class="dialog-summary-card__label">% merma</span>
+        <strong>{{ porcentajeMerma | number:'1.0-2' }} %</strong>
+      </div>
+    </div>
+
+    <div class="dialog-form-footer">
+      <button mat-stroked-button type="button" (click)="volver()">Volver</button>
+      <button *ngIf="porcionamiento?.Estado === 1" mat-stroked-button color="warn" type="button"
+              (click)="anular()" [disabled]="guardando">
+        <mat-icon>block</mat-icon>
+        Anular porcionamiento
+      </button>
+      <button *ngIf="!porcionamiento" mat-raised-button color="primary" type="submit"
+              [disabled]="guardando || lineas.length === 0">
+        <mat-icon>content_cut</mat-icon>
+        Registrar y actualizar stock
+      </button>
+    </div>
+  </form>
+
+  <div *ngIf="vista === 'configuracion'" class="dialog-form-workspace">
+    <div class="dialog-detail-header">
+      <button mat-stroked-button type="button" (click)="volver()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </button>
+      <div class="dialog-detail-header__title">
+        <strong>Relación entre artículo origen y productos obtenidos</strong>
+      </div>
+    </div>
+
+    <div class="dialog-form-section">
+      <h3><mat-icon>tune</mat-icon> Artículo porcionable</h3>
+      <p class="dialog-section-help">
+        Esta relación evita elegir productos incompatibles al registrar el porcionamiento.
+        El factor ideal sirve como referencia; la cantidad real se registra en cada operación.
+      </p>
+      <div class="dialog-form-grid dialog-form-grid--3">
+        <mat-form-field appearance="fill">
+          <mat-label>Artículo origen</mat-label>
+          <mat-select [(ngModel)]="configuracion.IdProductoOrigen" name="configOrigen"
+                      (selectionChange)="cambiarOrigenConfiguracion()" required>
+            <mat-option *ngFor="let item of catalogos?.ArticulosPorcionables" [value]="item.IdProducto">
+              {{ item.Descripcion }} · {{ item.UnidadMedida }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Control de merma</mat-label>
+          <mat-select [(ngModel)]="configuracion.ControlaMerma" name="controlaMerma">
+            <mat-option [value]="false">No</mat-option>
+            <mat-option [value]="true">Sí</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Merma referencial (%)</mat-label>
+          <input matInput type="number" min="0" max="100" step="0.01"
+                 [(ngModel)]="configuracion.PorcentajeMermaReferencial" name="mermaReferencial"
+                 [disabled]="!configuracion.ControlaMerma">
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="dialog-form-section">
+      <h3><mat-icon>add_circle</mat-icon> Productos que se pueden obtener</h3>
+      <div class="dialog-form-grid dialog-form-grid--3">
+        <mat-form-field appearance="fill">
+          <mat-label>Producto porcionado</mat-label>
+          <mat-select [(ngModel)]="idProductoConfiguradoAgregar" name="configProductoAgregar">
+            <mat-option *ngFor="let item of productosPorcionadosDisponibles" [value]="item.IdProducto">
+              {{ item.Descripcion }} · {{ item.UnidadMedida }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div class="dialog-form-action">
+          <button mat-stroked-button color="primary" type="button" (click)="agregarProductoConfigurado()">
+            <mat-icon>add</mat-icon>
+            Agregar relación
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-table-card dialog-table-card--detail">
+      <div class="dialog-table-wrapper--fill">
+        <table class="dialog-detail-table">
+          <thead>
+            <tr>
+              <th>Producto obtenido</th>
+              <th>Unidad</th>
+              <th>Factor ideal</th>
+              <th>Factor máximo (opcional)</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let linea of configuracionLineas; let i = index">
+              <td>{{ linea.Producto }}</td>
+              <td>{{ linea.UnidadMedida }}</td>
+              <td>
+                <input class="dialog-inline-number" type="number" min="0.001" step="0.001"
+                       [(ngModel)]="linea.FactorIdeal" [name]="'factorIdeal' + i">
+              </td>
+              <td>
+                <input class="dialog-inline-number" type="number" min="0" step="0.001"
+                       [(ngModel)]="linea.FactorMaximo" [name]="'factorMaximo' + i">
+              </td>
+              <td>
+                <button mat-icon-button color="warn" type="button" aria-label="Quitar relación"
+                        (click)="quitarProductoConfigurado(i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="configuracionLineas.length === 0">
+              <td colspan="5" class="dialog-empty-cell">Agregue al menos un producto obtenido.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="dialog-form-section" *ngIf="catalogos?.Configuraciones?.length">
+      <h3><mat-icon>list</mat-icon> Configuraciones existentes</h3>
+      <div class="dialog-table-wrapper--fill">
+        <table class="dialog-detail-table">
+          <thead><tr><th>Artículo origen</th><th>Productos</th><th>Merma referencial</th><th>Acciones</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let item of catalogos?.Configuraciones">
+              <td>{{ item.ProductoOrigen }}</td>
+              <td>{{ item.Detalles.length }}</td>
+              <td>{{ item.ControlaMerma ? (item.PorcentajeMermaReferencial | number:'1.0-2') + ' %' : 'No controla' }}</td>
+              <td>
+                <button mat-icon-button color="primary" type="button" aria-label="Editar configuración"
+                        (click)="abrirConfiguracion(item)"><mat-icon>edit</mat-icon></button>
+                <button mat-icon-button color="warn" type="button" aria-label="Eliminar configuración"
+                        (click)="eliminarConfiguracion(item)"><mat-icon>delete</mat-icon></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="dialog-form-footer">
+      <button mat-stroked-button type="button" (click)="volver()">Volver</button>
+      <button mat-raised-button color="primary" type="button" (click)="guardarConfiguracion()"
+              [disabled]="guardando || configuracionLineas.length === 0">
+        <mat-icon>save</mat-icon>
+        Guardar configuración
+      </button>
+    </div>
+  </div>
+</div>

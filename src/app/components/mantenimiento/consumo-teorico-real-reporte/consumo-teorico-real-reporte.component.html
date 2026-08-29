@@ -1,0 +1,31 @@
+<div class="mant-panel dialog-panel--workspace">
+  <button mat-icon-button class="close-button" type="button" aria-label="Cerrar" (click)="cerrar()"><mat-icon>close</mat-icon></button>
+  <h2>CONSUMO TEÓRICO VERSUS REAL</h2>
+  <div class="dialog-notice"><mat-icon>info</mat-icon><span>Compara las salidas registradas por el sistema con el consumo deducido del conteo físico. Solo se muestran inventarios cerrados y contados.</span></div>
+  <div class="dialog-toolbar">
+    <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+      <mat-form-field appearance="fill"><mat-label>Subárea</mat-label><mat-select [(ngModel)]="idSubAreaAlmacen"><mat-option [value]="null">Todas las subáreas</mat-option><mat-option *ngFor="let subArea of subAreas" [value]="subArea.IdSubAreaAlmacen">{{ subArea.Area }} · {{ subArea.Descripcion }}</mat-option></mat-select></mat-form-field>
+      <mat-form-field appearance="fill"><mat-label>Desde</mat-label><input matInput type="date" [(ngModel)]="fechaDesde"></mat-form-field>
+      <mat-form-field appearance="fill"><mat-label>Hasta</mat-label><input matInput type="date" [(ngModel)]="fechaHasta"></mat-form-field>
+      <mat-form-field appearance="fill"><mat-label>Buscar</mat-label><mat-icon matPrefix>search</mat-icon><input matInput [(ngModel)]="filtro" (ngModelChange)="aplicarFiltro()" placeholder="Artículo, subárea o inventario"></mat-form-field>
+    </div>
+    <div class="dialog-toolbar__actions"><button mat-stroked-button type="button" (click)="consultar()" [disabled]="cargando"><mat-icon>search</mat-icon> Consultar</button><button mat-raised-button color="primary" type="button" (click)="exportarExcel()" [disabled]="cargando"><mat-icon>download</mat-icon> Exportar a Excel</button></div>
+  </div>
+  <div class="dialog-summary-grid">
+    <div class="dialog-summary-card"><span class="dialog-summary-card__label">Inventarios comparados</span><strong>{{ resultado?.CantidadInventarios || 0 }}</strong></div>
+    <div class="dialog-summary-card"><span class="dialog-summary-card__label">Artículos</span><strong>{{ resultado?.CantidadArticulos || 0 }}</strong></div>
+    <div class="dialog-summary-card dialog-summary-card--warning"><span class="dialog-summary-card__label">Líneas con diferencia</span><strong>{{ resultado?.CantidadLineasConDiferencia || 0 }}</strong><span class="table-cell-subtext">de {{ resultado?.CantidadLineas || 0 }} comparaciones</span></div>
+  </div>
+  <div class="dialog-workspace-content"><div class="dialog-table-card"><div class="dialog-table-wrapper--fill">
+    <mat-table [dataSource]="dataSource" class="dialog-table--xwide">
+      <ng-container matColumnDef="inventario"><mat-header-cell *matHeaderCellDef>Inventario</mat-header-cell><mat-cell *matCellDef="let row"><div class="table-cell-stack"><strong>#{{ row.IdInventario }}</strong><span class="table-cell-subtext">{{ row.FechaInventario | date:'dd/MM/yyyy':'UTC' }}</span></div></mat-cell></ng-container>
+      <ng-container matColumnDef="subArea"><mat-header-cell *matHeaderCellDef>Subárea</mat-header-cell><mat-cell *matCellDef="let row">{{ row.SubAreaAlmacen }}</mat-cell></ng-container>
+      <ng-container matColumnDef="articulo"><mat-header-cell *matHeaderCellDef>Artículo</mat-header-cell><mat-cell *matCellDef="let row"><div class="table-cell-stack"><strong>{{ row.Articulo }}</strong><span class="table-cell-subtext">{{ row.UnidadMedida }}</span></div></mat-cell></ng-container>
+      <ng-container matColumnDef="teorico"><mat-header-cell *matHeaderCellDef>Consumo teórico</mat-header-cell><mat-cell *matCellDef="let row"><strong>{{ row.ConsumoTeorico | number:'1.0-3' }}</strong></mat-cell></ng-container>
+      <ng-container matColumnDef="real"><mat-header-cell *matHeaderCellDef>Consumo real</mat-header-cell><mat-cell *matCellDef="let row"><strong>{{ row.ConsumoReal | number:'1.0-3' }}</strong></mat-cell></ng-container>
+      <ng-container matColumnDef="diferencia"><mat-header-cell *matHeaderCellDef>Diferencia</mat-header-cell><mat-cell *matCellDef="let row"><div class="table-cell-stack"><strong [class.is-negative]="row.Diferencia > 0">{{ row.Diferencia | number:'1.0-3' }}</strong><span class="table-cell-subtext">{{ row.DiferenciaPorcentaje === null ? '—' : ((row.DiferenciaPorcentaje | number:'1.2-2') + ' %') }}</span></div></mat-cell></ng-container>
+      <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row><mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    </mat-table>
+    <div class="dialog-table-state" *ngIf="cargando"><mat-spinner diameter="38"></mat-spinner><span>Comparando inventarios…</span></div><div class="dialog-table-state" *ngIf="!cargando && !dataSource.filteredData.length"><mat-icon>fact_check</mat-icon><span>No hay inventarios cerrados con conteo en el período.</span></div>
+  </div><mat-paginator [pageSize]="25" [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons></mat-paginator></div></div>
+</div>

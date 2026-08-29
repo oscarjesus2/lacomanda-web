@@ -4,6 +4,7 @@ export class Producto {
 
     public Activo: boolean;
     public Descripcion: string;
+    public DescripcionCarta?: string;
     public IdProducto: number;
     public NombreCorto: string;
     public IdFamilia: number;
@@ -19,11 +20,10 @@ export class Producto {
     public rows: number;
     public Visible: boolean;
     public EsServicio: boolean;
-    public SinPrecio: number;
+    public SinPrecio: boolean;
     public Stock: number;
     public IdGrupoVenta: number;
-    public MonedaVenta: string;
-    public ImpuestoBolsa: number;
+    public IdMoneda: string;
     public EsProductoBolsa: boolean;
     public Tipo: number;
     public ExclusivoParaAnfitriona: boolean;
@@ -33,9 +33,21 @@ export class Producto {
     public FactorComplemento: number;
     public PrecioMinimo: number;
     public IdClaseCombo: number;
-    public IdImpuestoPais: number;
+    public IdImpuestoPais: string;
     public InsumoProducto: string;
-      ProductoAreaImpresion?: ProductoAreaImpresion[];
+    public TieneReceta: boolean;
+    public IdUnidadStock: number | null;
+    public IdUnidadReceta: number | null;
+    public FactorReceta: number;
+    public IdGrupoCompra: number | null;
+    public DescripcionCompra: string;
+    public PrecioCompra: number;
+    public StockMinimo: number;
+    public StockMaximo: number;
+    public Inventario: boolean;
+    public ControlDirectoStock: boolean;
+    public TieneImagen: boolean;
+    ProductoAreaImpresion?: ProductoAreaImpresion[];
 
     constructor(init?: Partial<Producto>) {
         Object.assign(this, init);

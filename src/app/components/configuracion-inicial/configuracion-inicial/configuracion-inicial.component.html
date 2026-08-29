@@ -1,153 +1,303 @@
-
-<div class="config-wrapper">
-  <button mat-icon-button class="close-button" (click)="salir()">
+<div class="mant-panel config-panel">
+  <!-- BOTÓN CERRAR -->
+  <button *ngIf="!esModoInicial" mat-icon-button class="close-button" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Configuración Inicial</h2>
+  <h2 *ngIf="esModoInicial">{{ 'initialSetup' | tenantText }}</h2>
+  <h2 *ngIf="!esModoInicial">{{ 'configurationMaintenance' | tenantText }}</h2>
 
-  <form [formGroup]="form" (ngSubmit)="guardar()">
+  <form
+    *ngIf="esModoInicial"
+    [formGroup]="formInicial"
+    (ngSubmit)="guardar()">
     <section class="card">
-      <h3>Datos de Negocio</h3>
-      <div class="grid2">
-        <mat-form-field appearance="fill">
-          <mat-label>País (ISO2)</mat-label>
+      <h3>{{ 'essentialBusinessData' | tenantText }}</h3>
+
+      <div class="hint">
+        {{ 'initialSetupHint' | tenantText }}
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'businessName' | tenantText }}</mat-label>
+          <input matInput formControlName="RazonSocial" required />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'tradeName' | tenantText }}</mat-label>
+          <input matInput formControlName="NombreComercial" required />
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'address' | tenantText }}</mat-label>
+          <input matInput formControlName="Direccion" required />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'telephone' | tenantText }}</mat-label>
+          <input matInput formControlName="Telefono" required />
+        </mat-form-field>
+      </div>
+
+      <div class="hint">
+        {{ 'settingsAvailableLater' | tenantText }}
+      </div>
+    </section>
+
+    <div class="actions">
+      <button mat-raised-button color="primary" type="submit">
+        {{ 'saveAndStart' | tenantText }}
+      </button>
+    </div>
+  </form>
+
+  <form *ngIf="!esModoInicial && licenciaCargada" [formGroup]="form" (ngSubmit)="guardar()">
+
+    <!-- =========================
+         1. DATOS DE NEGOCIO
+    ========================== -->
+    <section class="card">
+      <h3>{{ 'businessData' | tenantText }}</h3>
+
+      <div class="form-row">
+        <!-- País -->
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'countryIso2' | tenantText }}</mat-label>
           <mat-select formControlName="PaisISO2" required>
             <mat-option *ngFor="let p of paises" [value]="p">{{ p }}</mat-option>
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Tipo de Identidad</mat-label>
+        <!-- Moneda por defecto -->
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'defaultCurrency' | tenantText }}</mat-label>
+          <mat-select formControlName="IdMoneda" required>
+            <mat-option *ngFor="let m of monedas" [value]="m.IdMoneda">
+              {{ m.Simbolo }} — {{ m.Descripcion }}
+            </mat-option>
+          </mat-select>
+          <mat-hint *ngIf="form.get('SimboloMoneda')?.value">
+            {{ 'symbol' | tenantText }}: {{ form.get('SimboloMoneda')?.value }}
+          </mat-hint>
+        </mat-form-field>
+
+        <!-- Tipo de identidad -->
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'identityType' | tenantText }}</mat-label>
           <mat-select formControlName="IdTipoIdentidad" required>
-            <mat-option *ngFor="let t of tiposIdentidadPais" [value]="t.IdTipoIdentidad">
-              {{ t.Descripcion }}
+            <mat-option
+              *ngFor="let t of tiposIdentidadPais"
+              [value]="t.IdTipoIdentidad">
+              {{ t.Abreviatura || t.Descripcion }}
             </mat-option>
           </mat-select>
         </mat-form-field>
+      </div>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Número de Identifición</mat-label>
-          <input matInput formControlName="NumeroIdentificacion" [placeholder]="mascaraHint || ''">
-          <mat-hint *ngIf="mascaraHint">Formato: {{ mascaraHint }}</mat-hint>
-          <mat-error *ngIf="form.get('NumeroIdentificacion')?.hasError('formatoInvalido')">
-            Formato inválido para el país/tipo seleccionado.
+      <div class="form-row">
+        <!-- Número de identificación -->
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'identityNumber' | tenantText }}</mat-label>
+          <input
+            matInput
+            formControlName="NumeroIdentificacion"
+            [placeholder]="mascaraHint || ''" />
+
+          <mat-hint *ngIf="mascaraHint">
+            {{ 'format' | tenantText }}: {{ mascaraHint }}
+          </mat-hint>
+
+          <mat-error
+            *ngIf="form.get('NumeroIdentificacion')?.hasError('formatoInvalido')">
+            {{ 'invalidFormatForCountryType' | tenantText }}
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Razón Social</mat-label>
-          <input matInput formControlName="RazonSocial" required>
+        <!-- Razón social -->
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'businessName' | tenantText }}</mat-label>
+          <input matInput formControlName="RazonSocial" required />
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <!-- Nombre comercial -->
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'tradeName' | tenantText }}</mat-label>
+          <input matInput formControlName="NombreComercial" required />
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Nombre Comercial</mat-label>
-          <input matInput formControlName="NombreComercial" required>
+        <!-- Dirección -->
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'address' | tenantText }}</mat-label>
+          <input matInput formControlName="Direccion" required />
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <!-- Teléfono -->
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>{{ 'telephone' | tenantText }}</mat-label>
+          <input matInput formControlName="Telefono" required />
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Dirección</mat-label>
-          <input matInput formControlName="Direccion" required>
-        </mat-form-field>
+        <!-- % Servicio -->
+        <mat-form-field *ngIf="puedeServicio" appearance="fill" class="form-field">
+          <mat-label>{{ 'servicePercent' | tenantText }}</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="Servicio"
+            min="0"
+            max="100"
+            step="0.01"
+            placeholder="0 - 100" />
 
-        <mat-form-field appearance="fill">
-          <mat-label>Teléfono</mat-label>
-          <input matInput formControlName="Telefono" required>
+          <mat-error *ngIf="form.get('Servicio')?.hasError('min')">
+            {{ 'min0Percent' | tenantText }}
+          </mat-error>
         </mat-form-field>
+      </div>
 
-        <mat-form-field appearance="fill">
-          <mat-label>% Servicio</mat-label>
-          <input matInput type="number" formControlName="Servicio" min="0" max="100" step="0.01" placeholder="0 - 100">
-          <mat-error *ngIf="form.get('Servicio')?.hasError('min')">Mínimo 0%</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="fill" class="full">
-          <mat-label>Pie de Página (Comprobante)</mat-label>
-          <textarea matInput rows="2" formControlName="PiePagina"></textarea>
+      <!-- Pie de página -->
+      <div class="form-row">
+        <mat-form-field appearance="fill" class="form-field form-field--grow">
+          <mat-label>{{ 'receiptFooter' | tenantText }}</mat-label>
+          <textarea
+            matInput
+            rows="2"
+            formControlName="PiePagina">
+          </textarea>
         </mat-form-field>
       </div>
     </section>
 
-    <section class="card">
-      <h3>Operación</h3>
-      <div class="toggles">
-        <mat-slide-toggle formControlName="Traslado">Traslado</mat-slide-toggle>
-        <mat-slide-toggle formControlName="Precuentas">Permitir Precuentas</mat-slide-toggle>
-        <mat-slide-toggle formControlName="CambioMesa">Permitir Cambio de Espacio</mat-slide-toggle>
-        <mat-slide-toggle formControlName="Diario">Control Diario</mat-slide-toggle>
-        <mat-form-field appearance="fill" class="nro-precuentas" [class.disabled]="!form.get('Precuentas')?.value">
-          <mat-label>N° de Precuentas</mat-label>
-          <input matInput type="number" formControlName="NroPrecuentas" min="1">
-        </mat-form-field>
-      </div>
-    </section>
+    <!-- =========================
+         2. OPERACIÓN
+    ========================== -->
+    <section class="card" *ngIf="puedePrecuentas || puedeCambioEspacio">
+      <h3>{{ 'operation' | tenantText }}</h3>
 
-    <section class="card">
-      <h3>Reportes en Cierre</h3>
       <div class="toggles">
-        <mat-slide-toggle formControlName="ResumenVenta">Resumen de Venta</mat-slide-toggle>
-        <mat-slide-toggle formControlName="VentaPorProducto">Venta por Producto</mat-slide-toggle>
-        <mat-slide-toggle formControlName="Liquidacion">Liquidación</mat-slide-toggle>
-        <mat-slide-toggle formControlName="ConsumoArticulo">Consumo de Artículo</mat-slide-toggle>
-        <mat-slide-toggle formControlName="GastosDiarios">Gastos Diarios</mat-slide-toggle>
-        <mat-slide-toggle formControlName="IncluirExpressEnCierre">
-          Incluir "Express" en Cierre
+        <mat-slide-toggle *ngIf="puedePrecuentas" formControlName="Precuentas">
+          {{ 'allowPreBills' | tenantText }}
         </mat-slide-toggle>
-        <div class="hint">
-          Si "Incluir Express en Cierre" está activo, los comprobantes internos (sin efecto fiscal) se
-          incluirán en los reportes marcados arriba.
-        </div>
+
+        <mat-slide-toggle *ngIf="puedeCambioEspacio" formControlName="CambioEspacio">
+          {{ 'allowSpaceChange' | tenantText }}
+        </mat-slide-toggle>
+
+        <!-- N° pre-cuentas, ligado al toggle -->
+        <mat-form-field
+          *ngIf="puedePrecuentas"
+          appearance="fill"
+          class="nro-precuentas"
+          [class.disabled]="!form.get('Precuentas')?.value">
+          <mat-label>{{ 'preBillsNumber' | tenantText }}</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="NroPrecuentas"
+            min="1" />
+        </mat-form-field>
       </div>
     </section>
 
-    <section class="card">
-      <h3>Características</h3>
+    <!-- =========================
+         3. REPORTES EN CIERRE
+    ========================== -->
+    <section class="card" *ngIf="puedeReportesCierre">
+      <h3>{{ 'closingReports' | tenantText }}</h3>
+
+      <div class="toggles">
+        <mat-slide-toggle formControlName="ResumenVenta">
+          {{ 'salesSummary' | tenantText }}
+        </mat-slide-toggle>
+
+        <mat-slide-toggle formControlName="VentaPorProducto">
+          {{ 'salesByProduct' | tenantText }}
+        </mat-slide-toggle>
+
+        <mat-slide-toggle formControlName="Liquidacion">
+          {{ 'settlement' | tenantText }}
+        </mat-slide-toggle>
+
+        <mat-slide-toggle *ngIf="puedeConsumoArticulo" formControlName="ConsumoArticulo">
+          {{ 'itemConsumption' | tenantText }}
+        </mat-slide-toggle>
+
+        <mat-slide-toggle formControlName="GastosDiarios">
+          {{ 'dailyExpenses' | tenantText }}
+        </mat-slide-toggle>
+
+      </div>
+    </section>
+
+    <!-- =========================
+         4. CARACTERÍSTICAS
+    ========================== -->
+    <section class="card" *ngIf="puedeAnfitrionas">
+      <h3>{{ 'features' | tenantText }}</h3>
+
       <mat-slide-toggle formControlName="Anfitrionas">
-        Habilitar campo "Anfitrionas" en Productos
+        {{ 'enableHostessField' | tenantText }}
       </mat-slide-toggle>
-      <div class="hint">
-        Si está activo, en el mantenimiento de productos se mostrará y habilitará el campo
-        “ExclusivoParaAnfitriona”.
-      </div>
+
+      <div class="hint" [innerHTML]="'hostessFieldHint' | tenantText"></div>
     </section>
 
-    <section class="card">
-      <h3>Productos Internos</h3>
-      <div class="grid2">
-        <mat-slide-toggle formControlName="TieneProductoPropina">
-          Habilitar "propinas cobradas en POS"
+    <!-- =========================
+         5. PRODUCTOS INTERNOS
+    ========================== -->
+    <section class="card" *ngIf="puedePropinas || puedeCargoDelivery">
+      <h3>{{ 'internalProducts' | tenantText }}</h3>
+
+      <div class="toggles">
+        <mat-slide-toggle *ngIf="puedePropinas" formControlName="TieneProductoPropina">
+          {{ 'enablePosTips' | tenantText }}
         </mat-slide-toggle>
 
-        <mat-slide-toggle formControlName="TieneProductoPrecioDelivery">
-          Habilitar "Cargo por delivery"
+        <mat-slide-toggle *ngIf="puedeCargoDelivery" formControlName="TieneProductoPrecioDelivery">
+          {{ 'enableDeliveryCharge' | tenantText }}
         </mat-slide-toggle>
       </div>
 
       <div class="hint">
-        Estos son productos  que se crean como <strong>internos/ocultos</strong> para permitir:
+        <span [innerHTML]="'internalProductsHint' | tenantText"></span>
         <ul>
-          <li>Propinas cobradas en POS</li>
-          <li>Cargo por delivery</li>
+          <li *ngIf="puedePropinas">{{ 'registerPosTips' | tenantText }}</li>
+          <li *ngIf="puedeCargoDelivery">{{ 'applyDeliveryCharge' | tenantText }}</li>
         </ul>
       </div>
     </section>
 
-    <section class="card">
-    <h3>Descuento Internos</h3>
-    <div class="grid2">
-       <mat-slide-toggle formControlName="TieneDescuentoTragoCortesia">
-          Habilitar descuento "Trago Cortesía"
+    <!-- =========================
+         6. DESCUENTOS INTERNOS
+    ========================== -->
+    <section class="card" *ngIf="puedeTragoCortesia">
+      <h3>{{ 'internalDiscounts' | tenantText }}</h3>
+
+      <div class="toggles">
+        <mat-slide-toggle formControlName="TieneDescuentoTragoCortesia">
+          {{ 'enableCourtesyDrinkDiscount' | tenantText }}
         </mat-slide-toggle>
-    </div>
-    <div class="hint">
-      El porcentaje de servicio se usará para cálculos de precio final donde corresponda.
-    </div>
-  </section>
+      </div>
 
+      <div class="hint">
+        {{ 'servicePercentHint' | tenantText }}
+      </div>
+    </section>
 
-
+    <!-- =========================
+         ACCIONES
+    ========================== -->
     <div class="actions">
-      <button mat-raised-button color="primary" type="submit">Guardar</button>
+      <button mat-raised-button color="primary" type="submit">
+        {{ 'save' | tenantText }}
+      </button>
     </div>
   </form>
 </div>

@@ -1,21 +1,47 @@
-<div class="report" style="position: relative; min-height: 200px;">
-  <ngx-spinner
-  bdColor="rgba(128, 128, 128, 0.8)"
-  size="medium"
-  color="#fff"
-  type="ball-scale-multiple"
-  name="popularidadPlatoSpinner"
->
-  <p style="font-size: 20px; color: rgb(71, 68, 68)">Cargando...</p>
-</ngx-spinner>
-    <h2>Popularidad de Platos</h2>
-    <select (change)="onReportTypeChange($event)">
-      <option value="1">Top 1</option>
-      <option value="2">Top 2</option>
-      <option value="3">Top 3</option>
-      <option value="4">Top 4</option>
-    </select>
-    <div #chart class="chart" id="chart-ventas-diarias"></div>
-  </div>
+<div class="report report-panel">
 
-  
+  <ngx-spinner
+    bdColor="rgba(0, 0, 0, 0.35)"
+    size="medium"
+    color="#fff"
+    type="ball-scale-multiple"
+    name="popularidadPlatoSpinner"
+    class="report-panel__spinner"
+  >
+    <p>{{ 'loadingPopularity' | tenantText }}</p>
+  </ngx-spinner>
+
+  <header class="report-panel__header">
+    <div>
+      <h3 class="report-panel__title">{{ 'dishPopularity' | tenantText }}</h3>
+      <p class="report-panel__subtitle">
+        {{ 'topBestSellingDishes' | tenantText }}
+      </p>
+    </div>
+
+    <label class="report-panel__control">
+      <span>{{ 'top' | tenantText }}</span>
+      <select
+        class="report-panel__select"
+        (change)="onReportTypeChange($event)"
+      >
+        <option value="1">{{ 'top' | tenantText }} 1</option>
+        <option value="2">{{ 'top' | tenantText }} 2</option>
+        <option value="3">{{ 'top' | tenantText }} 3</option>
+        <option value="4">{{ 'top' | tenantText }} 4</option>
+      </select>
+    </label>
+  </header>
+
+  <div class="report-panel__chart-container">
+    <div
+      #chart
+      class="report-panel__chart"
+      id="chart-ventas-diarias"
+    ></div>
+
+    <div class="report-panel__empty" *ngIf="sinDatos">
+      {{ 'noDataForRange' | tenantText }}
+    </div>
+  </div>
+</div>

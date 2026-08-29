@@ -1,4 +1,142 @@
-.table-wrap{max-height:60vh;overflow:auto}
-.docs-table{width:100%;border-collapse:collapse}
-.docs-table th,.docs-table td{border-bottom:1px solid #eee;padding:6px 8px;text-align:left}
-.toolbar{display:flex;gap:8px;margin-bottom:8px}
+/* Panel: reaprovecha tarjeta global .mant-panel */
+.docs-panel {
+  padding-top: 28px; /* espacio para la X */
+}
+
+/* Título */
+.docs-panel__title {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+
+/* Estado "Cargando" */
+.docs-panel__loading {
+  padding: 16px 4px;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+/* Contenido principal */
+.docs-panel__body {
+  margin-top: 4px;
+}
+
+/* Toolbar superior */
+.docs-panel__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.docs-panel__toolbar-btn {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Contenedor scrolleable de la tabla */
+.docs-panel__table-wrap {
+  max-height: 60vh;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-warm);
+  box-shadow: var(--shadow-md);
+  overflow: auto;
+}
+
+/* Tabla */
+.docs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.docs-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(0, 121, 107, 0.05);
+}
+
+.docs-table th,
+.docs-table td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.docs-table th {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.docs-table tr:nth-child(even) td {
+  background: var(--color-surface-warm);
+}
+
+.docs-table__cell--center {
+  text-align: center;
+}
+
+/* Inputs dentro de la tabla */
+.docs-input {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border-strong);
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  background: var(--color-surface-warm);
+  outline: none;
+  transition: var(--transition-fast);
+}
+
+.docs-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(249, 168, 37, 0.25);
+  background: var(--color-surface);
+}
+
+.docs-input--number {
+  text-align: right;
+}
+
+/* Checkboxes centrados */
+.docs-checkbox {
+  margin: 0;
+}
+
+/* Acciones al pie */
+.docs-panel__actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .docs-panel__table-wrap {
+    overflow-x: auto;
+  }
+
+  .docs-table {
+    min-width: 720px;
+  }
+
+  .docs-panel__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .docs-panel__actions button {
+    width: 100%;
+  }
+}

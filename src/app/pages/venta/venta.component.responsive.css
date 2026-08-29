@@ -1,0 +1,418 @@
+/*
+ * Presentacion adaptativa de VentaComponent.
+ * La logica de venta permanece en un unico componente; este archivo solo
+ * reorganiza la misma interfaz para escritorio, tablet/iPad y telefono.
+ */
+
+.order-workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.compact-view-switcher {
+  display: none;
+}
+
+/* Tablet horizontal, iPad Pro y portatiles compactos. */
+@media (max-width: 1365px) and (min-width: 1024px) {
+  .container {
+    grid-template-columns: minmax(420px, 44fr) minmax(0, 56fr);
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .top-section {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .session-info,
+  .channel-buttons {
+    width: 100%;
+  }
+
+  .channel-buttons {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .channel-buttons button,
+  .button-row button,
+  .static-buttons-row button,
+  .tables-grid button,
+  .products-grid button {
+    min-height: 44px;
+  }
+
+  .button-row {
+    flex-wrap: wrap;
+  }
+
+  .button-row button {
+    flex: 1 1 calc(33.333% - 6px);
+  }
+
+  .tables-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* Tablet vertical y telefonos: una sola zona operativa con conmutador. */
+@media (max-width: 1023px) {
+  :host {
+    display: block;
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: 100dvh;
+    min-height: 100dvh;
+    padding: 6px;
+    overflow: hidden;
+  }
+
+  .column-left,
+  .column-right {
+    gap: 6px;
+    padding: 6px;
+    border-radius: var(--radius-md);
+  }
+
+  .column-left {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  .compact-show-order .column-left,
+  .compact-show-catalog .column-right {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .compact-show-catalog .order-workspace,
+  .compact-show-order .column-right {
+    display: none;
+  }
+
+  .top-section {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+    padding: 7px 8px;
+  }
+
+  .session-info,
+  .channel-buttons {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .session-info__item {
+    flex: 0 0 auto;
+    padding: 0 10px;
+  }
+
+  .session-info__icon-wrap,
+  .table-info__icon-wrap {
+    width: 30px;
+    height: 30px;
+  }
+
+  .channel-buttons {
+    gap: 5px;
+    padding-bottom: 2px;
+  }
+
+  .channel-buttons button {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 7px 11px;
+  }
+
+  .compact-view-switcher {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 5px;
+    flex: 0 0 auto;
+  }
+
+  .compact-view-switcher button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    min-height: 46px;
+    padding: 6px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-warm);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .compact-view-switcher button.active {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-text-light);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .compact-view-switcher mat-icon {
+    flex: 0 0 auto;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .compact-view-switcher strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .compact-view-switcher__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    border-radius: var(--radius-pill);
+    background: var(--color-accent);
+    color: var(--color-text);
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .order-workspace,
+  .middle-section,
+  .data-grid {
+    min-height: 0;
+  }
+
+  .table-info {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 8px 10px;
+  }
+
+  .table-info__item,
+  .tiempos-pedido {
+    flex: 0 0 auto;
+    padding: 0 10px;
+  }
+
+  .data-grid {
+    overflow: auto;
+  }
+
+  .data-grid > table {
+    min-width: 560px;
+    table-layout: fixed;
+  }
+
+  .data-grid .mat-column-NombreProducto {
+    width: auto;
+  }
+
+  .data-grid .mat-column-Precio {
+    width: 64px;
+  }
+
+  .data-grid .mat-column-Cantidad {
+    width: 58px;
+  }
+
+  .data-grid .mat-column-actions {
+    width: 132px;
+    min-width: 132px;
+    padding-right: 4px;
+    padding-left: 4px;
+  }
+
+  .product-row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+
+  .product-row-actions button {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+  }
+
+  .button-row {
+    flex-wrap: wrap;
+  }
+
+  .button-row button {
+    flex: 1 1 calc(33.333% - 6px);
+    min-width: 132px;
+    min-height: 46px;
+    white-space: normal;
+  }
+
+  .total-section__item {
+    min-width: 0;
+    padding: 7px 5px;
+  }
+
+  .total-section__value--total {
+    font-size: 18px;
+  }
+
+  .tables-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-auto-rows: minmax(78px, 1fr);
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-auto-rows: minmax(76px, 1fr);
+  }
+
+  .tables-grid button,
+  .products-grid button,
+  .static-buttons-row button {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  .static-buttons-row--familia,
+  .static-buttons-row--ambiente,
+  .static-buttons-row--acciones {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .static-buttons-row--familia button,
+  .static-buttons-row--ambiente button,
+  .static-buttons-row--acciones button {
+    flex: 0 0 auto;
+    height: 44px;
+  }
+
+}
+
+/* Telefono. */
+@media (max-width: 599px) {
+  .container {
+    padding: 4px;
+  }
+
+  .column-left,
+  .column-right {
+    padding: 4px;
+  }
+
+  .session-info__item:nth-child(2) {
+    display: none;
+  }
+
+  .session-info__label {
+    font-size: 8px;
+  }
+
+  .session-info__value {
+    font-size: 12px;
+  }
+
+  .channel-buttons button {
+    min-height: 40px;
+    padding: 6px 9px;
+    font-size: 11px;
+  }
+
+  .compact-view-switcher button {
+    min-height: 44px;
+    padding: 5px 7px;
+    font-size: 12px;
+  }
+
+  .compact-view-switcher strong {
+    font-size: 11px;
+  }
+
+  .tables-grid,
+  .products-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .tables-grid {
+    grid-auto-rows: minmax(82px, 1fr);
+  }
+
+  .products-grid {
+    grid-auto-rows: minmax(86px, 1fr);
+  }
+
+  .tables-grid button,
+  .products-grid button {
+    padding: 6px 4px;
+    font-size: 12px;
+  }
+
+  .button-row button {
+    flex-basis: calc(50% - 5px);
+    min-width: 0;
+    min-height: 46px;
+    padding: 7px 6px;
+    font-size: 11px;
+  }
+
+  .total-section__label {
+    font-size: 8px;
+  }
+
+  .total-section__value {
+    font-size: 12px;
+  }
+
+  .total-section__value--total {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 380px) {
+  .tables-grid,
+  .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .compact-view-switcher button {
+    gap: 4px;
+    font-size: 11px;
+  }
+}
+
+/* iPad y tablets en horizontal: evita gestos accidentales al pulsar rapido. */
+@media (pointer: coarse) {
+  button {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+}

@@ -1,48 +1,56 @@
-<div class="product-search-container">
-    <h2>Buscar Producto</h2>
-    <mat-form-field class="search-input">
-      <mat-label>Buscar por : Producto</mat-label>
-      <input matInput [(ngModel)]="filterText" (input)="filterProducts()" placeholder="Producto" readonly>
-    </mat-form-field>
-  
-    <!-- Product List Table with a limited height and scroll -->
-    <div class="product-list-container">
-      <table mat-table [dataSource]="filteredProducts" class="mat-elevation-z8">
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef> Producto </th>
-          <td mat-cell *matCellDef="let product"> {{ product.NombreCorto }} </td>
-        </ng-container>
-  
-        <ng-container matColumnDef="price">
-          <th mat-header-cell *matHeaderCellDef> Precio </th>
-          <td mat-cell *matCellDef="let product"> {{ product.Precio }} </td>
-        </ng-container>
-  
-        <ng-container matColumnDef="family">
-          <th mat-header-cell *matHeaderCellDef> Familia </th>
-          <td mat-cell *matCellDef="let product"> {{ product.Familia }} </td>
-        </ng-container>
-  
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
-        [class.selected]="selectedProduct === row" (click)="selectProduct(row)">
-    </tr>
-        
-      </table>
-    </div>
-  
-    <div class="keypad">
-        <div *ngFor="let row of keyRows">
-          <button *ngFor="let key of row" (click)="onKeyClick(key)">{{ key }}</button>
-        </div>
-      </div>
+<div class="mant-panel ps-panel">
 
-      <div class="botones-accion">
-        <!-- Añadir la clase 'aceptar' para el botón Aceptar -->
-        <button class="aceptar" (click)="onAcceptClick()">Aceptar</button>
-        
-        <!-- Añadir la clase 'cancelar' para el botón Cancelar -->
-        <button class="cancelar" (click)="onCancelClick()">Cerrar</button>
-      </div>
+  <h2>{{ 'searchProducts' | tenantText }}</h2>
+
+  <!-- Campo de búsqueda -->
+  <mat-form-field appearance="fill" class="ps-search-field">
+    <mat-label>{{ 'searchByProduct' | tenantText }}</mat-label>
+    <mat-icon matPrefix class="ps-search-icon">search</mat-icon>
+    <input matInput [(ngModel)]="filterText" (input)="filterProducts()"
+           [placeholder]="'typeToFilter' | tenantText"
+           autocomplete="off" />
+  </mat-form-field>
+
+  <!-- Tabla de resultados -->
+  <div class="ps-table-wrap">
+    <table mat-table [dataSource]="filteredProducts" class="ps-table">
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>{{ 'product' | tenantText }}</th>
+        <td mat-cell *matCellDef="let product">{{ product.NombreCorto }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="price">
+        <th mat-header-cell *matHeaderCellDef>{{ 'price' | tenantText }}</th>
+        <td mat-cell *matCellDef="let product">{{ product.Precio }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="family">
+        <th mat-header-cell *matHeaderCellDef>{{ 'family' | tenantText }}</th>
+        <td mat-cell *matCellDef="let product">{{ product.Familia }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+          [class.ps-row--selected]="selectedProduct === row"
+          (click)="selectProduct(row)">
+      </tr>
+    </table>
   </div>
-  
+
+  <!-- Teclado táctil -->
+  <div class="ps-keypad">
+    <div *ngFor="let row of keyRows">
+      <button *ngFor="let key of row" class="ps-key" (click)="onKeyClick(key)">{{ key }}</button>
+    </div>
+  </div>
+
+  <!-- Acciones -->
+  <div class="ps-actions">
+    <button class="ps-btn ps-btn--cancel" (click)="onCancelClick()">{{ 'close' | tenantText }}</button>
+    <button class="ps-btn ps-btn--accept" (click)="onAcceptClick()">
+      <mat-icon>check</mat-icon> {{ 'accept' | tenantText }}
+    </button>
+  </div>
+
+</div>

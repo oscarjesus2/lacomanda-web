@@ -5,14 +5,9 @@ export interface VentasInterface {
     TipoDocumento: string;
     Documento: string;
     Cliente: string;
-    FechaVenta: string; // Suponiendo que la fecha viene en formato de cadena
+    FechaVenta: string;
     Moneda: string;
     Dscto: number;
-    Inafecto: number;
-    ValorVenta: number;
-    IGV: number;
-    Servicio: number;
-    ICBPER: number;
     Total: number;
     IdTurno: number;
     EstadoDescripcion: string;
@@ -32,6 +27,7 @@ export interface VentasInterface {
     NumeroDoi: string;          // Número DOI (Documento de Identidad del cliente)
     NombreArchivo: string;      // Nombre del archivo generado
     FormaPago: string;          // Forma de pago utilizada
+    Estado?: string;            // Estado del documento ('Generado', 'Anulado')
     IdTipoPedido: string;       // Tipo de pedido
     IdTipoDocumento: string;         // Tipo de documento de la venta
     Importe: number;                 // Importe total de la venta

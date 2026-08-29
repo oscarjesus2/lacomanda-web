@@ -1,0 +1,58 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.menu-summary-row {
+  flex: 0 0 auto;
+}
+
+.menu-summary-row .dialog-summary {
+  margin: 0 0 12px;
+}
+
+.menu-sections {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.menu-workspace {
+  gap: 18px;
+}
+
+.menu-column {
+  flex: 1 1 0;
+}
+
+.menu-column__header {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.menu-table {
+  min-width: 560px;
+}
+
+.menu-observation {
+  width: min(280px, 32vw);
+  margin-bottom: -1.25em;
+}
+
+.dialog-actions {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 800px) {
+  .menu-workspace {
+    flex-direction: column;
+  }
+
+  .menu-column {
+    min-height: 0;
+  }
+}

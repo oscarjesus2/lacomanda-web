@@ -12,6 +12,14 @@ import { Pago } from '../models/pago.models';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { DescuentoCodigo } from '../models/descuentocodigo.models';
 import { ImpresionDTO } from '../interfaces/impresionDTO.interface';
+import {
+    PlanCorreccionVenta,
+    PreparacionCorreccionVenta,
+    ResultadoAnulacionDocumentoVenta,
+    ResultadoCorreccionVenta,
+    SolicitudAnulacionDocumentoVenta,
+    SolicitudCorreccionVenta
+} from '../interfaces/correccion-venta.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -48,22 +56,35 @@ export class VentaService {
         return this.http.get<InformeContableInterface[]>(this.basePath+ 'InformeContableVenta/' + fechaInicial + '/' + fechaFinal+ '/' + serie+ '/' + tipoDoc);
     }
 
-    anularDocumentoVenta(idVenta: number, motivo: string, usuAnula: number, anularPedido: boolean):  Observable<ApiResponse<ImpresionDTO[]>>  {
-        const url = `${this.basePath}anulardocumentoventa/${idVenta}/${encodeURIComponent(motivo)}/${usuAnula}/${anularPedido}`;
-        return this.http.put< ApiResponse<ImpresionDTO[]>>(url, null);
-      }
+    anularDocumentoVenta(
+        idVenta: number,
+        solicitud: SolicitudAnulacionDocumentoVenta
+    ): Observable<ApiResponse<ResultadoAnulacionDocumentoVenta>> {
+        const url = `${this.basePath}anulardocumentoventa/${idVenta}`;
+        return this.http.put<ApiResponse<ResultadoAnulacionDocumentoVenta>>(url, solicitud);
+    }
       
   
-    guardarDocumentoVenta(idTipoPedido: string, venta: Venta, cliente: Cliente, pedidoCab: PedidoCab, listaDescuentoCodigo: DescuentoCodigo[], listaPago: Pago[],  bTurnoIndependiente: boolean): Observable<ApiResponse<ImpresionDTO[]>> {
+    guardarDocumentoVenta(
+        idTipoPedido: string,
+        venta: Venta,
+        cliente: Cliente | null,
+        pedidoCab: PedidoCab,
+        listaDescuentoCodigo: DescuentoCodigo[],
+        listaPago: Pago[],
+        bTurnoIndependiente: boolean,
+        usarClienteGenerico: boolean
+    ): Observable<ApiResponse<ImpresionDTO[]>> {
 
         const body = {
             IdTipoPedido: idTipoPedido,
             venta: venta,
-            cliente: cliente,
+            cliente: usarClienteGenerico ? null : cliente,
             pedidoCab: pedidoCab,
             listaDescuentoCodigo: listaDescuentoCodigo,
             listaPago: listaPago,
-            bTurnoIndependiente: bTurnoIndependiente
+            bTurnoIndependiente: bTurnoIndependiente,
+            usarClienteGenerico: usarClienteGenerico
         };
 
         return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + 'grabardocumentoventa', body);
@@ -82,6 +103,32 @@ export class VentaService {
     getImpresionComprobanteVenta(idventa: number, tipoFormato: number): Observable<ApiResponse<ImpresionDTO[]>> 
     {
         return this.http.get<ApiResponse<ImpresionDTO[]>>(`${this.basePath}ImpresionComprobanteVenta/${idventa}/${tipoFormato}`);
+    }
+
+    prepararCorreccionVenta(idVenta: number): Observable<ApiResponse<PreparacionCorreccionVenta>> {
+        return this.http.get<ApiResponse<PreparacionCorreccionVenta>>(
+            `${this.basePath}correccion/${idVenta}`
+        );
+    }
+
+    planificarCorreccionVenta(
+        idVenta: number,
+        solicitud: SolicitudCorreccionVenta
+    ): Observable<ApiResponse<PlanCorreccionVenta>> {
+        return this.http.post<ApiResponse<PlanCorreccionVenta>>(
+            `${this.basePath}correccion/${idVenta}/plan`,
+            solicitud
+        );
+    }
+
+    aplicarCorreccionVenta(
+        idVenta: number,
+        solicitud: SolicitudCorreccionVenta
+    ): Observable<ApiResponse<ResultadoCorreccionVenta>> {
+        return this.http.post<ApiResponse<ResultadoCorreccionVenta>>(
+            `${this.basePath}correccion/${idVenta}`,
+            solicitud
+        );
     }
 
     private isBase64(str: string): boolean {

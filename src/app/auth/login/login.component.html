@@ -1,60 +1,59 @@
 <div class="login-container">
   <div class="login-box">
-    <img src="assets/logo.png" alt="Loaris REST Logo" class="login-logo">
-    <h2>Welcome to Loaris REST</h2>
-    <button *ngIf="showInstallButton" (click)="installPWA()">Instalar Aplicación</button>
-    <mat-card class="login-card">
-      <mat-card-content>
-        <form [formGroup]="loginForm" (ngSubmit)="login()">
-          <mat-error *ngIf="!loginValid">
-            Invalid credentials, please try again
-          </mat-error>
+    <!-- Logo + encabezado -->
+    <div class="brand">
+      <img src="/assets/logo.svg" alt="LaComanda Logo" class="login-logo" />
+      <h1 class="title">LaComanda</h1>
+      <p class="tagline">{{ 'restaurantManagement' | tenantText }}</p>
+      <button *ngIf="showInstallButton" class="pwa-btn" (click)="installPWA()">
+        {{ 'installApplication' | tenantText }}
+      </button>
+    </div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Sucursal</mat-label>
-            <mat-select formControlName="tenant" required>
-              <mat-option *ngFor="let tenant of tenantDefault" [value]="tenant">
-                {{tenant.Sucursal}}
-              </mat-option>
-            </mat-select>
-            <mat-error>Please provide a valid Sucursal</mat-error>
-          </mat-form-field>
+    <!-- Card del formulario (oculta mientras se decide/redirige, para no
+         mostrar el selector por un instante al cerrar sesión) -->
+    <div class="login-card" *ngIf="showSelector">
 
-          <mat-form-field appearance="outline">
-            <mat-label>Tipo Usuario</mat-label>
-            <mat-select formControlName="idNivel" required>
-              <mat-option *ngFor="let nivel of nivelUsuario" [value]="nivel.value">
-                {{nivel.nombreNivel}}
-              </mat-option>
-            </mat-select>
-            <mat-error>Please provide a valid User Type</mat-error>
-          </mat-form-field>
+      <!-- ── Vista: Selección de sucursal (paso 1) ───────────────────────── -->
+      <form [formGroup]="loginForm" (ngSubmit)="login()">
+        <h2 class="step-title">Selecciona tu sucursal</h2>
+        <p class="step-subtitle">Elige el local y continúa para iniciar sesión.</p>
 
-          <!-- Nuevo campo Identificador Único -->
-          <mat-form-field appearance="outline" *ngIf="shouldShowIdentifierField()">
-            <mat-label>Identificador Único</mat-label>
-            <input matInput formControlName="identifier" required>
-            <mat-error>Please provide a valid identifier</mat-error>
-          </mat-form-field>
+        <div *ngIf="!loginValid" class="error-banner">
+          {{ 'invalidCredentials' | tenantText }}
+        </div>
 
-          <!-- Botón para ingresar la contraseña numérica -->
-          <div class="password-field">
-            <button mat-button type="button" (click)="openPasswordDialog()">Ingresar Contraseña Touch</button>
+        <!-- Selector de sucursal -->
+        <div class="form-group">
+          <label for="tenant">{{ 'branch' | tenantText }}</label>
+          <div class="custom-select">
+            <select id="tenant" formControlName="tenant" required>
+              <option *ngFor="let t of tenantDefault" [ngValue]="t">{{ t.Sucursal }}</option>
+            </select>
           </div>
-          
-          <mat-form-field appearance="outline">
-            <mat-label>Password</mat-label>
-            <input matInput type="password" formControlName="password" required>
-            <mat-error>Please provide a valid password</mat-error>
-          </mat-form-field>
+        </div>
 
-          <button mat-raised-button color="primary" class="login-button" [disabled]="!loginForm.valid">Login</button>
-        </form>
-      </mat-card-content>
-    </mat-card>
-    <br>
-    <p class="app-version">Versión de la aplicación: {{ appVersion }}</p>
+        <!-- La contraseña (y "olvidé mi contraseña") se gestionan en la página
+             segura de Keycloak, en el siguiente paso. -->
 
+        <button
+          type="submit"
+          class="login-button"
+          [disabled]="isSubmitting || loginForm.invalid">
+          <ng-container *ngIf="!isSubmitting; else loadingTpl">
+            {{ 'continue' | tenantText }}
+          </ng-container>
+          <ng-template #loadingTpl>
+            <span aria-busy="true">{{ 'signingIn' | tenantText }}</span>
+          </ng-template>
+        </button>
+      </form>
+
+    </div>
+
+    <!-- Versión app -->
+    <p class="app-version">
+      {{ 'applicationVersion' | tenantText }}: {{ appVersion }}
+    </p>
   </div>
-
 </div>

@@ -1,0 +1,130 @@
+<div class="mant-panel dialog-panel--workspace dialog-panel--dense">
+  <button mat-icon-button class="close-button" type="button" aria-label="Cerrar" (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>Cobro móvil de la cuenta</h2>
+
+  <div class="dialog-empty-state" *ngIf="loading">
+    <mat-icon>hourglass_top</mat-icon>
+    <span>Cargando la configuración del restaurante…</span>
+  </div>
+
+  <form class="dialog-form dialog-form--workspace" *ngIf="!loading && configuration" (ngSubmit)="save()">
+    <div class="dialog-form-scroll">
+      <div class="dialog-notice" [class.dialog-notice--success]="active && readyToSave">
+        <mat-icon>{{ active && readyToSave ? 'verified' : 'info' }}</mat-icon>
+        <div class="dialog-notice__content">
+          <strong class="dialog-notice__title">
+            {{ active ? 'Cobro desde el QR habilitado' : 'Cobro desde el QR desactivado' }}
+          </strong>
+          <span class="dialog-notice__text">
+            El cliente verá “Pagar mi cuenta” únicamente cuando tenga una sesión activa y una cuenta pendiente.
+          </span>
+        </div>
+      </div>
+
+      <div class="dialog-summary">
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">País</span>
+          <strong class="dialog-summary__value">{{ isSpain ? 'España' : 'Perú' }}</strong>
+        </div>
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">Proveedor asignado</span>
+          <strong class="dialog-summary__value">{{ providerName }}</strong>
+        </div>
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">Experiencia de pago</span>
+          <strong class="dialog-summary__value">
+            {{ isSpain ? 'Tarjeta y Bizum' : 'Tarjeta, Yape y otros medios de Culqi' }}
+          </strong>
+        </div>
+      </div>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>payments</mat-icon>
+          Activación
+        </h3>
+        <div class="dialog-option">
+          <mat-slide-toggle name="active" [(ngModel)]="active">
+            Permitir que el cliente pague su cuenta desde el móvil
+          </mat-slide-toggle>
+        </div>
+      </section>
+
+      <section class="dialog-form-section" *ngIf="isSpain">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>account_balance_wallet</mat-icon>
+          Cuenta MONEI Connect
+        </h3>
+        <p class="dialog-form-section__hint">
+          Vincula este restaurante con su cuenta MONEI. La clave del partner se configura una sola vez en el backend.
+        </p>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Identificador de cuenta MONEI</mat-label>
+            <input matInput name="moneiAccountId" [(ngModel)]="moneiAccountId" maxlength="120" autocomplete="off" [required]="active">
+            <mat-hint>MONEI Account ID asignado a este restaurante.</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="dialog-form-section" *ngIf="!isSpain">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>account_balance_wallet</mat-icon>
+          Cuenta Culqi
+        </h3>
+        <p class="dialog-form-section__hint">
+          Usa las llaves del comercio de este restaurante. La llave privada se cifra y nunca vuelve a mostrarse.
+        </p>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Llave pública Culqi</mat-label>
+            <input matInput name="culqiPublicKey" [(ngModel)]="culqiPublicKey" maxlength="180" autocomplete="off" [required]="active">
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Llave privada Culqi</mat-label>
+            <input matInput name="culqiSecretKey" [(ngModel)]="culqiSecretKey" type="password" autocomplete="new-password" [required]="active && !configuration.CredencialPrivadaConfigurada">
+            <mat-hint *ngIf="configuration.CredencialPrivadaConfigurada && !culqiSecretKey">
+              Ya configurada. Déjala vacía para conservarla.
+            </mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>webhook</mat-icon>
+          Confirmación automática del pago
+        </h3>
+        <p class="dialog-form-section__hint">
+          <ng-container *ngIf="isSpain; else culqiWebhookHelp">
+            LaComanda envía esta dirección automáticamente a MONEI en cada pago. Se muestra aquí para facilitar la revisión técnica.
+          </ng-container>
+          <ng-template #culqiWebhookHelp>
+            Registra esta URL como webhook en Culqi. Es exclusiva de este restaurante y no requiere iniciar sesión.
+          </ng-template>
+        </p>
+        <div class="dialog-option">
+          <div class="dialog-option__content">
+            <strong class="dialog-option__title">URL del webhook</strong>
+            <span class="dialog-option__hint">{{ configuration.UrlWebhook }}</span>
+          </div>
+          <button mat-stroked-button type="button" (click)="copyWebhook()">
+            <mat-icon>{{ copied ? 'check' : 'content_copy' }}</mat-icon>
+            {{ copied ? 'Copiada' : 'Copiar URL' }}
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div class="dialog-form-actions">
+      <button mat-stroked-button type="button" (click)="close()">Cancelar</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="saving || !readyToSave">
+        <mat-icon>save</mat-icon>
+        {{ saving ? 'Guardando…' : 'Guardar configuración' }}
+      </button>
+    </div>
+  </form>
+</div>

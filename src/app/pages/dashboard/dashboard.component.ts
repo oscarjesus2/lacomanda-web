@@ -3,6 +3,7 @@ import { Usuario } from 'src/app/models/usuario.models';
 import Swal from 'sweetalert2';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { StorageService } from 'src/app/services/storage.service';
+import { HeaderService } from 'src/app/services/header.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -20,18 +21,22 @@ export class DashboardComponent implements OnInit {
   userData?: Usuario;
 
   reportes = [
-    { titulo: 'Ventas Diarias', componente: 'ventas-diarias', visible: false },
-    { titulo: 'Popularidad de Platos', componente: 'popularidad-platos', visible: false },
-    { titulo: 'Horas Pico', componente: 'horas-pico', visible: false },
-    { titulo: 'Canal de Venta', componente: 'canal-venta', visible: false },
-    { titulo: 'Anulaciones', componente: 'anulaciones', visible: false }
+    { tituloKey: 'comparisonSales', componente: 'comparativo-ventas', visible: true, wide: true },
+    { tituloKey: 'marginEvolution', componente: 'evolucion-margen', visible: true, wide: false },
+    { tituloKey: 'paymentDistribution', componente: 'metodos-pago-dashboard', visible: true, wide: false },
+    { tituloKey: 'dailySales', componente: 'ventas-diarias', visible: false },
+    { tituloKey: 'dishPopularity', componente: 'popularidad-platos', visible: false },
+    { tituloKey: 'peakHours', componente: 'horas-pico', visible: false },
+    { tituloKey: 'salesChannel', componente: 'canal-venta', visible: false },
+    { tituloKey: 'voids', componente: 'anulaciones', visible: false }
     // Puedes agregar más reportes aquí:
-    // { titulo: 'Nuevo Reporte', componente: 'nuevo-reporte', visible: false }
+    // { tituloKey: 'nuevoReporte', componente: 'nuevo-reporte', visible: false }
   ];
 
   constructor(
     private storageService: StorageService,
-    private spinnerService: NgxSpinnerService
+    private spinnerService: NgxSpinnerService,
+    private headerService: HeaderService
   ) { 
     const lastday = new Date(new Date());
     lastday.setDate(new Date().getDate() - 1);
@@ -101,10 +106,9 @@ export class DashboardComponent implements OnInit {
   async ngOnInit() {
     try {
       this.spinnerService.show();
-      
+      this.headerService.showHeader();
       this.updateVisibleReportes();
-
-    } catch(e) {
+    } catch(e) {  
       this.salir();
       Swal.fire('Error', e.message, 'error');
     } finally {

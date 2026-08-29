@@ -1,0 +1,49 @@
+<section class="executive-widget">
+  <header class="executive-widget__header">
+    <div>
+      <span class="executive-widget__eyebrow">{{ 'cashFlow' | tenantText }}</span>
+      <h3 class="executive-widget__title">{{ 'paymentDistribution' | tenantText }}</h3>
+      <p class="executive-widget__subtitle">{{ 'paymentDistributionSubtitle' | tenantText }}</p>
+    </div>
+  </header>
+
+  <div class="payment-dashboard">
+    <div class="payment-dashboard__mix">
+      <div class="executive-chart executive-chart--donut" #chart></div>
+      <div class="payment-methods" *ngIf="data">
+        <div class="payment-method" *ngFor="let metodo of data.Metodos; let i = index">
+          <i [style.background]="colorMetodo(i)"></i>
+          <span><strong>{{ metodo.TipoPago }}</strong><small>{{ metodo.CantidadPagos }} {{ 'payments' | tenantText }}</small></span>
+          <b>{{ metodo.Porcentaje | number:'1.1-1' }}%</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="currency-breakdown" *ngIf="data">
+      <div class="currency-breakdown__heading">
+        <strong>{{ 'currencyBreakdown' | tenantText }}</strong>
+        <span>{{ 'netCollected' | tenantText }}: {{ simboloMoneda }} {{ data.TotalNetoMonedaBase | number:'1.2-2' }}</span>
+      </div>
+      <article class="currency-card" *ngFor="let moneda of data.Monedas">
+        <div class="currency-card__title">
+          <strong>{{ moneda.Moneda }}</strong>
+          <span>{{ moneda.CantidadPagos }} {{ 'payments' | tenantText }}</span>
+        </div>
+        <div class="currency-card__values">
+          <span *ngIf="moneda.CantidadPagos > moneda.PagosSinDesgloseOriginal">
+            {{ 'originalAmount' | tenantText }} <b>{{ moneda.Simbolo }} {{ moneda.MontoRecibido | number:'1.2-2' }}</b>
+          </span>
+          <span>{{ 'baseCurrencyEquivalent' | tenantText }} <b>{{ simboloMoneda }} {{ moneda.NetoMonedaBase | number:'1.2-2' }}</b></span>
+          <span *ngIf="moneda.TipoCambioPromedio">{{ 'averageExchangeRate' | tenantText }} <b>{{ moneda.TipoCambioPromedio | number:'1.4-4' }}</b></span>
+        </div>
+        <small class="currency-card__legacy" *ngIf="moneda.PagosSinDesgloseOriginal">
+          {{ 'legacyPaymentBreakdown' | tenantText:{ count: moneda.PagosSinDesgloseOriginal } }}
+        </small>
+      </article>
+    </div>
+  </div>
+
+  <div class="executive-state" *ngIf="loading">{{ 'loading' | tenantText }}</div>
+  <div class="executive-state is-error" *ngIf="error">{{ 'reportLoadError' | tenantText }}</div>
+  <div class="executive-state" *ngIf="!loading && !error && data && !data.CantidadPagos">{{ 'noDataForRange' | tenantText }}</div>
+</section>

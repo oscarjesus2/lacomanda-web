@@ -1,0 +1,203 @@
+<div class="mant-panel dialog-panel--workspace">
+  <button mat-icon-button class="close-button" type="button" aria-label="Cerrar" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>CONSULTA DE KARDEX</h2>
+
+  <div class="dialog-toolbar">
+    <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+      <mat-form-field appearance="fill">
+        <mat-label>Subárea de almacén</mat-label>
+        <mat-select [(ngModel)]="idSubAreaAlmacen" (selectionChange)="cambiarSubArea()">
+          <mat-option *ngFor="let subArea of catalogos.SubAreas" [value]="subArea.IdSubAreaAlmacen">
+            {{ subArea.Descripcion }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide">
+        <mat-label>Artículo</mat-label>
+        <mat-select
+          [(ngModel)]="idProducto"
+          [disabled]="!idSubAreaAlmacen"
+          (closed)="busquedaArticulo = ''">
+          <mat-option class="select-search-option" disabled>
+            <mat-icon>search</mat-icon>
+            <input
+              class="select-search-input"
+              type="text"
+              autocomplete="off"
+              aria-label="Buscar artículo"
+              placeholder="Buscar artículo..."
+              [value]="busquedaArticulo"
+              (input)="buscarArticulo($event)"
+              (click)="detenerEvento($event)"
+              (keydown)="detenerEvento($event)">
+          </mat-option>
+          <mat-option *ngFor="let articulo of articulosFiltrados" [value]="articulo.IdProducto">
+            {{ articulo.Descripcion }} · {{ articulo.UnidadMedida }}
+          </mat-option>
+          <mat-option disabled *ngIf="articulosFiltrados.length === 0">
+            {{ busquedaArticulo ? 'No hay coincidencias' : 'La subárea no tiene artículos' }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Desde</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaDesde">
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Hasta</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaHasta">
+      </mat-form-field>
+    </div>
+
+    <div class="dialog-toolbar__actions">
+      <button mat-stroked-button type="button" (click)="exportarExcel()" [disabled]="cargando || !resultado">
+        <mat-icon>download</mat-icon>
+        EXPORTAR A EXCEL
+      </button>
+      <button mat-raised-button color="primary" type="button" (click)="consultar()" [disabled]="cargando">
+        <mat-icon>search</mat-icon>
+        {{ cargando ? 'CONSULTANDO...' : 'CONSULTAR' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="dialog-context-grid" *ngIf="resultado">
+    <div class="dialog-context-card">
+      <span>ARTÍCULO</span>
+      <strong>{{ resultado.Articulo }}</strong>
+      <small>{{ resultado.UnidadMedida }}</small>
+    </div>
+    <div class="dialog-context-card">
+      <span>SUBÁREA</span>
+      <strong>{{ resultado.SubAreaAlmacen }}</strong>
+    </div>
+  </div>
+
+  <div class="dialog-summary-grid" *ngIf="resultado">
+    <div class="dialog-summary-card">
+      <span class="dialog-summary-card__label">Saldo inicial</span>
+      <strong>{{ resultado.SaldoInicial | number:'1.3-3' }}</strong>
+    </div>
+    <div class="dialog-summary-card dialog-summary-card--success">
+      <span class="dialog-summary-card__label">Entradas</span>
+      <strong>{{ resultado.TotalEntradas | number:'1.3-3' }}</strong>
+    </div>
+    <div class="dialog-summary-card dialog-summary-card--danger">
+      <span class="dialog-summary-card__label">Salidas</span>
+      <strong>{{ resultado.TotalSalidas | number:'1.3-3' }}</strong>
+    </div>
+    <div class="dialog-summary-card dialog-summary-card--accent">
+      <span class="dialog-summary-card__label">Saldo final</span>
+      <strong>{{ resultado.SaldoFinal | number:'1.3-3' }}</strong>
+    </div>
+  </div>
+
+  <div class="dialog-workspace-content">
+    <div class="dialog-table-card">
+      <div class="dialog-table-state" *ngIf="cargando">
+        <mat-spinner diameter="38"></mat-spinner>
+        <span>Consultando movimientos…</span>
+      </div>
+
+      <div class="dialog-table-state" *ngIf="!cargando && !resultado">
+        <mat-icon>inventory_2</mat-icon>
+        <strong>Selecciona los filtros para consultar</strong>
+        <span>El Kardex mostrará el saldo inicial y cada movimiento en orden cronológico.</span>
+      </div>
+
+      <div class="dialog-table-state" *ngIf="resultado && dataSource.data.length === 0">
+        <mat-icon>info</mat-icon>
+        <strong>Sin movimientos en el período</strong>
+        <span>El saldo inicial y final corresponden al historial anterior al rango seleccionado.</span>
+      </div>
+
+      <div class="dialog-table-wrapper--fill" *ngIf="dataSource.data.length > 0">
+        <table mat-table [dataSource]="dataSource" class="dialog-table dialog-table--xwide dialog-table--kardex">
+          <ng-container matColumnDef="fecha">
+            <th mat-header-cell *matHeaderCellDef>FECHA</th>
+            <td mat-cell *matCellDef="let item">{{ item.Fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="operacion">
+            <th mat-header-cell *matHeaderCellDef>OPERACIÓN</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="table-operation-inline">
+                <strong>{{ item.Operacion }}</strong>
+                <span
+                  class="movement-type-badge"
+                  [class.is-entry]="item.Tipo === 'E'"
+                  [class.is-exit]="item.Tipo === 'S'"
+                  [attr.title]="item.Tipo === 'E' ? 'Entrada' : item.Tipo === 'S' ? 'Salida' : 'Movimiento'">
+                  {{ item.Tipo }}
+                </span>
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="referencia">
+            <th mat-header-cell *matHeaderCellDef>REFERENCIA</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="document-reference">{{ item.Referencia || '—' }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="entrada">
+            <th mat-header-cell *matHeaderCellDef>ENTRADA</th>
+            <td mat-cell *matCellDef="let item" class="is-numeric is-positive">
+              {{ item.Entrada ? (item.Entrada | number:'1.3-3') : '—' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="salida">
+            <th mat-header-cell *matHeaderCellDef>SALIDA</th>
+            <td mat-cell *matCellDef="let item" class="is-numeric is-negative">
+              {{ item.Salida ? (item.Salida | number:'1.3-3') : '—' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="conteo">
+            <th mat-header-cell *matHeaderCellDef>CONTEO</th>
+            <td mat-cell *matCellDef="let item" class="is-numeric">
+              {{ item.ConteoInventario == null ? '—' : (item.ConteoInventario | number:'1.3-3') }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="saldo">
+            <th mat-header-cell *matHeaderCellDef>SALDO</th>
+            <td mat-cell *matCellDef="let item" class="is-numeric is-emphasis">
+              {{ item.Saldo | number:'1.3-3' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="precio">
+            <th mat-header-cell *matHeaderCellDef>PRECIO</th>
+            <td mat-cell *matCellDef="let item" class="is-numeric">
+              {{ item.Precio == null ? '—' : (item.Precio | number:'1.2-3') }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="observacion">
+            <th mat-header-cell *matHeaderCellDef>OBSERVACIÓN</th>
+            <td mat-cell *matCellDef="let item">{{ item.Observacion || '—' }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+
+      <mat-paginator
+        *ngIf="dataSource.data.length > 0"
+        [pageSize]="25"
+        [pageSizeOptions]="[10, 25, 50, 100]"
+        showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </div>
+</div>

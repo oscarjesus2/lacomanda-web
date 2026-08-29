@@ -1,39 +1,39 @@
 <div flex *ngIf="muestraAceptacion">
-    <h1 mat-dialog-title>Confirmar Anulación</h1>
+    <h1 mat-dialog-title>{{ 'confirmVoidTitle' | tenantText }}</h1>
     <div mat-dialog-content>
-        <mat-label>¿Esta seguro de eliminar el producto: </mat-label> <strong>{{data.nombreProducto}}?</strong>
+        <mat-label>{{ 'confirmDeleteProduct' | tenantText:{ product: data.nombreProducto } }}</mat-label>
     </div>
     <div mat-dialog-actions>
-        <button mat-raised-button color="primary"  (click)="acepta(false)">No</button>
-        <button mat-raised-button color="primary" (click)="acepta(true)">Yes</button>
+        <button mat-raised-button color="primary"  (click)="acepta(false)">{{ 'no' | tenantText }}</button>
+        <button mat-raised-button color="primary" (click)="acepta(true)">{{ 'yes' | tenantText }}</button>
     </div>
 </div>
 
 <div  flex *ngIf="muestraPedidoClave">
-    <h1 mat-dialog-title>Administrador</h1>
+    <h1 mat-dialog-title>{{ 'administrator' | tenantText }}</h1>
     <div mat-dialog-content>
           <mat-form-field>
-            <mat-label>Clave</mat-label>
+            <mat-label>{{ 'password' | tenantText }}</mat-label>
             <input matInput id="clave" name="clave" [(ngModel)]="clave" type="password">
         </mat-form-field>
     </div>
     <div mat-dialog-actions>
-        <button mat-raised-button color="primary"  (click)="authenticar()">Autenticar</button>
-        <button mat-raised-button color="primary" (click)="acepta(false)">Cancelar</button>
+        <button mat-raised-button color="primary"  (click)="authenticar()">{{ 'authenticate' | tenantText }}</button>
+        <button mat-raised-button color="primary" (click)="acepta(false)">{{ 'cancel' | tenantText }}</button>
     </div>
 </div>
 
 <div  flex *ngIf="muestraIngresoMotivo">
 
-    <h1 mat-dialog-title>Producto: {{data.nombreProducto}}</h1>
+    <h1 mat-dialog-title>{{ 'product' | tenantText }}: {{data.nombreProducto}}</h1>
     <div mat-dialog-content>
           <mat-form-field>
-            <mat-label>Motivo de Anulacion</mat-label>
+            <mat-label>{{ 'voidReason' | tenantText }}</mat-label>
             <input matInput id="data.motivoAnulacion" name="data.motivoAnulacion" [(ngModel)]="data.motivoAnulacion">
         </mat-form-field>
     </div>
     <div mat-dialog-actions>
-        <button mat-raised-button color="primary" (click)="enviarAnulacion()">Anular</button>
-        <button mat-raised-button color="primary" (click)="acepta(false)">Cancelar</button>
+        <button mat-raised-button color="primary" (click)="enviarAnulacion()">{{ 'void' | tenantText }}</button>
+        <button mat-raised-button color="primary" (click)="acepta(false)">{{ 'cancel' | tenantText }}</button>
     </div>
 </div>

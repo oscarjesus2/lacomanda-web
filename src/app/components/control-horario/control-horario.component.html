@@ -1,0 +1,60 @@
+<section class="time-clock">
+  <header class="time-clock__header">
+    <div>
+      <span class="time-clock__eyebrow">Mi jornada</span>
+      <h2>Control horario</h2>
+      <p>Registra tu entrada, pausas y salida.</p>
+    </div>
+    <button type="button" mat-icon-button aria-label="Cerrar" (click)="cerrar()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <div *ngIf="cargando" class="time-clock__loading">
+    <mat-icon>schedule</mat-icon>
+    <span>Consultando tu jornada…</span>
+  </div>
+
+  <ng-container *ngIf="!cargando">
+    <div *ngIf="!jornada" class="time-clock__empty">
+      <div class="time-clock__status-icon"><mat-icon>login</mat-icon></div>
+      <strong>Aún no has iniciado tu jornada</strong>
+      <span>El fichaje se guardará con la hora exacta del sistema.</span>
+      <button type="button" class="btn-primary" [disabled]="procesando" (click)="iniciar()">
+        <mat-icon>play_arrow</mat-icon> Registrar entrada
+      </button>
+    </div>
+
+    <ng-container *ngIf="jornada as actual">
+      <div class="time-clock__state" [class.time-clock__state--paused]="actual.EstaEnPausa">
+        <div class="time-clock__state-label">
+          <span class="time-clock__pulse"></span>
+          {{ actual.EstaEnPausa ? 'EN PAUSA' : 'JORNADA EN CURSO' }}
+        </div>
+        <div class="time-clock__timer">{{ duracion }}</div>
+        <div class="time-clock__meta">
+          <span><mat-icon>login</mat-icon> Entrada {{ actual.InicioUtc | date:'HH:mm' }}</span>
+          <span><mat-icon>coffee</mat-icon> {{ actual.MinutosPausa }} min. de pausa</span>
+        </div>
+      </div>
+
+      <div class="time-clock__actions">
+        <button *ngIf="!actual.EstaEnPausa" type="button" class="btn-secondary"
+                [disabled]="procesando" (click)="pausar()">
+          <mat-icon>coffee</mat-icon> Iniciar pausa
+        </button>
+        <button *ngIf="actual.EstaEnPausa" type="button" class="btn-primary"
+                [disabled]="procesando" (click)="reanudar()">
+          <mat-icon>play_arrow</mat-icon> Reanudar jornada
+        </button>
+        <button type="button" class="btn-danger-outline"
+                [disabled]="procesando" (click)="finalizar()">
+          <mat-icon>logout</mat-icon> Registrar salida
+        </button>
+      </div>
+      <p class="time-clock__note" *ngIf="actual.EstaEnPausa">
+        Si registras la salida ahora, la pausa se cerrará automáticamente a la misma hora.
+      </p>
+    </ng-container>
+  </ng-container>
+</section>

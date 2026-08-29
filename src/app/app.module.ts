@@ -1,19 +1,13 @@
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA, LOCALE_ID, isDevMode } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
-
 import { CommonModule, DatePipe } from '@angular/common';
-
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-
 import { LoginComponent } from './auth/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
-
-
 import { HttpClientModule } from '@angular/common/http';
 import { JobBackendProvider } from './interceptor/angular.http.interceptor';
-
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,7 +19,6 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialogModule, MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
-
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -51,6 +44,7 @@ import { MatListModule } from '@angular/material/list';
 import { VentaComponent } from './pages/venta/venta.component';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { DialogTurnoComponent } from './components/dialog-turno/dialog-turno.component';
+import { DialogCerrarTurnoComponent } from './components/dialog-cerrar-turno/dialog-cerrar-turno.component';
 import { HeaderComponent } from './shared/header/header.component';
 import { VentasDiariasComponent } from './pages/dashboard/ventas-diarias/ventas-diarias.component';
 import { PopularidadPlatosComponent } from './pages/dashboard/popularidad-platos/popularidad-platos.component';
@@ -66,6 +60,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSortModule } from '@angular/material/sort';
 import { DialogEmitirComprobanteComponent } from './components/dialog-emitir-comprobante/dialog-emitir-comprobante.component';
 import { DialogMCantComponent } from './components/dialog-mcant/dialog-mcant.component';
+import { DialogAnfitrionasComponent } from './components/dialog-anfitrionas/dialog-anfitrionas.component';
 
 
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -76,7 +71,6 @@ import { DialogReportecontableComponent } from './components/dialog-reporteconta
 import { QzTrayRequiredComponent } from './qz-tray-required/qz-tray-required.component';
 import { ClienteMantenimientoComponent } from './components/mantenimiento/cliente-mantenimiento/cliente-mantenimiento.component';
 import { EmpleadoMantenimientoComponent } from './components/mantenimiento/empleado-mantenimiento/empleado-mantenimiento.component';
-import { DigitacionMozoComponent } from './pages/digitacion-mozo/digitacion-mozo.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { DialogComplementosComponent } from './components/dialog-complementos/dialog-complementos.component';
 import { DialogMTextComponent } from './components/dialog-mtext/dialog-mtext.component';
@@ -88,12 +82,28 @@ import { DialogDescuentoComponent } from './components/dialog-descuento/dialog-d
 import { DialogEntradasComponent } from './components/dialog-entradas/dialog-entradas.component';
 import { DialogPagarTaxistaComponent } from './components/dialog-pagar-taxista/dialog-pagar-taxista.component';
 import { DialogDocumentosEmitidosComponent } from './components/dialog-documentos-emitidos/dialog-documentos-emitidos.component';
+import { DialogCorregirVentaComponent } from './components/dialog-corregir-venta/dialog-corregir-venta.component';
 import { UsuariosMantenimientoComponent } from './components/mantenimiento/usuarios-mantenimiento/usuarios-mantenimiento.component';
 import { AnulacionesComponent } from './pages/dashboard/anulaciones/anulaciones.component';
-import { MesasMantenimientoComponent } from './components/mantenimiento/mesas-mantenimiento/mesas-mantenimiento.component';
+import { EspaciosMantenimientoComponent } from './components/mantenimiento/espacios-mantenimiento/espacios-mantenimiento.component';
 import { PosicionSelectorDialogComponent } from './components/posicion-selector-dialog/posicion-selector-dialog.component';
 import { AmbienteMantenimientoComponent } from './components/mantenimiento/ambiente-mantenimiento/ambiente-mantenimiento.component';
 import { ProductoMantenimientoComponent } from './components/mantenimiento/producto-mantenimiento/producto-mantenimiento.component';
+import { ArticuloMantenimientoComponent } from './components/mantenimiento/articulo-mantenimiento/articulo-mantenimiento.component';
+import { RecetaMantenimientoComponent } from './components/mantenimiento/receta-mantenimiento/receta-mantenimiento.component';
+import { InventarioMantenimientoComponent } from './components/mantenimiento/inventario-mantenimiento/inventario-mantenimiento.component';
+import { StockAlmacenConsultaComponent } from './components/mantenimiento/stock-almacen-consulta/stock-almacen-consulta.component';
+import { KardexAlmacenConsultaComponent } from './components/mantenimiento/kardex-almacen-consulta/kardex-almacen-consulta.component';
+import { ConsumoAreaReporteComponent } from './components/mantenimiento/consumo-area-reporte/consumo-area-reporte.component';
+import { VentaCostoReporteComponent } from './components/mantenimiento/venta-costo-reporte/venta-costo-reporte.component';
+import { ConsumoTeoricoRealReporteComponent } from './components/mantenimiento/consumo-teorico-real-reporte/consumo-teorico-real-reporte.component';
+import { RentabilidadProductoCanalReporteComponent } from './components/mantenimiento/rentabilidad-producto-canal-reporte/rentabilidad-producto-canal-reporte.component';
+import { CoberturaStockReporteComponent } from './components/mantenimiento/cobertura-stock-reporte/cobertura-stock-reporte.component';
+import { AreaAlmacenMantenimientoComponent } from './components/mantenimiento/area-almacen-mantenimiento/area-almacen-mantenimiento.component';
+import { SubAreaAlmacenMantenimientoComponent } from './components/mantenimiento/subarea-almacen-mantenimiento/subarea-almacen-mantenimiento.component';
+import { EntradaCompraMantenimientoComponent } from './components/mantenimiento/entrada-compra-mantenimiento/entrada-compra-mantenimiento.component';
+import { ProveedorMantenimientoComponent } from './components/mantenimiento/proveedor-mantenimiento/proveedor-mantenimiento.component';
+import { ProductoComboMantenimientoComponent } from './components/mantenimiento/producto-combo-mantenimiento/producto-combo-mantenimiento.component';
 import { FamiliaMantenimientoComponent } from './components/mantenimiento/familia-mantenimiento/familia-mantenimiento.component';
 import { SubFamiliaMantenimientoComponent } from './components/mantenimiento/subfamilia-mantenimiento/subfamilia-mantenimiento.component';
 import { GrupoMantenimientoComponent } from './components/mantenimiento/grupo-mantenimiento/grupo-mantenimiento.component';
@@ -105,6 +115,38 @@ import { EstacionMantenimientoComponent } from './components/mantenimiento/estac
 import { ObservacionMantenimientoComponent } from './components/mantenimiento/observacion-mantenimiento/observacion-mantenimiento.component';
 import { ConfigurarOrdenadorComponent } from './components/configuracion-inicial/configurar-ordenador/configurar-ordenador.component';
 import { AreaImpresionMantenimientoComponent } from './components/mantenimiento/area-impresion-mantenimiento/area-impresion-mantenimiento.component';
+import { DialogReportesComponent } from './components/dialog-reportes/dialog-reportes.component';
+import { DescuentoMantenimientoComponent } from './components/mantenimiento/descuento-mantenimiento/descuento-mantenimiento.component';
+import { TarjetaMantenimientoComponent } from './components/mantenimiento/tarjeta-mantenimiento/tarjeta-mantenimiento.component';
+import { DialogDeliveryComponent } from './components/dialog-delivery/dialog-delivery.component';
+import { DialogMenuComponent } from './components/dialog-menu/dialog-menu.component';
+import { SocioNegocioMantenimientoComponent } from './components/mantenimiento/socio-negocio-mantenimiento/socio-negocio-mantenimiento.component';
+import { TenantTextPipe } from './pipes/tenant-text.pipe';
+import { MesaClienteComponent } from './pages/mesa-cliente/mesa-cliente.component';
+import { DialogSolicitudesMesaComponent } from './components/dialog-solicitudes-mesa/dialog-solicitudes-mesa.component';
+import { SalidaInternaMantenimientoComponent } from './components/mantenimiento/salida-interna-mantenimiento/salida-interna-mantenimiento.component';
+import { TransferenciaAlmacenMantenimientoComponent } from './components/mantenimiento/transferencia-almacen-mantenimiento/transferencia-almacen-mantenimiento.component';
+import { PorcionamientoMantenimientoComponent } from './components/mantenimiento/porcionamiento-mantenimiento/porcionamiento-mantenimiento.component';
+import { ProduccionMantenimientoComponent } from './components/mantenimiento/produccion-mantenimiento/produccion-mantenimiento.component';
+import { PromocionMantenimientoComponent } from './components/mantenimiento/promocion-mantenimiento/promocion-mantenimiento.component';
+import { MotivoSalidaMantenimientoComponent } from './components/mantenimiento/motivo-salida-mantenimiento/motivo-salida-mantenimiento.component';
+import { GrupoAlmacenMantenimientoComponent } from './components/mantenimiento/grupo-almacen-mantenimiento/grupo-almacen-mantenimiento.component';
+import { AsistenteEstacionComponent } from './components/asistente-estacion/asistente-estacion.component';
+import { ComparativoVentasComponent } from './pages/dashboard/comparativo-ventas/comparativo-ventas.component';
+import { EvolucionMargenComponent } from './pages/dashboard/evolucion-margen/evolucion-margen.component';
+import { MetodosPagoDashboardComponent } from './pages/dashboard/metodos-pago-dashboard/metodos-pago-dashboard.component';
+import { ControlHorarioComponent } from './components/control-horario/control-horario.component';
+import { ControlHorarioMantenimientoComponent } from './components/mantenimiento/control-horario-mantenimiento/control-horario-mantenimiento.component';
+import { ControlHorarioCorreccionComponent } from './components/mantenimiento/control-horario-correccion/control-horario-correccion.component';
+import { ReporteVentasAnaliticoComponent } from './components/mantenimiento/reporte-ventas-analitico/reporte-ventas-analitico.component';
+import { ReservasMantenimientoComponent } from './components/mantenimiento/reservas-mantenimiento/reservas-mantenimiento.component';
+import { AgendaReservasComponent } from './components/reservas/agenda-reservas/agenda-reservas.component';
+import { AgendaReservasDialogComponent } from './components/reservas/agenda-reservas-dialog/agenda-reservas-dialog.component';
+import { ReservasOnlineComponent } from './pages/reservas-online/reservas-online.component';
+import { ReportesTermicosAdministracionComponent } from './components/mantenimiento/reportes-termicos-administracion/reportes-termicos-administracion.component';
+import { MonitorComandasComponent } from './components/mantenimiento/monitor-comandas/monitor-comandas.component';
+import { SunatConfigurationComponent } from './components/mantenimiento/sunat-configuration/sunat-configuration.component';
+import { PagoCuentaOnlineConfigurationComponent } from './components/mantenimiento/pago-cuenta-online-configuration/pago-cuenta-online-configuration.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -133,6 +175,7 @@ export const MY_DATE_FORMATS = {
 
     VentaComponent,
     DialogTurnoComponent,
+    DialogCerrarTurnoComponent,
     HeaderComponent,
     VentasDiariasComponent,
     PopularidadPlatosComponent,
@@ -144,13 +187,13 @@ export const MY_DATE_FORMATS = {
     DialogVentasgeneralesComponent,
     DialogEmitirComprobanteComponent,
     DialogMCantComponent,
+    DialogAnfitrionasComponent,
     TransaccionesDiariasComponent,
     DialogEmitirVentaComponent,
     DialogReportecontableComponent,
     QzTrayRequiredComponent,
     ClienteMantenimientoComponent,
     EmpleadoMantenimientoComponent,
-    DigitacionMozoComponent,
     DialogComplementosComponent,
     DialogMTextComponent,
     DialogProductSearchComponent,
@@ -159,12 +202,28 @@ export const MY_DATE_FORMATS = {
     DialogEntradasComponent,
     DialogPagarTaxistaComponent,
     DialogDocumentosEmitidosComponent,
+    DialogCorregirVentaComponent,
     UsuariosMantenimientoComponent,
     AnulacionesComponent,
-    MesasMantenimientoComponent,
+    EspaciosMantenimientoComponent,
     PosicionSelectorDialogComponent,
     AmbienteMantenimientoComponent,
     ProductoMantenimientoComponent,
+    ArticuloMantenimientoComponent,
+    RecetaMantenimientoComponent,
+    InventarioMantenimientoComponent,
+    StockAlmacenConsultaComponent,
+    KardexAlmacenConsultaComponent,
+    ConsumoAreaReporteComponent,
+    VentaCostoReporteComponent,
+    ConsumoTeoricoRealReporteComponent,
+    RentabilidadProductoCanalReporteComponent,
+    CoberturaStockReporteComponent,
+    AreaAlmacenMantenimientoComponent,
+    SubAreaAlmacenMantenimientoComponent,
+    EntradaCompraMantenimientoComponent,
+    ProveedorMantenimientoComponent,
+    ProductoComboMantenimientoComponent,
     FamiliaMantenimientoComponent,
     SubFamiliaMantenimientoComponent,
     GrupoMantenimientoComponent,
@@ -176,6 +235,38 @@ export const MY_DATE_FORMATS = {
     ObservacionMantenimientoComponent,
     ConfigurarOrdenadorComponent,
     AreaImpresionMantenimientoComponent,
+    DialogReportesComponent,
+    DescuentoMantenimientoComponent,
+    TarjetaMantenimientoComponent,
+    DialogDeliveryComponent,
+    DialogMenuComponent,
+    SocioNegocioMantenimientoComponent,
+    TenantTextPipe,
+    MesaClienteComponent,
+    DialogSolicitudesMesaComponent,
+    SalidaInternaMantenimientoComponent,
+    TransferenciaAlmacenMantenimientoComponent,
+    PorcionamientoMantenimientoComponent,
+    ProduccionMantenimientoComponent,
+    PromocionMantenimientoComponent,
+    MotivoSalidaMantenimientoComponent,
+    GrupoAlmacenMantenimientoComponent,
+    AsistenteEstacionComponent,
+    ComparativoVentasComponent,
+    EvolucionMargenComponent,
+    MetodosPagoDashboardComponent,
+    ControlHorarioComponent,
+    ControlHorarioMantenimientoComponent,
+    ControlHorarioCorreccionComponent,
+    ReporteVentasAnaliticoComponent,
+    ReservasMantenimientoComponent,
+    AgendaReservasComponent,
+    AgendaReservasDialogComponent,
+    ReservasOnlineComponent,
+    ReportesTermicosAdministracionComponent,
+    MonitorComandasComponent,
+    SunatConfigurationComponent,
+    PagoCuentaOnlineConfigurationComponent,
   ],
   imports: [
     CommonModule,

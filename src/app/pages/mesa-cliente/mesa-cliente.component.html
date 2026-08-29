@@ -1,0 +1,245 @@
+<main class="mesa-cliente-page" [class.mesa-cliente-page--carta]="cartaDisponible">
+  <header *ngIf="cartaDisponible" class="carta-header">
+    <div>
+      <span class="eyebrow">{{ cartaPublica?.Restaurante || 'LA COMANDA' }}</span>
+      <strong>{{ cartaPublica?.Ambiente }} · {{ nombreEspacio }}</strong>
+    </div>
+    <button *ngIf="activa" class="cart-button" type="button" (click)="mostrarCarrito = !mostrarCarrito">
+      <mat-icon>shopping_bag</mat-icon>
+      <span>{{ unidadesCarrito }}</span>
+    </button>
+    <button *ngIf="!activa" class="order-start-button" type="button" (click)="solicitarPedido()">
+      <mat-icon>room_service</mat-icon>
+      Quiero pedir
+    </button>
+  </header>
+
+  <section *ngIf="!cartaDisponible" class="mesa-cliente-card" aria-live="polite">
+    <div class="brand-mark"><mat-icon>room_service</mat-icon></div>
+    <p class="eyebrow">LA COMANDA</p>
+
+    <div *ngIf="cargando" class="state-block">
+      <mat-icon class="state-icon state-icon--spin">progress_activity</mat-icon>
+      <h1>Abriendo la mesa</h1>
+      <p>Estamos comprobando el código QR.</p>
+    </div>
+
+    <div *ngIf="!cargando && error" class="state-block">
+      <mat-icon class="state-icon state-icon--error">error_outline</mat-icon>
+      <h1>No pudimos continuar</h1>
+      <p>{{ error }}</p>
+      <button mat-raised-button color="primary" (click)="reintentar()">REINTENTAR</button>
+    </div>
+  </section>
+
+  <section *ngIf="cartaDisponible" class="menu-hero">
+    <span>Bienvenido</span>
+    <h1>{{ cartaPublica?.Restaurante }}</h1>
+    <p>Explora la carta con calma. Solo te pediremos autorización cuando decidas enviar un pedido.</p>
+    <small *ngIf="cartaPublica?.Direccion"><mat-icon>location_on</mat-icon>{{ cartaPublica?.Direccion }}</small>
+    <button *ngIf="cartaPublica?.AsistenteIaDisponible" class="menu-hero__assistant" type="button" (click)="abrirAsistenteGeneral()">
+      <mat-icon>auto_awesome</mat-icon>
+      <span><strong>¿No sabes qué elegir?</strong><small>Cuéntame qué te apetece y te ayudo.</small></span>
+    </button>
+  </section>
+
+  <section
+    *ngIf="cartaDisponible && (puedePagarCuenta || verificandoPago || pagoCompletado)"
+    class="mobile-payment"
+    [class.mobile-payment--success]="pagoCompletado"
+    aria-live="polite">
+    <div class="mobile-payment__icon">
+      <mat-icon [class.state-icon--spin]="verificandoPago">{{ pagoCompletado ? 'check_circle' : (verificandoPago ? 'sync' : 'account_balance_wallet') }}</mat-icon>
+    </div>
+    <div class="mobile-payment__content">
+      <strong>{{ pagoCompletado ? 'Cuenta pagada' : (verificandoPago ? 'Confirmando tu pago' : '¿Quieres pagar desde tu móvil?') }}</strong>
+      <span *ngIf="pagoCompletado || verificandoPago">{{ estadoPagoTexto }}</span>
+      <span *ngIf="puedePagarCuenta && !verificandoPago">
+        Paga de forma segura. El restaurante recibirá la confirmación automáticamente.
+      </span>
+    </div>
+    <button
+      *ngIf="puedePagarCuenta && !verificandoPago"
+      type="button"
+      [disabled]="iniciandoPago"
+      (click)="pagarCuenta()">
+      <mat-icon>{{ iniciandoPago ? 'progress_activity' : 'lock' }}</mat-icon>
+      {{ iniciandoPago ? 'Abriendo pago…' : 'Pagar mi cuenta' }}
+    </button>
+  </section>
+
+  <section *ngIf="cartaDisponible" class="carta-layout">
+    <div *ngIf="idsProductosRecomendados.length" class="recommendation-banner" aria-live="polite">
+      <mat-icon>auto_awesome</mat-icon>
+      <span><strong>Selección preparada para ti</strong> Estos son los platos que mejor encajan con lo que buscas.</span>
+      <button type="button" (click)="limpiarRecomendaciones()">Ver toda la carta</button>
+    </div>
+    <nav class="categorias" aria-label="Categorías de la carta">
+      <button type="button" [class.active]="categoriaActiva === undefined" (click)="seleccionarCategoria()">Todo</button>
+      <button *ngFor="let categoria of carta?.Categorias" type="button"
+        [class.active]="categoriaActiva === categoria.IdSubFamilia"
+        (click)="seleccionarCategoria(categoria.IdSubFamilia)">
+        {{ categoria.Nombre }}
+      </button>
+    </nav>
+
+    <div *ngIf="cargandoCarta" class="loading-carta"><mat-spinner diameter="36"></mat-spinner>Cargando la carta…</div>
+
+    <div *ngIf="!cargandoCarta && carta" class="productos-grid">
+      <article *ngFor="let producto of productosVisibles" class="producto-card"
+        [style.--product-color]="producto.Color">
+        <button class="producto-card__open" type="button" (click)="editarProducto(producto)">
+          <span class="producto-media">
+            <img *ngIf="imagenProducto(producto.IdProducto) as imagen" [src]="imagen"
+              [alt]="producto.Nombre" loading="lazy" decoding="async">
+            <mat-icon *ngIf="!imagenProducto(producto.IdProducto)">restaurant_menu</mat-icon>
+          </span>
+          <span class="producto-info">
+            <strong>{{ producto.Nombre }}</strong>
+            <small *ngIf="producto.DescripcionCarta">{{ producto.DescripcionCarta }}</small>
+            <em *ngIf="producto.Tipo === 1">Menú · Personalizable</em>
+            <em *ngIf="producto.Tipo === 2">Admite complementos</em>
+          </span>
+          <b>{{ carta.Moneda }} {{ producto.Precio | number:'1.2-2' }}</b>
+        </button>
+        <button *ngIf="cartaPublica?.AsistenteIaDisponible" class="producto-card__assistant"
+          type="button" (click)="abrirAsistente(producto, $event)">
+          <mat-icon>auto_awesome</mat-icon>
+          Preguntar sobre este plato
+        </button>
+      </article>
+      <p *ngIf="productosVisibles.length === 0" class="empty-products">No hay productos disponibles en esta categoría.</p>
+    </div>
+  </section>
+
+  <div *ngIf="aviso" class="toast-success">{{ aviso }}</div>
+  <div *ngIf="cartaDisponible && error" class="toast-error" (click)="error = ''">{{ error }}</div>
+
+  <div *ngIf="mostrarAcceso && !activa" class="sheet-backdrop" (click)="mostrarAcceso = false">
+    <section class="access-sheet" aria-live="polite" (click)="$event.stopPropagation()">
+      <button class="sheet-close" type="button" (click)="mostrarAcceso = false"><mat-icon>close</mat-icon></button>
+      <div class="brand-mark"><mat-icon>room_service</mat-icon></div>
+      <div *ngIf="cargando" class="state-block">
+        <mat-icon class="state-icon state-icon--spin">progress_activity</mat-icon>
+        <h1>Preparando tu solicitud</h1>
+        <p>Estamos comprobando este espacio.</p>
+      </div>
+      <div *ngIf="!cargando && pendiente" class="state-block">
+        <p class="location">{{ solicitud?.Ambiente || estado?.Ambiente }} · {{ nombreEspacio }}</p>
+        <h1>Confirma que estás aquí</h1>
+        <p>Muestra este código al personal. En cuanto lo confirme podrás añadir productos y enviar el pedido.</p>
+        <div class="visual-code">{{ solicitud?.CodigoVisual || estado?.CodigoVisual }}</div>
+        <div class="waiting"><span></span> Esperando confirmación…</div>
+      </div>
+      <div *ngIf="!cargando && finalizada" class="state-block">
+        <mat-icon class="state-icon">lock_clock</mat-icon>
+        <h1>La solicitud ha terminado</h1>
+        <p *ngIf="estado?.Estado === 'Rechazada'">El personal no pudo confirmarla. Si estás aquí, solicita ayuda.</p>
+        <p *ngIf="estado?.Estado !== 'Rechazada'">Puedes volver a solicitar acceso para pedir.</p>
+        <button mat-raised-button color="primary" (click)="reintentar()">SOLICITAR DE NUEVO</button>
+      </div>
+    </section>
+  </div>
+
+  <div *ngIf="editor" class="sheet-backdrop" (click)="cerrarEditor()">
+    <section class="bottom-sheet" (click)="$event.stopPropagation()">
+      <header>
+        <div><span>Personaliza tu pedido</span><h2>{{ editor.producto.Nombre }}</h2></div>
+        <button type="button" (click)="cerrarEditor()"><mat-icon>close</mat-icon></button>
+      </header>
+
+      <div class="quantity-main">
+        <button type="button" (click)="cambiarCantidadProducto(-1)">−</button>
+        <strong>{{ editor.cantidad }}</strong>
+        <button type="button" (click)="cambiarCantidadProducto(1)">+</button>
+        <span>{{ carta?.Moneda }} {{ editor.producto.Precio * editor.cantidad | number:'1.2-2' }}</span>
+      </div>
+
+      <div *ngFor="let seccion of editor.producto.SeccionesMenu" class="option-section">
+        <div class="section-title"><strong>{{ seccion.Descripcion }}</strong><span>Elige {{ requeridoMenu(seccion) }} · {{ seleccionMenu(seccion) }}/{{ requeridoMenu(seccion) }}</span></div>
+        <div *ngFor="let opcion of seccion.Opciones" class="option-row">
+          <span>{{ opcion.Nombre }}</span>
+          <div class="stepper">
+            <button type="button" (click)="cambiarOpcionMenu(seccion, opcion.IdProducto, -1)">−</button>
+            <b>{{ cantidadOpcionMenu(seccion.IdSeccionMenu, opcion.IdProducto) }}</b>
+            <button type="button" (click)="cambiarOpcionMenu(seccion, opcion.IdProducto, 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="editor.producto.Tipo === 2" class="option-section">
+        <div class="section-title"><strong>Complementos</strong><span>{{ pesoComplementos }}/{{ editor.producto.CantidadComplementos * editor.cantidad }}</span></div>
+        <div *ngFor="let complemento of carta?.Complementos" class="option-row">
+          <span>{{ complemento.Nombre }}</span>
+          <div class="stepper">
+            <button type="button" (click)="cambiarComplemento(complemento, -1)">−</button>
+            <b>{{ cantidadComplemento(complemento.IdProducto) }}</b>
+            <button type="button" [disabled]="!puedeAgregarComplemento(complemento)" (click)="cambiarComplemento(complemento, 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <label class="observation">¿Alguna indicación?<textarea maxlength="250" [(ngModel)]="editor.observacion" placeholder="Ej. sin cebolla, punto de cocción…"></textarea></label>
+      <button *ngIf="activa" class="primary-action" type="button" [disabled]="!editorValido" (click)="agregarAlCarrito()">
+        Añadir al pedido · {{ carta?.Moneda }} {{ editor.producto.Precio * editor.cantidad | number:'1.2-2' }}
+      </button>
+      <button *ngIf="!activa" class="primary-action" type="button" (click)="cerrarEditor(); solicitarPedido()">
+        Quiero pedir este producto
+      </button>
+    </section>
+  </div>
+
+  <div *ngIf="mostrarCarrito" class="sheet-backdrop" (click)="mostrarCarrito = false">
+    <section class="bottom-sheet cart-sheet" (click)="$event.stopPropagation()">
+      <header><div><span>Tu mesa</span><h2>Revisa tu pedido</h2></div><button type="button" (click)="mostrarCarrito = false"><mat-icon>close</mat-icon></button></header>
+      <div *ngFor="let linea of carrito; let i = index" class="cart-line">
+        <span><strong>{{ linea.request.Cantidad }} × {{ linea.nombre }}</strong><small *ngIf="linea.request.Observacion">{{ linea.request.Observacion }}</small></span>
+        <b>{{ carta?.Moneda }} {{ linea.precio * linea.request.Cantidad | number:'1.2-2' }}</b>
+        <button type="button" (click)="quitarLinea(i)"><mat-icon>delete_outline</mat-icon></button>
+      </div>
+      <p *ngIf="carrito.length === 0" class="empty-cart">Todavía no has añadido productos.</p>
+      <div class="cart-total"><span>Total</span><strong>{{ carta?.Moneda }} {{ totalCarrito | number:'1.2-2' }}</strong></div>
+      <button class="primary-action" type="button" [disabled]="carrito.length === 0 || enviandoPedido" (click)="enviarPedido()">
+        {{ enviandoPedido ? 'Enviando…' : 'Enviar a preparación' }}
+      </button>
+    </section>
+  </div>
+
+  <div *ngIf="mostrarAsistente" class="assistant-backdrop" (click)="cerrarAsistente()">
+    <aside class="assistant-panel" (click)="$event.stopPropagation()">
+      <header>
+        <div class="assistant-avatar"><mat-icon>auto_awesome</mat-icon></div>
+        <div>
+          <span>{{ productoAsistente ? 'Pregunta sobre este plato' : 'Camarero virtual' }}</span>
+          <strong>{{ productoAsistente?.Nombre || 'Te ayudo a elegir' }}</strong>
+        </div>
+        <button type="button" (click)="cerrarAsistente()"><mat-icon>close</mat-icon></button>
+      </header>
+      <div class="assistant-notice">
+        <mat-icon>health_and_safety</mat-icon>
+        {{ productoAsistente
+          ? 'Puedo orientarte sobre este plato. Si una alergia es importante para ti, el equipo del restaurante puede confirmar el detalle antes de pedir.'
+          : 'Soy tu asistente de la carta. Cuéntame tus gustos, compara opciones conmigo y te recomendaré platos de este restaurante.' }}
+      </div>
+      <div class="assistant-messages">
+        <div *ngIf="historialAsistente.length === 0" class="assistant-welcome">
+          <strong>{{ productoAsistente ? 'Conoce mejor ' + productoAsistente.Nombre : '¿Qué te apetece hoy?' }}</strong>
+          <p>{{ productoAsistente
+            ? 'Pregunta por ingredientes, alérgenos, picante o cualquier duda sobre este plato.'
+            : 'Puedo recomendarte platos, ayudarte a comparar y preparar una selección según tus gustos.' }}</p>
+          <button *ngFor="let sugerencia of sugerenciasAsistente" type="button" (click)="enviarPreguntaAsistente(sugerencia)">{{ sugerencia }}</button>
+        </div>
+        <p *ngFor="let mensaje of historialAsistente" class="assistant-message" [class.assistant-message--user]="mensaje.Rol === 'user'">
+          {{ mensaje.Texto }}
+        </p>
+        <p *ngIf="consultandoAsistente" class="assistant-thinking"><span></span><span></span><span></span></p>
+        <p *ngIf="errorAsistente" class="assistant-error">{{ errorAsistente }}</p>
+      </div>
+      <form class="assistant-composer" (ngSubmit)="enviarPreguntaAsistente()">
+        <input name="preguntaAsistente" maxlength="600" autocomplete="off" [(ngModel)]="preguntaAsistente"
+          [placeholder]="productoAsistente ? 'Pregunta sobre este plato' : 'Ej. Quiero algo suave para compartir'">
+        <button type="submit" [disabled]="!preguntaAsistente.trim() || consultandoAsistente"><mat-icon>send</mat-icon></button>
+      </form>
+    </aside>
+  </div>
+</main>

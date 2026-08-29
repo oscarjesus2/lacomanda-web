@@ -1,6 +1,6 @@
 import { Turno } from "./turno.models";
 
-export class Caja {
+export class CajaDto {
     public IdCaja: number;
     public TurnoAbierto: Turno;
     public Descripcion: string;
@@ -12,6 +12,7 @@ export class Caja {
     public UsuModi?: number;
     public FecModi?: string;
     public IdCanalVentaDefecto: number;
+    public IdCanalesVenta: number[] = [];
     public EmitePrecuenta: boolean;
     public EmiteComanda: boolean;
     public EmiteDescuento: boolean;
@@ -19,5 +20,6 @@ export class Caja {
     public PermiteCierreParcial: boolean;
     public EnvioElectronicoOnline: boolean;
     public PrecuentaLlevarDeliveryAutomatica: boolean;
+    public PermitirPagoTaxistas: boolean;
   }
 

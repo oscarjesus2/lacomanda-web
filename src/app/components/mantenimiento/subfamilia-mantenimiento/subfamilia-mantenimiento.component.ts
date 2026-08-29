@@ -1,11 +1,13 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
 import Swal from 'sweetalert2';
 import { SubFamilia } from '../../../models/subfamilia.models';
 import { Familia } from '../../../models/familia.models';
 import { FamiliaService } from 'src/app/services/familia.service';
 import { MatDialogRef } from '@angular/material/dialog';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-subfamilia-mantenimiento',
@@ -14,6 +16,11 @@ import { MatDialogRef } from '@angular/material/dialog';
 })
 export class SubFamiliaMantenimientoComponent implements OnInit {
   @ViewChild('form') form: NgForm;
+  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
+    if (value) {
+      this.filtered.paginator = value;
+    }
+  }
   subfamilia: SubFamilia = new SubFamilia();
   subfamilias: SubFamilia[] = [];
   familias: Familia[] = [];
@@ -84,7 +91,7 @@ export class SubFamiliaMantenimientoComponent implements OnInit {
     if (this.subfamilia.IdSubFamilia) {
       this.familiaService.updateSubFamilia(this.subfamilia).subscribe(r => {
         if (r.Success) {
-          Swal.fire('Actualizado', '', 'success');
+          Notificar.exito('Actualizado', '');
           this.cargarSubFamilias();
           this.showForm = false;
         } else {
@@ -94,7 +101,7 @@ export class SubFamiliaMantenimientoComponent implements OnInit {
     } else {
       this.familiaService.createSubFamilia(this.subfamilia).subscribe(r => {
         if (r.Success) {
-          Swal.fire('Guardado', '', 'success');
+          Notificar.exito('Guardado', '');
           this.cargarSubFamilias();
           this.showForm = false;
         } else {
@@ -116,7 +123,7 @@ export class SubFamiliaMantenimientoComponent implements OnInit {
       if (r.isConfirmed) {
         this.familiaService.deleteSubFamilia(id).subscribe(resp => {
           if (resp.Success) {
-            Swal.fire('Eliminado', '', 'success');
+            Notificar.exito('Eliminado', '');
             this.cargarSubFamilias();
           } else {
             Swal.fire('Error', resp.Message || 'No se pudo eliminar', 'error');

@@ -3,26 +3,22 @@
   "version": "19.0.5",
   "scripts": {
     "ng": "ng",
-    "start": "node ./scripts/version.js && concurrently \"ng serve --proxy-config proxy.conf.json\" \"node server.js\"",
-    "build": "node ./scripts/version.js && ng build",
+    "start": "concurrently \"ng serve --proxy-config proxy.conf.json\" \"node server.js\"",
+    "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e",
-    "release": "standard-version",
-    "release:dev": "standard-version --release-as patch && node scripts/update-changelogs.js development",
-    "release:test": "standard-version --release-as minor && node scripts/update-changelogs.js testing",
-    "release:prod": "standard-version --release-as major && node scripts/update-changelogs.js production"
+    "e2e": "ng e2e"
   },
   "private": true,
   "dependencies": {
     "@angular/animations": "^16.1.0",
-    "@angular/cdk": "^16.1.4",
+    "@angular/cdk": "^16.2.14",
     "@angular/common": "^16.1.0",
     "@angular/compiler": "^16.1.0",
     "@angular/core": "^16.1.0",
     "@angular/forms": "^16.1.0",
-    "@angular/material": "^16.1.4",
+    "@angular/material": "^16.2.14",
     "@angular/material-moment-adapter": "^16.1.4",
     "@angular/platform-browser": "^16.1.0",
     "@angular/platform-browser-dynamic": "^16.1.0",
@@ -31,6 +27,7 @@
     "@fortawesome/angular-fontawesome": "^0.13.0",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/free-solid-svg-icons": "^6.6.0",
+    "@microsoft/signalr": "8.0.7",
     "body-parser": "^1.20.2",
     "d3": "^7.9.0",
     "d3-time": "^3.1.0",
@@ -38,6 +35,7 @@
     "internal-ip": "^8.0.0",
     "jssha": "^3.3.1",
     "jwt-decode": "^4.0.0",
+    "keycloak-js": "^24.0.5",
     "moment": "^2.30.1",
     "ngx-cookie-service": "^16.0.0",
     "ngx-spinner": "^16.0.2",
@@ -61,7 +59,6 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "standard-version": "^9.5.0",
     "typescript": "~5.1.3"
   }
 }

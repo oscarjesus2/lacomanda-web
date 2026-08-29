@@ -1,0 +1,119 @@
+name: Frontend - Promote to Production (GKE)
+
+# Producción no construye ni vuelve a analizar: promociona el artefacto que ya
+# superó las pruebas y el quality gate al publicarse en staging, leyendo su
+# identificador de latest-frontend-image-tag.txt. Repetir el análisis aquí no
+# aportaría nada, porque la imagen desplegada es exactamente la misma.
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  promote-to-production:
+    concurrency: frontend-production-${{ github.ref }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      IMAGE_NAME: oscar020/frontend
+      PROJECT_ID: lacomanda-477709
+      GKE_CLUSTER: gke-eusw1-autopilot-01
+      GKE_LOCATION: europe-southwest1
+      GSA_EMAIL: gha-gke-deployer@lacomanda-477709.iam.gserviceaccount.com
+      WORKLOAD_IDENTITY_PROVIDER: projects/161733769525/locations/global/workloadIdentityPools/github-pool/providers/github-pool
+
+    steps:
+    # Con workflow_run, actions/checkout tomaría por defecto el último commit de
+    # la rama por defecto. Se fija master explícitamente porque el job hace
+    # después "git push origin master" y necesita estar sobre la rama, no en
+    # detached HEAD.
+    - name: Checkout repo
+      uses: actions/checkout@v4
+      with:
+        ref: master
+
+    - name: Read staging image tag
+      run: |
+        IMAGE_TAG=$(cat latest-frontend-image-tag.txt)
+        STAGING_TAG=${IMAGE_TAG}-staging
+        echo "STAGING_TAG=$STAGING_TAG" >> $GITHUB_ENV
+        echo "Promoting image: $STAGING_TAG"
+
+    - name: Install kustomize
+      run: |
+        KUSTOMIZE_VERSION=v5.4.3
+        curl -fsSL \
+          "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" \
+          -o kustomize.tar.gz
+        tar -xzf kustomize.tar.gz
+        sudo mv kustomize /usr/local/bin/
+        rm kustomize.tar.gz
+
+    - name: Update production overlay with promoted image
+      run: |
+        pushd k8s-manifests/frontend/overlays/production
+        kustomize edit set image "$IMAGE_NAME=$IMAGE_NAME:$STAGING_TAG"
+        popd
+
+    - name: Commit updated kustomization.yaml
+      run: |
+        git config user.name  "ci-bot"
+        git config user.email "ci@job.pe"
+        git add k8s-manifests/frontend/overlays/production/kustomization.yaml
+        if ! git diff --cached --quiet; then
+          git commit -m "ci(frontend): promote $STAGING_TAG to production [skip ci]"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git push origin master
+        else
+          echo "kustomization.yaml ya estaba actualizado."
+        fi
+
+    - name: Auth to Google Cloud (WIF)
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+        service_account: ${{ env.GSA_EMAIL }}
+
+    - name: Setup gcloud
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Get GKE credentials
+      uses: google-github-actions/get-gke-credentials@v2
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_LOCATION }}
+        project_id: ${{ env.PROJECT_ID }}
+
+    - name: Verify wildcard certificate infrastructure
+      run: |
+        if ! kubectl get crd certificates.cert-manager.io >/dev/null 2>&1; then
+          echo "::error::Falta cert-manager. Ejecute el workflow de infraestructura 'Infrastructure - Install cert-manager and IONOS DNS'."
+          exit 1
+        fi
+
+        if ! kubectl get clusterissuer letsencrypt-ionos >/dev/null 2>&1; then
+          echo "::error::Falta el ClusterIssuer letsencrypt-ionos. Ejecute primero el workflow de cert-manager en infra-lacomanda-cluster."
+          exit 1
+        fi
+
+        kubectl wait --for=condition=Ready clusterissuer/letsencrypt-ionos --timeout=2m
+
+    - name: Deploy to production
+      run: |
+        kustomize build k8s-manifests/frontend/overlays/production | kubectl apply -f -
+        kubectl rollout status \
+          --namespace frontend-appweb-production \
+          deployment/frontend \
+          --timeout=5m
+        kubectl rollout status \
+          --namespace frontend-appweb-production \
+          deployment/staging-proxy \
+          --timeout=5m
+        kubectl wait \
+          --namespace frontend-appweb-production \
+          --for=condition=Ready \
+          certificate/wildcard-lacomanda \
+          --timeout=10m

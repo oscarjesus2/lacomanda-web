@@ -1,20 +1,58 @@
-<div class="report" style="position: relative; min-height: 200px;">
+<div class="report report-panel">
+
   <ngx-spinner
-  bdColor="rgba(128, 128, 128, 0.8)"
-  size="medium"
-  color="#fff"
-  type="ball-scale-multiple"
-  name="ventaDiariaSpinner"
->
-  <p style="font-size: 20px; color: rgb(71, 68, 68)">Cargando...</p>
-</ngx-spinner>
-  <h2>Ventas Diarias/Semanales/Mensuales</h2>
-  <select (change)="onReportTypeChange($event)">
-    <option value="diarias">Diarias</option>
-    <option value="semanales">Semanales</option>
-    <option value="mensuales">Mensuales</option>
-  </select>
-  <div  class="totalVenta">Total Venta : S/. {{totalVenta}}</div> 
-  <div #chart class="chart" id="chart-ventas-diarias"></div>
-<div id="tooltip" class="tooltip"></div>
+    bdColor="rgba(0, 0, 0, 0.35)"
+    size="medium"
+    color="#fff"
+    type="ball-scale-multiple"
+    name="ventaDiariaSpinner"
+    class="report-panel__spinner"
+  >
+    <p>{{ 'loadingSales' | tenantText }}</p>
+  </ngx-spinner>
+
+  <header class="report-panel__header">
+    <div>
+      <h3 class="report-panel__title">{{ 'sales' | tenantText }}</h3>
+      <p class="report-panel__subtitle">
+        {{ 'dailyWeeklyMonthly' | tenantText }}
+      </p>
+    </div>
+
+    <label class="report-panel__control">
+      <span>{{ 'period' | tenantText }}</span>
+      <select
+        class="report-panel__select"
+        (change)="onReportTypeChange($event)"
+      >
+        <option value="diarias">{{ 'daily' | tenantText }}</option>
+        <option value="semanales">{{ 'weekly' | tenantText }}</option>
+        <option value="mensuales">{{ 'monthly' | tenantText }}</option>
+      </select>
+    </label>
+  </header>
+
+  <section class="report-panel__summary" *ngIf="totalVenta != null">
+    <span class="report-panel__summary-label">{{ 'totalSale' | tenantText }}</span>
+    <span class="report-panel__summary-value">
+      {{ monedaSimbolo }} {{ totalVenta | number:'1.2-2' }}
+    </span>
+  </section>
+
+  <div class="report-panel__chart-container">
+    <div
+      #chart
+      class="report-panel__chart"
+      id="chart-ventas-diarias"
+    ></div>
+
+    <div
+      id="tooltip"
+      class="report-panel__tooltip"
+    ></div>
+
+    <div class="report-panel__empty" *ngIf="sinDatos">
+      {{ 'noDataForRange' | tenantText }}
+    </div>
+  </div>
 </div>

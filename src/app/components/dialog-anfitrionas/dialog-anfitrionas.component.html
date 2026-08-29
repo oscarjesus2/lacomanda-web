@@ -1,0 +1,92 @@
+<div class="mant-panel hostess-panel">
+  <button
+    mat-icon-button
+    class="close-button"
+    [attr.aria-label]="'closeDialog' | tenantText"
+    (click)="cancelar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <header class="hostess-header">
+    <span class="hostess-header__icon"><mat-icon>woman</mat-icon></span>
+    <span>
+      <h2>{{ 'assignHostesses' | tenantText }}</h2>
+      <small>{{ data.producto }}</small>
+    </span>
+  </header>
+
+  <p class="hostess-help">{{ 'assignHostessesHelp' | tenantText }}</p>
+
+  <section class="hostess-section" aria-live="polite">
+    <div class="hostess-section__title">
+      <span>{{ 'assignedHostesses' | tenantText }}</span>
+      <small>{{ codigos.length }}</small>
+    </div>
+
+    <div class="hostess-list" *ngIf="codigos.length; else emptyHostesses">
+      <div class="hostess-chip" *ngFor="let codigoItem of codigos; let i = index">
+        <span class="hostess-chip__number">{{ i + 1 }}</span>
+        <span class="hostess-chip__text">
+          <small>{{ 'hostess' | tenantText }}</small>
+          <strong>{{ codigoItem }}</strong>
+        </span>
+        <button
+          type="button"
+          mat-icon-button
+          [attr.aria-label]="('delete' | tenantText) + ' ' + codigoItem"
+          (click)="eliminar(i)">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <ng-template #emptyHostesses>
+      <div class="hostess-empty">
+        <mat-icon>person_add</mat-icon>
+        <span>{{ 'noHostessesAssigned' | tenantText }}</span>
+      </div>
+    </ng-template>
+  </section>
+
+  <section class="hostess-capture">
+    <label for="hostess-code">{{ 'hostessCode' | tenantText }}</label>
+    <div class="hostess-capture__row">
+      <input
+        id="hostess-code"
+        type="text"
+        inputmode="numeric"
+        autocomplete="off"
+        [(ngModel)]="codigo"
+        (input)="normalizarCodigo()"
+        (keydown.enter)="agregar()"
+        [placeholder]="'hostessCodePlaceholder' | tenantText"
+        autofocus />
+      <button type="button" class="hostess-add" (click)="agregar()">
+        <mat-icon>add</mat-icon>
+        {{ 'add' | tenantText }}
+      </button>
+    </div>
+    <span class="hostess-validation" *ngIf="mensajeValidacion">
+      <mat-icon>info</mat-icon>{{ mensajeValidacion | tenantText }}
+    </span>
+  </section>
+
+  <div class="hostess-keypad" [attr.aria-label]="'numericKeypad' | tenantText">
+    <button type="button" *ngFor="let key of numericKeys" (click)="escribir(key)">
+      {{ key }}
+    </button>
+    <button type="button" class="hostess-keypad__backspace" (click)="borrarUltimo()">
+      <mat-icon>backspace</mat-icon>
+    </button>
+  </div>
+
+  <footer class="hostess-actions">
+    <button type="button" class="hostess-btn hostess-btn--secondary" (click)="cancelar()">
+      {{ 'cancel' | tenantText }}
+    </button>
+    <button type="button" class="hostess-btn hostess-btn--primary" (click)="guardar()">
+      <mat-icon>check</mat-icon>
+      {{ 'saveHostesses' | tenantText }}
+    </button>
+  </footer>
+</div>

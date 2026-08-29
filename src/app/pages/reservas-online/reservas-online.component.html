@@ -1,0 +1,95 @@
+<main class="booking-page">
+  <div class="booking-page__glow booking-page__glow--one"></div>
+  <div class="booking-page__glow booking-page__glow--two"></div>
+
+  <section class="booking-shell booking-shell--branches" *ngIf="esperandoSucursal">
+    <header class="booking-brand">
+      <img src="/assets/logo.svg" alt="LaComanda">
+      <span>RESERVAS ONLINE</span>
+    </header>
+    <div class="booking-branch-heading">
+      <span class="booking-hero__eyebrow">Elige dónde reservar</span>
+      <h1>¿A qué sucursal deseas venir?</h1>
+      <p>Selecciona el local para mostrarte sus mesas y horarios disponibles.</p>
+    </div>
+    <div class="booking-branch-list">
+      <button type="button" *ngFor="let sucursal of sucursales" (click)="seleccionarSucursal(sucursal)">
+        <mat-icon>storefront</mat-icon>
+        <span><strong>{{ sucursal.Nombre }}</strong><small>Ver disponibilidad</small></span>
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </div>
+  </section>
+
+  <section class="booking-shell" *ngIf="configuracion; else loadingOrError">
+    <header class="booking-brand">
+      <img src="/assets/logo.svg" alt="LaComanda">
+      <span>RESERVAS ONLINE</span>
+    </header>
+
+    <div class="booking-hero">
+      <span class="booking-hero__eyebrow">Tu mesa te espera</span>
+      <h1>{{ configuracion.Restaurante }}</h1>
+      <p>{{ configuracion.MensajePublico }}</p>
+      <span class="booking-hero__address" *ngIf="configuracion.Direccion"><mat-icon>location_on</mat-icon>{{ configuracion.Direccion }}</span>
+    </div>
+
+    <section class="booking-card booking-card--management" *ngIf="codigoGestion">
+      <div class="booking-success__icon" [class.is-cancelled]="cancelada"><mat-icon>{{ cancelada ? 'event_busy' : 'event_available' }}</mat-icon></div>
+      <h2>{{ cancelada ? 'Reserva cancelada' : 'Gestiona tu reserva' }}</h2>
+      <p class="booking-code">{{ codigoGestion }}</p>
+      <p *ngIf="!cancelada">Si tus planes han cambiado, puedes liberar la mesa desde aquí.</p>
+      <button *ngIf="!cancelada" type="button" class="booking-button booking-button--danger" (click)="cancelar()" [disabled]="cancelando">{{ cancelando ? 'Cancelando…' : 'Cancelar mi reserva' }}</button>
+      <p class="booking-contact" *ngIf="configuracion.TelefonoContacto">¿Necesitas ayuda? {{ configuracion.TelefonoContacto }}</p>
+    </section>
+
+    <section class="booking-card booking-success" *ngIf="resultado && !codigoGestion">
+      <div class="booking-success__icon"><mat-icon>done</mat-icon></div>
+      <span class="booking-success__label">{{ resultado.Estado === 'Confirmada' ? 'RESERVA CONFIRMADA' : 'SOLICITUD RECIBIDA' }}</span>
+      <h2>¡Nos vemos pronto, {{ nombre }}!</h2>
+      <p class="booking-code">{{ resultado.Codigo }}</p>
+      <div class="booking-success__summary"><span><mat-icon>calendar_today</mat-icon>{{ fechaVisible() }}</span><span><mat-icon>groups</mat-icon>{{ resultado.Personas }} personas</span></div>
+      <p>Te hemos enviado los datos de la reserva por correo. Guarda también este enlace: te permitirá cancelarla si cambian tus planes.</p>
+    </section>
+
+    <section class="booking-card" *ngIf="!resultado && !codigoGestion">
+      <div class="booking-steps"><span class="is-active">1 <small>Elige</small></span><i></i><span [class.is-active]="hora">2 <small>Tus datos</small></span><i></i><span>3 <small>Listo</small></span></div>
+
+      <div class="booking-choice-grid">
+        <label><span><mat-icon>calendar_today</mat-icon>Fecha</span><input type="date" [(ngModel)]="fecha" [min]="minFecha()" [max]="maxFecha()" (change)="buscarHoras()"></label>
+        <label><span><mat-icon>groups</mat-icon>Personas</span><select [(ngModel)]="personas" (change)="buscarHoras()"><option *ngFor="let value of [].constructor(configuracion.MaximoPersonasPorReserva); let i = index" [ngValue]="i + 1">{{ i + 1 }} {{ i === 0 ? 'persona' : 'personas' }}</option></select></label>
+      </div>
+
+      <div class="booking-times">
+        <div class="booking-section-title"><span>Horas disponibles</span><small>Tu mesa estará reservada durante: {{ configuracion.DuracionMinutos }} min</small></div>
+        <div class="booking-time-grid" *ngIf="horas.length"><button type="button" *ngFor="let item of horas" [class.is-selected]="hora === item" (click)="hora = item">{{ item }}</button></div>
+        <div class="booking-inline-state" *ngIf="consultando"><span></span>Buscando mesas…</div>
+        <div class="booking-inline-state" *ngIf="!consultando && !horas.length"><mat-icon>event_busy</mat-icon>No quedan horas disponibles para este día.</div>
+      </div>
+
+      <form class="booking-form" *ngIf="hora" (ngSubmit)="crear()">
+        <div class="booking-section-title"><span>¿A nombre de quién reservamos?</span><small>{{ fecha | date:'dd/MM/yyyy' }} · {{ hora }}</small></div>
+        <div class="booking-form__grid">
+          <label><span>Nombre y apellidos *</span><input type="text" required maxlength="120" [(ngModel)]="nombre" name="nombre" autocomplete="name"></label>
+          <label><span>Correo *</span><input type="email" required maxlength="160" [(ngModel)]="email" name="email" autocomplete="email"><small>Recibirás aquí la confirmación y cualquier cambio.</small></label>
+          <label><span>Teléfono (opcional)</span><input type="tel" maxlength="30" [(ngModel)]="telefono" name="telefono" autocomplete="tel"></label>
+          <label class="booking-form__wide"><span>¿Algo que debamos saber?</span><textarea maxlength="500" rows="2" [(ngModel)]="notas" name="notas" placeholder="Carrito de bebé, accesibilidad, celebración…"></textarea></label>
+        </div>
+        <button class="booking-button" type="submit" [disabled]="enviando || !nombre.trim() || !email.trim()">{{ enviando ? 'Reservando…' : (configuracion.ConfirmacionAutomatica ? 'Confirmar reserva' : 'Solicitar reserva') }}<mat-icon>arrow_forward</mat-icon></button>
+      </form>
+      <div class="booking-error" *ngIf="error"><mat-icon>error_outline</mat-icon>{{ error }}</div>
+    </section>
+
+    <footer class="booking-footer"><span>Reservas seguras con</span><strong>LaComanda</strong><span *ngIf="configuracion.TelefonoContacto">· {{ configuracion.TelefonoContacto }}</span></footer>
+  </section>
+
+  <ng-template #loadingOrError>
+    <section class="booking-shell booking-shell--state" *ngIf="!esperandoSucursal">
+      <img src="/assets/logo.svg" alt="LaComanda">
+      <div class="booking-page__loader" *ngIf="cargando"></div>
+      <mat-icon *ngIf="!cargando">event_busy</mat-icon>
+      <h2>{{ cargando ? 'Preparando las reservas…' : 'Reservas no disponibles' }}</h2>
+      <p *ngIf="error">{{ error }}</p>
+    </section>
+  </ng-template>
+</main>

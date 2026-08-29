@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { NgxSpinnerService } from 'ngx-spinner';
 import * as d3 from 'd3';
 import Swal from 'sweetalert2';
@@ -12,19 +12,23 @@ import { StorageService } from 'src/app/services/storage.service';
   templateUrl: './transacciones-diarias.component.html',
   styleUrls: ['./transacciones-diarias.component.css']
 })
-export class TransaccionesDiariasComponent implements OnInit, OnChanges  {
-  @ViewChild('chart', { static: true }) 
-  
+export class TransaccionesDiariasComponent implements OnInit, OnChanges, OnDestroy  {
+  @ViewChild('chart', { static: true })
+
   private chartContainer: ElementRef;
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
   totalTransaccion: number;
+  sinDatos = false;
   reportType: string;
   private data: ventadiariasemanalmensual[];
+  private svgRoot;
   private svg;
   private width: number;
   private height: number;
   private radius: number;
+  private resizeObserver?: ResizeObserver;
+  private resizePending = false;
 
   private color;
   private tooltip;
@@ -41,6 +45,7 @@ export class TransaccionesDiariasComponent implements OnInit, OnChanges  {
       this.radius = Math.min(this.width, this.height) / 2;
   
       this.initSvg();
+      this.observeResize();
       if (this.fechaInicial && this.fechaFinal) {
         const fechaInicialStr = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US');
         const fechaFinalStr = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US');
@@ -76,10 +81,12 @@ export class TransaccionesDiariasComponent implements OnInit, OnChanges  {
   private initSvg() {
     this.color = d3.scaleOrdinal(d3.schemeCategory10);
 
-    this.svg = d3.select(this.chartContainer.nativeElement)
+    this.svgRoot = d3.select(this.chartContainer.nativeElement)
       .append('svg')
       .attr('width', this.width)
-      .attr('height', this.height)
+      .attr('height', this.height);
+
+    this.svg = this.svgRoot
       .append('g')
       .attr('transform', `translate(${this.width / 2},${this.height / 2})`);
 
@@ -98,9 +105,39 @@ export class TransaccionesDiariasComponent implements OnInit, OnChanges  {
       .style('opacity', 0);
   }
 
+  /** Redibuja el pie al cambiar el ancho (columna completa ↔ media). El alto se mantiene. */
+  private observeResize(): void {
+    if (typeof ResizeObserver === 'undefined') { return; }
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.resizePending) { return; }
+      this.resizePending = true;
+      requestAnimationFrame(() => {
+        this.resizePending = false;
+        this.onResize();
+      });
+    });
+    this.resizeObserver.observe(this.chartContainer.nativeElement);
+  }
+
+  private onResize(): void {
+    const w = this.chartContainer.nativeElement.clientWidth;
+    if (!w || w === this.width) { return; }
+    this.width = w;
+    this.radius = Math.min(this.width, this.height) / 2;
+    this.svgRoot.attr('width', this.width).attr('height', this.height);
+    this.svg.attr('transform', `translate(${this.width / 2},${this.height / 2})`);
+    if (this.data) { this.updateChart(); }
+  }
+
+  ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
+    if (this.tooltip) { this.tooltip.remove(); }
+  }
+
   async getVentaDiariasSemanalMensual(tipo: number, fechaInicial: string, fechaFinal: string) {
       const data = await this.ventaService.getVentaDiariasSemanalMensual(tipo, fechaInicial, fechaFinal).toPromise();
       this.data = data;
+      this.sinDatos = !this.data || this.data.length === 0;
       this.totalTransaccion = this.data.reduce((acc, venta) => acc + venta.Transacciones, 0);
       this.updateChart();
   }
