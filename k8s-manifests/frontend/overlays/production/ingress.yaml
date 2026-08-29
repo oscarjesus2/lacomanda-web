@@ -15,7 +15,6 @@ spec:
         - "lacomanda.store"
         - "www.lacomanda.store"
         - "portal.lacomanda.store"
-        - "app.lacomanda.store"
         - "*.lacomanda.store"
         - "*.staging.lacomanda.store"
       secretName: wildcard-lacomanda-tls
@@ -61,6 +60,18 @@ spec:
             backend:
               service:
                 name: frontend
+                port:
+                  number: 80
+    # Keycloak de producción comparte este Load Balancer. El proxy conserva
+    # el host y los encabezados X-Forwarded-* requeridos por Keycloak.
+    - host: auth.lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: staging-proxy
                 port:
                   number: 80
     # Subdominios de tenant (<tenant>.lacomanda.store) → mismo frontend.
