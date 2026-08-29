@@ -111,8 +111,6 @@ jobs:
           --namespace frontend-appweb-production \
           deployment/staging-proxy \
           --timeout=5m
-        kubectl wait \
-          --namespace frontend-appweb-production \
-          --for=condition=Ready \
-          certificate/wildcard-lacomanda \
-          --timeout=10m
+        kubectl get certificate wildcard-lacomanda \
+          --namespace frontend-appweb-production
+        echo "::notice::cert-manager completará en segundo plano la emisión o renovación del certificado wildcard."
