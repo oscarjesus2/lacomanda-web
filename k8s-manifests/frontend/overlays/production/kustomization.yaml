@@ -4,14 +4,14 @@ kind: Kustomization
 namespace: frontend-appweb-production
 
 resources:
-  - ../../base
-  - namespace.yaml
-  - ingress.yaml
-  - certificate.yaml
-  - frontendconfig.yaml
-  - staging-proxy.yaml
+- ../../base
+- namespace.yaml
+- ingress.yaml
+- certificate.yaml
+- frontendconfig.yaml
+- staging-proxy.yaml
 
 images:
-  - name: oscar020/frontend
-    newName: oscar020/frontend
-    newTag: 202608291644-3148466-staging
+- name: oscar020/frontend
+  newName: oscar020/frontend
+  newTag: 202608292047-6a7d5fa-staging
