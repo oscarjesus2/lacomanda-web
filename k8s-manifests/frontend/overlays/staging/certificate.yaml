@@ -13,3 +13,4 @@ spec:
     kind: ClusterIssuer
   dnsNames:
     - "*.staging.lacomanda.store"
+    - "sonarqube.lacomanda.store"

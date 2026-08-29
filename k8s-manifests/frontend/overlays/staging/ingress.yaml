@@ -11,10 +11,37 @@ spec:
   # también app.staging (una etiqueta bajo staging.lacomanda.store).
   tls:
     - hosts:
+        - "sonarqube.lacomanda.store"
+        - "portal.staging.lacomanda.store"
         - "app.staging.lacomanda.store"
         - "*.staging.lacomanda.store"
       secretName: wildcard-lacomanda-tls
   rules:
+    # SonarQube permanece aislado en su namespace. Este proxy permite compartir
+    # el Load Balancer de staging porque un Ingress no puede usar directamente
+    # un Service de otro namespace.
+    - host: sonarqube.lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sonarqube-proxy
+                port:
+                  number: 80
+    # Regla exacta: evita que el wildcard de tenants envíe el portal al
+    # frontend operativo y reutiliza la misma IP de staging.
+    - host: portal.staging.lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portal-lacomanda
+                port:
+                  number: 80
     - host: app.staging.lacomanda.store
       http:
         paths:

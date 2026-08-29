@@ -135,6 +135,10 @@ jobs:
     - name: Deploy to staging
       run: |
         kustomize build k8s-manifests/frontend/overlays/staging | kubectl apply -f -
+        kubectl rollout status \
+          --namespace frontend-appweb-staging \
+          deployment/sonarqube-proxy \
+          --timeout=5m
         kubectl wait \
           --namespace frontend-appweb-staging \
           --for=condition=Ready \

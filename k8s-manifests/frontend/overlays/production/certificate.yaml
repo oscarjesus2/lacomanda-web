@@ -12,4 +12,6 @@ spec:
     name: letsencrypt-ionos
     kind: ClusterIssuer
   dnsNames:
+    - "lacomanda.store"
+    - "www.lacomanda.store"
     - "*.lacomanda.store"

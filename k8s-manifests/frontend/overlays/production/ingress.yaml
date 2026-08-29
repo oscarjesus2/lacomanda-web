@@ -7,15 +7,50 @@ metadata:
     kubernetes.io/ingress.global-static-ip-name: "frontend-production-global-ip"
     networking.gke.io/frontend-config: "frontend-frontendconfig"
 spec:
-  # TLS por cert-manager (Secret wildcard-lacomanda-tls). El cert comodín cubre
-  # también app.lacomanda.store (una etiqueta bajo lacomanda.store), así que ya
-  # no se usa el managed cert de Google.
+  # TLS por cert-manager. El certificado incluye el apex para redirigirlo al
+  # portal y el wildcard para portal, app y los subdominios de tenant.
   tls:
     - hosts:
+        - "lacomanda.store"
+        - "www.lacomanda.store"
+        - "portal.lacomanda.store"
         - "app.lacomanda.store"
         - "*.lacomanda.store"
       secretName: wildcard-lacomanda-tls
   rules:
+    # El portal mantiene su Deployment/Service en este mismo namespace para
+    # compartir el Load Balancer y la IP de producción del frontend.
+    - host: portal.lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portal-lacomanda
+                port:
+                  number: 80
+    # Nginx del portal responde 308 para conservar el dominio anterior.
+    - host: lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portal-lacomanda
+                port:
+                  number: 80
+    - host: www.lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portal-lacomanda
+                port:
+                  number: 80
     - host: app.lacomanda.store
       http:
         paths:
