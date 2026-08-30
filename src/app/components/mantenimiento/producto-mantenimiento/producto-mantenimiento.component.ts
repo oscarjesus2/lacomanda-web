@@ -346,6 +346,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
 
     const incompletos = previsualizacion.Productos.some(producto =>
       producto.Seleccionado && (
+        !producto.GrupoVenta?.trim() ||
         !producto.Familia?.trim() ||
         !producto.SubFamilia?.trim() ||
         !producto.NombreCorto?.trim() ||
@@ -356,7 +357,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     if (incompletos) {
       Swal.fire(
         'Completa los datos pendientes',
-        'Revisa familia, subfamilia, nombre, descripción y precio de los productos seleccionados.',
+        'Revisa grupo de venta, familia, subfamilia, nombre, descripción y precio de los productos seleccionados.',
         'info',
       );
       return;
@@ -397,7 +398,8 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
           title: 'Carta importada',
           html:
             `<strong>${resultado.ProductosCreados}</strong> productos creados` +
-            `<br>${resultado.FamiliasCreadas} familias y ` +
+            `<br>${resultado.GruposCreados} grupos, ` +
+            `${resultado.FamiliasCreadas} familias y ` +
             `${resultado.SubFamiliasCreadas} subfamilias nuevas` +
             (resultado.DuplicadosOmitidos > 0
               ? `<br>${resultado.DuplicadosOmitidos} duplicados omitidos`

@@ -1,4 +1,6 @@
 export interface CartaIaProducto {
+  IdGrupoVenta: number | null;
+  GrupoVenta: string;
   IdFamilia: number | null;
   Familia: string;
   IdSubFamilia: number | null;
@@ -25,6 +27,7 @@ export interface CartaIaPrevisualizacion {
 
 export interface ImportacionCartaIaResultado {
   ProductosCreados: number;
+  GruposCreados: number;
   FamiliasCreadas: number;
   SubFamiliasCreadas: number;
   DuplicadosOmitidos: number;
