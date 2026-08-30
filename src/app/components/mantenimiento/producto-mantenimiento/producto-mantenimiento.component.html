@@ -95,6 +95,17 @@
 
         <div class="menu-import-product__fields">
           <mat-form-field appearance="fill">
+            <mat-label>Grupo de venta</mat-label>
+            <input
+              matInput
+              [(ngModel)]="producto.GrupoVenta"
+              maxlength="100"
+              [disabled]="!producto.Seleccionado"
+            >
+            <mat-hint>Propuesto por la IA para informes y operación.</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
             <mat-label>Familia</mat-label>
             <input
               matInput
@@ -198,8 +209,8 @@
         [disabled]="procesandoCartaIa"
         (click)="cartaInput.click()"
       >
-        <mat-icon>auto_awesome</mat-icon>
-        Crear productos desde mi carta
+        <mat-icon>{{ procesandoCartaIa ? 'hourglass_top' : 'auto_awesome' }}</mat-icon>
+        {{ procesandoCartaIa ? 'Analizando carta…' : 'Crear productos desde mi carta' }}
       </button>
       <input
         #cartaInput
