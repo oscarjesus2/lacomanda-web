@@ -62,6 +62,8 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   procesandoCartaIa = false;
   confirmandoCartaIa = false;
   previsualizacionCarta: CartaIaPrevisualizacion | null = null;
+  coloresCartaIaCargados = false;
+  areasCartaIaCargadas = false;
   imagenSeleccionada?: File;
   imagenPrevisualizacion?: string;
   eliminarImagenPendiente = false;
@@ -162,7 +164,17 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
       }, error: () => { this.spinner.hide(); Swal.fire('Error', 'No se pudo cargar productos', 'error'); }
     });
 
-    this.colorService.getColores().subscribe(r => { if (r.Success) this.colores = r.Data; });
+    this.coloresCartaIaCargados = false;
+    this.colorService.getColores().subscribe({
+      next: r => {
+        this.colores = r.Success ? (r.Data || []) : [];
+        this.coloresCartaIaCargados = true;
+      },
+      error: () => {
+        this.colores = [];
+        this.coloresCartaIaCargados = true;
+      },
+    });
     this.monedaService.getMoneda().subscribe(r => { if (r.Success) this.monedas = r.Data; });
     this.familiaService.getFamilias().subscribe(r => { if (r.Success) this.familias = r.Data; });
     this.grupoService.getGrupos('P').subscribe(r => { if (r.Success) this.grupos = r.Data; });
@@ -178,11 +190,18 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   }
 
   private cargarAreasImpresion(): void {
-  this.areaSrv.listar().subscribe({
-    next: list => this.areas = list,
-    error: _ => this.areas = []
-  });
-}
+    this.areasCartaIaCargadas = false;
+    this.areaSrv.listar().subscribe({
+      next: list => {
+        this.areas = list;
+        this.areasCartaIaCargadas = true;
+      },
+      error: () => {
+        this.areas = [];
+        this.areasCartaIaCargadas = true;
+      },
+    });
+  }
 
   onFamiliaChange(): void {
   this.p.IdSubFamilia = undefined as any;
@@ -266,6 +285,10 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.validarCatalogosImportacionCarta()) {
+      return;
+    }
+
     if (imagenes.length > 8) {
       Swal.fire(
         'Demasiadas fotos',
@@ -319,8 +342,12 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
         this.previsualizacionCarta = respuesta.Data;
       },
       error: error => {
+        const requiereConfiguracion =
+          error?.error?.ErrorCode === 'CONFIGURATION_MISSING';
         Swal.fire(
-          'No pudimos leer la carta',
+          requiereConfiguracion
+            ? 'Completa la configuración'
+            : 'No pudimos leer la carta',
           error?.error?.Message ||
             'Prueba con fotos más nítidas y bien encuadradas.',
           'error',
@@ -346,6 +373,8 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
 
     const incompletos = previsualizacion.Productos.some(producto =>
       producto.Seleccionado && (
+        !producto.IdColor ||
+        !producto.AreasImpresionIds?.length ||
         !producto.GrupoVenta?.trim() ||
         !producto.Familia?.trim() ||
         !producto.SubFamilia?.trim() ||
@@ -357,7 +386,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     if (incompletos) {
       Swal.fire(
         'Completa los datos pendientes',
-        'Revisa grupo de venta, familia, subfamilia, nombre, descripción y precio de los productos seleccionados.',
+        'Revisa color, áreas de impresión, grupo de venta, familia, subfamilia, nombre, descripción y precio de los productos seleccionados.',
         'info',
       );
       return;
@@ -426,6 +455,59 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     const confianza = producto?.Confianza ??
       this.previsualizacionCarta?.Confianza ?? 0;
     return Math.round(confianza * 100);
+  }
+
+  abrirSelectorCarta(input: HTMLInputElement): void {
+    if (!this.validarCatalogosImportacionCarta()) {
+      return;
+    }
+
+    input.click();
+  }
+
+  nombreColor(idColor: number | null): string {
+    return this.colores.find(color => color.IdColor === idColor)?.Descripcion ||
+      'Selecciona un color';
+  }
+
+  estiloColor(idColor: number | null): string {
+    const color = this.colores.find(item => item.IdColor === idColor);
+    return color
+      ? `rgb(${color.Rgb1}, ${color.Rgb2}, ${color.Rgb3})`
+      : 'transparent';
+  }
+
+  private validarCatalogosImportacionCarta(): boolean {
+    if (!this.coloresCartaIaCargados || !this.areasCartaIaCargadas) {
+      Swal.fire(
+        'Estamos cargando la configuración',
+        'Espera unos segundos antes de seleccionar las fotos de la carta.',
+        'info',
+      );
+      return false;
+    }
+
+    const faltaColores = this.colores.length === 0;
+    const faltaAreas = this.areas.length === 0;
+    if (!faltaColores && !faltaAreas) {
+      return true;
+    }
+
+    const pendientes = [
+      faltaAreas
+        ? '<li>Crea al menos un área de impresión y configura la impresora que recibirá las comandas.</li>'
+        : '',
+      faltaColores
+        ? '<li>Crea al menos un color para diferenciar visualmente los productos.</li>'
+        : '',
+    ].filter(Boolean).join('');
+    Swal.fire({
+      icon: 'info',
+      title: 'Prepara los catálogos primero',
+      html: `<p>La IA necesita estas opciones para preparar una propuesta completa:</p><ul style="text-align:left">${pendientes}</ul><p>Configúralas desde Administración y vuelve a intentarlo.</p>`,
+      confirmButtonText: 'Entendido',
+    });
+    return false;
   }
 
   trackProductoCarta(index: number, producto: CartaIaProducto): string {
