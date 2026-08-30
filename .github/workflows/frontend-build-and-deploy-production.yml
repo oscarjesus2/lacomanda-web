@@ -1,8 +1,8 @@
-name: Frontend - Promote to Production (GKE)
+name: Frontend - Build & Deploy to Production (GKE)
 
-# Producción no construye: promociona exactamente el artefacto generado y
-# validado en staging, leyendo su identificador de
-# latest-frontend-image-tag.txt.
+# Angular incorpora environment.production.ts durante la compilación. Por eso
+# producción reutiliza el mismo commit validado en staging, pero construye una
+# imagen nueva con BUILD_CONFIG=production.
 on:
   push:
     branches:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  promote-to-production:
+  build-and-deploy-production:
     concurrency: frontend-production-${{ github.ref }}
     runs-on: ubuntu-latest
     permissions:
@@ -25,21 +25,41 @@ jobs:
       WORKLOAD_IDENTITY_PROVIDER: projects/161733769525/locations/global/workloadIdentityPools/github-pool/providers/github-pool
 
     steps:
-    # Con workflow_run, actions/checkout tomaría por defecto el último commit de
-    # la rama por defecto. Se fija master explícitamente porque el job hace
-    # después "git push origin master" y necesita estar sobre la rama, no en
-    # detached HEAD.
+    # Se fija master explícitamente porque el job actualiza y publica el
+    # manifiesto de producción en esa misma rama.
     - name: Checkout repo
       uses: actions/checkout@v4
       with:
         ref: master
 
-    - name: Read staging image tag
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Read promoted source tag
       run: |
         IMAGE_TAG=$(cat latest-frontend-image-tag.txt)
-        STAGING_TAG=${IMAGE_TAG}-staging
-        echo "STAGING_TAG=$STAGING_TAG" >> $GITHUB_ENV
-        echo "Promoting image: $STAGING_TAG"
+        PRODUCTION_TAG=${IMAGE_TAG}-production
+        echo "PRODUCTION_TAG=$PRODUCTION_TAG" >> "$GITHUB_ENV"
+        echo "Building production image: $PRODUCTION_TAG"
+
+    - name: Build and push production image
+      run: |
+        docker build \
+          --build-arg BUILD_CONFIG=production \
+          --build-arg APP_VERSION=$PRODUCTION_TAG \
+          -t $IMAGE_NAME:$PRODUCTION_TAG \
+          -f ./dockerfiles/frontend/Dockerfile .
+
+        if docker run --rm $IMAGE_NAME:$PRODUCTION_TAG \
+          sh -c 'grep -R -q "api.staging.lacomanda.store\|auth.staging.lacomanda.store" /usr/share/nginx/html'; then
+          echo "::error::La imagen de producción contiene URLs de staging."
+          exit 1
+        fi
+
+        docker push $IMAGE_NAME:$PRODUCTION_TAG
 
     - name: Install kustomize
       run: |
@@ -51,10 +71,10 @@ jobs:
         sudo mv kustomize /usr/local/bin/
         rm kustomize.tar.gz
 
-    - name: Update production overlay with promoted image
+    - name: Update production overlay with production image
       run: |
         pushd k8s-manifests/frontend/overlays/production
-        kustomize edit set image "$IMAGE_NAME=$IMAGE_NAME:$STAGING_TAG"
+        kustomize edit set image "$IMAGE_NAME=$IMAGE_NAME:$PRODUCTION_TAG"
         popd
 
     - name: Commit updated kustomization.yaml
@@ -63,7 +83,7 @@ jobs:
         git config user.email "ci@job.pe"
         git add k8s-manifests/frontend/overlays/production/kustomization.yaml
         if ! git diff --cached --quiet; then
-          git commit -m "ci(frontend): promote $STAGING_TAG to production [skip ci]"
+          git commit -m "ci(frontend): deploy $PRODUCTION_TAG to production [skip ci]"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git push origin master
         else

@@ -12,6 +12,6 @@ resources:
 - staging-proxy.yaml
 
 images:
-- name: oscar020/frontend
-  newName: oscar020/frontend
-  newTag: 202608292353-a9962ef-staging
+  - name: oscar020/frontend
+    newName: oscar020/frontend
+    newTag: 202608292353-a9962ef-production
