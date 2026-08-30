@@ -5,6 +5,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { NgForm } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { NgxSpinnerService } from 'ngx-spinner';
+import { finalize } from 'rxjs/operators';
 
 import { Producto } from 'src/app/models/product.models';
 import { ProductoService } from 'src/app/services/product.service';
@@ -31,6 +32,7 @@ import { UnidadMedidaService } from 'src/app/services/unidad-medida.service';
 import { Notificar } from 'src/app/shared/notificaciones';
 import { ImportacionCartaIaService } from 'src/app/services/importacion-carta-ia.service';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { ProcessingIndicatorService } from 'src/app/services/processing-indicator.service';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 import {
   CartaIaPrevisualizacion,
@@ -108,7 +110,8 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     private configuracionService: ConfiguracionService,
     private unidadMedidaService: UnidadMedidaService,
     private importacionCartaIaService: ImportacionCartaIaService,
-    private licenciaTenantService: LicenciaTenantService
+    private licenciaTenantService: LicenciaTenantService,
+    private processingIndicator: ProcessingIndicatorService
   ) {}
 
   ngOnInit(): void {
@@ -288,11 +291,22 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     }
 
     this.procesandoCartaIa = true;
-    this.spinner.show();
-    this.importacionCartaIaService.previsualizar(imagenes).subscribe({
-      next: respuesta => {
+    const processing = this.processingIndicator.begin({
+      icon: 'auto_awesome',
+      title: 'Analizando tu carta',
+      message: imagenes.length === 1
+        ? 'La IA está leyendo la imagen y organizando familias, productos y precios.'
+        : `La IA está leyendo las ${imagenes.length} imágenes y organizando familias, productos y precios.`,
+      hint: 'Puede tardar unos segundos. No cierres esta ventana.',
+    });
+
+    this.importacionCartaIaService.previsualizar(imagenes).pipe(
+      finalize(() => {
         this.procesandoCartaIa = false;
-        this.spinner.hide();
+        processing.close();
+      }),
+    ).subscribe({
+      next: respuesta => {
         if (!respuesta.Success || !respuesta.Data) {
           Swal.fire(
             'No pudimos leer la carta',
@@ -305,8 +319,6 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
         this.previsualizacionCarta = respuesta.Data;
       },
       error: error => {
-        this.procesandoCartaIa = false;
-        this.spinner.hide();
         Swal.fire(
           'No pudimos leer la carta',
           error?.error?.Message ||
@@ -351,14 +363,23 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     }
 
     this.confirmandoCartaIa = true;
-    this.spinner.show();
+    const processing = this.processingIndicator.begin({
+      icon: 'playlist_add_check',
+      title: 'Creando tus productos',
+      message: `Estamos creando ${this.cantidadProductosSeleccionados} productos y ordenando sus familias.`,
+      hint: 'Mantén esta ventana abierta hasta que finalice la importación.',
+    });
+
     this.importacionCartaIaService.confirmar({
       IdOperacion: previsualizacion.IdOperacion,
       Productos: previsualizacion.Productos,
-    }).subscribe({
-      next: respuesta => {
+    }).pipe(
+      finalize(() => {
         this.confirmandoCartaIa = false;
-        this.spinner.hide();
+        processing.close();
+      }),
+    ).subscribe({
+      next: respuesta => {
         if (!respuesta.Success || !respuesta.Data) {
           Swal.fire(
             'No se pudo completar la importación',
@@ -385,8 +406,6 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
         });
       },
       error: error => {
-        this.confirmandoCartaIa = false;
-        this.spinner.hide();
         Swal.fire(
           'No se pudo completar la importación',
           error?.error?.Message || 'Revisa los datos e inténtalo de nuevo.',

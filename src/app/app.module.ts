@@ -46,6 +46,7 @@ import { NgxSpinnerModule } from 'ngx-spinner';
 import { DialogTurnoComponent } from './components/dialog-turno/dialog-turno.component';
 import { DialogCerrarTurnoComponent } from './components/dialog-cerrar-turno/dialog-cerrar-turno.component';
 import { HeaderComponent } from './shared/header/header.component';
+import { ProcessingIndicatorComponent } from './shared/processing-indicator/processing-indicator.component';
 import { VentasDiariasComponent } from './pages/dashboard/ventas-diarias/ventas-diarias.component';
 import { PopularidadPlatosComponent } from './pages/dashboard/popularidad-platos/popularidad-platos.component';
 import { CanalVentaComponent } from './pages/dashboard/canal-venta/canal-venta.component';
@@ -177,6 +178,7 @@ export const MY_DATE_FORMATS = {
     DialogTurnoComponent,
     DialogCerrarTurnoComponent,
     HeaderComponent,
+    ProcessingIndicatorComponent,
     VentasDiariasComponent,
     PopularidadPlatosComponent,
     CanalVentaComponent,

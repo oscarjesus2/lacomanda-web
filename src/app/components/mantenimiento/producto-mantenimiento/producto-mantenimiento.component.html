@@ -198,8 +198,8 @@
         [disabled]="procesandoCartaIa"
         (click)="cartaInput.click()"
       >
-        <mat-icon>auto_awesome</mat-icon>
-        Crear productos desde mi carta
+        <mat-icon>{{ procesandoCartaIa ? 'hourglass_top' : 'auto_awesome' }}</mat-icon>
+        {{ procesandoCartaIa ? 'Analizando carta…' : 'Crear productos desde mi carta' }}
       </button>
       <input
         #cartaInput

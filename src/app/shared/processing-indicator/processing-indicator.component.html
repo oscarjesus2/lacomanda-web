@@ -1,0 +1,30 @@
+<div
+  *ngIf="state$ | async as state"
+  class="processing-indicator"
+  role="status"
+  aria-live="polite"
+  aria-atomic="true"
+  aria-busy="true"
+>
+  <section class="processing-indicator__card">
+    <div class="processing-indicator__animation" aria-hidden="true">
+      <span class="processing-indicator__orbit"></span>
+      <span class="processing-indicator__brand">
+        <mat-icon>{{ state.icon }}</mat-icon>
+      </span>
+    </div>
+
+    <div class="processing-indicator__copy">
+      <span class="processing-indicator__eyebrow">La Comanda está trabajando</span>
+      <h2>{{ state.title }}</h2>
+      <p>{{ state.message }}</p>
+      <small *ngIf="state.hint">{{ state.hint }}</small>
+    </div>
+
+    <div class="processing-indicator__steps" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </section>
+</div>
