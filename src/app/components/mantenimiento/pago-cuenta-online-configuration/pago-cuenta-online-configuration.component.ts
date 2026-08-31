@@ -17,6 +17,7 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
   configuration: ConfiguracionPagoCuentaOnline | null = null;
   active = false;
   moneiAccountId = '';
+  moneiApiKey = '';
   culqiPublicKey = '';
   culqiSecretKey = '';
   loading = false;
@@ -37,7 +38,12 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
   }
 
   get providerName(): string {
-    return this.isSpain ? 'MONEI Connect' : 'Culqi';
+    return this.isSpain ? 'MONEI' : 'Culqi';
+  }
+
+  get canKeepMoneiKey(): boolean {
+    return !!this.configuration?.CredencialPrivadaConfigurada
+      && this.moneiAccountId.trim() === this.configuration?.MoneiAccountId;
   }
 
   get readyToSave(): boolean {
@@ -46,7 +52,8 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
     }
 
     if (this.isSpain) {
-      return this.moneiAccountId.trim().length > 0;
+      return this.moneiAccountId.trim().length > 0
+        && (this.moneiApiKey.trim().length > 0 || this.canKeepMoneiKey);
     }
 
     return this.culqiPublicKey.trim().length > 0
@@ -59,7 +66,7 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
       Swal.fire(
         'Revisa la configuración',
         this.isSpain
-          ? 'Indica el identificador de la cuenta MONEI del restaurante.'
+          ? 'Indica la cuenta y la API key de MONEI de este restaurante. Si cambias de cuenta, introduce también su clave.'
           : 'Indica las claves pública y privada de Culqi del restaurante.',
         'warning',
       );
@@ -69,6 +76,9 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
     const request: ActualizarConfiguracionPagoCuentaOnline = {
       Activa: this.active,
       MoneiAccountId: this.isSpain ? this.moneiAccountId.trim() : undefined,
+      MoneiApiKey: this.isSpain && this.moneiApiKey.trim()
+        ? this.moneiApiKey.trim()
+        : undefined,
       CulqiPublicKey: this.isSpain ? undefined : this.culqiPublicKey.trim(),
       // Vacía significa conservar la clave que ya está cifrada en el backend.
       CulqiSecretKey: this.isSpain || !this.culqiSecretKey
@@ -82,11 +92,12 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
       .subscribe({
         next: response => {
           this.apply(response.Data);
+          this.moneiApiKey = '';
           this.culqiSecretKey = '';
           Notificar.exito(
             'Cobro móvil configurado',
             this.active
-              ? 'Los clientes ya podrán pagar su cuenta desde el QR de su espacio.'
+              ? 'Configuración guardada. Comprueba que tu cuenta de pago esté habilitada y realiza una prueba antes de ofrecer el cobro a tus clientes.'
               : 'El cobro móvil quedó desactivado para este restaurante.',
           );
         },

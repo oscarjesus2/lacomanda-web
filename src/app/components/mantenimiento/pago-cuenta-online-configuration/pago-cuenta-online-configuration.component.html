@@ -16,10 +16,10 @@
         <mat-icon>{{ active && readyToSave ? 'verified' : 'info' }}</mat-icon>
         <div class="dialog-notice__content">
           <strong class="dialog-notice__title">
-            {{ active ? 'Cobro desde el QR habilitado' : 'Cobro desde el QR desactivado' }}
+            {{ !active ? 'Cobro desde el QR desactivado' : readyToSave ? 'Configuración de cobro completa' : 'Completa la cuenta y su clave para habilitar el cobro' }}
           </strong>
           <span class="dialog-notice__text">
-            El cliente verá “Pagar mi cuenta” únicamente cuando tenga una sesión activa y una cuenta pendiente.
+            Guarda una configuración completa para habilitar “Pagar mi cuenta”. El cliente necesitará una sesión activa y una cuenta pendiente.
           </span>
         </div>
       </div>
@@ -56,16 +56,27 @@
       <section class="dialog-form-section" *ngIf="isSpain">
         <h3 class="dialog-form-section__title">
           <mat-icon>account_balance_wallet</mat-icon>
-          Cuenta MONEI Connect
+          Tu cuenta MONEI
         </h3>
         <p class="dialog-form-section__hint">
-          Vincula este restaurante con su cuenta MONEI. La clave del partner se configura una sola vez en el backend.
+          Usa la cuenta y la API key propias de este restaurante, disponibles en MONEI → Configuración → Acceso a API.
+          No uses una clave de partner. La clave se guarda cifrada y no se vuelve a mostrar.
         </p>
         <div class="dialog-form-grid">
           <mat-form-field appearance="fill">
             <mat-label>Identificador de cuenta MONEI</mat-label>
-            <input matInput name="moneiAccountId" [(ngModel)]="moneiAccountId" maxlength="120" autocomplete="off" [required]="active">
+            <input matInput name="moneiAccountId" [(ngModel)]="moneiAccountId" maxlength="100" autocomplete="off" [required]="active">
             <mat-hint>MONEI Account ID asignado a este restaurante.</mat-hint>
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>API key de MONEI del restaurante</mat-label>
+            <input matInput name="moneiApiKey" [(ngModel)]="moneiApiKey" type="password" maxlength="512" autocomplete="new-password" [required]="active && !canKeepMoneiKey">
+            <mat-hint *ngIf="canKeepMoneiKey; else moneiKeyRequired">
+              Ya configurada. Déjala vacía para conservarla.
+            </mat-hint>
+            <ng-template #moneiKeyRequired>
+              <mat-hint>Necesaria para activar los cobros. La cuenta y la clave deben ser ambas de pruebas o ambas de producción.</mat-hint>
+            </ng-template>
           </mat-form-field>
         </div>
       </section>
