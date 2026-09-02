@@ -550,9 +550,9 @@ export class MenuVentasComponent implements OnInit {
   OpenEspacioMantenimientoComponent(): void {
   
     const dialog = this.dialog.open(EspaciosMantenimientoComponent, {
-      disableClose: true,
-      hasBackdrop: true,
+      ...this.configuracionMaestroCompacto,
       width: '900px',
+      height: '720px',
     });
   }
 
