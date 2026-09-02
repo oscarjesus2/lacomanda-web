@@ -106,7 +106,7 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Sub Familia de Productos',    route: '/ventas/subfamilia-productos',     icon: 'account_tree',     label: 'Sub familias', titleKey: 'productSubfamilies', labelKey: 'subfamiliesShort',   feature: C.OperacionCaja   },
         { title: 'Grupos de Productos',         route: '/ventas/grupos',                   icon: 'inventory_2',      label: 'Grupos',       titleKey: 'productGroups',      labelKey: 'groups',             feature: C.OperacionCaja   },
         { title: 'Colores',                     route: '/ventas/colores',                  icon: 'palette',          label: 'Colores',      titleKey: 'colors',             labelKey: 'colors',             feature: C.OperacionCaja   },
-        { title: 'Areas de Impresión',          route: '/ventas/area-impresion',           icon: 'print',            label: 'Impresión',    titleKey: 'printAreas',         labelKey: 'printing',           feature: C.OperacionCaja   },
+        { title: 'Áreas de impresión',          route: '/ventas/area-impresion',           icon: 'print',            label: 'Áreas de impresión', titleKey: 'printAreas',      labelKey: 'printAreas',         feature: C.OperacionCaja   },
         { title: 'Productos',                   route: '/ventas/productos',                icon: 'restaurant_menu',  label: 'Productos',    titleKey: 'products',           labelKey: 'products',           feature: C.OperacionCaja   },
         { title: 'Socios de Negocio',           route: '/ventas/socios-negocio',           icon: 'handshake',        label: 'Socios',       titleKey: 'businessPartners',   labelKey: 'partners',           feature: C.OperacionCaja   },
         { title: 'Configuración de menús',      route: '/ventas/configuracion-combos',     icon: 'tune',             label: 'Menús',        titleKey: 'combosConfig',       labelKey: 'combos',             feature: C.ProductosMenus  },
@@ -233,7 +233,7 @@ export class MenuVentasComponent implements OnInit {
       {
         this.OpenUsuarioMantenimientoComponent();
       }
-    if (item.title === 'Areas de Impresión') 
+    if (item.route === '/ventas/area-impresion')
       {
         this.OpenAreasImpresionMantenimientoComponent();
       } 

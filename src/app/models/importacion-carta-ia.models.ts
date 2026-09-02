@@ -1,4 +1,6 @@
 export interface CartaIaProducto {
+  IdColor: number | null;
+  AreasImpresionIds: number[];
   IdGrupoVenta: number | null;
   GrupoVenta: string;
   IdFamilia: number | null;

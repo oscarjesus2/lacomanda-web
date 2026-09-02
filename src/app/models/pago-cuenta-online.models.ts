@@ -11,6 +11,7 @@ export interface ConfiguracionPagoCuentaOnline {
 export interface ActualizarConfiguracionPagoCuentaOnline {
   Activa: boolean;
   MoneiAccountId?: string;
+  MoneiApiKey?: string;
   CulqiPublicKey?: string;
   CulqiSecretKey?: string;
 }

@@ -171,6 +171,24 @@
   grid-column: span 3;
 }
 
+.menu-import-product__areas {
+  grid-column: span 2;
+}
+
+.menu-import-color-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-import-color-option__swatch {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+}
+
 .menu-import-review__actions {
   position: sticky;
   bottom: 0;
@@ -372,6 +390,10 @@
   }
 
   .menu-import-product__description {
+    grid-column: auto;
+  }
+
+  .menu-import-product__areas {
     grid-column: auto;
   }
 

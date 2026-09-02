@@ -44,7 +44,8 @@
     <p class="menu-import-review__safety">
       <mat-icon>verified_user</mat-icon>
       Aquí solo se preparan datos comerciales. Recetas, stock, impuestos
-      especiales y áreas de impresión se configuran después, cuando corresponda.
+      especiales se configuran después. Revisa el color y las impresoras que la
+      IA propone para cada producto.
     </p>
 
     <div
@@ -94,6 +95,51 @@
         </p>
 
         <div class="menu-import-product__fields">
+          <mat-form-field appearance="fill">
+            <mat-label>Color visual</mat-label>
+            <mat-select
+              [(ngModel)]="producto.IdColor"
+              [disabled]="!producto.Seleccionado"
+            >
+              <mat-select-trigger>
+                <span class="menu-import-color-option">
+                  <span
+                    class="menu-import-color-option__swatch"
+                    [style.background-color]="estiloColor(producto.IdColor)"
+                  ></span>
+                  {{ nombreColor(producto.IdColor) }}
+                </span>
+              </mat-select-trigger>
+              <mat-option *ngFor="let color of colores" [value]="color.IdColor">
+                <span class="menu-import-color-option">
+                  <span
+                    class="menu-import-color-option__swatch"
+                    [style.background-color]="estiloColor(color.IdColor)"
+                  ></span>
+                  {{ color.Descripcion }}
+                </span>
+              </mat-option>
+            </mat-select>
+            <mat-hint>Propuesto según la categoría y los colores existentes.</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="menu-import-product__areas">
+            <mat-label>Áreas de impresión</mat-label>
+            <mat-select
+              multiple
+              [(ngModel)]="producto.AreasImpresionIds"
+              [disabled]="!producto.Seleccionado"
+            >
+              <mat-option
+                *ngFor="let area of areas"
+                [value]="area.IdAreaImpresion"
+              >
+                {{ area.Descripcion }} · {{ area.NombreImpresora }}
+              </mat-option>
+            </mat-select>
+            <mat-hint>Impresoras que recibirán la comanda de este producto.</mat-hint>
+          </mat-form-field>
+
           <mat-form-field appearance="fill">
             <mat-label>Grupo de venta</mat-label>
             <input
@@ -207,7 +253,7 @@
         color="primary"
         type="button"
         [disabled]="procesandoCartaIa"
-        (click)="cartaInput.click()"
+        (click)="abrirSelectorCarta(cartaInput)"
       >
         <mat-icon>{{ procesandoCartaIa ? 'hourglass_top' : 'auto_awesome' }}</mat-icon>
         {{ procesandoCartaIa ? 'Analizando carta…' : 'Crear productos desde mi carta' }}

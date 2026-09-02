@@ -42,7 +42,7 @@
                 (click)="canalVenta(canalVentaEnum.PARA_LLEVAR)" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faShoppingBag"></fa-icon> {{ 'takeawayChannel' | tenantText }}
         </button>
-        <button *ngIf="isDelivery && !isEntrada"
+        <button *ngIf="isDelivery"
                 (click)="seleccionarCanalDelivery()" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faTruck"></fa-icon> {{ 'deliveryChannel' | tenantText }}
         </button>
