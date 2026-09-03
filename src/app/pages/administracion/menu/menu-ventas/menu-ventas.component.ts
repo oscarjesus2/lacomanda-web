@@ -47,6 +47,7 @@ import { ReportesTermicosAdministracionComponent } from 'src/app/components/mant
 import { TipoReporteTermicoAdministracion } from 'src/app/models/reportes-termicos-administracion.models';
 import { MonitorComandasComponent } from 'src/app/components/mantenimiento/monitor-comandas/monitor-comandas.component';
 import { SunatConfigurationComponent } from 'src/app/components/mantenimiento/sunat-configuration/sunat-configuration.component';
+import { CpeEnvioMonitorComponent } from 'src/app/components/mantenimiento/cpe-envio-monitor/cpe-envio-monitor.component';
 import { PagoCuentaOnlineConfigurationComponent } from 'src/app/components/mantenimiento/pago-cuenta-online-configuration/pago-cuenta-online-configuration.component';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 
@@ -157,6 +158,7 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Configuración Inicial',      route: '/ventas/config-inicial',  icon: 'settings',  label: 'Config. inicial', titleKey: 'initialSetup',          labelKey: 'initialSetupShort' },
         { title: 'Configurar esta estación',   route: '/ventas/config-estacion', icon: 'computer',  label: 'Esta estación',   titleKey: 'configureThisStation',  labelKey: 'thisStation'       },
         { title: 'Facturación electrónica SUNAT', route: '/ventas/configuracion-sunat', icon: 'verified_user', label: 'Facturación electrónica', feature: C.OperacionComprobantes, soloPeru: true },
+        { title: 'Monitor de envíos SUNAT', route: '/ventas/monitor-envios-sunat', icon: 'outbox', label: 'Monitor SUNAT', monitorEnviosSunat: true, feature: C.OperacionComprobantes, soloPeru: true },
         { title: 'Cobro móvil de la cuenta', route: '/ventas/configuracion-pago-cuenta-online', icon: 'payments', label: 'Cobro móvil', feature: C.VentasPagoCuentaOnline, soloPagoMovil: true }
       ]
     }
@@ -199,6 +201,10 @@ export class MenuVentasComponent implements OnInit {
   }
 
   openDialog(item: any): void {
+    if (item.monitorEnviosSunat) {
+      this.OpenCpeEnvioMonitorComponent();
+      return;
+    }
     if (item.monitorComandas) {
       this.OpenMonitorComandasComponent();
       return;
@@ -647,6 +653,18 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '900px',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100vh - 32px)',
+      panelClass: 'dialog-window--workspace',
+    });
+  }
+
+  OpenCpeEnvioMonitorComponent(): void {
+    this.dialog.open(CpeEnvioMonitorComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: '1280px',
+      height: '852px',
       maxWidth: 'calc(100vw - 32px)',
       maxHeight: 'calc(100vh - 32px)',
       panelClass: 'dialog-window--workspace',

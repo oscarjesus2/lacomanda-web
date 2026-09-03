@@ -147,6 +147,7 @@ import { ReservasOnlineComponent } from './pages/reservas-online/reservas-online
 import { ReportesTermicosAdministracionComponent } from './components/mantenimiento/reportes-termicos-administracion/reportes-termicos-administracion.component';
 import { MonitorComandasComponent } from './components/mantenimiento/monitor-comandas/monitor-comandas.component';
 import { SunatConfigurationComponent } from './components/mantenimiento/sunat-configuration/sunat-configuration.component';
+import { CpeEnvioMonitorComponent } from './components/mantenimiento/cpe-envio-monitor/cpe-envio-monitor.component';
 import { PagoCuentaOnlineConfigurationComponent } from './components/mantenimiento/pago-cuenta-online-configuration/pago-cuenta-online-configuration.component';
 
 export const MY_DATE_FORMATS = {
@@ -268,6 +269,7 @@ export const MY_DATE_FORMATS = {
     ReportesTermicosAdministracionComponent,
     MonitorComandasComponent,
     SunatConfigurationComponent,
+    CpeEnvioMonitorComponent,
     PagoCuentaOnlineConfigurationComponent,
   ],
   imports: [
