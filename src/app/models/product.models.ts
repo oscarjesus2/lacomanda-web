@@ -3,7 +3,8 @@ import { ProductoAreaImpresion } from "./producto-area-impresion.models";
 export class Producto {
 
     public Activo: boolean;
-    public Descripcion: string;
+    public NombreCompleto: string;
+    public NombreFiscal?: string;
     public DescripcionCarta?: string;
     public IdProducto: number;
     public NombreCorto: string;

@@ -179,16 +179,18 @@
               maxlength="50"
               [disabled]="!producto.Seleccionado"
             >
+            <mat-hint>Nombre mostrado en la pantalla de digitación.</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="fill" class="menu-import-product__description">
             <mat-label>Nombre completo</mat-label>
             <input
               matInput
-              [(ngModel)]="producto.Descripcion"
+              [(ngModel)]="producto.NombreCompleto"
               maxlength="120"
               [disabled]="!producto.Seleccionado"
             >
+            <mat-hint>Nombre descriptivo general del producto.</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="fill" class="menu-import-product__description">
@@ -277,12 +279,12 @@
     <div class="mant-table-card">
       <mat-table [dataSource]="filtered" class="mat-elevation-z8">
         <ng-container matColumnDef="nombre">
-          <mat-header-cell *matHeaderCellDef> {{ 'name' | tenantText }} </mat-header-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'shortName' | tenantText }} </mat-header-cell>
           <mat-cell *matCellDef="let r"> {{ r.NombreCorto }} </mat-cell>
         </ng-container>
-        <ng-container matColumnDef="descripcion">
-          <mat-header-cell *matHeaderCellDef> {{ 'description' | tenantText }} </mat-header-cell>
-          <mat-cell *matCellDef="let r"> {{ r.Descripcion }} </mat-cell>
+        <ng-container matColumnDef="nombreCompleto">
+          <mat-header-cell *matHeaderCellDef> {{ 'fullName' | tenantText }} </mat-header-cell>
+          <mat-cell *matCellDef="let r"> {{ r.NombreCompleto }} </mat-cell>
         </ng-container>
         <ng-container matColumnDef="precio">
           <mat-header-cell *matHeaderCellDef> {{ 'price' | tenantText }} </mat-header-cell>
@@ -351,14 +353,16 @@
       <div class="form-row">
         <mat-form-field class="form-field" appearance="fill">
           <mat-label>{{ 'shortName' | tenantText }}</mat-label>
-          <input matInput [(ngModel)]="p.NombreCorto" name="nombre" required #nombre="ngModel">
+          <input matInput [(ngModel)]="p.NombreCorto" name="nombre" maxlength="50" required #nombre="ngModel">
+          <mat-hint>{{ 'shortNameHint' | tenantText }}</mat-hint>
           <mat-error *ngIf="nombre.invalid && (nombre.dirty || nombre.touched)">{{ 'required' | tenantText }}</mat-error>
         </mat-form-field>
 
         <mat-form-field class="form-field" appearance="fill">
-          <mat-label>{{ 'description' | tenantText }}</mat-label>
-          <input matInput [(ngModel)]="p.Descripcion" name="descripcion" required #descripcion="ngModel">
-          <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">{{ 'required' | tenantText }}</mat-error>
+          <mat-label>{{ 'fullName' | tenantText }}</mat-label>
+          <input matInput [(ngModel)]="p.NombreCompleto" name="nombreCompleto" maxlength="120" required #nombreCompleto="ngModel">
+          <mat-hint>{{ 'fullNameHint' | tenantText }}</mat-hint>
+          <mat-error *ngIf="nombreCompleto.invalid && (nombreCompleto.dirty || nombreCompleto.touched)">{{ 'required' | tenantText }}</mat-error>
         </mat-form-field>
       </div>
 
@@ -527,10 +531,19 @@
 
       <div class="form-row">
         <mat-form-field class="form-field form-field--wide" appearance="fill">
-          <mat-label>Descripción para la carta</mat-label>
+          <mat-label>{{ 'digitalMenuDescription' | tenantText }}</mat-label>
           <textarea matInput rows="3" [(ngModel)]="p.DescripcionCarta"
                     name="descripcionCarta" maxlength="500"></textarea>
-          <mat-hint>Se mostrará bajo el nombre del producto y ayudará al asistente a recomendarlo.</mat-hint>
+          <mat-hint>{{ 'digitalMenuDescriptionHint' | tenantText }}</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field class="form-field form-field--wide" appearance="fill">
+          <mat-label>{{ 'fiscalName' | tenantText }}</mat-label>
+          <input matInput [(ngModel)]="p.NombreFiscal"
+                 name="nombreFiscal" maxlength="120">
+          <mat-hint>{{ 'fiscalNameHint' | tenantText }}</mat-hint>
         </mat-form-field>
       </div>
 
@@ -687,7 +700,7 @@
             [(ngModel)]="p.DescripcionCompra"
             name="descripcionCompra"
             maxlength="100"
-            [placeholder]="p.Descripcion || 'Descripción para almacén'"
+            [placeholder]="p.NombreCompleto || 'Descripción para almacén'"
           >
         </mat-form-field>
 

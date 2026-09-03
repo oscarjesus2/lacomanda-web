@@ -76,7 +76,7 @@ export class SocioNegocioMantenimientoComponent
         this.productos = (response.productos.Data ?? [])
           .filter(producto => producto.Activo)
           .sort((a, b) =>
-            (a.Descripcion ?? '').localeCompare(b.Descripcion ?? '')
+            (a.NombreCompleto ?? '').localeCompare(b.NombreCompleto ?? '')
           );
         this.productosFiltrados = this.productos;
         this.dataSource.data = this.socios;
@@ -106,7 +106,7 @@ export class SocioNegocioMantenimientoComponent
       .trim()
       .toLocaleLowerCase();
     this.productosFiltrados = this.productos.filter(producto =>
-      (producto.Descripcion ?? '').toLocaleLowerCase().includes(value)
+      (producto.NombreCompleto ?? '').toLocaleLowerCase().includes(value)
       || (producto.NombreCorto ?? '').toLocaleLowerCase().includes(value)
     );
   }

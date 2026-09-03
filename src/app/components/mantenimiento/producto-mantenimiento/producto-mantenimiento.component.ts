@@ -89,7 +89,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   mostrarAnfitriona = false;       // config.Anfitrionas
   mostrarTragoCortesia = false;    // config.TieneDescuentoTragoCortesia
 
-  displayedColumns: string[] = ['nombre', 'descripcion', 'precio', 'tipo', 'visible', 'activo', 'posicion', 'actions'];
+  displayedColumns: string[] = ['nombre', 'nombreCompleto', 'precio', 'tipo', 'visible', 'activo', 'posicion', 'actions'];
 
   // grids (parametrizable)
   readonly GRID_POS_ROWS = 10;
@@ -269,7 +269,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     const f = (this.filtro || '').toLowerCase();
     this.filtered.data = this.productos.filter(x =>
       (x.NombreCorto || '').toLowerCase().includes(f) ||
-      (x.Descripcion || '').toLowerCase().includes(f) ||
+      (x.NombreCompleto || '').toLowerCase().includes(f) ||
       String(x.Precio || '').includes(f) ||
       String(x.Posicion || '').includes(f) ||
       (x.Activo ? 'activo' : 'inactivo').includes(f)
@@ -379,14 +379,14 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
         !producto.Familia?.trim() ||
         !producto.SubFamilia?.trim() ||
         !producto.NombreCorto?.trim() ||
-        !producto.Descripcion?.trim() ||
+        !producto.NombreCompleto?.trim() ||
         producto.Precio === null ||
         producto.Precio < 0
       ));
     if (incompletos) {
       Swal.fire(
         'Completa los datos pendientes',
-        'Revisa color, áreas de impresión, grupo de venta, familia, subfamilia, nombre, descripción y precio de los productos seleccionados.',
+        'Revisa color, áreas de impresión, grupo de venta, familia, subfamilia, nombre corto, nombre completo y precio de los productos seleccionados.',
         'info',
       );
       return;
@@ -735,6 +735,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   resetForm(): void {
     this.limpiarEdicionImagen();
     this.p = new Producto();
+    this.p.NombreFiscal = '';
     this.mostrarConfiguracionAvanzada = false;
     this.configuracionAvanzadaHabilitada = false;
     this.p.Visible = true; this.p.Activo = true; this.p.IdImpuestoPais = ''; this.p.Tipo = 0;
