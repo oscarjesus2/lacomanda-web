@@ -514,6 +514,19 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     return `${index}-${producto.NombreCorto}`;
   }
 
+  copiarNombreCortoANombreCompletoSiVacio(
+    producto: { NombreCorto?: string; NombreCompleto?: string }
+  ): void {
+    if (producto.NombreCompleto?.trim()) {
+      return;
+    }
+
+    const nombreCorto = producto.NombreCorto?.trim();
+    if (nombreCorto) {
+      producto.NombreCompleto = nombreCorto;
+    }
+  }
+
   nuevo(): void {
     this.resetForm();
     this.selectedAreas = [];

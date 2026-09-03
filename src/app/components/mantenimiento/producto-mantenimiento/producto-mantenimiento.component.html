@@ -178,6 +178,7 @@
               [(ngModel)]="producto.NombreCorto"
               maxlength="50"
               [disabled]="!producto.Seleccionado"
+              (blur)="copiarNombreCortoANombreCompletoSiVacio(producto)"
             >
             <mat-hint class="form-field-guidance">Nombre mostrado en la pantalla de digitación.</mat-hint>
           </mat-form-field>
@@ -353,7 +354,8 @@
       <div class="form-row">
         <mat-form-field class="form-field" appearance="fill" subscriptSizing="dynamic">
           <mat-label>{{ 'shortName' | tenantText }}</mat-label>
-          <input matInput [(ngModel)]="p.NombreCorto" name="nombre" maxlength="50" required #nombre="ngModel">
+          <input matInput [(ngModel)]="p.NombreCorto" name="nombre" maxlength="50" required #nombre="ngModel"
+                 (blur)="copiarNombreCortoANombreCompletoSiVacio(p)">
           <mat-hint class="form-field-guidance">{{ 'shortNameHint' | tenantText }}</mat-hint>
           <mat-error *ngIf="nombre.invalid && (nombre.dirty || nombre.touched)">{{ 'required' | tenantText }}</mat-error>
         </mat-form-field>
