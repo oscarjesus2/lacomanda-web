@@ -1,4 +1,4 @@
-<div class="mant-panel">
+<div class="mant-panel dialog-panel--workspace">
   <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
@@ -6,87 +6,117 @@
   <h2>{{ 'maintenanceSpaces' | tenantText }}</h2>
 
   <!-- Lista de Mesas -->
-  <div class="empleados-list" *ngIf="!showForm">
-    <div class="mant-actions-bar">
-      <button mat-raised-button color="primary" (click)="nuevaEspacio()">
-        <mat-icon>add</mat-icon>
-        {{ 'newSpace' | tenantText }}
-      </button>
-      <button mat-stroked-button color="primary" (click)="imprimirTodosLosQr()">
-        <mat-icon>qr_code_2</mat-icon>
-        IMPRIMIR TODOS LOS QR
-      </button>
+  <ng-container *ngIf="!showForm">
+    <div class="dialog-toolbar">
+      <div class="dialog-toolbar__filters dialog-toolbar__filters--single">
+        <mat-form-field appearance="fill">
+          <mat-label>{{ 'search' | tenantText }}</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            matInput
+            [(ngModel)]="filtroEspacio"
+            (ngModelChange)="applyFilter()"
+            [placeholder]="'searchSpace' | tenantText"
+          >
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-toolbar__actions">
+        <button mat-raised-button color="primary" type="button" (click)="nuevaEspacio()">
+          <mat-icon>add</mat-icon>
+          {{ 'newSpace' | tenantText }}
+        </button>
+        <button mat-stroked-button color="primary" type="button" (click)="imprimirTodosLosQr()">
+          <mat-icon>qr_code_2</mat-icon>
+          IMPRIMIR TODOS LOS QR
+        </button>
+      </div>
     </div>
 
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>{{ 'search' | tenantText }}</mat-label>
-      <input matInput [(ngModel)]="filtroEspacio" (ngModelChange)="applyFilter()"
-        [placeholder]="'searchSpace' | tenantText">
-    </mat-form-field>
-<div class="mant-table-card">
-    <mat-table [dataSource]="filteredEspacios" class="mat-elevation-z8">
-      <!-- Descripcion -->
-      <ng-container matColumnDef="descripcion">
-        <mat-header-cell *matHeaderCellDef> {{ 'spaceType' | tenantText }} </mat-header-cell>
-        <mat-cell *matCellDef="let espacio"> {{ espacio.Descripcion }} </mat-cell>
-      </ng-container>
+    <div class="dialog-workspace-content">
+      <div class="dialog-table-card">
+        <div class="dialog-table-wrapper--fill">
+          <mat-table [dataSource]="filteredEspacios">
+            <!-- Descripcion -->
+            <ng-container matColumnDef="descripcion">
+              <mat-header-cell *matHeaderCellDef> {{ 'spaceType' | tenantText }} </mat-header-cell>
+              <mat-cell *matCellDef="let espacio"> {{ espacio.Descripcion }} </mat-cell>
+            </ng-container>
 
-      <!-- Numero -->
-      <ng-container matColumnDef="numero">
-        <mat-header-cell *matHeaderCellDef> {{ 'number' | tenantText }} </mat-header-cell>
-        <mat-cell *matCellDef="let espacio"> {{ espacio.Numero }} </mat-cell>
-      </ng-container>
+            <!-- Numero -->
+            <ng-container matColumnDef="numero">
+              <mat-header-cell *matHeaderCellDef> {{ 'number' | tenantText }} </mat-header-cell>
+              <mat-cell *matCellDef="let espacio"> {{ espacio.Numero }} </mat-cell>
+            </ng-container>
 
-      <!-- Posicion -->
-      <ng-container matColumnDef="posicion">
-        <mat-header-cell *matHeaderCellDef> {{ 'position' | tenantText }} </mat-header-cell>
-        <mat-cell *matCellDef="let espacio"> {{ espacio.Posicion }} </mat-cell>
-      </ng-container>
+            <!-- Posicion -->
+            <ng-container matColumnDef="posicion">
+              <mat-header-cell *matHeaderCellDef> {{ 'position' | tenantText }} </mat-header-cell>
+              <mat-cell *matCellDef="let espacio"> {{ espacio.Posicion }} </mat-cell>
+            </ng-container>
 
-      <!-- Ambiente -->
-      <ng-container matColumnDef="ambiente">
-        <mat-header-cell *matHeaderCellDef> {{ 'environment' | tenantText }} </mat-header-cell>
-        <mat-cell *matCellDef="let espacio"> {{ getAmbienteDescripcion(espacio.IdAmbiente) }} </mat-cell>
-      </ng-container>
+            <!-- Ambiente -->
+            <ng-container matColumnDef="ambiente">
+              <mat-header-cell *matHeaderCellDef> {{ 'environment' | tenantText }} </mat-header-cell>
+              <mat-cell *matCellDef="let espacio"> {{ getAmbienteDescripcion(espacio.IdAmbiente) }} </mat-cell>
+            </ng-container>
 
-      <!-- Activo -->
-      <ng-container matColumnDef="activo">
-        <mat-header-cell *matHeaderCellDef> {{ 'active' | tenantText }} </mat-header-cell>
-        <mat-cell *matCellDef="let espacio"> {{ (espacio.Activo ? 'yes' : 'no') | tenantText }} </mat-cell>
-      </ng-container>
+            <!-- Activo -->
+            <ng-container matColumnDef="activo">
+              <mat-header-cell *matHeaderCellDef> {{ 'active' | tenantText }} </mat-header-cell>
+              <mat-cell *matCellDef="let espacio"> {{ (espacio.Activo ? 'yes' : 'no') | tenantText }} </mat-cell>
+            </ng-container>
 
-      <!-- Visible -->
-      <ng-container matColumnDef="visible">
-        <mat-header-cell *matHeaderCellDef> {{ 'visible' | tenantText }} </mat-header-cell>
-        <mat-cell *matCellDef="let espacio"> {{ (espacio.Visible ? 'yes' : 'no') | tenantText }} </mat-cell>
-      </ng-container>
+            <!-- Visible -->
+            <ng-container matColumnDef="visible">
+              <mat-header-cell *matHeaderCellDef> {{ 'visible' | tenantText }} </mat-header-cell>
+              <mat-cell *matCellDef="let espacio"> {{ (espacio.Visible ? 'yes' : 'no') | tenantText }} </mat-cell>
+            </ng-container>
 
-      <!-- Acciones -->
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef> {{ 'actions' | tenantText }} </mat-header-cell>
-        <mat-cell *matCellDef="let espacio">
-          <button mat-icon-button color="primary" (click)="onEdit(espacio)" [matTooltip]="'edit' | tenantText">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button color="primary" (click)="imprimirQr(espacio)" matTooltip="Imprimir QR">
-            <mat-icon>qr_code_2</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="regenerarQr(espacio)" matTooltip="Regenerar QR">
-            <mat-icon>refresh</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="onDelete(espacio.IdEspacio)" [matTooltip]="'delete' | tenantText">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-cell>
-      </ng-container>
+            <!-- Acciones -->
+            <ng-container matColumnDef="actions">
+              <mat-header-cell *matHeaderCellDef> {{ 'actions' | tenantText }} </mat-header-cell>
+              <mat-cell *matCellDef="let espacio">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  [matMenuTriggerFor]="accionesEspacio"
+                  [attr.aria-label]="'actions' | tenantText"
+                  [matTooltip]="'actions' | tenantText"
+                >
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #accionesEspacio="matMenu">
+                  <button mat-menu-item type="button" (click)="onEdit(espacio)">
+                    <mat-icon>edit</mat-icon>
+                    <span>{{ 'edit' | tenantText }}</span>
+                  </button>
+                  <button mat-menu-item type="button" (click)="imprimirQr(espacio)">
+                    <mat-icon>qr_code_2</mat-icon>
+                    <span>Imprimir QR</span>
+                  </button>
+                  <button mat-menu-item type="button" (click)="regenerarQr(espacio)">
+                    <mat-icon>refresh</mat-icon>
+                    <span>Regenerar QR</span>
+                  </button>
+                  <button mat-menu-item type="button" (click)="onDelete(espacio.IdEspacio)">
+                    <mat-icon color="warn">delete</mat-icon>
+                    <span>{{ 'delete' | tenantText }}</span>
+                  </button>
+                </mat-menu>
+              </mat-cell>
+            </ng-container>
 
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-    </mat-table>
+            <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+          </mat-table>
+        </div>
 
-    <mat-paginator [length]="espacios.length" [pageSize]="5" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
-  </div>
-</div>
+        <mat-paginator [pageSize]="5" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+      </div>
+    </div>
+  </ng-container>
   <!-- Formulario -->
   <form *ngIf="showForm" #espacioForm="ngForm" (ngSubmit)="onSubmit()">
     <div class="form-row">

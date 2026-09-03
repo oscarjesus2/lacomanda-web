@@ -13,11 +13,11 @@ import { EspaciosService } from 'src/app/services/espacios.service';
 import { AmbienteService } from 'src/app/services/ambiente.service';
 import { PosicionSelectorDialogComponent, PosicionSelectorData } from '../../posicion-selector-dialog/posicion-selector-dialog.component';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { ordenarEspaciosPorTipoYNumero } from './espacios-order';
 
 @Component({
   selector: 'app-espacios-mantenimiento',
-  templateUrl: './espacios-mantenimiento.component.html',
-  styleUrls: ['./espacios-mantenimiento.component.css']
+  templateUrl: './espacios-mantenimiento.component.html'
 })
 export class EspaciosMantenimientoComponent implements OnInit {
   @ViewChild('espacioForm') espacioForm: NgForm;
@@ -67,7 +67,7 @@ export class EspaciosMantenimientoComponent implements OnInit {
     this.espacioService.GetAllEspacios().subscribe({
       next: (res) => {
         if (res.Success) {
-          this.espacios = res.Data || [];
+          this.espacios = ordenarEspaciosPorTipoYNumero(res.Data || []);
           this.filteredEspacios.data = this.espacios;
         } else {
           Swal.fire('Error', res.Message || 'Error al cargar los espacios', 'error');
@@ -101,13 +101,14 @@ export class EspaciosMantenimientoComponent implements OnInit {
 
   // ---------- LISTA ----------
   applyFilter(): void {
-    const filterValue = (this.filtroEspacio || '').toLowerCase();
+    const filterValue = (this.filtroEspacio || '').trim().toLowerCase();
     this.filteredEspacios.data = this.espacios.filter(m =>
       (m.Descripcion || '').toLowerCase().includes(filterValue) ||
       String(m.Numero || '').toLowerCase().includes(filterValue) ||
       String(m.Posicion || '').toLowerCase().includes(filterValue) ||
       (this.getAmbienteDescripcion(m.IdAmbiente) || '').toLowerCase().includes(filterValue)
     );
+    this.filteredEspacios.paginator?.firstPage();
   }
 
   getAmbienteDescripcion(idAmbiente: number): string {

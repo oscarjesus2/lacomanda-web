@@ -1,0 +1,161 @@
+<div class="monitor-panel">
+  <header class="monitor-header">
+    <div>
+      <span class="monitor-eyebrow">Administración · Facturación electrónica</span>
+      <h2>Monitor de envíos SUNAT</h2>
+      <p>Seguimiento de cada comprobante desde su emisión hasta la respuesta de SUNAT.</p>
+    </div>
+    <button mat-icon-button type="button" aria-label="Cerrar" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <form class="monitor-filters" (ngSubmit)="search()">
+    <mat-form-field appearance="outline">
+      <mat-label>Desde</mat-label>
+      <input matInput type="date" name="fechaDesde" [(ngModel)]="fechaDesde" required>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Hasta</mat-label>
+      <input matInput type="date" name="fechaHasta" [(ngModel)]="fechaHasta" required>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="monitor-search">
+      <mat-label>Documento, caja, cliente o turno</mat-label>
+      <input matInput name="busqueda" [(ngModel)]="busqueda" maxlength="120">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select name="estado" [(ngModel)]="estado">
+        <mat-option *ngFor="let item of estados" [value]="item.codigo">
+          {{ item.nombre }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+      <mat-icon>filter_alt</mat-icon>
+      Consultar
+    </button>
+  </form>
+
+  <div class="monitor-toolbar">
+    <mat-slide-toggle
+      [(ngModel)]="autoActualizar"
+      (change)="configureAutoRefresh()">
+      Actualizar cada 10 segundos
+    </mat-slide-toggle>
+    <span *ngIf="actualizadoUtc && !loading">
+      Última actualización: {{ actualizadoUtc | date:'HH:mm:ss' }}
+    </span>
+    <span class="monitor-loading" *ngIf="loading">
+      <mat-icon>sync</mat-icon>
+      Actualizando…
+    </span>
+  </div>
+
+  <div class="monitor-alert" *ngIf="errorMessage">
+    <mat-icon>cloud_off</mat-icon>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <section class="monitor-summary" aria-label="Resumen de estados">
+    <article>
+      <span>Total</span>
+      <strong>{{ resultado.Total }}</strong>
+    </article>
+    <article class="summary-pending">
+      <span>Pendientes del cierre</span>
+      <strong>{{ resultado.Pendientes }}</strong>
+    </article>
+    <article class="summary-queue">
+      <span>En cola / proceso</span>
+      <strong>{{ resultado.EnCola }}</strong>
+    </article>
+    <article class="summary-accepted">
+      <span>Aceptados</span>
+      <strong>{{ resultado.Aceptados }}</strong>
+    </article>
+    <article class="summary-rejected">
+      <span>Rechazados</span>
+      <strong>{{ resultado.Rechazados }}</strong>
+    </article>
+    <article class="summary-error">
+      <span>Con error</span>
+      <strong>{{ resultado.ConError }}</strong>
+    </article>
+  </section>
+
+  <div class="monitor-table-wrap" *ngIf="registros.length; else emptyState">
+    <table class="monitor-table">
+      <thead>
+        <tr>
+          <th>Comprobante</th>
+          <th>Caja / turno</th>
+          <th>Cliente</th>
+          <th>Modalidad</th>
+          <th>Estado</th>
+          <th>Seguimiento</th>
+          <th>Respuesta</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let registro of registros; trackBy: trackByVenta">
+          <td>
+            <strong>{{ registro.NumeroDocumento }}</strong>
+            <span>{{ registro.TipoDocumento }}</span>
+            <small>{{ registro.FechaEmisionUtc | date:'dd/MM/yyyy HH:mm' }}</small>
+          </td>
+          <td>
+            <strong>{{ registro.Caja }}</strong>
+            <span>Turno {{ registro.IdTurno }}</span>
+            <small>Venta #{{ registro.IdVenta }}</small>
+          </td>
+          <td>
+            <strong>{{ registro.Cliente || 'Cliente genérico' }}</strong>
+            <span>{{ registro.Total | number:'1.2-2' }}</span>
+          </td>
+          <td>
+            <strong>{{ registro.MomentoEnvio }}</strong>
+            <span>{{ registro.EnvioElectronicoOnline ? 'Envío inmediato' : 'Envío al cerrar turno' }}</span>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="statusClass(registro.EstadoCodigo)">
+              {{ registro.Estado }}
+            </span>
+          </td>
+          <td>
+            <strong>{{ registro.Intentos }} intento{{ registro.Intentos === 1 ? '' : 's' }}</strong>
+            <span *ngIf="registro.FechaEncoladoUtc">
+              En cola: {{ registro.FechaEncoladoUtc | date:'dd/MM HH:mm:ss' }}
+            </span>
+            <small *ngIf="registro.ProximoIntentoUtc">
+              Próximo: {{ registro.ProximoIntentoUtc | date:'dd/MM HH:mm:ss' }}
+            </small>
+          </td>
+          <td>
+            <strong *ngIf="registro.CodigoRespuesta">Código {{ registro.CodigoRespuesta }}</strong>
+            <span *ngIf="registro.MensajeRespuesta">{{ registro.MensajeRespuesta }}</span>
+            <span class="monitor-error-text" *ngIf="registro.UltimoError">{{ registro.UltimoError }}</span>
+            <small *ngIf="registro.FechaRespuestaUtc">
+              {{ registro.FechaRespuestaUtc | date:'dd/MM/yyyy HH:mm:ss' }}
+            </small>
+            <span *ngIf="!registro.CodigoRespuesta && !registro.MensajeRespuesta && !registro.UltimoError">—</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="monitor-empty" *ngIf="!loading">
+      <mat-icon>receipt_long</mat-icon>
+      <strong>No hay comprobantes para los filtros seleccionados</strong>
+      <span>Amplía el periodo o elimina el filtro de estado.</span>
+    </div>
+  </ng-template>
+</div>
+
