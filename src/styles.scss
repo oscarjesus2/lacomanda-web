@@ -4318,6 +4318,7 @@ mat-row:hover mat-cell {
 .device-printer-bridge { background: var(--color-border); color: var(--color-text-muted); }
 .device-printer-bridge--online,
 .device-printer-status--success { background: var(--color-success-soft); color: var(--color-success); }
+.device-printer-bridge--empty { background: var(--color-warning-soft); color: var(--color-warning); }
 .device-printer-bridge--offline,
 .device-printer-status--error { background: var(--color-warn-soft); color: var(--color-warn); }
 .device-printer-status--warning,

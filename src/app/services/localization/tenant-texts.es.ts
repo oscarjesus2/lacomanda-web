@@ -542,10 +542,23 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   defaultPrinter: 'Predeterminada',
   validationStatus: 'Validación',
   qzConnected: 'QZ conectado',
+  qzConnectedNoPrinters: 'QZ conectado · sin impresoras',
   qzUnavailable: 'QZ no disponible',
   checkingQz: 'Comprobando QZ',
+  qzRequiredForWindowsTitle: 'QZ Tray es obligatorio en esta PC Windows',
+  qzRequiredForWindowsMessage:
+    'Antes de vincular esta PC a una estación, instala y abre QZ Tray y autoriza el certificado de LaComanda. Abre la guía para completar estos pasos.',
+  qzCertificateRequiredForWindowsTitle: 'Falta autorizar el certificado en QZ Tray',
+  qzCertificateRequiredForWindowsMessage:
+    'QZ Tray está abierto, pero esta PC todavía no ha autorizado el certificado de LaComanda. Abre la guía y completa el paso del certificado antes de vincularla.',
+  openQzSetup: 'Configurar QZ Tray',
+  windowsQzLinkRequirementNote:
+    'Requisito para esta PC Windows: QZ Tray debe estar abierto y el certificado de LaComanda debe estar autorizado.',
   checkThisDevice: 'Validar este equipo',
   validatingThisDevice: 'Validando…',
+  noPrintAreasConfigured: 'Todavía no hay áreas de impresión configuradas. Crea una con el botón “Nueva área”.',
+  noPrintAreasToValidateTitle: 'No hay áreas para validar',
+  noPrintAreasToValidateMessage: 'Primero crea un área de impresión e indica el nombre real de su impresora.',
   printAgentRequiredHelp:
     'Este dispositivo no puede ejecutar QZ Tray. El botón Probar enviará una impresión al agente instalado en una PC Windows.',
   printAgentFallbackHelp:

@@ -69,11 +69,29 @@ export class EstacionSessionRealtimeService {
       // Esta comprobacion no depende del WebSocket. Los navegadores moviles
       // pueden suspender SignalR al bloquear la pantalla o cambiar de app;
       // al volver, esta consulta garantiza que una reasignacion no se pierda.
+      const vinculoConfirmado = this.deviceIdentifier
+        .hasConfirmedStationLink(identifier);
       const vinculadaPorHttp = await this.verifyLinkByHttp(identifier);
       if (vinculadaPorHttp === false) {
-        await this.handleRevocation({
-          mensaje: 'Esta estacion fue vinculada a otro dispositivo. Debes volver a iniciar sesion para configurar este equipo.',
-        });
+        if (vinculoConfirmado) {
+          await this.handleRevocation({
+            mensaje: 'Esta estacion fue vinculada a otro dispositivo. Debes volver a iniciar sesion para configurar este equipo.',
+          });
+        } else {
+          // Tener un identificador no significa que el equipo ya estuviera
+          // vinculado. Algunas pantallas administrativas crean el identificador
+          // para guardar preferencias de impresion. En ese caso no hay una
+          // sesion de estacion que revocar.
+          await this.stopHub();
+        }
+        return;
+      }
+      if (vinculadaPorHttp === true) {
+        this.deviceIdentifier.markStationLinkConfirmed(identifier);
+      } else if (!vinculoConfirmado) {
+        // Sin una verificacion positiva previa, un fallo HTTP tampoco autoriza
+        // a abrir el hub: el servidor lo interpretaria como una revocacion.
+        await this.stopHub();
         return;
       }
 
@@ -226,6 +244,10 @@ export class EstacionSessionRealtimeService {
         await this.handleRevocation({
           mensaje: 'Este dispositivo ya no está vinculado a una estación. Debes volver a iniciar sesión para configurar el equipo.',
         });
+      } else {
+        this.deviceIdentifier.markStationLinkConfirmed(
+          this.connectedIdentifier,
+        );
       }
     } catch (error) {
       console.warn('No se pudo verificar la vinculación de la estación.', error);

@@ -142,6 +142,7 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
         }
 
         this.deviceIdentifier.saveIdentifier(identifier);
+        this.deviceIdentifier.markStationLinkConfirmed(identifier);
         const session = this.storage.getCurrentSession();
         if (session) {
           session.Ip = identifier;

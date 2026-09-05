@@ -539,10 +539,23 @@ export const EN_TEXTS = {
   defaultPrinter: 'Default',
   validationStatus: 'Validation',
   qzConnected: 'QZ connected',
+  qzConnectedNoPrinters: 'QZ connected · no printers',
   qzUnavailable: 'QZ unavailable',
   checkingQz: 'Checking QZ',
+  qzRequiredForWindowsTitle: 'QZ Tray is required on this Windows PC',
+  qzRequiredForWindowsMessage:
+    'Before linking this PC to a station, install and open QZ Tray and authorize the LaComanda certificate. Open the setup guide to complete these steps.',
+  qzCertificateRequiredForWindowsTitle: 'The QZ Tray certificate still needs authorization',
+  qzCertificateRequiredForWindowsMessage:
+    'QZ Tray is running, but this PC has not authorized the LaComanda certificate yet. Open the setup guide and complete the certificate step before linking it.',
+  openQzSetup: 'Set up QZ Tray',
+  windowsQzLinkRequirementNote:
+    'Requirement for this Windows PC: QZ Tray must be open and the LaComanda certificate must be authorized.',
   checkThisDevice: 'Check this device',
   validatingThisDevice: 'Checking…',
+  noPrintAreasConfigured: 'No print areas are configured yet. Create one with the “New area” button.',
+  noPrintAreasToValidateTitle: 'No print areas to validate',
+  noPrintAreasToValidateMessage: 'First create a print area and enter the actual name of its printer.',
   printAgentRequiredHelp:
     'This device cannot run QZ Tray. Test will send a print job to the agent installed on a Windows PC.',
   printAgentFallbackHelp:

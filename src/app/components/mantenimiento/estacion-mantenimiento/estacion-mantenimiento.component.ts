@@ -3,6 +3,7 @@ import { NgForm } from '@angular/forms';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
@@ -26,6 +27,10 @@ import { forkJoin } from 'rxjs';
 import { Notificar } from 'src/app/shared/notificaciones';
 import { DeviceCapabilitiesService } from 'src/app/services/device-capabilities.service';
 import { DispositivoTipoEnum } from 'src/app/models/device.models';
+import {
+  EstadoImpresion,
+  EstadoImpresionService,
+} from 'src/app/services/estado-impresion.service';
 
 @Component({
   selector: 'app-estacion-mantenimiento',
@@ -44,6 +49,7 @@ export class EstacionMantenimientoComponent implements OnInit {
   filtro = '';
   showForm = false;
   guardando = false;
+  comprobandoQzVinculacion = false;
   identificadorPendiente = '';
   tipoDispositivoPendiente = DispositivoTipoEnum.DESCONOCIDO;
   licenciaAlmacenVerificada = false;
@@ -74,6 +80,8 @@ export class EstacionMantenimientoComponent implements OnInit {
     private readonly areaAlmacenService: AreaAlmacenService,
     private readonly subAreaAlmacenService: SubAreaAlmacenService,
     private readonly deviceCapabilities: DeviceCapabilitiesService,
+    private readonly estadoImpresion: EstadoImpresionService,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -102,6 +110,9 @@ export class EstacionMantenimientoComponent implements OnInit {
     if (this.esEsteDispositivo) {
       return this.deviceCapabilities.getDeviceType();
     }
+    if (this.muestraRequisitoQzParaVincular) {
+      return this.deviceCapabilities.getDeviceType();
+    }
     return this.estacion.TipoDispositivo
       ?? DispositivoTipoEnum.DESCONOCIDO;
   }
@@ -111,6 +122,12 @@ export class EstacionMantenimientoComponent implements OnInit {
       && this.deviceCapabilities.requiresRemotePrintAgent(
         this.tipoDispositivoVinculacion,
       );
+  }
+
+  get muestraRequisitoQzParaVincular(): boolean {
+    return !this.esEsteDispositivo
+      && !this.seVincularaEsteDispositivo
+      && this.deviceCapabilities.getDeviceType() === DispositivoTipoEnum.PC_WINDOWS;
   }
 
   get textoVinculacion(): string {
@@ -233,6 +250,16 @@ export class EstacionMantenimientoComponent implements OnInit {
   }
 
   async usarEsteDispositivo(): Promise<void> {
+    if (this.comprobandoQzVinculacion) return;
+
+    const tipoDispositivo = this.deviceCapabilities.getDeviceType();
+    if (
+      tipoDispositivo === DispositivoTipoEnum.PC_WINDOWS &&
+      !await this.cumpleRequisitoQzParaWindows()
+    ) {
+      return;
+    }
+
     const identificador = this.deviceIdentifier.getIdentifier()
       || this.identificadorPendiente
       || this.deviceIdentifier.generateIdentifier();
@@ -279,8 +306,60 @@ export class EstacionMantenimientoComponent implements OnInit {
 
     if (result.isConfirmed) {
       this.identificadorPendiente = identificador;
-      this.tipoDispositivoPendiente = this.deviceCapabilities.getDeviceType();
+      this.tipoDispositivoPendiente = tipoDispositivo;
     }
+  }
+
+  /**
+   * Una web remota no puede instalar ni verificar QZ desde el backend: la
+   * comprobacion debe ejecutarse en el navegador que se va a vincular. En una
+   * PC Windows exigimos tanto la conexion local como el certificado autorizado
+   * antes de preparar la vinculacion.
+   */
+  private async cumpleRequisitoQzParaWindows(): Promise<boolean> {
+    this.comprobandoQzVinculacion = true;
+    let estado: EstadoImpresion = {
+      disponible: false,
+      motivo: 'qz-no-disponible',
+    };
+
+    try {
+      estado = await this.estadoImpresion.comprobar(true);
+      if (estado.disponible && estado.certificadoConfigurado === true) {
+        return true;
+      }
+    } catch {
+      // La guia de configuracion tambien cubre errores de conexion inesperados.
+    } finally {
+      this.comprobandoQzVinculacion = false;
+    }
+
+    const certificadoPendiente = estado.disponible &&
+      estado.certificadoConfigurado !== true;
+    const resultado = await Swal.fire({
+      icon: 'warning',
+      title: this.textCatalog.get(
+        certificadoPendiente
+          ? 'qzCertificateRequiredForWindowsTitle'
+          : 'qzRequiredForWindowsTitle',
+      ),
+      text: this.textCatalog.get(
+        certificadoPendiente
+          ? 'qzCertificateRequiredForWindowsMessage'
+          : 'qzRequiredForWindowsMessage',
+      ),
+      showCancelButton: true,
+      confirmButtonText: this.textCatalog.get('openQzSetup'),
+      cancelButtonText: this.textCatalog.get('cancel'),
+      focusCancel: true,
+    });
+
+    if (resultado.isConfirmed) {
+      this.dialogRef.close();
+      await this.router.navigate(['/qz-tray-required']);
+    }
+
+    return false;
   }
 
   onSubmit(): void {
@@ -429,6 +508,9 @@ export class EstacionMantenimientoComponent implements OnInit {
           return;
         }
         this.deviceIdentifier.saveIdentifier(this.identificadorPendiente);
+        this.deviceIdentifier.markStationLinkConfirmed(
+          this.identificadorPendiente,
+        );
         this.realtime.restart();
         this.finalizarGuardado('Estación y dispositivo configurados');
       },

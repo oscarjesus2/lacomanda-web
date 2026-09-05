@@ -5,6 +5,7 @@ import { StorageService } from './storage.service';
 @Injectable({ providedIn: 'root' })
 export class DeviceIdentifierService {
   private readonly cookieName = 'clientUUID';
+  private readonly confirmedStationLinkPrefix = 'lc_station_link_confirmed';
 
   constructor(
     private readonly cookie: CookieService,
@@ -44,6 +45,8 @@ export class DeviceIdentifierService {
   }
 
   deleteIdentifier(): void {
+    const identifier = this.getIdentifier();
+    this.clearConfirmedStationLink(identifier);
     this.cookie.delete(this.cookieName, '/');
     this.cookie.delete(this.cookieName);
 
@@ -52,5 +55,30 @@ export class DeviceIdentifierService {
       session.Ip = '';
       this.storage.setCurrentSession(session);
     }
+  }
+
+  hasConfirmedStationLink(identifier: string): boolean {
+    const key = this.confirmedStationLinkKey(identifier);
+    return !!key && localStorage.getItem(key) === 'true';
+  }
+
+  markStationLinkConfirmed(identifier: string): void {
+    const key = this.confirmedStationLinkKey(identifier);
+    if (key) localStorage.setItem(key, 'true');
+  }
+
+  clearConfirmedStationLink(identifier: string): void {
+    const key = this.confirmedStationLinkKey(identifier);
+    if (key) localStorage.removeItem(key);
+  }
+
+  private confirmedStationLinkKey(identifier: string): string {
+    const tenant = this.storage.getCurrentSession()?.TenantID
+      ?.trim()
+      .toLowerCase();
+    const device = identifier?.trim().toLowerCase();
+    return tenant && device
+      ? `${this.confirmedStationLinkPrefix}:${tenant}:${device}`
+      : '';
   }
 }

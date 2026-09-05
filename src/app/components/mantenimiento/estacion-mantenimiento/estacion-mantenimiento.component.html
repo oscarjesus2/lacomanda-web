@@ -168,10 +168,14 @@
       <div class="device-link-copy">
         <h3>Dispositivo de esta estación</h3>
         <p>{{ textoVinculacion }}</p>
-        <small *ngIf="esEsteDispositivo || seVincularaEsteDispositivo"
+        <small *ngIf="esEsteDispositivo || seVincularaEsteDispositivo || muestraRequisitoQzParaVincular"
                class="device-platform-label">
           Tipo detectado: {{ nombreTipoDispositivo(tipoDispositivoVinculacion) }}
         </small>
+        <p *ngIf="muestraRequisitoQzParaVincular" class="device-agent-note">
+          <mat-icon>verified_user</mat-icon>
+          {{ 'windowsQzLinkRequirementNote' | tenantText }}
+        </p>
         <p *ngIf="recomiendaAgenteVinculacion" class="device-agent-note">
           <mat-icon>info</mat-icon>
           Este dispositivo no puede ejecutar QZ Tray. Instala LaComanda Print Agent
@@ -179,9 +183,12 @@
         </p>
       </div>
       <button mat-stroked-button color="primary" type="button" (click)="usarEsteDispositivo()"
-              [disabled]="guardando || (esEsteDispositivo && !seVincularaEsteDispositivo)">
-        <mat-icon>link</mat-icon>
-        {{ textoAccionDispositivo }}
+              [class.is-processing]="comprobandoQzVinculacion"
+              [disabled]="guardando || comprobandoQzVinculacion || (esEsteDispositivo && !seVincularaEsteDispositivo)">
+        <span *ngIf="comprobandoQzVinculacion"
+              class="button-processing-spinner" aria-hidden="true"></span>
+        <mat-icon *ngIf="!comprobandoQzVinculacion">link</mat-icon>
+        {{ comprobandoQzVinculacion ? ('checkingQz' | tenantText) : textoAccionDispositivo }}
       </button>
     </section>
 

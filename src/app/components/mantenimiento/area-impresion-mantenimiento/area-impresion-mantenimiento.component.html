@@ -21,10 +21,11 @@
       </div>
       <div class="device-printer-panel__actions">
         <span class="device-printer-bridge"
-              [class.device-printer-bridge--online]="qzDisponible === true"
+              [class.device-printer-bridge--online]="qzDisponible === true && !qzConectadoSinImpresoras"
+              [class.device-printer-bridge--empty]="qzConectadoSinImpresoras"
               [class.device-printer-bridge--offline]="qzDisponible === false">
-          <mat-icon>{{ qzDisponible === true ? 'check_circle' : (qzDisponible === false ? 'error' : 'hourglass_empty') }}</mat-icon>
-          {{ qzDisponible === true ? ('qzConnected' | tenantText) : (qzDisponible === false ? ('qzUnavailable' | tenantText) : ('checkingQz' | tenantText)) }}
+          <mat-icon>{{ iconoEstadoQz }}</mat-icon>
+          {{ textoEstadoQz | tenantText }}
         </span>
         <button mat-raised-button color="primary" type="button"
                 [class.is-processing]="detectandoImpresoras || guardandoEquipo"
@@ -53,7 +54,12 @@
     </div>
 
     <div class="mant-table-card device-printer-table">
-      <mat-table [dataSource]="filtered" class="mat-elevation-z8">
+      <div *ngIf="areas.length === 0" class="dialog-empty-state">
+        <mat-icon>print_disabled</mat-icon>
+        <span>{{ 'noPrintAreasConfigured' | tenantText }}</span>
+      </div>
+
+      <mat-table *ngIf="areas.length > 0" [dataSource]="filtered" class="mat-elevation-z8">
         <ng-container matColumnDef="descripcion">
           <mat-header-cell *matHeaderCellDef>{{ 'description' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let r">
@@ -105,7 +111,7 @@
         <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
       </mat-table>
 
-      <mat-paginator [length]="filtered.data.length" [pageSize]="5" [pageSizeOptions]="[5,10,20]"></mat-paginator>
+      <mat-paginator *ngIf="areas.length > 0" [length]="filtered.data.length" [pageSize]="5" [pageSizeOptions]="[5,10,20]"></mat-paginator>
     </div>
   </div>
 

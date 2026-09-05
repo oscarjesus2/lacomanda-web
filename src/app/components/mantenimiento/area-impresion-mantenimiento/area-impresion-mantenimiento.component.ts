@@ -77,6 +77,23 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
     return this.deviceCapabilities.requiresRemotePrintAgent();
   }
 
+  get qzConectadoSinImpresoras(): boolean {
+    return this.qzDisponible === true
+      && this.impresorasInstaladas.length === 0;
+  }
+
+  get textoEstadoQz(): TenantTextKey {
+    if (this.qzDisponible === false) return 'qzUnavailable';
+    if (this.qzConectadoSinImpresoras) return 'qzConnectedNoPrinters';
+    return this.qzDisponible === true ? 'qzConnected' : 'checkingQz';
+  }
+
+  get iconoEstadoQz(): string {
+    if (this.qzDisponible === false) return 'error';
+    if (this.qzConectadoSinImpresoras) return 'warning';
+    return this.qzDisponible === true ? 'check_circle' : 'hourglass_empty';
+  }
+
   ngOnInit(): void {
     this.identificadorDispositivo = this.obtenerIdentificadorDispositivo();
     void this.cargar();
@@ -179,6 +196,15 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
     if (this.guardandoEquipo || this.detectandoImpresoras) return;
     this.guardandoEquipo = true;
     try {
+      if (this.areas.length === 0) {
+        await Swal.fire(
+          this.textCatalog.get('noPrintAreasToValidateTitle'),
+          this.textCatalog.get('noPrintAreasToValidateMessage'),
+          'info',
+        );
+        return;
+      }
+
       await this.refrescarImpresoras(false);
       if (this.qzDisponible !== true) {
         await Swal.fire(
