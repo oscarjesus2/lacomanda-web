@@ -408,18 +408,19 @@ export class QzTrayV224Service {
    * Imprime un trabajo cuya persistencia y reintentos pertenecen a la cola
    * del backend. Evita duplicarlo también en la cola temporal del navegador.
    *
-   * Si la impresora configurada no existe en este equipo se usa la
-   * predeterminada; si existe, QZ entrega el documento al spooler aunque la
-   * impresora esté temporalmente apagada.
+   * En comandas puede usarse la impresora predeterminada si falta la indicada.
+   * Las pruebas pasan false para exigir el nombre exacto y no informar un
+   * éxito engañoso en otra impresora.
    */
   async printPDFDesdeColaServidor(
     documento: string,
     impresora: string,
+    usarPredeterminadaSiNoExiste = true,
   ): Promise<boolean> {
     return this.printPDF(
       documento,
       impresora,
-      true,
+      usarPredeterminadaSiNoExiste,
       false,
       false,
       undefined,
