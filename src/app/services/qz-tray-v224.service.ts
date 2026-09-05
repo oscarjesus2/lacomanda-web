@@ -634,6 +634,7 @@ export class QzTrayV224Service {
     nombreImpresora: string,
     contexto?: {
       Estacion: string;
+      IdentificadorDispositivo?: string;
       TipoDispositivo: string;
       Area: string;
     },
@@ -651,6 +652,9 @@ export class QzTrayV224Service {
 
       const fecha = new Date().toLocaleString();
       const estacion = this.escapeHtml(contexto?.Estacion || 'Sin identificar');
+      const identificador = contexto?.IdentificadorDispositivo
+        ? this.escapeHtml(contexto.IdentificadorDispositivo)
+        : null;
       const tipoDispositivo = this.escapeHtml(
         contexto?.TipoDispositivo || 'Desconocido',
       );
@@ -664,6 +668,9 @@ export class QzTrayV224Service {
           <h2 style="text-align:center">LaComanda</h2>
           <h3 style="text-align:center">PRUEBA DE IMPRESIÓN</h3><hr>
           <p><strong>Estación solicitante:</strong><br>${estacion}</p>
+          ${identificador
+            ? `<p><strong>Identificador:</strong><br>${identificador}</p>`
+            : ''}
           <p><strong>Tipo de dispositivo:</strong><br>${tipoDispositivo}</p>
           <p><strong>Área:</strong><br>${area}</p>
           <p><strong>Impresora destino:</strong><br>${impresoraSegura}</p>

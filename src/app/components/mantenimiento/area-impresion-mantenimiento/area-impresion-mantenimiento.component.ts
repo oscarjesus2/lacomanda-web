@@ -273,7 +273,10 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
       if (this.qzDisponible === true) {
         await this.qzTray.probarImpresora(area.NombreImpresora, {
           Estacion: this.estacionActual?.Descripcion
-            || this.identificadorDispositivo,
+            || 'DISPOSITIVO SIN VINCULAR',
+          IdentificadorDispositivo: this.estacionActual
+            ? undefined
+            : this.identificadorDispositivo,
           TipoDispositivo: this.nombreTipoDispositivo(
             this.estacionActual?.TipoDispositivo
               ?? this.deviceCapabilities.getDeviceType(),
@@ -398,9 +401,10 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
     area: AreaImpresionEquipo,
   ): Promise<void> {
     const respuesta = await firstValueFrom(
-      this.areaSrv.solicitarPruebaAgente(
+      this.areaSrv.solicitarPruebaRemota(
         area.IdAreaImpresion,
         this.identificadorDispositivo,
+        this.deviceCapabilities.getDeviceType(),
       ),
     );
     if (!respuesta.Success || !respuesta.Data) {

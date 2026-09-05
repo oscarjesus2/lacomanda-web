@@ -10,6 +10,7 @@ import {
   PruebaImpresionAreaEncolada,
   ValidacionAreaImpresionDispositivo,
 } from '../models/area-impresion.models';
+import { DispositivoTipoEnum } from '../models/device.models';
 
 @Injectable({ providedIn: 'root' })
 export class AreaImpresionService {
@@ -54,13 +55,17 @@ export class AreaImpresionService {
     );
   }
 
-  solicitarPruebaAgente(
+  solicitarPruebaRemota(
     idAreaImpresion: number,
     identificadorDispositivo: string,
+    tipoDispositivo: DispositivoTipoEnum,
   ): Observable<ApiResponse<PruebaImpresionAreaEncolada>> {
     return this.http.post<ApiResponse<PruebaImpresionAreaEncolada>>(
       `${this.base}/${idAreaImpresion}/prueba-agente`,
-      { IdentificadorDispositivo: identificadorDispositivo },
+      {
+        IdentificadorDispositivo: identificadorDispositivo,
+        TipoDispositivo: tipoDispositivo,
+      },
     );
   }
 
