@@ -11,7 +11,12 @@
         <mat-icon>print</mat-icon>
         <div>
           <strong>{{ 'printersOnThisDevice' | tenantText }}</strong>
-          <p>{{ 'printersOnThisDeviceHelp' | tenantText }}</p>
+          <p *ngIf="qzDisponible !== false">{{ 'printersOnThisDeviceHelp' | tenantText }}</p>
+          <p *ngIf="qzDisponible === false">
+            {{ agenteRemotoRecomendado
+              ? ('printAgentRequiredHelp' | tenantText)
+              : ('printAgentFallbackHelp' | tenantText) }}
+          </p>
         </div>
       </div>
       <div class="device-printer-panel__actions">
@@ -22,10 +27,15 @@
           {{ qzDisponible === true ? ('qzConnected' | tenantText) : (qzDisponible === false ? ('qzUnavailable' | tenantText) : ('checkingQz' | tenantText)) }}
         </span>
         <button mat-raised-button color="primary" type="button"
+                [class.is-processing]="detectandoImpresoras || guardandoEquipo"
                 (click)="validarEsteEquipo()"
                 [disabled]="detectandoImpresoras || guardandoEquipo">
-          <mat-icon>refresh</mat-icon>
-          {{ 'checkThisDevice' | tenantText }}
+          <span *ngIf="detectandoImpresoras || guardandoEquipo"
+                class="button-processing-spinner" aria-hidden="true"></span>
+          <mat-icon *ngIf="!detectandoImpresoras && !guardandoEquipo">refresh</mat-icon>
+          {{ detectandoImpresoras || guardandoEquipo
+            ? ('validatingThisDevice' | tenantText)
+            : ('checkThisDevice' | tenantText) }}
         </button>
       </div>
     </section>
@@ -67,9 +77,12 @@
                 {{ estadoEquipo(r) | tenantText }}
               </span>
               <button mat-stroked-button type="button" class="device-printer-test"
+                      [class.is-processing]="probandoAreaId === r.IdAreaImpresion"
                       (click)="probarImpresora(r)"
-                      [disabled]="!impresoraExiste(r) || probandoAreaId !== null">
-                <mat-icon>print</mat-icon>
+                      [disabled]="!puedeProbar(r) || probandoAreaId !== null || detectandoImpresoras">
+                <span *ngIf="probandoAreaId === r.IdAreaImpresion"
+                      class="button-processing-spinner" aria-hidden="true"></span>
+                <mat-icon *ngIf="probandoAreaId !== r.IdAreaImpresion">print</mat-icon>
                 {{ probandoAreaId === r.IdAreaImpresion ? ('sending' | tenantText) : ('testPrint' | tenantText) }}
               </button>
             </div>

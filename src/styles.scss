@@ -4336,6 +4336,39 @@ mat-row:hover mat-cell {
 .device-printer-state-cell { flex-wrap: wrap; gap: 7px; }
 .device-printer-test { min-width: 92px; }
 
+.device-status__copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.device-status__copy small,
+.device-platform-label {
+  color: var(--color-text-muted);
+  font-size: .68rem;
+  font-weight: 600;
+}
+
+.device-agent-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 8px !important;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--color-warning-soft);
+  color: var(--color-warning) !important;
+  font-size: .76rem;
+  font-weight: 700;
+}
+
+.device-agent-note mat-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  font-size: 17px;
+}
+
 @media (max-width: 900px) {
   .device-printer-panel { align-items: stretch; flex-direction: column; }
   .device-printer-panel__actions { justify-content: flex-start; }

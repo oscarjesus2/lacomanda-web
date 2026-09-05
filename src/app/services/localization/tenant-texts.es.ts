@@ -54,6 +54,8 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   stationAssistantError:
     'No se pudo vincular este ordenador. Inténtalo nuevamente.',
   stationAssistantReady: '{{station}} ya está vinculada a este ordenador.',
+  stationAssistantAgentRecommendation:
+    'Este dispositivo no puede ejecutar QZ Tray. Para imprimir automáticamente, instala LaComanda Print Agent y QZ Tray en una PC Windows de caja o mozo.',
 
   restaurantManagement:
     'Gestión ágil para restaurantes y hostelería',
@@ -543,6 +545,11 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   qzUnavailable: 'QZ no disponible',
   checkingQz: 'Comprobando QZ',
   checkThisDevice: 'Validar este equipo',
+  validatingThisDevice: 'Validando…',
+  printAgentRequiredHelp:
+    'Este dispositivo no puede ejecutar QZ Tray. El botón Probar enviará una impresión al agente instalado en una PC Windows.',
+  printAgentFallbackHelp:
+    'QZ no está disponible aquí. El botón Probar intentará imprimir mediante el agente de otra PC Windows.',
   saveDevicePrinters: 'Guardar impresoras',
   testPrint: 'Probar',
   printerNotConfiguredOnDevice: 'Sin configurar en este equipo',
@@ -560,6 +567,17 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   uniqueIdentifier: 'Identificador único',
   type: 'Tipo',
   stationType: 'Tipo de estación',
+  deviceTypeUnknown: 'Tipo desconocido',
+  deviceTypeWindowsPc: 'PC Windows',
+  deviceTypeMac: 'Mac',
+  deviceTypeLinuxPc: 'PC Linux',
+  deviceTypeAndroidTablet: 'Tablet Android',
+  deviceTypeAndroidPhone: 'Móvil Android',
+  deviceTypeIpad: 'iPad',
+  deviceTypeIphone: 'iPhone',
+  deviceTypeChromeOs: 'Chromebook / ChromeOS',
+  deviceTypeRemoteTerminal: 'Terminal remoto / Citrix',
+  deviceTypeOther: 'Otro dispositivo',
   assignedRegister: 'Caja asignada',
   maintenanceEnvironments: 'Mantenimiento de ambientes',
   newEnvironment: 'Nuevo ambiente',

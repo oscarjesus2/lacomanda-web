@@ -54,6 +54,8 @@ export const EN_TEXTS = {
   stationAssistantError:
     'This computer could not be linked. Please try again.',
   stationAssistantReady: '{{station}} is now linked to this computer.',
+  stationAssistantAgentRecommendation:
+    'This device cannot run QZ Tray. For automatic printing, install LaComanda Print Agent and QZ Tray on a Windows register or waiter PC.',
 
   // Application and login
   restaurantManagement: 'Agile management for restaurants and hospitality',
@@ -540,6 +542,11 @@ export const EN_TEXTS = {
   qzUnavailable: 'QZ unavailable',
   checkingQz: 'Checking QZ',
   checkThisDevice: 'Check this device',
+  validatingThisDevice: 'Checking…',
+  printAgentRequiredHelp:
+    'This device cannot run QZ Tray. Test will send a print job to the agent installed on a Windows PC.',
+  printAgentFallbackHelp:
+    'QZ is unavailable here. Test will try to print through the agent on another Windows PC.',
   saveDevicePrinters: 'Save device printers',
   testPrint: 'Test',
   printerNotConfiguredOnDevice: 'Not configured on this device',
@@ -557,6 +564,17 @@ export const EN_TEXTS = {
   uniqueIdentifier: 'Unique identifier',
   type: 'Type',
   stationType: 'Station type',
+  deviceTypeUnknown: 'Unknown type',
+  deviceTypeWindowsPc: 'Windows PC',
+  deviceTypeMac: 'Mac',
+  deviceTypeLinuxPc: 'Linux PC',
+  deviceTypeAndroidTablet: 'Android tablet',
+  deviceTypeAndroidPhone: 'Android phone',
+  deviceTypeIpad: 'iPad',
+  deviceTypeIphone: 'iPhone',
+  deviceTypeChromeOs: 'Chromebook / ChromeOS',
+  deviceTypeRemoteTerminal: 'Remote terminal / Citrix',
+  deviceTypeOther: 'Other device',
   assignedRegister: 'Assigned register',
   maintenanceEnvironments: 'Zone maintenance',
   newEnvironment: 'New zone',

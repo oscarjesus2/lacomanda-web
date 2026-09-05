@@ -22,3 +22,22 @@ export interface ActualizarValidacionesAreaImpresionDispositivo {
   IdentificadorDispositivo: string;
   ImpresorasValidadas: ImpresoraValidadaAreaDispositivo[];
 }
+
+export enum TrabajoImpresionEstadoEnum {
+  PENDIENTE = 1,
+  EN_PROCESO = 2,
+  COMPLETADO = 3,
+  FALLIDO = 4,
+}
+
+export interface PruebaImpresionAreaEncolada {
+  IdTrabajoImpresion: number;
+  Estado: TrabajoImpresionEstadoEnum;
+  FechaExpiracionUtc: string;
+}
+
+export interface EstadoPruebaImpresionArea {
+  IdTrabajoImpresion: number;
+  Estado: TrabajoImpresionEstadoEnum;
+  UltimoError: string | null;
+}

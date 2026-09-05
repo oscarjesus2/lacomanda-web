@@ -34,7 +34,12 @@
                   [class.device-current]="estadoDispositivo(r) === 'Este dispositivo'"
                   [class.device-unassigned]="estadoDispositivo(r) === 'Sin dispositivo'">
               <mat-icon>{{ iconoDispositivo(r) }}</mat-icon>
-              {{ estadoDispositivo(r) }}
+              <span class="device-status__copy">
+                {{ estadoDispositivo(r) }}
+                <small *ngIf="r.IdentificadorUnico">
+                  {{ nombreTipoDispositivo(r.TipoDispositivo) }}
+                </small>
+              </span>
             </span>
           </mat-cell>
         </ng-container>
@@ -163,6 +168,15 @@
       <div class="device-link-copy">
         <h3>Dispositivo de esta estación</h3>
         <p>{{ textoVinculacion }}</p>
+        <small *ngIf="esEsteDispositivo || seVincularaEsteDispositivo"
+               class="device-platform-label">
+          Tipo detectado: {{ nombreTipoDispositivo(tipoDispositivoVinculacion) }}
+        </small>
+        <p *ngIf="recomiendaAgenteVinculacion" class="device-agent-note">
+          <mat-icon>info</mat-icon>
+          Este dispositivo no puede ejecutar QZ Tray. Instala LaComanda Print Agent
+          y QZ Tray en una PC Windows de caja o mozo para recibir sus impresiones.
+        </p>
       </div>
       <button mat-stroked-button color="primary" type="button" (click)="usarEsteDispositivo()"
               [disabled]="guardando || (esEsteDispositivo && !seVincularaEsteDispositivo)">

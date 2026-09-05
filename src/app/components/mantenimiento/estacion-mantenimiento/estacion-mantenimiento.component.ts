@@ -24,6 +24,8 @@ import { AreaAlmacen } from 'src/app/models/receta.models';
 import { SubAreaAlmacen } from 'src/app/models/almacen-maestro.models';
 import { forkJoin } from 'rxjs';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { DeviceCapabilitiesService } from 'src/app/services/device-capabilities.service';
+import { DispositivoTipoEnum } from 'src/app/models/device.models';
 
 @Component({
   selector: 'app-estacion-mantenimiento',
@@ -43,6 +45,7 @@ export class EstacionMantenimientoComponent implements OnInit {
   showForm = false;
   guardando = false;
   identificadorPendiente = '';
+  tipoDispositivoPendiente = DispositivoTipoEnum.DESCONOCIDO;
   licenciaAlmacenVerificada = false;
   almacenHabilitado = false;
   catalogoAlmacenCargado = false;
@@ -70,6 +73,7 @@ export class EstacionMantenimientoComponent implements OnInit {
     private readonly licenciaTenantService: LicenciaTenantService,
     private readonly areaAlmacenService: AreaAlmacenService,
     private readonly subAreaAlmacenService: SubAreaAlmacenService,
+    private readonly deviceCapabilities: DeviceCapabilitiesService,
   ) {}
 
   ngOnInit(): void {
@@ -89,6 +93,24 @@ export class EstacionMantenimientoComponent implements OnInit {
 
   get seVincularaEsteDispositivo(): boolean {
     return !!this.identificadorPendiente;
+  }
+
+  get tipoDispositivoVinculacion(): DispositivoTipoEnum {
+    if (this.seVincularaEsteDispositivo) {
+      return this.tipoDispositivoPendiente;
+    }
+    if (this.esEsteDispositivo) {
+      return this.deviceCapabilities.getDeviceType();
+    }
+    return this.estacion.TipoDispositivo
+      ?? DispositivoTipoEnum.DESCONOCIDO;
+  }
+
+  get recomiendaAgenteVinculacion(): boolean {
+    return (this.esEsteDispositivo || this.seVincularaEsteDispositivo)
+      && this.deviceCapabilities.requiresRemotePrintAgent(
+        this.tipoDispositivoVinculacion,
+      );
   }
 
   get textoVinculacion(): string {
@@ -202,6 +224,14 @@ export class EstacionMantenimientoComponent implements OnInit {
       : 'devices';
   }
 
+  nombreTipoDispositivo(tipo?: DispositivoTipoEnum): string {
+    return this.textCatalog.get(
+      this.deviceCapabilities.getDeviceTypeTextKey(
+        tipo ?? DispositivoTipoEnum.DESCONOCIDO,
+      ),
+    );
+  }
+
   async usarEsteDispositivo(): Promise<void> {
     const identificador = this.deviceIdentifier.getIdentifier()
       || this.identificadorPendiente
@@ -247,7 +277,10 @@ export class EstacionMantenimientoComponent implements OnInit {
       focusCancel: reemplazaOtroDispositivo,
     });
 
-    if (result.isConfirmed) this.identificadorPendiente = identificador;
+    if (result.isConfirmed) {
+      this.identificadorPendiente = identificador;
+      this.tipoDispositivoPendiente = this.deviceCapabilities.getDeviceType();
+    }
   }
 
   onSubmit(): void {
@@ -292,6 +325,7 @@ export class EstacionMantenimientoComponent implements OnInit {
       IdentificadorUnico: estacionNormalizada.IdentificadorUnico,
     });
     this.identificadorPendiente = '';
+    this.tipoDispositivoPendiente = DispositivoTipoEnum.DESCONOCIDO;
     this.descargaStockHabilitada = false;
     this.showForm = true;
     if (this.almacenHabilitado) {
@@ -387,6 +421,7 @@ export class EstacionMantenimientoComponent implements OnInit {
     this.estacionService.linkDevice(
       Number(guardada.IdEstacion),
       this.identificadorPendiente,
+      this.tipoDispositivoPendiente,
     ).subscribe({
       next: vinculacion => {
         if (!vinculacion.Success) {
@@ -542,6 +577,9 @@ export class EstacionMantenimientoComponent implements OnInit {
     return Object.assign(new Estacion(), {
       ...estacion,
       IdentificadorUnico: esIdentificadorInicial ? '' : identificador,
+      TipoDispositivo: esIdentificadorInicial
+        ? DispositivoTipoEnum.DESCONOCIDO
+        : (estacion.TipoDispositivo ?? DispositivoTipoEnum.DESCONOCIDO),
     });
   }
 

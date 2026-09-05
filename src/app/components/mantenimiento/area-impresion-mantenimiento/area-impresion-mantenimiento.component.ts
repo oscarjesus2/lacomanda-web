@@ -9,6 +9,8 @@ import { NgxSpinnerService } from 'ngx-spinner';
 
 import {
   AreaImpresion,
+  EstadoPruebaImpresionArea,
+  TrabajoImpresionEstadoEnum,
   ValidacionAreaImpresionDispositivo,
 } from 'src/app/models/area-impresion.models';
 import { AreaImpresionService } from 'src/app/services/area-impresion.service';
@@ -16,6 +18,11 @@ import { DeviceIdentifierService } from 'src/app/services/device-identifier.serv
 import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 import { TenantTextKey } from 'src/app/services/localization/tenant-texts.en';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { DeviceCapabilitiesService } from 'src/app/services/device-capabilities.service';
+import { Estacion } from 'src/app/models/estacion.models';
+import { EstacionService } from 'src/app/services/estacion.service';
+import { DispositivoTipoEnum } from 'src/app/models/device.models';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 
 interface AreaImpresionEquipo extends AreaImpresion {
   NombreImpresoraGuardada: string;
@@ -46,6 +53,7 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
   guardandoEquipo = false;
   probandoAreaId: number | null = null;
   identificadorDispositivo = '';
+  estacionActual: Estacion | null = null;
 
   displayedColumns: string[] = [
     'descripcion',
@@ -60,7 +68,14 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
     private deviceIdentifier: DeviceIdentifierService,
     private qzTray: QzTrayV224Service,
     private spinner: NgxSpinnerService,
+    private deviceCapabilities: DeviceCapabilitiesService,
+    private estacionService: EstacionService,
+    private textCatalog: TenantTextCatalogService,
   ) {}
+
+  get agenteRemotoRecomendado(): boolean {
+    return this.deviceCapabilities.requiresRemotePrintAgent();
+  }
 
   ngOnInit(): void {
     this.identificadorDispositivo = this.obtenerIdentificadorDispositivo();
@@ -70,12 +85,17 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
   async cargar(): Promise<void> {
     this.spinner.show();
     try {
-      const [areas, validaciones] = await Promise.all([
+      const [areas, validaciones, estaciones] = await Promise.all([
         firstValueFrom(this.areaSrv.listar()),
         firstValueFrom(this.areaSrv.obtenerValidacionesDispositivo(
           this.identificadorDispositivo,
         )),
+        firstValueFrom(this.estacionService.getAll()),
       ]);
+      this.estacionActual = (estaciones.Data ?? []).find(estacion =>
+        estacion.IdentificadorUnico?.trim().toLowerCase()
+          === this.identificadorDispositivo.trim().toLowerCase()
+      ) ?? null;
       this.areas = this.combinarValidaciones(areas ?? [], validaciones ?? []);
       this.applyFilter();
       await this.refrescarImpresoras(false);
@@ -90,6 +110,13 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
   async refrescarImpresoras(mostrarResultado = false): Promise<void> {
     this.detectandoImpresoras = true;
     try {
+      if (!this.deviceCapabilities.supportsLocalQz()) {
+        this.impresorasInstaladas = [];
+        this.impresoraPredeterminada = null;
+        this.qzDisponible = false;
+        return;
+      }
+
       const resultado = await this.qzTray.listarImpresoras();
       this.impresorasInstaladas = resultado.Impresoras;
       this.impresoraPredeterminada = resultado.Predeterminada;
@@ -149,18 +176,21 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
   }
 
   async validarEsteEquipo(): Promise<void> {
-    await this.refrescarImpresoras(false);
-    if (this.qzDisponible !== true) {
-      await Swal.fire(
-        'No se puede validar',
-        'Abra QZ Tray y vuelva a comprobar este equipo antes de guardar.',
-        'warning',
-      );
-      return;
-    }
-
+    if (this.guardandoEquipo || this.detectandoImpresoras) return;
     this.guardandoEquipo = true;
     try {
+      await this.refrescarImpresoras(false);
+      if (this.qzDisponible !== true) {
+        await Swal.fire(
+          'No se puede validar localmente',
+          this.agenteRemotoRecomendado
+            ? 'Este dispositivo no puede ejecutar QZ Tray. Puedes usar “Probar” para enviar una impresión al agente instalado en una PC Windows.'
+            : 'Abra QZ Tray o use “Probar” para enviar una impresión mediante el agente de otra PC.',
+          'warning',
+        );
+        return;
+      }
+
       const encontradas = this.areas.filter(area => this.impresoraExiste(area));
       const respuesta = await firstValueFrom(
         this.areaSrv.guardarValidacionesDispositivo(
@@ -210,23 +240,48 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
   }
 
   async probarImpresora(area: AreaImpresionEquipo): Promise<void> {
-    if (!this.impresoraExiste(area)) return;
+    if (!this.puedeProbar(area) || this.probandoAreaId !== null) return;
 
     this.probandoAreaId = area.IdAreaImpresion;
     try {
-      await this.qzTray.probarImpresora(area.NombreImpresora);
-      Notificar.exito('Prueba enviada',
-        `Se envió una prueba a la impresora de ${area.Descripcion}.`);
-    } catch (error) {
+      if (this.qzDisponible === true) {
+        await this.qzTray.probarImpresora(area.NombreImpresora, {
+          Estacion: this.estacionActual?.Descripcion
+            || this.identificadorDispositivo,
+          TipoDispositivo: this.nombreTipoDispositivo(
+            this.estacionActual?.TipoDispositivo
+              ?? this.deviceCapabilities.getDeviceType(),
+          ),
+          Area: area.Descripcion,
+        });
+        Notificar.exito(
+          'Prueba impresa',
+          `QZ confirmó el envío a ${area.NombreImpresora}.`,
+        );
+        return;
+      }
+
+      await this.probarMedianteAgente(area);
+    } catch (error: any) {
       console.error('Falló la prueba de impresión:', error);
-      await Swal.fire(
-        'No se pudo imprimir',
-        'Revise que la impresora esté encendida, conectada y sin errores.',
-        'error',
-      );
+      const message = error?.error?.Message
+        || error?.message
+        || 'Revise que la impresora esté encendida, conectada y sin errores.';
+      if (/ningún agente|ningun agente|agente de impresión no respondió/i.test(message)) {
+        await Notificar.advertencia(
+          'El agente no respondió',
+          `${message} Instala o inicia LaComanda Print Agent y QZ Tray en una PC Windows de caja o mozo.`,
+        );
+      } else {
+        await Notificar.error('No se pudo imprimir', message);
+      }
     } finally {
       this.probandoAreaId = null;
     }
+  }
+
+  puedeProbar(area: AreaImpresionEquipo): boolean {
+    return this.qzDisponible === false || this.impresoraExiste(area);
   }
 
   nuevo(): void {
@@ -311,6 +366,76 @@ export class AreaImpresionMantenimientoComponent implements OnInit {
     const nuevo = this.deviceIdentifier.generateIdentifier();
     this.deviceIdentifier.saveIdentifier(nuevo);
     return nuevo;
+  }
+
+  private async probarMedianteAgente(
+    area: AreaImpresionEquipo,
+  ): Promise<void> {
+    const respuesta = await firstValueFrom(
+      this.areaSrv.solicitarPruebaAgente(
+        area.IdAreaImpresion,
+        this.identificadorDispositivo,
+      ),
+    );
+    if (!respuesta.Success || !respuesta.Data) {
+      throw new Error(
+        respuesta.Message || 'No se pudo enviar la prueba al agente.',
+      );
+    }
+
+    const estado = await this.esperarConfirmacionAgente(
+      respuesta.Data.IdTrabajoImpresion,
+      respuesta.Data.FechaExpiracionUtc,
+    );
+    if (estado.Estado === TrabajoImpresionEstadoEnum.COMPLETADO) {
+      Notificar.exito(
+        'Prueba confirmada por el agente',
+        `${area.Descripcion} se imprimió en ${area.NombreImpresora}.`,
+      );
+      return;
+    }
+
+    throw new Error(
+      estado.UltimoError
+        || 'El agente de impresión no respondió antes de vencer la prueba.',
+    );
+  }
+
+  private async esperarConfirmacionAgente(
+    idTrabajoImpresion: number,
+    fechaExpiracionUtc: string,
+  ): Promise<EstadoPruebaImpresionArea> {
+    const limite = Math.max(
+      Date.parse(fechaExpiracionUtc) + 1500,
+      Date.now() + 5000,
+    );
+    do {
+      await new Promise(resolve => setTimeout(resolve, 750));
+      const respuesta = await firstValueFrom(
+        this.areaSrv.consultarEstadoPrueba(idTrabajoImpresion),
+      );
+      if (!respuesta.Success || !respuesta.Data) {
+        throw new Error(
+          respuesta.Message || 'No se pudo consultar la prueba.',
+        );
+      }
+      if (respuesta.Data.Estado === TrabajoImpresionEstadoEnum.COMPLETADO
+          || respuesta.Data.Estado === TrabajoImpresionEstadoEnum.FALLIDO) {
+        return respuesta.Data;
+      }
+    } while (Date.now() <= limite);
+
+    return {
+      IdTrabajoImpresion: idTrabajoImpresion,
+      Estado: TrabajoImpresionEstadoEnum.FALLIDO,
+      UltimoError: 'Ningún agente de impresión atendió la prueba a tiempo.',
+    };
+  }
+
+  private nombreTipoDispositivo(tipo: DispositivoTipoEnum): string {
+    return this.textCatalog.get(
+      this.deviceCapabilities.getDeviceTypeTextKey(tipo),
+    );
   }
 
   private combinarValidaciones(

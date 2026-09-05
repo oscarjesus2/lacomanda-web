@@ -7,6 +7,7 @@ import {
 } from '../models/estacion.models';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
+import { DispositivoTipoEnum } from '../models/device.models';
 
 @Injectable({ providedIn: 'root' })
 export class EstacionService {
@@ -44,10 +45,17 @@ export class EstacionService {
     );
   }
 
-  linkDevice(id: number, identificadorUnico: string): Observable<ApiResponse<Estacion>> {
+  linkDevice(
+    id: number,
+    identificadorUnico: string,
+    tipoDispositivo: DispositivoTipoEnum,
+  ): Observable<ApiResponse<Estacion>> {
     return this.http.put<ApiResponse<Estacion>>(
       `${this.basePath}/${id}/dispositivo`,
-      { IdentificadorUnico: identificadorUnico },
+      {
+        IdentificadorUnico: identificadorUnico,
+        TipoDispositivo: tipoDispositivo,
+      },
     );
   }
 
@@ -67,10 +75,15 @@ export class EstacionService {
   assignAvailableDevice(
     tipo: number,
     identificadorUnico: string,
+    tipoDispositivo: DispositivoTipoEnum,
   ): Observable<ApiResponse<Estacion>> {
     return this.http.post<ApiResponse<Estacion>>(
       `${this.basePath}/dispositivo/asignar-disponible`,
-      { Tipo: tipo, IdentificadorUnico: identificadorUnico },
+      {
+        Tipo: tipo,
+        IdentificadorUnico: identificadorUnico,
+        TipoDispositivo: tipoDispositivo,
+      },
     );
   }
 

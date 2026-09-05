@@ -6,6 +6,8 @@ import { ApiResponse } from '../interfaces/apirResponse.interface';
 import {
   ActualizarValidacionesAreaImpresionDispositivo,
   AreaImpresion,
+  EstadoPruebaImpresionArea,
+  PruebaImpresionAreaEncolada,
   ValidacionAreaImpresionDispositivo,
 } from '../models/area-impresion.models';
 
@@ -49,6 +51,24 @@ export class AreaImpresionService {
     return this.http.put<ApiResponse<ValidacionAreaImpresionDispositivo[]>>(
       `${this.base}/dispositivos/${identificador}/validaciones`,
       validaciones,
+    );
+  }
+
+  solicitarPruebaAgente(
+    idAreaImpresion: number,
+    identificadorDispositivo: string,
+  ): Observable<ApiResponse<PruebaImpresionAreaEncolada>> {
+    return this.http.post<ApiResponse<PruebaImpresionAreaEncolada>>(
+      `${this.base}/${idAreaImpresion}/prueba-agente`,
+      { IdentificadorDispositivo: identificadorDispositivo },
+    );
+  }
+
+  consultarEstadoPrueba(
+    idTrabajoImpresion: number,
+  ): Observable<ApiResponse<EstadoPruebaImpresionArea>> {
+    return this.http.get<ApiResponse<EstadoPruebaImpresionArea>>(
+      `${this.base}/pruebas/${idTrabajoImpresion}`,
     );
   }
 }
