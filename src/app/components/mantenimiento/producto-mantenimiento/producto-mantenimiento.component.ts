@@ -38,6 +38,7 @@ import {
   CartaIaPrevisualizacion,
   CartaIaProducto,
 } from 'src/app/models/importacion-carta-ia.models';
+import { integrarPrevisualizacionCarta } from './importacion-carta-preview.utils';
 
 @Component({
   selector: 'app-producto-mantenimiento',
@@ -62,6 +63,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   procesandoCartaIa = false;
   confirmandoCartaIa = false;
   previsualizacionCarta: CartaIaPrevisualizacion | null = null;
+  fotosCartaAnalizadas = 0;
   coloresCartaIaCargados = false;
   areasCartaIaCargadas = false;
   imagenSeleccionada?: File;
@@ -313,10 +315,24 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const tamanoTotal = imagenes.reduce(
+      (total, imagen) => total + imagen.size,
+      0,
+    );
+    if (tamanoTotal > 32 * 1024 * 1024) {
+      Swal.fire(
+        'Las fotos pesan demasiado',
+        'La selección completa debe pesar como máximo 32 MB.',
+        'info',
+      );
+      return;
+    }
+
     this.procesandoCartaIa = true;
+    const agregandoFotos = !!this.previsualizacionCarta;
     const processing = this.processingIndicator.begin({
       icon: 'auto_awesome',
-      title: 'Analizando tu carta',
+      title: agregandoFotos ? 'Agregando fotos a tu carta' : 'Analizando tu carta',
       message: imagenes.length === 1
         ? 'La IA está leyendo la imagen y organizando familias, productos y precios.'
         : `La IA está leyendo las ${imagenes.length} imágenes y organizando familias, productos y precios.`,
@@ -339,7 +355,19 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
           return;
         }
 
-        this.previsualizacionCarta = respuesta.Data;
+        const integracion = integrarPrevisualizacionCarta(
+          this.previsualizacionCarta,
+          respuesta.Data,
+        );
+        this.previsualizacionCarta = integracion.Previsualizacion;
+        this.fotosCartaAnalizadas += imagenes.length;
+
+        if (integracion.DuplicadosOmitidos > 0) {
+          Notificar.exito(
+            'Fotos agregadas',
+            `${integracion.DuplicadosOmitidos} producto(s) repetido(s) no se añadieron otra vez.`,
+          );
+        }
       },
       error: error => {
         const requiereConfiguracion =
@@ -358,6 +386,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
 
   cancelarImportacionCarta(): void {
     this.previsualizacionCarta = null;
+    this.fotosCartaAnalizadas = 0;
   }
 
   confirmarImportacionCarta(): void {
@@ -421,6 +450,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
 
         const resultado = respuesta.Data;
         this.previsualizacionCarta = null;
+        this.fotosCartaAnalizadas = 0;
         this.cargarTodo();
         Swal.fire({
           icon: 'success',

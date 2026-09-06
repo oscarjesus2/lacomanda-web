@@ -5,6 +5,15 @@
 
   <h2>{{ 'maintenanceProducts' | tenantText }}</h2>
 
+  <input
+    #cartaInput
+    hidden
+    type="file"
+    multiple
+    accept="image/jpeg,image/png,image/webp"
+    (change)="analizarCarta($event)"
+  >
+
   <section
     *ngIf="previsualizacionCarta"
     class="menu-import-review"
@@ -17,8 +26,8 @@
         </span>
         <h3>Revisa los productos de tu carta</h3>
         <p>
-          La IA preparó un borrador. Corrige lo necesario y desmarca lo que no
-          quieras crear todavía.
+          La IA preparó un borrador. Puedes agregar más fotos, incluso una por
+          una, y corregir lo necesario. Nada se creará hasta que confirmes.
         </p>
       </div>
       <div class="menu-import-review__summary">
@@ -26,6 +35,10 @@
           Confianza {{ confianzaPorcentaje() }} %
         </span>
         <strong>{{ cantidadProductosSeleccionados }} seleccionados</strong>
+        <strong>
+          {{ fotosCartaAnalizadas }}
+          {{ fotosCartaAnalizadas === 1 ? 'foto analizada' : 'fotos analizadas' }}
+        </strong>
       </div>
     </div>
 
@@ -225,16 +238,26 @@
       <button
         mat-stroked-button
         type="button"
-        [disabled]="confirmandoCartaIa"
+        [disabled]="confirmandoCartaIa || procesandoCartaIa"
         (click)="cancelarImportacionCarta()"
       >
         Cancelar
       </button>
       <button
+        mat-stroked-button
+        color="primary"
+        type="button"
+        [disabled]="confirmandoCartaIa || procesandoCartaIa"
+        (click)="abrirSelectorCarta(cartaInput)"
+      >
+        <mat-icon>{{ procesandoCartaIa ? 'hourglass_top' : 'add_photo_alternate' }}</mat-icon>
+        {{ procesandoCartaIa ? 'Analizando fotos…' : 'Agregar más fotos' }}
+      </button>
+      <button
         mat-raised-button
         color="primary"
         type="button"
-        [disabled]="confirmandoCartaIa || cantidadProductosSeleccionados === 0"
+        [disabled]="confirmandoCartaIa || procesandoCartaIa || cantidadProductosSeleccionados === 0"
         (click)="confirmarImportacionCarta()"
       >
         <mat-icon>playlist_add_check</mat-icon>
@@ -261,15 +284,12 @@
         <mat-icon>{{ procesandoCartaIa ? 'hourglass_top' : 'auto_awesome' }}</mat-icon>
         {{ procesandoCartaIa ? 'Analizando carta…' : 'Crear productos desde mi carta' }}
       </button>
-      <input
-        #cartaInput
-        hidden
-        type="file"
-        multiple
-        accept="image/jpeg,image/png,image/webp"
-        (change)="analizarCarta($event)"
-      >
     </div>
+
+    <p *ngIf="puedeImportarCartaIa" class="dialog-form-section__hint">
+      Puedes seleccionar hasta 8 fotos en cada tanda y agregar otras antes de
+      confirmar. Los productos no se crearán hasta el último paso.
+    </p>
 
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>{{ 'search' | tenantText }}</mat-label>
