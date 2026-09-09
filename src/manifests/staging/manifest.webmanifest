@@ -10,7 +10,7 @@
   "start_url": "./",
   "scope_extensions": [
     {
-      "origin": "https://auth.lacomanda.store"
+      "origin": "https://auth.staging.lacomanda.store"
     }
   ],
   "icons": [

@@ -76,7 +76,11 @@
               "assets": [
                 "src/favicon.ico",
                 "src/assets",
-                "src/manifest.webmanifest",
+                {
+                  "glob": "manifest.webmanifest",
+                  "input": "src/manifests/staging",
+                  "output": "/"
+                },
                 "src/config.htaccess"
               ],
               "fileReplacements": [
