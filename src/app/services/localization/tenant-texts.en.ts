@@ -54,6 +54,8 @@ export const EN_TEXTS = {
   stationAssistantError:
     'This computer could not be linked. Please try again.',
   stationAssistantReady: '{{station}} is now linked to this computer.',
+  stationAssistantAgentRecommendation:
+    'This device cannot run QZ Tray. For automatic printing, install LaComanda Print Agent and QZ Tray on a Windows register or waiter PC.',
 
   // Application and login
   restaurantManagement: 'Agile management for restaurants and hospitality',
@@ -537,9 +539,27 @@ export const EN_TEXTS = {
   defaultPrinter: 'Default',
   validationStatus: 'Validation',
   qzConnected: 'QZ connected',
+  qzConnectedNoPrinters: 'QZ connected · no printers',
   qzUnavailable: 'QZ unavailable',
   checkingQz: 'Checking QZ',
+  qzRequiredForWindowsTitle: 'QZ Tray is required on this Windows PC',
+  qzRequiredForWindowsMessage:
+    'Before linking this PC to a station, install and open QZ Tray and authorize the LaComanda certificate. Open the setup guide to complete these steps.',
+  qzCertificateRequiredForWindowsTitle: 'The QZ Tray certificate still needs authorization',
+  qzCertificateRequiredForWindowsMessage:
+    'QZ Tray is running, but this PC has not authorized the LaComanda certificate yet. Open the setup guide and complete the certificate step before linking it.',
+  openQzSetup: 'Set up QZ Tray',
+  windowsQzLinkRequirementNote:
+    'Requirement for this Windows PC: QZ Tray must be open and the LaComanda certificate must be authorized.',
   checkThisDevice: 'Check this device',
+  validatingThisDevice: 'Checking…',
+  noPrintAreasConfigured: 'No print areas are configured yet. Create one with the “New area” button.',
+  noPrintAreasToValidateTitle: 'No print areas to validate',
+  noPrintAreasToValidateMessage: 'First create a print area and enter the actual name of its printer.',
+  printAgentRequiredHelp:
+    'This device cannot run QZ Tray. Test will send a print job to the agent installed on a Windows PC.',
+  printAgentFallbackHelp:
+    'QZ is unavailable here. Test will try to print through the agent on another Windows PC.',
   saveDevicePrinters: 'Save device printers',
   testPrint: 'Test',
   printerNotConfiguredOnDevice: 'Not configured on this device',
@@ -557,6 +577,17 @@ export const EN_TEXTS = {
   uniqueIdentifier: 'Unique identifier',
   type: 'Type',
   stationType: 'Station type',
+  deviceTypeUnknown: 'Unknown type',
+  deviceTypeWindowsPc: 'Windows PC',
+  deviceTypeMac: 'Mac',
+  deviceTypeLinuxPc: 'Linux PC',
+  deviceTypeAndroidTablet: 'Android tablet',
+  deviceTypeAndroidPhone: 'Android phone',
+  deviceTypeIpad: 'iPad',
+  deviceTypeIphone: 'iPhone',
+  deviceTypeChromeOs: 'Chromebook / ChromeOS',
+  deviceTypeRemoteTerminal: 'Remote terminal / Citrix',
+  deviceTypeOther: 'Other device',
   assignedRegister: 'Assigned register',
   maintenanceEnvironments: 'Zone maintenance',
   newEnvironment: 'New zone',
@@ -626,8 +657,15 @@ export const EN_TEXTS = {
   // Product maintenance (producto)
   maintenanceProducts: 'Product maintenance',
   newProduct: 'New product',
-  searchProduct: 'Name, description, price, position...',
+  searchProduct: 'Short name, full name, price, position...',
   shortName: 'Short name',
+  shortNameHint: 'Short name shown on the order-entry screen.',
+  fullName: 'Full name',
+  fullNameHint: 'Operational name used on kitchen tickets, inventory, and reports.',
+  digitalMenuDescription: 'Digital menu description',
+  digitalMenuDescriptionHint: 'Text shown under the product name in the digital menu and used by the assistant when recommending it.',
+  fiscalName: 'Fiscal name',
+  fiscalNameHint: 'Name shown on receipts and fiscal documents. If left empty, the full name will be used.',
   visible: 'Visible',
   productTypeMenuCard: 'À la carte',
   productTypeMenu: 'Menu',

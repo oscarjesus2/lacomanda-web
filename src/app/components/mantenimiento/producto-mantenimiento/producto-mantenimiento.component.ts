@@ -38,6 +38,7 @@ import {
   CartaIaPrevisualizacion,
   CartaIaProducto,
 } from 'src/app/models/importacion-carta-ia.models';
+import { integrarPrevisualizacionCarta } from './importacion-carta-preview.utils';
 
 @Component({
   selector: 'app-producto-mantenimiento',
@@ -62,6 +63,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   procesandoCartaIa = false;
   confirmandoCartaIa = false;
   previsualizacionCarta: CartaIaPrevisualizacion | null = null;
+  fotosCartaAnalizadas = 0;
   coloresCartaIaCargados = false;
   areasCartaIaCargadas = false;
   imagenSeleccionada?: File;
@@ -89,7 +91,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   mostrarAnfitriona = false;       // config.Anfitrionas
   mostrarTragoCortesia = false;    // config.TieneDescuentoTragoCortesia
 
-  displayedColumns: string[] = ['nombre', 'descripcion', 'precio', 'tipo', 'visible', 'activo', 'posicion', 'actions'];
+  displayedColumns: string[] = ['nombre', 'nombreCompleto', 'precio', 'tipo', 'visible', 'activo', 'posicion', 'actions'];
 
   // grids (parametrizable)
   readonly GRID_POS_ROWS = 10;
@@ -269,7 +271,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     const f = (this.filtro || '').toLowerCase();
     this.filtered.data = this.productos.filter(x =>
       (x.NombreCorto || '').toLowerCase().includes(f) ||
-      (x.Descripcion || '').toLowerCase().includes(f) ||
+      (x.NombreCompleto || '').toLowerCase().includes(f) ||
       String(x.Precio || '').includes(f) ||
       String(x.Posicion || '').includes(f) ||
       (x.Activo ? 'activo' : 'inactivo').includes(f)
@@ -313,10 +315,24 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const tamanoTotal = imagenes.reduce(
+      (total, imagen) => total + imagen.size,
+      0,
+    );
+    if (tamanoTotal > 32 * 1024 * 1024) {
+      Swal.fire(
+        'Las fotos pesan demasiado',
+        'La selección completa debe pesar como máximo 32 MB.',
+        'info',
+      );
+      return;
+    }
+
     this.procesandoCartaIa = true;
+    const agregandoFotos = !!this.previsualizacionCarta;
     const processing = this.processingIndicator.begin({
       icon: 'auto_awesome',
-      title: 'Analizando tu carta',
+      title: agregandoFotos ? 'Agregando fotos a tu carta' : 'Analizando tu carta',
       message: imagenes.length === 1
         ? 'La IA está leyendo la imagen y organizando familias, productos y precios.'
         : `La IA está leyendo las ${imagenes.length} imágenes y organizando familias, productos y precios.`,
@@ -339,7 +355,19 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
           return;
         }
 
-        this.previsualizacionCarta = respuesta.Data;
+        const integracion = integrarPrevisualizacionCarta(
+          this.previsualizacionCarta,
+          respuesta.Data,
+        );
+        this.previsualizacionCarta = integracion.Previsualizacion;
+        this.fotosCartaAnalizadas += imagenes.length;
+
+        if (integracion.DuplicadosOmitidos > 0) {
+          Notificar.exito(
+            'Fotos agregadas',
+            `${integracion.DuplicadosOmitidos} producto(s) repetido(s) no se añadieron otra vez.`,
+          );
+        }
       },
       error: error => {
         const requiereConfiguracion =
@@ -358,6 +386,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
 
   cancelarImportacionCarta(): void {
     this.previsualizacionCarta = null;
+    this.fotosCartaAnalizadas = 0;
   }
 
   confirmarImportacionCarta(): void {
@@ -379,14 +408,14 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
         !producto.Familia?.trim() ||
         !producto.SubFamilia?.trim() ||
         !producto.NombreCorto?.trim() ||
-        !producto.Descripcion?.trim() ||
+        !producto.NombreCompleto?.trim() ||
         producto.Precio === null ||
         producto.Precio < 0
       ));
     if (incompletos) {
       Swal.fire(
         'Completa los datos pendientes',
-        'Revisa color, áreas de impresión, grupo de venta, familia, subfamilia, nombre, descripción y precio de los productos seleccionados.',
+        'Revisa color, áreas de impresión, grupo de venta, familia, subfamilia, nombre corto, nombre completo y precio de los productos seleccionados.',
         'info',
       );
       return;
@@ -421,6 +450,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
 
         const resultado = respuesta.Data;
         this.previsualizacionCarta = null;
+        this.fotosCartaAnalizadas = 0;
         this.cargarTodo();
         Swal.fire({
           icon: 'success',
@@ -512,6 +542,19 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
 
   trackProductoCarta(index: number, producto: CartaIaProducto): string {
     return `${index}-${producto.NombreCorto}`;
+  }
+
+  copiarNombreCortoANombreCompletoSiVacio(
+    producto: { NombreCorto?: string; NombreCompleto?: string }
+  ): void {
+    if (producto.NombreCompleto?.trim()) {
+      return;
+    }
+
+    const nombreCorto = producto.NombreCorto?.trim();
+    if (nombreCorto) {
+      producto.NombreCompleto = nombreCorto;
+    }
   }
 
   nuevo(): void {
@@ -735,6 +778,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   resetForm(): void {
     this.limpiarEdicionImagen();
     this.p = new Producto();
+    this.p.NombreFiscal = '';
     this.mostrarConfiguracionAvanzada = false;
     this.configuracionAvanzadaHabilitada = false;
     this.p.Visible = true; this.p.Activo = true; this.p.IdImpuestoPais = ''; this.p.Tipo = 0;

@@ -408,18 +408,19 @@ export class QzTrayV224Service {
    * Imprime un trabajo cuya persistencia y reintentos pertenecen a la cola
    * del backend. Evita duplicarlo también en la cola temporal del navegador.
    *
-   * Si la impresora configurada no existe en este equipo se usa la
-   * predeterminada; si existe, QZ entrega el documento al spooler aunque la
-   * impresora esté temporalmente apagada.
+   * En comandas puede usarse la impresora predeterminada si falta la indicada.
+   * Las pruebas pasan false para exigir el nombre exacto y no informar un
+   * éxito engañoso en otra impresora.
    */
   async printPDFDesdeColaServidor(
     documento: string,
     impresora: string,
+    usarPredeterminadaSiNoExiste = true,
   ): Promise<boolean> {
     return this.printPDF(
       documento,
       impresora,
-      true,
+      usarPredeterminadaSiNoExiste,
       false,
       false,
       undefined,
@@ -629,7 +630,15 @@ export class QzTrayV224Service {
     }
   }
 
-  async probarImpresora(nombreImpresora: string): Promise<void> {
+  async probarImpresora(
+    nombreImpresora: string,
+    contexto?: {
+      Estacion: string;
+      IdentificadorDispositivo?: string;
+      TipoDispositivo: string;
+      Area: string;
+    },
+  ): Promise<void> {
     const yaEstabaConectado = qz.websocket.isActive();
     try {
       await this.connect();
@@ -642,13 +651,34 @@ export class QzTrayV224Service {
       }
 
       const fecha = new Date().toLocaleString();
+      const estacion = this.escapeHtml(contexto?.Estacion || 'Sin identificar');
+      const identificador = contexto?.IdentificadorDispositivo
+        ? this.escapeHtml(contexto.IdentificadorDispositivo)
+        : null;
+      const tipoDispositivo = this.escapeHtml(
+        contexto?.TipoDispositivo || 'Desconocido',
+      );
+      const area = this.escapeHtml(contexto?.Area || 'Sin especificar');
+      const impresoraSegura = this.escapeHtml(String(impresora));
       await qz.print(qz.configs.create(impresora), [{
         type: 'pixel',
         format: 'html',
         flavor: 'plain',
-        data: `<html><body style="font-family:Arial;text-align:center;padding:10px">
-          <h2>LaComanda</h2><strong>Impresora validada</strong>
-          <p>${impresora}</p><small>${fecha}</small>
+        data: `<html><body style="font-family:Arial;padding:10px">
+          <h2 style="text-align:center">LaComanda</h2>
+          <h3 style="text-align:center">PRUEBA DE IMPRESIÓN</h3><hr>
+          <p><strong>Estación solicitante:</strong><br>${estacion}</p>
+          ${identificador
+            ? `<p><strong>Identificador:</strong><br>${identificador}</p>`
+            : ''}
+          <p><strong>Tipo de dispositivo:</strong><br>${tipoDispositivo}</p>
+          <p><strong>Área:</strong><br>${area}</p>
+          <p><strong>Impresora destino:</strong><br>${impresoraSegura}</p>
+          <p><strong>Fecha local:</strong><br>${this.escapeHtml(fecha)}</p>
+          <p><strong>Canal:</strong><br>QZ Tray directo</p><hr>
+          <p style="text-align:center;color:#1e7a3d;font-weight:bold">
+            COMUNICACIÓN E IMPRESIÓN CORRECTAS
+          </p>
         </body></html>`,
       }]);
       this.registrarConfianza(true);
@@ -657,6 +687,16 @@ export class QzTrayV224Service {
         await this.disconnect();
       }
     }
+  }
+
+  private escapeHtml(value: string): string {
+    return value.replace(/[&<>'"]/g, character => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;',
+    })[character] ?? character);
   }
 
 }

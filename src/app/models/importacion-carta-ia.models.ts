@@ -9,7 +9,7 @@ export interface CartaIaProducto {
   SubFamilia: string;
   IdProductoExistente: number | null;
   NombreCorto: string;
-  Descripcion: string;
+  NombreCompleto: string;
   DescripcionCarta: string;
   Precio: number | null;
   Confianza: number;

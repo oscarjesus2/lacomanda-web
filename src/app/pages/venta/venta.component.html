@@ -46,7 +46,7 @@
                 (click)="seleccionarCanalDelivery()" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faTruck"></fa-icon> {{ 'deliveryChannel' | tenantText }}
         </button>
-        <button *ngIf="isEntrada"
+        <button *ngIf="isEntrada && !isModoMozo"
                 (click)="canalVenta(canalVentaEnum.ENTRADAS)" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faWalking"></fa-icon> {{ 'admission' | tenantText }}
         </button>

@@ -6,8 +6,11 @@ import { ApiResponse } from '../interfaces/apirResponse.interface';
 import {
   ActualizarValidacionesAreaImpresionDispositivo,
   AreaImpresion,
+  EstadoPruebaImpresionArea,
+  PruebaImpresionAreaEncolada,
   ValidacionAreaImpresionDispositivo,
 } from '../models/area-impresion.models';
+import { DispositivoTipoEnum } from '../models/device.models';
 
 @Injectable({ providedIn: 'root' })
 export class AreaImpresionService {
@@ -49,6 +52,28 @@ export class AreaImpresionService {
     return this.http.put<ApiResponse<ValidacionAreaImpresionDispositivo[]>>(
       `${this.base}/dispositivos/${identificador}/validaciones`,
       validaciones,
+    );
+  }
+
+  solicitarPruebaRemota(
+    idAreaImpresion: number,
+    identificadorDispositivo: string,
+    tipoDispositivo: DispositivoTipoEnum,
+  ): Observable<ApiResponse<PruebaImpresionAreaEncolada>> {
+    return this.http.post<ApiResponse<PruebaImpresionAreaEncolada>>(
+      `${this.base}/${idAreaImpresion}/prueba-agente`,
+      {
+        IdentificadorDispositivo: identificadorDispositivo,
+        TipoDispositivo: tipoDispositivo,
+      },
+    );
+  }
+
+  consultarEstadoPrueba(
+    idTrabajoImpresion: number,
+  ): Observable<ApiResponse<EstadoPruebaImpresionArea>> {
+    return this.http.get<ApiResponse<EstadoPruebaImpresionArea>>(
+      `${this.base}/pruebas/${idTrabajoImpresion}`,
     );
   }
 }

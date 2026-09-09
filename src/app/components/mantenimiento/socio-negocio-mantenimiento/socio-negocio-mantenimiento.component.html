@@ -172,9 +172,9 @@
 
         <div class="socio-price-row" *ngFor="let producto of productosFiltrados">
           <div class="socio-product">
-            <strong>{{ producto.NombreCorto || producto.Descripcion }}</strong>
-            <small *ngIf="producto.NombreCorto !== producto.Descripcion">
-              {{ producto.Descripcion }}
+            <strong>{{ producto.NombreCorto || producto.NombreCompleto }}</strong>
+            <small *ngIf="producto.NombreCorto !== producto.NombreCompleto">
+              {{ producto.NombreCompleto }}
             </small>
           </div>
           <span>{{ producto.Precio | number:'1.2-2' }}</span>

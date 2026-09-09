@@ -20,6 +20,7 @@ describe('AgenteImpresionPedidosService', () => {
     NombreImpresora: 'COCINA',
     Documento: 'JVBERi0xLjQ=',
     Intento: 1,
+    EsPrueba: false,
   };
 
   beforeEach(() => {
@@ -51,6 +52,7 @@ describe('AgenteImpresionPedidosService', () => {
     expect(qz.printPDFDesdeColaServidor).toHaveBeenCalledOnceWith(
       trabajo.Documento,
       trabajo.NombreImpresora,
+      true,
     );
     expect(trabajos.confirmar).toHaveBeenCalledOnceWith(
       trabajo.IdTrabajoImpresion,
@@ -74,5 +76,50 @@ describe('AgenteImpresionPedidosService', () => {
         Error: 'QZ no confirmo la impresion del documento.',
       },
     );
+  });
+
+  it('exige la impresora exacta cuando el trabajo es una prueba', async () => {
+    qz.printPDFDesdeColaServidor.and.resolveTo(true);
+    trabajos.confirmar.and.returnValue(of({} as any));
+
+    const resultado = await (service as any).imprimir({
+      ...trabajo,
+      EsPrueba: true,
+    });
+
+    expect(resultado).toBeTrue();
+    expect(qz.printPDFDesdeColaServidor).toHaveBeenCalledOnceWith(
+      trabajo.Documento,
+      trabajo.NombreImpresora,
+      false,
+    );
+  });
+
+  it('declara que el respaldo web admite pruebas al reclamar', async () => {
+    const storage = jasmine.createSpyObj<StorageService>(
+      'StorageService',
+      ['getCurrentToken', 'getCurrentIP'],
+    );
+    storage.getCurrentToken.and.returnValue('token');
+    storage.getCurrentIP.and.returnValue('caja-windows-1');
+    qz.isQzTrayRunning.and.resolveTo(true);
+    trabajos.reclamar.and.returnValue(of({ Data: [] } as any));
+    service = new AgenteImpresionPedidosService(
+      storage,
+      trabajos,
+      qz,
+      {} as NgZone,
+      {} as DeviceCapabilitiesService,
+    );
+    (service as any).detenido = false;
+
+    await (service as any).procesarPendientes();
+
+    expect(trabajos.reclamar).toHaveBeenCalledOnceWith({
+      IdentificadorEstacion: 'caja-windows-1',
+      Cantidad: 1,
+      QzDisponible: true,
+      AdmitePruebas: true,
+    });
   });
 });

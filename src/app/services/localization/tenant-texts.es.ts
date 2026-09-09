@@ -54,6 +54,8 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   stationAssistantError:
     'No se pudo vincular este ordenador. Inténtalo nuevamente.',
   stationAssistantReady: '{{station}} ya está vinculada a este ordenador.',
+  stationAssistantAgentRecommendation:
+    'Este dispositivo no puede ejecutar QZ Tray. Para imprimir automáticamente, instala LaComanda Print Agent y QZ Tray en una PC Windows de caja o mozo.',
 
   restaurantManagement:
     'Gestión ágil para restaurantes y hostelería',
@@ -540,9 +542,27 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   defaultPrinter: 'Predeterminada',
   validationStatus: 'Validación',
   qzConnected: 'QZ conectado',
+  qzConnectedNoPrinters: 'QZ conectado · sin impresoras',
   qzUnavailable: 'QZ no disponible',
   checkingQz: 'Comprobando QZ',
+  qzRequiredForWindowsTitle: 'QZ Tray es obligatorio en esta PC Windows',
+  qzRequiredForWindowsMessage:
+    'Antes de vincular esta PC a una estación, instala y abre QZ Tray y autoriza el certificado de LaComanda. Abre la guía para completar estos pasos.',
+  qzCertificateRequiredForWindowsTitle: 'Falta autorizar el certificado en QZ Tray',
+  qzCertificateRequiredForWindowsMessage:
+    'QZ Tray está abierto, pero esta PC todavía no ha autorizado el certificado de LaComanda. Abre la guía y completa el paso del certificado antes de vincularla.',
+  openQzSetup: 'Configurar QZ Tray',
+  windowsQzLinkRequirementNote:
+    'Requisito para esta PC Windows: QZ Tray debe estar abierto y el certificado de LaComanda debe estar autorizado.',
   checkThisDevice: 'Validar este equipo',
+  validatingThisDevice: 'Validando…',
+  noPrintAreasConfigured: 'Todavía no hay áreas de impresión configuradas. Crea una con el botón “Nueva área”.',
+  noPrintAreasToValidateTitle: 'No hay áreas para validar',
+  noPrintAreasToValidateMessage: 'Primero crea un área de impresión e indica el nombre real de su impresora.',
+  printAgentRequiredHelp:
+    'Este dispositivo no puede ejecutar QZ Tray. El botón Probar enviará una impresión al agente instalado en una PC Windows.',
+  printAgentFallbackHelp:
+    'QZ no está disponible aquí. El botón Probar intentará imprimir mediante el agente de otra PC Windows.',
   saveDevicePrinters: 'Guardar impresoras',
   testPrint: 'Probar',
   printerNotConfiguredOnDevice: 'Sin configurar en este equipo',
@@ -560,6 +580,17 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   uniqueIdentifier: 'Identificador único',
   type: 'Tipo',
   stationType: 'Tipo de estación',
+  deviceTypeUnknown: 'Tipo desconocido',
+  deviceTypeWindowsPc: 'PC Windows',
+  deviceTypeMac: 'Mac',
+  deviceTypeLinuxPc: 'PC Linux',
+  deviceTypeAndroidTablet: 'Tablet Android',
+  deviceTypeAndroidPhone: 'Móvil Android',
+  deviceTypeIpad: 'iPad',
+  deviceTypeIphone: 'iPhone',
+  deviceTypeChromeOs: 'Chromebook / ChromeOS',
+  deviceTypeRemoteTerminal: 'Terminal remoto / Citrix',
+  deviceTypeOther: 'Otro dispositivo',
   assignedRegister: 'Caja asignada',
   maintenanceEnvironments: 'Mantenimiento de ambientes',
   newEnvironment: 'Nuevo ambiente',
@@ -630,8 +661,15 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   // Mantenimiento de productos
   maintenanceProducts: 'Mantenimiento de productos',
   newProduct: 'Nuevo producto',
-  searchProduct: 'Nombre, descripción, precio, posición...',
+  searchProduct: 'Nombre corto, nombre completo, precio, posición...',
   shortName: 'Nombre corto',
+  shortNameHint: 'Nombre breve que se mostrará en la pantalla de digitación.',
+  fullName: 'Nombre completo',
+  fullNameHint: 'Nombre operativo utilizado en comandas, inventario y reportes.',
+  digitalMenuDescription: 'Descripción para la carta',
+  digitalMenuDescriptionHint: 'Texto visible bajo el nombre del producto en la carta digital y utilizado por el asistente para recomendarlo.',
+  fiscalName: 'Nombre fiscal',
+  fiscalNameHint: 'Nombre que aparecerá en los comprobantes y documentos fiscales. Si se deja vacío, se utilizará el nombre completo.',
   visible: 'Visible',
   productTypeMenuCard: 'Carta',
   productTypeMenu: 'Menú',

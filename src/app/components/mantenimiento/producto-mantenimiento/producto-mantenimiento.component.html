@@ -5,6 +5,15 @@
 
   <h2>{{ 'maintenanceProducts' | tenantText }}</h2>
 
+  <input
+    #cartaInput
+    hidden
+    type="file"
+    multiple
+    accept="image/jpeg,image/png,image/webp"
+    (change)="analizarCarta($event)"
+  >
+
   <section
     *ngIf="previsualizacionCarta"
     class="menu-import-review"
@@ -17,8 +26,8 @@
         </span>
         <h3>Revisa los productos de tu carta</h3>
         <p>
-          La IA preparó un borrador. Corrige lo necesario y desmarca lo que no
-          quieras crear todavía.
+          La IA preparó un borrador. Puedes agregar más fotos, incluso una por
+          una, y corregir lo necesario. Nada se creará hasta que confirmes.
         </p>
       </div>
       <div class="menu-import-review__summary">
@@ -26,6 +35,10 @@
           Confianza {{ confianzaPorcentaje() }} %
         </span>
         <strong>{{ cantidadProductosSeleccionados }} seleccionados</strong>
+        <strong>
+          {{ fotosCartaAnalizadas }}
+          {{ fotosCartaAnalizadas === 1 ? 'foto analizada' : 'fotos analizadas' }}
+        </strong>
       </div>
     </div>
 
@@ -95,7 +108,7 @@
         </p>
 
         <div class="menu-import-product__fields">
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="fill" subscriptSizing="dynamic">
             <mat-label>Color visual</mat-label>
             <mat-select
               [(ngModel)]="producto.IdColor"
@@ -123,7 +136,7 @@
             <mat-hint>Propuesto según la categoría y los colores existentes.</mat-hint>
           </mat-form-field>
 
-          <mat-form-field appearance="fill" class="menu-import-product__areas">
+          <mat-form-field appearance="fill" class="menu-import-product__areas" subscriptSizing="dynamic">
             <mat-label>Áreas de impresión</mat-label>
             <mat-select
               multiple
@@ -140,7 +153,7 @@
             <mat-hint>Impresoras que recibirán la comanda de este producto.</mat-hint>
           </mat-form-field>
 
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="fill" subscriptSizing="dynamic">
             <mat-label>Grupo de venta</mat-label>
             <input
               matInput
@@ -171,27 +184,30 @@
             >
           </mat-form-field>
 
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="fill" subscriptSizing="dynamic">
             <mat-label>Nombre corto</mat-label>
             <input
               matInput
               [(ngModel)]="producto.NombreCorto"
               maxlength="50"
               [disabled]="!producto.Seleccionado"
+              (blur)="copiarNombreCortoANombreCompletoSiVacio(producto)"
             >
+            <mat-hint class="form-field-guidance">Nombre mostrado en la pantalla de digitación.</mat-hint>
           </mat-form-field>
 
-          <mat-form-field appearance="fill" class="menu-import-product__description">
+          <mat-form-field appearance="fill" class="menu-import-product__description" subscriptSizing="dynamic">
             <mat-label>Nombre completo</mat-label>
             <input
               matInput
-              [(ngModel)]="producto.Descripcion"
+              [(ngModel)]="producto.NombreCompleto"
               maxlength="120"
               [disabled]="!producto.Seleccionado"
             >
+            <mat-hint class="form-field-guidance">Nombre descriptivo general del producto.</mat-hint>
           </mat-form-field>
 
-          <mat-form-field appearance="fill" class="menu-import-product__description">
+          <mat-form-field appearance="fill" class="menu-import-product__description" subscriptSizing="dynamic">
             <mat-label>Descripción para la carta</mat-label>
             <textarea
               matInput
@@ -200,7 +216,7 @@
               maxlength="500"
               [disabled]="!producto.Seleccionado"
             ></textarea>
-            <mat-hint>Texto breve visible para el comensal.</mat-hint>
+            <mat-hint class="form-field-guidance">Texto breve visible para el comensal.</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="fill">
@@ -222,16 +238,26 @@
       <button
         mat-stroked-button
         type="button"
-        [disabled]="confirmandoCartaIa"
+        [disabled]="confirmandoCartaIa || procesandoCartaIa"
         (click)="cancelarImportacionCarta()"
       >
         Cancelar
       </button>
       <button
+        mat-stroked-button
+        color="primary"
+        type="button"
+        [disabled]="confirmandoCartaIa || procesandoCartaIa"
+        (click)="abrirSelectorCarta(cartaInput)"
+      >
+        <mat-icon>{{ procesandoCartaIa ? 'hourglass_top' : 'add_photo_alternate' }}</mat-icon>
+        {{ procesandoCartaIa ? 'Analizando fotos…' : 'Agregar más fotos' }}
+      </button>
+      <button
         mat-raised-button
         color="primary"
         type="button"
-        [disabled]="confirmandoCartaIa || cantidadProductosSeleccionados === 0"
+        [disabled]="confirmandoCartaIa || procesandoCartaIa || cantidadProductosSeleccionados === 0"
         (click)="confirmarImportacionCarta()"
       >
         <mat-icon>playlist_add_check</mat-icon>
@@ -258,15 +284,12 @@
         <mat-icon>{{ procesandoCartaIa ? 'hourglass_top' : 'auto_awesome' }}</mat-icon>
         {{ procesandoCartaIa ? 'Analizando carta…' : 'Crear productos desde mi carta' }}
       </button>
-      <input
-        #cartaInput
-        hidden
-        type="file"
-        multiple
-        accept="image/jpeg,image/png,image/webp"
-        (change)="analizarCarta($event)"
-      >
     </div>
+
+    <p *ngIf="puedeImportarCartaIa" class="dialog-form-section__hint">
+      Puedes seleccionar hasta 8 fotos en cada tanda y agregar otras antes de
+      confirmar. Los productos no se crearán hasta el último paso.
+    </p>
 
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>{{ 'search' | tenantText }}</mat-label>
@@ -277,12 +300,12 @@
     <div class="mant-table-card">
       <mat-table [dataSource]="filtered" class="mat-elevation-z8">
         <ng-container matColumnDef="nombre">
-          <mat-header-cell *matHeaderCellDef> {{ 'name' | tenantText }} </mat-header-cell>
+          <mat-header-cell *matHeaderCellDef> {{ 'shortName' | tenantText }} </mat-header-cell>
           <mat-cell *matCellDef="let r"> {{ r.NombreCorto }} </mat-cell>
         </ng-container>
-        <ng-container matColumnDef="descripcion">
-          <mat-header-cell *matHeaderCellDef> {{ 'description' | tenantText }} </mat-header-cell>
-          <mat-cell *matCellDef="let r"> {{ r.Descripcion }} </mat-cell>
+        <ng-container matColumnDef="nombreCompleto">
+          <mat-header-cell *matHeaderCellDef> {{ 'fullName' | tenantText }} </mat-header-cell>
+          <mat-cell *matCellDef="let r"> {{ r.NombreCompleto }} </mat-cell>
         </ng-container>
         <ng-container matColumnDef="precio">
           <mat-header-cell *matHeaderCellDef> {{ 'price' | tenantText }} </mat-header-cell>
@@ -349,16 +372,19 @@
       <p class="prod-col-label">{{ 'idAndClassification' | tenantText }}</p>
 
       <div class="form-row">
-        <mat-form-field class="form-field" appearance="fill">
+        <mat-form-field class="form-field" appearance="fill" subscriptSizing="dynamic">
           <mat-label>{{ 'shortName' | tenantText }}</mat-label>
-          <input matInput [(ngModel)]="p.NombreCorto" name="nombre" required #nombre="ngModel">
+          <input matInput [(ngModel)]="p.NombreCorto" name="nombre" maxlength="50" required #nombre="ngModel"
+                 (blur)="copiarNombreCortoANombreCompletoSiVacio(p)">
+          <mat-hint class="form-field-guidance">{{ 'shortNameHint' | tenantText }}</mat-hint>
           <mat-error *ngIf="nombre.invalid && (nombre.dirty || nombre.touched)">{{ 'required' | tenantText }}</mat-error>
         </mat-form-field>
 
-        <mat-form-field class="form-field" appearance="fill">
-          <mat-label>{{ 'description' | tenantText }}</mat-label>
-          <input matInput [(ngModel)]="p.Descripcion" name="descripcion" required #descripcion="ngModel">
-          <mat-error *ngIf="descripcion.invalid && (descripcion.dirty || descripcion.touched)">{{ 'required' | tenantText }}</mat-error>
+        <mat-form-field class="form-field" appearance="fill" subscriptSizing="dynamic">
+          <mat-label>{{ 'fullName' | tenantText }}</mat-label>
+          <input matInput [(ngModel)]="p.NombreCompleto" name="nombreCompleto" maxlength="120" required #nombreCompleto="ngModel">
+          <mat-hint class="form-field-guidance">{{ 'fullNameHint' | tenantText }}</mat-hint>
+          <mat-error *ngIf="nombreCompleto.invalid && (nombreCompleto.dirty || nombreCompleto.touched)">{{ 'required' | tenantText }}</mat-error>
         </mat-form-field>
       </div>
 
@@ -526,11 +552,20 @@
       </div>
 
       <div class="form-row">
-        <mat-form-field class="form-field form-field--wide" appearance="fill">
-          <mat-label>Descripción para la carta</mat-label>
+        <mat-form-field class="form-field form-field--wide" appearance="fill" subscriptSizing="dynamic">
+          <mat-label>{{ 'digitalMenuDescription' | tenantText }}</mat-label>
           <textarea matInput rows="3" [(ngModel)]="p.DescripcionCarta"
                     name="descripcionCarta" maxlength="500"></textarea>
-          <mat-hint>Se mostrará bajo el nombre del producto y ayudará al asistente a recomendarlo.</mat-hint>
+          <mat-hint class="form-field-guidance">{{ 'digitalMenuDescriptionHint' | tenantText }}</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field class="form-field form-field--wide" appearance="fill" subscriptSizing="dynamic">
+          <mat-label>{{ 'fiscalName' | tenantText }}</mat-label>
+          <input matInput [(ngModel)]="p.NombreFiscal"
+                 name="nombreFiscal" maxlength="120">
+          <mat-hint class="form-field-guidance">{{ 'fiscalNameHint' | tenantText }}</mat-hint>
         </mat-form-field>
       </div>
 
@@ -687,7 +722,7 @@
             [(ngModel)]="p.DescripcionCompra"
             name="descripcionCompra"
             maxlength="100"
-            [placeholder]="p.Descripcion || 'Descripción para almacén'"
+            [placeholder]="p.NombreCompleto || 'Descripción para almacén'"
           >
         </mat-form-field>
 

@@ -16,6 +16,7 @@ import {
 import { StorageService } from '../../services/storage.service';
 import { CARACTERISTICAS_LICENCIA } from '../../constants/caracteristicas-licencia';
 import { LicenciaTenantService } from '../../services/licencia-tenant.service';
+import { DeviceCapabilitiesService } from '../../services/device-capabilities.service';
 
 @Component({
   selector: 'app-asistente-estacion',
@@ -44,7 +45,12 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
     private readonly stationRealtime: EstacionSessionRealtimeService,
     private readonly textCatalog: TenantTextCatalogService,
     private readonly licenseService: LicenciaTenantService,
+    private readonly deviceCapabilities: DeviceCapabilitiesService,
   ) {}
+
+  get agenteRecomendado(): boolean {
+    return this.deviceCapabilities.requiresRemotePrintAgent();
+  }
 
   ngOnInit(): void {
     this.subscriptions.add(
@@ -122,7 +128,11 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
     const identifier = this.deviceIdentifier.getIdentifier()
       || this.deviceIdentifier.generateIdentifier();
 
-    this.stationService.assignAvailableDevice(tipo, identifier).subscribe({
+    this.stationService.assignAvailableDevice(
+      tipo,
+      identifier,
+      this.deviceCapabilities.getDeviceType(),
+    ).subscribe({
       next: response => {
         const station = response?.Data;
         if (!response?.Success || !station) {
@@ -132,6 +142,7 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
         }
 
         this.deviceIdentifier.saveIdentifier(identifier);
+        this.deviceIdentifier.markStationLinkConfirmed(identifier);
         const session = this.storage.getCurrentSession();
         if (session) {
           session.Ip = identifier;
@@ -151,7 +162,7 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
         this.navigationTimer = setTimeout(() => {
           this.visible = false;
           void this.router.navigateByUrl(target);
-        }, 1100);
+        }, this.agenteRecomendado ? 4200 : 1100);
       },
       error: error => {
         this.assigning = false;

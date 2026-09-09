@@ -144,6 +144,9 @@ export class AgenteImpresionPedidosService {
           IdentificadorEstacion: this.storage.getCurrentIP()!.trim(),
           Cantidad: 1,
           QzDisponible: true,
+          // Este navegador es el respaldo del agente nativo: al tener QZ puede
+          // procesar tambien las pruebas iniciadas desde moviles y tabletas.
+          AdmitePruebas: true,
         }));
         const trabajo = response.Data?.[0];
         if (!trabajo) break;
@@ -180,6 +183,7 @@ export class AgenteImpresionPedidosService {
       const impreso = await this.qz.printPDFDesdeColaServidor(
         trabajo.Documento,
         trabajo.NombreImpresora,
+        !trabajo.EsPrueba,
       );
       if (!impreso) {
         throw new Error('QZ no confirmo la impresion del documento.');

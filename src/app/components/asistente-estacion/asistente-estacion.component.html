@@ -22,6 +22,11 @@
     </div>
   </div>
 
+  <p *ngIf="agenteRecomendado"
+     class="station-assistant__feedback station-assistant__feedback--warning">
+    {{ t('stationAssistantAgentRecommendation') }}
+  </p>
+
   <ng-container *ngIf="!readyMessage">
     <p class="station-assistant__body" *ngIf="!expanded">
       {{ t('stationAssistantBody', { options: availableOptionsText }) }}

@@ -6,12 +6,14 @@ export interface TrabajoImpresion {
   NombreImpresora: string;
   Documento: string;
   Intento: number;
+  EsPrueba: boolean;
 }
 
 export interface ReclamarTrabajosImpresionRequest {
   IdentificadorEstacion: string;
   Cantidad: number;
   QzDisponible: boolean;
+  AdmitePruebas: boolean;
 }
 
 export interface ConfirmarTrabajoImpresionRequest {

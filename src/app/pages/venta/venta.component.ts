@@ -372,9 +372,12 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Actualiza los flags de visibilidad de cada botón de canal según lo configurado en la caja */
   actualizarFlagsCanales(): void {
-    const ids = this.listaTipoPedidos.map(c => c.IdCanalVenta);
+    const idsConfigurados = this.listaTipoPedidos.map(c => c.IdCanalVenta);
+    const ids = this.isModoMozo
+      ? idsConfigurados.filter(id => id !== this.canalVentaEnum.ENTRADAS)
+      : idsConfigurados;
     // Si viene vacío (sin configuración) mostramos todos
-    if (ids.length === 0) {
+    if (idsConfigurados.length === 0) {
       this.isEspacio = this.isParaLlevar = this.isDelivery = true;
       this.isEntrada = false;
       return;
@@ -385,15 +388,21 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isEntrada    = ids.includes(this.canalVentaEnum.ENTRADAS);
 
     // Si el canal activo no está habilitado para esta caja, activar el canal por defecto
-    if (!ids.includes(this.idCanalVentaSelected) && this.listaTipoPedidos.length > 0) {
+    if (!ids.includes(this.idCanalVentaSelected) && ids.length > 0) {
       const defecto = ids.includes(this.idCanalVentaDefectoCaja)
         ? this.idCanalVentaDefectoCaja
-        : this.listaTipoPedidos[0].IdCanalVenta;   // fallback: primero disponible
+        : ids[0];   // fallback: primero disponible para la estación
       this.canalVenta(defecto);
     }
   }
 
   canalVenta(idCanalVenta: number): void {
+    // El canal de entradas es exclusivo de caja, incluso si quedó configurado
+    // como canal predeterminado de la estación.
+    if (this.isModoMozo && idCanalVenta === this.canalVentaEnum.ENTRADAS) {
+      return;
+    }
+
     this.limpiarPedido();
     this.idCanalVentaSelected = idCanalVenta;
     if (idCanalVenta === this.canalVentaEnum.ENTRADAS) {
