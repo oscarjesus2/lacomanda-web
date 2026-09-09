@@ -1,12 +1,21 @@
 {
   "name": "LaComanda",
   "short_name": "LaComanda",
+  "id": "./",
   "description": "Gestión ágil para restaurantes y hostelería",
   "theme_color": "#BF360C",
   "background_color": "#FFF8F2",
   "display": "standalone",
   "scope": "./",
   "start_url": "./",
+  "scope_extensions": [
+    {
+      "origin": "https://auth.lacomanda.store"
+    },
+    {
+      "origin": "https://auth.staging.lacomanda.store"
+    }
+  ],
   "icons": [
     {
       "src": "assets/icons/icon-72x72.png",

@@ -25,6 +25,15 @@ data:
       default                        frontend.frontend-appweb-staging.svc.cluster.local:80;
     }
 
+    # Chrome valida esta asociación antes de considerar Keycloak parte del
+    # ámbito de la PWA. Al estar autorizada, el redirect de inicio de sesión no
+    # muestra la barra de URL "fuera del ámbito" en la aplicación instalada.
+    map $host $web_app_origin_association {
+      default                        '{"web_apps":[]}';
+      auth.lacomanda.store           '{"web_apps":[{"web_app_identity":"https://app.lacomanda.store/"}]}';
+      auth.staging.lacomanda.store   '{"web_apps":[{"web_app_identity":"https://app.staging.lacomanda.store/"}]}';
+    }
+
     server {
       listen 8080;
       server_name _;
@@ -37,6 +46,13 @@ data:
         access_log off;
         default_type text/plain;
         return 200 "ok\n";
+      }
+
+      location = /.well-known/web-app-origin-association {
+        access_log off;
+        default_type application/json;
+        add_header Cache-Control "public, max-age=3600" always;
+        return 200 $web_app_origin_association;
       }
 
       location / {
