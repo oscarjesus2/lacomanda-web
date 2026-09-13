@@ -55,6 +55,17 @@
       <mat-icon>sync</mat-icon>
       Actualizando…
     </span>
+    <button
+      *ngIf="reintentables.length"
+      mat-stroked-button
+      color="primary"
+      class="monitor-toolbar__retry"
+      type="button"
+      [disabled]="loading || reintentando"
+      (click)="reintentarTodos()">
+      <mat-icon>replay</mat-icon>
+      {{ reintentando ? 'Programando…' : 'Reintentar errores (' + reintentables.length + ')' }}
+    </button>
   </div>
 
   <div class="monitor-alert" *ngIf="errorMessage">
@@ -100,6 +111,7 @@
           <th>Estado</th>
           <th>Seguimiento</th>
           <th>Respuesta</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -144,6 +156,19 @@
               {{ registro.FechaRespuestaUtc | date:'dd/MM/yyyy HH:mm:ss' }}
             </small>
             <span *ngIf="!registro.CodigoRespuesta && !registro.MensajeRespuesta && !registro.UltimoError">—</span>
+          </td>
+          <td>
+            <button
+              *ngIf="registro.EstadoCodigo === 'ERROR'"
+              mat-stroked-button
+              color="primary"
+              type="button"
+              [disabled]="loading || reintentando"
+              [attr.aria-label]="'Reintentar envío de ' + registro.NumeroDocumento"
+              (click)="reintentarUno(registro)">
+              <mat-icon>replay</mat-icon>
+              Reintentar
+            </button>
           </td>
         </tr>
       </tbody>
