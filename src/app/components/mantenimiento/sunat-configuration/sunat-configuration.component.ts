@@ -109,10 +109,17 @@ export class SunatConfigurationComponent implements OnInit {
           this.solPassword = '';
           this.certificatePassword = '';
           this.certificate = null;
-          Notificar.exito(
-            'Facturación electrónica configurada',
-            'Las credenciales y el certificado quedaron guardados de forma segura.',
-          );
+          if (response.Data.CertificadoVigente) {
+            Notificar.exito(
+              'Facturación electrónica configurada',
+              'Las credenciales y el certificado quedaron guardados de forma segura.',
+            );
+          } else {
+            Notificar.advertencia(
+              'Certificado vencido registrado',
+              'El certificado quedó guardado, pero debes reemplazarlo por uno vigente para enviar comprobantes a SUNAT.',
+            );
+          }
         },
         error: error =>
           this.showError(

@@ -20,7 +20,9 @@
             Completa estos datos antes de habilitar el envío automático de comprobantes a SUNAT.
           </span>
           <span class="dialog-notice__text" *ngIf="configuration.CertificadoConfigurado">
-            SUNAT utilizará este certificado y las credenciales SOL exclusivamente para este restaurante.
+            {{ configuration.CertificadoVigente
+              ? 'SUNAT utilizará este certificado y las credenciales SOL exclusivamente para este restaurante.'
+              : 'El certificado quedó registrado, pero está vencido. Debes reemplazarlo por uno vigente antes de enviar comprobantes a SUNAT.' }}
           </span>
         </div>
       </div>
@@ -84,7 +86,7 @@
           Certificado digital
         </h3>
         <p class="dialog-form-section__hint">
-          Selecciona el archivo PFX o P12 vigente del contribuyente. Quedará almacenado de forma privada y separado por restaurante.
+          Selecciona el archivo PFX o P12 del contribuyente, incluso si está vencido. Quedará almacenado de forma privada y separado por restaurante.
         </p>
         <div class="dialog-option">
           <div class="dialog-option__content">

@@ -26,6 +26,7 @@ import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service'
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 import { ResultadoAnulacionDocumentoVenta } from 'src/app/interfaces/correccion-venta.interface';
 import { firstValueFrom } from 'rxjs';
+import { ReprintFormatService } from 'src/app/services/reprint-format.service';
 
 @Component({
   selector: 'app-dialog-documentos-emitidos',
@@ -71,6 +72,7 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
     private qzTrayService: QzTrayV224Service,
     private texts: TenantTextCatalogService,
     private licenciaTenantService: LicenciaTenantService,
+    private reprintFormat: ReprintFormatService,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.idTurno = data.idTurno;
@@ -197,13 +199,34 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
     return contador;
   }
 
-  reImprimirDocumento(): void {
+  async reImprimirDocumento(): Promise<void> {
     if (!this.selectedRow) { this.alertSeleccione(); return; }
-    this.ventaService.getImpresionComprobanteVenta(this.selectedRow.IdVenta, 1).subscribe({
-      next: (response: ApiResponse<ImpresionDTO[]>) => {
-        if (response.Success) this.imprimir(response.Data);
+    const idVenta = this.selectedRow.IdVenta;
+    const formato = await this.reprintFormat.choose();
+    if (formato === null) return;
+
+    this.spinnerService.show();
+    try {
+      const response: ApiResponse<ImpresionDTO[]> = await firstValueFrom(
+        this.ventaService.getImpresionComprobanteVenta(idVenta, formato)
+      );
+      if (!response.Success) throw new Error(response.Message);
+
+      if (formato === 1) {
+        const impresos = await this.imprimir(response.Data);
+        if (impresos < response.Data.length) {
+          await Swal.fire(this.texts.get('attention'), this.texts.get('reprintFailed'), 'warning');
+        }
+      } else {
+        for (const documento of response.Data) {
+          await this.ventaService.showPDF(documento.Documento);
+        }
       }
-    });
+    } catch (error) {
+      await Swal.fire(this.texts.get('error'), String(error), 'error');
+    } finally {
+      this.spinnerService.hide();
+    }
   }
 
   corregirVenta(): void {

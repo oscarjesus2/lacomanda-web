@@ -141,6 +141,7 @@
           <div class="command-trace__detail-total">
             <span class="trace-status" [ngClass]="'trace-status--' + estadoClase(detalle.Estado)">{{ detalle.Estado }}</span>
             <strong>{{ formatearImporte(detalle.Total) }}</strong>
+            <small *ngIf="propinaComanda(detalle) > 0">Consumo; no incluye propina</small>
           </div>
         </header>
 
@@ -164,11 +165,15 @@
             <span>
               <strong>{{ cuenta.Nombre }}</strong>
               <small>{{ cuenta.NroPersonas }} comensales · {{ cuenta.UsuarioRegistro }}</small>
+              <small *ngIf="cuenta.Nombre === 'Pedido Inicial'">Nombre predeterminado de la cuenta; no es otro pedido</small>
             </span>
             <span class="trace-status" [ngClass]="'trace-status--' + estadoClase(cuenta.Estado)">{{ cuenta.Estado }}</span>
             <strong>{{ formatearImporte(cuenta.Total) }}</strong>
           </article>
         </section>
+        <p class="command-trace__accounts-note" *ngIf="propinaComanda(detalle) > 0">
+          Las cuentas reflejan el consumo. La propina se añade al comprobante al cobrar.
+        </p>
 
         <div class="command-trace__investigation">
           <section class="command-trace__timeline-card">
@@ -241,6 +246,9 @@
                   </span>
                   <strong>{{ formatearImporte(documento.Total, documento.SimboloMoneda) }}</strong>
                 </header>
+                <p class="command-trace__tip-note" *ngIf="propinaDocumento(documento) > 0">
+                  El total del comprobante incluye {{ formatearImporte(propinaDocumento(documento), documento.SimboloMoneda) }} de propina.
+                </p>
                 <dl>
                   <div><dt>Fecha documento</dt><dd>{{ formatearFecha(documento.FechaDocumento) }}</dd></div>
                   <div><dt>Emitido</dt><dd>{{ formatearFechaHora(documento.FechaEmisionUtc) }}</dd></div>
@@ -261,7 +269,9 @@
                       <small *ngIf="pago.Autorizacion">Autorización: {{ pago.Autorizacion }}</small>
                     </span>
                     <span class="command-trace__payment-amount">
-                      <strong>{{ formatearImporte(pago.MontoPagado, documento.SimboloMoneda) }}</strong>
+                      <strong>{{ formatearImporte(pago.Propina > 0 ? totalCobrado(pago) : consumoAplicado(pago), documento.SimboloMoneda) }}</strong>
+                      <small *ngIf="pago.Propina > 0">Consumo: {{ formatearImporte(consumoAplicado(pago), documento.SimboloMoneda) }}</small>
+                      <small *ngIf="pago.Propina > 0">Propina: {{ formatearImporte(pago.Propina, documento.SimboloMoneda) }}</small>
                       <small *ngIf="pago.MontoRecibido !== null && pago.MontoRecibido !== undefined">
                         Recibido: {{ formatearImporte(pago.MontoRecibido, pago.SimboloMoneda) }}
                       </small>

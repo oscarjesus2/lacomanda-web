@@ -410,6 +410,7 @@ export const EN_TEXTS = {
   modifyPayments: 'Modify payments',
   getPdfAndXml: 'Get PDF and XML',
   reprintDocument: 'Reprint document',
+  reprintFailed: 'The receipt was not printed. Check the printer and try again.',
   salesPagination: 'Sales pagination',
   selectDocument: 'Select a document.',
   selectSaleToVoid: 'Select a sale to void.',

@@ -414,6 +414,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   modifyPayments: 'Modificación de pagos',
   getPdfAndXml: 'Obtener PDF y XML',
   reprintDocument: 'Reimprimir documento',
+  reprintFailed: 'El comprobante no se imprimió. Revisa la impresora e inténtalo de nuevo.',
   salesPagination: 'Paginación de ventas',
   selectDocument: 'Seleccione un documento.',
   selectSaleToVoid: 'Debe seleccionar una venta para anular.',
