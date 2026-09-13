@@ -6,6 +6,7 @@ import {
   MonitorComandaDetalle,
   MonitorDocumento,
   MonitorLineaPedido,
+  MonitorPago,
   MonitorPedidoResumen,
   MonitorTurno
 } from 'src/app/models/monitor-comandas.models';
@@ -198,6 +199,27 @@ export class MonitorComandasComponent implements OnInit {
       'es-ES',
       { minimumFractionDigits: 2, maximumFractionDigits: 2 }
     )}`.trim();
+  }
+
+  consumoAplicado(pago: MonitorPago): number {
+    return Math.max(0, Number(pago.MontoPagado || 0) - Number(pago.Vuelto || 0));
+  }
+
+  totalCobrado(pago: MonitorPago): number {
+    return this.consumoAplicado(pago) + Number(pago.Propina || 0);
+  }
+
+  propinaDocumento(documento: MonitorDocumento): number {
+    return documento.Pagos
+      .filter(pago => this.normalizar(pago.Estado) === 'activo')
+      .reduce((total, pago) => total + Number(pago.Propina || 0), 0);
+  }
+
+  propinaComanda(detalle: MonitorComandaDetalle): number {
+    return detalle.Documentos.reduce(
+      (total, documento) => total + this.propinaDocumento(documento),
+      0
+    );
   }
 
   estadoClase(estado?: string | null): string {

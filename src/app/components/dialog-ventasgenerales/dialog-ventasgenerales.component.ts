@@ -18,6 +18,7 @@ import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-lice
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { ResultadoAnulacionDocumentoVenta } from 'src/app/interfaces/correccion-venta.interface';
 import { firstValueFrom } from 'rxjs';
+import { ReprintFormatService } from 'src/app/services/reprint-format.service';
 
 @Component({
   selector: 'app-dialog-ventasgenerales',
@@ -54,6 +55,7 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
     private texts: TenantTextCatalogService,
     private licenciaTenantService: LicenciaTenantService,
     private configuracionService: ConfiguracionService,
+    private reprintFormat: ReprintFormatService,
   ) { }
 
   ngOnInit(): void {
@@ -210,7 +212,7 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
     });
   }
 
-  reImprimirDocumento() {
+  async reImprimirDocumento(): Promise<void> {
     if (!this.ventaSeleccionada) {
       Swal.fire({
         title: this.texts.get('reprint'),
@@ -220,17 +222,22 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
       });
       return;
     }
-    this.spinnerService.show();
-    this.ventaService.getImpresionComprobanteVenta(this.ventaSeleccionada.IdVenta, 0).subscribe(async (response: ApiResponse<ImpresionDTO[]>) => {
-      if (response.Success) 
-      {
-        await this.imprimir(response.Data);
+    const idVenta = this.ventaSeleccionada.IdVenta;
+    const formato = await this.reprintFormat.choose();
+    if (formato === null) return;
 
-      } else {
-        console.error('Error al obtener los datos', response.Message);
-      }
+    this.spinnerService.show();
+    try {
+      const response: ApiResponse<ImpresionDTO[]> = await firstValueFrom(
+        this.ventaService.getImpresionComprobanteVenta(idVenta, formato)
+      );
+      if (!response.Success) throw new Error(response.Message);
+      await this.imprimir(response.Data);
+    } catch (error) {
+      await Swal.fire(this.texts.get('error'), String(error), 'error');
+    } finally {
       this.spinnerService.hide();
-    });
+    }
   }
 
   async imprimir(listImpresionDTO: ImpresionDTO[]){
