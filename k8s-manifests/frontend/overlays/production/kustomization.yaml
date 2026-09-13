@@ -14,4 +14,4 @@ resources:
 images:
 - name: oscar020/frontend
   newName: oscar020/frontend
-  newTag: 202609090735-49cd982-production
+  newTag: 202609132059-b2b80a7-production
