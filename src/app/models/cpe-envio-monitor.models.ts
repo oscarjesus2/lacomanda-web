@@ -14,6 +14,11 @@ export interface CpeEnvioMonitorResultado {
   Registros: CpeEnvioMonitorRegistro[];
 }
 
+export interface ReintentarEnviosCpeResultado {
+  Encolados: number;
+  Omitidos: number;
+}
+
 export interface CpeEnvioMonitorRegistro {
   IdVenta: number;
   IdTurno: number;
@@ -35,4 +40,3 @@ export interface CpeEnvioMonitorRegistro {
   MensajeRespuesta?: string | null;
   UltimoError?: string | null;
 }
-

@@ -69,6 +69,11 @@
   font-size: 12px;
 }
 
+.monitor-toolbar__retry {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
 .monitor-loading {
   display: inline-flex;
   align-items: center;

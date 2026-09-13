@@ -5,6 +5,7 @@ import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import {
   ConsultarCpeEnvioMonitorRequest,
   CpeEnvioMonitorResultado,
+  ReintentarEnviosCpeResultado,
 } from 'src/app/models/cpe-envio-monitor.models';
 import { environment } from 'src/environments/environment';
 
@@ -30,5 +31,11 @@ export class CpeEnvioMonitorService {
       { params },
     );
   }
-}
 
+  reintentar(idVentas: number[]): Observable<ApiResponse<ReintentarEnviosCpeResultado>> {
+    return this.http.post<ApiResponse<ReintentarEnviosCpeResultado>>(
+      `${this.basePath}/reintentos`,
+      { IdVentas: idVentas },
+    );
+  }
+}

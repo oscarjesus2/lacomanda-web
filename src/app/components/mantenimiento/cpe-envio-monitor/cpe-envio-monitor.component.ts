@@ -1,12 +1,13 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
-import { finalize, interval, Subscription } from 'rxjs';
+import { finalize, firstValueFrom, interval, Subscription } from 'rxjs';
 import {
   CpeEnvioMonitorRegistro,
   CpeEnvioMonitorResultado,
 } from 'src/app/models/cpe-envio-monitor.models';
 import { CpeEnvioMonitorService } from 'src/app/services/cpe-envio-monitor.service';
 import Swal from 'sweetalert2';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 @Component({
   selector: 'app-cpe-envio-monitor',
@@ -32,6 +33,7 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
   estado = '';
   autoActualizar = true;
   loading = false;
+  reintentando = false;
   errorMessage = '';
   actualizadoUtc: Date | null = null;
   resultado: CpeEnvioMonitorResultado = this.emptyResult();
@@ -66,8 +68,12 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
     );
   }
 
+  get reintentables(): CpeEnvioMonitorRegistro[] {
+    return this.registros.filter(registro => registro.EstadoCodigo === 'ERROR');
+  }
+
   load(showError: boolean): void {
-    if (this.loading || !this.fechaDesde || !this.fechaHasta) {
+    if (this.loading || this.reintentando || !this.fechaDesde || !this.fechaHasta) {
       return;
     }
 
@@ -110,6 +116,21 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
     this.load(true);
   }
 
+  async reintentarUno(registro: CpeEnvioMonitorRegistro): Promise<void> {
+    await this.reintentar(
+      [registro.IdVenta],
+      `¿Reintentar el envío de ${registro.NumeroDocumento}?`,
+    );
+  }
+
+  async reintentarTodos(): Promise<void> {
+    const ids = this.reintentables.map(registro => registro.IdVenta);
+    await this.reintentar(
+      ids,
+      `¿Reintentar los ${ids.length} comprobantes con error?`,
+    );
+  }
+
   configureAutoRefresh(): void {
     this.autoRefreshSubscription?.unsubscribe();
     if (!this.autoActualizar) {
@@ -141,6 +162,57 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
     return 'status-badge--info';
   }
 
+  private async reintentar(ids: number[], titulo: string): Promise<void> {
+    if (this.reintentando || !ids.length) {
+      return;
+    }
+
+    const confirmado = await Notificar.confirmar({
+      titulo,
+      detalle: 'Comprueba antes que los datos SUNAT estén corregidos. Solo se reencolarán comprobantes que sigan en error sin más reintentos.',
+      textoConfirmar: 'Reintentar',
+      textoCancelar: 'Cancelar',
+    });
+    if (!confirmado) {
+      return;
+    }
+
+    this.reintentando = true;
+    let encolados = 0;
+    let omitidos = 0;
+    try {
+      for (let inicio = 0; inicio < ids.length; inicio += 500) {
+        const response = await firstValueFrom(
+          this.service.reintentar(ids.slice(inicio, inicio + 500)),
+        );
+        encolados += response.Data?.Encolados ?? 0;
+        omitidos += response.Data?.Omitidos ?? 0;
+      }
+
+      if (encolados > 0) {
+        await Notificar.exito(
+          'Reintento programado',
+          `${encolados} comprobante(s) en cola${omitidos ? `; ${omitidos} omitido(s)` : ''}.`,
+        );
+      } else {
+        await Notificar.advertencia(
+          'No se reencoló ningún comprobante',
+          'Su estado cambió o ya existe un envío activo. Actualiza el monitor.',
+        );
+      }
+    } catch (error: any) {
+      await Notificar.error(
+        'No se pudo completar el reintento',
+        `${encolados} comprobante(s) quedaron en cola antes del error. ` +
+          (error?.error?.Message || error?.error?.message ||
+            'Consulta de nuevo el monitor antes de volver a intentarlo.'),
+      );
+    } finally {
+      this.reintentando = false;
+      this.load(false);
+    }
+  }
+
   private toInputDate(value: Date): string {
     const year = value.getFullYear();
     const month = `${value.getMonth() + 1}`.padStart(2, '0');
@@ -160,4 +232,3 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
     };
   }
 }
-
