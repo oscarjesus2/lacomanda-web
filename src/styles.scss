@@ -3698,6 +3698,15 @@ mat-row:hover mat-cell {
   overflow: hidden !important;
 }
 
+/* Los diálogos con vista previa pueden ocupar la mesa de trabajo solo cuando
+   hay contenido; antes de generarlo se ajustan a sus controles. */
+.cdk-global-overlay-wrapper .dialog-panel--workspace.dialog-panel--autoheight {
+  height: auto;
+  max-height: calc(100vh - 32px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
 .cdk-global-overlay-wrapper .dialog-panel--workspace > h2 {
   top: 0;
 }

@@ -1,4 +1,5 @@
-<div class="mant-panel dialog-panel--workspace thermal-report">
+<div class="mant-panel dialog-panel--workspace thermal-report"
+     [class.dialog-panel--autoheight]="!pdfUrl">
   <button class="close-button" type="button" (click)="cerrar()" aria-label="Cerrar">
     <mat-icon>close</mat-icon>
   </button>
@@ -15,17 +16,18 @@
     <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
       <mat-form-field appearance="fill">
         <mat-label>Fecha de trabajo desde</mat-label>
-        <input matInput type="date" [(ngModel)]="fechaDesde">
+        <input matInput type="date" [(ngModel)]="fechaDesde" (ngModelChange)="invalidarTurnos()">
       </mat-form-field>
 
       <mat-form-field appearance="fill">
         <mat-label>Fecha de trabajo hasta</mat-label>
-        <input matInput type="date" [(ngModel)]="fechaHasta">
+        <input matInput type="date" [(ngModel)]="fechaHasta" (ngModelChange)="invalidarTurnos()">
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide">
         <mat-label>Turnos que se incluirán</mat-label>
-        <mat-select [(ngModel)]="idTurnoSeleccionado" [disabled]="cargandoTurnos || !turnos.length">
+        <mat-select [(ngModel)]="idTurnoSeleccionado" (selectionChange)="cerrarPdf()"
+                    [disabled]="cargandoTurnos || !turnos.length">
           <mat-option [value]="0">Todos los turnos del período ({{ turnos.length }})</mat-option>
           <mat-option *ngFor="let turno of turnos" [value]="turno.IdTurno">
             {{ fechaTurno(turno) }} · {{ turno.Caja }} · Turno {{ turno.NroTurno }} · {{ turno.Estado }}
@@ -53,18 +55,16 @@
     </div>
   </div>
 
-  <div class="dialog-notice thermal-report__notice" *ngIf="turnos.length">
-    <mat-icon>print</mat-icon>
+  <div class="dialog-notice thermal-report__notice" *ngIf="!pdfUrl">
+    <mat-icon>{{ iconoPreparacion }}</mat-icon>
     <div class="dialog-notice__content">
-      <span class="dialog-notice__title">Preparado para impresora térmica de 80 mm</span>
-      <span class="dialog-notice__text">
-        Conserva el formato de Caja y acumula en un único ticket la información de todos los turnos incluidos.
-      </span>
+      <span class="dialog-notice__title">{{ tituloPreparacion }}</span>
+      <span class="dialog-notice__text">{{ detallePreparacion }}</span>
     </div>
   </div>
 
-  <div class="dialog-workspace-content thermal-report__content">
-    <section class="dialog-table-card thermal-report__preview" *ngIf="pdfUrl; else emptyState">
+  <div class="dialog-workspace-content thermal-report__content" *ngIf="pdfUrl">
+    <section class="dialog-table-card thermal-report__preview">
       <div class="thermal-report__preview-toolbar">
         <span><mat-icon>preview</mat-icon> Vista previa</span>
         <div>
@@ -78,22 +78,5 @@
       </div>
       <iframe class="thermal-report__frame" [src]="pdfUrl" title="Vista previa del reporte térmico"></iframe>
     </section>
-
-    <ng-template #emptyState>
-      <div class="dialog-table-card">
-        <div class="dialog-empty-state" *ngIf="consultaRealizada && !turnos.length; else readyState">
-          <mat-icon>event_busy</mat-icon>
-          <strong>No hay turnos en el período seleccionado</strong>
-          <span>Amplíe el rango de fechas de trabajo para encontrar turnos anteriores.</span>
-        </div>
-        <ng-template #readyState>
-          <div class="dialog-empty-state">
-            <mat-icon>receipt_long</mat-icon>
-            <strong>{{ cargandoTurnos ? 'Buscando turnos…' : 'El reporte está listo para generarse' }}</strong>
-            <span *ngIf="!cargandoTurnos">Seleccione todos los turnos o uno concreto y pulse Generar PDF.</span>
-          </div>
-        </ng-template>
-      </div>
-    </ng-template>
   </div>
 </div>

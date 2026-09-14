@@ -52,11 +52,12 @@ export class ReportesTermicosAdministracionComponent implements OnInit, OnDestro
   fechaHasta = this.formatearFecha(new Date());
   turnos: TurnoReporteTermico[] = [];
   idTurnoSeleccionado = 0;
-  consultaRealizada = false;
   cargandoTurnos = false;
   generandoPdf = false;
   pdfUrl: SafeResourceUrl | null = null;
   private pdfBlobUrl: string | null = null;
+  private consultaVersion = 0;
+  private generacionVersion = 0;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) readonly data: ReporteTermicoDialogData,
@@ -72,6 +73,8 @@ export class ReportesTermicosAdministracionComponent implements OnInit, OnDestro
   }
 
   ngOnDestroy(): void {
+    this.consultaVersion++;
+    this.generacionVersion++;
     this.liberarPdf();
   }
 
@@ -92,28 +95,63 @@ export class ReportesTermicosAdministracionComponent implements OnInit, OnDestro
       : 'Turno seleccionado';
   }
 
+  get iconoPreparacion(): string {
+    return this.cargandoTurnos ? 'sync' : this.turnos.length ? 'print' : 'event_busy';
+  }
+
+  get tituloPreparacion(): string {
+    return this.cargandoTurnos
+      ? 'Buscando turnos…'
+      : this.turnos.length
+        ? 'Preparado para impresora térmica de 80 mm'
+        : 'No hay turnos en el período seleccionado';
+  }
+
+  get detallePreparacion(): string {
+    return this.cargandoTurnos
+      ? 'Espere un momento.'
+      : this.turnos.length
+        ? 'Seleccione todos los turnos o uno concreto y pulse Generar PDF.'
+        : 'Amplíe el rango de fechas de trabajo para encontrar turnos anteriores.';
+  }
+
+  invalidarTurnos(): void {
+    this.consultaVersion++;
+    this.cargandoTurnos = false;
+    this.turnos = [];
+    this.idTurnoSeleccionado = 0;
+    this.cerrarPdf();
+  }
+
   async consultarTurnos(): Promise<void> {
     if (!this.rangoValido) {
       await Swal.fire('Validación', 'Seleccione un rango de fechas válido.', 'warning');
       return;
     }
 
+    const version = ++this.consultaVersion;
     this.cargandoTurnos = true;
-    this.consultaRealizada = false;
     this.idTurnoSeleccionado = 0;
     this.cerrarPdf();
     try {
       const response = await lastValueFrom(
         this.reportesService.listarTurnos(this.fechaDesde, this.fechaHasta),
       );
+      if (version !== this.consultaVersion) {
+        return;
+      }
       this.turnos = response.Success ? response.Data ?? [] : [];
-      this.consultaRealizada = true;
     } catch (error) {
+      if (version !== this.consultaVersion) {
+        return;
+      }
       this.turnos = [];
       console.error('No se pudieron consultar los turnos del reporte térmico.', error);
       await Swal.fire('Error', 'No se pudieron consultar los turnos del período.', 'error');
     } finally {
-      this.cargandoTurnos = false;
+      if (version === this.consultaVersion) {
+        this.cargandoTurnos = false;
+      }
     }
   }
 
@@ -122,8 +160,9 @@ export class ReportesTermicosAdministracionComponent implements OnInit, OnDestro
       return;
     }
 
-    this.generandoPdf = true;
     this.cerrarPdf();
+    const version = this.generacionVersion;
+    this.generandoPdf = true;
     try {
       const response = await lastValueFrom(
         this.reportesService.generar(this.data.tipo, {
@@ -132,6 +171,9 @@ export class ReportesTermicosAdministracionComponent implements OnInit, OnDestro
           IdTurno: this.idTurnoSeleccionado || undefined,
         }),
       );
+      if (version !== this.generacionVersion) {
+        return;
+      }
       if (!response.Success || !response.Data) {
         await Swal.fire('Reporte', 'No se pudo generar el reporte.', 'warning');
         return;
@@ -140,11 +182,17 @@ export class ReportesTermicosAdministracionComponent implements OnInit, OnDestro
       const blob = this.base64ToBlob(response.Data, 'application/pdf');
       this.pdfBlobUrl = URL.createObjectURL(blob);
       this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfBlobUrl);
+      this.dialogRef.updateSize('calc(100vw - 32px)', 'calc(100vh - 32px)');
     } catch (error) {
+      if (version !== this.generacionVersion) {
+        return;
+      }
       console.error('No se pudo generar el reporte térmico.', error);
       await Swal.fire('Error', 'No se pudo generar el PDF del reporte.', 'error');
     } finally {
-      this.generandoPdf = false;
+      if (version === this.generacionVersion) {
+        this.generandoPdf = false;
+      }
     }
   }
 
@@ -166,8 +214,11 @@ export class ReportesTermicosAdministracionComponent implements OnInit, OnDestro
   }
 
   cerrarPdf(): void {
+    this.generacionVersion++;
+    this.generandoPdf = false;
     this.liberarPdf();
     this.pdfUrl = null;
+    this.dialogRef.updateSize('min(900px, calc(100vw - 32px))', 'auto');
   }
 
   cerrar(): void {

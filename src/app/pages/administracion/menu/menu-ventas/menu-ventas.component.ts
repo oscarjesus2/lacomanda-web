@@ -370,10 +370,10 @@ export class MenuVentasComponent implements OnInit {
     this.dialog.open(ReportesTermicosAdministracionComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: 'calc(100vw - 32px)',
-      height: 'calc(100vh - 32px)',
+      width: 'min(900px, calc(100vw - 32px))',
+      height: 'auto',
       maxWidth: '1380px',
-      maxHeight: '920px',
+      maxHeight: 'min(920px, calc(100vh - 32px))',
       panelClass: 'dialog-window--workspace',
       data: { tipo },
     });
