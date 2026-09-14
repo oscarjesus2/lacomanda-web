@@ -195,19 +195,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   public Caja(): void {
-    this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
-      if (data?.Data != null) {
-        this.turnoAbierto = data.Data;
-        this.title = this.textCatalog.get('register');
-        this.router.navigateByUrl('/caja');
-      } else {
-        Swal.fire({
-          icon: 'warning',
-          title: this.textCatalog.get('noOpenShiftForStation'),
-          confirmButtonText: this.textCatalog.get('accept'),
-        });
-      }
-    });
+    // Caja muestra su propia pantalla previa cuando aún no existe turno.
+    this.title = this.textCatalog.get('register');
+    this.router.navigateByUrl('/caja');
   }
 
   public Mozo(): void {

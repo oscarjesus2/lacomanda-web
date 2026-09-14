@@ -118,6 +118,13 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   register: 'Caja',
   noOpenShiftForStation:
     'No hay un turno abierto para esta estación',
+  canOpenShiftHint: 'Puedes abrir un turno para comenzar a trabajar en Caja.',
+  checkingShiftPermissions: 'Comprobando tus permisos de turno…',
+  requestOpenShiftHint: 'Solicita a un administrador que abra el turno o te conceda permiso para hacerlo.',
+  checkShiftAgain: 'Comprobar de nuevo',
+  shiftLookupFailed: 'No se pudo comprobar el turno de esta estación.',
+  allowOpenShift: 'Permitir abrir turnos',
+  allowCloseShift: 'Permitir cerrar turnos',
   componentWillClose: 'Esta pantalla se cerrará.',
   change: 'Cambiar',
 
