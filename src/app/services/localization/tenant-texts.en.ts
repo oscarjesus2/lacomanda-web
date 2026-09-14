@@ -116,6 +116,13 @@ export const EN_TEXTS = {
   administration: 'Administration',
   register: 'Register',
   noOpenShiftForStation: 'There is no open shift for this station',
+  canOpenShiftHint: 'You can open a shift to start working at the register.',
+  checkingShiftPermissions: 'Checking your shift permissions…',
+  requestOpenShiftHint: 'Ask an administrator to open the shift or grant you permission.',
+  checkShiftAgain: 'Check again',
+  shiftLookupFailed: 'Could not check this station\'s shift.',
+  allowOpenShift: 'Allow opening shifts',
+  allowCloseShift: 'Allow closing shifts',
   componentWillClose: 'This screen will close.',
   change: 'Change',
 

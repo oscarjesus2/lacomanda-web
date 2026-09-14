@@ -146,6 +146,15 @@
         </mat-form-field>
       </div>
 
+      <div class="form-row" *ngIf="usuario.IdNivel === 2">
+        <mat-checkbox [(ngModel)]="usuario.PuedeAbrirTurno" name="puedeAbrirTurno">
+          {{ 'allowOpenShift' | tenantText }}
+        </mat-checkbox>
+        <mat-checkbox [(ngModel)]="usuario.PuedeCerrarTurno" name="puedeCerrarTurno">
+          {{ 'allowCloseShift' | tenantText }}
+        </mat-checkbox>
+      </div>
+
       <div class="form-actions">
         <button mat-raised-button color="primary">
           {{ (usuario.IdUsuario ? 'updateAction' : 'save') | tenantText }}

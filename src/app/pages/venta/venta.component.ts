@@ -91,6 +91,8 @@ import { AgendaReservasDialogComponent } from 'src/app/components/reservas/agend
 import { ConfirmacionImpresionPedidosService } from 'src/app/services/confirmacion-impresion-pedidos.service';
 import { Notificar } from 'src/app/shared/notificaciones';
 import { DialogAnfitrionasComponent } from 'src/app/components/dialog-anfitrionas/dialog-anfitrionas.component';
+import { DialogTurnoComponent } from 'src/app/components/dialog-turno/dialog-turno.component';
+import { DialogCerrarTurnoComponent } from 'src/app/components/dialog-cerrar-turno/dialog-cerrar-turno.component';
 
 @Component({
   selector: 'app-venta',
@@ -108,6 +110,10 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   isEdited: boolean;
   elementArr: any = [].fill(0);
   public turnoAbierto: Turno;
+  public sinTurno = false;
+  public puedeAbrirTurno = false;
+  public puedeCerrarTurno = false;
+  public cargandoPermisos = true;
   public user: Usuario;
   public config: Configuracion | null = null;
 
@@ -457,6 +463,20 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async ngOnInit() {
+    this.usuarioService.getUsuarioActual().subscribe({
+      next: response => {
+        this.puedeAbrirTurno = response?.Data?.IdNivel === NivelUsuarioEnum.Administrador
+          || !!response?.Data?.PuedeAbrirTurno;
+        this.puedeCerrarTurno = response?.Data?.IdNivel === NivelUsuarioEnum.Administrador
+          || !!response?.Data?.PuedeCerrarTurno;
+        this.cargandoPermisos = false;
+      },
+      error: () => {
+        this.puedeAbrirTurno = false;
+        this.puedeCerrarTurno = false;
+        this.cargandoPermisos = false;
+      },
+    });
     this.confirmacionImpresionPedidos.iniciar();
     this.configuracionService.get().subscribe(cfg => this.config = cfg);
     this.licenciaTenantService.obtenerEstado().subscribe(estado => {
@@ -505,6 +525,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       console.log("antes");
       this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP()).subscribe(data => {
         if (data?.Data != null) {
+          this.sinTurno = false;
           this.turnoAbierto = data.Data;
           this.iniciarSolicitudesMesaEnTiempoReal();
 
@@ -585,31 +606,53 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
           });
 
         } else {
-          // Si no hay turno abierto
+          // Sin turno se conserva la sesión y se muestra la pantalla previa.
           this.spinnerService.hide();
-          Swal.fire({
-            icon: 'warning',
-            title: this.textCatalog.get('noOpenShiftForStation'),
-            text: this.textCatalog.get('componentWillClose'),
-            confirmButtonText: this.textCatalog.get('accept')
-          }).then(() => {
-            if (this.storageService.getCurrentUser().IdNivel == 1) {
-              this.router.navigate(['/dashboard']);
-            } else {
-              this.storageService.logout();
-            }
-          });
+          this.sinTurno = true;
         }
+      }, () => {
+        this.spinnerService.hide();
+        this.errorCargaInicial = true;
       });
 
     } catch (error) {
       this.spinnerService.hide();
-      this.salir();
+      this.errorCargaInicial = true;
     }
   }
 
   public salir(): void {
     this.storageService.logout();
+  }
+
+  public reintentarTurno(): void {
+    window.location.reload();
+  }
+
+  public volverAdministracion(): void {
+    this.router.navigate(['/administracion']);
+  }
+
+  public abrirDialogoTurno(): void {
+    if (!this.sinTurno || !this.puedeAbrirTurno) return;
+    this.dialog.open(DialogTurnoComponent, { width: 'min(720px, 96vw)' })
+      .afterClosed().subscribe(() => {
+        this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP())
+          .subscribe({ next: response => {
+            if (response?.Data) window.location.reload();
+          }});
+      });
+  }
+
+  public abrirDialogoCerrarTurno(): void {
+    if (!this.turnoAbierto || !this.puedeCerrarTurno) return;
+    this.dialog.open(DialogCerrarTurnoComponent, { width: 'min(900px, 96vw)' })
+      .afterClosed().subscribe(() => {
+        this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP())
+          .subscribe({ next: response => {
+            if (!response?.Data) window.location.reload();
+          }});
+      });
   }
 
 
