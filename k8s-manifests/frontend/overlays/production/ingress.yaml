@@ -19,6 +19,8 @@ spec:
         - "*.staging.lacomanda.store"
         - "auth.tax-flow.store"
         - "auth-staging.tax-flow.store"
+        - "app.tax-flow.store"
+        - "app-staging.tax-flow.store"
       secretName: wildcard-lacomanda-tls
   rules:
     # El portal mantiene su Deployment/Service en este mismo namespace para
@@ -62,6 +64,28 @@ spec:
             backend:
               service:
                 name: frontend
+                port:
+                  number: 80
+    # Los frontends de TaxFlow viven en otros namespaces y entran por esta
+    # misma IP global mediante proxies internos dedicados por entorno.
+    - host: app.tax-flow.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: taxflow-production-proxy
+                port:
+                  number: 80
+    - host: app-staging.tax-flow.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: taxflow-staging-proxy
                 port:
                   number: 80
     # Keycloak de producción comparte este Load Balancer. El proxy conserva
