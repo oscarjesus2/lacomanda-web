@@ -29,7 +29,7 @@ data:
       }
 
       location / {
-        set $staging_upstream frontend-taxflow-service.taxflow-staging.svc.cluster.local:80;
+        set $staging_upstream frontend-taxflow-service.frontend-taxflow-staging.svc.cluster.local:80;
         proxy_pass http://$staging_upstream;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
