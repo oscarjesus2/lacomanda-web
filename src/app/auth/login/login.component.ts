@@ -118,15 +118,21 @@ export class LoginComponent implements OnInit {
       return;
     }
 
-    // 3. Sesión ya activa → navegar directo.
+    // 3. Sesión ya activa y vigente → navegar directo. Una sesión persistida
+    //    con un token vencido no debe sacarnos del login para volver después de
+    //    un 401: esa carrera dejaba el selector oculto hasta pulsar F5.
     const currentSession = this.storageService.getCurrentSession();
-    if (currentSession) {
+    if (currentSession && this.keycloakAuth.isTokenActive(currentSession.Token)) {
       this.textCatalog.setCulture(
         currentSession.Cultura ?? currentSession.CulturaTenant,
       );
       const route = this.keycloakAuth.getTargetRoute(currentSession.Token);
       this.router.navigateByUrl(route);
       return;
+    }
+
+    if (currentSession) {
+      this.storageService.removeCurrentSession();
     }
 
     // 4. ¿Hay una sucursal recordada? Primero se valida contra las sucursales

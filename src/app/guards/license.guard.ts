@@ -46,6 +46,14 @@ export class LicenseGuard {
       return true;
     }
 
+    // El guard de licencia nunca debe llamar a un endpoint protegido si la
+    // sesión local ya venció. Los guards de una misma ruta pueden comenzar a
+    // resolverse antes de que la redirección de RoleGuard haya finalizado.
+    const token = this.storageService.getCurrentToken();
+    if (!this.keycloakAuth.isTokenActive(token, 0)) {
+      return this.router.createUrlTree(['/iniciar-sesion']);
+    }
+
     return this.licenciaTenantService
       .tieneCaracteristica(exigencia)
       .pipe(map(permitido => permitido || this.rutaDeRepliegue()));

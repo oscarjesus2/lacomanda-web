@@ -412,7 +412,9 @@
           <div class="rpt-section__header">
             <mat-icon>summarize</mat-icon>
             <span>{{ 'collectionsSummary' | tenantText }} — {{ 'shift' | tenantText }} {{ idTurno }}</span>
-            <button class="rpt-refresh" (click)="loadResumen()" [disabled]="loadingResumen" [matTooltip]="'update' | tenantText">
+            <button class="rpt-refresh" (click)="loadResumen()"
+                    [disabled]="loadingResumen || !puedeVerReportesVentas"
+                    [matTooltip]="(!puedeVerReportesVentas ? 'salesReportsPermissionRequired' : 'update') | tenantText">
               <mat-icon>refresh</mat-icon>
             </button>
           </div>
@@ -454,23 +456,23 @@
           </div>
           <div class="rpt-actions">
             <button class="rpt-action-btn"
-                    [disabled]="!!loadingPdf || !isAdmin"
+                    [disabled]="!!loadingPdf || !puedeVerReportesVentas"
                     (click)="verVentasPorProducto()"
-                    [matTooltip]="(!isAdmin ? 'adminsOnly' : 'viewPdf') | tenantText">
+                    [matTooltip]="(!puedeVerReportesVentas ? 'salesReportsPermissionRequired' : 'viewPdf') | tenantText">
               <mat-icon>{{ loadingPdf === 'ventas-producto' ? 'hourglass_empty' : 'inventory_2' }}</mat-icon>
               <span>{{ (loadingPdf === 'ventas-producto' ? 'generating' : 'salesByProduct') | tenantText }}</span>
             </button>
             <button class="rpt-action-btn"
-                    [disabled]="!!loadingPdf || !isAdmin"
+                    [disabled]="!!loadingPdf || !puedeVerReportesVentas"
                     (click)="verResumenVenta()"
-                    [matTooltip]="(!isAdmin ? 'adminsOnly' : 'viewPdf') | tenantText">
+                    [matTooltip]="(!puedeVerReportesVentas ? 'salesReportsPermissionRequired' : 'viewPdf') | tenantText">
               <mat-icon>{{ loadingPdf === 'resumen-venta' ? 'hourglass_empty' : 'receipt' }}</mat-icon>
               <span>{{ (loadingPdf === 'resumen-venta' ? 'generating' : 'salesSummary') | tenantText }}</span>
             </button>
             <button class="rpt-action-btn"
-                    [disabled]="!!loadingPdf || !isAdmin"
+                    [disabled]="!!loadingPdf || !puedeVerReportesVentas"
                     (click)="verResuDocumentos()"
-                    [matTooltip]="(!isAdmin ? 'adminsOnly' : 'viewPdf') | tenantText">
+                    [matTooltip]="(!puedeVerReportesVentas ? 'salesReportsPermissionRequired' : 'viewPdf') | tenantText">
               <mat-icon>{{ loadingPdf === 'resu-documentos' ? 'hourglass_empty' : 'description' }}</mat-icon>
               <span>{{ (loadingPdf === 'resu-documentos' ? 'generating' : 'documentsSummary') | tenantText }}</span>
             </button>

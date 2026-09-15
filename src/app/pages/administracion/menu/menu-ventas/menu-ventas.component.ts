@@ -540,6 +540,8 @@ export class MenuVentasComponent implements OnInit {
       disableClose: true,
       hasBackdrop: true,
       width: '900px',
+      maxWidth: 'calc(100vw - 32px)',
+      panelClass: 'dialog-window--maintenance-table',
     });
   }
 
