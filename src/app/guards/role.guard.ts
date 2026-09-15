@@ -27,7 +27,7 @@ export class RoleGuard {
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | UrlTree {
     const token = this.storageService.getCurrentToken();
 
-    if (!token || this.isTokenExpired(token)) {
+    if (!this.keycloakAuth.isTokenActive(token, 0)) {
       return this.router.createUrlTree(['/iniciar-sesion'], { queryParams: { returnUrl: state.url } });
     }
 
@@ -53,12 +53,4 @@ export class RoleGuard {
     return '/iniciar-sesion';
   }
 
-  private isTokenExpired(token: string): boolean {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return Date.now() > payload.exp * 1000;
-    } catch {
-      return true;
-    }
-  }
 }

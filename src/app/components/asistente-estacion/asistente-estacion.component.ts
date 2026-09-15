@@ -34,6 +34,8 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
   private availableStations: Estacion[] = [];
   private onEligibleRoute = false;
   private operationEnabled = false;
+  private licenseTenantId: string | null = null;
+  private licenseLoading = false;
   private readonly subscriptions = new Subscription();
   private navigationTimer?: ReturnType<typeof setTimeout>;
 
@@ -57,15 +59,6 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
       this.router.events.pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
       ).subscribe(event => this.handleRoute(event.urlAfterRedirects)),
-    );
-
-    this.subscriptions.add(
-      this.licenseService
-        .tieneCaracteristica(CARACTERISTICAS_LICENCIA.OperacionCaja)
-        .subscribe(enabled => {
-          this.operationEnabled = enabled;
-          this.handleRoute(this.router.url);
-        }),
     );
 
     this.handleRoute(this.router.url);
@@ -184,7 +177,29 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
     // en Administración. El asistente debe seguir permitiendo vincular este
     // equipo a una estación disponible desde esa pantalla.
     this.onEligibleRoute = path === '/dashboard' || path === '/administracion';
-    if (!this.onEligibleRoute || !this.operationEnabled) {
+    if (!this.onEligibleRoute) {
+      if (!this.storage.getCurrentSession()?.Token) {
+        this.resetLicenseState();
+      }
+      this.visible = false;
+      return;
+    }
+
+    const session = this.storage.getCurrentSession();
+    if (!session?.Token) {
+      this.resetLicenseState();
+      this.visible = false;
+      return;
+    }
+
+    const tenantId = session.TenantID?.trim().toLowerCase() ?? '';
+    if (this.licenseTenantId !== tenantId) {
+      this.loadOperationLicense(tenantId);
+      this.visible = false;
+      return;
+    }
+
+    if (this.licenseLoading || !this.operationEnabled) {
       this.visible = false;
       return;
     }
@@ -263,6 +278,36 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
 
   private isTypeAvailable(tipo: EstacionTipoEnum): boolean {
     return this.availableStations.some(station => station.Tipo === tipo);
+  }
+
+  private loadOperationLicense(tenantId: string): void {
+    this.licenseTenantId = tenantId;
+    this.licenseLoading = true;
+    this.operationEnabled = false;
+
+    this.subscriptions.add(
+      this.licenseService
+        .tieneCaracteristica(CARACTERISTICAS_LICENCIA.OperacionCaja)
+        .subscribe({
+          next: enabled => {
+            if (this.licenseTenantId !== tenantId) return;
+            this.licenseLoading = false;
+            this.operationEnabled = enabled;
+            this.handleRoute(this.router.url);
+          },
+          error: () => {
+            if (this.licenseTenantId !== tenantId) return;
+            this.licenseLoading = false;
+            this.operationEnabled = false;
+          },
+        }),
+    );
+  }
+
+  private resetLicenseState(): void {
+    this.licenseTenantId = null;
+    this.licenseLoading = false;
+    this.operationEnabled = false;
   }
 
   private preferenceKey(preference: 'later' | 'dismissed'): string {

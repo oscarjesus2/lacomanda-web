@@ -1032,6 +1032,7 @@ export const EN_TEXTS = {
   pendingCollection: 'Pending collection',
   salesReports: 'Sales reports',
   adminsOnly: 'Administrators only',
+  salesReportsPermissionRequired: 'Requires permission to close shifts',
   viewPdf: 'View PDF',
   generating: 'Generating...',
   salesByProduct: 'Sales by product',

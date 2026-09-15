@@ -3698,6 +3698,21 @@ mat-row:hover mat-cell {
   overflow: hidden !important;
 }
 
+/* Mantenimientos tabulares: el ancho no cambia al aumentar el paginado y,
+   si aparecen más filas, el desplazamiento queda dentro de la tabla. */
+.cdk-global-overlay-wrapper .mant-panel.mant-panel--table-dialog {
+  width: 100%;
+}
+
+.mant-panel--table-dialog .mant-table-card mat-table {
+  max-height: calc(100vh - 340px);
+  overflow-y: auto;
+}
+
+.dialog-window--maintenance-table .mat-mdc-dialog-surface {
+  overflow: hidden !important;
+}
+
 /* Los diálogos con vista previa pueden ocupar la mesa de trabajo solo cuando
    hay contenido; antes de generarlo se ajustan a sus controles. */
 .cdk-global-overlay-wrapper .dialog-panel--workspace.dialog-panel--autoheight {

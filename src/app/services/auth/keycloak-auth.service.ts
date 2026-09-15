@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Usuario } from 'src/app/models/usuario.models';
+import { isJwtActive } from './token.utils';
 
 export interface KeycloakTokenResponse {
   access_token:       string;
@@ -89,6 +90,16 @@ export class KeycloakAuthService {
   /** Retorna los realm roles del token. */
   getRoles(token: string): string[] {
     return this.decodePayload(token).realm_access?.roles ?? [];
+  }
+
+  /**
+   * Comprueba localmente que el access token todavía puede usarse.
+   *
+   * El margen evita iniciar una navegación protegida con un token que va a
+   * expirar mientras se resuelven los guards y las primeras peticiones.
+   */
+  isTokenActive(token: string | null | undefined, clockSkewSeconds = 30): boolean {
+    return isJwtActive(token, clockSkewSeconds);
   }
 
   /**

@@ -20,6 +20,7 @@ export interface DialogReportesData {
   idTurno: number;
   config: Configuracion | null;
   isAdmin: boolean;
+  puedeVerReportesVentas: boolean;
 }
 
 @Component({
@@ -32,6 +33,7 @@ export class DialogReportesComponent implements OnInit, OnDestroy {
   idTurno: number;
   config: Configuracion | null;
   isAdmin: boolean;
+  puedeVerReportesVentas: boolean;
 
   resumen: ResumenCobrosDTO | null = null;
   loadingResumen = false;
@@ -79,10 +81,11 @@ export class DialogReportesComponent implements OnInit, OnDestroy {
     this.idTurno  = data.idTurno;
     this.config   = data.config;
     this.isAdmin  = data.isAdmin ?? false;
+    this.puedeVerReportesVentas = data.puedeVerReportesVentas ?? this.isAdmin;
   }
 
   ngOnInit(): void {
-    if (this.isAdmin) {
+    if (this.puedeVerReportesVentas) {
       this.loadResumen();
     }
   }

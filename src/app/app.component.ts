@@ -132,7 +132,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {    
      this.appUpdateService.start();
-     this.actualizarRealtimePorRuta(this.router.url);
      const session = this.storageService.getCurrentSession();
      this.textCatalog.setCulture(
        session?.Cultura ?? session?.CulturaTenant,
@@ -151,7 +150,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private actualizarRealtimePorRuta(url: string): void {
-    if (this.esRutaPublicaComensal(url)) {
+    if (this.esRutaPublica(url)) {
       this.estacionSessionRealtime.stop();
       return;
     }
@@ -159,8 +158,11 @@ export class AppComponent implements OnInit, OnDestroy {
     this.estacionSessionRealtime.start();
   }
 
-  private esRutaPublicaComensal(url: string): boolean {
-    return url.startsWith('/mesa/') || url.startsWith('/reservas');
+  private esRutaPublica(url: string): boolean {
+    return url.startsWith('/iniciar-sesion')
+      || url.startsWith('/inicio')
+      || url.startsWith('/mesa/')
+      || url.startsWith('/reservas');
   }
 
   get canRevealOperationalHeader(): boolean {

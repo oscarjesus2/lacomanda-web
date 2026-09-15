@@ -1025,7 +1025,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       data: {
         idTurno: this.turnoAbierto?.IdTurno,
         config: this.config,
-        isAdmin: this.isAdmin
+        isAdmin: this.isAdmin,
+        puedeVerReportesVentas: this.puedeCerrarTurno
       }
     });
   }

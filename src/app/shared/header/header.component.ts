@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter, take } from 'rxjs/operators';
 import { DialogTurnoComponent } from 'src/app/components/dialog-turno/dialog-turno.component';
 import { Turno } from 'src/app/models/turno.models';
 import { LoginService } from 'src/app/services/auth/login.service';
@@ -103,6 +104,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   private clockInterval: any;
   private statsInterval: any;
+  private initialNavigationSubscription?: Subscription;
 
   constructor(
     private router: Router,
@@ -297,8 +299,23 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.updateClock();
     this.clockInterval = setInterval(() => this.updateClock(), 1000);
 
-    // No cargar datos en la pantalla de login (evita 500 aunque haya token residual)
-    const esLogin = this.router.url.startsWith('/iniciar-sesion');
+    // Durante el bootstrap Router.url todavía puede ser '/'. Esperamos a que la
+    // navegación inicial termine antes de decidir si se pueden pedir datos
+    // protegidos; así una carga directa del login nunca dispara config/licencia.
+    if (!this.router.navigated || this.router.getCurrentNavigation()) {
+      this.initialNavigationSubscription = this.router.events.pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        take(1),
+      ).subscribe(event => this.initializeAuthenticatedHeader(event.urlAfterRedirects));
+      return;
+    }
+
+    this.initializeAuthenticatedHeader(this.router.url);
+  }
+
+  private initializeAuthenticatedHeader(url: string): void {
+    // No cargar datos en pantallas públicas ni sin una sesión vigente.
+    const esLogin = url.startsWith('/iniciar-sesion') || url.startsWith('/inicio');
     const sesionActiva = !!this.storageService.getCurrentSession();
     if (esLogin || !sesionActiva) return;
 
@@ -343,6 +360,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.initialNavigationSubscription?.unsubscribe();
     if (this.clockInterval)  clearInterval(this.clockInterval);
     if (this.statsInterval)  clearInterval(this.statsInterval);
   }

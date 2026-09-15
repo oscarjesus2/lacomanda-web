@@ -1037,6 +1037,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   pendingCollection: 'Por Cobrar',
   salesReports: 'Reportes de Ventas',
   adminsOnly: 'Solo administradores',
+  salesReportsPermissionRequired: 'Requiere permiso para cerrar turnos',
   viewPdf: 'Ver PDF',
   generating: 'Generando...',
   salesByProduct: 'Ventas por Producto',
