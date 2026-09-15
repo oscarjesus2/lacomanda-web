@@ -101,7 +101,7 @@ spec:
                 port:
                   number: 80
     # Taxflow comparte el Load Balancer y el Keycloak de cada entorno.
-    - host: auth.taxflow.store
+    - host: auth.tax-flow.store
       http:
         paths:
           - path: /
@@ -111,7 +111,7 @@ spec:
                 name: staging-proxy
                 port:
                   number: 80
-    - host: auth-staging.taxflow.store
+    - host: auth-staging.tax-flow.store
       http:
         paths:
           - path: /
