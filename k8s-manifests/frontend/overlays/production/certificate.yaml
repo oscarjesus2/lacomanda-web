@@ -17,3 +17,5 @@ spec:
     - "*.staging.lacomanda.store"
     - "auth.tax-flow.store"
     - "auth-staging.tax-flow.store"
+    - "app.tax-flow.store"
+    - "app-staging.tax-flow.store"

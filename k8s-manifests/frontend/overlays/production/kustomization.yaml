@@ -10,6 +10,8 @@ resources:
 - certificate.yaml
 - frontendconfig.yaml
 - staging-proxy.yaml
+- taxflow-staging-proxy.yaml
+- taxflow-production-proxy.yaml
 
 images:
   - name: oscar020/frontend
