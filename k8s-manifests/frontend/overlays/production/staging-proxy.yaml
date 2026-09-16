@@ -105,9 +105,17 @@ spec:
       labels:
         app: staging-proxy
     spec:
+      # El balanceador de Google tarda ~75 s en retirar un endpoint del NEG. Sin
+      # esta espera, nginx se para al instante y el LB devuelve 502 durante el
+      # rollout. Debe superar al preStop.
+      terminationGracePeriodSeconds: 120
       containers:
         - name: nginx
           image: nginx:1.27-alpine
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 90
           ports:
             - name: http
               containerPort: 8080
