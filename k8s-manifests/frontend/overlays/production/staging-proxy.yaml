@@ -16,7 +16,6 @@ data:
 
     map $host $staging_upstream {
       portal.staging.lacomanda.store portal-lacomanda.frontend-appweb-staging.svc.cluster.local:80;
-      api.staging.lacomanda.store    backend-core.backend-core-staging.svc.cluster.local:80;
       auth.staging.lacomanda.store   keycloak.keycloak-staging.svc.cluster.local:8080;
       auth.lacomanda.store           keycloak.keycloak-production.svc.cluster.local:8080;
       auth-staging.tax-flow.store    keycloak.keycloak-staging.svc.cluster.local:8080;
@@ -67,6 +66,9 @@ data:
         proxy_set_header X-Forwarded-Proto $forwarded_proto;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
+        proxy_buffer_size 32k;
+        proxy_buffers 8 32k;
+        proxy_busy_buffers_size 64k;
         proxy_read_timeout 3600s;
         proxy_send_timeout 3600s;
         proxy_request_buffering off;

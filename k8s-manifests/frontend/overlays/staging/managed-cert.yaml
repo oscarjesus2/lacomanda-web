@@ -1,3 +1,0 @@
-# Ya no se usa: el TLS de staging (app + tenants) lo cubre el cert comodín de
-# cert-manager (ver certificate.yaml + ingress.yaml). Este archivo está fuera del
-# kustomization y puede borrarse.
