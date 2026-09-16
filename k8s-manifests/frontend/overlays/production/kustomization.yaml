@@ -14,24 +14,24 @@ resources:
 - taxflow-production-proxy.yaml
 
 images:
-  - name: oscar020/frontend
-    newName: oscar020/frontend
-    newTag: 202608292353-a9962ef-production
+- name: oscar020/frontend
+  newName: oscar020/frontend
+  newTag: 202609150554-6d94adc-production
 
 # Solo en producción el balanceador de Google apunta directamente a este pod
 # (NEG). Tarda ~75 s en retirar un endpoint: sin la espera, el rollout deja
 # 502. En staging el tráfico llega por staging-proxy vía ClusterIP.
 patches:
-  - target:
-      kind: Deployment
-      name: frontend
-    patch: |-
-      - op: add
-        path: /spec/template/spec/terminationGracePeriodSeconds
-        value: 120
-      - op: add
-        path: /spec/template/spec/containers/0/lifecycle
-        value:
-          preStop:
-            sleep:
-              seconds: 90
+- patch: |-
+    - op: add
+      path: /spec/template/spec/terminationGracePeriodSeconds
+      value: 120
+    - op: add
+      path: /spec/template/spec/containers/0/lifecycle
+      value:
+        preStop:
+          sleep:
+            seconds: 90
+  target:
+    kind: Deployment
+    name: frontend
