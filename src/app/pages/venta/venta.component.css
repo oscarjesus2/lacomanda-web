@@ -1093,3 +1093,13 @@ button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+.solicitud-pendiente {
+  color: #a00000;
+  font-weight: 700;
+  font-size: small;
+}
+
+.solicitud-pendiente mat-icon {
+  vertical-align: middle;
+}

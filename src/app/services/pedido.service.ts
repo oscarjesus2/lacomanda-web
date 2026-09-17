@@ -6,7 +6,7 @@ import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { PedidoEspacioDTO as PedidoEspacioDTO } from '../interfaces/pedidoespacioDTO.interface';
 import { ImpresionDTO } from '../interfaces/impresionDTO.interface';
-import { AnularProductoYComplementoDTO } from '../interfaces/anularProductoYComplementoDTO.interface';
+import { AnularPedidoEspacioRequest, AnularProductoYComplementoDTO } from '../interfaces/anularProductoYComplementoDTO.interface';
 import { PedidoDeliveryDTO } from '../interfaces/pedidoDTO.interface';
 import { DividirCuentaDTO } from '../interfaces/dividircuentaDTO.interface';
 import { PedidoDescuentoDTO } from '../interfaces/pedidoDescuentoDTO.interface';
@@ -82,8 +82,9 @@ export class PedidoService {
         return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + '/AnularProductoYComplemento', pedido);
     }
 
-    AnularPedido(idEspacio: number, usuAnula: number, motivoAnula: string, ip: string): Observable<ApiResponse<ImpresionDTO[]>> {
-        return this.http.post<ApiResponse<ImpresionDTO[]>>(`${this.basePath}/AnularPedido/${idEspacio}/${usuAnula}/${motivoAnula}/${ip}`, {});
+    /** Anula el pedido abierto del espacio. Solo administradores y cajeros autorizados. */
+    AnularPedidoEspacio(request: AnularPedidoEspacioRequest): Observable<ApiResponse<ImpresionDTO[]>> {
+        return this.http.post<ApiResponse<ImpresionDTO[]>>(`${this.basePath}/AnularPedidoEspacio`, request);
     }
 
     AnularPedidoPendiente(request: AnularPedidoPendienteRequest): Observable<ApiResponse<ImpresionDTO[]>> {

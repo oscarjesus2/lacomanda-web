@@ -82,6 +82,7 @@
         <button *ngIf="reservasHabilitadas" type="button" class="channel-buttons__reservations" (click)="abrirAgendaReservas()">
           <mat-icon>event_available</mat-icon> Reservas
         </button>
+        <app-solicitudes-autorizacion-boton variante="canal"></app-solicitudes-autorizacion-boton>
         <button *ngIf="solicitudesQrPendientes.length > 0"
                 type="button"
                 class="channel-buttons__qr-requests"
@@ -211,6 +212,10 @@
                 <table>
                   <tr>{{product.Producto.NombreCorto}}
                   </tr>
+                  <tr *ngIf="solicitudPendiente(product) as solicitud" class="solicitud-pendiente">
+                    <mat-icon inline>hourglass_top</mat-icon>
+                    {{ 'voidPending' | tenantText }} · {{ solicitud.UsuarioSolicita }}
+                  </tr>
                   <tr *ngIf="product.Observacion" style="font-style: italic; font-size: small;">
                     {{ 'observation' | tenantText }}:
                     {{product.Observacion}}
@@ -278,9 +283,9 @@
                 <mat-menu #MasOpciones="matMenu">
 
                   <button mat-icon-button color="accent"
-                    [matTooltip]="'delete' | tenantText"
+                    [matTooltip]="(solicitudPendiente(product) ? (puedeAprobarSolicitudes ? 'approve' : 'withdrawRequest') : 'delete') | tenantText"
                     (click)="deleteProductGrid(product)">
-                    <mat-icon>delete</mat-icon>
+                    <mat-icon>{{ solicitudPendiente(product) ? (puedeAprobarSolicitudes ? 'task_alt' : 'undo') : 'delete' }}</mat-icon>
                   </button>
                   <button mat-icon-button color="primary"
                     [matTooltip]="'observation' | tenantText"
