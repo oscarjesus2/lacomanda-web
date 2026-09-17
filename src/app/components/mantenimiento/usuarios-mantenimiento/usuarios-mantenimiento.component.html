@@ -153,6 +153,9 @@
         <mat-checkbox [(ngModel)]="usuario.PuedeCerrarTurno" name="puedeCerrarTurno">
           {{ 'allowCloseShift' | tenantText }}
         </mat-checkbox>
+        <mat-checkbox [(ngModel)]="usuario.PuedeAplicarDescuento" name="puedeAplicarDescuento">
+          {{ 'allowApplyDiscounts' | tenantText }}
+        </mat-checkbox>
       </div>
 
       <div class="form-actions">
