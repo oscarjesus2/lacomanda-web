@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 import { EntradasEmitidasService } from 'src/app/services/entradasemitidas.service';
@@ -25,13 +25,22 @@ import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { MonedaService } from 'src/app/services/moneda.service';
 import { ProductoService } from 'src/app/services/product.service';
 import { EntradaProducto } from 'src/app/interfaces/entradaProducto.interface';
+import { SolicitudAutorizacionService } from 'src/app/services/solicitud-autorizacion.service';
+import { SolicitudesAutorizacionRealtimeService } from 'src/app/services/solicitudes-autorizacion-realtime.service';
+import {
+  SolicitudAutorizacion,
+  SolicitudAutorizacionCreada,
+  autorizacionDisponible,
+} from 'src/app/models/solicitud-autorizacion.models';
+import { Notificar } from 'src/app/shared/notificaciones';
+import { Subscription, firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-dialog-entradas',
   templateUrl: './dialog-entradas.component.html',
   styleUrls: ['./dialog-entradas.component.css']
 })
-export class DialogEntradasComponent {
+export class DialogEntradasComponent implements OnDestroy {
   turnoAbierto: Turno;
   tragosGratis = 0;
   entradaSocios = 0;
@@ -66,6 +75,11 @@ export class DialogEntradasComponent {
   vinoConTaxista: boolean = false;
   /** Administrador, o cajero con el permiso "Permitir aplicar descuentos". */
   puedeAplicarDescuento = false;
+  /** Autorizaciones aprobadas y sin usar, por producto de entrada. */
+  private autorizacionesDescuento = new Map<number, SolicitudAutorizacion>();
+  /** Autorización aprobada y sin usar para emitir entradas gratis. */
+  private autorizacionEntradasGratis?: SolicitudAutorizacion;
+  private autorizacionesSubscription = new Subscription();
 
   constructor(
     public dialogRef: MatDialogRef<DialogEntradasComponent>,
@@ -79,8 +93,111 @@ export class DialogEntradasComponent {
     private configuracionService: ConfiguracionService,
     private monedaService: MonedaService,
     private productoService: ProductoService,
-    private qzTrayService: QzTrayV224Service) {
+    private qzTrayService: QzTrayV224Service,
+    private solicitudAutorizacionService: SolicitudAutorizacionService,
+    private solicitudesAutorizacionRealtime: SolicitudesAutorizacionRealtimeService) {
 
+  }
+
+  ngOnDestroy(): void {
+    this.autorizacionesSubscription.unsubscribe();
+  }
+
+  /**
+   * Autorizaciones propias vigentes: al volver a abrir la caja, un descuento ya
+   * aprobado sigue disponible.
+   */
+  private async cargarMisAutorizaciones(): Promise<void> {
+    try {
+      const mias = await firstValueFrom(this.solicitudAutorizacionService.listarMisAutorizaciones());
+      mias.filter(autorizacionDisponible).forEach(s => this.guardarAutorizacion(s));
+    } catch {
+      // Sin autorizaciones recuperadas se sigue pudiendo pedir de nuevo.
+    }
+  }
+
+  /** Mantiene al día las autorizaciones cuando las resuelven mientras la caja está abierta. */
+  private escucharAutorizaciones(): void {
+    const miUsuario = this.storageService.getCurrentUser()?.IdUsuario;
+    this.autorizacionesSubscription.add(
+      this.solicitudesAutorizacionRealtime.resuelta$.subscribe(solicitud => {
+        if (solicitud.IdUsuarioSolicita !== miUsuario) return;
+        if (autorizacionDisponible(solicitud)) {
+          this.guardarAutorizacion(solicitud);
+        } else {
+          this.olvidarAutorizacion(solicitud);
+        }
+      }),
+    );
+  }
+
+  private guardarAutorizacion(solicitud: SolicitudAutorizacion): void {
+    if (solicitud.Tipo === 'EntradasGratis') {
+      this.autorizacionEntradasGratis = solicitud;
+      return;
+    }
+
+    const idProducto = solicitud.Datos?.IdProducto;
+    if (solicitud.Tipo !== 'DescuentoEntrada' || !idProducto) return;
+
+    this.autorizacionesDescuento.set(idProducto, solicitud);
+    this.aplicarDescuentoAutorizado(idProducto, Number(solicitud.Datos?.DescuentoUnitario ?? 0));
+    this.calcularTotal();
+  }
+
+  private olvidarAutorizacion(solicitud: SolicitudAutorizacion): void {
+    if (solicitud.Tipo === 'EntradasGratis') {
+      if (this.autorizacionEntradasGratis?.IdSolicitud === solicitud.IdSolicitud) {
+        this.autorizacionEntradasGratis = undefined;
+      }
+
+      return;
+    }
+
+    const idProducto = solicitud.Datos?.IdProducto;
+    if (!idProducto || this.autorizacionesDescuento.get(idProducto)?.IdSolicitud !== solicitud.IdSolicitud) return;
+
+    this.autorizacionesDescuento.delete(idProducto);
+    this.aplicarDescuentoAutorizado(idProducto, 0);
+    this.calcularTotal();
+  }
+
+  /** Refleja en la pantalla el descuento autorizado (o lo quita con 0). */
+  private aplicarDescuentoAutorizado(idProducto: number, descuento: number): void {
+    if (idProducto === this.idProductoNacional) {
+      this.descuentoNacional = descuento;
+      this.nuevoPrecioNacional = descuento > 0 ? this.precioNacional - descuento : 0;
+    } else if (idProducto === this.idProductoInternacional) {
+      this.descuentoInternacional = descuento;
+      this.nuevoPrecioInternacional = descuento > 0 ? this.precioInternacional - descuento : 0;
+    }
+  }
+
+  /** Pide autorización para rebajar una entrada. */
+  private async solicitarDescuentoEntrada(idProducto: number, descuento: number): Promise<void> {
+    try {
+      const creada = await firstValueFrom(this.solicitudAutorizacionService.solicitarDescuentoEntrada({
+        IdCaja: this.turnoAbierto.IdCaja,
+        IdProducto: idProducto,
+        DescuentoUnitario: descuento,
+        Motivo: null,
+        IdentificadorEstacion: this.storageService.getCurrentIP() || null,
+      }));
+      this.avisarSolicitudEnviada(creada);
+    } catch {
+      // El interceptor ya mostró el motivo (p. ej. ya hay una pendiente).
+    }
+  }
+
+  private avisarSolicitudEnviada(creada: SolicitudAutorizacionCreada): void {
+    const sinAprobadores = creada.AprobadoresConectados === 0;
+    Notificar.informacion(
+      'Solicitud enviada',
+      sinAprobadores
+        ? 'No hay administradores conectados ahora. La solicitud quedará pendiente y la verán al ingresar.'
+        : creada.Solicitud.Descripcion,
+      sinAprobadores ? 'warning' : 'info',
+    );
   }
 
   /** Carga los productos de entrada (precio, id, nombre) desde el backend. */
@@ -139,6 +256,8 @@ export class DialogEntradasComponent {
     this.loadMoneda();
     this.loadEntradas();
     this.loadPermisoDescuento();
+    void this.cargarMisAutorizaciones();
+    this.escucharAutorizaciones();
     this.spinnerService.show();
 
     try {
@@ -221,25 +340,29 @@ export class DialogEntradasComponent {
 
   async aplicarDescuentoNacional() {
     try {
-      if (this.puedeAplicarDescuento) {
-        const dialogRef = this.dialog.open(DialogMCantComponent, {
-          data: { title: 'Descuento Entrada Nacional' }
-        });
+      const result = await this.dialog.open(DialogMCantComponent, {
+        data: { title: 'Descuento Entrada Nacional' }
+      }).afterClosed().toPromise();
+      const descuento = Number(result?.value ?? 0);
 
-        const result = await dialogRef.afterClosed().toPromise();
-
-        if (!(result?.value && result.value > 0)) {
-          this.descuentoNacional = 0;
-          this.nuevoPrecioNacional = 0;
-        } else {
-          this.iIdUsuarioNacionalAdmin = this.storageService.getCurrentUser().IdUsuario;
-          this.descuentoNacional = result.value;
-          this.nuevoPrecioNacional = this.precioNacional - this.descuentoNacional;
+      if (!this.puedeAplicarDescuento) {
+        if (descuento > 0) {
+          await this.solicitarDescuentoEntrada(this.idProductoNacional, descuento);
         }
-        this.calcularTotal();
-      } else {
-        await this.avisarSinPermisoDescuento();
+
+        return;
       }
+
+      if (descuento <= 0) {
+        this.descuentoNacional = 0;
+        this.nuevoPrecioNacional = 0;
+      } else {
+        this.iIdUsuarioNacionalAdmin = this.storageService.getCurrentUser().IdUsuario;
+        this.descuentoNacional = descuento;
+        this.nuevoPrecioNacional = this.precioNacional - this.descuentoNacional;
+      }
+
+      this.calcularTotal();
     } catch (error) {
       Swal.fire('Error', error.message, 'error');
     }
@@ -247,28 +370,29 @@ export class DialogEntradasComponent {
 
   async aplicarDescuentoInternacional() {
     try {
-      if (this.puedeAplicarDescuento) {
-        const dialogRef = this.dialog.open(DialogMCantComponent, {
-          data: { title: 'Descuento Entrada Internacional' }
-        });
+      const result = await this.dialog.open(DialogMCantComponent, {
+        data: { title: 'Descuento Entrada Internacional' }
+      }).afterClosed().toPromise();
+      const descuento = Number(result?.value ?? 0);
 
-        const result = await dialogRef.afterClosed().toPromise();
-
-        if (!(result?.value && result.value > 0)) {
-          this.descuentoInternacional = 0;
-          this.nuevoPrecioInternacional = 0;
-        } else {
-          this.iIdUsuarioInterNacionalAdmin = this.storageService.getCurrentUser().IdUsuario;
-          this.descuentoInternacional = result.value;
-          this.nuevoPrecioInternacional = this.precioInternacional - this.descuentoInternacional;
+      if (!this.puedeAplicarDescuento) {
+        if (descuento > 0) {
+          await this.solicitarDescuentoEntrada(this.idProductoInternacional, descuento);
         }
 
-
-
-        this.calcularTotal();
-      } else {
-        await this.avisarSinPermisoDescuento();
+        return;
       }
+
+      if (descuento <= 0) {
+        this.descuentoInternacional = 0;
+        this.nuevoPrecioInternacional = 0;
+      } else {
+        this.iIdUsuarioInterNacionalAdmin = this.storageService.getCurrentUser().IdUsuario;
+        this.descuentoInternacional = descuento;
+        this.nuevoPrecioInternacional = this.precioInternacional - this.descuentoInternacional;
+      }
+
+      this.calcularTotal();
     } catch (error) {
       Swal.fire('Error', error.message, 'error');
     }
@@ -447,6 +571,10 @@ export class DialogEntradasComponent {
     }
 
     pedidoCab.ListaPedidoDet = oListaPedidoDet;
+    // El backend comprueba y consume estas autorizaciones al grabar la venta.
+    pedidoCab.IdsAutorizacionDescuento = oListaPedidoDet
+      .map(det => this.autorizacionesDescuento.get(Number(det.Producto?.IdProducto))?.IdSolicitud)
+      .filter((id): id is number => !!id);
     // Procesar códigos promocionales (tragos gratis)
     var listaDescuentoCodigo: DescuentoCodigo[] = [];
     for (let i = 1; i <= this.tragosGratis; i++) {
@@ -606,92 +734,19 @@ export class DialogEntradasComponent {
 
   async procesarEntradaGratis() {
     try {
-
       if (this.entradaSocios === 0 && this.entradaInvitados === 0) {
         return;
       }
 
-      if (this.storageService.getCurrentUser().IdNivel === 1) {
-        const confirmResult = await Swal.fire({
-          title: 'Está apunto de procesar:',
-          html: `
-                    ${(this.entradaSocios !== 0 ? this.entradaSocios + " Entrada(s) para Socios<br>" : "")}
-                    ${(this.entradaSocios !== 0 ? this.entradaSocios + " Entrada(s) para Invitados<br>" : "")}
-                    ¿Desea Continuar?`,
-          icon: 'question',
-          showCancelButton: true,
-          confirmButtonText: 'Sí',
-          cancelButtonText: 'No'
-        });
-
-        if (confirmResult.isDismissed) return;
-
-
-        var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaSocios, 'SOCIOS', 0).toPromise();
-        this.imprimir(responseService.Data);
-
-        var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaInvitados, 'INVITADOS', 0).toPromise();
-        this.imprimir(responseService.Data);
-      } else {
-        await Swal.fire({
-          title: 'Seguridad',
-          text: 'Usted no tiene permiso para procesar entradas gratis.',
-          icon: 'info',
-          confirmButtonText: 'OK'
-        });
-
-        const dialogRef = this.dialog.open(DialogMCantComponent, {
-          width: '350px',
-          data: {
-            title: 'Ingresar Código de Administrador',
-            hideNumber: true,
-            decimalActive: false
-          }
-        });
-
-        dialogRef.afterClosed().subscribe(result => {
-          if (result && result.value) {
-            const codigoAdmin = result.value;
-            // Validar el código del administrador llamando a la API
-            this.usuarioService.getUsuarioAuth(NivelUsuarioEnum.Administrador, codigoAdmin).subscribe(async (response: ApiResponse<Usuario>) => {
-              if (response.Success) {
-                if (response.Data) {
-                  const confirmResult = await Swal.fire({
-                    title: 'Está apunto de procesar:',
-                    html: `
-                            ${(this.entradaSocios !== 0 ? this.entradaSocios + " Entrada(s) para Socios<br>" : "")}
-                            ${(this.entradaSocios !== 0 ? this.entradaSocios + " Entrada(s) para Invitados<br>" : "")}
-                            ¿Desea Continuar?`,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí',
-                    cancelButtonText: 'No'
-                  });
-
-                  if (confirmResult.isDismissed) return;
-
-                  var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaSocios, 'SOCIOS', null).toPromise();
-                  this.imprimir(responseService.Data);
-
-                  var responseService: ApiResponse<ImpresionDTO[]> = await this.entradasemitidasService.procesarEmisionEntradas(this.entradaInvitados, 'INVITADOS', null).toPromise();
-                  this.imprimir(responseService.Data);
-                } else {
-
-                  Swal.fire({
-                    title: 'Código inválido',
-                    text: 'El código ingresado no es correcto.',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                  });
-                }
-              }
-            });
-          }
-        });
-
-
+      // Sin permiso hace falta una autorización aprobada: si no la hay, se pide.
+      if (!this.puedeAplicarDescuento) {
+        await this.procesarEntradaGratisAutorizada();
+        return;
       }
 
+      if (!await this.confirmarEntradasGratis()) return;
+
+      await this.emitirEntradasGratis();
       this.limpiar();
     } catch (error) {
       await Swal.fire({
@@ -700,6 +755,76 @@ export class DialogEntradasComponent {
         icon: 'error',
         confirmButtonText: 'OK'
       });
+    }
+  }
+
+  /** Emite con la autorización aprobada, o la pide si todavía no la tiene. */
+  private async procesarEntradaGratisAutorizada(): Promise<void> {
+    const autorizacion = this.autorizacionEntradasGratis;
+    const datos = autorizacion?.Datos;
+    const coincide = !!datos
+      && Number(datos.Socios ?? 0) === this.entradaSocios
+      && Number(datos.Invitados ?? 0) === this.entradaInvitados;
+
+    if (autorizacion && coincide) {
+      if (!await this.confirmarEntradasGratis()) return;
+
+      await this.emitirEntradasGratis(autorizacion.IdSolicitud);
+      this.autorizacionEntradasGratis = undefined;
+      this.limpiar();
+      return;
+    }
+
+    if (autorizacion) {
+      Notificar.informacion(
+        'Autorización por otras cantidades',
+        `Está autorizado ${datos?.Socios ?? 0} socio(s) y ${datos?.Invitados ?? 0} invitado(s).`,
+        'warning',
+      );
+      return;
+    }
+
+    try {
+      const creada = await firstValueFrom(this.solicitudAutorizacionService.solicitarEntradasGratis({
+        IdCaja: this.turnoAbierto.IdCaja,
+        Socios: this.entradaSocios,
+        Invitados: this.entradaInvitados,
+        Motivo: null,
+        IdentificadorEstacion: this.storageService.getCurrentIP() || null,
+      }));
+      this.avisarSolicitudEnviada(creada);
+    } catch {
+      // El interceptor ya mostró el motivo.
+    }
+  }
+
+  private async confirmarEntradasGratis(): Promise<boolean> {
+    const confirmResult = await Swal.fire({
+      title: 'Está apunto de procesar:',
+      html: `
+                ${(this.entradaSocios !== 0 ? this.entradaSocios + " Entrada(s) para Socios<br>" : "")}
+                ${(this.entradaInvitados !== 0 ? this.entradaInvitados + " Entrada(s) para Invitados<br>" : "")}
+                ¿Desea Continuar?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí',
+      cancelButtonText: 'No'
+    });
+
+    return !confirmResult.isDismissed;
+  }
+
+  private async emitirEntradasGratis(idSolicitudAutorizacion?: number): Promise<void> {
+    this.spinnerService.show();
+    try {
+      const response = await firstValueFrom(this.entradasemitidasService.emitirEntradasGratis(
+        this.entradaSocios,
+        this.entradaInvitados,
+        idSolicitudAutorizacion,
+      ));
+      await this.imprimir(response.Data ?? []);
+    } finally {
+      this.spinnerService.hide();
     }
   }
 }

@@ -10,6 +10,8 @@
 .request-info small { color: #7c7069; }
 .request-amount { padding: 10px 12px; border-radius: 10px; background: #fff; color: #9a1d08; font: 800 20px/1 monospace; }
 .request-actions { display: flex; gap: 8px; }
+.email-preference { display: grid; gap: 4px; margin-top: 18px; padding-top: 14px; border-top: 1px solid #ead6c8; }
+.email-preference small { color: #7c7069; }
 @media (max-width: 700px) {
   .approval-dialog { width: auto; }
   .request-card { grid-template-columns: 1fr auto; }

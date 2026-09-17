@@ -13,15 +13,15 @@
 
   <article *ngFor="let solicitud of solicitudes" class="request-card">
     <div class="request-info">
-      <span class="request-type">{{ 'voidProductRequest' | tenantText }} · {{ solicitud.Ubicacion }}</span>
+      <span class="request-type">{{ etiquetaTipo(solicitud) }} · {{ solicitud.Ubicacion }}</span>
       <h3>{{ solicitud.Descripcion }}</h3>
-      <p class="request-reason">“{{ solicitud.Motivo }}”</p>
+      <p class="request-reason" *ngIf="solicitud.Motivo">“{{ solicitud.Motivo }}”</p>
       <small>
         {{ 'requestedBy' | tenantText:{ user: solicitud.UsuarioSolicita } }}
         · {{ solicitud.FechaSolicitudUtc | date:'HH:mm' }}
       </small>
     </div>
-    <div class="request-amount">{{ solicitud.Importe | number:'1.2-2' }}</div>
+    <div class="request-amount" *ngIf="solicitud.Importe > 0">{{ solicitud.Importe | number:'1.2-2' }}</div>
     <div class="request-actions">
       <button mat-stroked-button color="warn"
               [disabled]="procesando.has(solicitud.IdSolicitud)"
@@ -35,4 +35,15 @@
       </button>
     </div>
   </article>
+
+  <div class="email-preference" *ngIf="puedeElegirCorreo">
+    <mat-slide-toggle
+      color="primary"
+      [checked]="recibirPorCorreo"
+      [disabled]="guardandoPreferencia"
+      (change)="cambiarPreferenciaCorreo($event.checked)">
+      {{ 'alsoNotifyByEmail' | tenantText }}
+    </mat-slide-toggle>
+    <small>{{ 'alsoNotifyByEmailHint' | tenantText }}</small>
+  </div>
 </div>

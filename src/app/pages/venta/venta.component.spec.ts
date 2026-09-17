@@ -166,3 +166,34 @@ describe('VentaComponent - anulación de productos con aprobación', () => {
     expect(component.solicitudesPedido.has(3)).toBeFalse();
   });
 });
+
+describe('VentaComponent - solicitudes sobre la cuenta', () => {
+  function crearComponente(solicitudes: any[]) {
+    const component = Object.create(VentaComponent.prototype) as any;
+    component.solicitudesCuenta = solicitudes;
+    component.textCatalog = { get: (clave: string, params?: any) => params ? `${clave}:${params.user}` : clave };
+    return component;
+  }
+
+  const solicitud = (tipo: string, usuario = 'Ana') => ({
+    IdSolicitud: 1,
+    Tipo: tipo,
+    Descripcion: 'Cuenta completa',
+    UsuarioSolicita: usuario,
+  });
+
+  it('encuentra la solicitud pendiente por tipo', () => {
+    const component = crearComponente([solicitud('AnularPedido')]);
+
+    expect(component.solicitudCuentaPendiente('AnularPedido')).toBeTruthy();
+    expect(component.solicitudCuentaPendiente('CambiarCamarero')).toBeUndefined();
+  });
+
+  it('resume las solicitudes pendientes con quién las pidió', () => {
+    const component = crearComponente([solicitud('AnularPedido'), solicitud('CambiarCamarero', 'Luis')]);
+
+    expect(component.resumenSolicitudesCuenta).toBe(
+      'Cuenta completa (requestedBy:Ana) · Cuenta completa (requestedBy:Luis)',
+    );
+  });
+});

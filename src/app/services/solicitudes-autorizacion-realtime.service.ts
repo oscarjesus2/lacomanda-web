@@ -26,6 +26,10 @@ export class SolicitudesAutorizacionRealtimeService {
   private readonly esAprobadorSubject = new BehaviorSubject<boolean>(false);
   readonly esAprobador$ = this.esAprobadorSubject.asObservable();
 
+  private readonly apruebaDescuentosSubject = new BehaviorSubject<boolean>(false);
+  /** Los descuentos y las entradas gratis solo los aprueba quien puede aplicarlos. */
+  readonly apruebaDescuentos$ = this.apruebaDescuentosSubject.asObservable();
+
   private readonly creadaSubject = new Subject<SolicitudAutorizacion>();
   /** Nuevas solicitudes (solo llegan a aprobadores). */
   readonly creada$ = this.creadaSubject.asObservable();
@@ -50,6 +54,10 @@ export class SolicitudesAutorizacionRealtimeService {
     return this.esAprobadorSubject.value;
   }
 
+  get apruebaDescuentos(): boolean {
+    return this.apruebaDescuentosSubject.value;
+  }
+
   get pendientes(): SolicitudAutorizacion[] {
     return this.pendientesSubject.value;
   }
@@ -67,6 +75,7 @@ export class SolicitudesAutorizacionRealtimeService {
     const hub = this.hub;
     this.hub = undefined;
     this.esAprobadorSubject.next(false);
+    this.apruebaDescuentosSubject.next(false);
     this.pendientesSubject.next([]);
     if (hub && hub.state !== signalR.HubConnectionState.Disconnected) {
       await hub.stop();
@@ -114,13 +123,18 @@ export class SolicitudesAutorizacionRealtimeService {
     try {
       const response = await firstValueFrom(this.usuarioService.getUsuarioActual());
       const usuario = response?.Data;
+      const esAdministrador = usuario?.IdNivel === NivelUsuarioEnum.Administrador;
       const esAprobador = !!usuario?.Activo && (
-        usuario.IdNivel === NivelUsuarioEnum.Administrador
+        esAdministrador
         || (usuario.IdNivel === NivelUsuarioEnum.Cajero && !!usuario.PuedeAprobarSolicitudes)
       );
       this.esAprobadorSubject.next(esAprobador);
+      this.apruebaDescuentosSubject.next(
+        esAprobador && (esAdministrador || !!usuario?.PuedeAplicarDescuento),
+      );
     } catch {
       this.esAprobadorSubject.next(false);
+      this.apruebaDescuentosSubject.next(false);
     }
   }
 

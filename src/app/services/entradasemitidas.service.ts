@@ -18,4 +18,20 @@ export class EntradasEmitidasService {
   procesarEmisionEntradas(cantidadEntradas: number, tipoEntrada: string, idVentaRef?: number): Observable<ApiResponse<ImpresionDTO[]>> {
     return this.http.put<ApiResponse<ImpresionDTO[]>>(`${this.basePath }ProcesarEmisionEntradas/${cantidadEntradas}/${tipoEntrada}/${idVentaRef}`, {});
   }
+
+  /**
+   * Entradas sin cobro. Quien puede aplicar descuentos las emite directamente;
+   * el resto manda la autorización aprobada, que el backend consume.
+   */
+  emitirEntradasGratis(
+    socios: number,
+    invitados: number,
+    idSolicitudAutorizacion?: number,
+  ): Observable<ApiResponse<ImpresionDTO[]>> {
+    return this.http.post<ApiResponse<ImpresionDTO[]>>(`${this.basePath}gratis`, {
+      Socios: socios,
+      Invitados: invitados,
+      IdSolicitudAutorizacion: idSolicitudAutorizacion ?? null,
+    });
+  }
 }

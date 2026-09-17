@@ -4,11 +4,34 @@ export type EstadoSolicitudAutorizacion =
   | 'Denegada'
   | 'Cancelada'
   | 'SinEfecto'
-  | 'Caducada';
+  | 'Caducada'
+  | 'Utilizada';
+
+export type TipoSolicitudAutorizacion =
+  | 'AnularProducto'
+  | 'CambiarCamarero'
+  | 'AnularPedido'
+  | 'DescuentoPedido'
+  | 'DescuentoEntrada'
+  | 'EntradasGratis';
+
+/** Parámetros de la acción, tal como los guardó el servidor. */
+export interface DatosSolicitudAutorizacion {
+  IdEmpleado?: number;
+  IdDescuento?: number;
+  Porcentaje?: number;
+  NroCupon?: string | null;
+  Item?: number;
+  IdProducto?: number;
+  DescuentoUnitario?: number;
+  PrecioUnitario?: number;
+  Socios?: number;
+  Invitados?: number;
+}
 
 export interface SolicitudAutorizacion {
   IdSolicitud: number;
-  Tipo: string;
+  Tipo: TipoSolicitudAutorizacion | string;
   Estado: EstadoSolicitudAutorizacion;
   IdPedido: number;
   NroCuenta: number;
@@ -18,12 +41,24 @@ export interface SolicitudAutorizacion {
   Descripcion: string;
   Importe: number;
   Motivo: string;
+  /** Parámetros de la acción (camarero, descuento, cantidades…). */
+  Datos: DatosSolicitudAutorizacion | null;
+  /** Solo la aprueba quien además puede aplicar descuentos. */
+  RequierePermisoDescuento: boolean;
+  /** Autorización de un uso: tras aprobarse, quien la pidió la consume. */
+  RequiereUso: boolean;
   IdUsuarioSolicita: number;
   UsuarioSolicita: string;
   FechaSolicitudUtc: Date;
   UsuarioResuelve: string | null;
   FechaResolucionUtc: Date | null;
+  FechaUsoUtc: Date | null;
   Observacion: string | null;
+}
+
+/** Aprobada y todavía sin consumir. */
+export function autorizacionDisponible(solicitud: SolicitudAutorizacion): boolean {
+  return solicitud.RequiereUso && solicitud.Estado === 'Aprobada';
 }
 
 export interface SolicitudAutorizacionCreada {
@@ -38,6 +73,54 @@ export interface SolicitarAnulacionProducto {
   Item: number;
   Motivo: string;
   IdentificadorEstacion: string | null;
+}
+
+export interface SolicitarAnulacionPedido {
+  IdPedido: number;
+  NroCuenta: number;
+  Motivo: string;
+  IdentificadorEstacion: string | null;
+}
+
+export interface SolicitarCambioCamarero {
+  IdPedido: number;
+  NroCuenta: number;
+  IdEmpleado: number;
+  IdentificadorEstacion: string | null;
+}
+
+export interface SolicitarDescuentoPedido {
+  IdPedido: number;
+  NroCuenta: number;
+  Item: number;
+  IdDescuento: number;
+  Porcentaje: number;
+  NroCupon: string | null;
+  Motivo: string | null;
+  IdentificadorEstacion: string | null;
+}
+
+export interface SolicitarDescuentoEntrada {
+  IdCaja: number;
+  IdProducto: number;
+  DescuentoUnitario: number;
+  Motivo: string | null;
+  IdentificadorEstacion: string | null;
+}
+
+export interface SolicitarEntradasGratis {
+  IdCaja: number;
+  Socios: number;
+  Invitados: number;
+  Motivo: string | null;
+  IdentificadorEstacion: string | null;
+}
+
+export interface PreferenciasSolicitudes {
+  RecibirPorCorreo: boolean;
+  Email: string | null;
+  EsAprobador: boolean;
+  PuedeAprobarDescuentos: boolean;
 }
 
 /**
@@ -68,11 +151,31 @@ export function normalizarSolicitudAutorizacion(raw: any): SolicitudAutorizacion
     Descripcion: String(valor('Descripcion') ?? ''),
     Importe: Number(valor('Importe') ?? 0),
     Motivo: String(valor('Motivo') ?? ''),
+    Datos: leerDatos(valor('Datos')),
+    RequierePermisoDescuento: valor('RequierePermisoDescuento') === true,
+    RequiereUso: valor('RequiereUso') === true,
     IdUsuarioSolicita: Number(valor('IdUsuarioSolicita') ?? 0),
     UsuarioSolicita: String(valor('UsuarioSolicita') ?? ''),
     FechaSolicitudUtc: fecha('FechaSolicitudUtc') ?? new Date(),
     UsuarioResuelve: valor('UsuarioResuelve') ?? null,
     FechaResolucionUtc: fecha('FechaResolucionUtc'),
+    FechaUsoUtc: fecha('FechaUsoUtc'),
     Observacion: valor('Observacion') ?? null,
   };
+}
+
+/** El servidor guarda los parámetros como JSON; aquí se leen con nombres PascalCase. */
+function leerDatos(raw: unknown): DatosSolicitudAutorizacion | null {
+  if (!raw) return null;
+  try {
+    const plano = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    if (!plano || typeof plano !== 'object') return null;
+    const datos: Record<string, unknown> = {};
+    Object.entries(plano as Record<string, unknown>).forEach(([clave, valor]) => {
+      datos[clave.charAt(0).toUpperCase() + clave.slice(1)] = valor;
+    });
+    return datos as DatosSolicitudAutorizacion;
+  } catch {
+    return null;
+  }
 }

@@ -3,6 +3,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { SolicitudAutorizacion } from 'src/app/models/solicitud-autorizacion.models';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { TenantTextKey } from 'src/app/services/localization/tenant-texts.en';
 import { SolicitudAutorizacionService } from 'src/app/services/solicitud-autorizacion.service';
 import { SolicitudesAutorizacionRealtimeService } from 'src/app/services/solicitudes-autorizacion-realtime.service';
 import { Notificar } from 'src/app/shared/notificaciones';
@@ -17,6 +18,10 @@ import { DialogMTextComponent } from '../dialog-mtext/dialog-mtext.component';
 export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy {
   solicitudes: SolicitudAutorizacion[] = [];
   readonly procesando = new Set<number>();
+  /** Preferencia propia: recibir también las solicitudes por correo. */
+  recibirPorCorreo = false;
+  puedeElegirCorreo = false;
+  guardandoPreferencia = false;
   private subscription?: Subscription;
 
   constructor(
@@ -32,6 +37,47 @@ export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy
       this.solicitudes = solicitudes;
     });
     void this.realtime.sincronizar();
+    void this.cargarPreferencias();
+  }
+
+  /** Etiqueta del tipo de solicitud, para no mostrar el nombre técnico. */
+  etiquetaTipo(solicitud: SolicitudAutorizacion): string {
+    const claves: Record<string, TenantTextKey> = {
+      AnularProducto: 'voidProductRequest',
+      CambiarCamarero: 'changeAttendantRequest',
+      AnularPedido: 'voidOrderRequest',
+      DescuentoPedido: 'orderDiscountRequest',
+      DescuentoEntrada: 'ticketDiscountRequest',
+      EntradasGratis: 'freeTicketsRequest',
+    };
+    const clave = claves[solicitud.Tipo];
+    return clave ? this.textCatalog.get(clave) : solicitud.Tipo;
+  }
+
+  async cambiarPreferenciaCorreo(recibir: boolean): Promise<void> {
+    this.guardandoPreferencia = true;
+    try {
+      const preferencias = await firstValueFrom(this.api.guardarPreferencias(recibir));
+      this.recibirPorCorreo = preferencias.RecibirPorCorreo;
+      Notificar.exito(this.textCatalog.get(
+        preferencias.RecibirPorCorreo ? 'emailAlertsOn' : 'emailAlertsOff',
+      ));
+    } catch {
+      // El interceptor ya mostró el motivo (p. ej. el usuario no tiene correo).
+      await this.cargarPreferencias();
+    } finally {
+      this.guardandoPreferencia = false;
+    }
+  }
+
+  private async cargarPreferencias(): Promise<void> {
+    try {
+      const preferencias = await firstValueFrom(this.api.obtenerPreferencias());
+      this.recibirPorCorreo = preferencias.RecibirPorCorreo;
+      this.puedeElegirCorreo = preferencias.EsAprobador && !!preferencias.Email;
+    } catch {
+      this.puedeElegirCorreo = false;
+    }
   }
 
   ngOnDestroy(): void {
