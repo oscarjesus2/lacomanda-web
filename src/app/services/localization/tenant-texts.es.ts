@@ -125,6 +125,8 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   shiftLookupFailed: 'No se pudo comprobar el turno de esta estación.',
   allowOpenShift: 'Permitir abrir turnos',
   allowCloseShift: 'Permitir cerrar turnos',
+  allowApplyDiscounts: 'Permitir aplicar descuentos',
+  noDiscountPermission: 'No tienes permiso para aplicar descuentos. Solicita a un administrador que te lo conceda.',
   componentWillClose: 'Esta pantalla se cerrará.',
   change: 'Cambiar',
 

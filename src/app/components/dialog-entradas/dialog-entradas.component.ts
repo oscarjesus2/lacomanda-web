@@ -64,6 +64,8 @@ export class DialogEntradasComponent {
   iIdUsuarioNacionalAdmin: any;
   iIdUsuarioInterNacionalAdmin: any;
   vinoConTaxista: boolean = false;
+  /** Administrador, o cajero con el permiso "Permitir aplicar descuentos". */
+  puedeAplicarDescuento = false;
 
   constructor(
     public dialogRef: MatDialogRef<DialogEntradasComponent>,
@@ -121,10 +123,22 @@ export class DialogEntradasComponent {
       this.mensajeTaxista = "Usted esta indicando que el cliente NO vino con taxista";
     }
   }
+  /** Consulta el permiso en el backend (no en la sesión guardada, que puede estar desactualizada). */
+  private loadPermisoDescuento(): void {
+    this.usuarioService.getUsuarioActual().subscribe({
+      next: (response) => {
+        this.puedeAplicarDescuento = response?.Data?.IdNivel === NivelUsuarioEnum.Administrador
+          || !!response?.Data?.PuedeAplicarDescuento;
+      },
+      error: () => { this.puedeAplicarDescuento = false; }
+    });
+  }
+
   async ngOnInit() {
 
     this.loadMoneda();
     this.loadEntradas();
+    this.loadPermisoDescuento();
     this.spinnerService.show();
 
     try {
@@ -207,7 +221,7 @@ export class DialogEntradasComponent {
 
   async aplicarDescuentoNacional() {
     try {
-      if (this.storageService.getCurrentUser().IdNivel === 1) {
+      if (this.puedeAplicarDescuento) {
         const dialogRef = this.dialog.open(DialogMCantComponent, {
           data: { title: 'Descuento Entrada Nacional' }
         });
@@ -224,7 +238,7 @@ export class DialogEntradasComponent {
         }
         this.calcularTotal();
       } else {
-        await this.verificarPermisoDescuento('nacional');
+        await this.avisarSinPermisoDescuento();
       }
     } catch (error) {
       Swal.fire('Error', error.message, 'error');
@@ -233,7 +247,7 @@ export class DialogEntradasComponent {
 
   async aplicarDescuentoInternacional() {
     try {
-      if (this.storageService.getCurrentUser().IdNivel === 1) {
+      if (this.puedeAplicarDescuento) {
         const dialogRef = this.dialog.open(DialogMCantComponent, {
           data: { title: 'Descuento Entrada Internacional' }
         });
@@ -253,66 +267,21 @@ export class DialogEntradasComponent {
 
         this.calcularTotal();
       } else {
-        await this.verificarPermisoDescuento('internacional');
+        await this.avisarSinPermisoDescuento();
       }
     } catch (error) {
       Swal.fire('Error', error.message, 'error');
     }
   }
 
-  async verificarPermisoDescuento(tipo: 'nacional' | 'internacional') {
+  async avisarSinPermisoDescuento() {
+    // El backend también valida el permiso al emitir el comprobante.
     await Swal.fire({
       title: 'Seguridad',
-      text: 'Usted no tiene permiso para aplicar descuentos.',
+      text: 'No tienes permiso para aplicar descuentos. Solicita a un administrador que te lo conceda.',
       icon: 'info',
       confirmButtonText: 'OK'
     });
-
-    const dialogRef = this.dialog.open(DialogMCantComponent, {
-      width: '350px',
-      data: {
-        title: 'Ingresar Código de Administrador',
-        hideNumber: true,
-        decimalActive: false
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && result.value) {
-        const codigoAdmin = result.value;
-        // Validar el código del administrador llamando a la API
-        this.usuarioService.getUsuarioAuth(NivelUsuarioEnum.Administrador, codigoAdmin).subscribe(async (response: ApiResponse<Usuario>) => {
-          if (response.Success) {
-            if (response.Data) {
-              if (tipo === 'nacional') {
-                this.iIdUsuarioNacionalAdmin = result.iRetornaUsuarioAdmin;
-                await this.aplicarDescuentoNacional();
-              } else {
-                this.iIdUsuarioInterNacionalAdmin = result.iRetornaUsuarioAdmin;
-                await this.aplicarDescuentoInternacional();
-              }
-            } else {
-
-              Swal.fire({
-                title: 'Código inválido',
-                text: 'El código ingresado no es correcto.',
-                icon: 'error',
-                confirmButtonText: 'OK'
-              });
-            }
-          }
-        });
-      } else {
-        if (tipo === 'nacional') {
-          this.descuentoNacional = 0;
-          this.nuevoPrecioNacional = 0;
-        } else {
-          this.descuentoInternacional = 0;
-          this.nuevoPrecioInternacional = 0;
-        }
-      }
-    });
-
   }
 
 

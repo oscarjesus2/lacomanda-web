@@ -123,6 +123,8 @@ export const EN_TEXTS = {
   shiftLookupFailed: 'Could not check this station\'s shift.',
   allowOpenShift: 'Allow opening shifts',
   allowCloseShift: 'Allow closing shifts',
+  allowApplyDiscounts: 'Allow applying discounts',
+  noDiscountPermission: 'You do not have permission to apply discounts. Ask an administrator to grant it.',
   componentWillClose: 'This screen will close.',
   change: 'Change',
 

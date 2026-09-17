@@ -49,6 +49,7 @@ export class UsuarioService {
       IdEmpleado:    usuario.IdEmpleado,
       PuedeAbrirTurno: !!usuario.PuedeAbrirTurno,
       PuedeCerrarTurno: !!usuario.PuedeCerrarTurno,
+      PuedeAplicarDescuento: !!usuario.PuedeAplicarDescuento,
     };
     return this.http.put<ApiResponse<Usuario>>(`${this.basePath}/${usuario.IdUsuario}`, dto);
   }

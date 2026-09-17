@@ -113,6 +113,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   public sinTurno = false;
   public puedeAbrirTurno = false;
   public puedeCerrarTurno = false;
+  public puedeAplicarDescuento = false;
   public cargandoPermisos = true;
   public user: Usuario;
   public config: Configuracion | null = null;
@@ -469,11 +470,14 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
           || !!response?.Data?.PuedeAbrirTurno;
         this.puedeCerrarTurno = response?.Data?.IdNivel === NivelUsuarioEnum.Administrador
           || !!response?.Data?.PuedeCerrarTurno;
+        this.puedeAplicarDescuento = response?.Data?.IdNivel === NivelUsuarioEnum.Administrador
+          || !!response?.Data?.PuedeAplicarDescuento;
         this.cargandoPermisos = false;
       },
       error: () => {
         this.puedeAbrirTurno = false;
         this.puedeCerrarTurno = false;
+        this.puedeAplicarDescuento = false;
         this.cargandoPermisos = false;
       },
     });
@@ -2088,7 +2092,13 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (this.descuentoAplicado) {
       this.quitarDescuento();
-    }else{
+    } else if (!this.puedeAplicarDescuento) {
+      // El backend también lo valida; aquí solo se evita abrir el diálogo.
+      Swal.fire({
+        icon: 'info',
+        text: this.textCatalog.get('noDiscountPermission'),
+      });
+    } else {
       this.openDialogoDescuento(this.selectedRow);
     }
     
