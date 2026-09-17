@@ -13,6 +13,7 @@ import { EstadoImpresion, EstadoImpresionService } from './services/estado-impre
 import { NivelUsuarioEnum } from './enums/enum';
 import { AppUpdateService } from './services/app-update.service';
 import { SolicitudesAutorizacionRealtimeService } from './services/solicitudes-autorizacion-realtime.service';
+import { SesionUsuarioService } from './services/sesion-usuario.service';
 import { SolicitudAutorizacion } from './models/solicitud-autorizacion.models';
 import { Notificar } from './shared/notificaciones';
 
@@ -68,6 +69,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private estacionSessionRealtime: EstacionSessionRealtimeService,
     private estadoImpresionService: EstadoImpresionService,
     private solicitudesAutorizacion: SolicitudesAutorizacionRealtimeService,
+    private sesionUsuario: SesionUsuarioService,
   ) {
     this.backendDown$ = this.backendStatusService.isDown$;
     this.headerService.headerVisible$.subscribe(visible => {
@@ -175,6 +177,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.agenteImpresionPedidos.detener();
     this.estacionSessionRealtime.stop();
     void this.solicitudesAutorizacion.detener();
+    this.sesionUsuario.liberar();
     this.storageService.logout();
   }
 
@@ -201,11 +204,13 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.esRutaPublica(url)) {
       this.estacionSessionRealtime.stop();
       void this.solicitudesAutorizacion.detener();
+      void this.sesionUsuario.detener();
       return;
     }
 
     this.estacionSessionRealtime.start();
     this.solicitudesAutorizacion.iniciar();
+    this.sesionUsuario.iniciar();
   }
 
   private esRutaPublica(url: string): boolean {

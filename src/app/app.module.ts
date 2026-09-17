@@ -34,7 +34,6 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { DialogMozoComponent } from './components/dialog-mozo/dialog-mozo.component';
-import { DialogDeleteProductComponent } from './components/dialog-delete-product/dialog-product-delete.component';
 import { PedidosListComponent } from './components/pedidos-list/pedidos-list.component';
 import { DialogEnviarPedidoComponent } from './components/dialog-grabar-pedido/dialog-grabar-pedido.component';
 import { DialogVerPedidoComponent } from './components/dialog-ver-pedido/dialog-ver-pedido.component';
@@ -172,7 +171,6 @@ export const MY_DATE_FORMATS = {
     DashboardComponent,
 
     DialogMozoComponent,
-    DialogDeleteProductComponent,
     PedidosListComponent,
     DialogEnviarPedidoComponent,
     DialogVerPedidoComponent,

@@ -127,6 +127,8 @@ export const EN_TEXTS = {
   allowCloseShift: 'Allow closing shifts',
   allowApplyDiscounts: 'Allow applying discounts',
   allowApproveRequests: 'Allow approving requests',
+  sentComplementCannotBeRemoved: 'This complement was already sent to the kitchen',
+  sentComplementCannotBeRemovedHint: 'To change it, void the product on the account: the void ticket has to reach the kitchen too.',
   onlyAdminCanVoidDocuments: 'Only an administrator can void issued documents.',
   changeAttendantRequest: 'Change attendant',
   voidOrderRequest: 'Void account',

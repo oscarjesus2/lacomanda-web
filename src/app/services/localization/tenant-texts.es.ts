@@ -129,6 +129,8 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   allowCloseShift: 'Permitir cerrar turnos',
   allowApplyDiscounts: 'Permitir aplicar descuentos',
   allowApproveRequests: 'Permitir aprobar solicitudes',
+  sentComplementCannotBeRemoved: 'Este complemento ya se envió a cocina',
+  sentComplementCannotBeRemovedHint: 'Para cambiarlo, anula el producto en la cuenta: la comanda de anulación también tiene que llegar a cocina.',
   onlyAdminCanVoidDocuments: 'Solo un administrador puede anular documentos emitidos.',
   changeAttendantRequest: 'Cambiar camarero',
   voidOrderRequest: 'Anular cuenta',
