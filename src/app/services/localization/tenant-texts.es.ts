@@ -94,7 +94,9 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   couldNotLoadStations: 'No se pudo obtener la lista de estaciones.',
   stationNotConfigured: 'Estación no configurada',
   stationIdentifierMissing:
-    'Este dispositivo no tiene un identificador de estación. Contacta al administrador.',
+    'Este dispositivo no está configurado como estación. Solo un administrador puede ingresar para configurarlo.',
+  selectYourBranch: 'Selecciona tu sucursal',
+  selectBranchToSignIn: 'Elige el local y continúa para iniciar sesión.',
   selectBranchAndUser: 'Selecciona una sucursal e ingresa tu usuario.',
   iosInstallHint:
     'Para instalar la aplicación en iOS, abre el menú de compartir y selecciona "Agregar a la pantalla de inicio".',

@@ -16,8 +16,8 @@
 
       <!-- ── Vista: Selección de sucursal (paso 1) ───────────────────────── -->
       <form [formGroup]="loginForm" (ngSubmit)="login()">
-        <h2 class="step-title">Selecciona tu sucursal</h2>
-        <p class="step-subtitle">Elige el local y continúa para iniciar sesión.</p>
+        <h2 class="step-title">{{ 'selectYourBranch' | tenantText }}</h2>
+        <p class="step-subtitle">{{ 'selectBranchToSignIn' | tenantText }}</p>
 
         <div *ngIf="!loginValid" class="error-banner">
           {{ 'invalidCredentials' | tenantText }}

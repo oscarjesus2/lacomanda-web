@@ -21,6 +21,7 @@ import { UsuarioService } from 'src/app/services/usuario.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { Usuario } from 'src/app/models/usuario.models';
 import Swal from 'sweetalert2';
+import { firstValueFrom } from 'rxjs';
 
 interface PendingLogin {
   TenantId: string;
@@ -155,6 +156,17 @@ export class LoginComponent implements OnInit {
     this.loginForm = this.fb.group({
       tenant: [null, Validators.required],
     });
+    // Antes de tener sesión, el idioma lo define la sucursal elegida.
+    this.loginForm.get('tenant')?.valueChanges.subscribe(
+      (tenant: TenantDefault | null) => this.aplicarCulturaSucursal(tenant?.Cultura),
+    );
+  }
+
+  /** Aplica la cultura de la sucursal; si no tiene, se mantiene la del navegador. */
+  private aplicarCulturaSucursal(cultura: string | null | undefined): void {
+    if (cultura?.trim()) {
+      this.textCatalog.setCulture(cultura);
+    }
   }
 
   // ── Login (redirect a Keycloak) ─────────────────────────────────────────────
@@ -169,6 +181,7 @@ export class LoginComponent implements OnInit {
       Cultura:  tenant.Cultura,
     };
 
+    this.aplicarCulturaSucursal(pending.Cultura);
     // Recordar la sucursal para las próximas visitas (y para que Keycloak la lea).
     this.saveSucursal(pending);
 
@@ -253,7 +266,7 @@ export class LoginComponent implements OnInit {
         return false;
       }
 
-      this.completarSesion(tokens.token, tokens.refreshToken, pending);
+      this.completarSesion(tokens, pending);
       return true;
     } catch {
       localStorage.removeItem(LoginComponent.PENDING_LOGIN_KEY);
@@ -269,10 +282,12 @@ export class LoginComponent implements OnInit {
    * post-login (roles, estación, cultura, config y navegación).
    */
   private completarSesion(
-    token: string,
-    refreshToken: string,
+    tokens: { token: string; refreshToken: string; idToken?: string },
     pending: PendingLogin,
   ): void {
+    const { token, refreshToken } = tokens;
+    // Los mensajes previos a la sesión (p. ej. rechazos) usan el idioma de la sucursal.
+    this.aplicarCulturaSucursal(pending.Cultura);
     const roles   = this.keycloakAuth.getRoles(token);
     const usuario = this.keycloakAuth.buildUsuarioFromToken(token);
 
@@ -284,7 +299,7 @@ export class LoginComponent implements OnInit {
     if (!hasRole) {
       this.spinnerService.hide();
       this.notificationService.showWarning(this.textCatalog.get('noBusinessRole'));
-      this.loadTenants();
+      void this.rechazarSesionKeycloak(tokens, pending);
       return;
     }
 
@@ -339,13 +354,12 @@ export class LoginComponent implements OnInit {
     } else {
       if (!isAdmin) {
         this.spinnerService.hide();
-        Swal.fire({
+        void Swal.fire({
           title: this.textCatalog.get('stationNotConfigured'),
           text: this.textCatalog.get('stationIdentifierMissing'),
           icon: 'warning',
           confirmButtonText: this.textCatalog.get('accept')
-        });
-        this.loadTenants();
+        }).then(() => this.rechazarSesionKeycloak(tokens, pending));
         return;
       }
 
@@ -365,6 +379,31 @@ export class LoginComponent implements OnInit {
       this.spinnerService.hide();
       this.ensureConfigThenNavigate('/dashboard');
     }
+  }
+
+  /**
+   * Un usuario autenticado en Keycloak pero no admitido en este dispositivo
+   * deja abierta su sesión SSO. Sin cerrarla, el siguiente "Continuar" (o la
+   * sucursal recordada) vuelve a entrar silenciosamente con ese mismo usuario
+   * y el administrador nunca llega a ver el formulario de Keycloak.
+   */
+  private async rechazarSesionKeycloak(
+    tokens: { refreshToken: string; idToken?: string },
+    pending: PendingLogin,
+  ): Promise<void> {
+    this.storageService.removeCurrentSession();
+    try {
+      await firstValueFrom(
+        this.keycloakAuth.logout(tokens.refreshToken, pending.TenantId),
+      );
+    } catch {
+      if (tokens.idToken) {
+        // Respaldo: cierre por redirección; Keycloak devuelve al login.
+        this.keycloak.logoutRedirect(pending.TenantId, tokens.idToken);
+        return;
+      }
+    }
+    this.loadTenants();
   }
 
   /**
@@ -499,6 +538,7 @@ export class LoginComponent implements OnInit {
 
         if (tenantValido) {
           const pending = this.toPendingLogin(tenantValido);
+          this.aplicarCulturaSucursal(pending.Cultura);
           this.saveSucursal(pending);
           await this.loginWithTenant(pending);
           return;
@@ -512,6 +552,7 @@ export class LoginComponent implements OnInit {
         // continuamos sin obligar al usuario a confirmar un dato inequívoco.
         if (this.tenantDefault.length === 1) {
           const pending = this.toPendingLogin(this.tenantDefault[0]);
+          this.aplicarCulturaSucursal(pending.Cultura);
           this.saveSucursal(pending);
           await this.loginWithTenant(pending);
           return;

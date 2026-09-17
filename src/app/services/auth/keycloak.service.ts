@@ -43,7 +43,9 @@ export class KeycloakService {
    * usado en login(). Devuelve los tokens si la autenticación fue exitosa,
    * o null si no había un callback válido en la URL.
    */
-  async completeLogin(realm: string): Promise<{ token: string; refreshToken: string } | null> {
+  async completeLogin(
+    realm: string,
+  ): Promise<{ token: string; refreshToken: string; idToken?: string } | null> {
     this.kc = this.create(realm);
     const authenticated = await this.kc.init({
       pkceMethod: 'S256',
@@ -51,9 +53,28 @@ export class KeycloakService {
     });
 
     if (authenticated && this.kc.token && this.kc.refreshToken) {
-      return { token: this.kc.token, refreshToken: this.kc.refreshToken };
+      return {
+        token: this.kc.token,
+        refreshToken: this.kc.refreshToken,
+        idToken: this.kc.idToken,
+      };
     }
     return null;
+  }
+
+  /**
+   * Cierra la sesión SSO por redirección (front-channel) y vuelve al login.
+   * Se usa como respaldo cuando el logout por refresh_token no fue posible.
+   */
+  logoutRedirect(realm: string, idToken: string): void {
+    const params = new URLSearchParams({
+      client_id: environment.keycloak.clientId,
+      id_token_hint: idToken,
+      post_logout_redirect_uri: this.loginRedirectUri,
+    });
+    window.location.assign(
+      `${environment.keycloak.url}/realms/${realm}/protocol/openid-connect/logout?${params}`,
+    );
   }
 
   /**

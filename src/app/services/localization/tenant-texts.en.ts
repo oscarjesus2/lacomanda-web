@@ -92,7 +92,9 @@ export const EN_TEXTS = {
   couldNotLoadStations: 'The station list could not be loaded.',
   stationNotConfigured: 'Station not configured',
   stationIdentifierMissing:
-    'This device does not have a station identifier. Contact the administrator.',
+    'This device is not configured as a station. Only an administrator can sign in to configure it.',
+  selectYourBranch: 'Select your branch',
+  selectBranchToSignIn: 'Choose the location and continue to sign in.',
   selectBranchAndUser: 'Select a branch and enter your username.',
   iosInstallHint:
     'To install the application on iOS, open the share menu and select "Add to Home Screen".',
