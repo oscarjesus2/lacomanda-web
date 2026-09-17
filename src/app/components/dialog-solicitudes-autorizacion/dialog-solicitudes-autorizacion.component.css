@@ -1,6 +1,5 @@
-.approval-dialog { position: relative; min-width: min(720px, 82vw); max-height: 78vh; overflow: auto; padding: 26px; box-sizing: border-box; }
-.close-button { position: absolute; top: 10px; right: 10px; }
-h2 { margin: 0 0 4px; color: #8e0c0c; letter-spacing: .08em; text-transform: uppercase; }
+/* Fondo, borde, título y botón de cierre: primitivas globales de .mant-panel. */
+.approval-dialog { width: min(720px, 82vw); }
 .subtitle { margin: 0 0 22px; color: #7c7069; }
 .empty-state { min-height: 200px; display: grid; place-content: center; justify-items: center; gap: 8px; color: #81756d; text-align: center; }
 .empty-state mat-icon { width: 48px; height: 48px; font-size: 48px; }
@@ -12,7 +11,7 @@ h2 { margin: 0 0 4px; color: #8e0c0c; letter-spacing: .08em; text-transform: upp
 .request-amount { padding: 10px 12px; border-radius: 10px; background: #fff; color: #9a1d08; font: 800 20px/1 monospace; }
 .request-actions { display: flex; gap: 8px; }
 @media (max-width: 700px) {
-  .approval-dialog { min-width: 0; }
+  .approval-dialog { width: auto; }
   .request-card { grid-template-columns: 1fr auto; }
   .request-actions { grid-column: 1 / -1; justify-content: flex-end; }
 }
