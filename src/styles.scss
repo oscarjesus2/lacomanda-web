@@ -3713,34 +3713,30 @@ mat-row:hover mat-cell {
   overflow: hidden !important;
 }
 
-/* Diálogos con teclado en pantalla (mtext, mcant, búsqueda de productos).
-   El ancho lo decide la estación, no la llamada: así el teclado reparte el
-   espacio disponible y entra completo tanto en el monitor de la caja como en
-   una tablet. */
-.cdk-overlay-pane.dialog-window--teclado {
-  width: min(960px, calc(100vw - 16px)) !important;
-  max-width: calc(100vw - 16px) !important;
-  max-height: calc(100dvh - 16px) !important;
+/* Diálogos que solo piden un texto: una caja sobria, no una mesa de trabajo. */
+.cdk-overlay-pane.dialog-window--texto {
+  width: min(560px, calc(100vw - 24px)) !important;
+  max-width: calc(100vw - 24px) !important;
 }
 
-.cdk-global-overlay-wrapper .dialog-window--teclado .mant-panel {
+.cdk-global-overlay-wrapper .dialog-window--texto .mant-panel {
   width: 100%;
   max-width: none;
 }
 
-/* Pedir un importe no necesita una fila de diez teclas: la caja se queda
-   estrecha y solo se abre cuando el teclado pasa a letras. */
-.cdk-overlay-pane.dialog-window--teclado.dialog-window--teclado-compacto {
-  width: min(520px, calc(100vw - 16px)) !important;
+/* Mientras el teclado en pantalla está abierto ocupa el borde inferior, así
+   que lo que hay encima sube para no quedar debajo. */
+body.teclado-en-pantalla .cdk-global-overlay-wrapper {
+  align-items: flex-start !important;
 }
 
-/* Estaciones de poca altura: el título cede espacio al teclado. */
-@media (max-height: 760px) {
-  .cdk-global-overlay-wrapper .dialog-window--teclado .mant-panel > h2 {
-    font-size: 1.05rem;
-    letter-spacing: 0.08em;
-    padding-bottom: 8px;
-  }
+body.teclado-en-pantalla .cdk-overlay-pane {
+  max-height: 44dvh;
+}
+
+body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
 
 /* Los diálogos con vista previa pueden ocupar la mesa de trabajo solo cuando

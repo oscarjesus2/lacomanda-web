@@ -1,41 +1,37 @@
 import {
+  AfterViewInit,
   Component,
+  ElementRef,
   EventEmitter,
   Input,
+  OnDestroy,
   Output,
+  ViewChild,
 } from '@angular/core';
 
 import { TenantTextKey } from 'src/app/services/localization/tenant-text-catalog.service';
-
-export type ModoTecladoTactil = 'texto' | 'numerico';
-
-/** Qué juego de teclas está a la vista en este momento. */
-export type VistaTecladoTactil = 'numeros' | 'letras' | 'simbolos';
 
 type AccionTecla =
   | 'escribir'
   | 'borrar'
   | 'mayus'
   | 'simbolos'
-  | 'letras'
-  | 'numeros';
+  | 'letras';
 
 export interface TeclaTactil {
-  /** Lo que se ve en la tecla cuando el rótulo es universal (letras, signos). */
+  /** Rótulo universal (letras, cifras, signos). */
   etiqueta?: string;
   /** Rótulo traducido, para las teclas de servicio. */
   clave?: TenantTextKey;
   accion: AccionTecla;
   /** Carácter que se escribe cuando la acción es escribir. */
   valor?: string;
-  /** Icono de Material en lugar de texto (teclas de servicio). */
-  icono?: string;
-  /** Nombre accesible cuando la tecla se muestra como icono. */
-  aria?: TenantTextKey;
   ancha?: boolean;
   espacio?: boolean;
   activa?: boolean;
 }
+
+type CampoTexto = HTMLInputElement | HTMLTextAreaElement;
 
 const DIGITOS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
 const FILA_SUPERIOR = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'];
@@ -46,59 +42,90 @@ const SIMBOLOS_FILA_2 = ['?', '¿', '¡', '+', '*', "'", ':', ';', ',', '.'];
 const SIMBOLOS_FILA_3 = ['[', ']', '{', '}', '<', '>', '\\', '|', '^', '~'];
 
 /**
- * Teclado en pantalla para estaciones táctiles. Las filas se reparten el ancho
- * disponible y la altura de las teclas sigue al viewport, así el teclado entra
- * completo tanto en el monitor de la caja como en una tablet.
+ * Teclado en pantalla, el mismo del acceso: aparece solo cuando la persona lo
+ * pide, ocupa el borde inferior y reparte las teclas en el ancho disponible.
  *
- * Es una pieza de presentación: recibe el valor, devuelve el valor editado y
- * avisa cuando la persona pulsa la tecla de confirmación. Quien lo usa decide
- * qué significa confirmar.
+ * No sustituye al teclado del equipo: escribe sobre el campo indicado como lo
+ * haría cualquier persona tecleando, así que ambos conviven.
  */
 @Component({
   selector: 'app-teclado-tactil',
   templateUrl: './teclado-tactil.component.html',
   styleUrls: ['./teclado-tactil.component.css'],
 })
-export class TecladoTactilComponent {
-  /** Texto que se está editando. */
-  @Input() valor = '';
-  @Output() valorChange = new EventEmitter<string>();
+export class TecladoTactilComponent implements AfterViewInit, OnDestroy {
+  /** Campo sobre el que escribe. */
+  @Input() destino?: CampoTexto | ElementRef<CampoTexto> | null;
 
-  /** Con qué vista abre: importes (numérico) o texto libre. */
-  @Input() modo: ModoTecladoTactil = 'texto';
+  /** Nombre del campo para el aviso «Escribiendo en: …». */
+  @Input() campo = '';
 
-  /** En importes, si se admite separador decimal. */
-  @Input() decimales = true;
+  /** La persona pulsó «Entrar». */
+  @Output() enviar = new EventEmitter<void>();
 
-  /** En importes, si se permite cambiar a letras (códigos, contraseñas). */
-  @Input() permiteLetras = true;
+  @ViewChild('panel') private panel?: ElementRef<HTMLElement>;
 
-  /** Límite de caracteres; 0 es sin límite. */
-  @Input() maxLength = 0;
+  abierto = false;
 
-  /** La persona terminó de escribir. */
-  @Output() aceptar = new EventEmitter<void>();
-
-  /** Cambió el juego de teclas: quien lo usa puede ajustar su espacio. */
-  @Output() vistaChange = new EventEmitter<VistaTecladoTactil>();
+  /** Marca en el body mientras el teclado ocupa el borde inferior. */
+  private static readonly MarcaAbierto = 'teclado-en-pantalla';
 
   private mayus = false;
-  private vista: VistaTecladoTactil | null = null;
+  private simbolos = false;
+  private abrirAlTocar?: (evento: PointerEvent) => void;
 
-  /** Las filas de la vista actual, ya con mayúsculas resueltas. */
-  get filas(): TeclaTactil[][] {
-    switch (this.vistaActual) {
-      case 'numeros':
-        return this.filasNumericas();
-      case 'simbolos':
-        return this.filasSimbolos();
-      default:
-        return this.filasLetras();
-    }
+  ngAfterViewInit(): void {
+    // El panel vive pegado al viewport: colgado del body escapa del diálogo,
+    // que recorta y desplaza su contenido.
+    const nodo = this.panel?.nativeElement;
+    if (nodo) document.body.appendChild(nodo);
+
+    const campo = this.campoDestino;
+    if (!campo || !this.esPantallaTactil) return;
+
+    // En una estación táctil no hay teclado físico: tocar el campo ofrece este,
+    // y se evita el del sistema, que taparía el diálogo.
+    campo.setAttribute('inputmode', 'none');
+    this.abrirAlTocar = () => this.abrir();
+    campo.addEventListener('pointerup', this.abrirAlTocar);
   }
 
-  get esVistaNumerica(): boolean {
-    return this.vistaActual === 'numeros';
+  ngOnDestroy(): void {
+    const campo = this.campoDestino;
+    if (campo && this.abrirAlTocar) {
+      campo.removeEventListener('pointerup', this.abrirAlTocar);
+    }
+
+    // El panel cuelga del body: si el diálogo se cierra, se va con él.
+    document.body.classList.remove(TecladoTactilComponent.MarcaAbierto);
+    this.panel?.nativeElement.remove();
+  }
+
+  get filas(): TeclaTactil[][] {
+    return this.simbolos ? this.filasSimbolos() : this.filasLetras();
+  }
+
+  alternar(): void {
+    if (this.abierto) this.cerrar();
+    else this.abrir();
+  }
+
+  abrir(): void {
+    this.abierto = true;
+    // Lo que haya encima sube: el teclado ocupa el borde inferior.
+    document.body.classList.add(TecladoTactilComponent.MarcaAbierto);
+    this.enfocarCampo();
+  }
+
+  cerrar(): void {
+    this.abierto = false;
+    document.body.classList.remove(TecladoTactilComponent.MarcaAbierto);
+    this.enfocarCampo();
+  }
+
+  /** Evita que la tecla robe el foco al campo, que es donde se escribe. */
+  sostenerFoco(evento: Event): void {
+    evento.preventDefault();
   }
 
   pulsar(tecla: TeclaTactil): void {
@@ -113,138 +140,125 @@ export class TecladoTactilComponent {
         this.mayus = !this.mayus;
         break;
       case 'simbolos':
-        this.cambiarVista('simbolos');
+        this.simbolos = true;
         break;
       case 'letras':
-        this.cambiarVista('letras');
-        break;
-      case 'numeros':
-        this.cambiarVista('numeros');
+        this.simbolos = false;
         break;
     }
+
+    this.enfocarCampo();
   }
 
-  /** Vacía el campo. Lo usan los diálogos desde su propia botonera. */
   limpiar(): void {
-    this.publicar('');
+    const campo = this.campoDestino;
+    if (!campo) return;
+
+    campo.value = '';
+    this.avisarCambio(campo);
   }
 
-  confirmar(): void {
-    this.aceptar.emit();
+  entrar(): void {
+    this.cerrar();
+    this.enviar.emit();
   }
 
-  private get vistaActual(): VistaTecladoTactil {
-    if (this.vista) return this.vista;
-    return this.modo === 'numerico' ? 'numeros' : 'letras';
+  private get campoDestino(): CampoTexto | null {
+    if (!this.destino) return null;
+    return this.destino instanceof ElementRef ? this.destino.nativeElement : this.destino;
   }
 
-  private cambiarVista(vista: VistaTecladoTactil): void {
-    if (this.vistaActual === vista) return;
-
-    this.vista = vista;
-    this.vistaChange.emit(vista);
+  private get esPantallaTactil(): boolean {
+    return window.matchMedia?.('(pointer: coarse)').matches
+      || (navigator.maxTouchPoints ?? 0) > 0;
   }
 
-  private escribir(caracter: string): void {
-    if (!caracter) return;
-    if (caracter === '.' && this.esVistaNumerica && this.valor.includes('.')) return;
-    if (this.maxLength > 0 && this.valor.length >= this.maxLength) return;
+  private escribir(texto: string): void {
+    const campo = this.campoDestino;
+    if (!campo || !texto) return;
 
-    this.publicar(this.valor + caracter);
+    const inicio = campo.selectionStart ?? campo.value.length;
+    const fin = campo.selectionEnd ?? inicio;
+    const tope = campo.maxLength > 0 ? campo.maxLength : Infinity;
+    const sitio = tope - (campo.value.length - (fin - inicio));
+    const escrito = texto.slice(0, Math.max(0, sitio));
+
+    campo.value = campo.value.slice(0, inicio) + escrito + campo.value.slice(fin);
+    const cursor = inicio + escrito.length;
+    campo.setSelectionRange?.(cursor, cursor);
+    this.avisarCambio(campo);
   }
 
   private borrar(): void {
-    if (!this.valor) return;
-    this.publicar(this.valor.slice(0, -1));
+    const campo = this.campoDestino;
+    if (!campo || !campo.value) return;
+
+    let inicio = campo.selectionStart ?? campo.value.length;
+    const fin = campo.selectionEnd ?? inicio;
+    if (inicio === fin && inicio > 0) inicio -= 1;
+
+    campo.value = campo.value.slice(0, inicio) + campo.value.slice(fin);
+    campo.setSelectionRange?.(inicio, inicio);
+    this.avisarCambio(campo);
   }
 
-  private publicar(valor: string): void {
-    this.valor = valor;
-    this.valorChange.emit(valor);
+  /** El campo cambió como si lo hubiera tecleado la persona. */
+  private avisarCambio(campo: CampoTexto): void {
+    campo.dispatchEvent(new Event('input', { bubbles: true }));
+    campo.dispatchEvent(new Event('change', { bubbles: true }));
+    this.enfocarCampo();
   }
 
-  private teclaTexto(valor: string): TeclaTactil {
+  private enfocarCampo(): void {
+    const campo = this.campoDestino;
+    if (!campo) return;
+
+    try {
+      campo.focus({ preventScroll: true });
+    } catch {
+      campo.focus();
+    }
+  }
+
+  private tecla(valor: string): TeclaTactil {
     const etiqueta = this.mayus ? valor.toLocaleUpperCase() : valor;
     return { etiqueta, accion: 'escribir', valor: etiqueta };
   }
 
-  private get teclaBorrar(): TeclaTactil {
-    return {
-      accion: 'borrar',
-      icono: 'backspace',
-      aria: 'keyboardBackspace',
-      ancha: true,
-    };
+  private escribirTodas(valores: string[]): TeclaTactil[] {
+    return valores.map(valor => ({ etiqueta: valor, accion: 'escribir' as const, valor }));
   }
 
   private filasLetras(): TeclaTactil[][] {
-    const vuelta: TeclaTactil[] = this.modo === 'numerico'
-      ? [{ etiqueta: '123', accion: 'numeros', ancha: true }]
-      : [{ etiqueta: '#+=', accion: 'simbolos', ancha: true }];
-
     return [
-      DIGITOS.map(digito => ({ etiqueta: digito, accion: 'escribir' as const, valor: digito })),
-      FILA_SUPERIOR.map(letra => this.teclaTexto(letra)),
-      FILA_MEDIA.map(letra => this.teclaTexto(letra)),
+      this.escribirTodas(DIGITOS),
+      FILA_SUPERIOR.map(letra => this.tecla(letra)),
+      FILA_MEDIA.map(letra => this.tecla(letra)),
       [
-        {
-          clave: 'keyboardShift',
-          accion: 'mayus',
-          ancha: true,
-          activa: this.mayus,
-        },
-        ...FILA_INFERIOR.map(letra => this.teclaTexto(letra)),
-        this.teclaBorrar,
+        { clave: 'keyboardShift', accion: 'mayus', ancha: true, activa: this.mayus },
+        ...FILA_INFERIOR.map(letra => this.tecla(letra)),
+        { clave: 'keyboardBackspace', accion: 'borrar', ancha: true },
       ],
       [
-        ...vuelta,
-        { etiqueta: '@', accion: 'escribir', valor: '@' },
-        { etiqueta: '.', accion: 'escribir', valor: '.' },
-        { etiqueta: '-', accion: 'escribir', valor: '-' },
-        { etiqueta: '_', accion: 'escribir', valor: '_' },
+        { etiqueta: '#+=', accion: 'simbolos', ancha: true },
+        ...this.escribirTodas(['@', '.', '-', '_']),
         { clave: 'keyboardSpace', accion: 'escribir', valor: ' ', espacio: true },
       ],
     ];
   }
 
   private filasSimbolos(): TeclaTactil[][] {
-    const escribir = (valores: string[]): TeclaTactil[] =>
-      valores.map(valor => ({ etiqueta: valor, accion: 'escribir' as const, valor }));
-
     return [
-      escribir(DIGITOS),
-      escribir(SIMBOLOS_FILA_1),
-      escribir(SIMBOLOS_FILA_2),
-      escribir(SIMBOLOS_FILA_3),
+      this.escribirTodas(DIGITOS),
+      this.escribirTodas(SIMBOLOS_FILA_1),
+      this.escribirTodas(SIMBOLOS_FILA_2),
+      this.escribirTodas(SIMBOLOS_FILA_3),
       [
         { etiqueta: 'ABC', accion: 'letras', ancha: true },
-        { etiqueta: '@', accion: 'escribir', valor: '@' },
-        { etiqueta: '-', accion: 'escribir', valor: '-' },
-        { etiqueta: '_', accion: 'escribir', valor: '_' },
+        ...this.escribirTodas(['@', '-', '_']),
         { clave: 'keyboardSpace', accion: 'escribir', valor: ' ', espacio: true },
-        this.teclaBorrar,
+        { clave: 'keyboardBackspace', accion: 'borrar', ancha: true },
       ],
-    ];
-  }
-
-  private filasNumericas(): TeclaTactil[][] {
-    const numero = (valor: string): TeclaTactil => ({
-      etiqueta: valor,
-      accion: 'escribir',
-      valor,
-    });
-
-    const ultima: TeclaTactil[] = [];
-    if (this.permiteLetras) ultima.push({ etiqueta: 'ABC', accion: 'letras' });
-    ultima.push(numero('0'));
-    if (this.decimales) ultima.push(numero('.'));
-    ultima.push(this.teclaBorrar);
-
-    return [
-      ['7', '8', '9'].map(numero),
-      ['4', '5', '6'].map(numero),
-      ['1', '2', '3'].map(numero),
-      ultima,
     ];
   }
 }

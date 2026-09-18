@@ -1,6 +1,27 @@
-import { TecladoTactilComponent, TeclaTactil, VistaTecladoTactil } from './teclado-tactil.component';
+import { TecladoTactilComponent, TeclaTactil } from './teclado-tactil.component';
 
-/** Busca una tecla por su rótulo (literal o clave de texto). */
+/** Campo de texto mínimo: el teclado escribe sobre el elemento real. */
+function crearCampo(valor = '', maxLength = -1): HTMLInputElement {
+  const campo = {
+    value: valor,
+    maxLength,
+    selectionStart: valor.length,
+    selectionEnd: valor.length,
+    eventos: [] as string[],
+    setSelectionRange(inicio: number, fin: number): void {
+      campo.selectionStart = inicio;
+      campo.selectionEnd = fin;
+    },
+    dispatchEvent(evento: Event): boolean {
+      campo.eventos.push(evento.type);
+      return true;
+    },
+    focus(): void { /* el foco no se mueve en las pruebas */ },
+  };
+
+  return campo as unknown as HTMLInputElement;
+}
+
 function buscar(teclado: TecladoTactilComponent, etiqueta: string): TeclaTactil {
   const tecla = teclado.filas
     .reduce<TeclaTactil[]>((todas, fila) => todas.concat(fila), [])
@@ -10,17 +31,7 @@ function buscar(teclado: TecladoTactilComponent, etiqueta: string): TeclaTactil 
   return tecla;
 }
 
-/** La tecla de borrar se muestra como icono, no tiene rótulo. */
-function teclaBorrar(teclado: TecladoTactilComponent): TeclaTactil {
-  const tecla = teclado.filas
-    .reduce<TeclaTactil[]>((todas, fila) => todas.concat(fila), [])
-    .find(item => item.accion === 'borrar');
-
-  if (!tecla) throw new Error('No hay tecla de borrar en la vista actual.');
-  return tecla;
-}
-
-function escribir(teclado: TecladoTactilComponent, texto: string): void {
+function teclear(teclado: TecladoTactilComponent, texto: string): void {
   for (const caracter of texto) {
     teclado.pulsar(buscar(teclado, caracter));
   }
@@ -28,108 +39,91 @@ function escribir(teclado: TecladoTactilComponent, texto: string): void {
 
 describe('TecladoTactilComponent', () => {
   let teclado: TecladoTactilComponent;
-  let ultimoValor: string | null;
+  let campo: HTMLInputElement;
 
   beforeEach(() => {
     teclado = new TecladoTactilComponent();
-    ultimoValor = null;
-    teclado.valorChange.subscribe(valor => (ultimoValor = valor));
+    campo = crearCampo();
+    teclado.destino = campo;
   });
 
-  it('escribe lo que se pulsa y avisa del valor', () => {
-    escribir(teclado, 'sal');
+  it('escribe sobre el campo y avisa del cambio', () => {
+    teclear(teclado, 'sal');
 
-    expect(teclado.valor).toBe('sal');
-    expect(ultimoValor).toBe('sal');
+    expect(campo.value).toBe('sal');
+    expect((campo as unknown as { eventos: string[] }).eventos).toContain('input');
   });
 
-  it('respeta el límite de caracteres', () => {
-    teclado.maxLength = 3;
+  it('escribe donde está el cursor, no siempre al final', () => {
+    campo = crearCampo('sl');
+    campo.setSelectionRange(1, 1);
+    teclado.destino = campo;
 
-    escribir(teclado, 'salon');
+    teclear(teclado, 'a');
 
-    expect(teclado.valor).toBe('sal');
+    expect(campo.value).toBe('sal');
+    expect(campo.selectionStart).toBe(2);
+  });
+
+  it('respeta el límite de caracteres del campo', () => {
+    campo = crearCampo('', 3);
+    teclado.destino = campo;
+
+    teclear(teclado, 'salon');
+
+    expect(campo.value).toBe('sal');
   });
 
   it('escribe en mayúsculas mientras Mayús está activo', () => {
     teclado.pulsar(buscar(teclado, 'keyboardShift'));
-    escribir(teclado, 'AB');
+    teclear(teclado, 'AB');
 
-    expect(teclado.valor).toBe('AB');
+    expect(campo.value).toBe('AB');
     expect(buscar(teclado, 'keyboardShift').activa).toBeTrue();
   });
 
-  it('borra el último carácter y no falla con el campo vacío', () => {
-    escribir(teclado, 'no');
-    teclado.pulsar(teclaBorrar(teclado));
+  it('borra el carácter anterior al cursor y aguanta el campo vacío', () => {
+    teclear(teclado, 'no');
 
-    expect(teclado.valor).toBe('n');
+    teclado.pulsar(buscar(teclado, 'keyboardBackspace'));
+    expect(campo.value).toBe('n');
 
-    teclado.pulsar(teclaBorrar(teclado));
-    teclado.pulsar(teclaBorrar(teclado));
-
-    expect(teclado.valor).toBe('');
+    teclado.pulsar(buscar(teclado, 'keyboardBackspace'));
+    teclado.pulsar(buscar(teclado, 'keyboardBackspace'));
+    expect(campo.value).toBe('');
   });
 
-  it('en importes admite un solo separador decimal', () => {
-    teclado.modo = 'numerico';
-
-    escribir(teclado, '12.5');
-    teclado.pulsar(buscar(teclado, '.'));
-    escribir(teclado, '0');
-
-    expect(teclado.valor).toBe('12.50');
-  });
-
-  it('en importes puede ocultar el separador decimal', () => {
-    teclado.modo = 'numerico';
-    teclado.decimales = false;
-
-    expect(() => buscar(teclado, '.')).toThrow();
-  });
-
-  it('avisa una sola vez al cambiar de juego de teclas', () => {
-    const vistas: VistaTecladoTactil[] = [];
-    teclado.vistaChange.subscribe(vista => vistas.push(vista));
-
+  it('cambia entre letras y símbolos', () => {
     teclado.pulsar(buscar(teclado, '#+='));
-    teclado.pulsar(buscar(teclado, 'ABC'));
-    teclado.pulsar(buscar(teclado, '#+='));
+    teclear(teclado, '¿');
 
-    expect(vistas).toEqual(['simbolos', 'letras', 'simbolos']);
-  });
-
-  it('desde los importes se pasa a letras y se vuelve', () => {
-    teclado.modo = 'numerico';
-
-    expect(teclado.esVistaNumerica).toBeTrue();
+    expect(campo.value).toBe('¿');
 
     teclado.pulsar(buscar(teclado, 'ABC'));
-    escribir(teclado, 'ab');
+    teclear(teclado, 'a');
 
-    expect(teclado.esVistaNumerica).toBeFalse();
-    expect(teclado.valor).toBe('ab');
-
-    teclado.pulsar(buscar(teclado, '123'));
-
-    expect(teclado.esVistaNumerica).toBeTrue();
+    expect(campo.value).toBe('¿a');
   });
 
-  it('limpiar vacía el campo y avisa', () => {
-    escribir(teclado, 'algo');
+  it('limpiar vacía el campo', () => {
+    teclear(teclado, 'algo');
 
     teclado.limpiar();
 
-    expect(teclado.valor).toBe('');
-    expect(ultimoValor).toBe('');
+    expect(campo.value).toBe('');
   });
 
-  it('confirmar avisa a quien lo usa', () => {
-    let confirmado = false;
-    teclado.aceptar.subscribe(() => (confirmado = true));
+  it('sin campo destino no revienta', () => {
+    teclado.destino = null;
 
-    teclado.confirmar();
+    expect(() => teclear(teclado, 'a')).not.toThrow();
+    expect(() => teclado.limpiar()).not.toThrow();
+  });
 
-    expect(confirmado).toBeTrue();
+  it('la tecla no roba el foco al campo', () => {
+    let evitado = false;
+    teclado.sostenerFoco({ preventDefault: () => (evitado = true) } as unknown as Event);
+
+    expect(evitado).toBeTrue();
   });
 });

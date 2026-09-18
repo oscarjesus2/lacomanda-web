@@ -820,15 +820,17 @@ export const EN_TEXTS = {
   switchToLetters: 'Switch to letters',
   clear: 'Clear',
 
-  // On-screen keyboard (mcant, mtext)
+  // On-screen keyboard
+  keyboardTitle: 'On-screen keyboard',
+  keyboardShow: 'Show keyboard',
+  keyboardHide: 'Hide',
+  keyboardWritingIn: 'Typing in',
+  keyboardEnter: 'Enter',
   keyboardShift: 'Shift',
   keyboardSpace: 'Space',
   keyboardBackspace: 'Delete',
-  keyboardClear: 'Clear all',
+  keyboardClear: 'Clear',
   mustEnterText: 'Enter some text.',
-  mustEnterValue: 'Enter a value.',
-  amountGreaterThanZero: 'Enter an amount greater than 0.',
-  minimumAmountIs: 'The minimum you can enter is {{min}}.',
 
   confirmVoidTitle: 'Confirm void',
   administrator: 'Administrator',

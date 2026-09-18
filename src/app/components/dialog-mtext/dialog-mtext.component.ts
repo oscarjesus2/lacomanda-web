@@ -13,8 +13,8 @@ interface DatosTecladoTexto {
 }
 
 /**
- * Pide un texto con el teclado en pantalla. El diálogo ocupa lo que la
- * pantalla permite, así el teclado entra completo en cualquier estación.
+ * Pide un texto. Se escribe con el teclado del equipo y, si la estación no
+ * tiene, con el teclado en pantalla que ofrece el botón.
  */
 @Component({
   selector: 'app-dialog-mtext-touch',
@@ -35,8 +35,8 @@ export class DialogMTextComponent {
     this.inputValue = data?.text ?? data?.texto ?? '';
     this.maxLength = data?.maxLength ?? 0;
 
-    // El tamaño lo decide el teclado, no quien abre el diálogo.
-    dialogRef.addPanelClass('dialog-window--teclado');
+    // El diálogo se ajusta a la pantalla; el teclado va aparte, sobre el borde.
+    dialogRef.addPanelClass('dialog-window--texto');
     dialogRef.updateSize();
   }
 

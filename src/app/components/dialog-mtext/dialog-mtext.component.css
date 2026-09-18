@@ -1,7 +1,6 @@
 /* ==========================================================
-   dialog-mtext — pedir un texto con el teclado en pantalla.
-   Hereda mant-panel del global; el teclado vive en
-   app-teclado-tactil y se adapta al espacio disponible.
+   dialog-mtext — pedir un texto. El teclado en pantalla es
+   opcional y vive fuera del panel (app-teclado-tactil).
    ========================================================== */
 
 .mt-panel {
@@ -9,15 +8,15 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
-/* ── Display ─────────────────────────────────────────────── */
+/* ── Campo ───────────────────────────────────────────────── */
 .mt-display input {
   width: 100%;
   box-sizing: border-box;
-  padding: 8px 14px;
-  font-size: clamp(1rem, 2.4dvh, 1.25rem);
+  padding: 10px 14px;
+  font-size: 1.1rem;
   font-family: inherit;
   text-align: left;
   border-radius: var(--radius-md);
@@ -38,7 +37,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .mt-btn {
@@ -85,14 +84,4 @@
 .mt-btn--secondary:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
-}
-
-/* Estaciones de poca altura: la botonera se compacta para que el
-   teclado conserve su tamaño. */
-@media (max-height: 700px) {
-  .mt-btn {
-    min-height: 36px;
-    padding: 0 16px;
-    font-size: 0.74rem;
-  }
 }

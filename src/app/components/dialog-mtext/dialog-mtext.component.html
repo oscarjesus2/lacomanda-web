@@ -8,22 +8,17 @@
 
   <div class="mt-display">
     <input
+      #campo
       type="text"
-      inputmode="none"
       autocomplete="off"
-      autocapitalize="off"
       spellcheck="false"
       [attr.maxlength]="maxLength > 0 ? maxLength : null"
       [(ngModel)]="inputValue"
+      (keydown.enter)="accept()"
       placeholder="..." />
   </div>
 
-  <app-teclado-tactil
-    modo="texto"
-    [maxLength]="maxLength"
-    [(valor)]="inputValue"
-    (aceptar)="accept()">
-  </app-teclado-tactil>
+  <app-teclado-tactil [destino]="campo" (enviar)="accept()"></app-teclado-tactil>
 
   <div class="mt-actions">
     <button class="mt-btn mt-btn--warn" (click)="clear()">

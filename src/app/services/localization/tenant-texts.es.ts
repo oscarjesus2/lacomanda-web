@@ -824,15 +824,17 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   switchToLetters: 'Cambiar a letras',
   clear: 'Borrar',
 
-  // Teclado en pantalla (mcant, mtext)
+  // Teclado en pantalla
+  keyboardTitle: 'Teclado en pantalla',
+  keyboardShow: 'Mostrar teclado',
+  keyboardHide: 'Ocultar',
+  keyboardWritingIn: 'Escribiendo en',
+  keyboardEnter: 'Entrar',
   keyboardShift: 'Mayús',
   keyboardSpace: 'Espacio',
   keyboardBackspace: 'Borrar',
   keyboardClear: 'Limpiar',
   mustEnterText: 'Debe ingresar texto.',
-  mustEnterValue: 'Debe ingresar un valor.',
-  amountGreaterThanZero: 'Debe ingresar una cantidad mayor a 0.',
-  minimumAmountIs: 'Como mínimo debe ingresar {{min}}.',
 
   confirmVoidTitle: 'Confirmar anulación',
   administrator: 'Administrador',

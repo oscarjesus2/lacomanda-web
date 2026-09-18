@@ -1,109 +1,178 @@
 /* ==========================================================
-   teclado-tactil — teclado en pantalla que se adapta al alto
-   y al ancho disponibles (el mismo criterio que el acceso).
+   teclado-tactil — el mismo teclado del acceso: se pide, se
+   pega al borde inferior y reparte las teclas en el ancho.
    ========================================================== */
 
-.tt-teclado {
+/* ── Botón para pedirlo ──────────────────────────────────── */
+/* Es una ayuda, no la forma principal de escribir: discreto y centrado. */
+.tt-llamador {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  min-height: 40px;
+  padding: 0 18px;
+
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+  color: var(--color-primary-dark);
+
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: var(--transition-fast);
+}
+
+.tt-llamador:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface-warm));
+}
+
+.tt-llamador mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+}
+
+/* ── Panel ───────────────────────────────────────────────── */
+.tt-panel {
+  position: fixed;
+  z-index: 10000;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+
+  box-sizing: border-box;
+  width: min(100%, 980px);
+  max-height: 52dvh;
+  padding: 10px 12px max(12px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  background: #2D1A0A;
+  box-shadow: 0 -10px 36px rgba(45, 12, 0, 0.38);
+  font-family: inherit;
+
+  /* La tecla crece con la pantalla, con topes para no deformarse. */
+  --tt-hueco: clamp(3px, 0.6vw, 6px);
+  --tt-alto: clamp(38px, 6.4dvh, 54px);
+  --tt-letra: clamp(0.85rem, 2dvh, 1.05rem);
+  --tt-letra-servicio: clamp(0.62rem, 1.5dvh, 0.82rem);
+}
+
+.tt-panel[hidden] { display: none !important; }
+
+.tt-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 34px;
+  margin-bottom: 7px;
+  color: #FFF8F0;
+  font-size: 0.8rem;
+}
+
+.tt-cerrar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.10);
+  color: #FFFFFF;
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* ── Teclas ──────────────────────────────────────────────── */
+.tt-teclas {
   display: flex;
   flex-direction: column;
-  gap: var(--tt-hueco, 6px);
-  width: 100%;
-  box-sizing: border-box;
-  padding: var(--tt-hueco, 6px);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-surface-warm) 55%, transparent);
-
-  /* La tecla crece con el viewport, con topes para no deformarse. */
-  --tt-hueco: clamp(3px, 0.6vw, 7px);
-  --tt-alto: clamp(34px, 6.4dvh, 54px);
-  --tt-letra: clamp(0.78rem, 1.9dvh, 1.05rem);
-  --tt-letra-servicio: clamp(0.6rem, 1.4dvh, 0.82rem);
+  gap: var(--tt-hueco);
 }
 
 .tt-fila {
   display: flex;
+  justify-content: center;
   gap: var(--tt-hueco);
-  width: 100%;
 }
+
+.tt-acciones { margin-top: 2px; }
 
 .tt-tecla {
   flex: 1 1 0;
   min-width: 0;
   min-height: var(--tt-alto);
-  padding: 2px;
+  padding: 4px 2px;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  border: 1px solid #D8C3B1;
+  border-radius: 9px;
+  background: #FFF9F4;
+  color: #2D1A0A;
 
   font-family: inherit;
   font-size: var(--tt-letra);
   font-weight: 700;
   line-height: 1;
-
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: 0 2px 0 color-mix(in srgb, var(--color-text) 14%, transparent);
+  box-shadow: 0 2px 0 #BFA58F;
 
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
-  transition: background 0.12s ease, border-color 0.12s ease;
-}
-
-.tt-tecla mat-icon {
-  font-size: calc(var(--tt-letra) * 1.25);
-  width: auto;
-  height: auto;
-}
-
-.tt-tecla:hover {
-  border-color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
 }
 
 .tt-tecla:active,
 .tt-tecla--activa {
   transform: translateY(2px);
-  border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
+  border-color: #F16A2A;
+  background: #FFD7BD;
   box-shadow: none;
 }
 
-/* Teclas de servicio: rótulo en palabras, así que necesitan más caja
-   y una letra algo menor para no romper la fila en pantallas estrechas. */
 .tt-tecla--ancha {
-  flex-grow: 1.7;
+  flex-grow: 1.65;
   font-size: var(--tt-letra-servicio);
-  letter-spacing: 0.02em;
-  background: color-mix(in srgb, var(--color-surface-warm) 70%, var(--color-surface));
 }
 
 .tt-tecla--espacio {
-  flex-grow: 3.4;
+  flex-grow: 3.5;
   font-size: var(--tt-letra-servicio);
 }
 
-/* Importes: pocas teclas por fila, todas grandes. */
-.tt-teclado--numerico {
-  --tt-alto: clamp(42px, 8.2dvh, 68px);
-  --tt-letra: clamp(1rem, 2.6dvh, 1.5rem);
-  --tt-letra-servicio: clamp(0.72rem, 1.7dvh, 0.95rem);
+.tt-tecla--entrar {
+  border-color: #F16A2A;
+  background: #E64A19;
+  color: #FFFFFF;
+  box-shadow: 0 2px 0 #8C2E0B;
 }
 
-.tt-teclado--numerico .tt-tecla--ancha {
-  flex-grow: 1;
-}
-
-/* Pantallas muy estrechas: se aprieta el hueco antes que la tecla. */
+/* Pantallas estrechas: se aprieta el hueco antes que la tecla. */
 @media (max-width: 420px) {
-  .tt-teclado {
+  .tt-panel {
+    max-height: 56dvh;
+    padding-inline: 5px;
+    border-radius: 12px 12px 0 0;
     --tt-hueco: 3px;
-    --tt-alto: clamp(32px, 5.9dvh, 44px);
-    padding: 3px;
+    --tt-alto: clamp(36px, 5.9dvh, 44px);
+    --tt-letra: 0.9rem;
+    --tt-letra-servicio: 0.6rem;
   }
 }

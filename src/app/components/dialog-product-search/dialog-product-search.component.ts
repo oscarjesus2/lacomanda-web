@@ -20,10 +20,6 @@ export class DialogProductSearchComponent {
   ) {
     this.listProducts = data.listProducts;
     this.filteredProducts = [...this.listProducts]; // Inicializar la lista filtrada
-
-    // El tamaño lo decide la estación: el teclado ocupa lo que sobra.
-    dialogRef.addPanelClass('dialog-window--teclado');
-    dialogRef.updateSize();
   }
 
   filterProducts() {
@@ -35,11 +31,6 @@ export class DialogProductSearchComponent {
     });
   }
 
-  /** El teclado en pantalla escribe en el mismo filtro que el campo. */
-  onTecladoValor(valor: string): void {
-    this.filterText = valor;
-    this.filterProducts();
-  }
 
   selectProduct(product: Producto) {
     this.selectedProduct = product; // Asignamos el producto seleccionado

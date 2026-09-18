@@ -2,11 +2,9 @@
    dialog-product-search — hereda mant-panel del global
    ========================================================== */
 
-/* El ancho lo fija el diálogo (dialog-window--teclado); aquí solo se
-   organiza el contenido para que el teclado reciba el espacio que sobra. */
+/* Ancho específico del panel de búsqueda */
 .ps-panel {
-  width: 100%;
-  box-sizing: border-box;
+  width: min(900px, calc(100vw - 32px));
 }
 
 /* ── Campo de búsqueda ──────────────────────────────────── */
@@ -25,7 +23,7 @@
 
 /* ── Tabla ──────────────────────────────────────────────── */
 .ps-table-wrap {
-  height: clamp(130px, 26dvh, 300px);
+  height: 220px;
   overflow-y: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
@@ -67,8 +65,8 @@
   font-weight: 600;
 }
 
-/* ── Teclado táctil ─────────────────────────────────────── */
-/* El teclado es app-teclado-tactil: se reparte el ancho del diálogo. */
+/* ── Teclado en pantalla ────────────────────────────────── */
+/* El teclado es app-teclado-tactil: aquí solo se reserva su sitio. */
 .ps-keypad {
   display: block;
   margin-bottom: 18px;

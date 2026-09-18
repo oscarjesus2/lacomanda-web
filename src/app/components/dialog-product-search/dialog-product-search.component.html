@@ -6,7 +6,7 @@
   <mat-form-field appearance="fill" class="ps-search-field">
     <mat-label>{{ 'searchByProduct' | tenantText }}</mat-label>
     <mat-icon matPrefix class="ps-search-icon">search</mat-icon>
-    <input matInput [(ngModel)]="filterText" (input)="filterProducts()"
+    <input #campo matInput [(ngModel)]="filterText" (input)="filterProducts()"
            [placeholder]="'typeToFilter' | tenantText"
            autocomplete="off" />
   </mat-form-field>
@@ -38,13 +38,11 @@
     </table>
   </div>
 
-  <!-- Teclado táctil -->
+  <!-- Teclado en pantalla: solo si la persona lo pide -->
   <app-teclado-tactil
     class="ps-keypad"
-    modo="texto"
-    [valor]="filterText"
-    (valorChange)="onTecladoValor($event)"
-    (aceptar)="onAcceptClick()">
+    [destino]="campo"
+    [campo]="'searchByProduct' | tenantText">
   </app-teclado-tactil>
 
   <!-- Acciones -->
