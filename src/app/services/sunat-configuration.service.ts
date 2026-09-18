@@ -22,7 +22,7 @@ export class SunatConfigurationService {
     configuration: SaveSunatConfiguration,
   ): Observable<ApiResponse<SunatConfiguration>> {
     const formData = new FormData();
-    formData.append('Ubigeo', configuration.Ubigeo);
+    formData.append('Ubigeo', configuration.CodigoEstablecimientoSunat);
     formData.append('UsuarioSol', configuration.UsuarioSol);
     formData.append('ClaveSol', configuration.ClaveSol);
     formData.append('ClaveCertificado', configuration.ClaveCertificado);

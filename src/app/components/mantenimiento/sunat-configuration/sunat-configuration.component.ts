@@ -18,7 +18,7 @@ export class SunatConfigurationComponent implements OnInit {
 
   configuration: SunatConfiguration | null = null;
   certificate: File | null = null;
-  ubigeo = '';
+  codigoEstablecimientoSunat = '';
   solUser = '';
   solPassword = '';
   certificatePassword = '';
@@ -45,7 +45,7 @@ export class SunatConfigurationComponent implements OnInit {
 
   get readyToSave(): boolean {
     return (
-      /^\d{6}$/.test(this.ubigeo.trim()) &&
+      /^\d{4}$/.test(this.codigoEstablecimientoSunat.trim()) &&
       this.solUser.trim().length > 0 &&
       this.solPassword.length > 0 &&
       this.certificatePassword.length > 0 &&
@@ -92,7 +92,7 @@ export class SunatConfigurationComponent implements OnInit {
     }
 
     const request: SaveSunatConfiguration = {
-      Ubigeo: this.ubigeo.trim(),
+      CodigoEstablecimientoSunat: this.codigoEstablecimientoSunat.trim(),
       UsuarioSol: this.solUser.trim(),
       ClaveSol: this.solPassword,
       ClaveCertificado: this.certificatePassword,
@@ -152,7 +152,7 @@ export class SunatConfigurationComponent implements OnInit {
 
   private applyConfiguration(configuration: SunatConfiguration): void {
     this.configuration = configuration;
-    this.ubigeo = configuration.Ubigeo ?? '';
+    this.codigoEstablecimientoSunat = configuration.CodigoEstablecimientoSunat ?? '';
     this.solUser = configuration.UsuarioSol ?? '';
   }
 
