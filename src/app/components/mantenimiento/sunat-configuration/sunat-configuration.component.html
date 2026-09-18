@@ -63,9 +63,9 @@
         </p>
         <div class="dialog-form-grid">
           <mat-form-field appearance="fill">
-            <mat-label>Ubigeo del domicilio fiscal</mat-label>
-            <input matInput name="ubigeo" [(ngModel)]="ubigeo" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" required>
-            <mat-hint>Exactamente 6 números.</mat-hint>
+            <mat-label>Código de establecimiento SUNAT</mat-label>
+            <input matInput name="codigoEstablecimientoSunat" [(ngModel)]="codigoEstablecimientoSunat" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" required>
+            <mat-hint>4 dígitos. Usa 0000 si corresponde al domicilio fiscal.</mat-hint>
           </mat-form-field>
           <mat-form-field appearance="fill">
             <mat-label>Usuario SOL</mat-label>

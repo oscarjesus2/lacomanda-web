@@ -1,7 +1,7 @@
 export interface SunatConfiguration {
   PaisISO2: string;
   Ruc: string;
-  Ubigeo: string;
+  CodigoEstablecimientoSunat: string;
   UsuarioSol: string;
   ClaveSolConfigurada: boolean;
   CertificadoConfigurado: boolean;
@@ -17,7 +17,7 @@ export interface SunatConfiguration {
 }
 
 export interface SaveSunatConfiguration {
-  Ubigeo: string;
+  CodigoEstablecimientoSunat: string;
   UsuarioSol: string;
   ClaveSol: string;
   ClaveCertificado: string;
