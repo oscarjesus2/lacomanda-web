@@ -4,18 +4,12 @@ import * as signalR from '@microsoft/signalr';
 import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import { environment } from 'src/environments/environment';
-import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { DeviceIdentifierService } from './device-identifier.service';
 import { StorageService } from './storage.service';
 import { Session } from '../models/session.models';
 
 interface SesionCerradaMessage {
   mensaje?: string;
-}
-
-interface SesionRegistrada {
-  SesionAnteriorCerrada?: boolean;
-  sesionAnteriorCerrada?: boolean;
 }
 
 /**
@@ -80,8 +74,8 @@ export class SesionUsuarioService {
   }
 
   private async registrar(session: Session): Promise<void> {
-    const respuesta = await firstValueFrom(
-      this.http.post<ApiResponse<SesionRegistrada>>(`${environment.apiUrl}/usuario/me/sesion`, {
+    await firstValueFrom(
+      this.http.post(`${environment.apiUrl}/usuario/me/sesion`, {
         IdentificadorEstacion: this.deviceIdentifier.getIdentifier() || null,
       }),
     );
@@ -89,19 +83,8 @@ export class SesionUsuarioService {
 
     this.sesionRegistrada = session;
 
-    const datos = respuesta?.Data;
-    if (datos?.SesionAnteriorCerrada ?? datos?.sesionAnteriorCerrada) {
-      Swal.fire({
-        toast: true,
-        position: 'bottom-end',
-        icon: 'info',
-        title: 'Se cerró tu sesión en el otro equipo',
-        showConfirmButton: false,
-        timer: 5000,
-        timerProgressBar: true,
-      });
-    }
-
+    // Quien acaba de entrar sabe que ha entrado: el aviso es para el equipo
+    // que queda desplazado, y le llega por el hub.
     await this.conectar();
   }
 

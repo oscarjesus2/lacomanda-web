@@ -77,6 +77,9 @@ export class TecladoTactilComponent implements AfterViewInit, OnDestroy {
   /** Marca en el body mientras el teclado ocupa el borde inferior. */
   private static readonly MarcaAbierto = 'teclado-en-pantalla';
 
+  /** Alto real del teclado, para que lo de encima se apoye en él. */
+  private static readonly VariableAlto = '--teclado-alto';
+
   private mayus = false;
   private simbolos = false;
   private abrirAlTocar?: (evento: PointerEvent) => void;
@@ -125,14 +128,17 @@ export class TecladoTactilComponent implements AfterViewInit, OnDestroy {
 
   abrir(): void {
     this.abierto = true;
-    // Lo que haya encima sube: el teclado ocupa el borde inferior.
+    // Lo de encima se apoya sobre el teclado, no se va al otro extremo de la
+    // pantalla: para eso hace falta saber cuánto ocupa.
     document.body.classList.add(TecladoTactilComponent.MarcaAbierto);
+    requestAnimationFrame(() => this.medir());
     this.enfocarCampo();
   }
 
   cerrar(): void {
     this.abierto = false;
     document.body.classList.remove(TecladoTactilComponent.MarcaAbierto);
+    document.body.style.removeProperty(TecladoTactilComponent.VariableAlto);
     this.enfocarCampo();
   }
 
@@ -182,6 +188,14 @@ export class TecladoTactilComponent implements AfterViewInit, OnDestroy {
   /** Rehace las filas solo cuando cambia el juego de teclas. */
   private redibujar(): void {
     this.filas = this.simbolos ? this.filasSimbolos() : this.filasLetras();
+  }
+
+  /** Publica el alto del teclado para que el diálogo se apoye justo encima. */
+  private medir(): void {
+    const alto = this.panel?.nativeElement.offsetHeight;
+    if (!alto) return;
+
+    document.body.style.setProperty(TecladoTactilComponent.VariableAlto, `${alto}px`);
   }
 
   private get campoDestino(): CampoTexto | null {

@@ -3735,19 +3735,24 @@ mat-row:hover mat-cell {
   letter-spacing: 0.08em;
 }
 
-/* Mientras el teclado en pantalla está abierto ocupa el borde inferior, así
-   que lo que hay encima sube para no quedar debajo. */
+/* Mientras el teclado en pantalla está abierto ocupa el borde inferior. Lo que
+   hay encima se apoya justo sobre él —como en un móvil— en vez de irse al otro
+   extremo de la pantalla. `--teclado-alto` lo publica el propio teclado. */
 body.teclado-en-pantalla .cdk-global-overlay-wrapper {
-  align-items: flex-start !important;
+  align-items: flex-end !important;
+  /* El envoltorio del CDK tiene alto fijo: sin border-box el relleno lo
+     desborda y el diálogo acabaría igualmente detrás del teclado. */
+  box-sizing: border-box;
+  padding-bottom: calc(var(--teclado-alto, 45dvh) + 8px);
 }
 
 body.teclado-en-pantalla .cdk-overlay-pane {
-  max-height: 44dvh;
+  max-height: calc(100dvh - var(--teclado-alto, 45dvh) - 16px);
 }
 
 body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
-  margin-top: 8px;
-  margin-bottom: 8px;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 /* Los diálogos con vista previa pueden ocupar la mesa de trabajo solo cuando
