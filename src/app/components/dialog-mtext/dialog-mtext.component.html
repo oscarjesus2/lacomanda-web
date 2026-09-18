@@ -7,26 +7,27 @@
   <h2 *ngIf="title">{{ title }}</h2>
 
   <div class="mt-display">
-    <input type="text" [(ngModel)]="inputValue" readonly placeholder="..." />
+    <input
+      type="text"
+      inputmode="none"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+      [attr.maxlength]="maxLength > 0 ? maxLength : null"
+      [(ngModel)]="inputValue"
+      placeholder="..." />
   </div>
 
-  <div class="mt-keypad">
-    <div *ngFor="let row of keyRows" class="mt-keypad__row">
-      <button
-        *ngFor="let key of row"
-        class="mt-key"
-        [class.mt-key--esc]="key === 'ESC'"
-        [class.mt-key--space]="key === 'Espacio'"
-        [class.mt-key--pct]="key === '%'"
-        (click)="onKeyClick(key)">
-        {{ key }}
-      </button>
-    </div>
-  </div>
+  <app-teclado-tactil
+    modo="texto"
+    [maxLength]="maxLength"
+    [(valor)]="inputValue"
+    (aceptar)="accept()">
+  </app-teclado-tactil>
 
   <div class="mt-actions">
     <button class="mt-btn mt-btn--warn" (click)="clear()">
-      <mat-icon>backspace</mat-icon> {{ 'clear' | tenantText }}
+      <mat-icon>backspace</mat-icon> {{ 'keyboardClear' | tenantText }}
     </button>
     <button class="mt-btn mt-btn--primary" (click)="accept()">
       <mat-icon>check</mat-icon> {{ 'accept' | tenantText }}

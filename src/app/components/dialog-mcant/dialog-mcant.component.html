@@ -6,41 +6,27 @@
 
   <h2 *ngIf="title">{{ title }}</h2>
 
-  <!-- Display -->
-  <input class="mc-display" type="text" [value]="getMaskedPassword()" readonly placeholder="0" />
+  <input
+    class="mc-display"
+    [type]="isPassword ? 'password' : 'text'"
+    inputmode="none"
+    autocomplete="off"
+    autocapitalize="off"
+    spellcheck="false"
+    [(ngModel)]="inputValue"
+    placeholder="0" />
 
-  <!-- Toggle teclado -->
-  <div class="mc-toggle-row">
-    <button class="mc-toggle" (click)="toggleKeyboard()">
-      <mat-icon>{{ showAlpha ? 'dialpad' : 'abc' }}</mat-icon>
-      {{ (showAlpha ? 'switchToNumeric' : 'switchToLetters') | tenantText }}
-    </button>
-  </div>
-
-  <!-- Teclado numérico -->
-  <div class="mc-keypad" *ngIf="!showAlpha">
-    <button class="mc-key" *ngFor="let key of numericKeys" (click)="onKeyClick(key)">
-      {{ key }}
-    </button>
-  </div>
-
-  <!-- Teclado alfanumérico -->
-  <div class="mc-alpha" *ngIf="showAlpha">
-    <div *ngFor="let row of alphaRows" class="mc-alpha__row">
-      <button
-        class="mc-key mc-key--alpha"
-        *ngFor="let key of row"
-        [class.mc-key--esc]="key === 'ESC'"
-        [class.mc-key--space]="key === 'Espacio'"
-        (click)="onKeyClick(key)">
-        {{ key }}
-      </button>
-    </div>
-  </div>
+  <app-teclado-tactil
+    modo="numerico"
+    [decimales]="decimales"
+    [(valor)]="inputValue"
+    (vistaChange)="onVistaTeclado($event)"
+    (aceptar)="accept()">
+  </app-teclado-tactil>
 
   <div class="mc-actions">
     <button class="mc-btn mc-btn--warn" (click)="clear()">
-      <mat-icon>backspace</mat-icon> {{ 'clear' | tenantText }}
+      <mat-icon>backspace</mat-icon> {{ 'keyboardClear' | tenantText }}
     </button>
     <button class="mc-btn mc-btn--primary" (click)="accept()">
       <mat-icon>check</mat-icon> {{ 'accept' | tenantText }}

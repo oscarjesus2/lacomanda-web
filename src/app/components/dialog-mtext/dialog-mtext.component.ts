@@ -1,42 +1,43 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import Swal from 'sweetalert2';
 
+import { Notificar } from 'src/app/shared/notificaciones';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+
+interface DatosTecladoTexto {
+  title?: string;
+  text?: string;
+  /** Algunas pantallas antiguas envían el valor inicial con este nombre. */
+  texto?: string;
+  maxLength?: number;
+}
+
+/**
+ * Pide un texto con el teclado en pantalla. El diálogo ocupa lo que la
+ * pantalla permite, así el teclado entra completo en cualquier estación.
+ */
 @Component({
   selector: 'app-dialog-mtext-touch',
   templateUrl: './dialog-mtext.component.html',
-  styleUrls: ['./dialog-mtext.component.css']
+  styleUrls: ['./dialog-mtext.component.css'],
 })
 export class DialogMTextComponent {
-  inputValue: string = '';
+  inputValue = '';
   title: string;
-  keys: string[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '.', '=', '+', '-', '*', '/'];
-
-  keyRows = [
-    ['ESC', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '/'],
-    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ', '*'],
-    ['Z', 'X', 'C', 'V', 'B', 'N', 'M', '.', '-', '=', '+'],
-    ['Espacio', '%']
-  ];
-
+  maxLength: number;
 
   constructor(
     public dialogRef: MatDialogRef<DialogMTextComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: DatosTecladoTexto,
+    private readonly textCatalog: TenantTextCatalogService,
   ) {
-    this.title = data.title;
-    this.inputValue = data.text || '';
-  }
+    this.title = data?.title ?? '';
+    this.inputValue = data?.text ?? data?.texto ?? '';
+    this.maxLength = data?.maxLength ?? 0;
 
-  onKeyClick(key: string): void {
-    if (key === 'Espacio') {
-      this.inputValue += ' ';
-    } else if (key === 'Borrar') {
-      this.inputValue = this.inputValue.slice(0, -1);
-    } else {
-      this.inputValue += key;
-    }
+    // El tamaño lo decide el teclado, no quien abre el diálogo.
+    dialogRef.addPanelClass('dialog-window--teclado');
+    dialogRef.updateSize();
   }
 
   clear(): void {
@@ -45,14 +46,13 @@ export class DialogMTextComponent {
 
   accept(): void {
     if (!this.inputValue.trim()) {
-      Swal.fire({
-        title: 'Validación',
-        text: 'Debe ingresar texto.',
-        icon: 'warning',
-        confirmButtonText: 'OK'
-      });
+      void Notificar.advertencia(
+        this.textCatalog.get('validation'),
+        this.textCatalog.get('mustEnterText'),
+      );
       return;
     }
+
     this.dialogRef.close({ value: this.inputValue });
   }
 

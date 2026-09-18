@@ -819,6 +819,17 @@ export const EN_TEXTS = {
   switchToNumeric: 'Switch to numeric',
   switchToLetters: 'Switch to letters',
   clear: 'Clear',
+
+  // On-screen keyboard (mcant, mtext)
+  keyboardShift: 'Shift',
+  keyboardSpace: 'Space',
+  keyboardBackspace: 'Delete',
+  keyboardClear: 'Clear all',
+  mustEnterText: 'Enter some text.',
+  mustEnterValue: 'Enter a value.',
+  amountGreaterThanZero: 'Enter an amount greater than 0.',
+  minimumAmountIs: 'The minimum you can enter is {{min}}.',
+
   confirmVoidTitle: 'Confirm void',
   administrator: 'Administrator',
   authenticate: 'Authenticate',

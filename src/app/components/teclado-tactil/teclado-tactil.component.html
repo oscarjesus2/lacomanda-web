@@ -1,0 +1,20 @@
+<div class="tt-teclado" [class.tt-teclado--numerico]="esVistaNumerica">
+  <div class="tt-fila" *ngFor="let fila of filas">
+    <button
+      type="button"
+      tabindex="-1"
+      class="tt-tecla"
+      *ngFor="let tecla of fila"
+      [class.tt-tecla--ancha]="tecla.ancha"
+      [class.tt-tecla--espacio]="tecla.espacio"
+      [class.tt-tecla--activa]="tecla.activa"
+      [attr.aria-label]="tecla.aria ? (tecla.aria | tenantText) : null"
+      (pointerdown)="$event.preventDefault()"
+      (click)="pulsar(tecla)">
+      <mat-icon *ngIf="tecla.icono">{{ tecla.icono }}</mat-icon>
+      <ng-container *ngIf="!tecla.icono">
+        {{ tecla.clave ? (tecla.clave | tenantText) : tecla.etiqueta }}
+      </ng-container>
+    </button>
+  </div>
+</div>

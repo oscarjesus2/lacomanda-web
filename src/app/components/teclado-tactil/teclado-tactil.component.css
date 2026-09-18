@@ -1,0 +1,109 @@
+/* ==========================================================
+   teclado-tactil — teclado en pantalla que se adapta al alto
+   y al ancho disponibles (el mismo criterio que el acceso).
+   ========================================================== */
+
+.tt-teclado {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tt-hueco, 6px);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--tt-hueco, 6px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface-warm) 55%, transparent);
+
+  /* La tecla crece con el viewport, con topes para no deformarse. */
+  --tt-hueco: clamp(3px, 0.6vw, 7px);
+  --tt-alto: clamp(34px, 6.4dvh, 54px);
+  --tt-letra: clamp(0.78rem, 1.9dvh, 1.05rem);
+  --tt-letra-servicio: clamp(0.6rem, 1.4dvh, 0.82rem);
+}
+
+.tt-fila {
+  display: flex;
+  gap: var(--tt-hueco);
+  width: 100%;
+}
+
+.tt-tecla {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--tt-alto);
+  padding: 2px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: inherit;
+  font-size: var(--tt-letra);
+  font-weight: 700;
+  line-height: 1;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--color-text) 14%, transparent);
+
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.tt-tecla mat-icon {
+  font-size: calc(var(--tt-letra) * 1.25);
+  width: auto;
+  height: auto;
+}
+
+.tt-tecla:hover {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
+}
+
+.tt-tecla:active,
+.tt-tecla--activa {
+  transform: translateY(2px);
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
+  box-shadow: none;
+}
+
+/* Teclas de servicio: rótulo en palabras, así que necesitan más caja
+   y una letra algo menor para no romper la fila en pantallas estrechas. */
+.tt-tecla--ancha {
+  flex-grow: 1.7;
+  font-size: var(--tt-letra-servicio);
+  letter-spacing: 0.02em;
+  background: color-mix(in srgb, var(--color-surface-warm) 70%, var(--color-surface));
+}
+
+.tt-tecla--espacio {
+  flex-grow: 3.4;
+  font-size: var(--tt-letra-servicio);
+}
+
+/* Importes: pocas teclas por fila, todas grandes. */
+.tt-teclado--numerico {
+  --tt-alto: clamp(42px, 8.2dvh, 68px);
+  --tt-letra: clamp(1rem, 2.6dvh, 1.5rem);
+  --tt-letra-servicio: clamp(0.72rem, 1.7dvh, 0.95rem);
+}
+
+.tt-teclado--numerico .tt-tecla--ancha {
+  flex-grow: 1;
+}
+
+/* Pantallas muy estrechas: se aprieta el hueco antes que la tecla. */
+@media (max-width: 420px) {
+  .tt-teclado {
+    --tt-hueco: 3px;
+    --tt-alto: clamp(32px, 5.9dvh, 44px);
+    padding: 3px;
+  }
+}

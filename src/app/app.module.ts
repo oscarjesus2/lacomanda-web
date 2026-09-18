@@ -75,6 +75,7 @@ import { EmpleadoMantenimientoComponent } from './components/mantenimiento/emple
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { DialogComplementosComponent } from './components/dialog-complementos/dialog-complementos.component';
 import { DialogMTextComponent } from './components/dialog-mtext/dialog-mtext.component';
+import { TecladoTactilComponent } from './components/teclado-tactil/teclado-tactil.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { DialogProductSearchComponent } from './components/dialog-product-search/dialog-product-search.component';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -200,6 +201,7 @@ export const MY_DATE_FORMATS = {
     EmpleadoMantenimientoComponent,
     DialogComplementosComponent,
     DialogMTextComponent,
+    TecladoTactilComponent,
     DialogProductSearchComponent,
     DialogDividirCuentaComponent,
     DialogDescuentoComponent,

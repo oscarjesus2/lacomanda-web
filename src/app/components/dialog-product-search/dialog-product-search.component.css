@@ -2,9 +2,11 @@
    dialog-product-search — hereda mant-panel del global
    ========================================================== */
 
-/* Ancho específico del panel de búsqueda */
+/* El ancho lo fija el diálogo (dialog-window--teclado); aquí solo se
+   organiza el contenido para que el teclado reciba el espacio que sobra. */
 .ps-panel {
-  width: min(900px, calc(100vw - 32px));
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── Campo de búsqueda ──────────────────────────────────── */
@@ -23,7 +25,7 @@
 
 /* ── Tabla ──────────────────────────────────────────────── */
 .ps-table-wrap {
-  height: 220px;
+  height: clamp(130px, 26dvh, 300px);
   overflow-y: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
@@ -66,36 +68,10 @@
 }
 
 /* ── Teclado táctil ─────────────────────────────────────── */
+/* El teclado es app-teclado-tactil: se reparte el ancho del diálogo. */
 .ps-keypad {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 6px;
+  display: block;
   margin-bottom: 18px;
-}
-
-.ps-keypad > div { display: contents; }
-
-.ps-key {
-  padding: 10px 4px;
-  font-size: 0.92rem;
-  font-weight: 700;
-  font-family: inherit;
-  border: none;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
-  color: var(--color-text-light);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  letter-spacing: 0.02em;
-}
-
-.ps-key:hover {
-  background: var(--color-primary-dark);
-  transform: translateY(-1px);
-}
-
-.ps-key:active {
-  transform: translateY(0);
 }
 
 /* ── Botones de acción ──────────────────────────────────── */

@@ -39,11 +39,13 @@
   </div>
 
   <!-- Teclado táctil -->
-  <div class="ps-keypad">
-    <div *ngFor="let row of keyRows">
-      <button *ngFor="let key of row" class="ps-key" (click)="onKeyClick(key)">{{ key }}</button>
-    </div>
-  </div>
+  <app-teclado-tactil
+    class="ps-keypad"
+    modo="texto"
+    [valor]="filterText"
+    (valorChange)="onTecladoValor($event)"
+    (aceptar)="onAcceptClick()">
+  </app-teclado-tactil>
 
   <!-- Acciones -->
   <div class="ps-actions">

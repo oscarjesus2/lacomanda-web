@@ -18,6 +18,7 @@ import { ConfiguracionInicialComponent } from 'src/app/components/configuracion-
 import { HeaderService } from 'src/app/services/header.service';
 import { EstacionTipoEnum } from 'src/app/enums/enum';
 import { UsuarioService } from 'src/app/services/usuario.service';
+import { SesionUsuarioService } from 'src/app/services/sesion-usuario.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { Usuario } from 'src/app/models/usuario.models';
 import Swal from 'sweetalert2';
@@ -82,6 +83,7 @@ export class LoginComponent implements OnInit {
     private configService: ConfiguracionService,
     private headerService: HeaderService,
     private usuarioService: UsuarioService,
+    private sesionUsuario: SesionUsuarioService,
     private textCatalog: TenantTextCatalogService,
   ) {}
 
@@ -266,12 +268,13 @@ export class LoginComponent implements OnInit {
         return false;
       }
 
-      this.completarSesion(tokens, pending);
+      await this.completarSesion(tokens, pending);
       return true;
     } catch {
       localStorage.removeItem(LoginComponent.PENDING_LOGIN_KEY);
       this.spinnerService.hide();
       this.loginValid = false;
+      this.notificationService.showError('No se pudo completar el inicio de sesión. Inténtalo de nuevo.');
       this.loadTenants();
       return false;
     }
@@ -281,10 +284,10 @@ export class LoginComponent implements OnInit {
    * Construye la sesión con los tokens de Keycloak y ejecuta la orquestación
    * post-login (roles, estación, cultura, config y navegación).
    */
-  private completarSesion(
+  private async completarSesion(
     tokens: { token: string; refreshToken: string; idToken?: string },
     pending: PendingLogin,
-  ): void {
+  ): Promise<void> {
     const { token, refreshToken } = tokens;
     // Los mensajes previos a la sesión (p. ej. rechazos) usan el idioma de la sucursal.
     this.aplicarCulturaSucursal(pending.Cultura);
@@ -303,19 +306,37 @@ export class LoginComponent implements OnInit {
       return;
     }
 
-    if (this.CurrentIP) {
-      const session = new Session(
-        token,
-        refreshToken,
-        usuario,
-        this.CurrentIP,
-        pending.TenantId,
-        pending.Sucursal,
-        pending.Cultura,
-      );
-      this.storageService.setCurrentSession(session);
-      this.inicializarCulturaUsuario(session, usuario);
+    if (!this.CurrentIP && !isAdmin) {
+      this.spinnerService.hide();
+      void Swal.fire({
+        title: this.textCatalog.get('stationNotConfigured'),
+        text: this.textCatalog.get('stationIdentifierMissing'),
+        icon: 'warning',
+        confirmButtonText: this.textCatalog.get('accept')
+      }).then(() => this.rechazarSesionKeycloak(tokens, pending));
+      return;
+    }
 
+    if (!this.CurrentIP) usuario.TipoCompu = EstacionTipoEnum.ADMINISTRADOR;
+    const session = new Session(
+      token,
+      refreshToken,
+      usuario,
+      this.CurrentIP,
+      pending.TenantId,
+      pending.Sucursal,
+      pending.Cultura,
+    );
+    this.storageService.setCurrentSession(session);
+    try {
+      await this.sesionUsuario.registrarAhora();
+    } catch (error) {
+      this.storageService.removeCurrentSession();
+      throw error;
+    }
+    this.inicializarCulturaUsuario(session, usuario);
+
+    if (this.CurrentIP) {
       this.estacionService.getAll().subscribe({
         next: (estResp) => {
           this.spinnerService.hide();
@@ -352,30 +373,6 @@ export class LoginComponent implements OnInit {
       });
 
     } else {
-      if (!isAdmin) {
-        this.spinnerService.hide();
-        void Swal.fire({
-          title: this.textCatalog.get('stationNotConfigured'),
-          text: this.textCatalog.get('stationIdentifierMissing'),
-          icon: 'warning',
-          confirmButtonText: this.textCatalog.get('accept')
-        }).then(() => this.rechazarSesionKeycloak(tokens, pending));
-        return;
-      }
-
-      usuario.TipoCompu = EstacionTipoEnum.ADMINISTRADOR;
-      const session = new Session(
-        token,
-        refreshToken,
-        usuario,
-        this.CurrentIP,
-        pending.TenantId,
-        pending.Sucursal,
-        pending.Cultura,
-      );
-      this.storageService.setCurrentSession(session);
-      this.inicializarCulturaUsuario(session, usuario);
-
       this.spinnerService.hide();
       this.ensureConfigThenNavigate('/dashboard');
     }

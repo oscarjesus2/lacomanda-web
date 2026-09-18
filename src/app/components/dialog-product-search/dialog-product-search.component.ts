@@ -14,19 +14,16 @@ export class DialogProductSearchComponent {
   displayedColumns: string[] = ['name', 'price', 'family'];
   selectedProduct: Producto | null = null; // Variable para almacenar el producto seleccionado
 
-  keyRows = [
-    ['ESC', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ'],
-    ['Z', 'X', 'C', 'V', 'B', 'N', 'M', ' ', 'BORRAR']
-  ];
-
   constructor(
     public dialogRef: MatDialogRef<DialogProductSearchComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { listProducts: Producto[] }
   ) {
     this.listProducts = data.listProducts;
     this.filteredProducts = [...this.listProducts]; // Inicializar la lista filtrada
+
+    // El tamaño lo decide la estación: el teclado ocupa lo que sobra.
+    dialogRef.addPanelClass('dialog-window--teclado');
+    dialogRef.updateSize();
   }
 
   filterProducts() {
@@ -38,15 +35,10 @@ export class DialogProductSearchComponent {
     });
   }
 
-  onKeyClick(key: string) {
-    if (key === 'BORRAR') {
-      this.filterText = this.filterText.slice(0, -1); // Remover el último carácter
-    } else if (key === 'ESPACIO') {
-      this.filterText += ' '; // Agregar un espacio
-    } else {
-      this.filterText += key; // Agregar la tecla presionada al filtro
-    }
-    this.filterProducts(); // Llamamos a la función para filtrar productos
+  /** El teclado en pantalla escribe en el mismo filtro que el campo. */
+  onTecladoValor(valor: string): void {
+    this.filterText = valor;
+    this.filterProducts();
   }
 
   selectProduct(product: Producto) {
