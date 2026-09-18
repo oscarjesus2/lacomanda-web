@@ -50,7 +50,7 @@ import { DialogMenuComponent } from 'src/app/components/dialog-menu/dialog-menu.
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 // import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
-import { forkJoin, lastValueFrom, Subscription } from 'rxjs';
+import { firstValueFrom, forkJoin, lastValueFrom, Subscription } from 'rxjs';
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { DialogMTextComponent } from 'src/app/components/dialog-mtext/dialog-mtext.component';
 import { AnularProductoYComplementoDTO } from 'src/app/interfaces/anularProductoYComplementoDTO.interface';
@@ -90,6 +90,9 @@ import { CuotaComprobantesMensuales } from 'src/app/models/licencia-tenant.model
 import { AgendaReservasDialogComponent } from 'src/app/components/reservas/agenda-reservas-dialog/agenda-reservas-dialog.component';
 import { ConfirmacionImpresionPedidosService } from 'src/app/services/confirmacion-impresion-pedidos.service';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { SolicitudAutorizacionService } from 'src/app/services/solicitud-autorizacion.service';
+import { SolicitudesAutorizacionRealtimeService } from 'src/app/services/solicitudes-autorizacion-realtime.service';
+import { SolicitudAutorizacion, SolicitudAutorizacionCreada } from 'src/app/models/solicitud-autorizacion.models';
 import { DialogAnfitrionasComponent } from 'src/app/components/dialog-anfitrionas/dialog-anfitrionas.component';
 import { DialogTurnoComponent } from 'src/app/components/dialog-turno/dialog-turno.component';
 import { DialogCerrarTurnoComponent } from 'src/app/components/dialog-cerrar-turno/dialog-cerrar-turno.component';
@@ -114,6 +117,13 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   public puedeAbrirTurno = false;
   public puedeCerrarTurno = false;
   public puedeAplicarDescuento = false;
+  /** Administrador o cajero autorizado: anula directamente en lugar de pedir aprobación. */
+  public puedeAprobarSolicitudes = false;
+  /** Anulaciones de producto pendientes de aprobación, por ítem. */
+  private solicitudesPedido = new Map<number, SolicitudAutorizacion>();
+  /** Solicitudes pendientes sobre la cuenta entera (anular, cambiar camarero, descuento). */
+  public solicitudesCuenta: SolicitudAutorizacion[] = [];
+  private solicitudesAutorizacionSubscription = new Subscription();
   public cargandoPermisos = true;
   public user: Usuario;
   public config: Configuracion | null = null;
@@ -267,6 +277,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     private estadoImpresion: EstadoImpresionService,
     private licenciaTenantService: LicenciaTenantService,
     private confirmacionImpresionPedidos: ConfirmacionImpresionPedidosService,
+    private solicitudAutorizacionService: SolicitudAutorizacionService,
+    private solicitudesAutorizacionRealtime: SolicitudesAutorizacionRealtimeService,
     private activatedRoute: ActivatedRoute) {
 
 
@@ -330,6 +342,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   
   ngOnDestroy() {
     this.solicitudesMesaSubscription?.unsubscribe();
+    this.solicitudesAutorizacionSubscription.unsubscribe();
     this.headerService.showHeader(); // Mostrar el header al salir
   }
 
@@ -472,15 +485,19 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
           || !!response?.Data?.PuedeCerrarTurno;
         this.puedeAplicarDescuento = response?.Data?.IdNivel === NivelUsuarioEnum.Administrador
           || !!response?.Data?.PuedeAplicarDescuento;
+        this.puedeAprobarSolicitudes = response?.Data?.IdNivel === NivelUsuarioEnum.Administrador
+          || (response?.Data?.IdNivel === NivelUsuarioEnum.Cajero && !!response?.Data?.PuedeAprobarSolicitudes);
         this.cargandoPermisos = false;
       },
       error: () => {
         this.puedeAbrirTurno = false;
         this.puedeCerrarTurno = false;
         this.puedeAplicarDescuento = false;
+        this.puedeAprobarSolicitudes = false;
         this.cargandoPermisos = false;
       },
     });
+    this.escucharSolicitudesAutorizacion();
     this.confirmacionImpresionPedidos.iniciar();
     this.configuracionService.get().subscribe(cfg => this.config = cfg);
     this.licenciaTenantService.obtenerEstado().subscribe(estado => {
@@ -863,12 +880,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       Swal.fire(title, this.textCatalog.get('selectSpace'), 'info');
       return;
     }
-    if (!this.isAdmin) {
-      Swal.fire(
-        title,
-        this.textCatalog.get('onlyAdminCanChangeOrderAttendant'),
-        'warning',
-      );
+    const pendienteCamarero = this.solicitudCuentaPendiente('CambiarCamarero');
+    if (pendienteCamarero) {
+      await this.retirarSolicitudCuenta(pendienteCamarero);
       return;
     }
 
@@ -895,6 +909,12 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     if (!idEmpleado) return;
+
+    // Sin permiso para aprobar, el cambio se pide y lo resuelve un administrador.
+    if (!this.puedeAprobarSolicitudes) {
+      await this.solicitarCambioCamarero(Number(idEmpleado));
+      return;
+    }
 
     try {
       this.spinnerService.show();
@@ -1035,7 +1055,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  openDialogoDescuento(itemPedidoDet: PedidoDet): void {
+  openDialogoDescuento(itemPedidoDet: PedidoDet, solicitarAprobacion = false): void {
 
     var idProducto = itemPedidoDet.Producto.IdProducto;
     var nombreCorto = itemPedidoDet.Producto.NombreCorto;
@@ -1061,7 +1081,12 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
           NroCupon: result.retornaNroCupon,
           UsuDescuento: this.storageService.getCurrentUser().IdUsuario
         };
-        
+
+        if (solicitarAprobacion) {
+          await this.solicitarDescuentoPedido(pedidoDescuentoDTO);
+          return;
+        }
+
         this.spinnerService.show();
         await this.pedidoService.AplicarDescuento(pedidoDescuentoDTO).subscribe(async ()=>{
         const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdPedidoNroCuenta(this.idPedidoCobrar, this.nroCuentaCobrar));
@@ -1655,12 +1680,11 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.calcularTotales();
   }
 
-  async realizarEliminacion(pedidoDet: PedidoDet, motivoAnulacion: string, idUsuAnula: number) {
+  async realizarEliminacion(pedidoDet: PedidoDet, motivoAnulacion: string) {
 
     var pedidoDelete: AnularProductoYComplementoDTO = {
       IdEspacio: this.espacioSelected.IdEspacio,
       NroCuenta: pedidoDet.NroCuenta,
-      UsuAnula: idUsuAnula,
       MotivoAnula: motivoAnulacion,
       IdPedido: pedidoDet.IdPedido,
       IdProducto: pedidoDet.Producto.IdProducto,
@@ -1669,109 +1693,312 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     this.spinnerService.show();
-    var responseService: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.AnularProductoYComplemento(pedidoDelete));
+    try {
+      const responseService: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.AnularProductoYComplemento(pedidoDelete));
 
-    if (responseService.Success == true) {
-      const contador = await this.imprimir(responseService.Data);
+      if (responseService.Success == true) {
+        const contador = await this.imprimir(responseService.Data);
 
-      if (responseService.Data.length > 0 && contador === responseService.Data.length) {
-        this.pedidoService.ActualizarNumAnulaItemImpresion(
-          pedidoDet.IdPedido,
-          pedidoDet.NroCuenta,
-          pedidoDet.Item).subscribe(response => {
-          console.log('Envios actualizados correctamente', response);
-        }, error => {
-          console.error('Error al actualizar los envíos', error);
-        });
+        if (responseService.Data.length > 0 && contador === responseService.Data.length) {
+          this.pedidoService.ActualizarNumAnulaItemImpresion(
+            pedidoDet.IdPedido,
+            pedidoDet.NroCuenta,
+            pedidoDet.Item).subscribe(response => {
+            console.log('Envios actualizados correctamente', response);
+          }, error => {
+            console.error('Error al actualizar los envíos', error);
+          });
+        }
+
+        this.quitarItemAnulado(pedidoDet.Item);
       }
-
-      var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(pedidoDet);
-      this.listProductGrid.splice(removeIndex, 1);
-      this.actualizarDatosGrilla();
-      if (this.listProductGrid.length == 0) {
-        this.limpiarPedido();
-        this.RehacerPantalla();
-      }
+    } finally {
+      this.spinnerService.hide();
     }
-    this.spinnerService.hide();
+  }
+
+  /** Quita de la grilla un ítem ya anulado; si la cuenta queda vacía, vuelve a los espacios. */
+  private quitarItemAnulado(item: number): void {
+    const indice = this.listProductGrid.findIndex(det => det.Item === item);
+    if (indice < 0) return;
+
+    this.listProductGrid.splice(indice, 1);
+    this.solicitudesPedido.delete(item);
+    this.actualizarDatosGrilla();
+    if (this.listProductGrid.length === 0) {
+      this.limpiarPedido();
+      this.RehacerPantalla();
+    }
+  }
+
+  /** Anulación pendiente de aprobación para una línea de la cuenta abierta. */
+  solicitudPendiente(pedidoDet: PedidoDet): SolicitudAutorizacion | undefined {
+    if (!pedidoDet || pedidoDet.Item <= 0 || pedidoDet.IdPedido !== this.idPedidoCobrar) return undefined;
+    return this.solicitudesPedido.get(pedidoDet.Item);
+  }
+
+  /** Solicitud pendiente sobre la cuenta entera del tipo indicado. */
+  solicitudCuentaPendiente(tipo: string): SolicitudAutorizacion | undefined {
+    return this.solicitudesCuenta.find(s => s.Tipo === tipo);
+  }
+
+  /** Texto del aviso de solicitudes pendientes sobre la cuenta. */
+  get resumenSolicitudesCuenta(): string {
+    return this.solicitudesCuenta
+      .map(s => `${s.Descripcion} (${this.textCatalog.get('requestedBy', { user: s.UsuarioSolicita })})`)
+      .join(' · ');
+  }
+
+  /** Vuelve a leer la cuenta desde el servidor tras un cambio aprobado. */
+  private async recargarCuentaAbierta(): Promise<void> {
+    if (!this.idPedidoCobrar) return;
+    try {
+      const listData = await lastValueFrom(
+        this.pedidoService.FindPedidoByIdPedidoNroCuenta(this.idPedidoCobrar, this.nroCuentaCobrar),
+      );
+      if (!listData.Data?.length) return;
+      this.rellenarHeaderPedido(listData.Data);
+      this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
+      this.actualizarDatosGrilla();
+    } catch (error) {
+      console.warn('No se pudo recargar la cuenta tras la aprobación.', error);
+    }
+  }
+
+  /** Retira una solicitud propia sobre la cuenta, o explica de quién es. */
+  private async retirarSolicitudCuenta(solicitud: SolicitudAutorizacion): Promise<boolean> {
+    if (solicitud.IdUsuarioSolicita !== this.storageService.getCurrentUser()?.IdUsuario) {
+      Notificar.informacion(
+        solicitud.Descripcion,
+        this.textCatalog.get('requestedBy', { user: solicitud.UsuarioSolicita }),
+      );
+      return false;
+    }
+
+    const confirmado = await Notificar.confirmar({
+      titulo: this.textCatalog.get('confirmCancelRequest', { product: solicitud.Descripcion }),
+      textoConfirmar: this.textCatalog.get('withdrawRequest'),
+      textoCancelar: this.textCatalog.get('cancel'),
+    });
+    if (!confirmado) return false;
+
+    try {
+      await firstValueFrom(this.solicitudAutorizacionService.cancelar(solicitud.IdSolicitud));
+      this.solicitudesCuenta = this.solicitudesCuenta.filter(s => s.IdSolicitud !== solicitud.IdSolicitud);
+    } catch {
+      await this.cargarSolicitudesPedido();
+    }
+
+    return true;
+  }
+
+  /** Aviso común tras enviar una solicitud: informa si no hay nadie conectado. */
+  private avisarSolicitudEnviada(creada: SolicitudAutorizacionCreada): void {
+    this.solicitudesCuenta = [
+      ...this.solicitudesCuenta.filter(s => s.IdSolicitud !== creada.Solicitud.IdSolicitud),
+      creada.Solicitud,
+    ];
+    const sinAprobadores = creada.AprobadoresConectados === 0;
+    Notificar.informacion(
+      this.textCatalog.get('requestSent'),
+      sinAprobadores
+        ? this.textCatalog.get('noApproversConnected')
+        : creada.Solicitud.Descripcion,
+      sinAprobadores ? 'warning' : 'info',
+    );
+  }
+
+  private async cargarSolicitudesPedido(): Promise<void> {
+    const idPedido = this.idPedidoCobrar;
+    const nroCuenta = this.nroCuentaCobrar;
+    if (!idPedido) {
+      this.solicitudesPedido.clear();
+      this.solicitudesCuenta = [];
+      return;
+    }
+
+    try {
+      const solicitudes = await firstValueFrom(this.solicitudAutorizacionService.listarPorPedido(idPedido, nroCuenta));
+      if (idPedido !== this.idPedidoCobrar || nroCuenta !== this.nroCuentaCobrar) return;
+      this.solicitudesPedido = new Map(
+        solicitudes
+          .filter(s => s.Tipo === 'AnularProducto' && s.Item !== null)
+          .map(s => [s.Item as number, s] as [number, SolicitudAutorizacion]),
+      );
+      this.solicitudesCuenta = solicitudes.filter(s => s.Tipo !== 'AnularProducto');
+    } catch (error) {
+      console.warn('No se pudieron cargar las solicitudes pendientes de la cuenta.', error);
+    }
+  }
+
+  /** Mantiene la cuenta abierta al día cuando se crean o resuelven solicitudes sobre ella. */
+  private escucharSolicitudesAutorizacion(): void {
+    const esDeLaCuentaAbierta = (s: SolicitudAutorizacion) =>
+      this.idPedidoCobrar > 0
+      && s.IdPedido === this.idPedidoCobrar
+      && s.NroCuenta === this.nroCuentaCobrar;
+
+    this.solicitudesAutorizacionSubscription.add(
+      this.solicitudesAutorizacionRealtime.creada$.subscribe(solicitud => {
+        if (!esDeLaCuentaAbierta(solicitud)) return;
+        if (solicitud.Tipo === 'AnularProducto' && solicitud.Item !== null) {
+          this.solicitudesPedido.set(solicitud.Item, solicitud);
+        } else {
+          this.solicitudesCuenta = [
+            ...this.solicitudesCuenta.filter(s => s.IdSolicitud !== solicitud.IdSolicitud),
+            solicitud,
+          ];
+        }
+      }),
+    );
+
+    this.solicitudesAutorizacionSubscription.add(
+      this.solicitudesAutorizacionRealtime.resuelta$.subscribe(solicitud => {
+        if (!esDeLaCuentaAbierta(solicitud)) return;
+        this.solicitudesCuenta = this.solicitudesCuenta.filter(s => s.IdSolicitud !== solicitud.IdSolicitud);
+        if (solicitud.Item !== null) {
+          this.solicitudesPedido.delete(solicitud.Item);
+        }
+
+        if (solicitud.Estado !== 'Aprobada') {
+          void this.cargarSolicitudesPedido();
+          return;
+        }
+
+        // Aprobada: la cuenta ya cambió en el servidor.
+        if (solicitud.Tipo === 'AnularProducto' && solicitud.Item !== null) {
+          this.quitarItemAnulado(solicitud.Item);
+        } else if (solicitud.Tipo === 'AnularPedido') {
+          this.limpiarPedido();
+          this.RehacerPantalla();
+        } else {
+          void this.recargarCuentaAbierta();
+        }
+      }),
+    );
+  }
+
+  /** Un aprobador que toca una línea con solicitud pendiente la aprueba aquí mismo, con el motivo del solicitante. */
+  private async aprobarSolicitudPendiente(pedidoDet: PedidoDet, solicitud: SolicitudAutorizacion): Promise<void> {
+    const confirmado = await Notificar.confirmar({
+      titulo: this.textCatalog.get('confirmDeleteProduct', { product: pedidoDet.Producto.NombreCorto }),
+      detalle: `${this.textCatalog.get('requestedBy', { user: solicitud.UsuarioSolicita })}: ${solicitud.Motivo}`,
+      textoConfirmar: this.textCatalog.get('approve'),
+      textoCancelar: this.textCatalog.get('cancel'),
+    });
+    if (!confirmado) return;
+
+    this.spinnerService.show();
+    try {
+      const resuelta = await firstValueFrom(this.solicitudAutorizacionService.aprobar(solicitud.IdSolicitud));
+      this.solicitudesAutorizacionRealtime.quitar(resuelta.IdSolicitud);
+      if (resuelta.Estado === 'Aprobada') {
+        this.quitarItemAnulado(pedidoDet.Item);
+        Notificar.exito(this.textCatalog.get('requestApproved'));
+      } else {
+        this.solicitudesPedido.delete(pedidoDet.Item);
+        Notificar.informacion(this.textCatalog.get('requestWithoutEffect'), resuelta.Observacion ?? undefined, 'warning');
+      }
+    } catch {
+      await this.cargarSolicitudesPedido();
+    } finally {
+      this.spinnerService.hide();
+    }
+  }
+
+  private async cancelarSolicitudPendiente(pedidoDet: PedidoDet, solicitud: SolicitudAutorizacion): Promise<void> {
+    const miUsuario = this.storageService.getCurrentUser()?.IdUsuario;
+    if (solicitud.IdUsuarioSolicita !== miUsuario) {
+      Notificar.informacion(
+        this.textCatalog.get('voidPending'),
+        this.textCatalog.get('requestedBy', { user: solicitud.UsuarioSolicita }),
+      );
+      return;
+    }
+
+    const confirmado = await Notificar.confirmar({
+      titulo: this.textCatalog.get('confirmCancelRequest', { product: pedidoDet.Producto.NombreCorto }),
+      textoConfirmar: this.textCatalog.get('withdrawRequest'),
+      textoCancelar: this.textCatalog.get('cancel'),
+    });
+    if (!confirmado) return;
+
+    try {
+      await firstValueFrom(this.solicitudAutorizacionService.cancelar(solicitud.IdSolicitud));
+      this.solicitudesPedido.delete(pedidoDet.Item);
+    } catch {
+      // El interceptor ya mostró el motivo (p. ej. ya fue resuelta); se refresca el estado.
+      await this.cargarSolicitudesPedido();
+    }
+  }
+
+  private async solicitarAnulacionProducto(pedidoDet: PedidoDet, motivo: string): Promise<void> {
+    this.spinnerService.show();
+    try {
+      const creada = await firstValueFrom(this.solicitudAutorizacionService.solicitarAnulacionProducto({
+        IdPedido: pedidoDet.IdPedido,
+        NroCuenta: pedidoDet.NroCuenta,
+        Item: pedidoDet.Item,
+        Motivo: motivo,
+        IdentificadorEstacion: this.storageService.getCurrentIP() || null,
+      }));
+      this.solicitudesPedido.set(pedidoDet.Item, creada.Solicitud);
+
+      const sinAprobadores = creada.AprobadoresConectados === 0;
+      Notificar.informacion(
+        this.textCatalog.get('requestSent'),
+        sinAprobadores
+          ? this.textCatalog.get('noApproversConnected')
+          : this.textCatalog.get('requestSentDetail', { product: pedidoDet.Producto.NombreCorto }),
+        sinAprobadores ? 'warning' : 'info',
+      );
+    } catch {
+      // El interceptor ya mostró el error; puede que ya exista una solicitud.
+      await this.cargarSolicitudesPedido();
+    } finally {
+      this.spinnerService.hide();
+    }
   }
 
   deleteProductGrid(pedidoDet: PedidoDet) {
-    const currentUser = this.storageService.getCurrentUser();
-    if (pedidoDet.Item > 0) {
-      if (currentUser.IdNivel === 1) {
-        // Usar DialogMTextTouchComponent para el motivo de anulación
-        const dialogRef = this.dialog.open(DialogMTextComponent, {
-          width: '800px',
-          data: {
-            title: this.textCatalog.get('confirmDeleteProduct', {
-              product: pedidoDet.Producto.NombreCorto
-            })
-          }
-        });
-
-        dialogRef.afterClosed().subscribe(result => {
-
-          if (result && result.value) {
-            const motivoAnulacion = result.value;
-            this.realizarEliminacion(pedidoDet, motivoAnulacion, this.storageService.getCurrentSession().User.IdUsuario);
-          }
-        });
-      } else {
-        // Si el usuario no es de nivel "001", pedir primero el código del administrador con DialogMCantComponent
-        const dialogRef = this.dialog.open(DialogMCantComponent, {
-          width: '350px',
-          data: {
-            title: this.textCatalog.get('enterAdministratorCode'),
-            hideNumber: true,
-            decimalActive: false
-          }
-        });
-
-        dialogRef.afterClosed().subscribe(result => {
-          if (result && result.value) {
-            const codigoAdmin = result.value;
-            // Validar el código del administrador llamando a la API
-            this.usuarioService.getUsuarioAuth(NivelUsuarioEnum.Administrador, codigoAdmin).subscribe((response: ApiResponse<Usuario>) => {
-              if (response.Success) {
-                if (response.Data) {
-                  // Mostrar el DialogMTextTouchComponent para el motivo de anulación
-                  const motivoRef = this.dialog.open(DialogMTextComponent, {
-                    width: '800px',
-                    data: {
-                      title: this.textCatalog.get('confirmDeleteProduct', {
-                        product: pedidoDet.Producto.NombreCorto
-                      })
-                    }
-                  });
-
-                  motivoRef.afterClosed().subscribe(result => {
-
-                    if (result && result.value) {
-                      const motivoAnulacion = result.value;
-
-                      this.realizarEliminacion(pedidoDet, motivoAnulacion, response.Data.IdUsuario);
-                    }
-                  });
-                } else {
-
-                  Swal.fire({
-                    title: this.textCatalog.get('invalidCode'),
-                    text: this.textCatalog.get('incorrectCode'),
-                    icon: 'error',
-                    confirmButtonText: this.textCatalog.get('accept')
-                  });
-                }
-              }
-            });
-          }
-        });
-      }
-    } else {
-      var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(pedidoDet);
-      this.listProductGrid.splice(removeIndex, 1);
+    if (pedidoDet.Item <= 0) {
+      const removeIndex = this.listProductGrid.indexOf(pedidoDet);
+      if (removeIndex >= 0) this.listProductGrid.splice(removeIndex, 1);
       this.actualizarDatosGrilla();
+      return;
     }
+
+    const pendiente = this.solicitudPendiente(pedidoDet);
+    if (pendiente) {
+      const esMia = pendiente.IdUsuarioSolicita === this.storageService.getCurrentUser()?.IdUsuario;
+      if (this.puedeAprobarSolicitudes && !esMia) {
+        void this.aprobarSolicitudPendiente(pedidoDet, pendiente);
+      } else {
+        void this.cancelarSolicitudPendiente(pedidoDet, pendiente);
+      }
+      return;
+    }
+
+    // Quien puede aprobar anula al momento; el resto envía una solicitud con el motivo.
+    const dialogRef = this.dialog.open(DialogMTextComponent, {
+      width: '800px',
+      data: {
+        title: this.textCatalog.get('confirmDeleteProduct', {
+          product: pedidoDet.Producto.NombreCorto
+        })
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      const motivo = (result?.value ?? '').toString().trim();
+      if (!motivo) return;
+
+      if (this.puedeAprobarSolicitudes) {
+        void this.realizarEliminacion(pedidoDet, motivo);
+      } else {
+        void this.solicitarAnulacionProducto(pedidoDet, motivo);
+      }
+    });
   }
 
 
@@ -1925,98 +2152,128 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const currentUser = this.storageService.getCurrentUser();
+    const pendienteAnulacion = this.solicitudCuentaPendiente('AnularPedido');
+    if (pendienteAnulacion) {
+      await this.retirarSolicitudCuenta(pendienteAnulacion);
+      return;
+    }
 
-    if (currentUser.IdNivel === 1) {
-      // Usar DialogMTextTouchComponent para el motivo de anulación
-      const dialogRef = this.dialog.open(DialogMTextComponent, {
-        width: '800px',
-        data: {
-          title: this.textCatalog.get('confirmVoidSpaceOrder', {
-            space: `${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}`
-          })
-        }
-      });
+    if (!this.puedeAprobarSolicitudes && !this.idPedidoCobrar) {
+      // Sin cuenta abierta no hay nada que pedir: solo un aprobador puede liberar el espacio.
+      await Notificar.advertencia(
+        this.textCatalog.get('cancelOrder'),
+        this.textCatalog.get('onlyApproversCanVoidOrder')
+      );
+      return;
+    }
 
-      dialogRef.afterClosed().subscribe(result => {
+    const dialogRef = this.dialog.open(DialogMTextComponent, {
+      width: '800px',
+      data: {
+        title: this.textCatalog.get('confirmVoidSpaceOrder', {
+          space: `${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}`
+        })
+      }
+    });
 
-        if (result && result.value) {
-          const motivoAnulacion = result.value;
-          this.RealizarAnulacionPedido(this.espacioSelected, motivoAnulacion, this.storageService.getCurrentSession().User.IdUsuario);
-        }
-      });
-    } else {
-      // Si el usuario no es de nivel "001", pedir primero el código del administrador con DialogMCantComponent
-      const dialogRef = this.dialog.open(DialogMCantComponent, {
-        width: '350px',
-        data: {
-          title: this.textCatalog.get('enterAdministratorCode'),
-          hideNumber: true,
-          decimalActive: false
-        }
-      });
+    dialogRef.afterClosed().subscribe(result => {
+      const motivo = (result?.value ?? '').toString().trim();
+      if (!motivo) return;
 
-      dialogRef.afterClosed().subscribe(result => {
-        if (result && result.value) {
-          const codigoAdmin = result.value;
-          // Validar el código del administrador llamando a la API
-          this.usuarioService.getUsuarioAuth(NivelUsuarioEnum.Administrador, codigoAdmin).subscribe((response: ApiResponse<Usuario>) => {
-            if (response.Success) {
-              if (response.Data) {
-                // Mostrar el DialogMTextTouchComponent para el motivo de anulación
-                const motivoRef = this.dialog.open(DialogMTextComponent, {
-                  width: '800px',
-                  data: {
-                    title: this.textCatalog.get('confirmVoidSpaceOrder', {
-                      space: `${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}`
-                    })
-                  }
-                });
+      if (this.puedeAprobarSolicitudes) {
+        void this.RealizarAnulacionPedido(this.espacioSelected, motivo);
+      } else {
+        void this.solicitarAnulacionPedido(motivo);
+      }
+    });
+  }
 
-                motivoRef.afterClosed().subscribe(result => {
+  /** Pide aprobación para asignar la cuenta a otro camarero. */
+  private async solicitarCambioCamarero(idEmpleado: number): Promise<void> {
+    this.spinnerService.show();
+    try {
+      const creada = await firstValueFrom(this.solicitudAutorizacionService.solicitarCambioCamarero({
+        IdPedido: this.idPedidoCobrar,
+        NroCuenta: this.nroCuentaCobrar,
+        IdEmpleado: idEmpleado,
+        IdentificadorEstacion: this.storageService.getCurrentIP() || null,
+      }));
+      this.avisarSolicitudEnviada(creada);
+    } catch {
+      // El interceptor ya mostró el motivo.
+      await this.cargarSolicitudesPedido();
+    } finally {
+      this.spinnerService.hide();
+    }
+  }
 
-                  if (result && result.value) {
-                    const motivoAnulacion = result.value;
+  /** Pide aprobación para anular la cuenta completa. */
+  private async solicitarAnulacionPedido(motivo: string): Promise<void> {
+    this.spinnerService.show();
+    try {
+      const creada = await firstValueFrom(this.solicitudAutorizacionService.solicitarAnulacionPedido({
+        IdPedido: this.idPedidoCobrar,
+        NroCuenta: this.nroCuentaCobrar,
+        Motivo: motivo,
+        IdentificadorEstacion: this.storageService.getCurrentIP() || null,
+      }));
+      this.avisarSolicitudEnviada(creada);
+    } catch {
+      await this.cargarSolicitudesPedido();
+    } finally {
+      this.spinnerService.hide();
+    }
+  }
 
-                    this.RealizarAnulacionPedido(this.espacioSelected, motivoAnulacion, response.Data.IdUsuario);
-                  }
-                });
-              } else {
-
-                Swal.fire({
-                  title: this.textCatalog.get('invalidCode'),
-                  text: this.textCatalog.get('incorrectCode'),
-                  icon: 'error',
-                  confirmButtonText: this.textCatalog.get('accept')
-                });
-              }
-            }
-          });
-        }
-      });
+  /** Pide aprobación para aplicar un descuento a la cuenta. */
+  private async solicitarDescuentoPedido(dto: PedidoDescuentoDTO): Promise<void> {
+    this.spinnerService.show();
+    try {
+      const creada = await firstValueFrom(this.solicitudAutorizacionService.solicitarDescuentoPedido({
+        IdPedido: dto.IdPedido,
+        NroCuenta: dto.NroCuenta,
+        Item: dto.Item,
+        IdDescuento: Number(dto.IdDescuento),
+        Porcentaje: dto.Porcentaje,
+        NroCupon: dto.NroCupon ?? null,
+        Motivo: null,
+        IdentificadorEstacion: this.storageService.getCurrentIP() || null,
+      }));
+      this.avisarSolicitudEnviada(creada);
+    } catch {
+      await this.cargarSolicitudesPedido();
+    } finally {
+      this.spinnerService.hide();
     }
   }
 
 
-  async RealizarAnulacionPedido(espacio: Espacios, motivoAnulacion: string, idUsuAnula: number) {
+  async RealizarAnulacionPedido(espacio: Espacios, motivoAnulacion: string) {
     this.spinnerService.show();
-    var responseService: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.AnularPedido(espacio.IdEspacio, idUsuAnula, motivoAnulacion, this.storageService.getCurrentIP()));
+    try {
+      const responseService: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.AnularPedidoEspacio({
+        IdEspacio: espacio.IdEspacio,
+        MotivoAnula: motivoAnulacion,
+        Ip: this.storageService.getCurrentIP() || null,
+      }));
 
-    if (responseService.Success == true) {
-      const contador = await this.imprimir(responseService.Data);
+      if (responseService.Success == true) {
+        const contador = await this.imprimir(responseService.Data);
 
-      if (contador === responseService.Data.length) {
-        const pedido = responseService.Data[0];
-        this.pedidoService.ActualizarNumAnulaPedidoImpresion(pedido.IdPedido, pedido.NroCuenta).subscribe(response => {
-          console.log('Envios actualizados correctamente', response);
-        }, error => {
-          console.error('Error al actualizar los envíos', error);
-        });
+        if (responseService.Data.length > 0 && contador === responseService.Data.length) {
+          const pedido = responseService.Data[0];
+          this.pedidoService.ActualizarNumAnulaPedidoImpresion(pedido.IdPedido, pedido.NroCuenta).subscribe(response => {
+            console.log('Envios actualizados correctamente', response);
+          }, error => {
+            console.error('Error al actualizar los envíos', error);
+          });
+        }
+        this.limpiarPedido();
+        this.RehacerPantalla();
       }
-      this.limpiarPedido();
-      this.RehacerPantalla();
+    } finally {
+      this.spinnerService.hide();
     }
-    this.spinnerService.hide();
   }
 
   scrollLeft() {
@@ -2092,15 +2349,17 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (this.descuentoAplicado) {
       this.quitarDescuento();
-    } else if (!this.puedeAplicarDescuento) {
-      // El backend también lo valida; aquí solo se evita abrir el diálogo.
-      Swal.fire({
-        icon: 'info',
-        text: this.textCatalog.get('noDiscountPermission'),
-      });
-    } else {
-      this.openDialogoDescuento(this.selectedRow);
+      return;
     }
+
+    const pendienteDescuento = this.solicitudCuentaPendiente('DescuentoPedido');
+    if (pendienteDescuento) {
+      void this.retirarSolicitudCuenta(pendienteDescuento);
+      return;
+    }
+
+    // Sin permiso, el descuento se pide y lo aplica quien lo aprueba.
+    this.openDialogoDescuento(this.selectedRow, !this.puedeAplicarDescuento);
     
    }
    quitarDescuento() {
@@ -2344,6 +2603,30 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     return contador;
   }
 
+  /**
+   * Si la cuenta tiene anulaciones por aprobar, avisa antes de cobrar: al cobrar
+   * esas solicitudes caducan. El aviso no impide seguir.
+   */
+  private async confirmarCobroConSolicitudesPendientes(): Promise<boolean> {
+    let pendientes: SolicitudAutorizacion[] = [];
+    try {
+      pendientes = await firstValueFrom(
+        this.solicitudAutorizacionService.listarPorPedido(this.idPedidoCobrar, this.nroCuentaCobrar)
+      );
+    } catch {
+      return true;
+    }
+
+    if (pendientes.length === 0) return true;
+
+    return Notificar.confirmar({
+      titulo: this.textCatalog.get('pendingRequestsBeforeCharge', { count: pendientes.length }),
+      detalle: this.textCatalog.get('pendingRequestsBeforeChargeDetail'),
+      textoConfirmar: this.textCatalog.get('chargeAnyway'),
+      textoCancelar: this.textCatalog.get('cancel'),
+    });
+  }
+
   async processComprobante() {
     if (this.idPedidoCobrar > 0) {
       var allSaved: Boolean = true;
@@ -2354,6 +2637,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
       if (allSaved) {
+        if (!(await this.confirmarCobroConSolicitudesPendientes())) {
+          return;
+        }
 
         var dataSet: any = {
 
@@ -2478,6 +2764,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.procesarPedido = false;
     this.idPedidoCobrar = 0;
     this.nroCuentaCobrar = 0;
+    this.solicitudesPedido.clear();
+    this.solicitudesCuenta = [];
     this.fechaApertura = null;
     this.nombreCuenta = '';
     this.espacioSelected.NroPersonas = 0;
@@ -2546,10 +2834,16 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.socioNegocioSelected = this.listaSociosNegocio?.find(
       socio => socio.IdSocioNegocio === firstItem.IdSocioNegocio
     ) ?? new SocioNegocio();
+    const cambioDeCuenta = this.idPedidoCobrar !== firstItem.IdPedido || this.nroCuentaCobrar !== firstItem.NroCuenta;
     this.idPedidoCobrar = firstItem.IdPedido;
     this.nroCuentaCobrar = firstItem.NroCuenta;
     this.fechaApertura = firstItem.FechaApertura;
     this.numeroPedido = firstItem.NroPedido;
+    if (cambioDeCuenta) {
+      this.solicitudesPedido.clear();
+      this.solicitudesCuenta = [];
+    }
+    void this.cargarSolicitudesPedido();
   }
 
   abrirAgendaReservas(): void {

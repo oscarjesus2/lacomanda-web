@@ -12,6 +12,10 @@ import { EstacionSessionRealtimeService } from './services/estacion-session-real
 import { EstadoImpresion, EstadoImpresionService } from './services/estado-impresion.service';
 import { NivelUsuarioEnum } from './enums/enum';
 import { AppUpdateService } from './services/app-update.service';
+import { SolicitudesAutorizacionRealtimeService } from './services/solicitudes-autorizacion-realtime.service';
+import { SesionUsuarioService } from './services/sesion-usuario.service';
+import { SolicitudAutorizacion } from './models/solicitud-autorizacion.models';
+import { Notificar } from './shared/notificaciones';
 
 @Component({
   selector: 'app-root',
@@ -64,6 +68,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private agenteImpresionPedidos: AgenteImpresionPedidosService,
     private estacionSessionRealtime: EstacionSessionRealtimeService,
     private estadoImpresionService: EstadoImpresionService,
+    private solicitudesAutorizacion: SolicitudesAutorizacionRealtimeService,
+    private sesionUsuario: SesionUsuarioService,
   ) {
     this.backendDown$ = this.backendStatusService.isDown$;
     this.headerService.headerVisible$.subscribe(visible => {
@@ -80,6 +86,9 @@ export class AppComponent implements OnInit, OnDestroy {
       }
       this.mensajeEstadoImpresion = mensaje;
     });
+
+    this.solicitudesAutorizacion.creada$.subscribe(solicitud => this.avisarSolicitudCreada(solicitud));
+    this.solicitudesAutorizacion.resuelta$.subscribe(solicitud => this.avisarSolicitudResuelta(solicitud));
 
     this.estadoImpresionService.pendientes$.subscribe(pendientes => {
       if (pendientes > 0 && this.documentosEnEspera === 0) {
@@ -119,6 +128,46 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Aviso al aprobador de una solicitud nueva hecha por otra persona. */
+  private avisarSolicitudCreada(solicitud: SolicitudAutorizacion): void {
+    if (!this.solicitudesAutorizacion.esAprobador
+        || solicitud.IdUsuarioSolicita === this.storageService.getCurrentUser()?.IdUsuario) {
+      return;
+    }
+
+    Notificar.informacion(
+      this.textCatalog.get('newApprovalRequest'),
+      `${solicitud.UsuarioSolicita}: ${this.textCatalog.get('voidProductRequest')} `
+        + `${solicitud.Descripcion} · ${solicitud.Ubicacion}`,
+    );
+  }
+
+  /** Aviso a quien pidió la autorización de cómo se resolvió. */
+  private avisarSolicitudResuelta(solicitud: SolicitudAutorizacion): void {
+    if (solicitud.Estado === 'Cancelada'
+        || solicitud.IdUsuarioSolicita !== this.storageService.getCurrentUser()?.IdUsuario) {
+      return;
+    }
+
+    const titulos: Record<string, string> = {
+      Aprobada: this.textCatalog.get('requestApproved'),
+      Denegada: this.textCatalog.get('requestDenied'),
+      SinEfecto: this.textCatalog.get('requestWithoutEffect'),
+      Caducada: this.textCatalog.get('requestExpired'),
+    };
+    const quien = solicitud.UsuarioResuelve
+      ? ` (${this.textCatalog.get('resolvedBy', { user: solicitud.UsuarioResuelve })})`
+      : '';
+    const detalle = `${solicitud.Descripcion} · ${solicitud.Ubicacion}${quien}`
+      + (solicitud.Observacion ? ` — ${solicitud.Observacion}` : '');
+
+    Notificar.informacion(
+      titulos[solicitud.Estado] ?? solicitud.Estado,
+      detalle,
+      solicitud.Estado === 'Aprobada' ? 'info' : 'warning',
+    );
+  }
+
   cerrarAvisoImpresion(): void {
     this.avisoImpresionOculto = true;
   }
@@ -127,6 +176,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.appUpdateService.stop();
     this.agenteImpresionPedidos.detener();
     this.estacionSessionRealtime.stop();
+    void this.solicitudesAutorizacion.detener();
+    this.sesionUsuario.liberar();
     this.storageService.logout();
   }
 
@@ -152,10 +203,14 @@ export class AppComponent implements OnInit, OnDestroy {
   private actualizarRealtimePorRuta(url: string): void {
     if (this.esRutaPublica(url)) {
       this.estacionSessionRealtime.stop();
+      void this.solicitudesAutorizacion.detener();
+      void this.sesionUsuario.detener();
       return;
     }
 
     this.estacionSessionRealtime.start();
+    this.solicitudesAutorizacion.iniciar();
+    this.sesionUsuario.iniciar();
   }
 
   private esRutaPublica(url: string): boolean {

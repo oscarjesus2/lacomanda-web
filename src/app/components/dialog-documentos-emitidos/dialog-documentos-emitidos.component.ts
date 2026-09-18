@@ -11,11 +11,8 @@ import { StorageService } from 'src/app/services/storage.service';
 import { CajaTipoDocumentoService } from 'src/app/services/caja-tipo-documento.service';
 import { MonedaService } from 'src/app/services/moneda.service';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
-import { UsuarioService } from 'src/app/services/usuario.service';
 import { VentaService } from 'src/app/services/venta.service';
 import Swal from 'sweetalert2';
-import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
-import { Usuario } from 'src/app/models/usuario.models';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { DialogMTextComponent } from '../dialog-mtext/dialog-mtext.component';
 import { NivelUsuarioEnum } from 'src/app/enums/enum';
@@ -61,7 +58,6 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
 
   constructor(
     private ventaService: VentaService,
-    private usuarioService: UsuarioService,
     private cajaTipoDocumentoService: CajaTipoDocumentoService,
     private monedaService: MonedaService,
     private configuracionService: ConfiguracionService,
@@ -267,20 +263,13 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
       return;
     }
 
-    const IntIdVenta    = this.selectedRow.IdVenta;
-    const idTipoPedido  = this.selectedRow.IdTipoPedido;
-    let   idUsuarioAnula = 0;
-
-    if (this.storageService.getCurrentUser().IdNivel !== 1) {
-      Swal.fire({ title: this.texts.get('void'), text: this.texts.get('noPermissionEnterAdminKey'), icon: 'error', confirmButtonText: this.texts.get('ok') })
-        .then(async () => {
-          idUsuarioAnula = 0
-          this.confirmarAnulacion(IntIdVenta, idTipoPedido, idUsuarioAnula);
-        });
-    } else {
-      idUsuarioAnula = 0
-      this.confirmarAnulacion(IntIdVenta, idTipoPedido, idUsuarioAnula);
+    // El backend solo permite anular documentos a un administrador.
+    if (this.storageService.getCurrentUser().IdNivel !== NivelUsuarioEnum.Administrador) {
+      void Notificar.advertencia(this.texts.get('void'), this.texts.get('onlyAdminCanVoidDocuments'));
+      return;
     }
+
+    this.confirmarAnulacion(this.selectedRow.IdVenta, this.selectedRow.IdTipoPedido, 0);
   }
 
   confirmarAnulacion(IntIdVenta: number, idTipoPedido: string, idUsuarioAnula: number): void {
@@ -370,28 +359,6 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
   abrirTeclado(): void {
     const dialogRef = this.dialog.open(DialogMTextComponent, { width: '800px', data: { texto: '' } });
     dialogRef.afterClosed().subscribe(result => { if (result) this.motivoAnulacion = result.value; });
-  }
-
-  abrirModalClaveAnula(): Promise<number> {
-    return new Promise((resolve) => {
-      const dialogRef = this.dialog.open(DialogMCantComponent, {
-        width: '350px',
-        data: { title: this.texts.get('administratorCode'), hideNumber: true, decimalActive: false }
-      });
-      dialogRef.afterClosed().subscribe(result => {
-        if (result?.value) {
-          this.usuarioService.getUsuarioAuth(NivelUsuarioEnum.Administrador, result.value).subscribe({
-            next: (response: ApiResponse<Usuario>) => {
-              if (response.Success && response.Data) resolve(response.Data.IdUsuario);
-              else { Swal.fire(this.texts.get('invalidCode'), '', 'error'); resolve(-1); }
-            }
-          });
-        } else {
-          Swal.fire(this.texts.get('operationCancelled'), '', 'info');
-          resolve(-1);
-        }
-      });
-    });
   }
 
   private alertSeleccione(): void {

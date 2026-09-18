@@ -43,6 +43,23 @@ export const Notificar = {
   },
 
   /**
+   * Aviso que llega sin que el usuario lo haya pedido (p. ej. la resolución de
+   * una solicitud). Toast algo más largo que el de éxito; no bloquea.
+   */
+  informacion(titulo: string, detalle?: string, icono: 'info' | 'warning' = 'info'): void {
+    Swal.fire({
+      toast: true,
+      position: 'bottom-end',
+      icon: icono,
+      title: titulo,
+      text: detalle || undefined,
+      showConfirmButton: false,
+      timer: 6000,
+      timerProgressBar: true,
+    });
+  },
+
+  /**
    * Algo ha fallado. Persiste hasta que el usuario lo cierra.
    *
    * El detalle debería decir qué hacer, no solo qué pasó.

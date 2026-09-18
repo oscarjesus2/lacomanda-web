@@ -156,6 +156,9 @@
         <mat-checkbox [(ngModel)]="usuario.PuedeAplicarDescuento" name="puedeAplicarDescuento">
           {{ 'allowApplyDiscounts' | tenantText }}
         </mat-checkbox>
+        <mat-checkbox [(ngModel)]="usuario.PuedeAprobarSolicitudes" name="puedeAprobarSolicitudes">
+          {{ 'allowApproveRequests' | tenantText }}
+        </mat-checkbox>
       </div>
 
       <div class="form-actions">

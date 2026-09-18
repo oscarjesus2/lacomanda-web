@@ -1,0 +1,19 @@
+/* Fondo, borde, título y botón de cierre: primitivas globales de .mant-panel. */
+.approval-dialog { width: min(720px, 82vw); }
+.subtitle { margin: 0 0 22px; color: #7c7069; }
+.empty-state { min-height: 200px; display: grid; place-content: center; justify-items: center; gap: 8px; color: #81756d; text-align: center; }
+.empty-state mat-icon { width: 48px; height: 48px; font-size: 48px; }
+.request-card { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 22px; padding: 18px; margin-bottom: 12px; border: 1px solid #ead6c8; border-radius: 14px; background: #fff9f4; }
+.request-card h3 { margin: 3px 0; font-size: 20px; }
+.request-type { color: #9a1d08; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.request-reason { margin: 4px 0; color: #4a3f39; font-style: italic; overflow-wrap: anywhere; }
+.request-info small { color: #7c7069; }
+.request-amount { padding: 10px 12px; border-radius: 10px; background: #fff; color: #9a1d08; font: 800 20px/1 monospace; }
+.request-actions { display: flex; gap: 8px; }
+.email-preference { display: grid; gap: 4px; margin-top: 18px; padding-top: 14px; border-top: 1px solid #ead6c8; }
+.email-preference small { color: #7c7069; }
+@media (max-width: 700px) {
+  .approval-dialog { width: auto; }
+  .request-card { grid-template-columns: 1fr auto; }
+  .request-actions { grid-column: 1 / -1; justify-content: flex-end; }
+}

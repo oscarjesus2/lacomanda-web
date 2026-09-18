@@ -19,6 +19,7 @@ type TextCatalog = Record<TenantTextKey, string>;
 
 const CATALOGS: Record<string, TextCatalog> = {
   en: { ...EN_TEXTS },
+  es: { ...ES_TEXTS },
   'es-ES': { ...ES_TEXTS, ...ES_ES_OVERRIDES },
   'es-PE': { ...ES_TEXTS, ...ES_PE_OVERRIDES },
 };
@@ -82,6 +83,12 @@ export class TenantTextCatalogService {
       return 'es-ES';
     }
 
-    return value?.startsWith('en') ? 'en' : 'en';
+    // Otras variantes de español (es, es-419, es-MX…) usan el catálogo base
+    // en español; antes caían al inglés.
+    if (value === 'es' || value?.startsWith('es-')) {
+      return 'es';
+    }
+
+    return 'en';
   }
 }

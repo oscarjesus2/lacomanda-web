@@ -1,13 +1,13 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
-import { lastValueFrom } from 'rxjs';
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
 import { PedidoDet } from 'src/app/models/pedidodet.models';
 import { Producto } from 'src/app/models/product.models';
 import Swal from 'sweetalert2';
+import { Notificar } from 'src/app/shared/notificaciones';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
-import { DialogDeleteProductComponent } from '../dialog-delete-product/dialog-product-delete.component';
 
 @Component({
   selector: 'app-dialog-complementos',
@@ -29,6 +29,7 @@ export class DialogComplementosComponent {
     @Inject(MAT_DIALOG_DATA) public data: any,
     private dialog: MatDialog,
     public dialogRef: MatDialogRef<DialogComplementosComponent>,
+    private textCatalog: TenantTextCatalogService,
   ) {
     this.pedidodet              = data.pedidodet;
     const listProducts: Producto[] = data.listProducts;
@@ -135,18 +136,13 @@ export class DialogComplementosComponent {
 
   async deleteProductGrid(pedidoComplemento: PedidoComplemento): Promise<void> {
     if (pedidoComplemento.ItemComple > 0) {
-      const dataSet = {
-        nombreProducto: pedidoComplemento.ProductoComplemento.NombreCorto,
-        motivoAnulacion: '',
-        confirmacion: false,
-      };
-      const dialogRef = this.dialog.open(DialogDeleteProductComponent, {
-        width: '350px',
-        data: dataSet,
-        hasBackdrop: true,
-      });
-      await lastValueFrom(dialogRef.afterClosed());
-      // La lógica de anulación remota se implementará cuando el endpoint esté disponible
+      // Un complemento ya enviado se anula con su producto: la comanda de
+      // anulación tiene que salir por cocina junto con el plato.
+      Notificar.informacion(
+        this.textCatalog.get('sentComplementCannotBeRemoved'),
+        this.textCatalog.get('sentComplementCannotBeRemovedHint'),
+        'warning',
+      );
     } else {
       const idx = this.listPedidoComplemento.indexOf(pedidoComplemento);
       if (idx > -1) {

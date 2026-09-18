@@ -41,6 +41,8 @@ export class PedidoCab {
     Espacio: string;
      NroPax: number;
      ListaPedidoDet: PedidoDet[];
+     /** Venta de entradas: autorizaciones de descuento aprobadas que se consumen al grabar. */
+     IdsAutorizacionDescuento?: number[];
     
     constructor(init?: Partial<PedidoCab>) {
         Object.assign(this, init);

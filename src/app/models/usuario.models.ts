@@ -21,6 +21,7 @@ export class Usuario {
   public PuedeAbrirTurno: boolean;
   public PuedeCerrarTurno: boolean;
   public PuedeAplicarDescuento: boolean;
+  public PuedeAprobarSolicitudes: boolean;
   /** Preferencia opcional; null significa usar la cultura del tenant. */
   public Cultura?: string | null;
 }
@@ -34,5 +35,6 @@ export interface UsuarioUpdateDto {
   PuedeAbrirTurno: boolean;
   PuedeCerrarTurno: boolean;
   PuedeAplicarDescuento: boolean;
+  PuedeAprobarSolicitudes: boolean;
 }
 

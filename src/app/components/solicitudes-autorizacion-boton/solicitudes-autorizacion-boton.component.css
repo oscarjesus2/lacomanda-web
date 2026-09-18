@@ -1,0 +1,51 @@
+:host { display: inline-flex; }
+
+.approval-button--icon { color: inherit; }
+.approval-button--icon.approval-button--pending mat-icon { animation: approvalRing 1.6s ease-in-out infinite; }
+
+/* Misma forma que los botones de canal de la pantalla de venta. */
+.approval-button--channel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-md, 8px);
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+.approval-button--channel:hover { background-color: rgba(255, 255, 255, 0.28); border-color: rgba(255, 255, 255, 0.6); }
+.approval-button--channel mat-icon { font-size: 18px; height: 18px; width: 18px; }
+.approval-button--channel.approval-button--pending {
+  border-color: #ffd04c;
+  background: #fff4cc;
+  color: #711400;
+}
+.approval-button--channel.approval-button--pending:hover { background: #ffffff; }
+.approval-button__count {
+  display: inline-grid;
+  min-width: 20px;
+  height: 20px;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: var(--radius-pill, 999px);
+  background: #a00000;
+  color: #ffffff;
+  font-size: 12px;
+}
+
+@keyframes approvalRing {
+  0%, 100% { transform: rotate(0); }
+  10%, 30% { transform: rotate(-12deg); }
+  20%, 40% { transform: rotate(12deg); }
+  50% { transform: rotate(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .approval-button--icon.approval-button--pending mat-icon { animation: none; }
+}

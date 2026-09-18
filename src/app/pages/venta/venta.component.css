@@ -1093,3 +1093,28 @@ button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+.solicitudes-cuenta {
+  margin: 0 0 6px;
+  padding: 6px 10px;
+  border: 1px solid #ead6c8;
+  border-radius: 8px;
+  background: #fff7f1;
+  color: #a00000;
+  font-size: small;
+  font-weight: 700;
+}
+
+.solicitudes-cuenta mat-icon {
+  vertical-align: middle;
+}
+
+.solicitud-pendiente {
+  color: #a00000;
+  font-weight: 700;
+  font-size: small;
+}
+
+.solicitud-pendiente mat-icon {
+  vertical-align: middle;
+}

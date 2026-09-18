@@ -1,0 +1,49 @@
+<div class="mant-panel approval-dialog">
+  <button mat-icon-button class="close-button" [attr.aria-label]="'close' | tenantText" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+  <h2>{{ 'approvalRequests' | tenantText }}</h2>
+  <p class="subtitle">{{ 'approvalRequestsHint' | tenantText }}</p>
+
+  <div *ngIf="solicitudes.length === 0" class="empty-state">
+    <mat-icon>notifications_none</mat-icon>
+    <strong>{{ 'noPendingApprovalRequests' | tenantText }}</strong>
+    <span>{{ 'windowUpdatesAutomatically' | tenantText }}</span>
+  </div>
+
+  <article *ngFor="let solicitud of solicitudes" class="request-card">
+    <div class="request-info">
+      <span class="request-type">{{ etiquetaTipo(solicitud) }} · {{ solicitud.Ubicacion }}</span>
+      <h3>{{ solicitud.Descripcion }}</h3>
+      <p class="request-reason" *ngIf="solicitud.Motivo">“{{ solicitud.Motivo }}”</p>
+      <small>
+        {{ 'requestedBy' | tenantText:{ user: solicitud.UsuarioSolicita } }}
+        · {{ solicitud.FechaSolicitudUtc | date:'HH:mm' }}
+      </small>
+    </div>
+    <div class="request-amount" *ngIf="solicitud.Importe > 0">{{ solicitud.Importe | number:'1.2-2' }}</div>
+    <div class="request-actions">
+      <button mat-stroked-button color="warn"
+              [disabled]="procesando.has(solicitud.IdSolicitud)"
+              (click)="denegar(solicitud)">
+        {{ 'deny' | tenantText }}
+      </button>
+      <button mat-raised-button color="primary"
+              [disabled]="procesando.has(solicitud.IdSolicitud)"
+              (click)="aprobar(solicitud)">
+        {{ 'approve' | tenantText }}
+      </button>
+    </div>
+  </article>
+
+  <div class="email-preference" *ngIf="puedeElegirCorreo">
+    <mat-slide-toggle
+      color="primary"
+      [checked]="recibirPorCorreo"
+      [disabled]="guardandoPreferencia"
+      (change)="cambiarPreferenciaCorreo($event.checked)">
+      {{ 'alsoNotifyByEmail' | tenantText }}
+    </mat-slide-toggle>
+    <small>{{ 'alsoNotifyByEmailHint' | tenantText }}</small>
+  </div>
+</div>

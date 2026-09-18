@@ -14,10 +14,6 @@ export class UsuarioService {
 
   constructor(private http: HttpClient) {}
 
-  getUsuarioAuth(idNivel: number, clave: string): Observable<ApiResponse<Usuario>> {
-    return this.http.get<ApiResponse<Usuario>>(this.basePath + '/GetUsuarioAuth/' + idNivel + '/' + clave);
-  }
-
   getAllUsuarios(): Observable<ApiResponse<Usuario[]>> {
     return this.http.get<ApiResponse<Usuario[]>>(this.basePath);
   }
@@ -50,6 +46,7 @@ export class UsuarioService {
       PuedeAbrirTurno: !!usuario.PuedeAbrirTurno,
       PuedeCerrarTurno: !!usuario.PuedeCerrarTurno,
       PuedeAplicarDescuento: !!usuario.PuedeAplicarDescuento,
+      PuedeAprobarSolicitudes: !!usuario.PuedeAprobarSolicitudes,
     };
     return this.http.put<ApiResponse<Usuario>>(`${this.basePath}/${usuario.IdUsuario}`, dto);
   }

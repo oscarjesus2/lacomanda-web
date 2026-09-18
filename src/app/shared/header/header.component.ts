@@ -15,6 +15,7 @@ import { Configuracion } from 'src/app/models/configuracion.models';
 import { EstacionTipoEnum, NivelUsuarioEnum } from 'src/app/enums/enum';
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { SesionUsuarioService } from 'src/app/services/sesion-usuario.service';
 import Swal from 'sweetalert2';
 import { ControlHorarioComponent } from 'src/app/components/control-horario/control-horario.component';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
@@ -118,6 +119,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private usuarioService: UsuarioService,
     private licenciaTenantService: LicenciaTenantService,
     public textCatalog: TenantTextCatalogService,
+    private sesionUsuario: SesionUsuarioService,
   ) { }
 
   // ── Reloj ──────────────────────────────────────────────────
@@ -192,6 +194,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   showHeader()  { this.headerVisibleSubject.next(true); }
 
   public onLogout(): void {
+    // Liberar la sesión evita dejarla marcada como activa en otro equipo.
+    this.sesionUsuario.liberar();
     this.storageService.logout();
     this.exitFullScreen();
   }

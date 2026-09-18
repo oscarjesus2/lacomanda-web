@@ -28,12 +28,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatBadgeModule } from '@angular/material/badge';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { DialogMozoComponent } from './components/dialog-mozo/dialog-mozo.component';
-import { DialogDeleteProductComponent } from './components/dialog-delete-product/dialog-product-delete.component';
 import { PedidosListComponent } from './components/pedidos-list/pedidos-list.component';
 import { DialogEnviarPedidoComponent } from './components/dialog-grabar-pedido/dialog-grabar-pedido.component';
 import { DialogVerPedidoComponent } from './components/dialog-ver-pedido/dialog-ver-pedido.component';
@@ -125,6 +125,8 @@ import { SocioNegocioMantenimientoComponent } from './components/mantenimiento/s
 import { TenantTextPipe } from './pipes/tenant-text.pipe';
 import { MesaClienteComponent } from './pages/mesa-cliente/mesa-cliente.component';
 import { DialogSolicitudesMesaComponent } from './components/dialog-solicitudes-mesa/dialog-solicitudes-mesa.component';
+import { DialogSolicitudesAutorizacionComponent } from './components/dialog-solicitudes-autorizacion/dialog-solicitudes-autorizacion.component';
+import { SolicitudesAutorizacionBotonComponent } from './components/solicitudes-autorizacion-boton/solicitudes-autorizacion-boton.component';
 import { SalidaInternaMantenimientoComponent } from './components/mantenimiento/salida-interna-mantenimiento/salida-interna-mantenimiento.component';
 import { TransferenciaAlmacenMantenimientoComponent } from './components/mantenimiento/transferencia-almacen-mantenimiento/transferencia-almacen-mantenimiento.component';
 import { PorcionamientoMantenimientoComponent } from './components/mantenimiento/porcionamiento-mantenimiento/porcionamiento-mantenimiento.component';
@@ -169,7 +171,6 @@ export const MY_DATE_FORMATS = {
     DashboardComponent,
 
     DialogMozoComponent,
-    DialogDeleteProductComponent,
     PedidosListComponent,
     DialogEnviarPedidoComponent,
     DialogVerPedidoComponent,
@@ -247,6 +248,8 @@ export const MY_DATE_FORMATS = {
     TenantTextPipe,
     MesaClienteComponent,
     DialogSolicitudesMesaComponent,
+    DialogSolicitudesAutorizacionComponent,
+    SolicitudesAutorizacionBotonComponent,
     SalidaInternaMantenimientoComponent,
     TransferenciaAlmacenMantenimientoComponent,
     PorcionamientoMantenimientoComponent,
@@ -302,6 +305,7 @@ export const MY_DATE_FORMATS = {
     MatDividerModule,
     MatSliderModule,
     MatMenuModule,
+    MatBadgeModule,
     MatTabsModule,
     MatSlideToggleModule,
     MatSidenavModule,
