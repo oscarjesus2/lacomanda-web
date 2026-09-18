@@ -12,7 +12,7 @@
   class="tt-panel"
   [hidden]="!abierto"
   [attr.aria-label]="'keyboardTitle' | tenantText"
-  (pointerdown)="sostenerFoco($event)">
+  (mousedown)="sostenerFoco($event)">
 
   <header class="tt-cabecera">
     <strong aria-live="polite">

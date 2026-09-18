@@ -14,8 +14,8 @@
   width: fit-content;
   max-width: 100%;
   margin: 0 auto;
-  min-height: 40px;
-  padding: 0 18px;
+  min-height: 36px;
+  padding: 0 16px;
 
   border: 1.5px solid var(--color-border-strong);
   border-radius: var(--radius-md);

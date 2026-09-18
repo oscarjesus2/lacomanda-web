@@ -3722,6 +3722,17 @@ mat-row:hover mat-cell {
 .cdk-global-overlay-wrapper .dialog-window--texto .mant-panel {
   width: 100%;
   max-width: none;
+  margin: 12px auto;
+  padding: 16px 18px 16px;
+}
+
+/* Pedir un texto es un trámite corto: el título no ocupa media caja. */
+.cdk-global-overlay-wrapper .dialog-window--texto .mant-panel > h2 {
+  top: -12px;
+  margin: -16px -18px 0;
+  padding: 14px 18px 10px;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
 }
 
 /* Mientras el teclado en pantalla está abierto ocupa el borde inferior, así
