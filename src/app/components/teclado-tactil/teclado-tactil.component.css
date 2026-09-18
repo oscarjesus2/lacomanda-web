@@ -4,18 +4,19 @@
    ========================================================== */
 
 /* ── Botón para pedirlo ──────────────────────────────────── */
-/* Es una ayuda, no la forma principal de escribir: discreto y centrado. */
+/* Es una ayuda, no la forma principal de escribir: va con las acciones. */
+:host {
+  display: inline-flex;
+}
+
 .tt-llamador {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
 
-  width: fit-content;
-  max-width: 100%;
-  margin: 0 auto;
-  min-height: 36px;
-  padding: 0 16px;
+  min-height: 38px;
+  padding: 0 14px;
 
   border: 1.5px solid var(--color-border-strong);
   border-radius: var(--radius-md);

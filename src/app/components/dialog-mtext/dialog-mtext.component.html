@@ -18,9 +18,9 @@
       placeholder="..." />
   </div>
 
-  <app-teclado-tactil [destino]="campo" (enviar)="accept()"></app-teclado-tactil>
-
   <div class="mt-actions">
+    <app-teclado-tactil [destino]="campo" (enviar)="accept()"></app-teclado-tactil>
+
     <button class="mt-btn mt-btn--warn" (click)="clear()">
       <mat-icon>backspace</mat-icon> {{ 'keyboardClear' | tenantText }}
     </button>

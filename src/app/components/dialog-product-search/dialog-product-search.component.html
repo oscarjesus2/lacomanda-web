@@ -38,15 +38,14 @@
     </table>
   </div>
 
-  <!-- Teclado en pantalla: solo si la persona lo pide -->
-  <app-teclado-tactil
-    class="ps-keypad"
-    [destino]="campo"
-    [campo]="'searchByProduct' | tenantText">
-  </app-teclado-tactil>
-
-  <!-- Acciones -->
+  <!-- Acciones (el teclado se pide desde aquí) -->
   <div class="ps-actions">
+    <app-teclado-tactil
+      class="ps-keypad"
+      [destino]="campo"
+      [campo]="'searchByProduct' | tenantText">
+    </app-teclado-tactil>
+
     <button class="ps-btn ps-btn--cancel" (click)="onCancelClick()">{{ 'close' | tenantText }}</button>
     <button class="ps-btn ps-btn--accept" (click)="onAcceptClick()">
       <mat-icon>check</mat-icon> {{ 'accept' | tenantText }}

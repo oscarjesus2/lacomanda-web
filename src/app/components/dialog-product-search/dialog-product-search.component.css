@@ -71,15 +71,15 @@
 }
 
 /* ── Teclado en pantalla ────────────────────────────────── */
-/* El teclado es app-teclado-tactil: aquí solo se reserva su sitio. */
+/* Vive en la fila de acciones: el botón a la izquierda, sin fila propia. */
 .ps-keypad {
-  display: block;
-  margin: 0 0 10px;
+  margin-right: auto;
 }
 
 /* ── Botones de acción ──────────────────────────────────── */
 .ps-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
 }
