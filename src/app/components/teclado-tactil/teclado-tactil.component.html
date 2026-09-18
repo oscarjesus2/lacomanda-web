@@ -29,12 +29,12 @@
   </header>
 
   <div class="tt-teclas">
-    <div class="tt-fila" *ngFor="let fila of filas">
+    <div class="tt-fila" *ngFor="let fila of filas; trackBy: identificarFila">
       <button
         type="button"
         tabindex="-1"
         class="tt-tecla"
-        *ngFor="let tecla of fila"
+        *ngFor="let tecla of fila; trackBy: identificar"
         [class.tt-tecla--ancha]="tecla.ancha"
         [class.tt-tecla--espacio]="tecla.espacio"
         [class.tt-tecla--activa]="tecla.activa"

@@ -67,12 +67,23 @@ export class TecladoTactilComponent implements AfterViewInit, OnDestroy {
 
   abierto = false;
 
+  /**
+   * Las filas son un dato estable, no un getter: si se recalcularan en cada
+   * ciclo de detección, *ngFor reharía las teclas entre el mousedown y el
+   * mouseup y el navegador nunca llegaría a emitir el clic.
+   */
+  filas: TeclaTactil[][] = [];
+
   /** Marca en el body mientras el teclado ocupa el borde inferior. */
   private static readonly MarcaAbierto = 'teclado-en-pantalla';
 
   private mayus = false;
   private simbolos = false;
   private abrirAlTocar?: (evento: PointerEvent) => void;
+
+  constructor() {
+    this.redibujar();
+  }
 
   ngAfterViewInit(): void {
     // El panel vive pegado al viewport: colgado del body escapa del diálogo,
@@ -101,9 +112,11 @@ export class TecladoTactilComponent implements AfterViewInit, OnDestroy {
     this.panel?.nativeElement.remove();
   }
 
-  get filas(): TeclaTactil[][] {
-    return this.simbolos ? this.filasSimbolos() : this.filasLetras();
-  }
+  /** Identidad estable de cada tecla, para que *ngFor no las rehaga. */
+  identificar = (indice: number, tecla: TeclaTactil): string =>
+    `${indice}:${tecla.accion}:${tecla.clave ?? tecla.etiqueta ?? ''}`;
+
+  identificarFila = (indice: number): number => indice;
 
   alternar(): void {
     if (this.abierto) this.cerrar();
@@ -138,12 +151,15 @@ export class TecladoTactilComponent implements AfterViewInit, OnDestroy {
         break;
       case 'mayus':
         this.mayus = !this.mayus;
+        this.redibujar();
         break;
       case 'simbolos':
         this.simbolos = true;
+        this.redibujar();
         break;
       case 'letras':
         this.simbolos = false;
+        this.redibujar();
         break;
     }
 
@@ -161,6 +177,11 @@ export class TecladoTactilComponent implements AfterViewInit, OnDestroy {
   entrar(): void {
     this.cerrar();
     this.enviar.emit();
+  }
+
+  /** Rehace las filas solo cuando cambia el juego de teclas. */
+  private redibujar(): void {
+    this.filas = this.simbolos ? this.filasSimbolos() : this.filasLetras();
   }
 
   private get campoDestino(): CampoTexto | null {
