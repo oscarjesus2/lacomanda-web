@@ -14,13 +14,6 @@ export class DialogProductSearchComponent {
   displayedColumns: string[] = ['name', 'price', 'family'];
   selectedProduct: Producto | null = null; // Variable para almacenar el producto seleccionado
 
-  keyRows = [
-    ['ESC', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ'],
-    ['Z', 'X', 'C', 'V', 'B', 'N', 'M', ' ', 'BORRAR']
-  ];
-
   constructor(
     public dialogRef: MatDialogRef<DialogProductSearchComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { listProducts: Producto[] }
@@ -38,16 +31,6 @@ export class DialogProductSearchComponent {
     });
   }
 
-  onKeyClick(key: string) {
-    if (key === 'BORRAR') {
-      this.filterText = this.filterText.slice(0, -1); // Remover el último carácter
-    } else if (key === 'ESPACIO') {
-      this.filterText += ' '; // Agregar un espacio
-    } else {
-      this.filterText += key; // Agregar la tecla presionada al filtro
-    }
-    this.filterProducts(); // Llamamos a la función para filtrar productos
-  }
 
   selectProduct(product: Producto) {
     this.selectedProduct = product; // Asignamos el producto seleccionado

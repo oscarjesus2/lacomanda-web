@@ -3713,6 +3713,48 @@ mat-row:hover mat-cell {
   overflow: hidden !important;
 }
 
+/* Diálogos que solo piden un texto: una caja sobria, no una mesa de trabajo. */
+.cdk-overlay-pane.dialog-window--texto {
+  width: min(560px, calc(100vw - 24px)) !important;
+  max-width: calc(100vw - 24px) !important;
+}
+
+.cdk-global-overlay-wrapper .dialog-window--texto .mant-panel {
+  width: 100%;
+  max-width: none;
+  margin: 12px auto;
+  padding: 16px 18px 16px;
+}
+
+/* Pedir un texto es un trámite corto: el título no ocupa media caja. */
+.cdk-global-overlay-wrapper .dialog-window--texto .mant-panel > h2 {
+  top: -12px;
+  margin: -16px -18px 0;
+  padding: 14px 18px 10px;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+}
+
+/* Mientras el teclado en pantalla está abierto ocupa el borde inferior. Lo que
+   hay encima se apoya justo sobre él —como en un móvil— en vez de irse al otro
+   extremo de la pantalla. `--teclado-alto` lo publica el propio teclado. */
+body.teclado-en-pantalla .cdk-global-overlay-wrapper {
+  align-items: flex-end !important;
+  /* El envoltorio del CDK tiene alto fijo: sin border-box el relleno lo
+     desborda y el diálogo acabaría igualmente detrás del teclado. */
+  box-sizing: border-box;
+  padding-bottom: calc(var(--teclado-alto, 45dvh) + 8px);
+}
+
+body.teclado-en-pantalla .cdk-overlay-pane {
+  max-height: calc(100dvh - var(--teclado-alto, 45dvh) - 16px);
+}
+
+body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 /* Los diálogos con vista previa pueden ocupar la mesa de trabajo solo cuando
    hay contenido; antes de generarlo se ajustan a sus controles. */
 .cdk-global-overlay-wrapper .dialog-panel--workspace.dialog-panel--autoheight {

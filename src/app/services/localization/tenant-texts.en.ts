@@ -819,6 +819,19 @@ export const EN_TEXTS = {
   switchToNumeric: 'Switch to numeric',
   switchToLetters: 'Switch to letters',
   clear: 'Clear',
+
+  // On-screen keyboard
+  keyboardTitle: 'On-screen keyboard',
+  keyboardShow: 'Show keyboard',
+  keyboardHide: 'Hide',
+  keyboardWritingIn: 'Typing in',
+  keyboardEnter: 'Enter',
+  keyboardShift: 'Shift',
+  keyboardSpace: 'Space',
+  keyboardBackspace: 'Delete',
+  keyboardClear: 'Clear',
+  mustEnterText: 'Enter some text.',
+
   confirmVoidTitle: 'Confirm void',
   administrator: 'Administrator',
   authenticate: 'Authenticate',

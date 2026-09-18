@@ -823,6 +823,19 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   switchToNumeric: 'Cambiar a numérico',
   switchToLetters: 'Cambiar a letras',
   clear: 'Borrar',
+
+  // Teclado en pantalla
+  keyboardTitle: 'Teclado en pantalla',
+  keyboardShow: 'Mostrar teclado',
+  keyboardHide: 'Ocultar',
+  keyboardWritingIn: 'Escribiendo en',
+  keyboardEnter: 'Entrar',
+  keyboardShift: 'Mayús',
+  keyboardSpace: 'Espacio',
+  keyboardBackspace: 'Borrar',
+  keyboardClear: 'Limpiar',
+  mustEnterText: 'Debe ingresar texto.',
+
   confirmVoidTitle: 'Confirmar anulación',
   administrator: 'Administrador',
   authenticate: 'Autenticar',

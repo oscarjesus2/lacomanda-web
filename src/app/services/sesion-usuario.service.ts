@@ -4,17 +4,12 @@ import * as signalR from '@microsoft/signalr';
 import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import { environment } from 'src/environments/environment';
-import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { DeviceIdentifierService } from './device-identifier.service';
 import { StorageService } from './storage.service';
+import { Session } from '../models/session.models';
 
 interface SesionCerradaMessage {
   mensaje?: string;
-}
-
-interface SesionRegistrada {
-  SesionAnteriorCerrada?: boolean;
-  sesionAnteriorCerrada?: boolean;
 }
 
 /**
@@ -25,8 +20,8 @@ interface SesionRegistrada {
 @Injectable({ providedIn: 'root' })
 export class SesionUsuarioService {
   private hub?: signalR.HubConnection;
-  private tokenRegistrado = '';
-  private registrando = false;
+  private sesionRegistrada?: Session;
+  private registroPendiente?: Promise<void>;
   private cerrando = false;
 
   constructor(
@@ -36,17 +31,12 @@ export class SesionUsuarioService {
     private readonly zone: NgZone,
   ) {}
 
-  /** Registra esta sesión y queda escuchando por si otra la desplaza. */
+  /** Escucha el cierre; el registro ocurre al completar el login. */
   iniciar(): void {
-    const token = this.storage.getCurrentToken();
-    if (!token || this.registrando || this.tokenRegistrado === token) return;
-
-    this.registrando = true;
-    void this.registrar(token).finally(() => this.registrando = false);
+    if (this.storage.getCurrentToken()) void this.conectar();
   }
 
   async detener(): Promise<void> {
-    this.tokenRegistrado = '';
     const hub = this.hub;
     this.hub = undefined;
     if (hub && hub.state !== signalR.HubConnectionState.Disconnected) {
@@ -64,32 +54,38 @@ export class SesionUsuarioService {
     void this.detener();
   }
 
-  private async registrar(token: string): Promise<void> {
-    try {
-      const respuesta = await firstValueFrom(
-        this.http.post<ApiResponse<SesionRegistrada>>(`${environment.apiUrl}/usuario/me/sesion`, {
-          IdentificadorEstacion: this.deviceIdentifier.getIdentifier() || null,
-        }),
-      );
-      this.tokenRegistrado = token;
-
-      const datos = respuesta?.Data;
-      if (datos?.SesionAnteriorCerrada ?? datos?.sesionAnteriorCerrada) {
-        Swal.fire({
-          toast: true,
-          position: 'bottom-end',
-          icon: 'info',
-          title: 'Se cerró tu sesión en el otro equipo',
-          showConfirmButton: false,
-          timer: 5000,
-          timerProgressBar: true,
-        });
-      }
-
+  /** Completa el registro antes de que el login consulte otros endpoints protegidos. */
+  async registrarAhora(): Promise<void> {
+    const session = this.storage.getCurrentSession();
+    if (!session?.Token) return;
+    if (this.sesionRegistrada === session) {
       await this.conectar();
-    } catch {
-      // Sin registro el backend no bloquea nada: se reintenta en la siguiente ruta.
+      return;
     }
+
+    if (this.registroPendiente) return this.registroPendiente;
+
+    this.registroPendiente = this.registrar(session);
+    try {
+      await this.registroPendiente;
+    } finally {
+      this.registroPendiente = undefined;
+    }
+  }
+
+  private async registrar(session: Session): Promise<void> {
+    await firstValueFrom(
+      this.http.post(`${environment.apiUrl}/usuario/me/sesion`, {
+        IdentificadorEstacion: this.deviceIdentifier.getIdentifier() || null,
+      }),
+    );
+    if (this.storage.getCurrentSession() !== session) return;
+
+    this.sesionRegistrada = session;
+
+    // Quien acaba de entrar sabe que ha entrado: el aviso es para el equipo
+    // que queda desplazado, y le llega por el hub.
+    await this.conectar();
   }
 
   private async conectar(): Promise<void> {

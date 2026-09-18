@@ -1,0 +1,58 @@
+<button
+  type="button"
+  class="tt-llamador"
+  [attr.aria-expanded]="abierto"
+  (click)="alternar()">
+  <mat-icon>keyboard</mat-icon>
+  {{ (abierto ? 'keyboardHide' : 'keyboardShow') | tenantText }}
+</button>
+
+<section
+  #panel
+  class="tt-panel"
+  [hidden]="!abierto"
+  [attr.aria-label]="'keyboardTitle' | tenantText"
+  (mousedown)="sostenerFoco($event)">
+
+  <header class="tt-cabecera">
+    <strong aria-live="polite">
+      <ng-container *ngIf="campo; else tituloGenerico">
+        {{ 'keyboardWritingIn' | tenantText }}: {{ campo }}
+      </ng-container>
+      <ng-template #tituloGenerico>{{ 'keyboardTitle' | tenantText }}</ng-template>
+    </strong>
+    <button
+      type="button"
+      class="tt-cerrar"
+      [attr.aria-label]="'keyboardHide' | tenantText"
+      (click)="cerrar()">×</button>
+  </header>
+
+  <div class="tt-teclas">
+    <div class="tt-fila" *ngFor="let fila of filas; trackBy: identificarFila">
+      <button
+        type="button"
+        tabindex="-1"
+        class="tt-tecla"
+        *ngFor="let tecla of fila; trackBy: identificar"
+        [class.tt-tecla--ancha]="tecla.ancha"
+        [class.tt-tecla--espacio]="tecla.espacio"
+        [class.tt-tecla--activa]="tecla.activa"
+        (click)="pulsar(tecla)">
+        {{ tecla.clave ? (tecla.clave | tenantText) : tecla.etiqueta }}
+      </button>
+    </div>
+
+    <div class="tt-fila tt-acciones">
+      <button type="button" tabindex="-1" class="tt-tecla tt-tecla--ancha" (click)="limpiar()">
+        {{ 'keyboardClear' | tenantText }}
+      </button>
+      <button type="button" tabindex="-1" class="tt-tecla tt-tecla--ancha" (click)="cerrar()">
+        {{ 'keyboardHide' | tenantText }}
+      </button>
+      <button type="button" tabindex="-1" class="tt-tecla tt-tecla--ancha tt-tecla--entrar" (click)="entrar()">
+        {{ 'keyboardEnter' | tenantText }}
+      </button>
+    </div>
+  </div>
+</section>
