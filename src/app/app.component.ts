@@ -217,7 +217,8 @@ export class AppComponent implements OnInit, OnDestroy {
     return url.startsWith('/iniciar-sesion')
       || url.startsWith('/inicio')
       || url.startsWith('/mesa/')
-      || url.startsWith('/reservas');
+      || url.startsWith('/reservas')
+      || url.startsWith('/comprobantes');
   }
 
   get canRevealOperationalHeader(): boolean {

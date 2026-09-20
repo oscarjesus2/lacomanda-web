@@ -17,6 +17,7 @@ import { DialogTurnoComponent } from '../app/components/dialog-turno/dialog-turn
 import { QzTrayRequiredComponent } from './qz-tray-required/qz-tray-required.component';
 import { MesaClienteComponent } from './pages/mesa-cliente/mesa-cliente.component';
 import { ReservasOnlineComponent } from './pages/reservas-online/reservas-online.component';
+import { ComprobantesPublicosComponent } from './pages/comprobantes-publicos/comprobantes-publicos.component';
 // DigitacionMozoComponent reemplazado por VentaComponent con isModoMozo=true
 
 // Importa más componentes según sea necesario...
@@ -25,6 +26,7 @@ const routes: Routes = [
 
   { path: 'mesa/:codigoQr', component: MesaClienteComponent },
   { path: 'reservas', component: ReservasOnlineComponent },
+  { path: 'comprobantes', component: ComprobantesPublicosComponent },
   { path: 'qz-tray-required', component: QzTrayRequiredComponent },
 {
   path:'', redirectTo:'/dashboard', pathMatch:'full'

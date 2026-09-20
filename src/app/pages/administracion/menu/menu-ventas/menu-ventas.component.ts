@@ -476,8 +476,9 @@ export class MenuVentasComponent implements OnInit {
     const dialog = this.dialog.open(ClienteMantenimientoComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '900px', 
-      // height: '700px', 
+      width: '900px',
+      maxWidth: 'calc(100vw - 32px)',
+      panelClass: 'dialog-window--maintenance-table',
     });
   }
 

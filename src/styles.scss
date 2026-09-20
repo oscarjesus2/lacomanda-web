@@ -4968,6 +4968,19 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 .reservations-loading span, .booking-page__loader { animation: sales-report-spin .7s linear infinite; border: 3px solid #efd9ce; border-radius: 50%; border-top-color: #cc3a12; height: 34px; width: 34px; }
 
 .booking-page { align-items: flex-start; background: linear-gradient(145deg, #fff9f4 0%, #f5e8de 48%, #f9f4ef 100%); display: flex; font-family: Inter, system-ui, sans-serif; justify-content: center; min-height: 100vh; overflow: hidden; padding: 34px 16px; position: relative; }
+.document-page { overflow-y: auto; }
+.document-card { display: grid; gap: 24px; }
+.document-form__grid select { background: #fffaf7; border: 1px solid #ddcec5; border-radius: 10px; box-sizing: border-box; color: #39241a; font: inherit; font-size: 14px; outline: none; padding: 12px; width: 100%; }
+.document-form__grid select:focus { border-color: #d14b21; box-shadow: 0 0 0 3px rgb(209 75 33 / 11%); }
+.document-privacy { align-items: center; color: #806b60; display: flex; font-size: 12px; gap: 7px; margin: 18px 0 0; }
+.document-privacy mat-icon { color: #3f815b; font-size: 17px; height: 17px; width: 17px; }
+.document-result { align-items: center; background: #f7fbf8; border: 1px solid #cfe5d7; border-radius: 16px; display: grid; gap: 16px; grid-template-columns: auto 1fr; padding: 20px; }
+.document-result h2 { color: #2f1c14; font-family: Georgia, serif; margin: 4px 0; }
+.document-result p { color: #756157; margin: 0; }
+.document-actions { display: flex; gap: 10px; grid-column: 1 / -1; }
+.document-actions .booking-button { flex: 1; margin: 0; }
+.booking-button--secondary { background: #fff !important; border: 1px solid #c63b14 !important; color: #b73612 !important; }
+@media (max-width: 560px) { .document-actions { flex-direction: column; } .document-form__grid { grid-template-columns: 1fr; } }
 .booking-page__glow { border-radius: 50%; filter: blur(3px); opacity: .45; position: fixed; }
 .booking-page__glow--one { background: #ffb173; height: 380px; right: -150px; top: -180px; width: 380px; }
 .booking-page__glow--two { background: #f0c8b4; bottom: -190px; height: 410px; left: -160px; width: 410px; }

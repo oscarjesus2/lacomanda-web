@@ -69,7 +69,10 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
   }
 
   get reintentables(): CpeEnvioMonitorRegistro[] {
-    return this.registros.filter(registro => registro.EstadoCodigo === 'ERROR');
+    return this.registros.filter(registro =>
+      registro.EstadoCodigo === 'ERROR'
+      || registro.EstadoCodigo === 'RECHAZADO'
+    );
   }
 
   load(showError: boolean): void {
@@ -169,7 +172,7 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
 
     const confirmado = await Notificar.confirmar({
       titulo,
-      detalle: 'Comprueba antes que los datos SUNAT estén corregidos. Solo se reencolarán comprobantes que sigan en error sin más reintentos.',
+      detalle: 'Comprueba antes que los datos SUNAT estén corregidos. Solo se reencolarán comprobantes rechazados o con error que no tengan otro envío activo.',
       textoConfirmar: 'Reintentar',
       textoCancelar: 'Cancelar',
     });
