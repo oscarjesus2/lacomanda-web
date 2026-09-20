@@ -3,7 +3,8 @@ import { ActivatedRoute } from '@angular/router';
 import {
   ComprobantePublico,
   ConsultarComprobantePublicoRequest,
-  SucursalComprobantePublico
+  SucursalComprobantePublico,
+  TipoDocumentoComprobantePublico
 } from 'src/app/models/comprobantes-publicos.models';
 import { ComprobantesPublicosService } from 'src/app/services/comprobantes-publicos.service';
 import { HeaderService } from 'src/app/services/header.service';
@@ -14,8 +15,11 @@ import { HeaderService } from 'src/app/services/header.service';
 })
 export class ComprobantesPublicosComponent implements OnInit, OnDestroy {
   sucursales: SucursalComprobantePublico[] = [];
+  tiposDocumento: TipoDocumentoComprobantePublico[] = [];
+  tiposIdentidad: string[] = [];
   tenantId = '';
-  tipoDocumento = 1;
+  paisISO2 = '';
+  tipoDocumento: number | null = null;
   serie = '';
   numero: number | null = null;
   numeroIdentificacion = '';
@@ -41,8 +45,11 @@ export class ComprobantesPublicosComponent implements OnInit, OnDestroy {
         this.sucursales = response.Data ?? [];
         const seleccionada = this.sucursales.find(x => x.TenantId === tenantSolicitado)
           ?? (this.sucursales.length === 1 ? this.sucursales[0] : null);
-        if (seleccionada) this.seleccionarSucursal(seleccionada);
-        this.cargando = false;
+        if (seleccionada) {
+          this.seleccionarSucursal(seleccionada);
+        } else {
+          this.cargando = false;
+        }
         if (!this.sucursales.length) {
           this.error = 'No hay sucursales disponibles para consultar comprobantes.';
         }
@@ -61,11 +68,32 @@ export class ComprobantesPublicosComponent implements OnInit, OnDestroy {
   seleccionarSucursal(sucursal: SucursalComprobantePublico): void {
     this.tenantId = sucursal.TenantId;
     this.service.seleccionarSucursal(sucursal.TenantId);
+    this.tiposDocumento = [];
+    this.tiposIdentidad = [];
+    this.tipoDocumento = null;
+    this.paisISO2 = '';
     this.resultado = null;
     this.error = '';
+    this.cargando = true;
     const params = new URLSearchParams(location.search);
     params.set('sucursal', sucursal.TenantId);
     history.replaceState(null, '', `${location.pathname}?${params.toString()}`);
+    this.service.obtenerConfiguracion().subscribe({
+      next: response => {
+        this.paisISO2 = response.Data?.PaisISO2 ?? '';
+        this.tiposDocumento = response.Data?.TiposDocumento ?? [];
+        this.tiposIdentidad = response.Data?.TiposIdentidad ?? [];
+        this.tipoDocumento = this.tiposDocumento[0]?.IdTipoDocumento ?? null;
+        this.cargando = false;
+        if (!this.tiposDocumento.length) {
+          this.error = 'No hay tipos de documento disponibles para esta sucursal.';
+        }
+      },
+      error: error => {
+        this.error = error?.error?.Message || 'No se pudo cargar la configuración de la sucursal.';
+        this.cargando = false;
+      }
+    });
   }
 
   consultar(): void {
@@ -108,6 +136,7 @@ export class ComprobantesPublicosComponent implements OnInit, OnDestroy {
 
   formularioValido(): boolean {
     return !!this.tenantId
+      && (this.tipoDocumento ?? 0) > 0
       && !!this.serie.trim()
       && (this.numero ?? 0) > 0
       && !!this.numeroIdentificacion.trim()
@@ -123,9 +152,15 @@ export class ComprobantesPublicosComponent implements OnInit, OnDestroy {
     return this.sucursales.find(x => x.TenantId === this.tenantId)?.Nombre ?? 'tu restaurante';
   }
 
+  get documentoClientePlaceholder(): string {
+    return this.tiposIdentidad.length
+      ? this.tiposIdentidad.join(' / ')
+      : 'Documento de identidad';
+  }
+
   private request(): ConsultarComprobantePublicoRequest {
     return {
-      TipoDocumento: this.tipoDocumento,
+      TipoDocumento: this.tipoDocumento ?? 0,
       Serie: this.serie.trim().toUpperCase(),
       Numero: this.numero ?? 0,
       NumeroIdentificacion: this.numeroIdentificacion.trim(),

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import {
   ComprobantePublico,
+  ConfiguracionComprobantesPublicos,
   ConsultarComprobantePublicoRequest,
   SucursalComprobantePublico
 } from 'src/app/models/comprobantes-publicos.models';
@@ -25,6 +26,13 @@ export class ComprobantesPublicosService {
 
   seleccionarSucursal(tenantId: string): void {
     this.tenantId = tenantId.trim();
+  }
+
+  obtenerConfiguracion(): Observable<ApiResponse<ConfiguracionComprobantesPublicos>> {
+    return this.http.get<ApiResponse<ConfiguracionComprobantesPublicos>>(
+      `${this.path}/configuracion`,
+      { headers: this.headers() }
+    );
   }
 
   consultar(request: ConsultarComprobantePublicoRequest): Observable<ApiResponse<ComprobantePublico>> {

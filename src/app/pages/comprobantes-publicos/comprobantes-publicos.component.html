@@ -8,7 +8,7 @@
     <div class="booking-branch-list"><button type="button" *ngFor="let sucursal of sucursales" (click)="seleccionarSucursal(sucursal)"><mat-icon>storefront</mat-icon><span><strong>{{ sucursal.Nombre }}</strong><small>Buscar comprobante</small></span><mat-icon>arrow_forward</mat-icon></button></div>
   </section>
 
-  <section class="booking-shell" *ngIf="tenantId; else loadingOrError">
+  <section class="booking-shell" *ngIf="tenantId && !cargando; else loadingOrError">
     <header class="booking-brand"><img src="/assets/logo.svg" alt="LaComanda"><span>COMPROBANTES ELECTRÓNICOS</span></header>
     <div class="booking-hero"><span class="booking-hero__eyebrow">Consulta segura</span><h1>{{ nombreSucursal() }}</h1><p>Ingresa los datos impresos en tu comprobante para descargar sus archivos oficiales.</p></div>
 
@@ -16,10 +16,10 @@
       <form class="booking-form" (ngSubmit)="consultar()">
         <div class="booking-section-title"><span>Datos del comprobante</span><small>Todos los campos son obligatorios</small></div>
         <div class="booking-form__grid document-form__grid">
-          <label><span>Tipo de documento</span><select [(ngModel)]="tipoDocumento" name="tipoDocumento"><option [ngValue]="1">Factura</option><option [ngValue]="2">Boleta</option><option [ngValue]="3">Nota de crédito</option></select></label>
-          <label><span>Documento del cliente</span><input type="text" required maxlength="20" [(ngModel)]="numeroIdentificacion" name="identidad" placeholder="DNI o RUC" autocomplete="off"></label>
-          <label><span>Serie</span><input type="text" required maxlength="4" [(ngModel)]="serie" name="serie" placeholder="F001" autocomplete="off"></label>
-          <label><span>Número</span><input type="number" required min="1" [(ngModel)]="numero" name="numero" placeholder="306" autocomplete="off"></label>
+          <label><span>Tipo de documento</span><select [(ngModel)]="tipoDocumento" name="tipoDocumento" required><option *ngFor="let tipo of tiposDocumento" [ngValue]="tipo.IdTipoDocumento">{{ tipo.Descripcion }}</option></select></label>
+          <label><span>Documento del cliente</span><input type="text" required maxlength="20" [(ngModel)]="numeroIdentificacion" name="identidad" [placeholder]="documentoClientePlaceholder" autocomplete="off"></label>
+          <label><span>Serie</span><input type="text" required maxlength="5" [(ngModel)]="serie" name="serie" placeholder="Serie" autocomplete="off"></label>
+          <label><span>Número</span><input type="number" required min="1" [(ngModel)]="numero" name="numero" placeholder="Número" autocomplete="off"></label>
           <label><span>Fecha de emisión</span><input type="date" required [(ngModel)]="fechaEmision" name="fecha"></label>
           <label><span>Total</span><input type="number" required min="0.01" step="0.01" [(ngModel)]="total" name="total" placeholder="0.00" inputmode="decimal"></label>
         </div>

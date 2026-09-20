@@ -3,6 +3,17 @@ export interface SucursalComprobantePublico {
   Nombre: string;
 }
 
+export interface TipoDocumentoComprobantePublico {
+  IdTipoDocumento: number;
+  Descripcion: string;
+}
+
+export interface ConfiguracionComprobantesPublicos {
+  PaisISO2: string;
+  TiposDocumento: TipoDocumentoComprobantePublico[];
+  TiposIdentidad: string[];
+}
+
 export interface ConsultarComprobantePublicoRequest {
   TipoDocumento: number;
   Serie: string;
