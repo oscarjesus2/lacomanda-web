@@ -42,6 +42,7 @@ export class SolicitudesAutorizacionRealtimeService {
   private iniciando?: Promise<void>;
   private reintento?: ReturnType<typeof setTimeout>;
   private detenerSolicitado = false;
+  private bandejaInicializada = false;
 
   constructor(
     private readonly storage: StorageService,
@@ -77,6 +78,7 @@ export class SolicitudesAutorizacionRealtimeService {
     this.esAprobadorSubject.next(false);
     this.apruebaDescuentosSubject.next(false);
     this.pendientesSubject.next([]);
+    this.bandejaInicializada = false;
     if (hub && hub.state !== signalR.HubConnectionState.Disconnected) {
       await hub.stop();
     }
@@ -91,8 +93,17 @@ export class SolicitudesAutorizacionRealtimeService {
     }
 
     try {
+      const idsConocidos = new Set(
+        this.pendientesSubject.value.map(item => item.IdSolicitud),
+      );
       const pendientes = await firstValueFrom(this.api.listarPendientes());
       this.pendientesSubject.next(this.ordenar(pendientes));
+      if (this.bandejaInicializada) {
+        pendientes
+          .filter(item => !idsConocidos.has(item.IdSolicitud))
+          .forEach(item => this.creadaSubject.next(item));
+      }
+      this.bandejaInicializada = true;
     } catch (error) {
       console.warn('No se pudo recuperar la bandeja de solicitudes de autorización.', error);
     }

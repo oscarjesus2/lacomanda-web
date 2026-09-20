@@ -739,7 +739,7 @@
           >
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="fill" subscriptSizing="dynamic">
           <mat-label>Grupo de almacén</mat-label>
           <mat-select
             [(ngModel)]="p.IdGrupoCompra"
@@ -792,7 +792,11 @@
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field appearance="fill" *ngIf="usaConversionUnidad()">
+        <mat-form-field
+          appearance="fill"
+          subscriptSizing="dynamic"
+          *ngIf="usaConversionUnidad()"
+        >
           <mat-label>Unidades por compra</mat-label>
           <input
             matInput

@@ -16,6 +16,7 @@ import { SolicitudesAutorizacionRealtimeService } from './services/solicitudes-a
 import { SesionUsuarioService } from './services/sesion-usuario.service';
 import { SolicitudAutorizacion } from './models/solicitud-autorizacion.models';
 import { Notificar } from './shared/notificaciones';
+import { NotificacionesSistemaService } from './services/notificaciones-sistema.service';
 
 @Component({
   selector: 'app-root',
@@ -28,6 +29,7 @@ export class AppComponent implements OnInit, OnDestroy {
   headerVisible = true;
   operationalHeaderOpen = false;
   isOperationalRoute = false;
+  mostrarActivacionNotificaciones = false;
 
   /** true cuando el backend no responde (status 0) */
   backendDown$: Observable<boolean>;
@@ -37,6 +39,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private mensajeEstadoImpresion: string | null = null;
   private avisoImpresionOculto = false;
+  private activacionNotificacionesOmitida = false;
 
   /**
    * Aviso de impresion para la caja; null cuando no hay nada que decir. Una
@@ -70,6 +73,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private estadoImpresionService: EstadoImpresionService,
     private solicitudesAutorizacion: SolicitudesAutorizacionRealtimeService,
     private sesionUsuario: SesionUsuarioService,
+    private notificacionesSistema: NotificacionesSistemaService,
   ) {
     this.backendDown$ = this.backendStatusService.isDown$;
     this.headerService.headerVisible$.subscribe(visible => {
@@ -89,6 +93,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.solicitudesAutorizacion.creada$.subscribe(solicitud => this.avisarSolicitudCreada(solicitud));
     this.solicitudesAutorizacion.resuelta$.subscribe(solicitud => this.avisarSolicitudResuelta(solicitud));
+    this.solicitudesAutorizacion.esAprobador$.subscribe(esAprobador => {
+      this.mostrarActivacionNotificaciones = esAprobador
+        && !this.activacionNotificacionesOmitida
+        && this.notificacionesSistema.permiso === 'default';
+    });
 
     this.estadoImpresionService.pendientes$.subscribe(pendientes => {
       if (pendientes > 0 && this.documentosEnEspera === 0) {
@@ -135,11 +144,32 @@ export class AppComponent implements OnInit, OnDestroy {
       return;
     }
 
-    Notificar.informacion(
-      this.textCatalog.get('newApprovalRequest'),
-      `${solicitud.UsuarioSolicita}: ${this.textCatalog.get('voidProductRequest')} `
-        + `${solicitud.Descripcion} · ${solicitud.Ubicacion}`,
-    );
+    const titulo = this.textCatalog.get('newApprovalRequest');
+    const detalle = `${solicitud.UsuarioSolicita}: ${this.etiquetaSolicitud(solicitud)} `
+      + `${solicitud.Descripcion} · ${solicitud.Ubicacion}`;
+
+    void this.notificacionesSistema
+      .mostrarAprobacion(solicitud.IdSolicitud, titulo, detalle)
+      .then(mostradaEnSistema => {
+        if (!mostradaEnSistema) Notificar.informacion(titulo, detalle);
+      })
+      .catch(error => {
+        console.warn('No se pudo mostrar la notificación del sistema.', error);
+        Notificar.informacion(titulo, detalle);
+      });
+  }
+
+  private etiquetaSolicitud(solicitud: SolicitudAutorizacion): string {
+    const etiquetas = {
+      AnularProducto: 'voidProductRequest',
+      CambiarCamarero: 'changeAttendantRequest',
+      AnularPedido: 'voidOrderRequest',
+      DescuentoPedido: 'orderDiscountRequest',
+      DescuentoEntrada: 'ticketDiscountRequest',
+      EntradasGratis: 'freeTicketsRequest',
+    } as const;
+    const clave = etiquetas[solicitud.Tipo as keyof typeof etiquetas];
+    return clave ? this.textCatalog.get(clave) : this.textCatalog.get('approvalRequestsShort');
   }
 
   /** Aviso a quien pidió la autorización de cómo se resolvió. */
@@ -170,6 +200,16 @@ export class AppComponent implements OnInit, OnDestroy {
 
   cerrarAvisoImpresion(): void {
     this.avisoImpresionOculto = true;
+  }
+
+  async activarNotificaciones(): Promise<void> {
+    await this.notificacionesSistema.solicitarPermiso();
+    this.mostrarActivacionNotificaciones = false;
+  }
+
+  omitirActivacionNotificaciones(): void {
+    this.activacionNotificacionesOmitida = true;
+    this.mostrarActivacionNotificaciones = false;
   }
 
   ngOnDestroy(): void {
