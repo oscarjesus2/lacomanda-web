@@ -17,6 +17,7 @@ import { SesionUsuarioService } from './services/sesion-usuario.service';
 import { SolicitudAutorizacion } from './models/solicitud-autorizacion.models';
 import { Notificar } from './shared/notificaciones';
 import { NotificacionesSistemaService } from './services/notificaciones-sistema.service';
+import { NotificacionesPushService } from './services/notificaciones-push.service';
 
 @Component({
   selector: 'app-root',
@@ -40,6 +41,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private mensajeEstadoImpresion: string | null = null;
   private avisoImpresionOculto = false;
   private activacionNotificacionesOmitida = false;
+  private esAprobadorActual = false;
 
   /**
    * Aviso de impresion para la caja; null cuando no hay nada que decir. Una
@@ -74,6 +76,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private solicitudesAutorizacion: SolicitudesAutorizacionRealtimeService,
     private sesionUsuario: SesionUsuarioService,
     private notificacionesSistema: NotificacionesSistemaService,
+    private notificacionesPush: NotificacionesPushService,
   ) {
     this.backendDown$ = this.backendStatusService.isDown$;
     this.headerService.headerVisible$.subscribe(visible => {
@@ -94,9 +97,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.solicitudesAutorizacion.creada$.subscribe(solicitud => this.avisarSolicitudCreada(solicitud));
     this.solicitudesAutorizacion.resuelta$.subscribe(solicitud => this.avisarSolicitudResuelta(solicitud));
     this.solicitudesAutorizacion.esAprobador$.subscribe(esAprobador => {
-      this.mostrarActivacionNotificaciones = esAprobador
-        && !this.activacionNotificacionesOmitida
-        && this.notificacionesSistema.permiso === 'default';
+      this.esAprobadorActual = esAprobador;
+      void this.actualizarActivacionNotificaciones(esAprobador);
     });
 
     this.estadoImpresionService.pendientes$.subscribe(pendientes => {
@@ -203,13 +205,49 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   async activarNotificaciones(): Promise<void> {
-    await this.notificacionesSistema.solicitarPermiso();
-    this.mostrarActivacionNotificaciones = false;
+    const permiso = await this.notificacionesSistema.solicitarPermiso();
+    if (permiso) {
+      try {
+        await this.notificacionesPush.activar();
+      } catch (error) {
+        console.warn('No se pudieron activar las notificaciones persistentes.', error);
+      }
+    }
+
+    await this.actualizarActivacionNotificaciones(this.esAprobadorActual);
   }
 
   omitirActivacionNotificaciones(): void {
     this.activacionNotificacionesOmitida = true;
     this.mostrarActivacionNotificaciones = false;
+  }
+
+  private async actualizarActivacionNotificaciones(
+    esAprobador: boolean,
+  ): Promise<void> {
+    if (!esAprobador || this.activacionNotificacionesOmitida) {
+      this.mostrarActivacionNotificaciones = false;
+      return;
+    }
+
+    if (this.notificacionesSistema.permiso === 'default') {
+      this.mostrarActivacionNotificaciones = true;
+      return;
+    }
+
+    if (this.notificacionesSistema.permiso !== 'granted') {
+      this.mostrarActivacionNotificaciones = false;
+      return;
+    }
+
+    try {
+      const estado = await this.notificacionesPush.sincronizarExistente();
+      this.mostrarActivacionNotificaciones = estado.persistentesPermitidas
+        && !estado.suscritas;
+    } catch (error) {
+      console.warn('No se pudo sincronizar la suscripción Web Push.', error);
+      this.mostrarActivacionNotificaciones = false;
+    }
   }
 
   ngOnDestroy(): void {
