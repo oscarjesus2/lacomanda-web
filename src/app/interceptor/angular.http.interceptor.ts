@@ -491,6 +491,7 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       request.url.includes('/api/Auth/login') ||
       request.url.includes('/api/Tenant') ||
       request.url.includes('/api/public/reservas')
+      || request.url.includes('/api/public/comprobantes')
     );
   }
 

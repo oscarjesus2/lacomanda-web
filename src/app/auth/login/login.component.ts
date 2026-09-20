@@ -1,6 +1,6 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { KeycloakAuthService } from 'src/app/services/auth/keycloak-auth.service';
 import { KeycloakService } from 'src/app/services/auth/keycloak.service';
 import { StorageService } from 'src/app/services/storage.service';
@@ -28,6 +28,7 @@ interface PendingLogin {
   TenantId: string;
   Sucursal: string;
   Cultura:  string;
+  ReturnUrl?: string;
 }
 
 @Component({
@@ -73,6 +74,7 @@ export class LoginComponent implements OnInit {
     private spinnerService: NgxSpinnerService,
     private fb: FormBuilder,
     private router: Router,
+    private route: ActivatedRoute,
     private keycloakAuth: KeycloakAuthService,
     private keycloak: KeycloakService,
     private storageService: StorageService,
@@ -181,6 +183,7 @@ export class LoginComponent implements OnInit {
       TenantId: tenant.TenantId,
       Sucursal: tenant.Sucursal,
       Cultura:  tenant.Cultura,
+      ReturnUrl: this.returnUrlSeguro(),
     };
 
     this.aplicarCulturaSucursal(pending.Cultura);
@@ -345,7 +348,9 @@ export class LoginComponent implements OnInit {
           const estacion   = estaciones.find(e => e.IdentificadorUnico === this.CurrentIP);
 
           if (!estacion) {
-            this.ensureConfigThenNavigate('/dashboard');
+            this.ensureConfigThenNavigate(
+              this.returnUrlSeguro(pending.ReturnUrl) ?? '/dashboard',
+            );
             return;
           }
 
@@ -358,7 +363,9 @@ export class LoginComponent implements OnInit {
           } else if (estacion.Tipo === EstacionTipoEnum.MOZO) {
             this.router.navigateByUrl('/mozo');
           } else {
-            this.ensureConfigThenNavigate('/dashboard');
+            this.ensureConfigThenNavigate(
+              this.returnUrlSeguro(pending.ReturnUrl) ?? '/dashboard',
+            );
           }
         },
         error: (error) => {
@@ -374,7 +381,9 @@ export class LoginComponent implements OnInit {
 
     } else {
       this.spinnerService.hide();
-      this.ensureConfigThenNavigate('/dashboard');
+      this.ensureConfigThenNavigate(
+        this.returnUrlSeguro(pending.ReturnUrl) ?? '/dashboard',
+      );
     }
   }
 
@@ -474,6 +483,15 @@ export class LoginComponent implements OnInit {
         this.logoutAndReturnToLogin();
       }
     });
+  }
+
+  /** Conserva el destino del aviso sin permitir redirecciones externas. */
+  private returnUrlSeguro(valor?: string | null): string | undefined {
+    const candidato = valor
+      ?? this.route.snapshot.queryParamMap.get('returnUrl');
+    return candidato?.startsWith('/') && !candidato.startsWith('//')
+      ? candidato
+      : undefined;
   }
 
   private logoutAndReturnToLogin(): void {
@@ -577,6 +595,7 @@ export class LoginComponent implements OnInit {
       TenantId: tenant.TenantId,
       Sucursal: tenant.Sucursal,
       Cultura: tenant.Cultura,
+      ReturnUrl: this.returnUrlSeguro(),
     };
   }
 }

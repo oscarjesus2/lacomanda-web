@@ -147,6 +147,7 @@ import { ReservasMantenimientoComponent } from './components/mantenimiento/reser
 import { AgendaReservasComponent } from './components/reservas/agenda-reservas/agenda-reservas.component';
 import { AgendaReservasDialogComponent } from './components/reservas/agenda-reservas-dialog/agenda-reservas-dialog.component';
 import { ReservasOnlineComponent } from './pages/reservas-online/reservas-online.component';
+import { ComprobantesPublicosComponent } from './pages/comprobantes-publicos/comprobantes-publicos.component';
 import { ReportesTermicosAdministracionComponent } from './components/mantenimiento/reportes-termicos-administracion/reportes-termicos-administracion.component';
 import { MonitorComandasComponent } from './components/mantenimiento/monitor-comandas/monitor-comandas.component';
 import { SunatConfigurationComponent } from './components/mantenimiento/sunat-configuration/sunat-configuration.component';
@@ -271,6 +272,7 @@ export const MY_DATE_FORMATS = {
     AgendaReservasComponent,
     AgendaReservasDialogComponent,
     ReservasOnlineComponent,
+    ComprobantesPublicosComponent,
     ReportesTermicosAdministracionComponent,
     MonitorComandasComponent,
     SunatConfigurationComponent,

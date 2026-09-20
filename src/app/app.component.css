@@ -28,6 +28,37 @@
   to   { transform: translateY(0); }
 }
 
+.approval-notification-banner {
+  display: flex;
+  min-height: 48px;
+  padding: 8px 18px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border-bottom: 1px solid #efc5ad;
+  background: #fff3e9;
+  color: #5c2a16;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.approval-notification-banner > span {
+  max-width: 80ch;
+}
+
+.approval-notification-banner .mat-mdc-unelevated-button {
+  background: var(--color-primary, #c9360d);
+  color: #fff;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .approval-notification-banner {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
 /* ── Aviso: impresion directa no disponible ───────────────────── */
 /* Va abajo para no tapar la cabecera ni los paneles de la caja. */
 .print-warning-banner {

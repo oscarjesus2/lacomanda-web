@@ -64,7 +64,7 @@
       [disabled]="loading || reintentando"
       (click)="reintentarTodos()">
       <mat-icon>replay</mat-icon>
-      {{ reintentando ? 'Programando…' : 'Reintentar errores (' + reintentables.length + ')' }}
+      {{ reintentando ? 'Programando…' : 'Reintentar envíos (' + reintentables.length + ')' }}
     </button>
   </div>
 
@@ -159,7 +159,7 @@
           </td>
           <td>
             <button
-              *ngIf="registro.EstadoCodigo === 'ERROR'"
+              *ngIf="registro.EstadoCodigo === 'ERROR' || registro.EstadoCodigo === 'RECHAZADO'"
               mat-stroked-button
               color="primary"
               type="button"

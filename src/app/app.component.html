@@ -38,6 +38,27 @@
   </span>
 </div>
 
+<section
+  *ngIf="mostrarActivacionNotificaciones"
+  class="approval-notification-banner"
+  role="status">
+  <mat-icon aria-hidden="true">notifications_active</mat-icon>
+  <span>{{ 'enableApprovalNotificationsHint' | tenantText }}</span>
+  <button
+    mat-flat-button
+    type="button"
+    (click)="activarNotificaciones()">
+    {{ 'enableNotifications' | tenantText }}
+  </button>
+  <button
+    mat-icon-button
+    type="button"
+    [attr.aria-label]="'notNow' | tenantText"
+    (click)="omitirActivacionNotificaciones()">
+    <mat-icon>close</mat-icon>
+  </button>
+</section>
+
 <!-- Aviso: impresion directa no disponible. Avisa, no bloquea la venta. -->
 <div *ngIf="isOperationalRoute && avisoImpresion" class="print-warning-banner">
   <mat-icon class="print-warning-banner__icon" aria-hidden="true">print_disabled</mat-icon>
@@ -56,4 +77,3 @@
 <app-asistente-estacion></app-asistente-estacion>
 <app-processing-indicator></app-processing-indicator>
  
-

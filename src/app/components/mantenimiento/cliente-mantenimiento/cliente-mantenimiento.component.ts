@@ -28,6 +28,7 @@ export class ClienteMantenimientoComponent implements OnInit {
   showForm: boolean = false; // Controla la visibilidad del formulario
   displayedColumns: string[] = ['ruc','razonSocial', 'direccion',  'correo', 'actions'];
   etiquetaCliente: string = '';
+  private paginatorRef?: MatPaginator;
 
   constructor(
     private dialogRef: MatDialogRef<ClienteMantenimientoComponent >,
@@ -36,12 +37,20 @@ export class ClienteMantenimientoComponent implements OnInit {
     private tipoDocClienteService: TipoDocClienteService) {}
     @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
       if (value) {
+        this.paginatorRef = value;
         this.filteredClientes.paginator = value;
       }
     }
 
     
   ngOnInit(): void {
+    this.filteredClientes.filterPredicate = (cliente, filtro) =>
+      [
+        cliente.NumeroIdentificacion,
+        cliente.RazonSocial,
+        cliente.Direccion,
+        cliente.Email,
+      ].some(valor => this.normalizarBusqueda(valor).includes(filtro));
     this.cargarClientes();
     this.cargarTiposDocCliente();
   }
@@ -76,12 +85,18 @@ export class ClienteMantenimientoComponent implements OnInit {
   }
 
   applyFilter(): void {
-    const filterValue = this.filtroCliente.toLowerCase();
-    this.filteredClientes.data = this.clientes.filter(cliente =>
-      cliente.RazonSocial.toLowerCase().includes(filterValue) ||
-      cliente.NumeroIdentificacion.toLowerCase().includes(filterValue) ||
-      cliente.Direccion.toLowerCase().includes(filterValue)
+    this.filteredClientes.filter = this.normalizarBusqueda(
+      this.filtroCliente
     );
+    this.paginatorRef?.firstPage();
+  }
+
+  private normalizarBusqueda(valor: unknown): string {
+    return String(valor ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLocaleLowerCase();
   }
 
   private markFormTouchedAndDirty(form: NgForm): void {
