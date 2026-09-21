@@ -22,7 +22,9 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
     { codigo: 'REINTENTO', nombre: 'En reintento' },
     { codigo: 'PROCESANDO', nombre: 'Procesando' },
     { codigo: 'ACEPTADO', nombre: 'Aceptado' },
+    { codigo: 'BAJA_ACEPTADA', nombre: 'Baja aceptada' },
     { codigo: 'RECHAZADO', nombre: 'Rechazado' },
+    { codigo: 'ANULACION_RECHAZADA', nombre: 'Anulación rechazada' },
     { codigo: 'ERROR', nombre: 'Error de envío' },
     { codigo: 'SIN_ENCOLAR', nombre: 'Sin encolar' },
   ];
@@ -65,6 +67,7 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
     }
     return this.resultado.Registros.filter(
       registro => registro.EstadoCodigo === this.estado
+        || registro.EstadoAnulacionCodigo === this.estado
         || (this.estado === 'RECHAZADO'
           && registro.EstadoCodigo === 'RECHAZADO_DEFINITIVO'),
     );
@@ -151,7 +154,7 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
   }
 
   statusClass(code: string): string {
-    if (code === 'ACEPTADO') {
+    if (code === 'ACEPTADO' || code === 'BAJA_ACEPTADA') {
       return 'status-badge--success';
     }
     if (code === 'RECHAZADO'

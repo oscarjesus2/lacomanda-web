@@ -153,6 +153,9 @@
             <small *ngIf="registro.ProximoIntentoUtc">
               Próximo: {{ registro.ProximoIntentoUtc | date:'dd/MM HH:mm:ss' }}
             </small>
+            <small *ngIf="registro.EstadoAnulacionCodigo">
+              Anulación: {{ registro.IntentosAnulacion }} intento{{ registro.IntentosAnulacion === 1 ? '' : 's' }}
+            </small>
           </td>
           <td>
             <strong *ngIf="registro.CodigoRespuesta">Código {{ registro.CodigoRespuesta }}</strong>
