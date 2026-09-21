@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse, HttpParams } from "@angular/common/http";
 import { catchError, Observable, throwError } from 'rxjs';
 import { ventadiariasemanalmensual } from '../models/ventadiariasemanalmensual.models';
 import { environment } from 'src/environments/environment';
-import { InformeContableInterface, VentasDTO, VentasInterface } from '../interfaces/ventas.interface';
+import { InformeContableInterface, ResultadoEnvioComprobanteCorreo, VentasDTO, VentasInterface } from '../interfaces/ventas.interface';
 import { Venta } from '../models/venta.models';
 import { Cliente } from '../models/cliente.models';
 import { PedidoCab } from '../models/pedido.models';
@@ -48,8 +48,36 @@ export class VentaService {
       return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'Anulaciones/'  + fechaInicial + '/' + fechaFinal);
     }
 
-    getListadoVentas(idTurno: number, incluirDI: number): Observable<VentasInterface[]> {
-        return this.http.get<VentasInterface[]>(this.basePath+ 'Listado/' + idTurno + '/' + incluirDI);
+    getListadoVentas(
+        fechaDesde: string,
+        fechaHasta: string,
+        incluirExpress: boolean,
+        estado?: number
+    ): Observable<VentasInterface[]> {
+        let params = new HttpParams()
+            .set('fechaDesde', fechaDesde)
+            .set('fechaHasta', fechaHasta)
+            .set('incluirExpress', incluirExpress);
+        if (estado) {
+            params = params.set('estado', estado);
+        }
+        return this.http.get<VentasInterface[]>(this.basePath + 'Listado', { params });
+    }
+
+    descargarArchivoComprobante(idVenta: number, formato: 'pdf' | 'xml'): Observable<Blob> {
+        return this.http.get(
+            `${this.basePath}${idVenta}/archivo/${formato}`,
+            { responseType: 'blob' }
+        );
+    }
+
+    enviarComprobantePorCorreo(
+        idVenta: number
+    ): Observable<ApiResponse<ResultadoEnvioComprobanteCorreo>> {
+        return this.http.post<ApiResponse<ResultadoEnvioComprobanteCorreo>>(
+            `${this.basePath}${idVenta}/enviar-correo`,
+            {}
+        );
     }
 
     getInformeContable(fechaInicial: string, fechaFinal: string, serie: string, tipoDoc: string): Observable<InformeContableInterface[]> {

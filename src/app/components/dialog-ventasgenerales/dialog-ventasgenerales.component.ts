@@ -1,31 +1,36 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatTableDataSource } from '@angular/material/table';
-import { VentaService } from '../../services/venta.service';
-import { NgxSpinnerService } from 'ngx-spinner';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import Swal from 'sweetalert2';
-import { VentasInterface } from 'src/app/interfaces/ventas.interface';
-import { DialogEmitirVentaComponent } from '../dialog-emitir-venta/dialog-emitir-venta.component';
 import { MatPaginator } from '@angular/material/paginator';
-import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
-import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
-import { EnumTipoDocumento } from 'src/app/enums/enum';
-import { finalize } from 'rxjs/operators';
-import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
-import { Notificar } from 'src/app/shared/notificaciones';
-import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
-import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
-import { ConfiguracionService } from 'src/app/services/configuracion.service';
-import { ResultadoAnulacionDocumentoVenta } from 'src/app/interfaces/correccion-venta.interface';
+import { MatTableDataSource } from '@angular/material/table';
+import { NgxSpinnerService } from 'ngx-spinner';
 import { firstValueFrom } from 'rxjs';
+import { finalize } from 'rxjs/operators';
+import Swal from 'sweetalert2';
+import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
+import { NivelUsuarioEnum } from 'src/app/enums/enum';
+import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
+import { TipoCorreccionVenta } from 'src/app/interfaces/correccion-venta.interface';
+import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
+import { VentasInterface } from 'src/app/interfaces/ventas.interface';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { ReprintFormatService } from 'src/app/services/reprint-format.service';
+import { StorageService } from 'src/app/services/storage.service';
+import { VentaService } from 'src/app/services/venta.service';
+import { Notificar } from 'src/app/shared/notificaciones';
+import { DialogCorregirVentaComponent } from '../dialog-corregir-venta/dialog-corregir-venta.component';
+import { DialogEmitirVentaComponent } from '../dialog-emitir-venta/dialog-emitir-venta.component';
 
 @Component({
   selector: 'app-dialog-ventasgenerales',
   templateUrl: './dialog-ventasgenerales.component.html',
-  styleUrls: ['./dialog-ventasgenerales.component.css']
+  styleUrls: ['./dialog-ventasgenerales.component.css'],
 })
 export class DialogVentasgeneralesComponent implements OnInit {
+  readonly tipoCorreccionPagos = TipoCorreccionVenta.Pagos;
+  readonly tipoCorreccionCliente = TipoCorreccionVenta.Cliente;
+
   @ViewChild(MatPaginator)
   set matPaginator(paginator: MatPaginator | undefined) {
     this.paginator = paginator;
@@ -35,34 +40,43 @@ export class DialogVentasgeneralesComponent implements OnInit {
   private paginator?: MatPaginator;
   ventas: VentasInterface[] = [];
   dataSource = new MatTableDataSource<VentasInterface>([]);
-  columnDefs: Array<{
-    key: string;
-    label: string;
-    width: number;
-    numeric?: boolean;
-  }> = [];
+  displayedColumns = [
+    'Documento',
+    'FechaVenta',
+    'Caja',
+    'Cliente',
+    'TipoDocumento',
+    'Total',
+    'EstadoDescripcion',
+    'EstadoFiscalDescripcion',
+    'acciones',
+  ];
 
-  displayedColumns: string[] = [];
   ventaSeleccionada: VentasInterface | null = null;
-  listarTodosLosTurnos = false;
+  fechaDesde = this.fechaLocalActual();
+  fechaHasta = this.fechaLocalActual();
   incluirVentasExpress = false;
   textoFiltro = '';
-  campoSeleccionado = 'TipoDocumento';
+  estadoSeleccionado = 0;
+  tipoDocumentoSeleccionado = '';
+  cajaSeleccionada = '';
   procesando = true;
+  procesandoAccion = false;
   comprobantesHabilitados = false;
   correccionHabilitada = false;
   cuotaComprobantesAgotada = false;
 
   constructor(
     public dialogRef: MatDialogRef<DialogVentasgeneralesComponent>,
-    private ventaService: VentaService,
-    private spinnerService: NgxSpinnerService,
-    private dialog: MatDialog,
-    private texts: TenantTextCatalogService,
-    private licenciaTenantService: LicenciaTenantService,
-    private configuracionService: ConfiguracionService,
-    private reprintFormat: ReprintFormatService,
-  ) { }
+    private readonly ventaService: VentaService,
+    private readonly spinnerService: NgxSpinnerService,
+    private readonly dialog: MatDialog,
+    private readonly texts: TenantTextCatalogService,
+    private readonly licenciaTenantService: LicenciaTenantService,
+    private readonly configuracionService: ConfiguracionService,
+    private readonly reprintFormat: ReprintFormatService,
+    private readonly storageService: StorageService,
+  ) {}
 
   ngOnInit(): void {
     this.licenciaTenantService.obtenerEstado().subscribe(estado => {
@@ -70,9 +84,7 @@ export class DialogVentasgeneralesComponent implements OnInit {
         estado,
         CARACTERISTICAS_LICENCIA.OperacionComprobantes,
       );
-      if (this.comprobantesHabilitados) {
-        this.cargarCuotaComprobantes();
-      }
+      if (this.comprobantesHabilitados) this.cargarCuotaComprobantes();
       this.correccionHabilitada = this.licenciaTenantService.evaluar(
         estado,
         [
@@ -81,81 +93,105 @@ export class DialogVentasgeneralesComponent implements OnInit {
         ],
       );
     });
-    this.columnDefs = [
-      { key: 'Caja', label: this.texts.get('register'), width: 100 },
-      { key: 'TipoDocumento', label: this.texts.get('documentType'), width: 130 },
-      { key: 'Documento', label: this.texts.get('documentNumber'), width: 130 },
-      { key: 'Cliente', label: this.texts.get('customer'), width: 230 },
-      { key: 'FechaVenta', label: this.texts.get('date'), width: 110 },
-      { key: 'Moneda', label: this.texts.get('currency'), width: 80 },
-      { key: 'Dscto', label: this.texts.get('discount'), width: 100, numeric: true },
-      { key: 'Total', label: this.texts.get('total'), width: 110, numeric: true },
-      { key: 'EstadoDescripcion', label: this.texts.get('state'), width: 120 },
-      { key: 'acciones', label: this.texts.get('options'), width: 80 }
-    ];
-    this.displayedColumns = this.columnDefs.map(column => column.key);
     this.loadVentas();
   }
 
-  loadVentas(): void {
-    const soloTurnoAbierto = this.listarTodosLosTurnos ? 0 : 1;
-    const incluirExpress = this.incluirVentasExpress
-      ? EnumTipoDocumento.Express
-      : 0;
-    this.getListadoVentas(soloTurnoAbierto, incluirExpress);
+  get tiposDocumento(): string[] {
+    return [...new Set(this.ventas.map(venta => venta.TipoDocumento).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b));
   }
-  
-  private getListadoVentas(
-    soloTurnoAbierto: number,
-    incluirExpress: number
-  ): void {
-    this.procesando = true;
-    this.spinnerService.show();
 
-    this.ventaService.getListadoVentas(soloTurnoAbierto, incluirExpress)
-      .pipe(
-        finalize(() => {
-          this.procesando = false;
-          this.spinnerService.hide();
-        })
-      )
+  get cajas(): string[] {
+    return [...new Set(this.ventas.map(venta => venta.Caja).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b));
+  }
+
+  get totalGenerados(): number {
+    return this.dataSource.data.filter(venta => venta.Estado === 1).length;
+  }
+
+  get totalNoVigentes(): number {
+    return this.dataSource.data.filter(venta => venta.Estado !== 1).length;
+  }
+
+  get totalAtencionFiscal(): number {
+    return this.dataSource.data.filter(venta =>
+      venta.EstadoFiscal === 2 || venta.EstadoFiscal === 7).length;
+  }
+
+  loadVentas(): void {
+    if (!this.fechasValidas()) {
+      void Swal.fire(
+        this.texts.get('validation'),
+        this.texts.get('invalidSalesDateRange'),
+        'warning',
+      );
+      return;
+    }
+
+    this.procesando = true;
+    this.ventaSeleccionada = null;
+    this.ventaService.getListadoVentas(
+      this.fechaDesde,
+      this.fechaHasta,
+      this.incluirVentasExpress,
+      this.estadoSeleccionado || undefined,
+    ).pipe(finalize(() => (this.procesando = false)))
       .subscribe({
-      next: (data) => {
-        this.ventas = data ?? [];
-        this.ventaSeleccionada = null;
-        this.aplicarFiltro();
-      },
-      // El interceptor global muestra los errores HTTP.
-      error: () => {}
-    });
+        next: data => {
+          this.ventas = data ?? [];
+          this.ajustarFiltrosDisponibles();
+          this.aplicarFiltro();
+        },
+        error: () => {
+          this.ventas = [];
+          this.aplicarFiltro();
+        },
+      });
   }
 
   aplicarFiltro(): void {
-    if (!this.textoFiltro || !this.campoSeleccionado) {
-      this.dataSource.data = this.ventas;
-    } else {
-      const filtro = this.textoFiltro.trim().toLocaleLowerCase();
-      this.dataSource.data = this.ventas.filter(venta => {
-        const valor = venta[this.campoSeleccionado];
-        return String(valor ?? '').toLocaleLowerCase().includes(filtro);
-      });
-    }
+    const texto = this.normalizar(this.textoFiltro);
+    this.dataSource.data = this.ventas.filter(venta => {
+      const coincideTexto = !texto || [
+        venta.Documento,
+        venta.Cliente,
+        venta.NumeroIdentificacion,
+        venta.Caja,
+        venta.TipoDocumento,
+        venta.EstadoDescripcion,
+        venta.EstadoFiscalDescripcion,
+      ].some(valor => this.normalizar(valor).includes(texto));
+      const coincideTipo = !this.tipoDocumentoSeleccionado
+        || venta.TipoDocumento === this.tipoDocumentoSeleccionado;
+      const coincideCaja = !this.cajaSeleccionada
+        || venta.Caja === this.cajaSeleccionada;
+      return coincideTexto && coincideTipo && coincideCaja;
+    });
 
     this.dataSource.paginator = this.paginator ?? null;
     this.paginator?.firstPage();
   }
 
-  limpiarFiltro(): void {
+  limpiarBusqueda(): void {
     this.textoFiltro = '';
     this.aplicarFiltro();
   }
 
-  trackVenta(_: number, venta: VentasInterface): number {
-    return venta.IdVenta;
+  limpiarFiltros(): void {
+    const hoy = this.fechaLocalActual();
+    this.fechaDesde = hoy;
+    this.fechaHasta = hoy;
+    this.estadoSeleccionado = 0;
+    this.tipoDocumentoSeleccionado = '';
+    this.cajaSeleccionada = '';
+    this.incluirVentasExpress = false;
+    this.textoFiltro = '';
+    this.loadVentas();
   }
 
-  actualizarLista(): void {
-    this.loadVentas();
+  trackVenta(_: number, venta: VentasInterface): number {
+    return venta.IdVenta;
   }
 
   seleccionarVenta(row: VentasInterface): void {
@@ -163,174 +199,238 @@ export class DialogVentasgeneralesComponent implements OnInit {
   }
 
   onNoClick(): void {
-    if (this.procesando) {
-      return;
-    }
-    this.dialogRef.close();
+    if (!this.procesando && !this.procesandoAccion) this.dialogRef.close();
   }
 
-  isRowSelected(row: VentasInterface): boolean {
-    return this.ventaSeleccionada === row;
+  esDocumentoActivo(venta: VentasInterface | null): boolean {
+    return venta?.Estado === 1;
   }
 
+  tieneCorreoValido(venta: VentasInterface | null): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(venta?.ClienteCorreo?.trim() ?? '');
+  }
+
+  claseEstado(venta: VentasInterface): string {
+    return venta.Estado === 1 ? 'success' : 'danger';
+  }
+
+  claseEstadoFiscal(venta: VentasInterface): string {
+    if (venta.EstadoFiscal === 3 || venta.EstadoFiscal === 4) return 'success';
+    if (venta.EstadoFiscal === 2 || venta.EstadoFiscal === 7) return 'danger';
+    if (venta.EstadoFiscal === 1 || venta.EstadoFiscal === 5) return 'info';
+    return 'neutral';
+  }
 
   OpenDialogEmitirVenta(): void {
-    if (!this.comprobantesHabilitados) {
-      Swal.fire(
-        'Funcionalidad no incluida',
-        'La licencia actual no incluye la emisión de comprobantes.',
+    if (!this.comprobantesHabilitados || this.cuotaComprobantesAgotada) {
+      void Swal.fire(
+        this.texts.get('attention'),
+        this.cuotaComprobantesAgotada
+          ? 'La licencia alcanzó el máximo mensual de comprobantes.'
+          : 'La licencia actual no incluye la emisión de comprobantes.',
         'warning',
       );
       return;
     }
-    if (this.cuotaComprobantesAgotada) {
-      Swal.fire(
-        'Cupo mensual agotado',
-        'La licencia alcanzó el máximo mensual de comprobantes.',
-        'warning',
-      );
-      return;
-    }
-  
-    const dialogEmitirVentaComponent = this.dialog.open(DialogEmitirVentaComponent, {
+
+    const dialogRef = this.dialog.open(DialogEmitirVentaComponent, {
       disableClose: true,
       hasBackdrop: true,
       width: '900px',
-      maxWidth: '95vw'
+      maxWidth: '95vw',
     });
-
-    dialogEmitirVentaComponent.afterClosed().subscribe(() => {
+    dialogRef.afterClosed().subscribe(() => {
       this.cargarCuotaComprobantes();
       this.loadVentas();
     });
   }
 
-  private cargarCuotaComprobantes(): void {
-    this.licenciaTenantService.obtenerCuotaComprobantes().subscribe({
-      next: cuota => (this.cuotaComprobantesAgotada = cuota.Agotada),
-      // El backend conserva la autoridad: un fallo transitorio al consultar el
-      // indicador no debe bloquear el botón con un estado posiblemente obsoleto.
-      error: () => (this.cuotaComprobantesAgotada = false),
+  corregirVenta(tipoCorreccion: TipoCorreccionVenta): void {
+    const venta = this.ventaSeleccionada;
+    if (!venta || !this.esDocumentoActivo(venta)) return;
+    if (!this.esAdministrador()) {
+      void Swal.fire(
+        this.texts.get('attention'),
+        this.texts.get('noPermissionEnterAdminKey'),
+        'error',
+      );
+      return;
+    }
+
+    const dialogRef = this.dialog.open(DialogCorregirVentaComponent, {
+      width: '92vw',
+      maxWidth: '1120px',
+      data: {
+        idVenta: venta.IdVenta,
+        tipoCorreccionInicial: tipoCorreccion,
+      },
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.actualizado) this.loadVentas();
     });
   }
 
-  async reImprimirDocumento(): Promise<void> {
-    if (!this.ventaSeleccionada) {
-      Swal.fire({
-        title: this.texts.get('reprint'),
-        text: this.texts.get('selectDocument'),
-        icon: 'warning',
-        confirmButtonText: this.texts.get('accept')
-      });
-      return;
-    }
-    const idVenta = this.ventaSeleccionada.IdVenta;
-    const formato = await this.reprintFormat.choose();
-    if (formato === null) return;
-
+  async descargarArchivo(formato: 'pdf' | 'xml'): Promise<void> {
+    const venta = this.ventaSeleccionada;
+    if (!venta) return;
+    this.procesandoAccion = true;
     this.spinnerService.show();
     try {
-      const response: ApiResponse<ImpresionDTO[]> = await firstValueFrom(
-        this.ventaService.getImpresionComprobanteVenta(idVenta, formato)
+      const blob = await firstValueFrom(
+        this.ventaService.descargarArchivoComprobante(venta.IdVenta, formato),
       );
-      if (!response.Success) throw new Error(response.Message);
-      await this.imprimir(response.Data);
-    } catch (error) {
-      await Swal.fire(this.texts.get('error'), String(error), 'error');
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement('a');
+      enlace.href = url;
+      enlace.download = `${venta.Documento}.${formato}`;
+      enlace.click();
+      URL.revokeObjectURL(url);
     } finally {
+      this.procesandoAccion = false;
       this.spinnerService.hide();
     }
   }
 
-  async imprimir(listImpresionDTO: ImpresionDTO[]){
-    for (const element of listImpresionDTO) {
-      await this.ventaService.showPDF(element.Documento);
-    }
-  }
-
-
-  anularDocumento(): void {
-    if (!this.ventaSeleccionada) {
-      Swal.fire(
-        this.texts.get('error'),
-        this.texts.get('selectSaleToVoid'),
-        'error'
+  async enviarPorCorreo(): Promise<void> {
+    const venta = this.ventaSeleccionada;
+    if (!venta) return;
+    if (!this.tieneCorreoValido(venta)) {
+      await Swal.fire(
+        this.texts.get('validation'),
+        this.texts.get('customerWithoutValidEmail'),
+        'warning',
       );
       return;
     }
 
-    // Confirmación de la anulación
-    Swal.fire({
-      title: this.texts.get('confirmVoidDocument', {
-        document: this.ventaSeleccionada.Documento
+    const confirmacion = await Swal.fire({
+      title: this.texts.get('sendReceiptByEmail'),
+      text: this.texts.get('confirmReceiptEmail', {
+        email: venta.ClienteCorreo ?? '',
       }),
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: this.texts.get('send'),
+      cancelButtonText: this.texts.get('cancel'),
+    });
+    if (!confirmacion.isConfirmed) return;
+
+    this.procesandoAccion = true;
+    this.spinnerService.show();
+    try {
+      const response = await firstValueFrom(
+        this.ventaService.enviarComprobantePorCorreo(venta.IdVenta),
+      );
+      await Swal.fire(
+        this.texts.get('sent'),
+        this.texts.get('receiptEmailSent', { email: response.Data.Correo }),
+        'success',
+      );
+    } finally {
+      this.procesandoAccion = false;
+      this.spinnerService.hide();
+    }
+  }
+
+  async reImprimirDocumento(): Promise<void> {
+    const venta = this.ventaSeleccionada;
+    if (!venta) return;
+    const formato = await this.reprintFormat.choose();
+    if (formato === null) return;
+
+    this.procesandoAccion = true;
+    this.spinnerService.show();
+    try {
+      const response: ApiResponse<ImpresionDTO[]> = await firstValueFrom(
+        this.ventaService.getImpresionComprobanteVenta(venta.IdVenta, formato),
+      );
+      if (!response.Success) throw new Error(response.Message);
+      for (const documento of response.Data) {
+        await this.ventaService.showPDF(documento.Documento);
+      }
+    } catch (error) {
+      await Swal.fire(this.texts.get('error'), String(error), 'error');
+    } finally {
+      this.procesandoAccion = false;
+      this.spinnerService.hide();
+    }
+  }
+
+  async anularDocumento(): Promise<void> {
+    const venta = this.ventaSeleccionada;
+    if (!venta || !this.esDocumentoActivo(venta)) return;
+    if (!this.esAdministrador()) {
+      void Notificar.advertencia(
+        this.texts.get('void'),
+        this.texts.get('onlyAdminCanVoidDocuments'),
+      );
+      return;
+    }
+
+    const motivo = await Swal.fire({
+      title: this.texts.get('confirmVoidDocument', { document: venta.Documento }),
       text: this.texts.get('actionCannotBeUndone'),
+      input: 'textarea',
+      inputLabel: this.texts.get('voidReason'),
+      inputPlaceholder: this.texts.get('voidReasonPlaceholder'),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: this.texts.get('yesVoid'),
-      cancelButtonText: this.texts.get('noCancel')
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        const documentoOtorgado = await this.solicitarEstadoEntregaDocumento();
-        if (documentoOtorgado === undefined) {
-          return;
-        }
+      cancelButtonText: this.texts.get('noCancel'),
+      inputValidator: value => value.trim().length >= 3
+        ? undefined
+        : this.texts.get('enterVoidReasonMsg'),
+    });
+    if (!motivo.isConfirmed) return;
 
-        // Realiza la anulación de la venta
-        const idVenta = this.ventaSeleccionada.IdVenta;
-        const motivo = 'Anulado desde el módulo de integración.';
-        const anularPedido = true; // Reemplaza si es necesario
+    const documentoOtorgado = await this.solicitarEstadoEntregaDocumento();
+    if (documentoOtorgado === undefined) return;
 
-        this.spinnerService.show(); // Mostrar spinner mientras se realiza la operación
-
-        this.ventaService.anularDocumentoVenta(idVenta, {
-          Motivo: motivo,
-          AnularPedido: anularPedido,
+    this.procesandoAccion = true;
+    this.spinnerService.show();
+    try {
+      const response = await firstValueFrom(
+        this.ventaService.anularDocumentoVenta(venta.IdVenta, {
+          Motivo: String(motivo.value).trim(),
+          AnularPedido: true,
           DocumentoOtorgado: documentoOtorgado,
-        }).subscribe(
-          (response: ApiResponse<ResultadoAnulacionDocumentoVenta>) => {
-            this.spinnerService.hide();
-            Notificar.exito(
-              this.texts.get('voided'),
-              response.Data?.Mensaje || this.texts.get('documentVoidedSuccessfully'),
-            );
-            this.actualizarLista(); // Actualiza la lista después de la anulación
-          },
-          (error: any) => {
-            this.spinnerService.hide();
-            Swal.fire(
-              this.texts.get('error'),
-              this.texts.get('couldNotVoidDocument'),
-              'error'
-            );
-          }
-        );
-      }
+        }),
+      );
+      await Notificar.exito(
+        this.texts.get('voided'),
+        response.Data?.Mensaje || this.texts.get('documentVoidedSuccessfully'),
+      );
+      this.loadVentas();
+    } finally {
+      this.procesandoAccion = false;
+      this.spinnerService.hide();
+    }
+  }
+
+  private cargarCuotaComprobantes(): void {
+    this.licenciaTenantService.obtenerCuotaComprobantes().subscribe({
+      next: cuota => (this.cuotaComprobantesAgotada = cuota.Agotada),
+      error: () => (this.cuotaComprobantesAgotada = false),
     });
   }
 
   private async solicitarEstadoEntregaDocumento(): Promise<boolean | null | undefined> {
     let paisISO2 = this.configuracionService.snapshot?.PaisISO2?.toUpperCase();
-
     if (!paisISO2) {
       try {
-        const configuracion = await firstValueFrom(this.configuracionService.get());
-        paisISO2 = configuracion?.PaisISO2?.toUpperCase();
+        paisISO2 = (await firstValueFrom(this.configuracionService.get()))
+          ?.PaisISO2?.toUpperCase();
       } catch {
-        Swal.fire({
-          title: this.texts.get('error'),
-          text: this.texts.get('couldNotDetermineFiscalCountry'),
-          icon: 'error',
-          confirmButtonText: this.texts.get('ok'),
-        });
+        await Swal.fire(
+          this.texts.get('error'),
+          this.texts.get('couldNotDetermineFiscalCountry'),
+          'error',
+        );
         return undefined;
       }
     }
 
-    if (paisISO2 !== 'PE') {
-      return null;
-    }
-
+    if (paisISO2 !== 'PE') return null;
     const result = await Swal.fire({
       title: this.texts.get('documentDeliveredQuestion'),
       text: this.texts.get('documentDeliveredExplanation'),
@@ -342,12 +442,42 @@ export class DialogVentasgeneralesComponent implements OnInit {
       cancelButtonText: this.texts.get('cancel'),
       allowOutsideClick: false,
     });
-
-    if (result.isDismissed) {
-      return undefined;
-    }
-
-    return result.isConfirmed;
+    return result.isDismissed ? undefined : result.isConfirmed;
   }
-  
+
+  private fechasValidas(): boolean {
+    return !!this.fechaDesde && !!this.fechaHasta
+      && this.fechaDesde <= this.fechaHasta;
+  }
+
+  private ajustarFiltrosDisponibles(): void {
+    if (this.tipoDocumentoSeleccionado
+        && !this.tiposDocumento.includes(this.tipoDocumentoSeleccionado)) {
+      this.tipoDocumentoSeleccionado = '';
+    }
+    if (this.cajaSeleccionada && !this.cajas.includes(this.cajaSeleccionada)) {
+      this.cajaSeleccionada = '';
+    }
+  }
+
+  private esAdministrador(): boolean {
+    return this.storageService.getCurrentUser().IdNivel
+      === NivelUsuarioEnum.Administrador;
+  }
+
+  private normalizar(value: unknown): string {
+    return String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase()
+      .trim();
+  }
+
+  private fechaLocalActual(): string {
+    const hoy = new Date();
+    const year = hoy.getFullYear();
+    const month = String(hoy.getMonth() + 1).padStart(2, '0');
+    const day = String(hoy.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 }

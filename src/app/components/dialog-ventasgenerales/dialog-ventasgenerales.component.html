@@ -1,53 +1,46 @@
-<div class="mant-panel dialog-panel dialog-panel--workspace">
+<div class="mant-panel dialog-panel dialog-panel--workspace sales-hub">
   <button
     mat-icon-button
     class="close-button"
     type="button"
     [attr.aria-label]="'closeDialog' | tenantText"
     (click)="onNoClick()"
-    [disabled]="procesando">
+    [disabled]="procesando || procesandoAccion">
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>{{ 'generalSales' | tenantText }}</h2>
-
-  <div class="dialog-toolbar">
-    <div class="dialog-toolbar__options">
-      <mat-checkbox
-        [(ngModel)]="listarTodosLosTurnos"
-        (change)="loadVentas()"
-        [disabled]="procesando">
-        {{ 'allShiftsAndRegisters' | tenantText }}
-      </mat-checkbox>
-
-      <mat-checkbox
-        [(ngModel)]="incluirVentasExpress"
-        (change)="loadVentas()"
-        [disabled]="procesando">
-        {{ 'includeExpressSales' | tenantText }}
-      </mat-checkbox>
+  <div class="sales-hub__heading">
+    <div>
+      <h2>{{ 'generalSales' | tenantText }}</h2>
+      <p>{{ 'salesHubSubtitle' | tenantText }}</p>
     </div>
+    <button
+      *ngIf="comprobantesHabilitados"
+      mat-raised-button
+      color="primary"
+      type="button"
+      (click)="OpenDialogEmitirVenta()"
+      [disabled]="procesando || procesandoAccion || cuotaComprobantesAgotada">
+      <mat-icon>add</mat-icon>
+      {{ 'newSale' | tenantText }}
+    </button>
+  </div>
 
-    <div class="dialog-toolbar__filters">
+  <section class="sales-filter-panel" aria-label="Filtros de comprobantes">
+    <div class="sales-filter-grid">
       <mat-form-field appearance="fill">
-        <mat-label>{{ 'searchBy' | tenantText }}</mat-label>
-        <mat-select
-          [(ngModel)]="campoSeleccionado"
-          (selectionChange)="aplicarFiltro()">
-          <mat-option value="Caja">{{ 'register' | tenantText }}</mat-option>
-          <mat-option value="TipoDocumento">{{ 'documentType' | tenantText }}</mat-option>
-          <mat-option value="Documento">{{ 'document' | tenantText }}</mat-option>
-          <mat-option value="Cliente">{{ 'customer' | tenantText }}</mat-option>
-          <mat-option value="FechaVenta">{{ 'date' | tenantText }}</mat-option>
-          <mat-option value="Moneda">{{ 'currency' | tenantText }}</mat-option>
-          <mat-option value="Dscto">{{ 'discount' | tenantText }}</mat-option>
-          <mat-option value="Total">{{ 'total' | tenantText }}</mat-option>
-          <mat-option value="EstadoDescripcion">{{ 'state' | tenantText }}</mat-option>
-        </mat-select>
+        <mat-label>{{ 'dateFrom' | tenantText }}</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaDesde" />
       </mat-form-field>
 
       <mat-form-field appearance="fill">
-        <mat-label>{{ 'search' | tenantText }}</mat-label>
+        <mat-label>{{ 'dateTo' | tenantText }}</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaHasta" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="sales-filter-grid__search">
+        <mat-label>{{ 'receiptGlobalSearch' | tenantText }}</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
         <input
           matInput
           [(ngModel)]="textoFiltro"
@@ -59,186 +52,255 @@
           mat-icon-button
           type="button"
           [attr.aria-label]="'clearSearch' | tenantText"
-          (click)="limpiarFiltro()">
+          (click)="limpiarBusqueda()">
           <mat-icon>close</mat-icon>
         </button>
       </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'state' | tenantText }}</mat-label>
+        <mat-select [(ngModel)]="estadoSeleccionado">
+          <mat-option [value]="0">{{ 'allStates' | tenantText }}</mat-option>
+          <mat-option [value]="1">{{ 'generated' | tenantText }}</mat-option>
+          <mat-option [value]="2">{{ 'voided' | tenantText }}</mat-option>
+          <mat-option [value]="3">{{ 'replaced' | tenantText }}</mat-option>
+          <mat-option [value]="4">{{ 'rectified' | tenantText }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'documentType' | tenantText }}</mat-label>
+        <mat-select
+          [(ngModel)]="tipoDocumentoSeleccionado"
+          (selectionChange)="aplicarFiltro()">
+          <mat-option value="">{{ 'allDocumentTypes' | tenantText }}</mat-option>
+          <mat-option *ngFor="let tipo of tiposDocumento" [value]="tipo">
+            {{ tipo }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'register' | tenantText }}</mat-label>
+        <mat-select
+          [(ngModel)]="cajaSeleccionada"
+          (selectionChange)="aplicarFiltro()">
+          <mat-option value="">{{ 'allRegisters' | tenantText }}</mat-option>
+          <mat-option *ngFor="let caja of cajas" [value]="caja">
+            {{ caja }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </div>
 
-    <div class="dialog-toolbar__footer">
-      <div class="dialog-toolbar__status" role="status" aria-live="polite">
-        <mat-icon>{{ procesando ? 'hourglass_top' : 'receipt_long' }}</mat-icon>
-        <span>
-          <ng-container *ngIf="procesando; else ventasEncontradas">
-            {{ 'loadingSales' | tenantText }}
-          </ng-container>
-          <ng-template #ventasEncontradas>
-            {{
-              (dataSource.data.length === 1 ? 'saleFound' : 'salesFound')
-                | tenantText:{ count: dataSource.data.length }
-            }}
-            <ng-container *ngIf="textoFiltro">
-              {{ 'fromTotal' | tenantText:{ count: ventas.length } }}
-            </ng-container>
-          </ng-template>
-        </span>
-      </div>
+    <div class="sales-filter-panel__footer">
+      <mat-checkbox [(ngModel)]="incluirVentasExpress">
+        {{ 'includeExpressSales' | tenantText }}
+      </mat-checkbox>
+      <span class="sales-filter-panel__spacer"></span>
+      <button mat-button type="button" (click)="limpiarFiltros()" [disabled]="procesando">
+        <mat-icon>filter_alt_off</mat-icon>
+        {{ 'clearFilters' | tenantText }}
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="loadVentas()"
+        [disabled]="procesando || procesandoAccion">
+        <mat-icon>search</mat-icon>
+        {{ 'consult' | tenantText }}
+      </button>
+    </div>
+  </section>
 
-      <div class="dialog-toolbar__actions">
-        <button
-          mat-stroked-button
-          type="button"
-          (click)="actualizarLista()"
-          [disabled]="procesando">
-          <mat-icon>refresh</mat-icon>
-          {{ 'update' | tenantText }}
-        </button>
-
-        <button
-          *ngIf="comprobantesHabilitados"
-          mat-raised-button
-          color="primary"
-          type="button"
-          (click)="OpenDialogEmitirVenta()"
-          [disabled]="procesando || cuotaComprobantesAgotada">
-          <mat-icon>receipt_long</mat-icon>
-          {{ 'newSale' | tenantText }}
-        </button>
-
-        <button
-          *ngIf="correccionHabilitada"
-          mat-raised-button
-          color="primary"
-          type="button"
-          [attr.title]="'pendingUseCase' | tenantText"
-          disabled>
-          <mat-icon>note_add</mat-icon>
-          {{ 'issueCreditNote' | tenantText }}
-        </button>
-      </div>
+  <div class="sales-summary" role="status" aria-live="polite">
+    <div class="sales-summary__item">
+      <span>{{ 'totalDocuments' | tenantText }}</span>
+      <strong>{{ dataSource.data.length }}</strong>
+    </div>
+    <div class="sales-summary__item sales-summary__item--success">
+      <span>{{ 'generatedDocuments' | tenantText }}</span>
+      <strong>{{ totalGenerados }}</strong>
+    </div>
+    <div class="sales-summary__item sales-summary__item--danger">
+      <span>{{ 'inactiveDocuments' | tenantText }}</span>
+      <strong>{{ totalNoVigentes }}</strong>
+    </div>
+    <div class="sales-summary__item sales-summary__item--warning">
+      <span>{{ 'fiscalAttention' | tenantText }}</span>
+      <strong>{{ totalAtencionFiscal }}</strong>
     </div>
   </div>
 
-  <div class="dialog-workspace-content">
+  <div class="dialog-workspace-content sales-hub__content">
     <div class="dialog-table-card">
-      <div
-        *ngIf="procesando"
-        class="dialog-table-state"
-        role="status"
-        aria-live="polite">
+      <div *ngIf="procesando" class="dialog-table-state" role="status" aria-live="polite">
         <mat-spinner diameter="38"></mat-spinner>
         <strong>{{ 'loadingSales' | tenantText }}</strong>
       </div>
 
       <ng-container *ngIf="!procesando">
-      <div class="dialog-table-wrapper--fill">
-        <table
-          mat-table
-          [dataSource]="dataSource"
-          [trackBy]="trackVenta"
-          class="ventas-table">
-          <ng-container *ngFor="let col of columnDefs" [matColumnDef]="col.key">
-            <th
-              mat-header-cell
-              *matHeaderCellDef
-              [style.width.px]="col.width"
-              [class.is-numeric]="col.numeric">
-              {{ col.label }}
-            </th>
+        <div class="dialog-table-wrapper--fill">
+          <table
+            mat-table
+            [dataSource]="dataSource"
+            [trackBy]="trackVenta"
+            class="ventas-table">
 
-            <td
-              mat-cell
-              *matCellDef="let row"
-              [style.width.px]="col.width"
-              [class.is-numeric]="col.numeric">
-              <ng-container [ngSwitch]="col.key">
-                <ng-container *ngSwitchCase="'acciones'">
-                  <button
-                    mat-icon-button
-                    [attr.aria-label]="'saleActions' | tenantText"
-                    [matMenuTriggerFor]="menuAcciones"
-                    (click)="seleccionarVenta(row); $event.stopPropagation()">
-                    <mat-icon>more_vert</mat-icon>
-                  </button>
-                </ng-container>
+            <ng-container matColumnDef="Documento">
+              <th mat-header-cell *matHeaderCellDef>{{ 'documentNumber' | tenantText }}</th>
+              <td mat-cell *matCellDef="let row">
+                <strong>{{ row.Documento }}</strong>
+              </td>
+            </ng-container>
 
-                <ng-container *ngSwitchCase="'FechaVenta'">
-                  {{ row[col.key] | date:'dd/MM/yyyy':'UTC' }}
-                </ng-container>
+            <ng-container matColumnDef="FechaVenta">
+              <th mat-header-cell *matHeaderCellDef>{{ 'date' | tenantText }}</th>
+              <td mat-cell *matCellDef="let row">{{ row.FechaVenta | date:'dd/MM/yyyy':'UTC' }}</td>
+            </ng-container>
 
-                <ng-container *ngSwitchCase="'Dscto'">
-                  {{ row[col.key] | number:'1.2-2' }}
-                </ng-container>
+            <ng-container matColumnDef="Caja">
+              <th mat-header-cell *matHeaderCellDef>{{ 'register' | tenantText }}</th>
+              <td mat-cell *matCellDef="let row" [title]="row.Caja">{{ row.Caja }}</td>
+            </ng-container>
 
-                <ng-container *ngSwitchCase="'Total'">
-                  {{ row[col.key] | number:'1.2-2' }}
-                </ng-container>
+            <ng-container matColumnDef="Cliente">
+              <th mat-header-cell *matHeaderCellDef>{{ 'customer' | tenantText }}</th>
+              <td mat-cell *matCellDef="let row" class="customer-cell">
+                <span [title]="row.Cliente">{{ row.Cliente }}</span>
+                <small>{{ row.NumeroIdentificacion || '—' }}</small>
+              </td>
+            </ng-container>
 
-                <ng-container *ngSwitchCase="'EstadoDescripcion'">
-                  <span
-                    class="status-badge"
-                    [class.status-badge--danger]="row[col.key] === 'Anulado'">
-                    {{ row[col.key] }}
-                  </span>
-                </ng-container>
+            <ng-container matColumnDef="TipoDocumento">
+              <th mat-header-cell *matHeaderCellDef>{{ 'documentType' | tenantText }}</th>
+              <td mat-cell *matCellDef="let row">{{ row.TipoDocumento }}</td>
+            </ng-container>
 
-                <ng-container *ngSwitchDefault>
-                  {{ row[col.key] }}
-                </ng-container>
+            <ng-container matColumnDef="Total">
+              <th mat-header-cell *matHeaderCellDef class="is-numeric">{{ 'total' | tenantText }}</th>
+              <td mat-cell *matCellDef="let row" class="is-numeric">
+                <strong>{{ row.Total | number:'1.2-2' }}</strong>
+                <small>{{ row.Moneda }}</small>
+              </td>
+            </ng-container>
 
-              </ng-container>
-            </td>
-          </ng-container>
+            <ng-container matColumnDef="EstadoDescripcion">
+              <th mat-header-cell *matHeaderCellDef>{{ 'state' | tenantText }}</th>
+              <td mat-cell *matCellDef="let row">
+                <span class="status-badge" [ngClass]="'status-badge--' + claseEstado(row)">
+                  {{ row.EstadoDescripcion }}
+                </span>
+              </td>
+            </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns" [class.selected]="row === ventaSeleccionada"
-            (click)="seleccionarVenta(row)"></tr>
+            <ng-container matColumnDef="EstadoFiscalDescripcion">
+              <th mat-header-cell *matHeaderCellDef>{{ 'fiscalState' | tenantText }}</th>
+              <td mat-cell *matCellDef="let row">
+                <span class="status-badge" [ngClass]="'status-badge--' + claseEstadoFiscal(row)">
+                  {{ row.EstadoFiscalDescripcion }}
+                </span>
+              </td>
+            </ng-container>
 
-          <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-              <div class="dialog-empty-state">
-                <mat-icon>search_off</mat-icon>
-                {{ 'noSalesFound' | tenantText }}
-              </div>
-            </td>
-          </tr>
-        </table>
-        <mat-menu #menuAcciones="matMenu">
-          <button mat-menu-item disabled>
-            <mat-icon>edit</mat-icon>
-            <span>{{ 'modifyDocument' | tenantText }}</span>
-          </button>
+            <ng-container matColumnDef="acciones">
+              <th mat-header-cell *matHeaderCellDef>{{ 'options' | tenantText }}</th>
+              <td mat-cell *matCellDef="let row" class="actions-cell">
+                <button
+                  mat-icon-button
+                  [attr.aria-label]="'saleActions' | tenantText"
+                  [matMenuTriggerFor]="menuAcciones"
+                  [disabled]="procesandoAccion"
+                  (click)="seleccionarVenta(row); $event.stopPropagation()">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+              </td>
+            </ng-container>
 
-          <button mat-menu-item disabled>
-            <mat-icon>payments</mat-icon>
-            <span>{{ 'modifyPayments' | tenantText }}</span>
-          </button>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: displayedColumns"
+              [class.selected]="row === ventaSeleccionada"
+              [class.document-inactive]="!esDocumentoActivo(row)"
+              (click)="seleccionarVenta(row)">
+            </tr>
 
-          <button mat-menu-item disabled>
-            <mat-icon>picture_as_pdf</mat-icon>
-            <span>{{ 'getPdfAndXml' | tenantText }}</span>
-          </button>
+            <tr class="mat-row" *matNoDataRow>
+              <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+                <div class="dialog-empty-state">
+                  <mat-icon>search_off</mat-icon>
+                  <strong>{{ 'noSalesFound' | tenantText }}</strong>
+                  <span>{{ 'noSalesFoundHint' | tenantText }}</span>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
 
-          <button *ngIf="comprobantesHabilitados" mat-menu-item (click)="reImprimirDocumento()">
-            <mat-icon>print</mat-icon>
-            <span>{{ 'reprintDocument' | tenantText }}</span>
-          </button>
-
-          <button *ngIf="correccionHabilitada" mat-menu-item (click)="anularDocumento()">
-            <mat-icon>cancel</mat-icon>
-            <span>{{ 'void' | tenantText }}</span>
-          </button>
-        </mat-menu>
-
-      </div>
-
-      <mat-paginator
-        [length]="dataSource.filteredData.length"
-        [pageSize]="10"
-        [pageSizeOptions]="[5, 10, 20]"
-        [attr.aria-label]="'salesPagination' | tenantText">
-      </mat-paginator>
+        <mat-paginator
+          [length]="dataSource.filteredData.length"
+          [pageSize]="10"
+          [pageSizeOptions]="[5, 10, 20, 50]"
+          [showFirstLastButtons]="true"
+          [attr.aria-label]="'salesPagination' | tenantText">
+        </mat-paginator>
       </ng-container>
     </div>
   </div>
+
+  <mat-menu #menuAcciones="matMenu">
+    <button
+      *ngIf="correccionHabilitada"
+      mat-menu-item
+      [disabled]="!esDocumentoActivo(ventaSeleccionada)"
+      (click)="corregirVenta(tipoCorreccionCliente)">
+      <mat-icon>edit_document</mat-icon>
+      <span>{{ 'modifyDocument' | tenantText }}</span>
+    </button>
+    <button
+      *ngIf="correccionHabilitada"
+      mat-menu-item
+      [disabled]="!esDocumentoActivo(ventaSeleccionada)"
+      (click)="corregirVenta(tipoCorreccionPagos)">
+      <mat-icon>payments</mat-icon>
+      <span>{{ 'modifyPayments' | tenantText }}</span>
+    </button>
+
+    <mat-divider></mat-divider>
+
+    <button mat-menu-item (click)="descargarArchivo('pdf')">
+      <mat-icon>picture_as_pdf</mat-icon>
+      <span>{{ 'downloadPdf' | tenantText }}</span>
+    </button>
+    <button mat-menu-item (click)="descargarArchivo('xml')">
+      <mat-icon>code</mat-icon>
+      <span>{{ 'downloadXml' | tenantText }}</span>
+    </button>
+    <button
+      mat-menu-item
+      [disabled]="!tieneCorreoValido(ventaSeleccionada)"
+      [attr.title]="tieneCorreoValido(ventaSeleccionada) ? null : ('customerWithoutValidEmail' | tenantText)"
+      (click)="enviarPorCorreo()">
+      <mat-icon>mail</mat-icon>
+      <span>{{ 'sendReceiptByEmail' | tenantText }}</span>
+    </button>
+    <button mat-menu-item (click)="reImprimirDocumento()">
+      <mat-icon>print</mat-icon>
+      <span>{{ 'reprintDocument' | tenantText }}</span>
+    </button>
+
+    <mat-divider></mat-divider>
+
+    <button
+      *ngIf="correccionHabilitada"
+      mat-menu-item
+      class="danger-menu-item"
+      [disabled]="!esDocumentoActivo(ventaSeleccionada)"
+      (click)="anularDocumento()">
+      <mat-icon>cancel</mat-icon>
+      <span>{{ 'void' | tenantText }}</span>
+    </button>
+  </mat-menu>
 </div>

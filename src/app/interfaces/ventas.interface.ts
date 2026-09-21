@@ -1,19 +1,24 @@
 export interface VentasInterface {
     IdVenta: number;
-    IdCaja: string;
+    IdCaja: number;
     Caja: string;
     TipoDocumento: string;
     Documento: string;
     Cliente: string;
+    NumeroIdentificacion: string;
+    ClienteCorreo?: string | null;
     FechaVenta: string;
     Moneda: string;
     Dscto: number;
     Total: number;
     IdTurno: number;
     EstadoDescripcion: string;
+    Estado: number;
+    EstadoFiscal: number;
+    EstadoFiscalDescripcion: string;
     NombreArchivo: string;
     EstadoPago: string;
-    IdTipopedido: string;
+    IdCanalVenta: number;
 }
 
   export interface VentasDTO {
@@ -64,4 +69,9 @@ export interface InformeContableInterface {
     Empresa: string;
     RucEmpresa: string;
     DirecEmpresa: string;
+}
+
+export interface ResultadoEnvioComprobanteCorreo {
+    Correo: string;
+    ArchivosAdjuntos: number;
 }
