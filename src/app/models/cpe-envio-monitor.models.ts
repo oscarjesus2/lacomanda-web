@@ -49,5 +49,10 @@ export interface CpeEnvioMonitorRegistro {
   PuedeReintentar: boolean;
   OperacionReintento?: 'EMISION' | 'ANULACION' | null;
   RequiereNuevoComprobante: boolean;
+  Regularizado: boolean;
+  IdVentaReemplazo?: number | null;
+  NumeroDocumentoReemplazo?: string | null;
+  EstadoReemplazoCodigo?: string | null;
+  EstadoReemplazo?: string | null;
   AccionRecomendada?: string | null;
 }

@@ -139,6 +139,11 @@
               {{ registro.Estado }}
             </span>
             <span
+              *ngIf="registro.Regularizado"
+              class="status-badge status-badge--success status-badge--secondary">
+              Regularizado
+            </span>
+            <span
               *ngIf="registro.EstadoAnulacionCodigo"
               class="status-badge status-badge--secondary"
               [ngClass]="statusClass(registro.EstadoAnulacionCodigo)">
@@ -194,6 +199,17 @@
               *ngIf="registro.RequiereNuevoComprobante">
               Emitir uno nuevo
             </span>
+            <div
+              class="monitor-replacement"
+              *ngIf="registro.Regularizado">
+              <mat-icon>task_alt</mat-icon>
+              <strong>Sustituido por {{ registro.NumeroDocumentoReemplazo }}</strong>
+              <small
+                class="status-badge"
+                [ngClass]="statusClass(registro.EstadoReemplazoCodigo || '')">
+                {{ registro.EstadoReemplazo || 'Pendiente de envío' }}
+              </small>
+            </div>
           </td>
         </tr>
       </tbody>
