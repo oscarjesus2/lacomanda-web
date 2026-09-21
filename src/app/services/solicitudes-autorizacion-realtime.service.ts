@@ -10,6 +10,8 @@ import {
 import { SolicitudAutorizacionService } from './solicitud-autorizacion.service';
 import { StorageService } from './storage.service';
 import { UsuarioService } from './usuario.service';
+import { ComprobanteFiscalPendiente } from '../models/comprobante-fiscal-pendiente.models';
+import { ComprobantesFiscalesPendientesService } from './comprobantes-fiscales-pendientes.service';
 
 /**
  * Canal en tiempo real de solicitudes de autorización.
@@ -25,6 +27,14 @@ export class SolicitudesAutorizacionRealtimeService {
 
   private readonly esAprobadorSubject = new BehaviorSubject<boolean>(false);
   readonly esAprobador$ = this.esAprobadorSubject.asObservable();
+
+  private readonly esAdministradorSubject = new BehaviorSubject<boolean>(false);
+  readonly esAdministrador$ = this.esAdministradorSubject.asObservable();
+
+  private readonly comprobantesFiscalesSubject =
+    new BehaviorSubject<ComprobanteFiscalPendiente[]>([]);
+  readonly comprobantesFiscalesPendientes$ =
+    this.comprobantesFiscalesSubject.asObservable();
 
   private readonly apruebaDescuentosSubject = new BehaviorSubject<boolean>(false);
   /** Los descuentos y las entradas gratis solo los aprueba quien puede aplicarlos. */
@@ -47,6 +57,8 @@ export class SolicitudesAutorizacionRealtimeService {
   constructor(
     private readonly storage: StorageService,
     private readonly api: SolicitudAutorizacionService,
+    private readonly comprobantesFiscalesApi:
+      ComprobantesFiscalesPendientesService,
     private readonly usuarioService: UsuarioService,
     private readonly zone: NgZone,
   ) {}
@@ -57,6 +69,10 @@ export class SolicitudesAutorizacionRealtimeService {
 
   get apruebaDescuentos(): boolean {
     return this.apruebaDescuentosSubject.value;
+  }
+
+  get esAdministrador(): boolean {
+    return this.esAdministradorSubject.value;
   }
 
   get pendientes(): SolicitudAutorizacion[] {
@@ -76,8 +92,10 @@ export class SolicitudesAutorizacionRealtimeService {
     const hub = this.hub;
     this.hub = undefined;
     this.esAprobadorSubject.next(false);
+    this.esAdministradorSubject.next(false);
     this.apruebaDescuentosSubject.next(false);
     this.pendientesSubject.next([]);
+    this.comprobantesFiscalesSubject.next([]);
     this.bandejaInicializada = false;
     if (hub && hub.state !== signalR.HubConnectionState.Disconnected) {
       await hub.stop();
@@ -89,23 +107,46 @@ export class SolicitudesAutorizacionRealtimeService {
     await this.cargarPermiso();
     if (!this.esAprobador) {
       this.pendientesSubject.next([]);
+    } else {
+      try {
+        const idsConocidos = new Set(
+          this.pendientesSubject.value.map(item => item.IdSolicitud),
+        );
+        const pendientes = await firstValueFrom(this.api.listarPendientes());
+        this.pendientesSubject.next(this.ordenar(pendientes));
+        if (this.bandejaInicializada) {
+          pendientes
+            .filter(item => !idsConocidos.has(item.IdSolicitud))
+            .forEach(item => this.creadaSubject.next(item));
+        }
+        this.bandejaInicializada = true;
+      } catch (error) {
+        console.warn(
+          'No se pudo recuperar la bandeja de solicitudes de autorización.',
+          error,
+        );
+      }
+    }
+
+    await this.sincronizarComprobantesFiscales();
+  }
+
+  async sincronizarComprobantesFiscales(): Promise<void> {
+    if (!this.esAdministrador) {
+      this.comprobantesFiscalesSubject.next([]);
       return;
     }
 
     try {
-      const idsConocidos = new Set(
-        this.pendientesSubject.value.map(item => item.IdSolicitud),
+      const resultado = await firstValueFrom(
+        this.comprobantesFiscalesApi.listar(),
       );
-      const pendientes = await firstValueFrom(this.api.listarPendientes());
-      this.pendientesSubject.next(this.ordenar(pendientes));
-      if (this.bandejaInicializada) {
-        pendientes
-          .filter(item => !idsConocidos.has(item.IdSolicitud))
-          .forEach(item => this.creadaSubject.next(item));
-      }
-      this.bandejaInicializada = true;
+      this.comprobantesFiscalesSubject.next(resultado.Registros);
     } catch (error) {
-      console.warn('No se pudo recuperar la bandeja de solicitudes de autorización.', error);
+      console.warn(
+        'No se pudo recuperar la bandeja de comprobantes por corregir.',
+        error,
+      );
     }
   }
 
@@ -135,6 +176,7 @@ export class SolicitudesAutorizacionRealtimeService {
       const response = await firstValueFrom(this.usuarioService.getUsuarioActual());
       const usuario = response?.Data;
       const esAdministrador = usuario?.IdNivel === NivelUsuarioEnum.Administrador;
+      this.esAdministradorSubject.next(!!usuario?.Activo && esAdministrador);
       const esAprobador = !!usuario?.Activo && (
         esAdministrador
         || (usuario.IdNivel === NivelUsuarioEnum.Cajero && !!usuario.PuedeAprobarSolicitudes)
@@ -145,6 +187,7 @@ export class SolicitudesAutorizacionRealtimeService {
       );
     } catch {
       this.esAprobadorSubject.next(false);
+      this.esAdministradorSubject.next(false);
       this.apruebaDescuentosSubject.next(false);
     }
   }
@@ -176,6 +219,10 @@ export class SolicitudesAutorizacionRealtimeService {
         this.quitar(solicitud.IdSolicitud);
         this.resueltaSubject.next(solicitud);
       });
+    });
+
+    this.hub.on('ComprobanteFiscalRechazado', () => {
+      void this.zone.run(() => this.sincronizarComprobantesFiscales());
     });
 
     this.hub.onreconnected(() => {

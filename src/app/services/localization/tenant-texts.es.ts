@@ -1357,6 +1357,31 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   portioning: 'Porcionamiento',
   production: 'Producción',
   timeTracking: 'Control horario',
+  notificationCenter: 'Notificaciones',
+  notificationCenterHint:
+    'Revisa las acciones que requieren tu atención.',
+  notificationsShort: 'Notificaciones',
+  electronicBilling: 'Facturación electrónica',
+  fiscalDocumentsToCorrect: 'Comprobantes por corregir y reemitir',
+  fiscalDocumentsToCorrectHint:
+    'Revisa la respuesta de SUNAT y resuelve cada comprobante rechazado.',
+  noFiscalDocumentsToCorrect: 'No hay comprobantes rechazados por corregir',
+  fiscalDocumentsResolvedHint:
+    'Los comprobantes resueltos desaparecen automáticamente de esta lista.',
+  fiscalDocumentsPendingCount:
+    '{{count}} comprobante(s) rechazado(s) requieren corrección',
+  fiscalDocumentsNotificationHint:
+    'Abre la bandeja para revisar la respuesta de SUNAT y reemitir cada comprobante.',
+  sunatResponse: 'Respuesta de SUNAT',
+  noResponseDetail: 'SUNAT no devolvió un detalle adicional.',
+  correctAndReissue: 'Corregir y reemitir',
+  correctAndReissueDocument: 'Corregir y reemitir comprobante',
+  correctionReissueSameData: 'Reemitir con los mismos datos de la venta',
+  correctionReissueSameDataHint:
+    'Úsalo cuando el rechazo se deba a un cálculo o configuración del emisor que ya fue corregido.',
+  confirmRejectedDocumentReissue: '¿Reemitir el comprobante rechazado?',
+  confirmRejectedDocumentReissueHint:
+    'El original quedará como evidencia y se emitirá otro con el siguiente correlativo disponible. No se duplicarán la venta, el stock ni el pago.',
 };
 
 export const ES_PE_OVERRIDES: Partial<Record<TenantTextKey, string>> = {

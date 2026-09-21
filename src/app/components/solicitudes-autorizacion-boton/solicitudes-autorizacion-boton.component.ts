@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { SolicitudesAutorizacionRealtimeService } from 'src/app/services/solicitudes-autorizacion-realtime.service';
 import { DialogSolicitudesAutorizacionComponent } from '../dialog-solicitudes-autorizacion/dialog-solicitudes-autorizacion.component';
+import { combineLatest, map } from 'rxjs';
 
 /**
  * Globo de solicitudes de autorización. Solo se muestra a aprobadores
@@ -17,7 +18,11 @@ export class SolicitudesAutorizacionBotonComponent {
   @Input() variante: 'icono' | 'canal' = 'icono';
 
   readonly esAprobador$ = this.realtime.esAprobador$;
-  readonly pendientes$ = this.realtime.pendientes$;
+  readonly pendientes$ = combineLatest([
+    this.realtime.pendientes$,
+    this.realtime.comprobantesFiscalesPendientes$,
+  ]).pipe(map(([solicitudes, comprobantes]) =>
+    solicitudes.length + comprobantes.length));
 
   constructor(
     private readonly realtime: SolicitudesAutorizacionRealtimeService,

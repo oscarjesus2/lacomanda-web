@@ -29,6 +29,8 @@ export class DialogCorregirVentaComponent implements OnInit {
   readonly tipoPagos = TipoCorreccionVenta.Pagos;
   readonly tipoCliente = TipoCorreccionVenta.Cliente;
   readonly tipoDocumento = TipoCorreccionVenta.TipoDocumento;
+  readonly tipoReemision = TipoCorreccionVenta.Reemision;
+  readonly origenRechazoFiscal: boolean;
 
   preparacion: PreparacionCorreccionVenta | null = null;
   tipoCorreccion = TipoCorreccionVenta.Pagos;
@@ -59,10 +61,18 @@ export class DialogCorregirVentaComponent implements OnInit {
     private readonly tipoIdentidadService: TipoIdentidadPaisService,
     private readonly texts: TenantTextCatalogService,
     private readonly dialogRef: MatDialogRef<DialogCorregirVentaComponent>,
-    @Inject(MAT_DIALOG_DATA) private readonly data: { idVenta: number },
-  ) {}
+    @Inject(MAT_DIALOG_DATA) private readonly data: {
+      idVenta: number;
+      origenRechazoFiscal?: boolean;
+    },
+  ) {
+    this.origenRechazoFiscal = !!data.origenRechazoFiscal;
+  }
 
   ngOnInit(): void {
+    if (this.origenRechazoFiscal) {
+      this.tipoCorreccion = TipoCorreccionVenta.Reemision;
+    }
     this.cargar();
   }
 
@@ -82,6 +92,10 @@ export class DialogCorregirVentaComponent implements OnInit {
 
   get errorIdentificacionCliente(): string | null {
     if (this.tipoCorreccion === TipoCorreccionVenta.Pagos) {
+      return null;
+    }
+
+    if (this.tipoCorreccion === TipoCorreccionVenta.Reemision) {
       return null;
     }
 
@@ -161,6 +175,10 @@ export class DialogCorregirVentaComponent implements OnInit {
             || Number(pago.Vuelto || 0) < Number(pago.MontoPagado))
           && (pago.IdTipoPago !== 3
             || (!!pago.IdTarjeta && !!pago.Autorizacion?.trim())));
+    }
+
+    if (this.tipoCorreccion === TipoCorreccionVenta.Reemision) {
+      return true;
     }
 
     if (!this.cliente.IdTipoIdentidad || !this.cliente.RazonSocial?.trim()) {
@@ -423,7 +441,10 @@ export class DialogCorregirVentaComponent implements OnInit {
         ...pago,
         Vuelto: pago.IdTipoPago === 1 ? Number(pago.Vuelto || 0) : 0,
       }));
-    } else {
+    } else if (
+      this.tipoCorreccion === TipoCorreccionVenta.Cliente
+      || this.tipoCorreccion === TipoCorreccionVenta.TipoDocumento
+    ) {
       solicitud.Cliente = { ...this.cliente };
     }
 
@@ -459,6 +480,13 @@ export class DialogCorregirVentaComponent implements OnInit {
           titulo: this.texts.get('confirmDocumentChange'),
           mensaje: this.texts.get('confirmDocumentChangeHint'),
           boton: this.texts.get('applyCorrection'),
+        };
+
+      case TipoCorreccionVenta.Reemision:
+        return {
+          titulo: this.texts.get('confirmRejectedDocumentReissue'),
+          mensaje: this.texts.get('confirmRejectedDocumentReissueHint'),
+          boton: this.texts.get('correctAndReissue'),
         };
     }
   }

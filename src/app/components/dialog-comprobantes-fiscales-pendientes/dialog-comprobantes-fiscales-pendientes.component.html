@@ -1,0 +1,60 @@
+<div class="mant-panel approval-dialog">
+  <button
+    mat-icon-button
+    class="close-button"
+    [attr.aria-label]="'close' | tenantText"
+    (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>{{ 'fiscalDocumentsToCorrect' | tenantText }}</h2>
+  <p class="subtitle">{{ 'fiscalDocumentsToCorrectHint' | tenantText }}</p>
+
+  <div *ngIf="cargando" class="empty-state">
+    <mat-icon>hourglass_top</mat-icon>
+    <strong>{{ 'loading' | tenantText }}</strong>
+  </div>
+
+  <div *ngIf="!cargando && comprobantes.length === 0" class="empty-state">
+    <mat-icon>task_alt</mat-icon>
+    <strong>{{ 'noFiscalDocumentsToCorrect' | tenantText }}</strong>
+    <span>{{ 'fiscalDocumentsResolvedHint' | tenantText }}</span>
+  </div>
+
+  <article *ngFor="let comprobante of comprobantes" class="request-card">
+    <div class="request-info">
+      <span class="request-type">
+        {{ comprobante.TipoDocumento }} · {{ comprobante.Caja }}
+      </span>
+      <h3>{{ comprobante.NumeroDocumento }}</h3>
+      <p>{{ comprobante.Cliente }}</p>
+      <p class="request-reason">
+        <strong>
+          {{ 'sunatResponse' | tenantText }}
+          <ng-container *ngIf="comprobante.CodigoRespuesta">
+            {{ comprobante.CodigoRespuesta }}
+          </ng-container>
+        </strong>
+        <br>
+        {{ comprobante.MensajeRespuesta || ('noResponseDetail' | tenantText) }}
+      </p>
+      <small>
+        {{ comprobante.FechaEmisionUtc | date:'dd/MM/yyyy HH:mm' }}
+      </small>
+    </div>
+
+    <div class="request-amount">
+      {{ comprobante.Total | number:'1.2-2' }}
+    </div>
+
+    <div class="request-actions">
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="corregir(comprobante)">
+        <mat-icon>edit_document</mat-icon>
+        {{ 'correctAndReissue' | tenantText }}
+      </button>
+    </div>
+  </article>
+</div>

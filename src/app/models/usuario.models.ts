@@ -14,6 +14,7 @@ export class Usuario {
   public NivelDescripcion: string;
   public NombreEmpleado: string;
   public EsUsuarioActual: boolean;
+  public EsUsuarioSoporteLaComanda: boolean;
   public PuedeEditarEmpleado: boolean;
   public PuedeCambiarNivel: boolean;
   public PuedeDesactivar: boolean;

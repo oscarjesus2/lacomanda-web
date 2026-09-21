@@ -8,6 +8,8 @@ import { SolicitudAutorizacionService } from 'src/app/services/solicitud-autoriz
 import { SolicitudesAutorizacionRealtimeService } from 'src/app/services/solicitudes-autorizacion-realtime.service';
 import { Notificar } from 'src/app/shared/notificaciones';
 import { DialogMTextComponent } from '../dialog-mtext/dialog-mtext.component';
+import { ComprobanteFiscalPendiente } from 'src/app/models/comprobante-fiscal-pendiente.models';
+import { DialogComprobantesFiscalesPendientesComponent } from '../dialog-comprobantes-fiscales-pendientes/dialog-comprobantes-fiscales-pendientes.component';
 
 /** Bandeja del aprobador: aprobar ejecuta la acción; denegar pide un motivo opcional. */
 @Component({
@@ -17,12 +19,13 @@ import { DialogMTextComponent } from '../dialog-mtext/dialog-mtext.component';
 })
 export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy {
   solicitudes: SolicitudAutorizacion[] = [];
+  comprobantesFiscales: ComprobanteFiscalPendiente[] = [];
   readonly procesando = new Set<number>();
   /** Preferencia propia: recibir también las solicitudes por correo. */
   recibirPorCorreo = false;
   puedeElegirCorreo = false;
   guardandoPreferencia = false;
-  private subscription?: Subscription;
+  private readonly subscriptions = new Subscription();
 
   constructor(
     private readonly dialogRef: MatDialogRef<DialogSolicitudesAutorizacionComponent>,
@@ -33,9 +36,14 @@ export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy
   ) {}
 
   ngOnInit(): void {
-    this.subscription = this.realtime.pendientes$.subscribe(solicitudes => {
+    this.subscriptions.add(this.realtime.pendientes$.subscribe(solicitudes => {
       this.solicitudes = solicitudes;
-    });
+    }));
+    this.subscriptions.add(
+      this.realtime.comprobantesFiscalesPendientes$.subscribe(comprobantes => {
+        this.comprobantesFiscales = comprobantes;
+      }),
+    );
     void this.realtime.sincronizar();
     void this.cargarPreferencias();
   }
@@ -81,7 +89,14 @@ export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy
   }
 
   ngOnDestroy(): void {
-    this.subscription?.unsubscribe();
+    this.subscriptions.unsubscribe();
+  }
+
+  abrirComprobantesFiscales(): void {
+    this.dialog.open(DialogComprobantesFiscalesPendientesComponent, {
+      width: 'min(900px, 96vw)',
+      maxWidth: '96vw',
+    });
   }
 
   async aprobar(solicitud: SolicitudAutorizacion): Promise<void> {
