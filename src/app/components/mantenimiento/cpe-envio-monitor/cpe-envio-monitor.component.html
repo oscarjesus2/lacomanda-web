@@ -138,6 +138,12 @@
             <span class="status-badge" [ngClass]="statusClass(registro.EstadoCodigo)">
               {{ registro.Estado }}
             </span>
+            <span
+              *ngIf="registro.EstadoAnulacionCodigo"
+              class="status-badge status-badge--secondary"
+              [ngClass]="statusClass(registro.EstadoAnulacionCodigo)">
+              {{ registro.EstadoAnulacion }}
+            </span>
           </td>
           <td>
             <strong>{{ registro.Intentos }} intento{{ registro.Intentos === 1 ? '' : 's' }}</strong>
@@ -156,10 +162,21 @@
               {{ registro.FechaRespuestaUtc | date:'dd/MM/yyyy HH:mm:ss' }}
             </small>
             <span *ngIf="!registro.CodigoRespuesta && !registro.MensajeRespuesta && !registro.UltimoError">—</span>
+            <div class="monitor-cancellation-response" *ngIf="registro.EstadoAnulacionCodigo">
+              <strong>Anulación<span *ngIf="registro.CodigoRespuestaAnulacion"> · Código {{ registro.CodigoRespuestaAnulacion }}</span></strong>
+              <span *ngIf="registro.MensajeRespuestaAnulacion">{{ registro.MensajeRespuestaAnulacion }}</span>
+              <span class="monitor-error-text" *ngIf="registro.UltimoErrorAnulacion">{{ registro.UltimoErrorAnulacion }}</span>
+              <small *ngIf="registro.FechaRespuestaAnulacionUtc">
+                {{ registro.FechaRespuestaAnulacionUtc | date:'dd/MM/yyyy HH:mm:ss' }}
+              </small>
+            </div>
+            <small class="monitor-recommendation" *ngIf="registro.AccionRecomendada">
+              {{ registro.AccionRecomendada }}
+            </small>
           </td>
           <td>
             <button
-              *ngIf="registro.EstadoCodigo === 'ERROR' || registro.EstadoCodigo === 'RECHAZADO'"
+              *ngIf="registro.PuedeReintentar"
               mat-stroked-button
               color="primary"
               type="button"
@@ -169,6 +186,11 @@
               <mat-icon>replay</mat-icon>
               Reintentar
             </button>
+            <span
+              class="monitor-action-guidance"
+              *ngIf="registro.RequiereNuevoComprobante">
+              Emitir uno nuevo
+            </span>
           </td>
         </tr>
       </tbody>

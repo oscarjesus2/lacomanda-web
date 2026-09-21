@@ -39,4 +39,15 @@ export interface CpeEnvioMonitorRegistro {
   CodigoRespuesta?: string | null;
   MensajeRespuesta?: string | null;
   UltimoError?: string | null;
+  EstadoAnulacionCodigo?: string | null;
+  EstadoAnulacion?: string | null;
+  IntentosAnulacion: number;
+  FechaRespuestaAnulacionUtc?: string | null;
+  CodigoRespuestaAnulacion?: string | null;
+  MensajeRespuestaAnulacion?: string | null;
+  UltimoErrorAnulacion?: string | null;
+  PuedeReintentar: boolean;
+  OperacionReintento?: 'EMISION' | 'ANULACION' | null;
+  RequiereNuevoComprobante: boolean;
+  AccionRecomendada?: string | null;
 }

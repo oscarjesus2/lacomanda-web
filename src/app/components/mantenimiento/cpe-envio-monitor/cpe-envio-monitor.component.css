@@ -201,6 +201,28 @@
 .status-badge--warning { background: #fff1d4; color: #94610c !important; }
 .status-badge--info { background: #e8f1f8; color: #2e658d !important; }
 
+.status-badge--secondary {
+  margin-top: 6px !important;
+}
+
+.monitor-cancellation-response {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid #eadfd8;
+}
+
+.monitor-recommendation,
+.monitor-action-guidance {
+  display: block;
+  margin-top: 7px;
+  color: #8f3b21 !important;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
 .monitor-error-text {
   color: #a8231a !important;
 }
