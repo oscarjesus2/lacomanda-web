@@ -1364,14 +1364,14 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   electronicBilling: 'Facturación electrónica',
   fiscalDocumentsToCorrect: 'Comprobantes por corregir y reemitir',
   fiscalDocumentsToCorrectHint:
-    'Revisa la respuesta de SUNAT y resuelve cada comprobante rechazado.',
+    'Revisa la respuesta de SUNAT y resuelve los comprobantes rechazados de los últimos 45 días.',
   noFiscalDocumentsToCorrect: 'No hay comprobantes rechazados por corregir',
   fiscalDocumentsResolvedHint:
     'Los comprobantes resueltos desaparecen automáticamente de esta lista.',
   fiscalDocumentsPendingCount:
     '{{count}} comprobante(s) rechazado(s) requieren corrección',
   fiscalDocumentsNotificationHint:
-    'Abre la bandeja para revisar la respuesta de SUNAT y reemitir cada comprobante.',
+    'Abre la bandeja para revisar y reemitir los comprobantes rechazados de los últimos 45 días.',
   sunatResponse: 'Respuesta de SUNAT',
   noResponseDetail: 'SUNAT no devolvió un detalle adicional.',
   correctAndReissue: 'Corregir y reemitir',
