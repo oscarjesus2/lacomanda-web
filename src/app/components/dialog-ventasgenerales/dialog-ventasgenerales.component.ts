@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { VentaService } from '../../services/venta.service';
 import { NgxSpinnerService } from 'ngx-spinner';
@@ -25,8 +25,14 @@ import { ReprintFormatService } from 'src/app/services/reprint-format.service';
   templateUrl: './dialog-ventasgenerales.component.html',
   styleUrls: ['./dialog-ventasgenerales.component.css']
 })
-export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
+export class DialogVentasgeneralesComponent implements OnInit {
+  @ViewChild(MatPaginator)
+  set matPaginator(paginator: MatPaginator | undefined) {
+    this.paginator = paginator;
+    this.dataSource.paginator = paginator ?? null;
+  }
+
+  private paginator?: MatPaginator;
   ventas: VentasInterface[] = [];
   dataSource = new MatTableDataSource<VentasInterface>([]);
   columnDefs: Array<{
@@ -42,7 +48,7 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
   incluirVentasExpress = false;
   textoFiltro = '';
   campoSeleccionado = 'TipoDocumento';
-  procesando = false;
+  procesando = true;
   comprobantesHabilitados = false;
   correccionHabilitada = false;
   cuotaComprobantesAgotada = false;
@@ -91,10 +97,6 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
     this.loadVentas();
   }
 
-  ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
-  }
-
   loadVentas(): void {
     const soloTurnoAbierto = this.listarTodosLosTurnos ? 0 : 1;
     const incluirExpress = this.incluirVentasExpress
@@ -139,7 +141,7 @@ export class DialogVentasgeneralesComponent implements OnInit, AfterViewInit {
       });
     }
 
-    this.dataSource.paginator = this.paginator;
+    this.dataSource.paginator = this.paginator ?? null;
     this.paginator?.firstPage();
   }
 
