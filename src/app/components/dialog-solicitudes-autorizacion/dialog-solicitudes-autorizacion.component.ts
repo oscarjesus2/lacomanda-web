@@ -94,7 +94,7 @@ export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy
 
   abrirComprobantesFiscales(): void {
     this.dialog.open(DialogComprobantesFiscalesPendientesComponent, {
-      width: 'min(900px, 96vw)',
+      width: 'min(760px, 96vw)',
       maxWidth: '96vw',
     });
   }
