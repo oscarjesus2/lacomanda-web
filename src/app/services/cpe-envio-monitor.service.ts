@@ -32,10 +32,13 @@ export class CpeEnvioMonitorService {
     );
   }
 
-  reintentar(idVentas: number[]): Observable<ApiResponse<ReintentarEnviosCpeResultado>> {
+  reintentar(
+    idVentas: number[],
+    operacion: 'EMISION' | 'ANULACION',
+  ): Observable<ApiResponse<ReintentarEnviosCpeResultado>> {
     return this.http.post<ApiResponse<ReintentarEnviosCpeResultado>>(
       `${this.basePath}/reintentos`,
-      { IdVentas: idVentas },
+      { IdVentas: idVentas, Operacion: operacion },
     );
   }
 }

@@ -12,6 +12,10 @@
 .request-actions { display: flex; gap: 8px; }
 .email-preference { display: grid; gap: 4px; margin-top: 18px; padding-top: 14px; border-top: 1px solid #ead6c8; }
 .email-preference small { color: #7c7069; }
+.fiscal-notification { width: 100%; color: inherit; text-align: left; cursor: pointer; }
+.fiscal-notification:hover { border-color: #c94722; background: #fff3e9; }
+.fiscal-notification .request-actions { color: #9a1d08; }
+.section-title { margin: 22px 0 12px; color: #5a2015; font-size: 15px; text-transform: uppercase; letter-spacing: .06em; }
 @media (max-width: 700px) {
   .approval-dialog { width: auto; }
   .request-card { grid-template-columns: 1fr auto; }

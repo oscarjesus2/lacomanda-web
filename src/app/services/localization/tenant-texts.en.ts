@@ -1352,6 +1352,31 @@ export const EN_TEXTS = {
   portioning: 'Portioning',
   production: 'Production',
   timeTracking: 'Time tracking',
+  notificationCenter: 'Notifications',
+  notificationCenterHint:
+    'Review the actions that require your attention.',
+  notificationsShort: 'Notifications',
+  electronicBilling: 'Electronic billing',
+  fiscalDocumentsToCorrect: 'Documents to correct and reissue',
+  fiscalDocumentsToCorrectHint:
+    'Review SUNAT responses and resolve each rejected document individually.',
+  noFiscalDocumentsToCorrect: 'There are no rejected documents to correct',
+  fiscalDocumentsResolvedHint:
+    'Resolved documents disappear from this list automatically.',
+  fiscalDocumentsPendingCount:
+    '{{count}} rejected document(s) require correction',
+  fiscalDocumentsNotificationHint:
+    'Open the list to review the SUNAT response and reissue each document.',
+  sunatResponse: 'SUNAT response',
+  noResponseDetail: 'SUNAT did not return additional details.',
+  correctAndReissue: 'Correct and reissue',
+  correctAndReissueDocument: 'Correct and reissue document',
+  correctionReissueSameData: 'Reissue with the same sale data',
+  correctionReissueSameDataHint:
+    'Use this when the rejection was caused by an emitter calculation or configuration already fixed.',
+  confirmRejectedDocumentReissue: 'Reissue the rejected document?',
+  confirmRejectedDocumentReissueHint:
+    'The original will remain as evidence and a new document will be issued with the next available number. The sale, stock and payment will not be duplicated.',
 } as const;
 
 export type TenantTextKey = keyof typeof EN_TEXTS;

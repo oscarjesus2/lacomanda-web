@@ -50,6 +50,7 @@ import { SunatConfigurationComponent } from 'src/app/components/mantenimiento/su
 import { CpeEnvioMonitorComponent } from 'src/app/components/mantenimiento/cpe-envio-monitor/cpe-envio-monitor.component';
 import { PagoCuentaOnlineConfigurationComponent } from 'src/app/components/mantenimiento/pago-cuenta-online-configuration/pago-cuenta-online-configuration.component';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { UsuarioService } from 'src/app/services/usuario.service';
 
 @Component({
   selector: 'app-menu-ventas',
@@ -81,6 +82,7 @@ export class MenuVentasComponent implements OnInit {
     habilitadas: new Set<string>(),
   };
   private paisISO2 = '';
+  private esUsuarioSoporteLaComanda = false;
 
   /**
    * Ajustes comunes de los mantenimientos que caben en un diálogo acotado.
@@ -158,7 +160,7 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Configuración Inicial',      route: '/ventas/config-inicial',  icon: 'settings',  label: 'Config. inicial', titleKey: 'initialSetup',          labelKey: 'initialSetupShort' },
         { title: 'Configurar esta estación',   route: '/ventas/config-estacion', icon: 'computer',  label: 'Esta estación',   titleKey: 'configureThisStation',  labelKey: 'thisStation'       },
         { title: 'Facturación electrónica SUNAT', route: '/ventas/configuracion-sunat', icon: 'verified_user', label: 'Facturación electrónica', feature: C.OperacionComprobantes, soloPeru: true },
-        { title: 'Monitor de envíos SUNAT', route: '/ventas/monitor-envios-sunat', icon: 'outbox', label: 'Monitor SUNAT', monitorEnviosSunat: true, feature: C.OperacionComprobantes, soloPeru: true },
+        { title: 'Monitor de envíos SUNAT', route: '/ventas/monitor-envios-sunat', icon: 'outbox', label: 'Monitor SUNAT', monitorEnviosSunat: true, feature: C.OperacionComprobantes, soloPeru: true, soloSoporteLaComanda: true },
         { title: 'Cobro móvil de la cuenta', route: '/ventas/configuracion-pago-cuenta-online', icon: 'payments', label: 'Cobro móvil', feature: C.VentasPagoCuentaOnline, soloPagoMovil: true }
       ]
     }
@@ -173,12 +175,14 @@ export class MenuVentasComponent implements OnInit {
     private dataService: DataService,
     private licenciaTenantService: LicenciaTenantService,
     private configuracionService: ConfiguracionService,
+    private usuarioService: UsuarioService,
   ) { }
 
   itemsVisibles(section: any): any[] {
     return section.children.filter((item: any) =>
       this.cubiertoPorLicencia(item.feature) &&
       (!item.soloPeru || this.paisISO2 === 'PE') &&
+      (!item.soloSoporteLaComanda || this.esUsuarioSoporteLaComanda) &&
       (!item.soloPagoMovil || ['ES', 'PE'].includes(this.paisISO2)));
   }
 
@@ -686,6 +690,14 @@ export class MenuVentasComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.usuarioService.getUsuarioActual().subscribe({
+      next: response => {
+        this.esUsuarioSoporteLaComanda =
+          response.Data?.EsUsuarioSoporteLaComanda === true;
+      },
+      error: () => (this.esUsuarioSoporteLaComanda = false),
+    });
+
     this.licenciaTenantService
       .obtenerEstado()
       .subscribe(estado => (this.estadoLicencia = estado));

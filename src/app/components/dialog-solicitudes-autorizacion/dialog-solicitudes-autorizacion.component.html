@@ -2,10 +2,36 @@
   <button mat-icon-button class="close-button" [attr.aria-label]="'close' | tenantText" (click)="cerrar()">
     <mat-icon>close</mat-icon>
   </button>
-  <h2>{{ 'approvalRequests' | tenantText }}</h2>
-  <p class="subtitle">{{ 'approvalRequestsHint' | tenantText }}</p>
+  <h2>{{ 'notificationCenter' | tenantText }}</h2>
+  <p class="subtitle">{{ 'notificationCenterHint' | tenantText }}</p>
 
-  <div *ngIf="solicitudes.length === 0" class="empty-state">
+  <button
+    *ngIf="comprobantesFiscales.length > 0"
+    type="button"
+    class="request-card fiscal-notification"
+    (click)="abrirComprobantesFiscales()">
+    <div class="request-info">
+      <span class="request-type">{{ 'electronicBilling' | tenantText }}</span>
+      <h3>
+        {{
+          'fiscalDocumentsPendingCount'
+            | tenantText:{ count: comprobantesFiscales.length }
+        }}
+      </h3>
+      <p>{{ 'fiscalDocumentsNotificationHint' | tenantText }}</p>
+    </div>
+    <div class="request-actions">
+      <mat-icon>chevron_right</mat-icon>
+    </div>
+  </button>
+
+  <h3 *ngIf="solicitudes.length > 0" class="section-title">
+    {{ 'approvalRequests' | tenantText }}
+  </h3>
+
+  <div
+    *ngIf="solicitudes.length === 0 && comprobantesFiscales.length === 0"
+    class="empty-state">
     <mat-icon>notifications_none</mat-icon>
     <strong>{{ 'noPendingApprovalRequests' | tenantText }}</strong>
     <span>{{ 'windowUpdatesAutomatically' | tenantText }}</span>

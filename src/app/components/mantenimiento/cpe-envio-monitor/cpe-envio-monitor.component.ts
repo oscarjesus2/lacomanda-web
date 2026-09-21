@@ -22,7 +22,9 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
     { codigo: 'REINTENTO', nombre: 'En reintento' },
     { codigo: 'PROCESANDO', nombre: 'Procesando' },
     { codigo: 'ACEPTADO', nombre: 'Aceptado' },
+    { codigo: 'BAJA_ACEPTADA', nombre: 'Baja aceptada' },
     { codigo: 'RECHAZADO', nombre: 'Rechazado' },
+    { codigo: 'ANULACION_RECHAZADA', nombre: 'Anulación rechazada' },
     { codigo: 'ERROR', nombre: 'Error de envío' },
     { codigo: 'SIN_ENCOLAR', nombre: 'Sin encolar' },
   ];
@@ -64,15 +66,15 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
       return this.resultado.Registros;
     }
     return this.resultado.Registros.filter(
-      registro => registro.EstadoCodigo === this.estado,
+      registro => registro.EstadoCodigo === this.estado
+        || registro.EstadoAnulacionCodigo === this.estado
+        || (this.estado === 'RECHAZADO'
+          && registro.EstadoCodigo === 'RECHAZADO_DEFINITIVO'),
     );
   }
 
   get reintentables(): CpeEnvioMonitorRegistro[] {
-    return this.registros.filter(registro =>
-      registro.EstadoCodigo === 'ERROR'
-      || registro.EstadoCodigo === 'RECHAZADO'
-    );
+    return this.registros.filter(registro => registro.PuedeReintentar);
   }
 
   load(showError: boolean): void {
@@ -121,16 +123,15 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
 
   async reintentarUno(registro: CpeEnvioMonitorRegistro): Promise<void> {
     await this.reintentar(
-      [registro.IdVenta],
-      `¿Reintentar el envío de ${registro.NumeroDocumento}?`,
+      [registro],
+      `¿Reintentar ${registro.OperacionReintento === 'ANULACION' ? 'la anulación' : 'el envío'} de ${registro.NumeroDocumento}?`,
     );
   }
 
   async reintentarTodos(): Promise<void> {
-    const ids = this.reintentables.map(registro => registro.IdVenta);
     await this.reintentar(
-      ids,
-      `¿Reintentar los ${ids.length} comprobantes con error?`,
+      this.reintentables,
+      `¿Reintentar las ${this.reintentables.length} operaciones con error técnico?`,
     );
   }
 
@@ -153,10 +154,13 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
   }
 
   statusClass(code: string): string {
-    if (code === 'ACEPTADO') {
+    if (code === 'ACEPTADO' || code === 'BAJA_ACEPTADA') {
       return 'status-badge--success';
     }
-    if (code === 'RECHAZADO' || code === 'ERROR') {
+    if (code === 'RECHAZADO'
+      || code === 'RECHAZADO_DEFINITIVO'
+      || code === 'ANULACION_RECHAZADA'
+      || code === 'ERROR') {
       return 'status-badge--danger';
     }
     if (code === 'PENDIENTE_CIERRE' || code === 'REINTENTO') {
@@ -165,14 +169,17 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
     return 'status-badge--info';
   }
 
-  private async reintentar(ids: number[], titulo: string): Promise<void> {
-    if (this.reintentando || !ids.length) {
+  private async reintentar(
+    registros: CpeEnvioMonitorRegistro[],
+    titulo: string,
+  ): Promise<void> {
+    if (this.reintentando || !registros.length) {
       return;
     }
 
     const confirmado = await Notificar.confirmar({
       titulo,
-      detalle: 'Comprueba antes que los datos SUNAT estén corregidos. Solo se reencolarán comprobantes rechazados o con error que no tengan otro envío activo.',
+      detalle: 'Solo se reintentarán fallos técnicos sin respuesta fiscal concluyente. Los comprobantes rechazados por SUNAT requieren un nuevo correlativo.',
       textoConfirmar: 'Reintentar',
       textoCancelar: 'Cancelar',
     });
@@ -184,12 +191,24 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
     let encolados = 0;
     let omitidos = 0;
     try {
-      for (let inicio = 0; inicio < ids.length; inicio += 500) {
-        const response = await firstValueFrom(
-          this.service.reintentar(ids.slice(inicio, inicio + 500)),
-        );
-        encolados += response.Data?.Encolados ?? 0;
-        omitidos += response.Data?.Omitidos ?? 0;
+      const operaciones: Array<'EMISION' | 'ANULACION'> = [
+        'EMISION',
+        'ANULACION',
+      ];
+      for (const operacion of operaciones) {
+        const ids = registros
+          .filter(registro => registro.OperacionReintento === operacion)
+          .map(registro => registro.IdVenta);
+        for (let inicio = 0; inicio < ids.length; inicio += 500) {
+          const response = await firstValueFrom(
+            this.service.reintentar(
+              ids.slice(inicio, inicio + 500),
+              operacion,
+            ),
+          );
+          encolados += response.Data?.Encolados ?? 0;
+          omitidos += response.Data?.Omitidos ?? 0;
+        }
       }
 
       if (encolados > 0) {

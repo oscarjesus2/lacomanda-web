@@ -4,6 +4,7 @@ export enum TipoCorreccionVenta {
   Pagos = 1,
   Cliente = 2,
   TipoDocumento = 3,
+  Reemision = 5,
 }
 
 export interface ClienteCorreccionVenta {

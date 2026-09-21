@@ -67,15 +67,20 @@
 
     <div class="dialog-toolbar__footer">
       <div class="dialog-toolbar__status" role="status" aria-live="polite">
-        <mat-icon>receipt_long</mat-icon>
+        <mat-icon>{{ procesando ? 'hourglass_top' : 'receipt_long' }}</mat-icon>
         <span>
-          {{
-            (dataSource.data.length === 1 ? 'saleFound' : 'salesFound')
-              | tenantText:{ count: dataSource.data.length }
-          }}
-          <ng-container *ngIf="textoFiltro">
-            {{ 'fromTotal' | tenantText:{ count: ventas.length } }}
+          <ng-container *ngIf="procesando; else ventasEncontradas">
+            {{ 'loadingSales' | tenantText }}
           </ng-container>
+          <ng-template #ventasEncontradas>
+            {{
+              (dataSource.data.length === 1 ? 'saleFound' : 'salesFound')
+                | tenantText:{ count: dataSource.data.length }
+            }}
+            <ng-container *ngIf="textoFiltro">
+              {{ 'fromTotal' | tenantText:{ count: ventas.length } }}
+            </ng-container>
+          </ng-template>
         </span>
       </div>
 
@@ -116,6 +121,16 @@
 
   <div class="dialog-workspace-content">
     <div class="dialog-table-card">
+      <div
+        *ngIf="procesando"
+        class="dialog-table-state"
+        role="status"
+        aria-live="polite">
+        <mat-spinner diameter="38"></mat-spinner>
+        <strong>{{ 'loadingSales' | tenantText }}</strong>
+      </div>
+
+      <ng-container *ngIf="!procesando">
       <div class="dialog-table-wrapper--fill">
         <table
           mat-table
@@ -223,6 +238,7 @@
         [pageSizeOptions]="[5, 10, 20]"
         [attr.aria-label]="'salesPagination' | tenantText">
       </mat-paginator>
+      </ng-container>
     </div>
   </div>
 </div>

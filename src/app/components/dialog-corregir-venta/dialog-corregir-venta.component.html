@@ -9,7 +9,12 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>{{ 'correctIssuedSale' | tenantText }}</h2>
+  <h2>
+    {{
+      (origenRechazoFiscal ? 'correctAndReissueDocument' : 'correctIssuedSale')
+        | tenantText
+    }}
+  </h2>
 
   <div *ngIf="cargando" class="dialog-notice">
     <mat-icon>hourglass_top</mat-icon>
@@ -67,13 +72,29 @@
         class="form-row"
         [(ngModel)]="tipoCorreccion"
         (ngModelChange)="cambiarTipoCorreccion()">
-        <mat-radio-button class="dialog-option form-field" [value]="tipoPagos">
+        <mat-radio-button
+          *ngIf="!origenRechazoFiscal"
+          class="dialog-option form-field"
+          [value]="tipoPagos">
           <span class="dialog-option__content">
             <span class="dialog-option__title">
               {{ 'correctionPayments' | tenantText }}
             </span>
             <span class="dialog-option__hint">
               {{ 'correctionPaymentsHint' | tenantText }}
+            </span>
+          </span>
+        </mat-radio-button>
+        <mat-radio-button
+          *ngIf="origenRechazoFiscal"
+          class="dialog-option form-field"
+          [value]="tipoReemision">
+          <span class="dialog-option__content">
+            <span class="dialog-option__title">
+              {{ 'correctionReissueSameData' | tenantText }}
+            </span>
+            <span class="dialog-option__hint">
+              {{ 'correctionReissueSameDataHint' | tenantText }}
             </span>
           </span>
         </mat-radio-button>
@@ -211,7 +232,8 @@
         </div>
       </ng-container>
 
-      <ng-container *ngIf="tipoCorreccion !== tipoPagos">
+      <ng-container
+        *ngIf="tipoCorreccion === tipoCliente || tipoCorreccion === tipoDocumento">
         <div *ngIf="tipoCorreccion === tipoDocumento" class="form-row">
           <mat-form-field class="form-field">
             <mat-label>{{ 'targetDocumentType' | tenantText }}</mat-label>
@@ -275,7 +297,10 @@
       </ng-container>
 
       <mat-checkbox
-        *ngIf="esPeruOnline && tipoCorreccion !== tipoPagos"
+        *ngIf="
+          esPeruOnline
+          && (tipoCorreccion === tipoCliente || tipoCorreccion === tipoDocumento)
+        "
         class="dialog-option"
         [(ngModel)]="documentoOtorgado">
         <span class="dialog-option__content">
