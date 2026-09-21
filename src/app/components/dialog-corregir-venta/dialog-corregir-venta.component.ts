@@ -64,6 +64,7 @@ export class DialogCorregirVentaComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) private readonly data: {
       idVenta: number;
       origenRechazoFiscal?: boolean;
+      tipoCorreccionInicial?: TipoCorreccionVenta;
     },
   ) {
     this.origenRechazoFiscal = !!data.origenRechazoFiscal;
@@ -72,6 +73,8 @@ export class DialogCorregirVentaComponent implements OnInit {
   ngOnInit(): void {
     if (this.origenRechazoFiscal) {
       this.tipoCorreccion = TipoCorreccionVenta.Reemision;
+    } else if (this.data.tipoCorreccionInicial) {
+      this.tipoCorreccion = this.data.tipoCorreccionInicial;
     }
     this.cargar();
   }

@@ -23,6 +23,7 @@ describe('MenuVentasComponent por licencia', () => {
       null as any,
       licencia as any,
       null as any,
+      null as any,
     );
 
     (component as any).estadoLicencia = {

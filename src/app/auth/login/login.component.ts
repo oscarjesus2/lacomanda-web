@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { KeycloakAuthService } from 'src/app/services/auth/keycloak-auth.service';
@@ -20,6 +20,10 @@ import { EstacionTipoEnum } from 'src/app/enums/enum';
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { SesionUsuarioService } from 'src/app/services/sesion-usuario.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import {
+  ProcessingIndicatorHandle,
+  ProcessingIndicatorService,
+} from 'src/app/services/processing-indicator.service';
 import { Usuario } from 'src/app/models/usuario.models';
 import Swal from 'sweetalert2';
 import { firstValueFrom } from 'rxjs';
@@ -36,7 +40,7 @@ interface PendingLogin {
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
   appVersion  = version;
   isSubmitting = false;
   loginValid  = true;
@@ -68,10 +72,12 @@ export class LoginComponent implements OnInit {
    * también pueda leerla y mostrar la sucursal.
    */
   private static readonly SUCURSAL_COOKIE = 'lc_sucursal';
+  private loginProcessing?: ProcessingIndicatorHandle;
 
   constructor(
     private dialog: MatDialog,
     private spinnerService: NgxSpinnerService,
+    private processingIndicator: ProcessingIndicatorService,
     private fb: FormBuilder,
     private router: Router,
     private route: ActivatedRoute,
@@ -151,6 +157,10 @@ export class LoginComponent implements OnInit {
 
     // 5. Primera vez → mostrar el selector de sucursal.
     this.loadTenants();
+  }
+
+  ngOnDestroy(): void {
+    this.finalizarIndicadorLogin();
   }
 
   // ── Form ──────────────────────────────────────────────────────────────────
@@ -258,24 +268,38 @@ export class LoginComponent implements OnInit {
       return false;
     }
 
-    const pending = JSON.parse(pendingRaw) as PendingLogin;
+    let pending: PendingLogin;
+    try {
+      pending = JSON.parse(pendingRaw) as PendingLogin;
+    } catch {
+      localStorage.removeItem(LoginComponent.PENDING_LOGIN_KEY);
+      return false;
+    }
+
+    this.aplicarCulturaSucursal(pending.Cultura);
     this.spinnerService.show();
+    this.iniciarIndicadorLogin();
 
     try {
       const tokens = await this.keycloak.completeLogin(pending.TenantId);
       localStorage.removeItem(LoginComponent.PENDING_LOGIN_KEY);
 
       if (!tokens) {
-        this.spinnerService.hide();
+        this.finalizarIndicadorLogin();
         this.loadTenants();
         return false;
       }
 
+      this.actualizarIndicadorLogin(
+        this.textCatalog.get('preparingSessionTitle'),
+        this.textCatalog.get('preparingSessionMessage'),
+        'verified_user',
+      );
       await this.completarSesion(tokens, pending);
       return true;
     } catch {
       localStorage.removeItem(LoginComponent.PENDING_LOGIN_KEY);
-      this.spinnerService.hide();
+      this.finalizarIndicadorLogin();
       this.loginValid = false;
       this.notificationService.showError('No se pudo completar el inicio de sesión. Inténtalo de nuevo.');
       this.loadTenants();
@@ -303,14 +327,14 @@ export class LoginComponent implements OnInit {
     const hasRole = isAdmin || isCaja || isMozo;
 
     if (!hasRole) {
-      this.spinnerService.hide();
+      this.finalizarIndicadorLogin();
       this.notificationService.showWarning(this.textCatalog.get('noBusinessRole'));
       void this.rechazarSesionKeycloak(tokens, pending);
       return;
     }
 
     if (!this.CurrentIP && !isAdmin) {
-      this.spinnerService.hide();
+      this.finalizarIndicadorLogin();
       void Swal.fire({
         title: this.textCatalog.get('stationNotConfigured'),
         text: this.textCatalog.get('stationIdentifierMissing'),
@@ -331,6 +355,11 @@ export class LoginComponent implements OnInit {
       pending.Cultura,
     );
     this.storageService.setCurrentSession(session);
+    this.actualizarIndicadorLogin(
+      this.textCatalog.get('preparingSessionTitle'),
+      this.textCatalog.get('preparingSessionMessage'),
+      'manage_accounts',
+    );
     try {
       await this.sesionUsuario.registrarAhora();
     } catch (error) {
@@ -340,10 +369,13 @@ export class LoginComponent implements OnInit {
     this.inicializarCulturaUsuario(session, usuario);
 
     if (this.CurrentIP) {
+      this.actualizarIndicadorLogin(
+        this.textCatalog.get('detectingStationTitle'),
+        this.textCatalog.get('detectingStationMessage'),
+        'computer',
+      );
       this.estacionService.getAll().subscribe({
         next: (estResp) => {
-          this.spinnerService.hide();
-
           const estaciones = estResp?.Data ?? [];
           const estacion   = estaciones.find(e => e.IdentificadorUnico === this.CurrentIP);
 
@@ -359,9 +391,9 @@ export class LoginComponent implements OnInit {
           this.storageService.setCurrentSession(session);
 
           if (estacion.Tipo === EstacionTipoEnum.CAJA) {
-            this.router.navigateByUrl('/caja');
+            void this.navegarTrasLogin('/caja');
           } else if (estacion.Tipo === EstacionTipoEnum.MOZO) {
-            this.router.navigateByUrl('/mozo');
+            void this.navegarTrasLogin('/mozo');
           } else {
             this.ensureConfigThenNavigate(
               this.returnUrlSeguro(pending.ReturnUrl) ?? '/dashboard',
@@ -369,7 +401,7 @@ export class LoginComponent implements OnInit {
           }
         },
         error: (error) => {
-          this.spinnerService.hide();
+          this.finalizarIndicadorLogin();
           this.storageService.removeCurrentSession();
           if (error?.status === 402) {
             return;
@@ -380,7 +412,6 @@ export class LoginComponent implements OnInit {
       });
 
     } else {
-      this.spinnerService.hide();
       this.ensureConfigThenNavigate(
         this.returnUrlSeguro(pending.ReturnUrl) ?? '/dashboard',
       );
@@ -397,6 +428,7 @@ export class LoginComponent implements OnInit {
     tokens: { refreshToken: string; idToken?: string },
     pending: PendingLogin,
   ): Promise<void> {
+    this.finalizarIndicadorLogin();
     this.storageService.removeCurrentSession();
     try {
       await firstValueFrom(
@@ -458,12 +490,17 @@ export class LoginComponent implements OnInit {
 
   private ensureConfigThenNavigate(targetUrl: string): void {
     this.spinnerService.show();
+    this.actualizarIndicadorLogin(
+      this.textCatalog.get('loadingRestaurantTitle'),
+      this.textCatalog.get('loadingRestaurantMessage'),
+      'storefront',
+    );
     this.configService.get().subscribe({
       next: (cfg) => {
-        this.spinnerService.hide();
         if (this.isConfigValid(cfg)) {
-          this.router.navigateByUrl(targetUrl);
+          void this.navegarTrasLogin(targetUrl);
         } else {
+          this.finalizarIndicadorLogin();
           const dialogRef = this.dialog.open(ConfiguracionInicialComponent, {
             width: '920px',
             disableClose: true,
@@ -479,7 +516,7 @@ export class LoginComponent implements OnInit {
         }
       },
       error: () => {
-        this.spinnerService.hide();
+        this.finalizarIndicadorLogin();
         this.logoutAndReturnToLogin();
       }
     });
@@ -495,8 +532,63 @@ export class LoginComponent implements OnInit {
   }
 
   private logoutAndReturnToLogin(): void {
+    this.finalizarIndicadorLogin();
     try { this.storageService.logout?.(); } catch {}
     this.router.navigateByUrl('/iniciar-sesion');
+  }
+
+  private iniciarIndicadorLogin(): void {
+    const options = {
+      title: this.textCatalog.get('validatingLoginTitle'),
+      message: this.textCatalog.get('validatingLoginMessage'),
+      hint: this.textCatalog.get('loginProcessingHint'),
+      icon: 'login',
+    };
+
+    if (this.loginProcessing) {
+      this.loginProcessing.update(options);
+      return;
+    }
+
+    this.loginProcessing = this.processingIndicator.begin(options);
+  }
+
+  private actualizarIndicadorLogin(
+    title: string,
+    message: string,
+    icon: string,
+  ): void {
+    if (!this.loginProcessing) {
+      this.loginProcessing = this.processingIndicator.begin({
+        title,
+        message,
+        hint: this.textCatalog.get('loginProcessingHint'),
+        icon,
+      });
+      return;
+    }
+
+    this.loginProcessing.update({ title, message, icon });
+  }
+
+  private finalizarIndicadorLogin(): void {
+    this.loginProcessing?.close();
+    this.loginProcessing = undefined;
+    this.spinnerService.hide();
+  }
+
+  private async navegarTrasLogin(targetUrl: string): Promise<void> {
+    this.actualizarIndicadorLogin(
+      this.textCatalog.get('openingWorkspaceTitle'),
+      this.textCatalog.get('openingWorkspaceMessage'),
+      'space_dashboard',
+    );
+
+    try {
+      await this.router.navigateByUrl(targetUrl);
+    } finally {
+      this.finalizarIndicadorLogin();
+    }
   }
 
   // ── PWA ───────────────────────────────────────────────────────────────────
