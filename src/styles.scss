@@ -5071,3 +5071,79 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
   .booking-section-title { align-items: flex-start; flex-direction: column; gap: 3px; }
   .booking-form__wide { grid-column: auto; }
 }
+
+/* Los diálogos de trabajo comparten un mismo comportamiento en teléfono:
+   el panel se desplaza verticalmente y cada tabla conserva su propio scroll
+   horizontal. Así los filtros largos nunca dejan la tabla fuera de alcance. */
+@media (max-width: 600px) {
+  .cdk-overlay-pane {
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - 16px) !important;
+  }
+
+  .mat-mdc-dialog-surface {
+    max-height: calc(100dvh - 16px) !important;
+  }
+
+  .cdk-global-overlay-wrapper .mant-panel > h2 {
+    padding-right: 56px;
+    overflow-wrap: anywhere;
+    font-size: clamp(1rem, 5vw, 1.3rem);
+    letter-spacing: 0.06em;
+  }
+
+  .cdk-overlay-pane.dialog-window--workspace {
+    width: calc(100vw - 16px) !important;
+    height: calc(100dvh - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - 16px) !important;
+  }
+
+  .dialog-window--workspace .mat-mdc-dialog-surface {
+    height: 100% !important;
+  }
+
+  .cdk-global-overlay-wrapper .dialog-panel--workspace:not(.dialog-panel--autoheight) {
+    height: 100% !important;
+    min-height: 0;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dialog-panel--workspace > .dialog-workspace-content {
+    flex: 0 0 auto;
+    height: clamp(260px, 52dvh, 480px);
+    min-height: 260px;
+  }
+
+  .dialog-toolbar__filters,
+  .dialog-toolbar__filters--fluid,
+  .dialog-toolbar__filters--single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dialog-toolbar__footer,
+  .dialog-actions {
+    flex-wrap: wrap;
+  }
+
+  .dialog-table-wrapper--fill {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mant-table-card {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mat-mdc-paginator-container {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-inline: 8px !important;
+  }
+}
