@@ -199,7 +199,11 @@
 }
 
 @media (max-width: 480px) {
-  .sales-filter-grid,
-  .sales-summary { grid-template-columns: 1fr; }
+  .sales-filter-grid { grid-template-columns: 1fr; }
   .sales-filter-grid__search { grid-column: auto; }
+  .sales-filter-panel__footer mat-checkbox { flex-basis: 100%; }
+  .sales-filter-panel__footer button { flex: 1 1 auto; }
+  .sales-summary { gap: 6px; }
+  .sales-summary__item { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .sales-summary__item span { white-space: normal; line-height: 1.2; }
 }

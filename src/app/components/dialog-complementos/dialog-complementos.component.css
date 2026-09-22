@@ -294,3 +294,28 @@ button.cancelar:hover { background-color: var(--color-bg); }
   flex: 1;
   min-width: 0;
 }
+
+@media (max-width: 600px) {
+  .complementos-panel {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .columnas {
+    flex: 0 0 auto;
+    flex-direction: column;
+    min-height: auto;
+    gap: 12px;
+  }
+
+  .complementos-configurados,
+  .producto-info {
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  .complementos-configurados { max-height: 240px; }
+  .grid-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .producto-cantidad-linea { flex-wrap: wrap; gap: 10px; }
+  .limited-height-table { flex: 0 0 auto; max-height: 260px; overflow: auto; }
+}
