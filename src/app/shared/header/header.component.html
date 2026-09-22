@@ -29,9 +29,14 @@
     </div>
 
     <!-- Sin turno -->
-    <div class="app-header__chip app-header__chip--inactive" *ngIf="!turnoActivo">
+    <div class="app-header__chip app-header__chip--inactive" *ngIf="!turnoActivo"
+         [matTooltip]="'noShiftForStation' | tenantText">
       <mat-icon class="app-header__chip-icon">schedule</mat-icon>
-      <span>{{ 'noShift' | tenantText }}</span>
+      <span *ngIf="cajasConTurnoAbierto === 0">{{ 'noShiftForStation' | tenantText }}</span>
+      <span *ngIf="cajasConTurnoAbierto === 1">{{ 'oneRegisterWithShift' | tenantText }}</span>
+      <span *ngIf="cajasConTurnoAbierto > 1">
+        {{ 'registersWithShift' | tenantText:{ count: cajasConTurnoAbierto } }}
+      </span>
     </div>
 
     <!-- Stats (solo cuando hay turno) -->
