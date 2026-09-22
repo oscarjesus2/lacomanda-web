@@ -97,6 +97,15 @@
   color: var(--color-warn);
 }
 
+.rcont-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -6px 0 16px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
 /* ---------- Acción ---------- */
 .rcont-actions {
   display: flex;

@@ -19,6 +19,7 @@ import { SesionUsuarioService } from 'src/app/services/sesion-usuario.service';
 import Swal from 'sweetalert2';
 import { ControlHorarioComponent } from 'src/app/components/control-horario/control-horario.component';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
+import { CajaService } from 'src/app/services/caja.service';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 
 @Component({
@@ -49,6 +50,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   nombreSucursal = '';
   turnoNumero   = 0;
   turnoActivo   = false;
+  cajasConTurnoAbierto = 0;
 
   // ── Config (moneda) ────────────────────────────────────────
   config: Configuracion | null = null;
@@ -113,6 +115,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private storageService: StorageService,
     private dialogTurno: MatDialog,
     private TurnoService: TurnoService,
+    private cajaService: CajaService,
     private dataService: DataService,
     private ventaService: VentaService,
     private configuracionService: ConfiguracionService,
@@ -145,8 +148,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   // ── Turno ──────────────────────────────────────────────────
   private checkTurno(): void {
+    // El turno de la cabecera pertenece a esta estación; otras cajas pueden
+    // tener turnos abiertos sin que exista uno asociado a su IP.
+    this.cajaService.getAllCaja(true).subscribe({
+      next: response => {
+        this.cajasConTurnoAbierto = (response.Data ?? [])
+          .filter(caja => !!caja.TurnoAbierto).length;
+      },
+      error: () => { this.cajasConTurnoAbierto = 0; },
+    });
     const ip = this.storageService.getCurrentIP();
-    if (!ip) return;
+    if (!ip) {
+      this.turnoActivo = false;
+      return;
+    }
 
     this.TurnoService.ObtenerTurnoByIP(ip).subscribe({
       next: (data) => {
@@ -251,7 +266,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       hasBackdrop: true,
       width: '560px',
       maxWidth: '95vw'
-    });
+    }).afterClosed().subscribe(() => this.checkTurno());
   }
 
   OpenControlHorario(): void {
@@ -352,6 +367,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     // Refrescar stats cada 2 minutos
     this.statsInterval = setInterval(() => {
+      this.checkTurno();
       if (this.turnoActivo && this.turnoAbierto?.IdTurno) {
         this.loadTurnoStats(this.turnoAbierto.IdTurno);
       }

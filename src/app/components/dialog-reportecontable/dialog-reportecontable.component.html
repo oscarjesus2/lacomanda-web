@@ -45,30 +45,44 @@
   <div class="rcont-grid">
     <mat-form-field class="form-field" appearance="fill">
       <mat-label>{{ 'documentType' | tenantText }}</mat-label>
-      <mat-select [(ngModel)]="tipoDocumentoSeleccionado" name="tipoDoc">
+      <mat-select [(ngModel)]="tipoDocumentoSeleccionado" name="tipoDoc"
+                  (selectionChange)="onTipoDocumentoChange()"
+                  [disabled]="cargandoFiltros || !!errorFiltros">
         <mat-option value="0">{{ 'allMasculine' | tenantText }}</mat-option>
-        <mat-option *ngFor="let opcion of listTipoDocumentoVentas" [value]="opcion.IdTipoDoc">
-          {{ opcion.Descripcion }}
+        <mat-option *ngFor="let opcion of tiposDocumento" [value]="opcion.id">
+          {{ opcion.descripcion }}
         </mat-option>
       </mat-select>
     </mat-form-field>
 
     <mat-form-field class="form-field" appearance="fill" *ngIf="mostrarSerie">
       <mat-label>{{ 'series' | tenantText }}</mat-label>
-      <mat-select [(ngModel)]="serieSeleccionada" name="serie">
+      <mat-select [(ngModel)]="serieSeleccionada" name="serie"
+                  [disabled]="cargandoFiltros || !!errorFiltros">
         <mat-option value="0">{{ 'allFeminine' | tenantText }}</mat-option>
-        <mat-option *ngFor="let opcion of listSeries" [value]="opcion.Serie">
-          {{ opcion.Descripcion }}
+        <mat-option *ngFor="let serie of seriesDisponibles" [value]="serie">
+          {{ serie }}
         </mat-option>
       </mat-select>
     </mat-form-field>
   </div>
 
+  <p class="rcont-status" *ngIf="cargandoFiltros">
+    <mat-icon class="rcont-spin">sync</mat-icon> {{ 'loadingAccountingFilters' | tenantText }}
+  </p>
+  <p class="rcont-error" *ngIf="errorFiltros">
+    <mat-icon>error_outline</mat-icon> {{ errorFiltros }}
+  </p>
+  <p class="rcont-status" *ngIf="!cargandoFiltros && !errorFiltros">
+    {{ (paisISO2 === 'ES' ? 'accountingEs' : paisISO2 === 'PE' ? 'accountingPe' : 'accountingOther') | tenantText }}
+    · {{ 'accountingInformational' | tenantText }}
+  </p>
+
   <!-- Acción -->
   <div class="rcont-actions">
     <button mat-raised-button class="rcont-export" type="button"
             (click)="validarFormularioExport()"
-            [disabled]="!rangoValido || exportando">
+            [disabled]="!rangoValido || cargandoFiltros || !!errorFiltros || exportando">
       <mat-icon [class.rcont-spin]="exportando">{{ exportando ? 'sync' : 'download' }}</mat-icon>
       {{ (exportando ? 'exporting' : 'exportToExcel') | tenantText }}
     </button>

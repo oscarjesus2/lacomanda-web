@@ -1,3 +1,5 @@
+import { ReporteContableImpuesto } from './reporte-contable-impuesto.interface';
+
 export interface VentasInterface {
     IdVenta: number;
     IdCaja: number;
@@ -45,7 +47,7 @@ export interface VentasInterface {
     FechaReg: Date; 
 
   }
-  
+
 export interface InformeContableInterface {
     IdVenta: number;
     Fecha: string;
@@ -62,6 +64,9 @@ export interface InformeContableInterface {
     Servicio: number;
     ICBPER: number;
     Total: number;
+    TotalDocumento: number;
+    DiferenciaDesglose: number;
+    DesgloseImpuestos: ReporteContableImpuesto[];
     EstadoDescripcion: string;
     EstadoSunat: string;
     DocRef: string;
