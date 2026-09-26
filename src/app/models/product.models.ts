@@ -1,4 +1,5 @@
 import { ProductoAreaImpresion } from "./producto-area-impresion.models";
+import { ProductoPresentacionCompra } from "./articulo.models";
 
 export class Producto {
 
@@ -41,6 +42,8 @@ export class Producto {
     public IdUnidadReceta: number | null;
     public FactorReceta: number;
     public IdGrupoCompra: number | null;
+    public IdAreaAlmacen: number | null;
+    public IdSubAreaAlmacenDescarga: number | null;
     public DescripcionCompra: string;
     public PrecioCompra: number;
     public StockMinimo: number;
@@ -48,6 +51,7 @@ export class Producto {
     public Inventario: boolean;
     public ControlDirectoStock: boolean;
     public TieneImagen: boolean;
+    public PresentacionesCompra: ProductoPresentacionCompra[] = [];
     ProductoAreaImpresion?: ProductoAreaImpresion[];
 
     constructor(init?: Partial<Producto>) {

@@ -39,6 +39,12 @@ import {
   CartaIaProducto,
 } from 'src/app/models/importacion-carta-ia.models';
 import { integrarPrevisualizacionCarta } from './importacion-carta-preview.utils';
+import { AreaAlmacenService } from 'src/app/services/area-almacen.service';
+import { SubAreaAlmacenService } from 'src/app/services/sub-area-almacen.service';
+import { AreaAlmacen } from 'src/app/models/receta.models';
+import { SubAreaAlmacen } from 'src/app/models/almacen-maestro.models';
+import { Proveedor } from 'src/app/models/proveedor.models';
+import { ProveedorService } from 'src/app/services/proveedor.service';
 
 @Component({
   selector: 'app-producto-mantenimiento',
@@ -79,6 +85,11 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   grupos: Grupo[] = [];
   gruposAlmacen: Grupo[] = [];
   unidadesMedida: UnidadMedida[] = [];
+  areasAlmacen: AreaAlmacen[] = [];
+  subAreasAlmacen: SubAreaAlmacen[] = [];
+  proveedores: Proveedor[] = [];
+  almacenHabilitado = false;
+  usarSubAreaFija = false;
   impuestoPais: ImpuestoPais[] = [];
   seccionMenu: SeccionMenu[] = [];
 
@@ -115,7 +126,10 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     private unidadMedidaService: UnidadMedidaService,
     private importacionCartaIaService: ImportacionCartaIaService,
     private licenciaTenantService: LicenciaTenantService,
-    private processingIndicator: ProcessingIndicatorService
+    private processingIndicator: ProcessingIndicatorService,
+    private areaAlmacenService: AreaAlmacenService,
+    private subAreaAlmacenService: SubAreaAlmacenService,
+    private proveedorService: ProveedorService
   ) {}
 
   ngOnInit(): void {
@@ -123,6 +137,28 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     this.cargarAreasImpresion();
     this.cargarConfiguracion();
     this.cargarAccesoImportacionCartaIa();
+    this.cargarAccesoAlmacen();
+  }
+
+  private cargarAccesoAlmacen(): void {
+    this.licenciaTenantService
+      .tieneCaracteristica(CARACTERISTICAS_LICENCIA.AlmacenGestion)
+      .subscribe(habilitada => {
+        this.almacenHabilitado = habilitada;
+        if (!habilitada) {
+          this.areasAlmacen = [];
+          this.subAreasAlmacen = [];
+          return;
+        }
+
+        this.areaAlmacenService.listarActivas().subscribe(
+          response => this.areasAlmacen = response.Data || []
+        );
+        this.subAreaAlmacenService.listar().subscribe(
+          response => this.subAreasAlmacen = (response.Data || [])
+            .filter(item => item.Activo)
+        );
+      });
   }
 
   ngOnDestroy(): void {
@@ -182,6 +218,9 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     this.grupoService.getGrupos('P').subscribe(r => { if (r.Success) this.grupos = r.Data; });
     this.grupoService.getGrupos('A').subscribe(r => { if (r.Success) this.gruposAlmacen = r.Data; });
     this.unidadMedidaService.listar().subscribe(r => { if (r.Success) this.unidadesMedida = r.Data || []; });
+    this.proveedorService.listar().subscribe(r => {
+      if (r.Success) this.proveedores = (r.Data || []).filter(p => p.Activo);
+    });
     this.impuestoPaisService.getImpuestoPais().subscribe(r => {
       if (r.Success) {
         this.impuestoPais = r.Data || [];
@@ -239,6 +278,26 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     }
   }
 
+  cambiarAreaAlmacen(): void {
+    if (!this.subAreasProducto().some(
+      item => item.IdSubAreaAlmacen === this.p.IdSubAreaAlmacenDescarga
+    )) {
+      this.p.IdSubAreaAlmacenDescarga = null;
+    }
+  }
+
+  cambiarModoDescarga(): void {
+    if (!this.usarSubAreaFija) {
+      this.p.IdSubAreaAlmacenDescarga = null;
+    }
+  }
+
+  subAreasProducto(): SubAreaAlmacen[] {
+    return this.subAreasAlmacen.filter(
+      item => item.IdAreaAlmacen === this.p.IdAreaAlmacen
+    );
+  }
+
   toggleConfiguracionAvanzada(): void {
     this.mostrarConfiguracionAvanzada =
       !this.mostrarConfiguracionAvanzada;
@@ -254,6 +313,24 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
       this.p.IdUnidadReceta = null;
       this.p.FactorReceta = 1;
     }
+    this.p.PresentacionesCompra = (this.p.PresentacionesCompra || [])
+      .filter(p => p.IdUnidadCompra !== this.p.IdUnidadStock);
+  }
+
+  agregarPresentacionCompra(): void {
+    this.p.PresentacionesCompra = [
+      ...(this.p.PresentacionesCompra || []),
+      {
+        IdProveedor: null,
+        IdUnidadCompra: null,
+        FactorConversionStock: 1
+      }
+    ];
+  }
+
+  quitarPresentacionCompra(index: number): void {
+    this.p.PresentacionesCompra.splice(index, 1);
+    this.p.PresentacionesCompra = [...this.p.PresentacionesCompra];
   }
 
   cambiarUnidadConsumo(): void {
@@ -567,11 +644,14 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     this.limpiarEdicionImagen();
     this.p = {
       ...row,
+      PresentacionesCompra: (row.PresentacionesCompra || [])
+        .map(presentacion => ({ ...presentacion })),
       ControlDirectoStock:
         row.ControlDirectoStock ??
         !!(row.IdUnidadStock ||
            row.IdGrupoCompra)
     };
+    this.usarSubAreaFija = !!row.IdSubAreaAlmacenDescarga;
     // El panel es solo visual: editar con él plegado conserva los datos.
     this.configuracionAvanzadaHabilitada = true;
     this.mostrarConfiguracionAvanzada = false;
@@ -707,10 +787,11 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     if (this.configuracionAvanzadaHabilitada &&
         this.p.ControlDirectoStock) {
       if (!this.p.IdGrupoCompra ||
-          !this.p.IdUnidadStock) {
+          !this.p.IdUnidadStock ||
+          !this.p.IdAreaAlmacen) {
         Swal.fire(
           'Validación',
-          'Los productos sin receta necesitan grupo de almacén y unidad de compra/stock.',
+          'Los productos sin receta necesitan grupo, unidad de compra/stock y área de almacén.',
           'info'
         );
         return;
@@ -741,6 +822,17 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
         Swal.fire(
           'Validación',
           'Indique cuántas unidades de consumo contiene cada unidad de compra.',
+          'info'
+        );
+        return;
+      }
+
+      if ((this.p.PresentacionesCompra || []).some(p =>
+        !p.IdUnidadCompra || p.FactorConversionStock <= 0
+      )) {
+        Swal.fire(
+          'Validación',
+          'Complete la unidad y el factor de todas las presentaciones de compra.',
           'info'
         );
         return;
@@ -793,12 +885,16 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     this.p.IdUnidadReceta = null;
     this.p.FactorReceta = 1;
     this.p.IdGrupoCompra = null;
+    this.p.IdAreaAlmacen = null;
+    this.p.IdSubAreaAlmacenDescarga = null;
+    this.usarSubAreaFija = false;
     this.p.DescripcionCompra = '';
     this.p.PrecioCompra = 0;
     this.p.StockMinimo = 0;
     this.p.StockMaximo = 0;
     this.p.Inventario = false;
     this.p.ControlDirectoStock = false;
+    this.p.PresentacionesCompra = [];
     this.selectedAreas = [];
     this.seleccionarImpuestoGeneralSiCorresponde();
   }
@@ -852,11 +948,15 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     this.p.IdUnidadReceta = null;
     this.p.FactorReceta = 1;
     this.p.IdGrupoCompra = null;
+    this.p.IdAreaAlmacen = null;
+    this.p.IdSubAreaAlmacenDescarga = null;
+    this.usarSubAreaFija = false;
     this.p.DescripcionCompra = '';
     this.p.PrecioCompra = 0;
     this.p.StockMinimo = 0;
     this.p.StockMaximo = 0;
     this.p.Inventario = false;
+    this.p.PresentacionesCompra = [];
   }
 
   private seleccionarImpuestoGeneralSiCorresponde(): void {

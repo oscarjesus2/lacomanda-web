@@ -341,6 +341,7 @@
             <mat-select
               name="proveedor"
               [(ngModel)]="formulario.IdProveedor"
+              (selectionChange)="cambiarProveedor()"
               required
               [disabled]="soloLectura"
             >
@@ -556,9 +557,34 @@
               (selectionChange)="seleccionarArticulo()"
             >
               <mat-option *ngFor="let articulo of articulosParaAgregar" [value]="articulo.IdProducto">
-                {{ articulo.Descripcion }} · {{ articulo.UnidadMedida }}
+                {{ articulo.Descripcion }} · stock en {{ articulo.UnidadMedida }}
               </mat-option>
             </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" *ngIf="articuloAgregar">
+            <mat-label>Presentación de compra</mat-label>
+            <mat-select
+              name="presentacionAgregar"
+              [(ngModel)]="idPresentacionAgregar"
+              (selectionChange)="actualizarPresentacionAgregar()"
+            >
+              <mat-option
+                *ngFor="let presentacion of presentacionesDisponibles(articuloAgregar)"
+                [value]="presentacion.IdPresentacionCompra"
+              >
+                {{ presentacion.UnidadCompra }}
+                <ng-container *ngIf="!presentacion.EsUnidadBase">
+                  · {{ presentacion.FactorConversionStock | number:'1.0-4' }}
+                  {{ articuloAgregar.UnidadMedida }}
+                </ng-container>
+              </mat-option>
+            </mat-select>
+            <mat-hint>
+              Cada unidad comprada ingresará
+              {{ presentacionAgregar?.FactorConversionStock || 1 }}
+              {{ articuloAgregar.UnidadMedida }} al stock.
+            </mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="fill">
@@ -661,7 +687,7 @@
                       </span>
                     </mat-select-trigger>
                     <mat-option *ngFor="let articulo of articulosParaAgregar" [value]="articulo.IdProducto">
-                      {{ articulo.Descripcion }} · {{ articulo.UnidadMedida }}
+                      {{ articulo.Descripcion }} · stock en {{ articulo.UnidadMedida }}
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
@@ -669,6 +695,33 @@
                   <div class="purchase-entry-line__display purchase-entry-line__article">
                     <span>Artículo</span>
                     <strong>{{ linea.Producto || 'Sin artículo asociado' }}</strong>
+                  </div>
+                </ng-template>
+
+                <mat-form-field
+                  appearance="fill"
+                  *ngIf="!soloLectura; else presentacionLectura"
+                >
+                  <mat-label>Presentación</mat-label>
+                  <mat-select
+                    [(ngModel)]="linea.IdPresentacionCompra"
+                    [ngModelOptions]="{standalone: true}"
+                    (selectionChange)="actualizarPresentacionLinea(linea)"
+                  >
+                    <mat-option
+                      *ngFor="let presentacion of presentacionesDisponibles(
+                        articuloLinea(linea)
+                      )"
+                      [value]="presentacion.IdPresentacionCompra"
+                    >
+                      {{ presentacion.UnidadCompra }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <ng-template #presentacionLectura>
+                  <div class="purchase-entry-line__display">
+                    <span>Presentación</span>
+                    <strong>{{ linea.UnidadMedida }}</strong>
                   </div>
                 </ng-template>
 
@@ -692,8 +745,11 @@
                 </ng-template>
 
                 <div class="purchase-entry-line__display">
-                  <span>Unidad</span>
-                  <strong>{{ linea.UnidadMedida || 'Por definir' }}</strong>
+                  <span>Ingreso al stock</span>
+                  <strong>
+                    {{ cantidadStockLinea(linea) | number:'1.0-4' }}
+                    {{ linea.UnidadStock || 'Por definir' }}
+                  </strong>
                 </div>
 
                 <mat-form-field appearance="fill" *ngIf="!soloLectura; else importeLectura">

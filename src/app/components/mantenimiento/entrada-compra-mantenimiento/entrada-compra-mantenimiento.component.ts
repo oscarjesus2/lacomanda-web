@@ -11,6 +11,7 @@ import {
   EntradaCompraGuardar,
   EntradaCompraImpuesto,
   EntradaCompraLineaGuardar,
+  EntradaCompraPresentacion,
   EntradaCompraPago,
   EntradaCompraPagoGuardar,
   EntradaCompraResumen,
@@ -33,6 +34,8 @@ interface LineaCompraEdicion
   IdProducto: number | null;
   Producto: string;
   UnidadMedida: string;
+  UnidadStock: string;
+  FactorConversionStock: number;
   Inventariable: boolean;
   OrigenIa?: boolean;
   CodigoOriginal?: string;
@@ -90,6 +93,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   };
 
   idArticuloAgregar: number | null = null;
+  idPresentacionAgregar: number | null = null;
   cantidadAgregar = 1;
   importeAgregar = 0;
   idSubAreaAgregar: number | null = null;
@@ -279,6 +283,9 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     if (!articulo) {
       linea.Producto = '';
       linea.UnidadMedida = '';
+      linea.UnidadStock = '';
+      linea.FactorConversionStock = 1;
+      linea.IdPresentacionCompra = null;
       linea.Inventariable = false;
       linea.IdSubAreaAlmacen = null;
       linea.Impuestos = [];
@@ -287,7 +294,8 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     }
 
     linea.Producto = articulo.Descripcion;
-    linea.UnidadMedida = articulo.UnidadMedida;
+    linea.IdPresentacionCompra = null;
+    this.actualizarPresentacionLinea(linea);
     linea.Inventariable = articulo.Inventariable;
     linea.Impuestos = [...articulo.Impuestos];
     linea.IdSubAreaAlmacen = articulo.Inventariable
@@ -348,15 +356,16 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       this.importeAgregar = 0;
       this.idSubAreaAgregar = null;
       this.impuestosAgregar = [];
+      this.idPresentacionAgregar = null;
       return;
     }
 
-    this.importeAgregar = Number(
-      (articulo.PrecioCompra * this.cantidadAgregar).toFixed(2)
-    );
     const detalleOrigen = this.notaOrigen?.Detalles.find(
       detalle => detalle.IdProducto === articulo.IdProducto
     );
+    this.idPresentacionAgregar =
+      detalleOrigen?.IdPresentacionCompra ?? null;
+    this.actualizarImporteSugerido();
     this.impuestosAgregar = detalleOrigen
       ? [...detalleOrigen.Impuestos]
       : [...articulo.Impuestos];
@@ -371,12 +380,17 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
 
   actualizarImporteSugerido(): void {
     const articulo = this.articuloAgregar;
-    if (!articulo || this.cantidadAgregar <= 0) {
+    const presentacion = this.presentacionAgregar;
+    if (!articulo || !presentacion || this.cantidadAgregar <= 0) {
       return;
     }
     this.importeAgregar = Number(
-      (articulo.PrecioCompra * this.cantidadAgregar).toFixed(2)
+      (presentacion.PrecioCompraSugerido * this.cantidadAgregar).toFixed(2)
     );
+  }
+
+  actualizarPresentacionAgregar(): void {
+    this.actualizarImporteSugerido();
   }
 
   agregarLinea(): void {
@@ -417,7 +431,12 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     this.lineas.push({
       IdProducto: articulo.IdProducto,
       Producto: articulo.Descripcion,
-      UnidadMedida: articulo.UnidadMedida,
+      IdPresentacionCompra: this.idPresentacionAgregar,
+      UnidadMedida: this.presentacionAgregar?.UnidadCompra ||
+        articulo.UnidadMedida,
+      UnidadStock: articulo.UnidadMedida,
+      FactorConversionStock:
+        this.presentacionAgregar?.FactorConversionStock || 1,
       Inventariable: articulo.Inventariable,
       Cantidad: this.cantidadAgregar,
       Importe: this.importeAgregar,
@@ -451,6 +470,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         IdProducto: Number(linea.IdProducto),
         Cantidad: Number(linea.Cantidad),
         Importe: Number(linea.Importe),
+        IdPresentacionCompra: linea.IdPresentacionCompra,
         IdSubAreaAlmacen: linea.IdSubAreaAlmacen,
         Impuestos: [...linea.Impuestos]
       }))
@@ -850,6 +870,71 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     return articulos.filter(a => permitidos.has(a.IdProducto));
   }
 
+  get presentacionAgregar(): EntradaCompraPresentacion | undefined {
+    return this.presentacionesDisponibles(this.articuloAgregar).find(
+      p => p.IdPresentacionCompra === this.idPresentacionAgregar
+    );
+  }
+
+  presentacionesDisponibles(
+    articulo?: EntradaCompraArticulo
+  ): EntradaCompraPresentacion[] {
+    const proveedor = Number(this.formulario.IdProveedor || 0);
+    return (articulo?.Presentaciones || []).filter(p =>
+      !p.IdProveedor || p.IdProveedor === proveedor
+    );
+  }
+
+  articuloLinea(
+    linea: LineaCompraEdicion
+  ): EntradaCompraArticulo | undefined {
+    return this.catalogos?.Articulos.find(
+      articulo => articulo.IdProducto === linea.IdProducto
+    );
+  }
+
+  cambiarProveedor(): void {
+    for (const linea of this.lineas) {
+      const articulo = this.catalogos?.Articulos.find(
+        item => item.IdProducto === linea.IdProducto
+      );
+      if (!this.presentacionesDisponibles(articulo).some(p =>
+        p.IdPresentacionCompra === linea.IdPresentacionCompra
+      )) {
+        linea.IdPresentacionCompra = null;
+        this.actualizarPresentacionLinea(linea);
+      }
+    }
+    this.idPresentacionAgregar = null;
+    this.actualizarImporteSugerido();
+  }
+
+  actualizarPresentacionLinea(linea: LineaCompraEdicion): void {
+    const articulo = this.catalogos?.Articulos.find(
+      item => item.IdProducto === linea.IdProducto
+    );
+    const presentacion = this.presentacionesDisponibles(articulo).find(
+      p => p.IdPresentacionCompra === linea.IdPresentacionCompra
+    ) || this.presentacionesDisponibles(articulo)[0];
+    if (!articulo || !presentacion) {
+      linea.UnidadMedida = '';
+      linea.UnidadStock = '';
+      linea.FactorConversionStock = 1;
+      return;
+    }
+
+    linea.IdPresentacionCompra = presentacion.IdPresentacionCompra;
+    linea.UnidadMedida = presentacion.UnidadCompra;
+    linea.UnidadStock = articulo.UnidadMedida;
+    linea.FactorConversionStock = presentacion.FactorConversionStock;
+  }
+
+  cantidadStockLinea(linea: LineaCompraEdicion): number {
+    return Number((
+      linea.Cantidad * linea.FactorConversionStock
+    ).toFixed(4));
+  }
+
   get tiposDocumentoDisponibles() {
     const tipos = this.catalogos?.TiposDocumento || [];
     if (!this.notaOrigen) {
@@ -915,6 +1000,9 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         IdProducto: detalle.IdProducto,
         Producto: detalle.Producto,
         UnidadMedida: detalle.UnidadMedida,
+        IdPresentacionCompra: detalle.IdPresentacionCompra,
+        UnidadStock: detalle.UnidadStock,
+        FactorConversionStock: detalle.FactorConversionStock,
         Inventariable:
           articulo?.Inventariable ??
           detalle.IdSubAreaAlmacen !== null,
@@ -1233,8 +1321,13 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       datos.PreciosIncluyenImpuestos;
     this.lineas = datos.Lineas.map(linea => ({
       IdProducto: linea.IdProducto,
+      IdPresentacionCompra: linea.IdPresentacionCompra,
       Producto: linea.Producto,
       UnidadMedida: linea.UnidadMedida,
+      UnidadStock: this.catalogos?.Articulos.find(
+        articulo => articulo.IdProducto === linea.IdProducto
+      )?.UnidadMedida || linea.UnidadMedida,
+      FactorConversionStock: 1,
       Inventariable: linea.Inventariable,
       Cantidad: linea.Cantidad,
       Importe: linea.Importe,
@@ -1292,6 +1385,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
 
   private limpiarLinea(): void {
     this.idArticuloAgregar = null;
+    this.idPresentacionAgregar = null;
     this.cantidadAgregar = 1;
     this.importeAgregar = 0;
     this.idSubAreaAgregar = null;

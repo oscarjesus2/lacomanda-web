@@ -11,6 +11,10 @@ export interface Articulo {
   FactorReceta: number;
   IdGrupoCompra: number | null;
   GrupoCompra: string;
+  IdAreaAlmacen: number | null;
+  AreaAlmacen: string;
+  IdSubAreaAlmacenDescarga: number | null;
+  SubAreaAlmacenDescarga: string;
   Stock: number;
   StockMinimo: number;
   StockMaximo: number;
@@ -25,6 +29,17 @@ export interface Articulo {
   IdImpuestoPais: string;
   Impuesto: string;
   TasaImpuesto: number;
+  PresentacionesCompra: ProductoPresentacionCompra[];
+}
+
+export interface ProductoPresentacionCompra {
+  IdPresentacionCompra?: number;
+  IdProveedor: number | null;
+  Proveedor?: string;
+  IdUnidadCompra: number | null;
+  UnidadCompra?: string;
+  FactorConversionStock: number;
+  Activo?: boolean;
 }
 
 export class ArticuloGuardar {
@@ -36,6 +51,8 @@ export class ArticuloGuardar {
   IdUnidadReceta: number | null = null;
   FactorReceta = 1;
   IdGrupoCompra: number | null = null;
+  IdAreaAlmacen: number | null = null;
+  IdSubAreaAlmacenDescarga: number | null = null;
   StockMinimo = 0;
   StockMaximo = 0;
   Precio = 0;
@@ -46,6 +63,7 @@ export class ArticuloGuardar {
   Inventario = false;
   Activo = true;
   IdImpuestoPais = '';
+  PresentacionesCompra: ProductoPresentacionCompra[] = [];
 
   constructor(init?: Partial<ArticuloGuardar>) {
     Object.assign(this, init);

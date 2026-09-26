@@ -141,15 +141,19 @@ export class DialogCerrarTurnoComponent implements OnInit {
       return;
     }
     this.fechaCierre = new Date();
-    this.ejecutarCierre(false);
+    this.ejecutarCierre(false, false);
   }
 
   /** Ejecuta el cierre; si el backend pide confirmar ventas al crédito, reintenta. */
-  private ejecutarCierre(confirmarCredito: boolean): void {
+  private ejecutarCierre(
+    confirmarCredito: boolean,
+    confirmarDescargaStock: boolean
+  ): void {
     const request: CerrarTurnoRequest = {
       IdCaja: this.idCajaSel!,
       EsParcial: this.esParcial,
       ConfirmarVentasSinPagoComoCredito: confirmarCredito,
+      ConfirmarCierreSinDescargaStock: confirmarDescargaStock,
       TipoFormato: 0
     };
 
@@ -160,7 +164,11 @@ export class DialogCerrarTurnoComponent implements OnInit {
       .subscribe({
         next: async (response) => {
           try {
-            await this.procesarRespuestaCierre(response);
+            await this.procesarRespuestaCierre(
+              response,
+              confirmarCredito,
+              confirmarDescargaStock
+            );
           } finally {
             this.liberarProceso();
           }
@@ -185,7 +193,9 @@ export class DialogCerrarTurnoComponent implements OnInit {
   }
 
   private async procesarRespuestaCierre(
-    response: ApiResponse<CerrarTurnoResult>
+    response: ApiResponse<CerrarTurnoResult>,
+    confirmarCredito: boolean,
+    confirmarDescargaStock: boolean
   ): Promise<void> {
     const data = response?.Data;
 
@@ -210,7 +220,18 @@ export class DialogCerrarTurnoComponent implements OnInit {
     this.pedidosPendientes = [];
 
     if (data.RequiereConfirmacionCredito) {
-      this.confirmarVentasCredito(data.VentasSinPago);
+      this.confirmarVentasCredito(
+        data.VentasSinPago,
+        confirmarDescargaStock
+      );
+      return;
+    }
+
+    if (data.RequiereConfirmacionDescargaStock) {
+      this.confirmarCierreSinDescargaStock(
+        data.AdvertenciasDescargaStock,
+        confirmarCredito
+      );
       return;
     }
 
@@ -299,7 +320,10 @@ export class DialogCerrarTurnoComponent implements OnInit {
       });
   }
 
-  private confirmarVentasCredito(ventas: VentaSinPago[]): void {
+  private confirmarVentasCredito(
+    ventas: VentaSinPago[],
+    confirmarDescargaStock: boolean
+  ): void {
     const filas = (ventas ?? []).map(v => {
       const doc = v.NumDocumento || [v.Serie, v.NroDoc].filter(Boolean).join('-') || `Venta ${v.IdVenta ?? ''}`;
       const total = v.Total != null ? v.Total.toFixed(2) : '';
@@ -320,7 +344,32 @@ export class DialogCerrarTurnoComponent implements OnInit {
       cancelButtonText: this.texts.get('cancel')
     }).then(res => {
       if (res.isConfirmed) {
-        this.ejecutarCierre(true);
+        this.ejecutarCierre(true, confirmarDescargaStock);
+      }
+    });
+  }
+
+  private confirmarCierreSinDescargaStock(
+    advertencias: string[],
+    confirmarCredito: boolean
+  ): void {
+    const filas = (advertencias ?? [])
+      .map(item => `<li>${this.escapeHtml(item)}</li>`)
+      .join('');
+
+    Swal.fire({
+      title: 'Configuración de descarga incompleta',
+      html: `
+        <p>Algunos consumos no podrán descontarse del almacén:</p>
+        <ul class="swal-warning-list">${filas}</ul>
+        <p>¿Desea cerrar el turno de todas formas?</p>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cerrar turno',
+      cancelButtonText: 'No, revisar configuración'
+    }).then(result => {
+      if (result.isConfirmed) {
+        this.ejecutarCierre(confirmarCredito, true);
       }
     });
   }

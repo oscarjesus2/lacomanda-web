@@ -21,6 +21,8 @@ import { FamiliaService } from 'src/app/services/familia.service';
 import { RecetaService } from 'src/app/services/receta.service';
 import { ArticuloMantenimientoComponent } from '../articulo-mantenimiento/articulo-mantenimiento.component';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { SubAreaAlmacenService } from 'src/app/services/sub-area-almacen.service';
+import { SubAreaAlmacen } from 'src/app/models/almacen-maestro.models';
 
 @Component({
   selector: 'app-receta-mantenimiento',
@@ -47,6 +49,7 @@ export class RecetaMantenimientoComponent implements OnInit {
   dataSource = new MatTableDataSource<RecetaResumen>([]);
   articulos: Articulo[] = [];
   areas: AreaAlmacen[] = [];
+  subAreas: SubAreaAlmacen[] = [];
   familias: Familia[] = [];
   filtro = '';
   cargando = false;
@@ -62,11 +65,13 @@ export class RecetaMantenimientoComponent implements OnInit {
   detalles: RecetaDetalle[] = [];
   detalleActual: RecetaDetalleGuardar = this.nuevoDetalle();
   indiceDetalleEditado: number | null = null;
+  usarSubAreaFijaDetalle = false;
 
   constructor(
     private readonly dialogRef: MatDialogRef<RecetaMantenimientoComponent>,
     private readonly recetaService: RecetaService,
     private readonly areaAlmacenService: AreaAlmacenService,
+    private readonly subAreaAlmacenService: SubAreaAlmacenService,
     private readonly articuloService: ArticuloService,
     private readonly familiaService: FamiliaService,
     private readonly dialog: MatDialog
@@ -85,13 +90,15 @@ export class RecetaMantenimientoComponent implements OnInit {
     forkJoin({
       recetas: this.recetaService.listar(),
       articulos: this.articuloService.listar(),
-      areas: this.areaAlmacenService.listarActivas()
+      areas: this.areaAlmacenService.listarActivas(),
+      subAreas: this.subAreaAlmacenService.listar()
     }).subscribe({
       next: response => {
         this.cargando = false;
         if (!response.recetas.Success ||
             !response.articulos.Success ||
-            !response.areas.Success) {
+            !response.areas.Success ||
+            !response.subAreas.Success) {
           Swal.fire(
             'Error',
             'No se pudieron cargar los datos del mantenimiento.',
@@ -105,6 +112,7 @@ export class RecetaMantenimientoComponent implements OnInit {
         this.articulos = (response.articulos.Data || [])
           .filter(articulo => articulo.Activo);
         this.areas = response.areas.Data || [];
+        this.subAreas = (response.subAreas.Data || []).filter(s => s.Activo);
       },
       error: error => {
         this.cargando = false;
@@ -265,7 +273,8 @@ export class RecetaMantenimientoComponent implements OnInit {
       'Cantidad llevar': item.CantidadLlevar,
       'Cantidad delivery': item.CantidadDelivery,
       Precio: item.Precio,
-      Área: item.Area
+      Área: item.Area,
+      Destino: item.SubAreaAlmacenDescarga || 'Según estación'
     }));
     const worksheet = XLSX.utils.json_to_sheet(filas);
     const workbook = XLSX.utils.book_new();
@@ -277,6 +286,9 @@ export class RecetaMantenimientoComponent implements OnInit {
     const articulo = this.articuloSeleccionado();
     const area = this.areas.find(
       item => item.IdArea === this.detalleActual.IdArea
+    );
+    const subArea = this.subAreas.find(
+      item => item.IdSubAreaAlmacen === this.detalleActual.IdSubAreaAlmacenDescarga
     );
     if (!articulo || !area) {
       Swal.fire(
@@ -348,7 +360,13 @@ export class RecetaMantenimientoComponent implements OnInit {
       CantidadLlevar: cantidades[1],
       CantidadDelivery: cantidades[2],
       IdArea: area.IdArea,
-      Area: area.Descripcion
+      Area: area.Descripcion,
+      IdSubAreaAlmacenDescarga: this.usarSubAreaFijaDetalle
+        ? subArea?.IdSubAreaAlmacen ?? null
+        : null,
+      SubAreaAlmacenDescarga: this.usarSubAreaFijaDetalle
+        ? subArea?.Descripcion ?? ''
+        : ''
     };
 
     if (this.indiceDetalleEditado === null) {
@@ -411,8 +429,10 @@ export class RecetaMantenimientoComponent implements OnInit {
       CantidadMesa: detalle.CantidadMesa,
       CantidadLlevar: detalle.CantidadLlevar,
       CantidadDelivery: detalle.CantidadDelivery,
-      IdArea: detalle.IdArea
+      IdArea: detalle.IdArea,
+      IdSubAreaAlmacenDescarga: detalle.IdSubAreaAlmacenDescarga
     };
+    this.usarSubAreaFijaDetalle = !!detalle.IdSubAreaAlmacenDescarga;
   }
 
   eliminarDetalle(index: number): void {
@@ -445,7 +465,8 @@ export class RecetaMantenimientoComponent implements OnInit {
         CantidadMesa: detalle.CantidadMesa,
         CantidadLlevar: detalle.CantidadLlevar,
         CantidadDelivery: detalle.CantidadDelivery,
-        IdArea: detalle.IdArea
+        IdArea: detalle.IdArea,
+        IdSubAreaAlmacenDescarga: detalle.IdSubAreaAlmacenDescarga
       }))
     };
     const idReceta = this.recetaSeleccionada.IdReceta;
@@ -541,6 +562,26 @@ export class RecetaMantenimientoComponent implements OnInit {
     return !!articulo?.IdUnidadReceta && articulo.FactorReceta > 0;
   }
 
+  cambiarAreaDetalle(): void {
+    if (!this.subAreasDetalle().some(
+      item => item.IdSubAreaAlmacen === this.detalleActual.IdSubAreaAlmacenDescarga
+    )) {
+      this.detalleActual.IdSubAreaAlmacenDescarga = null;
+    }
+  }
+
+  cambiarModoDescargaDetalle(): void {
+    if (!this.usarSubAreaFijaDetalle) {
+      this.detalleActual.IdSubAreaAlmacenDescarga = null;
+    }
+  }
+
+  subAreasDetalle(): SubAreaAlmacen[] {
+    return this.subAreas.filter(
+      item => item.IdAreaAlmacen === this.detalleActual.IdArea
+    );
+  }
+
   costo(canal: 'mesa' | 'llevar' | 'delivery'): number {
     return this.redondear(this.detalles.reduce((total, detalle) => {
       const cantidad = canal === 'mesa'
@@ -590,7 +631,8 @@ export class RecetaMantenimientoComponent implements OnInit {
       CantidadMesa: 0,
       CantidadLlevar: 0,
       CantidadDelivery: 0,
-      IdArea: null
+      IdArea: null,
+      IdSubAreaAlmacenDescarga: null
     };
   }
 

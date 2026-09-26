@@ -359,10 +359,39 @@
             <mat-select
               name="area"
               [(ngModel)]="detalleActual.IdArea"
+              (selectionChange)="cambiarAreaDetalle()"
               required
             >
               <mat-option *ngFor="let area of areas" [value]="area.IdArea">
                 {{ area.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Destino de descarga</mat-label>
+            <mat-select
+              name="modoDescargaDetalle"
+              [(ngModel)]="usarSubAreaFijaDetalle"
+              (selectionChange)="cambiarModoDescargaDetalle()"
+            >
+              <mat-option [value]="false">Según estación</mat-option>
+              <mat-option [value]="true">Subárea fija</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" *ngIf="usarSubAreaFijaDetalle">
+            <mat-label>Subárea fija</mat-label>
+            <mat-select
+              name="subAreaFijaDetalle"
+              [(ngModel)]="detalleActual.IdSubAreaAlmacenDescarga"
+              required
+            >
+              <mat-option
+                *ngFor="let subArea of subAreasDetalle()"
+                [value]="subArea.IdSubAreaAlmacen"
+              >
+                {{ subArea.Descripcion }}
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -462,7 +491,10 @@
                     · factor {{ detalle.Factor | number:'1.0-4' }}
                   </small>
                 </td>
-                <td>{{ detalle.Area }}</td>
+                <td>
+                  {{ detalle.Area }} ·
+                  {{ detalle.SubAreaAlmacenDescarga || 'según estación' }}
+                </td>
                 <td class="is-numeric">{{ detalle.Precio | number:'1.0-4' }}</td>
                 <td class="is-numeric">{{ detalle.CantidadMesa | number:'1.0-4' }}</td>
                 <td class="is-numeric">{{ detalle.CantidadLlevar | number:'1.0-4' }}</td>

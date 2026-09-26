@@ -5,6 +5,7 @@ export interface CerrarTurnoRequest {
   IdCaja: number;
   EsParcial: boolean;
   ConfirmarVentasSinPagoComoCredito: boolean;
+  ConfirmarCierreSinDescargaStock: boolean;
   TipoFormato: number;   // 0 = ticket por defecto
 }
 
@@ -47,6 +48,8 @@ export interface CerrarTurnoResult {
   Cerrado: boolean;
   RequiereConfirmacionCredito: boolean;
   VentasSinPago: VentaSinPago[];
+  RequiereConfirmacionDescargaStock: boolean;
+  AdvertenciasDescargaStock: string[];
   RequiereResolverPedidosPendientes: boolean;
   PedidosPendientes: PedidoPendienteCierre[];
   Impresiones: ImpresionDTO[];
