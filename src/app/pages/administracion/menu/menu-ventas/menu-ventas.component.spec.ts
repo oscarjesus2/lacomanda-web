@@ -3,9 +3,13 @@ import {
   expandirExigencia,
 } from 'src/app/constants/caracteristicas-licencia';
 import { MenuVentasComponent } from './menu-ventas.component';
+import { NivelUsuarioEnum } from 'src/app/enums/enum';
 
 describe('MenuVentasComponent por licencia', () => {
-  function crear(habilitadas: string[]): MenuVentasComponent {
+  function crear(
+    habilitadas: string[],
+    nivel = NivelUsuarioEnum.Administrador,
+  ): MenuVentasComponent {
     const licencia = {
       evaluar: (estado: any, exigencia: any) =>
         expandirExigencia(exigencia).every(codigo =>
@@ -18,7 +22,7 @@ describe('MenuVentasComponent por licencia', () => {
       null as any,
       null as any,
       null as any,
-      null as any,
+      { getCurrentUser: () => ({ IdNivel: nivel }) } as any,
       null as any,
       null as any,
       licencia as any,
@@ -64,5 +68,43 @@ describe('MenuVentasComponent por licencia', () => {
     expect(etiquetas).toContain('Productividad');
     expect(etiquetas).toContain('Espacios y servicio');
     expect(etiquetas).toContain('Calidad docs.');
+  });
+
+  it('para Gerente muestra únicamente el mantenimiento de usuarios', () => {
+    const component = crear(
+      [C.OperacionReportes, C.ReportesAnaliticos],
+      NivelUsuarioEnum.Gerente,
+    );
+
+    const visibles = component.seccionesVisibles
+      .flatMap(section => component.itemsVisibles(section))
+      .map(item => item.label);
+
+    expect(visibles).toEqual(['Usuarios']);
+  });
+
+  it('reserva las tres herramientas internas al usuario de soporte', () => {
+    const component = crear([
+      C.OperacionComprobantes,
+      C.VentasMesa,
+      C.VentasPagoCuentaOnline,
+    ]);
+    (component as any).paisISO2 = 'PE';
+    const configuracion = component.ventasMenu.find(
+      section => section.title === 'Configuracion',
+    )!;
+
+    const sinSoporte = component.itemsVisibles(configuracion)
+      .map(item => item.label);
+    expect(sinSoporte).not.toContain('Facturación electrónica');
+    expect(sinSoporte).not.toContain('Monitor SUNAT');
+    expect(sinSoporte).not.toContain('Cobro móvil');
+
+    (component as any).esUsuarioSoporteLaComanda = true;
+    const conSoporte = component.itemsVisibles(configuracion)
+      .map(item => item.label);
+    expect(conSoporte).toContain('Facturación electrónica');
+    expect(conSoporte).toContain('Monitor SUNAT');
+    expect(conSoporte).toContain('Cobro móvil');
   });
 });

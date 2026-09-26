@@ -48,6 +48,7 @@ export class RoleGuard {
 
   /** Ruta de inicio según el rol del usuario. */
   private homeRouteFor(roles: string[]): string {
+    if (roles.includes('gerente')) return '/dashboard';
     if (roles.includes('caja')) return '/caja';
     if (roles.includes('mozo')) return '/mozo';
     return '/iniciar-sesion';

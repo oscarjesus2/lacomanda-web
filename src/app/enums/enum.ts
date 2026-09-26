@@ -38,7 +38,8 @@ export enum CanalVentaEnum {
 export enum NivelUsuarioEnum {
   Administrador = 1,
   Cajero = 2,
-  Mozo = 3
+  Mozo = 3,
+  Gerente = 4
 }
 
 export enum TipoDescuentoEnum {

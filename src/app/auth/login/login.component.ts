@@ -322,9 +322,10 @@ export class LoginComponent implements OnInit, OnDestroy {
     const usuario = this.keycloakAuth.buildUsuarioFromToken(token);
 
     const isAdmin = roles.includes('admin');
+    const isGerente = roles.includes('gerente');
     const isCaja  = roles.includes('caja');
     const isMozo  = roles.includes('mozo');
-    const hasRole = isAdmin || isCaja || isMozo;
+    const hasRole = isGerente || isAdmin || isCaja || isMozo;
 
     if (!hasRole) {
       this.finalizarIndicadorLogin();
@@ -333,7 +334,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.CurrentIP && !isAdmin) {
+    if (!this.CurrentIP && !isAdmin && !isGerente) {
       this.finalizarIndicadorLogin();
       void Swal.fire({
         title: this.textCatalog.get('stationNotConfigured'),

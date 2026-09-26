@@ -25,6 +25,7 @@ const ROLE_TO_NIVEL: Record<string, number> = {
   admin: 1,
   caja:  2,
   mozo:  3,
+  gerente: 4,
 };
 
 /** Mapeo de roles de Keycloak a TipoCompu */
@@ -32,6 +33,7 @@ const ROLE_TO_TIPOCOMPU: Record<string, number> = {
   admin: 0,
   caja:  2,
   mozo:  1,
+  gerente: 0,
 };
 
 @Injectable({ providedIn: 'root' })
@@ -109,7 +111,7 @@ export class KeycloakAuthService {
   buildUsuarioFromToken(token: string): Usuario {
     const payload = this.decodePayload(token);
     const roles   = payload.realm_access?.roles ?? [];
-    const businessRole = ['admin', 'caja', 'mozo'].find(r => roles.includes(r));
+    const businessRole = ['gerente', 'admin', 'caja', 'mozo'].find(r => roles.includes(r));
 
     const usuario         = new Usuario();
     usuario.NombreUsuario = payload.preferred_username;
@@ -123,6 +125,7 @@ export class KeycloakAuthService {
   /** Ruta de navegación según el rol principal del usuario. */
   getTargetRoute(token: string): string {
     const roles = this.getRoles(token);
+    if (roles.includes('gerente')) return '/dashboard';
     if (roles.includes('admin')) return '/dashboard';
     if (roles.includes('caja'))  return '/caja';
     if (roles.includes('mozo'))  return '/mozo';

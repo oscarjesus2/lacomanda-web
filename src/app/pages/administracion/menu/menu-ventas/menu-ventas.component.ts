@@ -51,6 +51,7 @@ import { CpeEnvioMonitorComponent } from 'src/app/components/mantenimiento/cpe-e
 import { PagoCuentaOnlineConfigurationComponent } from 'src/app/components/mantenimiento/pago-cuenta-online-configuration/pago-cuenta-online-configuration.component';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { UsuarioService } from 'src/app/services/usuario.service';
+import { NivelUsuarioEnum } from 'src/app/enums/enum';
 
 @Component({
   selector: 'app-menu-ventas',
@@ -84,6 +85,11 @@ export class MenuVentasComponent implements OnInit {
   private paisISO2 = '';
   private esUsuarioSoporteLaComanda = false;
 
+  private get esGerente(): boolean {
+    return this.storageService?.getCurrentUser()?.IdNivel ===
+      NivelUsuarioEnum.Gerente;
+  }
+
   /**
    * Ajustes comunes de los mantenimientos que caben en un diálogo acotado.
    *
@@ -115,7 +121,7 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Configuración de menús',      route: '/ventas/configuracion-combos',     icon: 'tune',             label: 'Menús',        titleKey: 'combosConfig',       labelKey: 'combos',             feature: C.ProductosMenus  },
         { title: 'Observaciones',               route: '/ventas/observaciones',            icon: 'sticky_note_2',    label: 'Observac.',    titleKey: 'observations',       labelKey: 'observations',       feature: C.OperacionCaja   },
         { title: 'Empleados',                   route: '/ventas/empleados',                icon: 'badge',            label: 'Empleados',    titleKey: 'employees',          labelKey: 'employees'          },
-        { title: 'Usuarios',                    route: '/ventas/usuarios',                 icon: 'manage_accounts',  label: 'Usuarios',     titleKey: 'users',              labelKey: 'users'              },
+        { title: 'Usuarios',                    route: '/ventas/usuarios',                 icon: 'manage_accounts',  label: 'Usuarios',     titleKey: 'users',              labelKey: 'users', permitidoGerente: true },
         { title: 'Caja',                        route: '/ventas/caja',                     icon: 'point_of_sale',    label: 'Caja',         titleKey: 'register',           labelKey: 'register',           feature: C.OperacionCaja   },
         { title: 'Estacion',                    route: '/ventas/estacion',                 icon: 'computer',         label: 'Estación',     titleKey: 'station',            labelKey: 'station'            },
         { title: 'Descuentos',                  route: '/ventas/descuentos',               icon: 'local_offer',      label: 'Descuentos',   titleKey: 'discounts',          labelKey: 'discounts',          feature: C.VentasDescuentos },
@@ -159,9 +165,9 @@ export class MenuVentasComponent implements OnInit {
       children: [
         { title: 'Configuración Inicial',      route: '/ventas/config-inicial',  icon: 'settings',  label: 'Config. inicial', titleKey: 'initialSetup',          labelKey: 'initialSetupShort' },
         { title: 'Configurar esta estación',   route: '/ventas/config-estacion', icon: 'computer',  label: 'Esta estación',   titleKey: 'configureThisStation',  labelKey: 'thisStation'       },
-        { title: 'Facturación electrónica SUNAT', route: '/ventas/configuracion-sunat', icon: 'verified_user', label: 'Facturación electrónica', feature: C.OperacionComprobantes, soloPeru: true },
+        { title: 'Facturación electrónica SUNAT', route: '/ventas/configuracion-sunat', icon: 'verified_user', label: 'Facturación electrónica', feature: C.OperacionComprobantes, soloPeru: true, soloSoporteLaComanda: true },
         { title: 'Monitor de envíos SUNAT', route: '/ventas/monitor-envios-sunat', icon: 'outbox', label: 'Monitor SUNAT', monitorEnviosSunat: true, feature: C.OperacionComprobantes, soloPeru: true, soloSoporteLaComanda: true },
-        { title: 'Cobro móvil de la cuenta', route: '/ventas/configuracion-pago-cuenta-online', icon: 'payments', label: 'Cobro móvil', feature: C.VentasPagoCuentaOnline, soloPagoMovil: true }
+        { title: 'Cobro móvil de la cuenta', route: '/ventas/configuracion-pago-cuenta-online', icon: 'payments', label: 'Cobro móvil', feature: C.VentasPagoCuentaOnline, soloPagoMovil: true, soloSoporteLaComanda: true }
       ]
     }
   ];
@@ -180,6 +186,7 @@ export class MenuVentasComponent implements OnInit {
 
   itemsVisibles(section: any): any[] {
     return section.children.filter((item: any) =>
+      (!this.esGerente || item.permitidoGerente) &&
       this.cubiertoPorLicencia(item.feature) &&
       (!item.soloPeru || this.paisISO2 === 'PE') &&
       (!item.soloSoporteLaComanda || this.esUsuarioSoporteLaComanda) &&

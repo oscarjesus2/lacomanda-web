@@ -36,7 +36,7 @@ const routes: Routes = [
   component: DashboardComponent,
   canActivate: [RoleGuard, LicenseGuard],
   data: {
-    roles: ['admin'],
+    roles: ['admin', 'gerente'],
     feature: CARACTERISTICAS_LICENCIA.ReportesAnaliticos
   }
 },
@@ -62,7 +62,7 @@ const routes: Routes = [
   path: 'administracion',
   component: AdministracionComponent,
   canActivate: [RoleGuard],
-  data: { roles: ['admin'] }
+  data: { roles: ['admin', 'gerente'] }
 },
 {
   path:'iniciar-sesion', 
