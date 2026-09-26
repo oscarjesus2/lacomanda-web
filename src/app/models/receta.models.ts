@@ -26,6 +26,8 @@ export interface RecetaDetalle {
   CantidadDelivery: number;
   IdArea: number;
   Area: string;
+  IdSubAreaAlmacenDescarga: number | null;
+  SubAreaAlmacenDescarga: string;
 }
 
 export interface RecetaDetalleGuardar {
@@ -35,6 +37,7 @@ export interface RecetaDetalleGuardar {
   CantidadLlevar: number;
   CantidadDelivery: number;
   IdArea: number | null;
+  IdSubAreaAlmacenDescarga: number | null;
 }
 
 export interface RecetaGuardar {
@@ -68,4 +71,6 @@ export interface RecetaReporteFila {
   Precio: number;
   IdArea: number;
   Area: string;
+  IdSubAreaAlmacenDescarga: number | null;
+  SubAreaAlmacenDescarga: string;
 }

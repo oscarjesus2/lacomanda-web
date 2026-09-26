@@ -642,7 +642,7 @@
         </mat-form-field>
 
         <mat-form-field
-          *ngIf="!p.EsServicio && !p.TieneReceta"
+          *ngIf="almacenHabilitado && !p.EsServicio && !p.TieneReceta"
           class="form-field"
           appearance="fill"
         >
@@ -707,8 +707,8 @@
       </h3>
       <p class="dialog-form-section__hint">
         Al vender este producto se descontará directamente su propio stock.
-        La subárea se resuelve cruzando el stock del artículo con las descargas
-        habilitadas para la estación.
+        El área identifica el tipo de almacén. La subárea puede decidirla la
+        estación o quedar fijada en este producto.
       </p>
 
       <div class="dialog-form-grid">
@@ -757,7 +757,7 @@
         </mat-form-field>
 
         <mat-form-field appearance="fill">
-          <mat-label>Unidad de compra/stock</mat-label>
+          <mat-label>Unidad base de stock</mat-label>
           <mat-select
             [(ngModel)]="p.IdUnidadStock"
             name="unidadStock"
@@ -769,6 +769,48 @@
               [value]="unidad.IdUnidad"
             >
               {{ unidad.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Área de almacén</mat-label>
+          <mat-select
+            [(ngModel)]="p.IdAreaAlmacen"
+            name="areaAlmacen"
+            (selectionChange)="cambiarAreaAlmacen()"
+            required
+          >
+            <mat-option *ngFor="let area of areasAlmacen" [value]="area.IdArea">
+              {{ area.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Destino de descarga</mat-label>
+          <mat-select
+            [(ngModel)]="usarSubAreaFija"
+            name="modoDescarga"
+            (selectionChange)="cambiarModoDescarga()"
+          >
+            <mat-option [value]="false">Según estación</mat-option>
+            <mat-option [value]="true">Subárea fija</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" *ngIf="usarSubAreaFija">
+          <mat-label>Subárea fija</mat-label>
+          <mat-select
+            [(ngModel)]="p.IdSubAreaAlmacenDescarga"
+            name="subAreaAlmacenDescarga"
+            required
+          >
+            <mat-option
+              *ngFor="let subArea of subAreasProducto()"
+              [value]="subArea.IdSubAreaAlmacen"
+            >
+              {{ subArea.Descripcion }}
             </mat-option>
           </mat-select>
         </mat-form-field>
@@ -797,7 +839,7 @@
           subscriptSizing="dynamic"
           *ngIf="usaConversionUnidad()"
         >
-          <mat-label>Unidades por compra</mat-label>
+          <mat-label>Unidades de consumo por unidad de stock</mat-label>
           <input
             matInput
             type="number"
@@ -808,7 +850,7 @@
             required
           >
           <mat-hint>
-            Cuántas unidades de venta contiene una unidad de compra.
+            Cuántas unidades de venta contiene una unidad base de stock.
           </mat-hint>
         </mat-form-field>
 
@@ -850,6 +892,85 @@
           </mat-select>
         </mat-form-field>
       </div>
+
+      <div class="dialog-form-section__hint">
+        Presentaciones de compra
+      </div>
+      <p class="dialog-form-section__hint">
+        Añada las cajas o paquetes ofrecidos por cada proveedor. Cada compra
+        se convertirá a la unidad base antes de modificar el stock.
+      </p>
+
+      <div
+        class="dialog-form-grid"
+        *ngFor="let presentacion of p.PresentacionesCompra; let index = index"
+      >
+        <mat-form-field appearance="fill">
+          <mat-label>Proveedor</mat-label>
+          <mat-select
+            [(ngModel)]="presentacion.IdProveedor"
+            [name]="'presentacionProveedor' + index"
+          >
+            <mat-option [value]="null">Todos los proveedores</mat-option>
+            <mat-option
+              *ngFor="let proveedor of proveedores"
+              [value]="proveedor.IdProveedor"
+            >
+              {{ proveedor.RazonSocial }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Unidad de compra</mat-label>
+          <mat-select
+            [(ngModel)]="presentacion.IdUnidadCompra"
+            [name]="'presentacionUnidad' + index"
+            required
+          >
+            <mat-option
+              *ngFor="let unidad of unidadesMedida"
+              [value]="unidad.IdUnidad"
+              [disabled]="unidad.IdUnidad === p.IdUnidadStock"
+            >
+              {{ unidad.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Unidades de stock por compra</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0.0001"
+            step="0.0001"
+            [(ngModel)]="presentacion.FactorConversionStock"
+            [name]="'presentacionFactor' + index"
+            required
+          >
+        </mat-form-field>
+
+        <button
+          mat-icon-button
+          color="warn"
+          type="button"
+          matTooltip="Quitar presentación"
+          (click)="quitarPresentacionCompra(index)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+
+      <button
+        mat-stroked-button
+        color="primary"
+        type="button"
+        (click)="agregarPresentacionCompra()"
+      >
+        <mat-icon>add</mat-icon>
+        Agregar presentación
+      </button>
     </section>
 
     <!-- ── Acciones (span full width) ────────────────────────────────── -->

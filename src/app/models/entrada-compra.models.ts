@@ -38,6 +38,12 @@ export interface EntradaCompraDetalle {
   Producto: string;
   IdUnidadMedida: number;
   UnidadMedida: string;
+  IdPresentacionCompra: number | null;
+  IdUnidadStock: number;
+  UnidadStock: string;
+  FactorConversionStock: number;
+  CantidadStock: number;
+  PrecioUnitarioStock: number;
   Cantidad: number;
   PrecioUnitario: number;
   ValorCompra: number;
@@ -67,6 +73,7 @@ export interface EntradaCompraLineaGuardar {
   IdProducto: number;
   Cantidad: number;
   Importe: number;
+  IdPresentacionCompra: number | null;
   IdSubAreaAlmacen: number | null;
   Impuestos: string[];
 }
@@ -168,6 +175,17 @@ export interface EntradaCompraArticulo {
   PrecioCompra: number;
   Inventariable: boolean;
   Impuestos: string[];
+  Presentaciones: EntradaCompraPresentacion[];
+}
+
+export interface EntradaCompraPresentacion {
+  IdPresentacionCompra: number | null;
+  IdProveedor: number | null;
+  IdUnidadCompra: number;
+  UnidadCompra: string;
+  FactorConversionStock: number;
+  PrecioCompraSugerido: number;
+  EsUnidadBase: boolean;
 }
 
 export interface EntradaCompraSubArea {
@@ -235,6 +253,7 @@ export interface FacturaCompraIaLinea {
   CantidadOriginal: number;
   FactorConversionUnidad: number;
   IdProducto: number | null;
+  IdPresentacionCompra: number | null;
   Producto: string;
   UnidadMedida: string;
   Inventariable: boolean;

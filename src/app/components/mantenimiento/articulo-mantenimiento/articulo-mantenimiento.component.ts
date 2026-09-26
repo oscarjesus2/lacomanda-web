@@ -5,7 +5,12 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { forkJoin } from 'rxjs';
 import Swal from 'sweetalert2';
-import { Articulo, ArticuloGuardar, UnidadMedida } from 'src/app/models/articulo.models';
+import {
+  Articulo,
+  ArticuloGuardar,
+  UnidadMedida
+} from 'src/app/models/articulo.models';
+import { Proveedor } from 'src/app/models/proveedor.models';
 import { Grupo } from 'src/app/models/grupo.models';
 import { ImpuestoPais } from 'src/app/models/impuestopais.models';
 import { ArticuloService } from 'src/app/services/articulo.service';
@@ -13,6 +18,11 @@ import { GrupoService } from 'src/app/services/grupo.service';
 import { ImpuestoPaisService } from 'src/app/services/impuestopais.service';
 import { UnidadMedidaService } from 'src/app/services/unidad-medida.service';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { AreaAlmacenService } from 'src/app/services/area-almacen.service';
+import { SubAreaAlmacenService } from 'src/app/services/sub-area-almacen.service';
+import { AreaAlmacen } from 'src/app/models/receta.models';
+import { SubAreaAlmacen } from 'src/app/models/almacen-maestro.models';
+import { ProveedorService } from 'src/app/services/proveedor.service';
 
 export interface ArticuloMantenimientoData {
   creacionRapida?: boolean;
@@ -40,6 +50,10 @@ export class ArticuloMantenimientoComponent implements OnInit {
   unidades: UnidadMedida[] = [];
   grupos: Grupo[] = [];
   impuestos: ImpuestoPais[] = [];
+  areas: AreaAlmacen[] = [];
+  subAreas: SubAreaAlmacen[] = [];
+  proveedores: Proveedor[] = [];
+  usarSubAreaFija = false;
   filtro = '';
   showForm = false;
   cargando = false;
@@ -59,6 +73,9 @@ export class ArticuloMantenimientoComponent implements OnInit {
     private readonly unidadMedidaService: UnidadMedidaService,
     private readonly grupoService: GrupoService,
     private readonly impuestoPaisService: ImpuestoPaisService,
+    private readonly areaAlmacenService: AreaAlmacenService,
+    private readonly subAreaAlmacenService: SubAreaAlmacenService,
+    private readonly proveedorService: ProveedorService,
     @Optional()
     @Inject(MAT_DIALOG_DATA)
     data: ArticuloMantenimientoData | null
@@ -76,13 +93,19 @@ export class ArticuloMantenimientoComponent implements OnInit {
       articulos: this.articuloService.listar(),
       unidades: this.unidadMedidaService.listar(),
       impuestos: this.impuestoPaisService.getImpuestoPais(),
-      gruposArticulo: this.grupoService.getGrupos('A')
+      gruposArticulo: this.grupoService.getGrupos('A'),
+      areas: this.areaAlmacenService.listarActivas(),
+      subAreas: this.subAreaAlmacenService.listar(),
+      proveedores: this.proveedorService.listar()
     }).subscribe({
       next: response => {
         if (!response.articulos.Success ||
             !response.unidades.Success ||
             !response.impuestos.Success ||
-            !response.gruposArticulo.Success) {
+            !response.gruposArticulo.Success ||
+            !response.areas.Success ||
+            !response.subAreas.Success ||
+            !response.proveedores.Success) {
           this.cargando = false;
           Swal.fire('Error', 'No se pudieron cargar los datos del mantenimiento.', 'error');
           return;
@@ -93,6 +116,10 @@ export class ArticuloMantenimientoComponent implements OnInit {
         this.unidades = response.unidades.Data || [];
         this.impuestos = (response.impuestos.Data || []).filter(i => i.Activo);
         this.grupos = (response.gruposArticulo.Data || []).filter(g => g.Activo);
+        this.areas = response.areas.Data || [];
+        this.subAreas = (response.subAreas.Data || []).filter(s => s.Activo);
+        this.proveedores = (response.proveedores.Data || [])
+          .filter(p => p.Activo);
         this.cargando = false;
         if (this.creacionRapida) {
           this.nuevo();
@@ -121,8 +148,10 @@ export class ArticuloMantenimientoComponent implements OnInit {
   nuevo(): void {
     this.stockActual = 0;
     this.articulo = new ArticuloGuardar({
-      IdImpuestoPais: this.impuestoPredeterminado()
+      IdImpuestoPais: this.impuestoPredeterminado(),
+      IdAreaAlmacen: this.areas[0]?.IdArea ?? null
     });
+    this.usarSubAreaFija = false;
     this.cargarGrupos('A');
     this.showForm = true;
   }
@@ -138,6 +167,8 @@ export class ArticuloMantenimientoComponent implements OnInit {
       IdUnidadReceta: row.IdUnidadReceta,
       FactorReceta: row.FactorReceta || 1,
       IdGrupoCompra: row.IdGrupoCompra,
+      IdAreaAlmacen: row.IdAreaAlmacen,
+      IdSubAreaAlmacenDescarga: row.IdSubAreaAlmacenDescarga,
       StockMinimo: row.StockMinimo,
       StockMaximo: row.StockMaximo,
       Precio: row.PrecioCompra ?? row.Precio,
@@ -147,8 +178,12 @@ export class ArticuloMantenimientoComponent implements OnInit {
       Produccion: row.Produccion,
       Inventario: row.Inventario,
       Activo: row.Activo,
-      IdImpuestoPais: row.IdImpuestoPais
+      IdImpuestoPais: row.IdImpuestoPais,
+      PresentacionesCompra: (row.PresentacionesCompra || []).map(p => ({
+        ...p
+      }))
     });
+    this.usarSubAreaFija = !!row.IdSubAreaAlmacenDescarga;
     this.cargarGrupos(row.InsumoProducto === 'I' ? 'I' : 'A');
     this.showForm = true;
   }
@@ -167,6 +202,28 @@ export class ArticuloMantenimientoComponent implements OnInit {
       this.articulo.IdUnidadReceta = null;
       this.articulo.FactorReceta = 1;
     }
+    this.articulo.PresentacionesCompra =
+      this.articulo.PresentacionesCompra.filter(
+        p => p.IdUnidadCompra !== this.articulo.IdUnidadStock
+      );
+  }
+
+  agregarPresentacionCompra(): void {
+    this.articulo.PresentacionesCompra = [
+      ...this.articulo.PresentacionesCompra,
+      {
+        IdProveedor: null,
+        IdUnidadCompra: null,
+        FactorConversionStock: 1
+      }
+    ];
+  }
+
+  quitarPresentacionCompra(index: number): void {
+    this.articulo.PresentacionesCompra.splice(index, 1);
+    this.articulo.PresentacionesCompra = [
+      ...this.articulo.PresentacionesCompra
+    ];
   }
 
   cambiarUnidadReceta(): void {
@@ -175,6 +232,26 @@ export class ArticuloMantenimientoComponent implements OnInit {
       this.articulo.IdUnidadReceta = null;
       this.articulo.FactorReceta = 1;
     }
+  }
+
+  cambiarArea(): void {
+    if (!this.subAreasFiltradas().some(
+      subArea => subArea.IdSubAreaAlmacen === this.articulo.IdSubAreaAlmacenDescarga
+    )) {
+      this.articulo.IdSubAreaAlmacenDescarga = null;
+    }
+  }
+
+  cambiarModoDescarga(): void {
+    if (!this.usarSubAreaFija) {
+      this.articulo.IdSubAreaAlmacenDescarga = null;
+    }
+  }
+
+  subAreasFiltradas(): SubAreaAlmacen[] {
+    return this.subAreas.filter(
+      subArea => subArea.IdAreaAlmacen === this.articulo.IdAreaAlmacen
+    );
   }
 
   guardar(): void {
@@ -193,6 +270,17 @@ export class ArticuloMantenimientoComponent implements OnInit {
 
     if (this.articulo.IdUnidadReceta && this.articulo.FactorReceta <= 0) {
       Swal.fire('Validación', 'Indique un factor de conversión mayor que cero.', 'info');
+      return;
+    }
+
+    if (this.articulo.PresentacionesCompra.some(p =>
+      !p.IdUnidadCompra || p.FactorConversionStock <= 0
+    )) {
+      Swal.fire(
+        'Validación',
+        'Complete la unidad y el factor de todas las presentaciones de compra.',
+        'info'
+      );
       return;
     }
 
