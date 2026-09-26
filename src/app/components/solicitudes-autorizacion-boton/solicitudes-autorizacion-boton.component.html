@@ -1,29 +1,29 @@
 <ng-container *ngIf="esAprobador$ | async">
-  <ng-container *ngIf="pendientes$ | async as pendientes">
+  <ng-container *ngIf="{ pendientes: (pendientes$ | async) ?? 0 } as estado">
     <button *ngIf="variante === 'icono'"
             mat-icon-button
             type="button"
             class="approval-button approval-button--icon"
-            [class.approval-button--pending]="pendientes > 0"
+            [class.approval-button--pending]="estado.pendientes > 0"
             [matTooltip]="'notificationCenter' | tenantText"
             [attr.aria-label]="'notificationCenter' | tenantText"
             (click)="abrir()">
-      <mat-icon [matBadge]="pendientes"
-                [matBadgeHidden]="pendientes === 0"
+      <mat-icon [matBadge]="estado.pendientes"
+                [matBadgeHidden]="estado.pendientes === 0"
                 matBadgeColor="warn"
                 matBadgeSize="small">
-        {{ pendientes > 0 ? 'notifications_active' : 'notifications' }}
+        {{ estado.pendientes > 0 ? 'notifications_active' : 'notifications' }}
       </mat-icon>
     </button>
 
     <button *ngIf="variante === 'canal'"
             type="button"
             class="approval-button approval-button--channel"
-            [class.approval-button--pending]="pendientes > 0"
+            [class.approval-button--pending]="estado.pendientes > 0"
             (click)="abrir()">
-      <mat-icon>{{ pendientes > 0 ? 'notifications_active' : 'notifications' }}</mat-icon>
+      <mat-icon>{{ estado.pendientes > 0 ? 'notifications_active' : 'notifications' }}</mat-icon>
       {{ 'notificationsShort' | tenantText }}
-      <span *ngIf="pendientes > 0" class="approval-button__count">{{ pendientes }}</span>
+      <span *ngIf="estado.pendientes > 0" class="approval-button__count">{{ estado.pendientes }}</span>
     </button>
   </ng-container>
 </ng-container>

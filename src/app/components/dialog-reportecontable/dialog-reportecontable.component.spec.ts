@@ -15,7 +15,10 @@ describe('DialogReportecontableComponent', () => {
   } as any;
   const tiposPais = {
     GetTiposDocumentos: jasmine.createSpy('GetTiposDocumentos').and.returnValue(
-      of([{ IdTipoDocumento: 1, Descripcion: 'Factura' }])),
+      of([
+        { IdTipoDocumento: 1, Descripcion: 'Factura', EsFiscal: true },
+        { IdTipoDocumento: 9, Descripcion: 'Express', EsFiscal: false },
+      ])),
   } as any;
 
   function crear(cajas: any): DialogReportecontableComponent {
@@ -52,6 +55,24 @@ describe('DialogReportecontableComponent', () => {
     componente.tipoDocumentoSeleccionado = '0';
     componente.onTipoDocumentoChange();
     expect(componente.serieSeleccionada).toBe('F001');
+  });
+
+  it('oculta Express y su serie aunque esté configurado en una caja', async () => {
+    const cajas = {
+      getAllCaja: () => of({ Data: [{ IdCaja: 1 }] }),
+      getTipoDocumentoByCaja: () => of([
+        { IdTipoDocumento: 1, Descripcion: 'Factura', Serie: 'F001' },
+        { IdTipoDocumento: 9, Descripcion: 'Express', Serie: 'E001' },
+      ]),
+    } as any;
+    const componente = crear(cajas);
+
+    await componente.cargarFiltros();
+
+    expect(componente.tiposDocumento).toEqual([
+      { id: '1', descripcion: 'Factura' },
+    ]);
+    expect(componente.seriesDisponibles).toEqual(['F001']);
   });
 
   it('usa el catálogo de compras y no las series de ventas', async () => {

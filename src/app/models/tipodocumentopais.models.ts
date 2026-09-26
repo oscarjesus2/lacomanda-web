@@ -4,4 +4,5 @@ export class TipoDocumentoPais {
    Marcara: string;
    IdModulo: string; 
    Serie: string;
+   EsFiscal?: boolean;
 }
