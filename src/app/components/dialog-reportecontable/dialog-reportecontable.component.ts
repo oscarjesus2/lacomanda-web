@@ -113,7 +113,9 @@ export class DialogReportecontableComponent {
           this.cajaService.getTipoDocumentoByCaja(caja.IdCaja))))
         : [];
       if (tipoInforme !== this.tipoInformeSeleccionado) return;
-      const idsPermitidos = new Set(tiposPais.map(tipo => tipo.IdTipoDocumento));
+      const idsPermitidos = new Set(tiposPais
+        .filter(tipo => tipo.EsFiscal ?? (tipo.IdTipoDocumento !== 9))
+        .map(tipo => tipo.IdTipoDocumento));
       // Un informe histórico también necesita series desactivadas hoy.
       this.documentosCajas = documentosPorCaja.flat().filter(doc =>
         idsPermitidos.has(doc.IdTipoDocumento));
