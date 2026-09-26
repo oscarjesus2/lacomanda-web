@@ -69,7 +69,7 @@ export class LicenseGuard {
     const token = this.storageService.getCurrentToken();
     const roles = token ? this.keycloakAuth.getRoles(token) : [];
 
-    return roles.includes('admin')
+    return roles.includes('admin') || roles.includes('gerente')
       ? this.router.createUrlTree(['/administracion'])
       : this.router.createUrlTree(['/iniciar-sesion']);
   }

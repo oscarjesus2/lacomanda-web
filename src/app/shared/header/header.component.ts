@@ -78,11 +78,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const estacion = user.TipoCompu as EstacionTipoEnum;
 
     const isAdmin  = nivel   === NivelUsuarioEnum.Administrador;
+    const isGerente = nivel  === NivelUsuarioEnum.Gerente;
     const isCajero = nivel   === NivelUsuarioEnum.Cajero;
     const isMozo   = nivel   === NivelUsuarioEnum.Mozo;
     const esCaja   = estacion === EstacionTipoEnum.CAJA;
     const esMozo   = estacion === EstacionTipoEnum.MOZO;
-    if (isAdmin) {
+    if (isGerente) {
+      this.showDashboard      = this.reportesAnaliticosHabilitados;
+      this.showAdministracion = true;
+      this.showCaja           = false;
+      this.showMozo           = false;
+    } else if (isAdmin) {
       this.showDashboard      = this.reportesAnaliticosHabilitados;
       this.showAdministracion = true;
       this.showCaja           = esCaja && this.operacionCajaHabilitada;
