@@ -13,12 +13,18 @@
 
   <header class="report-panel__header">
     <div>
+      <span class="report-panel__eyebrow">Control y excepciones</span>
       <h3 class="report-panel__title">{{ 'voids' | tenantText }}</h3>
       <p class="report-panel__subtitle">
         {{ 'byProductAndReason' | tenantText }}
       </p>
     </div>
   </header>
+
+  <section class="report-panel__summary" *ngIf="!sinDatos">
+    <span class="report-panel__summary-label">Unidades anuladas</span>
+    <span class="report-panel__summary-value">{{ totalAnulaciones }}</span>
+  </section>
 
   <div class="report-panel__chart-container">
     <div class="report-panel__chart chart" #chart></div>

@@ -14,6 +14,7 @@ import { EvolucionMargenDashboard } from 'src/app/models/dashboard-ejecutivo.mod
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { DashboardReportesService } from 'src/app/services/dashboard-reportes.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { DashboardEnfoqueFecha } from 'src/app/models/dashboard-filtro.models';
 
 @Component({
   selector: 'app-evolucion-margen',
@@ -22,6 +23,7 @@ import { TenantTextCatalogService } from 'src/app/services/localization/tenant-t
 export class EvolucionMargenComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() fechaInicial = '';
   @Input() fechaFinal = '';
+  @Input() enfoque: DashboardEnfoqueFecha = 'FechaVenta';
   @ViewChild('chart', { static: true }) chartContainer: ElementRef<HTMLDivElement>;
 
   data?: EvolucionMargenDashboard;
@@ -48,7 +50,7 @@ export class EvolucionMargenComponent implements AfterViewInit, OnChanges, OnDes
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (this.viewReady && (changes.fechaInicial || changes.fechaFinal)) this.cargar();
+    if (this.viewReady && (changes.fechaInicial || changes.fechaFinal || changes.enfoque)) this.cargar();
   }
 
   ngOnDestroy(): void {
@@ -62,7 +64,7 @@ export class EvolucionMargenComponent implements AfterViewInit, OnChanges, OnDes
     this.loading = true;
     this.error = false;
     this.request = this.reportesService
-      .obtenerEvolucionMargen(this.fechaInicial, this.fechaFinal)
+      .obtenerEvolucionMargen(this.fechaInicial, this.fechaFinal, this.enfoque)
       .subscribe({
         next: data => {
           this.data = data;

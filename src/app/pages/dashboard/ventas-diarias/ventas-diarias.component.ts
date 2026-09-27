@@ -7,6 +7,7 @@ import { ventadiariasemanalmensual } from 'src/app/models/ventadiariasemanalmens
 import { formatDate } from '@angular/common';
 import { StorageService } from 'src/app/services/storage.service';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { DashboardEnfoqueFecha } from 'src/app/models/dashboard-filtro.models';
 
 @Component({
   selector: 'app-ventas-diarias',
@@ -19,6 +20,7 @@ export class VentasDiariasComponent implements OnInit, OnChanges, OnDestroy  {
   private chartContainer: ElementRef;
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
+  @Input() enfoque: DashboardEnfoqueFecha = 'FechaVenta';
   totalVenta: number;
   sinDatos = false;
   monedaSimbolo = '';
@@ -62,7 +64,7 @@ export class VentasDiariasComponent implements OnInit, OnChanges, OnDestroy  {
   }
   ngOnChanges(changes: SimpleChanges): void {
     // Detectar cambios en las fechas y actualizar el gráfico
-    if (changes.fechaInicial || changes.fechaFinal) {
+    if (changes.fechaInicial || changes.fechaFinal || changes.enfoque) {
       if (this.fechaInicial && this.fechaFinal) {
         var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
         var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
@@ -142,7 +144,7 @@ export class VentasDiariasComponent implements OnInit, OnChanges, OnDestroy  {
 
   async getVentaDiariasSemanalMensual(tipo: number, fechaInicial: string, fechaFinal: string) {
     this.spinnerService.show('ventaDiariaSpinner');
-      const data = await this.ventaService.getVentaDiariasSemanalMensual(tipo, fechaInicial, fechaFinal).toPromise();
+      const data = await this.ventaService.getVentaDiariasSemanalMensual(tipo, fechaInicial, fechaFinal, this.enfoque).toPromise();
       this.data = data;
       this.sinDatos = !this.data || this.data.length === 0;
       this.totalVenta = this.data.reduce((acc, venta) => acc + venta.Total, 0);
@@ -168,53 +170,72 @@ export class VentasDiariasComponent implements OnInit, OnChanges, OnDestroy  {
   }
 
   private updateChart() {
-    const pie = d3.pie<ventadiariasemanalmensual>().value((d: ventadiariasemanalmensual) => d.Total);
-    const arc = d3.arc<ventadiariasemanalmensual>()
-      .outerRadius(this.radius - 10)
-      .innerRadius(0);
+    const host = this.chartContainer.nativeElement;
+    d3.select(host).selectAll('svg').remove();
+    if (!this.data?.length) { return; }
 
-    const labelArc = d3.arc<ventadiariasemanalmensual>()
-      .outerRadius(this.radius - 40)
-      .innerRadius(this.radius - 40);
+    const outerWidth = Math.max(host.clientWidth, 320);
+    const outerHeight = 280;
+    const margin = { top: 18, right: 20, bottom: 44, left: 58 };
+    const width = outerWidth - margin.left - margin.right;
+    const height = outerHeight - margin.top - margin.bottom;
+    this.svgRoot = d3.select(host).append('svg')
+      .attr('viewBox', `0 0 ${outerWidth} ${outerHeight}`)
+      .attr('role', 'img');
+    this.svg = this.svgRoot.append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const update = this.svg.selectAll('.arc').data(pie(this.data));
+    const x = d3.scalePoint<string>()
+      .domain(this.data.map(item => item.Agrupado))
+      .range([0, width])
+      .padding(.35);
+    const maximo = d3.max(this.data, item => item.Total) ?? 0;
+    const y = d3.scaleLinear()
+      .domain([0, maximo * 1.12 || 1])
+      .nice()
+      .range([height, 0]);
 
-    update.exit().remove();
+    this.svg.append('g')
+      .attr('class', 'chart-grid')
+      .call(d3.axisLeft(y).ticks(5).tickSize(-width).tickFormat(() => ''));
+    this.svg.append('g')
+      .attr('transform', `translate(0,${height})`)
+      .call(d3.axisBottom(x));
+    this.svg.append('g')
+      .call(d3.axisLeft(y).ticks(5).tickFormat(value => d3.format('~s')(Number(value))));
 
-    const enter = update.enter().append('g')
-      .attr('class', 'arc');
+    const area = d3.area<ventadiariasemanalmensual>()
+      .x(item => x(item.Agrupado) ?? 0)
+      .y0(height)
+      .y1(item => y(item.Total))
+      .curve(d3.curveMonotoneX);
+    const line = d3.line<ventadiariasemanalmensual>()
+      .x(item => x(item.Agrupado) ?? 0)
+      .y(item => y(item.Total))
+      .curve(d3.curveMonotoneX);
 
-    enter.append('path')
-      .attr('d', arc)
-      .attr('fill', (d: any) => this.color(d.data.Agrupado))
-      .on('mouseover', (event: MouseEvent, d: any) => {
-        this.tooltip.transition()
-          .duration(200)
-          .style('opacity', .9);
-        this.tooltip.html(`${d.data.Agrupado} - Total Venta S/.  ${d.data.Total}`)
-          .style('left', (event.pageX + 5) + 'px')
-          .style('top', (event.pageY - 28) + 'px');
+    this.svg.append('path').datum(this.data)
+      .attr('d', area)
+      .attr('fill', 'rgba(191, 54, 12, .11)');
+    this.svg.append('path').datum(this.data)
+      .attr('d', line)
+      .attr('fill', 'none')
+      .attr('stroke', '#bf360c')
+      .attr('stroke-width', 2.6);
+    this.svg.selectAll('.sales-dot').data(this.data).enter().append('circle')
+      .attr('class', 'sales-dot')
+      .attr('cx', item => x(item.Agrupado) ?? 0)
+      .attr('cy', item => y(item.Total))
+      .attr('r', 4.5)
+      .attr('fill', '#bf360c')
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 2)
+      .on('mouseover', (event: MouseEvent, item) => {
+        this.tooltip.style('opacity', .95)
+          .html(`<strong>${item.Agrupado}</strong><br>${this.monedaSimbolo} ${item.Total.toFixed(2)} · ${item.Transacciones ?? 0} ventas`)
+          .style('left', `${event.pageX + 8}px`)
+          .style('top', `${event.pageY - 36}px`);
       })
-      .on('mouseout', () => {
-        this.tooltip.transition()
-          .duration(500)
-          .style('opacity', 0);
-      });
-
-    enter.append('text')
-      .attr('transform', (d: any) => `translate(${labelArc.centroid(d)})`)
-      .attr('dy', '0.35em')
-      .style('font-size', '12px')  // Ajusta el tamaño de la fuente
-      .style('text-anchor', 'middle')  // Alinea el texto al centro
-      .style('fill', 'black')  // Color del texto
-      .text((d: any) => `${d.data.Agrupado} (${((d.endAngle - d.startAngle) / (2 * Math.PI) * 100).toFixed(2)}%)`);
-
-    update.select('path')
-      .attr('d', arc)
-      .attr('fill', (d: any) => this.color(d.data.Agrupado));
-
-    update.select('text')
-      .attr('transform', (d: any) => `translate(${labelArc.centroid(d)})`)
-      .text((d: any) => `${d.data.Agrupado} (${((d.endAngle - d.startAngle) / (2 * Math.PI) * 100).toFixed(2)}%)`);
+      .on('mouseout', () => this.tooltip.style('opacity', 0));
   }
 }

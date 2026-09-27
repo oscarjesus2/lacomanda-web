@@ -4059,6 +4059,76 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
   .executive-chart--donut { max-width: 300px; margin: 0 auto; }
 }
 
+/* Dashboard gerencial: coherencia y contención de widgets heredados. */
+.report-panel {
+  padding: 12px 14px 14px;
+}
+
+.report-panel__header { align-items: flex-start; }
+
+.report-panel__eyebrow {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--color-primary);
+  font-size: .64rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.report-panel__summary {
+  background: color-mix(in srgb, var(--color-surface) 76%, var(--color-surface-warm));
+  border-color: var(--color-border);
+}
+
+.report-panel__summary-value {
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-panel__summary-chip {
+  min-width: 120px;
+  padding: .55rem .75rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface) 76%, var(--color-surface-warm));
+  font-size: .72rem;
+  font-weight: 750;
+}
+
+.report-panel__chart-container {
+  min-width: 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  padding-top: 6px;
+}
+
+.report-panel__chart svg { display: block; width: 100%; height: auto; }
+.report-panel__chart .domain { stroke: var(--color-border-strong); }
+.report-panel__chart .tick text { fill: var(--color-text-muted); font-size: 10px; }
+.report-panel__chart .tick line { stroke: var(--color-border); }
+.report-panel__chart .chart-grid .domain { display: none; }
+.report-panel__chart .chart-grid .tick line { stroke-dasharray: 3 4; opacity: .8; }
+
+.payment-dashboard {
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(340px, .9fr) minmax(0, 1.1fr);
+}
+
+.payment-dashboard > *,
+.payment-dashboard__mix > *,
+.currency-breakdown { min-width: 0; }
+
+.currency-breakdown__heading { flex-wrap: wrap; }
+
+.currency-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .payment-dashboard { grid-template-columns: 1fr; }
+}
+
 /* ============================================================
    Guías de configuración
    Patrón reutilizable para instalaciones y puestas a punto.

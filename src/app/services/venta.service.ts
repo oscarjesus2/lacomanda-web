@@ -20,6 +20,7 @@ import {
     SolicitudAnulacionDocumentoVenta,
     SolicitudCorreccionVenta
 } from '../interfaces/correccion-venta.interface';
+import { DashboardEnfoqueFecha } from '../models/dashboard-filtro.models';
 
 @Injectable({
     providedIn: 'root'
@@ -28,24 +29,24 @@ export class VentaService {
     private basePath = environment.apiUrl + '/venta/';
 
     constructor(private http: HttpClient) { }
-    getVentasPorCanal(fechaInicial: string, fechaFinal: string): Observable<ventadiariasemanalmensual[]> {
-        return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'VentasPorCanal/' + fechaInicial + '/' + fechaFinal);
+    getVentasPorCanal(fechaInicial: string, fechaFinal: string, enfoque: DashboardEnfoqueFecha = 'FechaVenta'): Observable<ventadiariasemanalmensual[]> {
+        return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'VentasPorCanal/' + fechaInicial + '/' + fechaFinal, { params: { enfoque } });
     }
 
-    getVentaDiariasSemanalMensual(tipo: number, fechaInicial: string, fechaFinal: string): Observable<ventadiariasemanalmensual[]> {
-        return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'DiariasSemanalMensual/' + tipo  + '/' + fechaInicial + '/' + fechaFinal);
+    getVentaDiariasSemanalMensual(tipo: number, fechaInicial: string, fechaFinal: string, enfoque: DashboardEnfoqueFecha = 'FechaVenta'): Observable<ventadiariasemanalmensual[]> {
+        return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'DiariasSemanalMensual/' + tipo  + '/' + fechaInicial + '/' + fechaFinal, { params: { enfoque } });
     }
 
-    getProductosMasVendidos(top: number, fechaInicial: string, fechaFinal: string): Observable<ventadiariasemanalmensual[]> {
-        return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'ProductosMasVendidos/' + top  + '/' + fechaInicial + '/' + fechaFinal);
+    getProductosMasVendidos(top: number, fechaInicial: string, fechaFinal: string, enfoque: DashboardEnfoqueFecha = 'FechaVenta'): Observable<ventadiariasemanalmensual[]> {
+        return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'ProductosMasVendidos/' + top  + '/' + fechaInicial + '/' + fechaFinal, { params: { enfoque } });
     }
 
-    getVentasHoraPico(tipo: number, fechaInicial: string, fechaFinal: string): Observable<ventadiariasemanalmensual[]> {
-        return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'VentasHoraPico/' + tipo  + '/' + fechaInicial + '/' + fechaFinal);
+    getVentasHoraPico(tipo: number, fechaInicial: string, fechaFinal: string, enfoque: DashboardEnfoqueFecha = 'FechaVenta'): Observable<ventadiariasemanalmensual[]> {
+        return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'VentasHoraPico/' + tipo  + '/' + fechaInicial + '/' + fechaFinal, { params: { enfoque } });
     }
 
-    getAnulaciones(fechaInicial: string, fechaFinal: string): Observable<ventadiariasemanalmensual[]> {
-      return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'Anulaciones/'  + fechaInicial + '/' + fechaFinal);
+    getAnulaciones(fechaInicial: string, fechaFinal: string, enfoque: DashboardEnfoqueFecha = 'FechaVenta'): Observable<ventadiariasemanalmensual[]> {
+      return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'Anulaciones/'  + fechaInicial + '/' + fechaFinal, { params: { enfoque } });
     }
 
     getListadoVentas(
