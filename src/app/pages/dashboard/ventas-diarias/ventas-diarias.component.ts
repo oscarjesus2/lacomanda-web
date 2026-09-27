@@ -175,67 +175,153 @@ export class VentasDiariasComponent implements OnInit, OnChanges, OnDestroy  {
     if (!this.data?.length) { return; }
 
     const outerWidth = Math.max(host.clientWidth, 320);
-    const outerHeight = 280;
-    const margin = { top: 18, right: 20, bottom: 44, left: 58 };
-    const width = outerWidth - margin.left - margin.right;
-    const height = outerHeight - margin.top - margin.bottom;
+    const outerHeight = 300;
+    const esCompacto = outerWidth < 720;
+    const centroX = esCompacto ? outerWidth / 2 : Math.min(outerWidth * .3, 300);
+    const centroY = outerHeight / 2;
+    const radio = Math.min(esCompacto ? outerWidth * .3 : 112, 112);
+    const total = d3.sum(this.data, item => item.Total);
+    const colores = [
+      '#b4230a',
+      '#ef6c00',
+      '#f6ad2f',
+      '#7b8d42',
+      '#00897b',
+      '#3f6f8f',
+      '#775da6',
+      '#a04463',
+    ];
+    const color = d3.scaleOrdinal<string, string>()
+      .domain(this.data.map(item => item.Agrupado))
+      .range(colores);
+
     this.svgRoot = d3.select(host).append('svg')
       .attr('viewBox', `0 0 ${outerWidth} ${outerHeight}`)
-      .attr('role', 'img');
+      .attr('role', 'img')
+      .attr('aria-label', 'Distribución de las ventas del periodo seleccionado');
     this.svg = this.svgRoot.append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+      .attr('transform', `translate(${centroX},${centroY})`);
 
-    const x = d3.scalePoint<string>()
-      .domain(this.data.map(item => item.Agrupado))
-      .range([0, width])
-      .padding(.35);
-    const maximo = d3.max(this.data, item => item.Total) ?? 0;
-    const y = d3.scaleLinear()
-      .domain([0, maximo * 1.12 || 1])
-      .nice()
-      .range([height, 0]);
+    const mostrarTooltip = (event: MouseEvent, item: ventadiariasemanalmensual) => {
+      const porcentaje = total > 0 ? (item.Total / total) * 100 : 0;
+      this.tooltip.style('opacity', .95)
+        .html(`<strong>${item.Agrupado}</strong><br>${this.monedaSimbolo} ${item.Total.toFixed(2)} · ${porcentaje.toFixed(1)}% · ${item.Transacciones ?? 0} ventas`)
+        .style('left', `${event.pageX + 8}px`)
+        .style('top', `${event.pageY - 36}px`);
+    };
+    const ocultarTooltip = () => this.tooltip.style('opacity', 0);
 
-    this.svg.append('g')
-      .attr('class', 'chart-grid')
-      .call(d3.axisLeft(y).ticks(5).tickSize(-width).tickFormat(() => ''));
-    this.svg.append('g')
-      .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(x));
-    this.svg.append('g')
-      .call(d3.axisLeft(y).ticks(5).tickFormat(value => d3.format('~s')(Number(value))));
+    if (total <= 0) {
+      this.svg.append('circle')
+        .attr('r', radio)
+        .attr('fill', '#eee4dc');
+      this.svg.append('circle')
+        .attr('r', radio * .58)
+        .attr('fill', '#fff8f3');
+    } else {
+      const pie = d3.pie<ventadiariasemanalmensual>()
+        .sort(null)
+        .value(item => Math.max(item.Total, 0));
+      const arco = d3.arc<d3.PieArcDatum<ventadiariasemanalmensual>>()
+        .innerRadius(radio * .58)
+        .outerRadius(radio);
+      const arcoActivo = d3.arc<d3.PieArcDatum<ventadiariasemanalmensual>>()
+        .innerRadius(radio * .56)
+        .outerRadius(radio + 5);
+      const sectores = pie(this.data);
 
-    const area = d3.area<ventadiariasemanalmensual>()
-      .x(item => x(item.Agrupado) ?? 0)
-      .y0(height)
-      .y1(item => y(item.Total))
-      .curve(d3.curveMonotoneX);
-    const line = d3.line<ventadiariasemanalmensual>()
-      .x(item => x(item.Agrupado) ?? 0)
-      .y(item => y(item.Total))
-      .curve(d3.curveMonotoneX);
+      this.svg.selectAll('.sales-slice')
+        .data(sectores)
+        .enter()
+        .append('path')
+        .attr('class', 'sales-slice')
+        .attr('d', arco)
+        .attr('fill', sector => color(sector.data.Agrupado))
+        .attr('stroke', '#fff8f3')
+        .attr('stroke-width', 2)
+        .on('mouseover', (event: MouseEvent, sector) => {
+          d3.select(event.currentTarget as SVGPathElement).attr('d', arcoActivo(sector));
+          mostrarTooltip(event, sector.data);
+        })
+        .on('mouseout', (event: MouseEvent, sector) => {
+          d3.select(event.currentTarget as SVGPathElement).attr('d', arco(sector));
+          ocultarTooltip();
+        });
 
-    this.svg.append('path').datum(this.data)
-      .attr('d', area)
-      .attr('fill', 'rgba(191, 54, 12, .11)');
-    this.svg.append('path').datum(this.data)
-      .attr('d', line)
-      .attr('fill', 'none')
-      .attr('stroke', '#bf360c')
-      .attr('stroke-width', 2.6);
-    this.svg.selectAll('.sales-dot').data(this.data).enter().append('circle')
-      .attr('class', 'sales-dot')
-      .attr('cx', item => x(item.Agrupado) ?? 0)
-      .attr('cy', item => y(item.Total))
-      .attr('r', 4.5)
-      .attr('fill', '#bf360c')
-      .attr('stroke', '#fff')
-      .attr('stroke-width', 2)
-      .on('mouseover', (event: MouseEvent, item) => {
-        this.tooltip.style('opacity', .95)
-          .html(`<strong>${item.Agrupado}</strong><br>${this.monedaSimbolo} ${item.Total.toFixed(2)} · ${item.Transacciones ?? 0} ventas`)
-          .style('left', `${event.pageX + 8}px`)
-          .style('top', `${event.pageY - 36}px`);
-      })
-      .on('mouseout', () => this.tooltip.style('opacity', 0));
+      this.svg.selectAll('.sales-percentage')
+        .data(sectores.filter(sector =>
+          ((sector.endAngle - sector.startAngle) / (Math.PI * 2)) >= .07))
+        .enter()
+        .append('text')
+        .attr('class', 'sales-percentage')
+        .attr('transform', sector => `translate(${arco.centroid(sector)})`)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'middle')
+        .attr('font-size', 11)
+        .attr('font-weight', 700)
+        .attr('fill', '#fff')
+        .text(sector => `${((sector.data.Total / total) * 100).toFixed(0)}%`);
+    }
+
+    this.svg.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('y', -5)
+      .attr('font-size', 10)
+      .attr('font-weight', 700)
+      .attr('fill', '#8c6f60')
+      .text('VENTA TOTAL');
+    this.svg.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('y', 17)
+      .attr('font-size', 16)
+      .attr('font-weight', 800)
+      .attr('fill', '#7f1d0d')
+      .text(`${this.monedaSimbolo} ${d3.format(',.0f')(total)}`);
+    this.svg.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('y', 37)
+      .attr('font-size', 10)
+      .attr('fill', '#8c6f60')
+      .text(`${this.data.length} ${this.data.length === 1 ? 'periodo' : 'periodos'}`);
+
+    if (!esCompacto) {
+      const leyenda = this.svgRoot.append('g')
+        .attr('transform', `translate(${outerWidth * .55},34)`);
+      const filas = leyenda.selectAll('.sales-legend-row')
+        .data(this.data.slice(0, 8))
+        .enter()
+        .append('g')
+        .attr('class', 'sales-legend-row')
+        .attr('transform', (_, indice) => `translate(0,${indice * 30})`);
+
+      filas.append('rect')
+        .attr('width', 10)
+        .attr('height', 18)
+        .attr('rx', 5)
+        .attr('fill', item => color(item.Agrupado));
+      filas.append('text')
+        .attr('x', 20)
+        .attr('y', 8)
+        .attr('font-size', 11)
+        .attr('font-weight', 700)
+        .attr('fill', '#35251f')
+        .text(item => item.Agrupado);
+      filas.append('text')
+        .attr('x', 20)
+        .attr('y', 23)
+        .attr('font-size', 10)
+        .attr('fill', '#8c6f60')
+        .text(item => `${this.monedaSimbolo} ${d3.format(',.2f')(item.Total)} · ${total > 0 ? ((item.Total / total) * 100).toFixed(1) : '0.0'}%`);
+
+      if (this.data.length > 8) {
+        leyenda.append('text')
+          .attr('x', 20)
+          .attr('y', 8 * 30 + 5)
+          .attr('font-size', 10)
+          .attr('font-weight', 700)
+          .attr('fill', '#a33a1c')
+          .text(`+ ${this.data.length - 8} periodos en la tarta`);
+      }
+    }
   }
 }
