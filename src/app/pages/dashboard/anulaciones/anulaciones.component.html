@@ -21,9 +21,21 @@
     </div>
   </header>
 
-  <section class="report-panel__summary" *ngIf="!sinDatos">
-    <span class="report-panel__summary-label">Unidades anuladas</span>
-    <span class="report-panel__summary-value">{{ totalAnulaciones }}</span>
+  <section class="anulaciones-kpis" *ngIf="!sinDatos" aria-label="Resumen de anulaciones">
+    <article class="anulaciones-kpi">
+      <span class="anulaciones-kpi__label">Unidades anuladas</span>
+      <strong class="anulaciones-kpi__value">{{ totalAnulaciones }}</strong>
+    </article>
+    <article class="anulaciones-kpi">
+      <span class="anulaciones-kpi__label">Importe afectado</span>
+      <strong class="anulaciones-kpi__value anulaciones-kpi__value--money">
+        {{ monedaSimbolo }} {{ totalImporte | number:'1.2-2' }}
+      </strong>
+    </article>
+    <article class="anulaciones-kpi">
+      <span class="anulaciones-kpi__label">Registros</span>
+      <strong class="anulaciones-kpi__value">{{ totalRegistros }}</strong>
+    </article>
   </section>
 
   <div class="report-panel__chart-container">
@@ -34,28 +46,59 @@
     </div>
   </div>
 
-  <h4 class="report-panel__table-title">
-    {{ selectedProducto }}
-  </h4>
+  <div class="anulaciones-table-heading" *ngIf="!sinDatos">
+    <div>
+      <h4 class="report-panel__table-title">Detalle de anulaciones</h4>
+      <p class="anulaciones-table-heading__context">
+        {{ selectedProducto ? 'Filtrado por ' + selectedProducto : 'Todas las anulaciones del período' }}
+      </p>
+    </div>
+    <button
+      *ngIf="selectedProducto"
+      type="button"
+      class="anulaciones-table-heading__clear"
+      (click)="limpiarSeleccion()"
+    >
+      Ver todos
+    </button>
+  </div>
 
-  <div class="report-panel__table-wrapper">
-    <table class="data-table">
+  <div class="report-panel__table-wrapper anulaciones-table-wrapper" *ngIf="!sinDatos">
+    <table class="data-table" aria-label="Detalle de anulaciones">
       <thead>
         <tr>
+          <th>Fechas</th>
+          <th>Origen / documento</th>
+          <th>Producto</th>
+          <th class="data-table__number">Cantidad</th>
+          <th class="data-table__number">Precio unit.</th>
+          <th class="data-table__number">Importe</th>
           <th>{{ 'reason' | tenantText }}</th>
-          <th>{{ 'document' | tenantText }}</th>
-          <th>{{ 'quantityFull' | tenantText }}</th>
-          <th>{{ 'price' | tenantText }}</th>
           <th>{{ 'authorizedBy' | tenantText }}</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of filteredData">
-          <td>{{ item.Motivo }}</td>
-          <td>{{ item.Documento }}</td>
-          <td>{{ item.Cantidad }}</td>
-          <td>{{ item.Precio }}</td>
-          <td>{{ item.Autoriza }}</td>
+          <td class="data-table__date">
+            <span class="data-table__primary">
+              {{ item.FechaAnulacion ? (item.FechaAnulacion | date:'dd/MM/yyyy HH:mm') : 'Sin fecha de anulación' }}
+            </span>
+            <span class="data-table__secondary">
+              Operación: {{ item.FechaOperacion | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+          </td>
+          <td>
+            <span class="data-table__badge">{{ item.Origen }}</span>
+            <span class="data-table__secondary data-table__secondary--document">{{ item.Documento }}</span>
+          </td>
+          <td class="data-table__product">{{ item.Producto }}</td>
+          <td class="data-table__number data-table__emphasis">{{ item.Cantidad }}</td>
+          <td class="data-table__number">{{ monedaSimbolo }} {{ item.PrecioUnitario | number:'1.2-2' }}</td>
+          <td class="data-table__number data-table__emphasis">{{ monedaSimbolo }} {{ item.Importe | number:'1.2-2' }}</td>
+          <td class="data-table__reason">{{ item.Motivo || 'Sin motivo registrado' }}</td>
+          <td>
+            <span class="data-table__primary">{{ item.Autoriza || 'Sin identificar' }}</span>
+          </td>
         </tr>
       </tbody>
     </table>

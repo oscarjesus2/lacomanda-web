@@ -3945,6 +3945,11 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 .executive-chart__line--margin { stroke: #00796b; stroke-width: 2.4; }
 .executive-chart__hit { fill: var(--color-primary); stroke: #fff; stroke-width: 2; cursor: pointer; }
 .executive-chart__margin-dot { fill: #00796b; stroke: #fff; stroke-width: 1.5; cursor: pointer; }
+.executive-chart__comparison-bar { rx: 7; cursor: pointer; transition: opacity .16s ease; }
+.executive-chart__comparison-bar:hover { opacity: .78; }
+.executive-chart__comparison-bar.is-current { fill: var(--color-primary); }
+.executive-chart__comparison-bar.is-previous { fill: #8d7d75; }
+.executive-chart__comparison-value { fill: var(--color-text) !important; font-size: 11px !important; font-weight: 800 !important; }
 .executive-chart__bar { rx: 3; }
 .executive-chart__bar--sale { fill: #ef6c00; opacity: .88; }
 .executive-chart__bar--cost { fill: #8d6e63; opacity: .82; }

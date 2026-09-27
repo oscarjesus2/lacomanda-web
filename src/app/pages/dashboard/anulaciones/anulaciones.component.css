@@ -1,27 +1,182 @@
+.anulaciones-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 210px));
+  gap: 0.65rem;
+  margin-top: 0.1rem;
+}
+
+.anulaciones-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-surface) 88%, var(--color-surface-warm));
+}
+
+.anulaciones-kpi__label {
+  color: var(--color-text-muted);
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.anulaciones-kpi__value {
+  color: var(--color-text);
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.anulaciones-kpi__value--money {
+  color: var(--color-primary-dark);
+}
+
+.anulaciones-table-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.anulaciones-table-heading .report-panel__table-title {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.anulaciones-table-heading__context {
+  margin: 0.2rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.73rem;
+}
+
+.anulaciones-table-heading__clear {
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  background: var(--color-surface);
+  color: var(--color-primary-dark);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.anulaciones-table-heading__clear:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--color-surface));
+}
+
+.anulaciones-table-wrapper {
+  max-height: 340px;
+  background: var(--color-surface);
+}
+
 .data-table {
   width: 100%;
+  min-width: 1080px;
   border-collapse: collapse;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
 }
 
 .data-table th,
 .data-table td {
-  padding: 0.4rem 0.6rem;
+  padding: 0.7rem 0.65rem;
   text-align: left;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+  vertical-align: middle;
 }
 
-.data-table thead {
+.data-table thead th {
   position: sticky;
   top: 0;
   background: var(--color-surface-warm);
   z-index: 1;
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+  font-weight: 750;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .data-table tbody tr:nth-child(even) {
-  background: color-mix(in srgb, var(--color-text) 2%, transparent);
+  background: color-mix(in srgb, var(--color-surface-warm) 45%, transparent);
 }
 
 .data-table tbody tr:hover {
-  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 9%, var(--color-surface));
+}
+
+.data-table__primary,
+.data-table__secondary {
+  display: block;
+}
+
+.data-table__primary {
+  color: var(--color-text);
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.data-table__secondary {
+  margin-top: 0.2rem;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.data-table__secondary--document {
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 0.48rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, var(--color-border));
+  color: var(--color-primary-dark);
+  font-size: 0.64rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.data-table__date {
+  min-width: 150px;
+}
+
+.data-table__product {
+  min-width: 145px;
+  color: var(--color-text);
+  font-weight: 650;
+}
+
+.data-table__reason {
+  min-width: 190px;
+  max-width: 280px;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.data-table th.data-table__number,
+.data-table td.data-table__number {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table__emphasis {
+  color: var(--color-primary-dark);
+  font-weight: 750;
+}
+
+@media (max-width: 720px) {
+  .anulaciones-kpis {
+    grid-template-columns: 1fr;
+  }
 }
