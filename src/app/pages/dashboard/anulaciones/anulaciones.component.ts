@@ -2,10 +2,15 @@ import { formatDate } from '@angular/common';
 import { Component, OnInit, ElementRef, ViewChild, Input, SimpleChanges, OnDestroy } from '@angular/core';
 import * as d3 from 'd3';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { ventadiariasemanalmensual } from 'src/app/models/ventadiariasemanalmensual.models';
-import { StorageService } from 'src/app/services/storage.service';
+import { AnulacionDashboard } from 'src/app/models/anulacion-dashboard.models';
 import { VentaService } from 'src/app/services/venta.service';
 import { DashboardEnfoqueFecha } from 'src/app/models/dashboard-filtro.models';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
+
+interface AnulacionesPorProducto {
+  Producto: string;
+  Cantidad: number;
+}
 
 @Component({
   selector: 'app-anulaciones',
@@ -18,14 +23,12 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
   @Input() fechaFinal: Date;
   @Input() enfoque: DashboardEnfoqueFecha = 'FechaVenta';
 
-  // Datos originales
-  private rawData: ventadiariasemanalmensual[] = [];
-
-  // Datos transformados
-  data = [];
+  private rawData: AnulacionDashboard[] = [];
+  data: AnulacionesPorProducto[] = [];
 
   selectedProducto: string | null = null;
   sinDatos = false;
+  monedaSimbolo = '';
 
   private svg;
   private margin = { top: 20, right: 30, bottom: 50, left: 150 }; // Más espacio para nombres de productos
@@ -37,8 +40,10 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
   constructor(
     private spinnerService: NgxSpinnerService,
     private ventaService: VentaService,
-    private storageService: StorageService
-  ) {}
+    configuracionService: ConfiguracionService
+  ) {
+    this.monedaSimbolo = configuracionService.snapshot?.SimboloMoneda ?? '';
+  }
 
   ngOnInit(): void {
     this.width = this.chartContainer.nativeElement.offsetWidth - this.margin.left - this.margin.right;
@@ -91,16 +96,15 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Agrupar por Producto y sumar cantidades
     const groupedData = d3.rollups(
       this.rawData,
-      v => d3.sum(v, d => d.Cantidad), // Sumar las cantidades
+      v => d3.sum(v, d => d.Cantidad),
       d => d.Producto
     );
 
-    // Convertir el formato agrupado en una estructura plana
-    this.data = groupedData.map(([Producto, Cantidad]) => ({ Producto, Cantidad }));
-
+    this.data = groupedData
+      .map(([Producto, Cantidad]) => ({ Producto, Cantidad }))
+      .sort((a, b) => b.Cantidad - a.Cantidad);
   }
 
   private createChart() {
@@ -109,7 +113,7 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
       d3.select(this.chartContainer.nativeElement).selectAll('*').remove();
     }
 
-    const productos = this.data.map(d => d.Producto); // Productos únicos
+    const productos = this.data.map(d => d.Producto);
     const maxCantidad = Math.ceil(d3.max(this.data, d => d.Cantidad) || 0);
 
     // Escalas
@@ -149,7 +153,9 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
       .attr('width', d => x(d.Cantidad))
       .attr('height', y.bandwidth())
       .attr('rx', 5)
-      .attr('fill', '#bf360c')
+      .attr('fill', d => d.Producto === this.selectedProducto ? '#8f1406' : '#bf360c')
+      .attr('opacity', d => !this.selectedProducto || d.Producto === this.selectedProducto ? 1 : 0.38)
+      .style('cursor', 'pointer')
       .on('click', (event, d) => {
         this.onBarClick(d.Producto);
       });
@@ -169,14 +175,21 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
   }
 
   onBarClick(producto: string) {
-    this.selectedProducto = producto;
+    this.selectedProducto = this.selectedProducto === producto ? null : producto;
+    this.createChart();
+  }
+
+  limpiarSeleccion(): void {
+    this.selectedProducto = null;
+    this.createChart();
   }
 
   async getAnulaciones(fechaInicial: string, fechaFinal: string) {
     try {
       this.spinnerService.show('anulacionesSpinner');
       const data = await this.ventaService.getAnulaciones(fechaInicial, fechaFinal, this.enfoque).toPromise();
-      this.rawData = data;
+      this.rawData = data ?? [];
+      this.selectedProducto = null;
 
       // Transformar y actualizar el gráfico después de cargar los datos
       this.transformData();
@@ -184,6 +197,9 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
       this.createChart();
     } catch (error) {
       console.error('Error al cargar datos:', error);
+      this.rawData = [];
+      this.data = [];
+      this.sinDatos = true;
     } finally {
       this.spinnerService.hide('anulacionesSpinner');
     }
@@ -195,5 +211,13 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
 
   get totalAnulaciones(): number {
     return this.rawData.reduce((total, item) => total + item.Cantidad, 0);
+  }
+
+  get totalImporte(): number {
+    return this.rawData.reduce((total, item) => total + item.Importe, 0);
+  }
+
+  get totalRegistros(): number {
+    return this.rawData.length;
   }
 }

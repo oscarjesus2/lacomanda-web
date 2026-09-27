@@ -21,6 +21,7 @@ import {
     SolicitudCorreccionVenta
 } from '../interfaces/correccion-venta.interface';
 import { DashboardEnfoqueFecha } from '../models/dashboard-filtro.models';
+import { AnulacionDashboard } from '../models/anulacion-dashboard.models';
 
 @Injectable({
     providedIn: 'root'
@@ -45,8 +46,8 @@ export class VentaService {
         return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'VentasHoraPico/' + tipo  + '/' + fechaInicial + '/' + fechaFinal, { params: { enfoque } });
     }
 
-    getAnulaciones(fechaInicial: string, fechaFinal: string, enfoque: DashboardEnfoqueFecha = 'FechaVenta'): Observable<ventadiariasemanalmensual[]> {
-      return this.http.get<ventadiariasemanalmensual[]>(this.basePath+ 'Anulaciones/'  + fechaInicial + '/' + fechaFinal, { params: { enfoque } });
+    getAnulaciones(fechaInicial: string, fechaFinal: string, enfoque: DashboardEnfoqueFecha = 'FechaVenta'): Observable<AnulacionDashboard[]> {
+      return this.http.get<AnulacionDashboard[]>(this.basePath+ 'Anulaciones/'  + fechaInicial + '/' + fechaFinal, { params: { enfoque } });
     }
 
     getListadoVentas(

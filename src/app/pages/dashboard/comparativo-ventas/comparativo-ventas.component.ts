@@ -104,20 +104,87 @@ export class ComparativoVentasComponent implements AfterViewInit, OnChanges, OnD
       .attr('role', 'img');
     const group = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
+    const max = d3.max(puntos, p => Math.max(p.VentaActual, p.VentaAnterior)) ?? 0;
+    const y = d3.scaleLinear().domain([0, max * 1.12 || 1]).nice().range([innerHeight, 0]);
+    group.append('g').attr('class', 'executive-chart__grid')
+      .call(d3.axisLeft(y).ticks(5).tickSize(-innerWidth).tickFormat(() => ''));
+    group.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(value =>
+      d3.format('~s')(Number(value))));
+    const tooltip = d3.select(host).append('div').attr('class', 'executive-tooltip');
+
+    if (puntos.length === 1) {
+      const punto = puntos[0];
+      const columnas = [
+        {
+          clave: 'actual',
+          etiqueta: this.textos.get('currentPeriod'),
+          fecha: punto.FechaActual,
+          valor: punto.VentaActual,
+        },
+        {
+          clave: 'anterior',
+          etiqueta: this.textos.get('previousPeriod'),
+          fecha: punto.FechaAnterior,
+          valor: punto.VentaAnterior,
+        },
+      ];
+      const anchoGrupo = Math.min(innerWidth * .56, 380);
+      const inicioGrupo = (innerWidth - anchoGrupo) / 2;
+      const xColumnas = d3.scaleBand<string>()
+        .domain(columnas.map(columna => columna.clave))
+        .range([inicioGrupo, inicioGrupo + anchoGrupo])
+        .padding(.32);
+
+      group.append('g')
+        .attr('transform', `translate(0,${innerHeight})`)
+        .call(d3.axisBottom(xColumnas).tickFormat(clave => {
+          const columna = columnas.find(item => item.clave === clave);
+          return columna
+            ? `${columna.etiqueta} · ${this.formatearFecha(columna.fecha)}`
+            : '';
+        }));
+
+      group.selectAll('.executive-chart__comparison-bar')
+        .data(columnas)
+        .enter()
+        .append('rect')
+        .attr('class', columna =>
+          `executive-chart__comparison-bar ${columna.clave === 'actual'
+            ? 'is-current'
+            : 'is-previous'}`)
+        .attr('x', columna => xColumnas(columna.clave) ?? 0)
+        .attr('y', columna => y(columna.valor))
+        .attr('width', xColumnas.bandwidth())
+        .attr('height', columna => Math.max(innerHeight - y(columna.valor), 2))
+        .on('mouseenter', (event, columna) => tooltip
+          .classed('is-visible', true)
+          .html(`<strong>${columna.etiqueta}</strong><br>${this.formatearFecha(columna.fecha)}<br>${this.simboloMoneda} ${columna.valor.toFixed(2)}`))
+        .on('mousemove', event => tooltip
+          .style('left', `${event.offsetX + 12}px`)
+          .style('top', `${event.offsetY - 18}px`))
+        .on('mouseleave', () => tooltip.classed('is-visible', false));
+
+      group.selectAll('.executive-chart__comparison-value')
+        .data(columnas)
+        .enter()
+        .append('text')
+        .attr('class', 'executive-chart__comparison-value')
+        .attr('x', columna =>
+          (xColumnas(columna.clave) ?? 0) + (xColumnas.bandwidth() / 2))
+        .attr('y', columna => Math.max(y(columna.valor) - 9, 12))
+        .attr('text-anchor', 'middle')
+        .text(columna => `${this.simboloMoneda} ${d3.format(',.2f')(columna.valor)}`);
+      return;
+    }
+
     const x = d3.scaleLinear()
       .domain(d3.extent(puntos, p => p.Indice) as [number, number])
       .range([0, innerWidth]);
-    const max = d3.max(puntos, p => Math.max(p.VentaActual, p.VentaAnterior)) ?? 0;
-    const y = d3.scaleLinear().domain([0, max * 1.12]).nice().range([innerHeight, 0]);
-    group.append('g').attr('class', 'executive-chart__grid')
-      .call(d3.axisLeft(y).ticks(5).tickSize(-innerWidth).tickFormat(() => ''));
     group.append('g').attr('transform', `translate(0,${innerHeight})`)
       .call(d3.axisBottom(x).ticks(Math.min(puntos.length, 7)).tickFormat(index => {
         const punto = puntos[Math.max(0, Math.min(puntos.length - 1, Math.round(Number(index)) - 1))];
         return punto ? this.formatearFecha(punto.FechaActual) : '';
       }));
-    group.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(value =>
-      d3.format('~s')(Number(value))));
     const area = d3.area<typeof puntos[number]>()
       .x(p => x(p.Indice)).y0(innerHeight).y1(p => y(p.VentaActual)).curve(d3.curveMonotoneX);
     group.append('path').datum(puntos)
@@ -132,7 +199,6 @@ export class ComparativoVentasComponent implements AfterViewInit, OnChanges, OnD
     group.append('path').datum(puntos)
       .attr('class', 'executive-chart__line executive-chart__line--previous')
       .attr('d', lineaAnterior);
-    const tooltip = d3.select(host).append('div').attr('class', 'executive-tooltip');
     group.selectAll('.executive-chart__hit').data(puntos).enter().append('circle')
       .attr('class', 'executive-chart__hit')
       .attr('cx', p => x(p.Indice)).attr('cy', p => y(p.VentaActual)).attr('r', 5)
