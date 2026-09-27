@@ -4,6 +4,7 @@ import * as d3 from 'd3';
 import { VentaService } from 'src/app/services/venta.service';
 import { formatDate } from '@angular/common';
 import { StorageService } from 'src/app/services/storage.service';
+import { DashboardEnfoqueFecha } from 'src/app/models/dashboard-filtro.models';
 
 @Component({
   selector: 'app-horas-pico',
@@ -14,6 +15,7 @@ export class HorasPicoComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('chart', { static: true }) private chartContainer: ElementRef;
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
+  @Input() enfoque: DashboardEnfoqueFecha = 'FechaVenta';
   horaPico: string;
   private svgRoot: any;
   private svg: any;
@@ -25,6 +27,7 @@ export class HorasPicoComponent implements OnInit, OnChanges, OnDestroy {
   private resizePending = false;
   sinDatos = false;
   loading: boolean = true;
+  reportType = 1;
 
   constructor(private spinnerService: NgxSpinnerService, private ventaService: VentaService, private storageService: StorageService) { }
 
@@ -37,7 +40,7 @@ export class HorasPicoComponent implements OnInit, OnChanges, OnDestroy {
 
       var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
       var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
-      this.getVentasHoraPico(1, fechaInicial, fechaFinal); // Inicializar con datos Tarde
+      this.getVentasHoraPico(this.reportType, fechaInicial, fechaFinal);
     } catch (error) {
       this.storageService.logout();
     }
@@ -46,11 +49,11 @@ export class HorasPicoComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges): void {
     // Detectar cambios en las fechas y actualizar el gráfico
-    if (changes.fechaInicial || changes.fechaFinal) {
+    if (changes.fechaInicial || changes.fechaFinal || changes.enfoque) {
       if (this.fechaInicial && this.fechaFinal) {
         var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
         var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
-        this.getVentasHoraPico(1, fechaInicial, fechaFinal); // Inicializar con datos Tarde
+        this.getVentasHoraPico(this.reportType, fechaInicial, fechaFinal);
       }
     }
   }
@@ -60,7 +63,7 @@ export class HorasPicoComponent implements OnInit, OnChanges, OnDestroy {
     this.spinnerService.show('horasPicoSpinner');
     this.loading = true;
     let maxValor = Number.MIN_SAFE_INTEGER;
-    const data = await this.ventaService.getVentasHoraPico(tipo, fechaInicial, fechaFinal).toPromise();
+    const data = await this.ventaService.getVentasHoraPico(tipo, fechaInicial, fechaFinal, this.enfoque).toPromise();
     data.forEach((elemento) => {
       if (elemento.Total > maxValor) {
         maxValor = elemento.Total;
@@ -75,10 +78,10 @@ export class HorasPicoComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onReportTypeChange(event: any): void {
-    const reportType = +event.target.value;
+    this.reportType = +event.target.value;
     var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
     var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
-    this.getVentasHoraPico(reportType, fechaInicial, fechaFinal);
+    this.getVentasHoraPico(this.reportType, fechaInicial, fechaFinal);
   }
 
 
@@ -134,28 +137,53 @@ export class HorasPicoComponent implements OnInit, OnChanges, OnDestroy {
     const x = d3.scaleBand()
       .domain(data.map(d => d.Agrupado))
       .range([0, this.width])
-      .padding(0.1);
+      .padding(0.22);
 
     const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.Total)])
+      .domain([0, (d3.max(data, d => d.Total) ?? 0) * 1.12 || 1])
       .nice()
       .range([this.height, 0]);
 
-    const yAxisFormat = d3.format(',.0f'); // Formato para los ticks del eje Y
+    const yAxisFormat = d3.format('~s');
 
     const yAxis = d3.axisLeft(y)
-      .tickFormat(d => `S/.${yAxisFormat(d)}`); // Antepone 'S/.' a cada tick
+      .tickFormat(d => yAxisFormat(Number(d)));
 
     const line = d3.line<any>()
       .x(d => x(d.Agrupado) + x.bandwidth() / 2)
-      .y(d => y(d.Total));
+      .y(d => y(d.Total))
+      .curve(d3.curveMonotoneX);
+
+    const area = d3.area<any>()
+      .x(d => x(d.Agrupado) + x.bandwidth() / 2)
+      .y0(this.height)
+      .y1(d => y(d.Total))
+      .curve(d3.curveMonotoneX);
+
+    this.svg.append('g')
+      .attr('class', 'chart-grid')
+      .call(d3.axisLeft(y).ticks(5).tickSize(-this.width).tickFormat(() => ''));
+
+    this.svg.append('path')
+      .datum(data)
+      .attr('fill', 'rgba(0, 121, 107, .12)')
+      .attr('d', area);
 
     this.svg.append('path')
       .datum(data)
       .attr('fill', 'none')
-      .attr('stroke', 'steelblue')
-      .attr('stroke-width', 2)
+      .attr('stroke', '#00796b')
+      .attr('stroke-width', 2.6)
       .attr('d', line);
+
+    this.svg.selectAll('.peak-dot').data(data).enter().append('circle')
+      .attr('class', 'peak-dot')
+      .attr('cx', d => x(d.Agrupado) + x.bandwidth() / 2)
+      .attr('cy', d => y(d.Total))
+      .attr('r', 4)
+      .attr('fill', '#00796b')
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 2);
 
     this.svg.append('g')
       .attr('class', 'axis axis-x')
@@ -164,12 +192,11 @@ export class HorasPicoComponent implements OnInit, OnChanges, OnDestroy {
 
     this.svg.append('g')
       .attr('class', 'axis axis-y')
-      .call(yAxis); // Aplicar el eje Y modificado
+      .call(yAxis);
 
     // Estilo adicional para los ticks y el texto del eje Y
     this.svg.selectAll('.axis-y text')
-      .attr('fill', 'black')
-      .style('font-size', '12px');
+      .style('font-size', '10px');
 
     this.svg.selectAll('.axis-y line')
       .attr('stroke', '#ccc')

@@ -7,6 +7,7 @@ import { ventadiariasemanalmensual } from 'src/app/models/ventadiariasemanalmens
 import { formatDate } from '@angular/common';
 import { StorageService } from 'src/app/services/storage.service';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import { DashboardEnfoqueFecha } from 'src/app/models/dashboard-filtro.models';
 @Component({
   selector: 'app-canal-venta',
   templateUrl: './canal-venta.component.html',
@@ -17,6 +18,7 @@ export class CanalVentaComponent implements OnInit, OnChanges, OnDestroy  {
   private chartContainer: ElementRef;
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
+  @Input() enfoque: DashboardEnfoqueFecha = 'FechaVenta';
   totalVentaEspacio: number;
   totalVentaLlevar: number;
   totalVentaDelivery: number;
@@ -55,7 +57,7 @@ export class CanalVentaComponent implements OnInit, OnChanges, OnDestroy  {
   }
   ngOnChanges(changes: SimpleChanges): void {
     // Detectar cambios en las fechas y actualizar el gráfico
-    if (changes.fechaInicial || changes.fechaFinal) {
+    if (changes.fechaInicial || changes.fechaFinal || changes.enfoque) {
       if (this.fechaInicial && this.fechaFinal) {
       var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
       var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
@@ -65,7 +67,7 @@ export class CanalVentaComponent implements OnInit, OnChanges, OnDestroy  {
     }
   }
   private initSvg() {
-    this.color = d3.scaleOrdinal(d3.schemeCategory10);
+    this.color = d3.scaleOrdinal(['#bf360c', '#f57c00', '#00796b', '#5e35b1', '#0277bd']);
 
     this.svgRoot = d3.select(this.chartContainer.nativeElement)
       .append('svg')
@@ -124,7 +126,7 @@ export class CanalVentaComponent implements OnInit, OnChanges, OnDestroy  {
     
     this.spinnerService.show('canalVentaSpinner');
 
-      const data = await this.ventaService.getVentasPorCanal(fechaInicial, fechaFinal).toPromise();
+      const data = await this.ventaService.getVentasPorCanal(fechaInicial, fechaFinal, this.enfoque).toPromise();
       this.data = data;
       this.sinDatos = !this.data || this.data.length === 0;
 
@@ -139,12 +141,10 @@ export class CanalVentaComponent implements OnInit, OnChanges, OnDestroy  {
   private updateChart() {
     const pie = d3.pie<ventadiariasemanalmensual>().value((d: ventadiariasemanalmensual) => d.Total);
     const arc = d3.arc<ventadiariasemanalmensual>()
-      .outerRadius(this.radius - 10)
-      .innerRadius(0);
-
-    const labelArc = d3.arc<ventadiariasemanalmensual>()
-      .outerRadius(this.radius - 40)
-      .innerRadius(this.radius - 40);
+      .outerRadius(this.radius * .84)
+      .innerRadius(this.radius * .52)
+      .cornerRadius(5)
+      .padAngle(.018);
 
     const update = this.svg.selectAll('.arc').data(pie(this.data));
 
@@ -160,7 +160,7 @@ export class CanalVentaComponent implements OnInit, OnChanges, OnDestroy  {
         this.tooltip.transition()
           .duration(200)
           .style('opacity', .9);
-        this.tooltip.html(`${d.data.Agrupado} - Total Venta S/.  ${d.data.Total}`)
+        this.tooltip.html(`<strong>${d.data.Agrupado}</strong><br>${this.monedaSimbolo} ${Number(d.data.Total).toFixed(2)}`)
           .style('left', (event.pageX + 5) + 'px')
           .style('top', (event.pageY - 28) + 'px');
       })
@@ -170,20 +170,27 @@ export class CanalVentaComponent implements OnInit, OnChanges, OnDestroy  {
           .style('opacity', 0);
       });
 
-    enter.append('text')
-      .attr('transform', (d: any) => `translate(${labelArc.centroid(d)})`)
-      .attr('dy', '0.35em')
-      .style('font-size', '12px')  // Ajusta el tamaño de la fuente
-      .style('text-anchor', 'middle')  // Alinea el texto al centro
-      .style('fill', 'black')  // Color del texto
-      .text((d: any) => `${d.data.Agrupado} (${((d.endAngle - d.startAngle) / (2 * Math.PI) * 100).toFixed(2)}%)`);
-
     update.select('path')
       .attr('d', arc)
       .attr('fill', (d: any) => this.color(d.data.Agrupado));
 
-    update.select('text')
-      .attr('transform', (d: any) => `translate(${labelArc.centroid(d)})`)
-      .text((d: any) => `${d.data.Agrupado} (${((d.endAngle - d.startAngle) / (2 * Math.PI) * 100).toFixed(2)}%)`);
+    this.svg.selectAll('.donut-center').remove();
+    const total = d3.sum(this.data, item => item.Total);
+    this.svg.append('text')
+      .attr('class', 'donut-center')
+      .attr('text-anchor', 'middle')
+      .attr('y', -5)
+      .style('font-size', '10px')
+      .style('font-weight', '800')
+      .style('fill', '#8a766d')
+      .text('VENTA TOTAL');
+    this.svg.append('text')
+      .attr('class', 'donut-center')
+      .attr('text-anchor', 'middle')
+      .attr('y', 18)
+      .style('font-size', '17px')
+      .style('font-weight', '850')
+      .style('fill', '#332822')
+      .text(`${this.monedaSimbolo} ${d3.format('~s')(total)}`);
   }
 }

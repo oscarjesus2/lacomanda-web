@@ -6,6 +6,7 @@ import { VentaService } from 'src/app/services/venta.service';
 import { ventadiariasemanalmensual } from 'src/app/models/ventadiariasemanalmensual.models';
 import { formatDate } from '@angular/common';
 import { StorageService } from 'src/app/services/storage.service';
+import { DashboardEnfoqueFecha } from 'src/app/models/dashboard-filtro.models';
 
 @Component({
   selector: 'app-popularidad-platos',
@@ -16,9 +17,10 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges, OnDestroy 
   @ViewChild('chart', { static: true }) private chartContainer: ElementRef;
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
+  @Input() enfoque: DashboardEnfoqueFecha = 'FechaVenta';
   private svgRoot: any;
   private svg: any;
-  private margin = { top: 20, right: 20, bottom: 30, left: 90 };
+  private margin = { top: 20, right: 54, bottom: 36, left: 140 };
   private width: number;
   private height: number;
   private tooltip: any;
@@ -26,7 +28,7 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges, OnDestroy 
   private resizeObserver?: ResizeObserver;
   private resizePending = false;
   sinDatos = false;
-  reportType: number=1;
+  reportType: number = 5;
   constructor(private spinnerService: NgxSpinnerService, private ventaService: VentaService, private storageService: StorageService) { }
 
   ngOnInit(): void {
@@ -49,7 +51,7 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges, OnDestroy 
 
       var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
       var fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US')
-      this.getProductosMasVendidos(1, fechaInicial, fechaFinal); // Inicializar con datos Top 1
+      this.getProductosMasVendidos(this.reportType, fechaInicial, fechaFinal);
     } catch (error) {
         this.storageService.logout();
     }
@@ -58,7 +60,7 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges, OnDestroy 
 
   ngOnChanges(changes: SimpleChanges): void {
     // Detectar cambios en las fechas y actualizar el gráfico
-    if (changes.fechaInicial || changes.fechaFinal) {
+    if (changes.fechaInicial || changes.fechaFinal || changes.enfoque) {
       if (this.fechaInicial && this.fechaFinal) {
         
       var fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US')
@@ -71,7 +73,7 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges, OnDestroy 
 
   async getProductosMasVendidos(top: number, fechaInicial: string, fechaFinal: string) {
     this.spinnerService.show('popularidadPlatoSpinner');
-      const data = await this.ventaService.getProductosMasVendidos(top, fechaInicial, fechaFinal).toPromise();
+      const data = await this.ventaService.getProductosMasVendidos(top, fechaInicial, fechaFinal, this.enfoque).toPromise();
 
       // Ordenar datos por cantidad de manera descendente
       data.sort((a, b) => b.Cantidad - a.Cantidad);
@@ -133,6 +135,14 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges, OnDestroy 
     if (this.tooltip) { this.tooltip.remove(); }
   }
 
+  get totalUnidades(): number {
+    return this.lastData.reduce((total, item) => total + item.Cantidad, 0);
+  }
+
+  get productoLider(): string {
+    return this.lastData[0]?.Producto ?? '';
+  }
+
   private updateChart(data: any[]): void {
     this.lastData = data;
     const x = d3.scaleLinear()
@@ -147,10 +157,14 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges, OnDestroy 
     // Actualizar ejes X e Y
     this.svg.select('.x-axis')
       .attr('transform', `translate(0,${this.height})`)
-      .call(d3.axisBottom(x));
+      .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format('d')));
 
     this.svg.select('.y-axis')
       .call(d3.axisLeft(y));
+    this.svg.selectAll('.chart-grid').remove();
+    this.svg.insert('g', ':first-child')
+      .attr('class', 'chart-grid')
+      .call(d3.axisBottom(x).ticks(5).tickSize(this.height).tickFormat(() => ''));
     // Seleccionar todas las barras actuales y unirlas con los nuevos datos
     const bars = this.svg.selectAll('.bar')
       .data(data);
@@ -165,7 +179,8 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges, OnDestroy 
       .attr('y', d => y(d.Producto))
       .attr('width', d => x(d.Cantidad))
       .attr('height', y.bandwidth())
-      .attr('fill', 'steelblue');
+      .attr('rx', 5)
+      .attr('fill', '#bf360c');
 
     // Agregar nuevas barras
     bars.enter().append('rect')
@@ -173,7 +188,8 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges, OnDestroy 
       .attr('y', d => y(d.Producto))
       .attr('width', d => x(d.Cantidad))
       .attr('height', y.bandwidth())
-      .attr('fill', 'steelblue')
+      .attr('rx', 5)
+      .attr('fill', '#bf360c')
       .on('mouseover', (event, d) => {
         this.tooltip.transition()
           .duration(200)
@@ -187,5 +203,18 @@ export class PopularidadPlatosComponent implements OnInit, OnChanges, OnDestroy 
           .duration(500)
           .style('opacity', 0);
       });
+
+    const labels = this.svg.selectAll('.bar-value').data(data);
+    labels.exit().remove();
+    labels.enter().append('text')
+      .attr('class', 'bar-value')
+      .merge(labels)
+      .attr('x', d => x(d.Cantidad) + 7)
+      .attr('y', d => (y(d.Producto) ?? 0) + y.bandwidth() / 2)
+      .attr('dy', '.35em')
+      .attr('fill', '#5f5049')
+      .style('font-size', '11px')
+      .style('font-weight', '700')
+      .text(d => d.Cantidad);
   }
 }

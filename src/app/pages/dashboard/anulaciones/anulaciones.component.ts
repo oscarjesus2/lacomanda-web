@@ -5,6 +5,7 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { ventadiariasemanalmensual } from 'src/app/models/ventadiariasemanalmensual.models';
 import { StorageService } from 'src/app/services/storage.service';
 import { VentaService } from 'src/app/services/venta.service';
+import { DashboardEnfoqueFecha } from 'src/app/models/dashboard-filtro.models';
 
 @Component({
   selector: 'app-anulaciones',
@@ -15,6 +16,7 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
   @ViewChild('chart', { static: true }) private chartContainer: ElementRef;
   @Input() fechaInicial: Date;
   @Input() fechaFinal: Date;
+  @Input() enfoque: DashboardEnfoqueFecha = 'FechaVenta';
 
   // Datos originales
   private rawData: ventadiariasemanalmensual[] = [];
@@ -74,7 +76,7 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.fechaInicial || changes.fechaFinal) {
+    if (changes.fechaInicial || changes.fechaFinal || changes.enfoque) {
       if (this.fechaInicial && this.fechaFinal) {
         const fechaInicial = formatDate(this.fechaInicial, 'yyyyMMdd', 'en-US');
         const fechaFinal = formatDate(this.fechaFinal, 'yyyyMMdd', 'en-US');
@@ -99,7 +101,6 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
     // Convertir el formato agrupado en una estructura plana
     this.data = groupedData.map(([Producto, Cantidad]) => ({ Producto, Cantidad }));
 
-    console.log('Datos transformados:', this.data);
   }
 
   private createChart() {
@@ -114,8 +115,6 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
     // Escalas
     const y = d3.scaleBand().domain(productos).range([0, this.height]).padding(0.2);
     const x = d3.scaleLinear().domain([0, maxCantidad]).range([0, this.width]);
-
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
 
     // Crear SVG
     this.svg = d3.select(this.chartContainer.nativeElement)
@@ -132,6 +131,10 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
       .call(d3.axisBottom(x).ticks(maxCantidad).tickFormat(d3.format('d')));;
 
     this.svg.append('g')
+      .attr('class', 'chart-grid')
+      .call(d3.axisBottom(x).ticks(Math.min(maxCantidad, 6)).tickSize(this.height).tickFormat(() => ''));
+
+    this.svg.append('g')
       .attr('class', 'y-axis')
       .call(d3.axisLeft(y));
 
@@ -145,10 +148,24 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
       .attr('y', d => y(d.Producto))
       .attr('width', d => x(d.Cantidad))
       .attr('height', y.bandwidth())
-      .attr('fill', d => color(d.Producto))
+      .attr('rx', 5)
+      .attr('fill', '#bf360c')
       .on('click', (event, d) => {
         this.onBarClick(d.Producto);
       });
+
+    this.svg.selectAll('.bar-value')
+      .data(this.data)
+      .enter()
+      .append('text')
+      .attr('class', 'bar-value')
+      .attr('x', d => x(d.Cantidad) + 7)
+      .attr('y', d => (y(d.Producto) ?? 0) + y.bandwidth() / 2)
+      .attr('dy', '.35em')
+      .style('font-size', '11px')
+      .style('font-weight', '750')
+      .style('fill', '#5f5049')
+      .text(d => d.Cantidad);
   }
 
   onBarClick(producto: string) {
@@ -158,7 +175,7 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
   async getAnulaciones(fechaInicial: string, fechaFinal: string) {
     try {
       this.spinnerService.show('anulacionesSpinner');
-      const data = await this.ventaService.getAnulaciones(fechaInicial, fechaFinal).toPromise();
+      const data = await this.ventaService.getAnulaciones(fechaInicial, fechaFinal, this.enfoque).toPromise();
       this.rawData = data;
 
       // Transformar y actualizar el gráfico después de cargar los datos
@@ -174,5 +191,9 @@ export class AnulacionesComponent implements OnInit, OnDestroy {
 
   get filteredData() {
     return this.rawData.filter(item => !this.selectedProducto || item.Producto === this.selectedProducto);
+  }
+
+  get totalAnulaciones(): number {
+    return this.rawData.reduce((total, item) => total + item.Cantidad, 0);
   }
 }

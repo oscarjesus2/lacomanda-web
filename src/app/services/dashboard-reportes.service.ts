@@ -8,6 +8,7 @@ import {
   EvolucionMargenDashboard,
   MetodosPagoDashboard
 } from '../models/dashboard-ejecutivo.models';
+import { DashboardEnfoqueFecha } from '../models/dashboard-filtro.models';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardReportesService {
@@ -17,43 +18,51 @@ export class DashboardReportesService {
 
   obtenerComparativoVentas(
     fechaDesde: string,
-    fechaHasta: string
+    fechaHasta: string,
+    enfoque: DashboardEnfoqueFecha = 'FechaVenta'
   ): Observable<ComparativoVentasDashboard> {
     return this.http
       .get<ApiResponse<ComparativoVentasDashboard>>(
         `${this.baseUrl}/comparativo-ventas`,
-        { params: this.crearParametros(fechaDesde, fechaHasta) }
+        { params: this.crearParametros(fechaDesde, fechaHasta, enfoque) }
       )
       .pipe(map(respuesta => respuesta.Data));
   }
 
   obtenerEvolucionMargen(
     fechaDesde: string,
-    fechaHasta: string
+    fechaHasta: string,
+    enfoque: DashboardEnfoqueFecha = 'FechaVenta'
   ): Observable<EvolucionMargenDashboard> {
     return this.http
       .get<ApiResponse<EvolucionMargenDashboard>>(
         `${this.baseUrl}/evolucion-margen`,
-        { params: this.crearParametros(fechaDesde, fechaHasta) }
+        { params: this.crearParametros(fechaDesde, fechaHasta, enfoque) }
       )
       .pipe(map(respuesta => respuesta.Data));
   }
 
   obtenerMetodosPago(
     fechaDesde: string,
-    fechaHasta: string
+    fechaHasta: string,
+    enfoque: DashboardEnfoqueFecha = 'FechaVenta'
   ): Observable<MetodosPagoDashboard> {
     return this.http
       .get<ApiResponse<MetodosPagoDashboard>>(
         `${this.baseUrl}/metodos-pago`,
-        { params: this.crearParametros(fechaDesde, fechaHasta) }
+        { params: this.crearParametros(fechaDesde, fechaHasta, enfoque) }
       )
       .pipe(map(respuesta => respuesta.Data));
   }
 
-  private crearParametros(fechaDesde: string, fechaHasta: string): HttpParams {
+  private crearParametros(
+    fechaDesde: string,
+    fechaHasta: string,
+    enfoque: DashboardEnfoqueFecha
+  ): HttpParams {
     return new HttpParams()
       .set('FechaDesde', fechaDesde)
-      .set('FechaHasta', fechaHasta);
+      .set('FechaHasta', fechaHasta)
+      .set('Enfoque', enfoque);
   }
 }

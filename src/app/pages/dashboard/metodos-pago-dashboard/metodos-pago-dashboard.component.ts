@@ -14,6 +14,7 @@ import { MetodoPagoDashboardItem, MetodosPagoDashboard } from 'src/app/models/da
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { DashboardReportesService } from 'src/app/services/dashboard-reportes.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { DashboardEnfoqueFecha } from 'src/app/models/dashboard-filtro.models';
 
 @Component({
   selector: 'app-metodos-pago-dashboard',
@@ -22,6 +23,7 @@ import { TenantTextCatalogService } from 'src/app/services/localization/tenant-t
 export class MetodosPagoDashboardComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() fechaInicial = '';
   @Input() fechaFinal = '';
+  @Input() enfoque: DashboardEnfoqueFecha = 'FechaVenta';
   @ViewChild('chart', { static: true }) chartContainer: ElementRef<HTMLDivElement>;
 
   data?: MetodosPagoDashboard;
@@ -49,7 +51,7 @@ export class MetodosPagoDashboardComponent implements AfterViewInit, OnChanges, 
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (this.viewReady && (changes.fechaInicial || changes.fechaFinal)) this.cargar();
+    if (this.viewReady && (changes.fechaInicial || changes.fechaFinal || changes.enfoque)) this.cargar();
   }
 
   ngOnDestroy(): void {
@@ -67,7 +69,7 @@ export class MetodosPagoDashboardComponent implements AfterViewInit, OnChanges, 
     this.loading = true;
     this.error = false;
     this.request = this.reportesService
-      .obtenerMetodosPago(this.fechaInicial, this.fechaFinal)
+      .obtenerMetodosPago(this.fechaInicial, this.fechaFinal, this.enfoque)
       .subscribe({
         next: data => {
           this.data = data;

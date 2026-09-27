@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { StorageService } from 'src/app/services/storage.service';
 import { HeaderService } from 'src/app/services/header.service';
+import { DashboardEnfoqueFecha } from 'src/app/models/dashboard-filtro.models';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,16 +20,17 @@ export class DashboardComponent implements OnInit {
   minFechaInicial: string;
   userLoginOn: boolean = false;
   userData?: Usuario;
+  enfoque: DashboardEnfoqueFecha = 'FechaVenta';
 
   reportes = [
     { tituloKey: 'comparisonSales', componente: 'comparativo-ventas', visible: true, wide: true },
     { tituloKey: 'marginEvolution', componente: 'evolucion-margen', visible: true, wide: false },
-    { tituloKey: 'paymentDistribution', componente: 'metodos-pago-dashboard', visible: true, wide: false },
+    { tituloKey: 'paymentDistribution', componente: 'metodos-pago-dashboard', visible: true, wide: true },
     { tituloKey: 'dailySales', componente: 'ventas-diarias', visible: false },
     { tituloKey: 'dishPopularity', componente: 'popularidad-platos', visible: false },
     { tituloKey: 'peakHours', componente: 'horas-pico', visible: false },
     { tituloKey: 'salesChannel', componente: 'canal-venta', visible: false },
-    { tituloKey: 'voids', componente: 'anulaciones', visible: false }
+    { tituloKey: 'voids', componente: 'anulaciones', visible: false, wide: true }
     // Puedes agregar más reportes aquí:
     // { tituloKey: 'nuevoReporte', componente: 'nuevo-reporte', visible: false }
   ];

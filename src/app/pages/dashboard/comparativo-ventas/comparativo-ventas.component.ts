@@ -14,6 +14,7 @@ import { ComparativoVentasDashboard } from 'src/app/models/dashboard-ejecutivo.m
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { DashboardReportesService } from 'src/app/services/dashboard-reportes.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { DashboardEnfoqueFecha } from 'src/app/models/dashboard-filtro.models';
 
 @Component({
   selector: 'app-comparativo-ventas',
@@ -22,6 +23,7 @@ import { TenantTextCatalogService } from 'src/app/services/localization/tenant-t
 export class ComparativoVentasComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() fechaInicial = '';
   @Input() fechaFinal = '';
+  @Input() enfoque: DashboardEnfoqueFecha = 'FechaVenta';
   @ViewChild('chart', { static: true }) chartContainer: ElementRef<HTMLDivElement>;
 
   data?: ComparativoVentasDashboard;
@@ -48,7 +50,7 @@ export class ComparativoVentasComponent implements AfterViewInit, OnChanges, OnD
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (this.viewReady && (changes.fechaInicial || changes.fechaFinal)) {
+    if (this.viewReady && (changes.fechaInicial || changes.fechaFinal || changes.enfoque)) {
       this.cargar();
     }
   }
@@ -69,7 +71,7 @@ export class ComparativoVentasComponent implements AfterViewInit, OnChanges, OnD
     this.loading = true;
     this.error = false;
     this.request = this.reportesService
-      .obtenerComparativoVentas(this.fechaInicial, this.fechaFinal)
+      .obtenerComparativoVentas(this.fechaInicial, this.fechaFinal, this.enfoque)
       .subscribe({
         next: data => {
           this.data = data;

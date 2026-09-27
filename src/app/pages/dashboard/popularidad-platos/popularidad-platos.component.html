@@ -13,6 +13,7 @@
 
   <header class="report-panel__header">
     <div>
+      <span class="report-panel__eyebrow">Demanda</span>
       <h3 class="report-panel__title">{{ 'dishPopularity' | tenantText }}</h3>
       <p class="report-panel__subtitle">
         {{ 'topBestSellingDishes' | tenantText }}
@@ -25,13 +26,18 @@
         class="report-panel__select"
         (change)="onReportTypeChange($event)"
       >
-        <option value="1">{{ 'top' | tenantText }} 1</option>
-        <option value="2">{{ 'top' | tenantText }} 2</option>
-        <option value="3">{{ 'top' | tenantText }} 3</option>
-        <option value="4">{{ 'top' | tenantText }} 4</option>
+        <option value="5">{{ 'top' | tenantText }} 5</option>
+        <option value="10">{{ 'top' | tenantText }} 10</option>
+        <option value="15">{{ 'top' | tenantText }} 15</option>
+        <option value="20">{{ 'top' | tenantText }} 20</option>
       </select>
     </label>
   </header>
+
+  <section class="report-panel__summary-group" *ngIf="!sinDatos">
+    <div class="report-panel__summary-chip">Líder: {{ productoLider }}</div>
+    <div class="report-panel__summary-chip">Unidades del top: {{ totalUnidades }}</div>
+  </section>
 
   <div class="report-panel__chart-container">
     <div
