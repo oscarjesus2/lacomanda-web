@@ -11,7 +11,7 @@ export class DialogProductSearchComponent {
   filterText: string = '';
   filteredProducts: Producto[] = [];
   listProducts: Producto[] = [];
-  displayedColumns: string[] = ['name', 'price', 'family'];
+  displayedColumns: string[] = ['name', 'price', 'category'];
   selectedProduct: Producto | null = null; // Variable para almacenar el producto seleccionado
 
   constructor(
@@ -22,13 +22,34 @@ export class DialogProductSearchComponent {
     this.filteredProducts = [...this.listProducts]; // Inicializar la lista filtrada
   }
 
-  filterProducts() {
-    const filterValue = this.filterText ? this.filterText.toLowerCase() : ''; // Verificamos que no sea null o undefined
-  
-    this.filteredProducts = this.listProducts.filter((product: any) => {
-      const productName = product.NombreCorto ? product.NombreCorto.toLowerCase() : ''; // Aseguramos que NombreCorto existe
-      return productName.includes(filterValue);
+  filterProducts(): void {
+    const terms = this.normalize(this.filterText)
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (terms.length === 0) {
+      this.filteredProducts = [...this.listProducts];
+      return;
+    }
+
+    this.filteredProducts = this.listProducts.filter(product => {
+      const searchableText = this.normalize([
+        product.NombreCorto,
+        product.NombreCompleto,
+        product.Familia,
+        product.SubFamilia,
+      ].filter(Boolean).join(' '));
+
+      return terms.every(term => searchableText.includes(term));
     });
+  }
+
+  private normalize(value: string | null | undefined): string {
+    return (value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase()
+      .trim();
   }
 
 

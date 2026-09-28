@@ -108,6 +108,7 @@
             <th>{{ 'order' | tenantText }}</th>
             <th>{{ 'account' | tenantText }}</th>
             <th>{{ 'spaceOrChannel' | tenantText }}</th>
+            <th>{{ 'status' | tenantText }}</th>
             <th>{{ 'orderAttendant' | tenantText }}</th>
             <th>{{ 'date' | tenantText }}</th>
             <th class="is-numeric">{{ 'amount' | tenantText }}</th>
@@ -119,12 +120,28 @@
             <td>{{ pedido.NroPedido }}</td>
             <td>{{ pedido.NroCuenta }}</td>
             <td>{{ pedido.Espacio || pedido.CanalVenta || '—' }}</td>
+            <td>
+              <span class="status-badge"
+                    [class.status-badge--warning]="pedido.EsPendienteCobro">
+                {{ pedido.EstadoDescripcion }}
+              </span>
+            </td>
             <td>{{ pedido.Empleado || '—' }}</td>
             <td>{{ pedido.FechaPedido | date:'dd/MM/yyyy HH:mm' }}</td>
             <td class="is-numeric">
               {{ pedido.MontoPendiente | number:'1.2-2' }}
             </td>
-            <td>
+            <td class="dialog-data-table__actions">
+              <button
+                *ngIf="pedido.EsPendienteCobro"
+                mat-raised-button
+                color="primary"
+                type="button"
+                (click)="cobrarPedidoPendiente(pedido)"
+                [disabled]="procesando">
+                <mat-icon>payments</mat-icon>
+                {{ 'charge' | tenantText }}
+              </button>
               <button
                 mat-stroked-button
                 color="warn"

@@ -1,5 +1,5 @@
-import { of } from 'rxjs';
-import { CanalVentaEnum } from 'src/app/enums/enum';
+import { of, Subject } from 'rxjs';
+import { CanalVentaEnum, PedidoEstadoEnum } from 'src/app/enums/enum';
 
 import { VentaComponent } from './venta.component';
 
@@ -63,6 +63,472 @@ describe('VentaComponent - canales por estación', () => {
     expect(limpiarPedido).not.toHaveBeenCalled();
     expect(abrirEntradas).not.toHaveBeenCalled();
     expect(component.idCanalVentaSelected).toBe(CanalVentaEnum.ESPACIO);
+  });
+});
+
+describe('VentaComponent - pedidos pendientes de cobro', () => {
+  function pedido(estado: PedidoEstadoEnum, id = 1): any {
+    return {
+      IdPedido: id,
+      NroCuenta: 1,
+      IdEspacio: 8,
+      NroPedido: `L${id}`,
+      Cliente: 'Cliente',
+      IdCanalVenta: CanalVentaEnum.ESPACIO,
+      Estado: estado,
+      Total: 25,
+      Posicion: id,
+      Visible: true,
+    };
+  }
+
+  it('separa únicamente los pedidos pendientes de cobro visibles', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.listaPedidosPendientes = [
+      pedido(PedidoEstadoEnum.Activo),
+      pedido(PedidoEstadoEnum.PendienteCobro, 2),
+      { ...pedido(PedidoEstadoEnum.PendienteCobro, 3), Visible: false },
+    ];
+
+    expect(component.pedidosPendientesCobro.map(item => item.IdPedido)).toEqual([2]);
+  });
+
+  it('un pendiente de cobro no permite operar la comanda pero sí cobrarla', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.procesarPedido = true;
+    component.idPedidoCobrar = 10;
+    component.nroCuentaCobrar = 1;
+    component.pedidoPendienteCobroSeleccionado = pedido(
+      PedidoEstadoEnum.PendienteCobro,
+      10,
+    );
+
+    expect(component.esPedidoPendienteCobro).toBeTrue();
+    expect(component.puedeOperarPedidoPersistido).toBeFalse();
+    expect(component.puedeCobrarPedido).toBeTrue();
+  });
+
+  it('al abrir la bandeja conserva solo los pendientes de cobro', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.isModoMozo = false;
+    component.listaPedidosPendientes = [
+      pedido(PedidoEstadoEnum.Activo),
+      pedido(PedidoEstadoEnum.PendienteCobro, 2),
+    ];
+    spyOn<any>(component, 'limpiarPedido');
+
+    component.mostrarPedidosPendientesCobro();
+
+    expect(component.mostrandoPendientesCobro).toBeTrue();
+    expect(component.listaPedido_x_Canal.map(item => item.IdPedido)).toEqual([2]);
+    expect(component.MostrarOcultarPanelEspacio).toBeTrue();
+    expect(component.MostrarOcultarPanelProducto).toBeFalse();
+  });
+
+  it('muestra el tipo y número reales del espacio original', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.listaEspaciosTotal = [
+      { IdEspacio: 8, Descripcion: 'BARRA', Numero: 3 } as any,
+    ];
+
+    expect(component.nombreEspacioOriginal(pedido(PedidoEstadoEnum.PendienteCobro)))
+      .toBe('BARRA 3');
+  });
+
+  it('usa el identificador como respaldo si el espacio ya no está disponible', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.listaEspaciosTotal = [];
+
+    expect(component.nombreEspacioOriginal(pedido(PedidoEstadoEnum.PendienteCobro)))
+      .toBe('#8');
+  });
+
+  it('no expone ni abre pendientes de cobro en la estación de mozo', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.isModoMozo = true;
+    component.listaPedidosPendientes = [
+      pedido(PedidoEstadoEnum.PendienteCobro),
+    ];
+    const limpiarPedido = spyOn<any>(component, 'limpiarPedido');
+
+    component.mostrarPedidosPendientesCobro();
+
+    expect(component.esEstacionCaja).toBeFalse();
+    expect(component.pedidosPendientesCobro).toEqual([]);
+    expect(limpiarPedido).not.toHaveBeenCalled();
+    expect(component.mostrandoPendientesCobro).toBeFalsy();
+  });
+
+  it('habilita Anular pedido únicamente para una cuenta guardada', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.idPedidoCobrar = 0;
+    component.nroCuentaCobrar = 0;
+    component.enviandoPedido = false;
+    expect(component.isAnularPedidoDisabled).toBeTrue();
+
+    component.idPedidoCobrar = 25;
+    component.nroCuentaCobrar = 1;
+    expect(component.isAnularPedidoDisabled).toBeFalse();
+
+    component.enviandoPedido = true;
+    expect(component.isAnularPedidoDisabled).toBeTrue();
+  });
+
+  it('oculta Anular pedido de caja durante el procesamiento normal', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.idPedidoCobrar = 25;
+    component.nroCuentaCobrar = 1;
+    component.enviandoPedido = false;
+    component.procesarPedido = false;
+    component.pedidoPendienteCobroSeleccionado = null;
+
+    expect(component.mostrarAnularPedidoCaja).toBeTrue();
+
+    component.procesarPedido = true;
+    expect(component.mostrarAnularPedidoCaja).toBeFalse();
+  });
+
+  it('mantiene Anular pedido para un pendiente de cobro', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.idPedidoCobrar = 25;
+    component.nroCuentaCobrar = 1;
+    component.enviandoPedido = false;
+    component.procesarPedido = true;
+    component.pedidoPendienteCobroSeleccionado = pedido(
+      PedidoEstadoEnum.PendienteCobro,
+      25,
+    );
+
+    expect(component.mostrarAnularPedidoCaja).toBeTrue();
+  });
+});
+
+describe('VentaComponent - centro de caja', () => {
+  function crearComponente(): VentaComponent {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.isModoMozo = false;
+    component.procesarPedido = false;
+    component.idPedidoCobrar = 0;
+    component.espacioSelected = {} as any;
+    component.listaPedidosPendientes = [];
+    component.canalVentaEnum = CanalVentaEnum;
+    component.idCanalVentaSelected = CanalVentaEnum.ESPACIO;
+    return component;
+  }
+
+  it('se muestra únicamente cuando la caja no tiene una operación seleccionada', () => {
+    const component = crearComponente();
+
+    expect(component.mostrarCentroCaja).toBeTrue();
+
+    component.espacioSelected = { IdEspacio: 17 } as any;
+    expect(component.mostrarCentroCaja).toBeFalse();
+
+    component.isModoMozo = true;
+    expect(component.mostrarCentroCaja).toBeFalse();
+  });
+
+  it('resume solo cuentas visibles que aún requieren atención', () => {
+    const component = crearComponente();
+    component.listaPedidosPendientes = [
+      { IdCanalVenta: CanalVentaEnum.ESPACIO, Estado: PedidoEstadoEnum.Activo, Total: 100, Visible: true } as any,
+      { IdCanalVenta: CanalVentaEnum.ESPACIO, Estado: PedidoEstadoEnum.PendienteCobro, Total: 35.5, Visible: true } as any,
+      { IdCanalVenta: CanalVentaEnum.ESPACIO, Estado: PedidoEstadoEnum.Pagado, Total: 80, Visible: true } as any,
+      { IdCanalVenta: CanalVentaEnum.ESPACIO, Estado: PedidoEstadoEnum.Activo, Total: 20, Visible: false } as any,
+      { IdCanalVenta: CanalVentaEnum.DELIVERY, Estado: PedidoEstadoEnum.Activo, Total: 60, Visible: true } as any,
+    ];
+
+    expect(component.cuentasAbiertas.length).toBe(3);
+    expect(component.cantidadOperacionesAbiertasCanal).toBe(2);
+    expect(component.importePendienteCanal).toBe(135.5);
+    expect(component.cantidadPendientesCobroCanal).toBe(1);
+  });
+
+  it('adapta la guía inicial al canal Llevar', () => {
+    const component = crearComponente();
+    component.idCanalVentaSelected = CanalVentaEnum.PARA_LLEVAR;
+
+    expect(component.canalAdmitePedidosDirectos).toBeTrue();
+    expect(component.iconoEstadoInicialCanal).toBe('takeout_dining');
+    expect(component.etiquetaEstadoInicialCanal).toBe('takeawayReady');
+    expect(component.tituloEstadoInicialCanal).toBe('selectTakeawayOrderToStart');
+    expect(component.tituloCanalSinPedidos).toBe('noTakeawayOrders');
+  });
+});
+
+describe('VentaComponent - cambio entre mesas', () => {
+  it('conserva la mesa actual hasta que el nuevo pedido termina de cargar', async () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    const respuesta$ = new Subject<any>();
+    const limpiarPedido = spyOn<any>(component, 'limpiarPedido').and.callFake(() => undefined);
+    spyOn<any>(component, 'rellenarHeaderPedido');
+    spyOn<any>(component, 'getPedidoDetByResponse').and.returnValue([]);
+    spyOn(component, 'actualizarDatosGrilla');
+
+    (component as any).pedidoService = {
+      FindPedidoByIdEspacio: () => respuesta$.asObservable(),
+    };
+    (component as any).secuenciaSeleccionPedido = 7;
+    component.aplicarFiltroUnirEspacio = false;
+    component.espacioSelected = { IdEspacio: 17 } as any;
+
+    const carga = component.handleEspacioOcupada({ IdEspacio: 12 } as any, 7);
+
+    expect(limpiarPedido).not.toHaveBeenCalled();
+    expect(component.espacioSelected.IdEspacio).toBe(17);
+
+    respuesta$.next({ Data: [{}] });
+    respuesta$.complete();
+    await carga;
+
+    expect(limpiarPedido).toHaveBeenCalledTimes(1);
+    expect(component.espacioSelected.IdEspacio).toBe(12);
+  });
+});
+
+describe('VentaComponent - acciones de la fila seleccionada', () => {
+  function crearComponente(tipo: number, complementos: any[] = []): VentaComponent {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.isVerComplementoDisabled = false;
+    component.selectedRow = {
+      Producto: { Tipo: tipo },
+      PedidoComplemento: complementos,
+    } as any;
+    return component;
+  }
+
+  it('habilita Ver complemento solo para un producto con complementos', () => {
+    const component = crearComponente(2, [{}]);
+
+    expect(component.puedeVerComplementos).toBeTrue();
+
+    component.selectedRow.Producto.Tipo = 0;
+    expect(component.puedeVerComplementos).toBeFalse();
+
+    component.selectedRow.Producto.Tipo = 2;
+    component.selectedRow.PedidoComplemento = [];
+    expect(component.puedeVerComplementos).toBeFalse();
+  });
+
+  it('respeta el bloqueo operativo aunque la fila tenga complementos', () => {
+    const component = crearComponente(2, [{}]);
+
+    component.isVerComplementoDisabled = true;
+
+    expect(component.puedeVerComplementos).toBeFalse();
+  });
+
+  it('no abre el diálogo cuando la fila seleccionada no permite ver complementos', () => {
+    const component = crearComponente(0);
+    const abrirComplementos = spyOn(component, 'AgregarProductoComplemento');
+
+    component.VerPedido();
+
+    expect(abrirComplementos).not.toHaveBeenCalled();
+  });
+
+  it('abre el diálogo para un producto con complementos', () => {
+    const component = crearComponente(2, [{}]);
+    const abrirComplementos = spyOn(component, 'AgregarProductoComplemento');
+
+    component.VerPedido();
+
+    expect(abrirComplementos).toHaveBeenCalledOnceWith(component.selectedRow);
+  });
+
+  it('permite mostrar y volver a ocultar las acciones compactas', () => {
+    const component = crearComponente(0);
+    component.accionesCompactasAbiertas = false;
+
+    component.alternarAccionesCompactas();
+    expect(component.accionesCompactasAbiertas).toBeTrue();
+
+    component.alternarAccionesCompactas();
+    expect(component.accionesCompactasAbiertas).toBeFalse();
+  });
+
+  it('identifica explícitamente si una línea ya fue enviada a cocina', () => {
+    const component = crearComponente(0);
+
+    expect(component.productoEnviadoACocina({ Item: 15 } as any)).toBeTrue();
+    expect(component.productoEnviadoACocina({ Item: 0 } as any)).toBeFalse();
+  });
+});
+
+describe('VentaComponent - visibilidad contextual de acciones del mozo', () => {
+  function crearComponente(): VentaComponent {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.procesarPedido = false;
+    component.enviandoPedido = false;
+    component.idPedidoCobrar = 0;
+    component.nroCuentaCobrar = 0;
+    component.espacioSelected = {} as any;
+    component.listProductGrid = [];
+    component.selectedRow = null;
+    component.pedidoPendienteCobroSeleccionado = null;
+    component.isComboDisabled = false;
+    component.isVerComplementoDisabled = false;
+    component.isEnviarPedidoDisabled = false;
+    component.isPrecuentaDisabled = false;
+    component.isBloquearDisabled = false;
+    component.precuentaHabilitada = false;
+    return component;
+  }
+
+  it('no muestra acciones sin un pedido, una mesa o una fila en contexto', () => {
+    const component = crearComponente();
+
+    expect(component.mostrarEnviarPedidoMozo).toBeFalse();
+    expect(component.mostrarAnularPedidoMozo).toBeFalse();
+    expect(component.mostrarRehacerMozo).toBeFalse();
+    expect(component.hayAccionesSecundariasMozo).toBeFalse();
+  });
+
+  it('muestra solo la acción propia del tipo de fila seleccionada', () => {
+    const component = crearComponente();
+    component.selectedRow = {
+      Producto: { Tipo: 1 },
+      PedidoComplemento: [],
+    } as any;
+
+    expect(component.mostrarMenuMozo).toBeTrue();
+    expect(component.mostrarComplementosMozo).toBeFalse();
+
+    component.selectedRow = {
+      Producto: { Tipo: 2 },
+      PedidoComplemento: [{}],
+    } as any;
+
+    expect(component.mostrarMenuMozo).toBeFalse();
+    expect(component.mostrarComplementosMozo).toBeTrue();
+  });
+
+  it('muestra Enviar pedido únicamente al editar líneas todavía no enviadas', () => {
+    const component = crearComponente();
+    component.procesarPedido = true;
+    component.listProductGrid = [{ Item: 4 }] as any;
+
+    expect(component.mostrarEnviarPedidoMozo).toBeFalse();
+
+    component.listProductGrid.push({ Item: 0 } as any);
+
+    expect(component.mostrarEnviarPedidoMozo).toBeTrue();
+  });
+
+  it('muestra Anular antes de editar y lo sustituye por las acciones de edición', () => {
+    const component = crearComponente();
+    component.idPedidoCobrar = 7;
+    component.nroCuentaCobrar = 1;
+    component.espacioSelected = { IdEspacio: 17 } as any;
+
+    expect(component.mostrarAnularPedidoMozo).toBeTrue();
+    expect(component.mostrarRehacerMozo).toBeTrue();
+
+    component.procesarPedido = true;
+    component.precuentaHabilitada = true;
+
+    expect(component.mostrarAnularPedidoMozo).toBeFalse();
+    expect(component.mostrarPrecuentaMozo).toBeTrue();
+
+    component.listProductGrid = [{ Item: 0 }] as any;
+    expect(component.mostrarPrecuentaMozo).toBeFalse();
+  });
+});
+
+describe('VentaComponent - contexto de acciones en caja', () => {
+  function crearComponente(): VentaComponent {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.procesarPedido = false;
+    component.idPedidoCobrar = 0;
+    component.espacioSelected = {} as any;
+    return component;
+  }
+
+  it('mantiene las acciones generales cuando no hay un pedido en contexto', () => {
+    const component = crearComponente();
+
+    expect(component.hayContextoPedidoActivo).toBeFalse();
+  });
+
+  it('cambia a contexto Rehacer apenas se selecciona un espacio', () => {
+    const component = crearComponente();
+    component.espacioSelected = { IdEspacio: 17 } as any;
+
+    expect(component.hayContextoPedidoActivo).toBeTrue();
+  });
+
+  it('rehace la pantalla si hay un espacio seleccionado aunque aún no se procese', () => {
+    const component = crearComponente();
+    component.espacioSelected = { IdEspacio: 17 } as any;
+    const rehacer = spyOn(component, 'RehacerPantalla');
+    const salir = spyOn(component, 'salir');
+
+    component.toggleBloquear();
+
+    expect(rehacer).toHaveBeenCalled();
+    expect(salir).not.toHaveBeenCalled();
+  });
+});
+
+describe('VentaComponent - cancelación del traslado de producto', () => {
+  it('lleva la vista compacta al canal de mesas al iniciar el traslado', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    const producto = { Item: 1 } as any;
+    component.vistaCompacta = 'pedido';
+    component.espacioSelected = { IdEspacio: 17 } as any;
+    component.ambienteActual = null;
+
+    component.iniciarTraslado(producto);
+
+    expect(component.vistaCompacta).toBe('catalogo');
+    expect(component.productoParaTraslado).toBe(producto);
+    expect(component.aplicarFiltroTrasladoProducto).toBeTrue();
+    expect(component.MostrarOcultarPanelEspacio).toBeTrue();
+    expect(component.MostrarOcultarPanelProducto).toBeFalse();
+  });
+
+  it('restaura la mesa origen sin alterar la lista maestra', async () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    const ambiente = { IdAmbiente: 1, Descripcion: 'SALÓN' } as any;
+    (component as any).spinnerService = {
+      show: jasmine.createSpy('show'),
+      hide: jasmine.createSpy('hide'),
+    };
+    component.espacioSelected = { IdEspacio: 17 } as any;
+    component.listaEspaciosTotal = [
+      {
+        IdEspacio: 17,
+        IdAmbiente: 1,
+        Numero: 17,
+        Ocupado: 1,
+        Visible: true,
+        Color: 'Pink',
+      },
+      {
+        IdEspacio: 18,
+        IdAmbiente: 1,
+        Numero: 18,
+        Ocupado: 0,
+        Visible: true,
+        Color: 'White',
+      },
+    ] as any;
+    component.productoParaTraslado = { Item: 1 } as any;
+    component.aplicarFiltroTrasladoProducto = true;
+    component.aplicarFiltroCambioEspacio = false;
+    component.aplicarFiltroUnirEspacio = false;
+    component.aplicarFiltroTrasladarAEspacio = false;
+
+    await component.MostrarEspacios_x_Ambiente(ambiente);
+
+    expect(component.listaEspacios_x_Ambiente[0].Visible).toBeFalse();
+    expect(component.listaEspaciosTotal[0].Visible).toBeTrue();
+
+    component.cancelarTraslado();
+
+    expect(component.aplicarFiltroTrasladoProducto).toBeFalse();
+    expect(component.productoParaTraslado).toBeNull();
+    expect(component.listaEspacios_x_Ambiente[0].Visible).toBeTrue();
   });
 });
 
@@ -195,5 +661,26 @@ describe('VentaComponent - solicitudes sobre la cuenta', () => {
     expect(component.resumenSolicitudesCuenta).toBe(
       'Cuenta completa (requestedBy:Ana) · Cuenta completa (requestedBy:Luis)',
     );
+  });
+
+  it('solicita un motivo específico al anular el pedido completo', async () => {
+    const component = crearComponente([]);
+    component.espacioSelected = {
+      IdEspacio: 17,
+      Descripcion: 'MESA',
+      Numero: 17,
+    };
+    component.idPedidoCobrar = 7;
+    component.puedeAprobarSolicitudes = true;
+    component.dialog = {
+      open: jasmine.createSpy().and.returnValue({ afterClosed: () => of(undefined) }),
+    };
+
+    await component.AnularPedido();
+
+    const configuracion = component.dialog.open.calls.mostRecent().args[1];
+    expect(configuracion.data.requiredMessage).toBe('voidReasonRequired');
+    expect(configuracion.data.placeholder).toBe('enterVoidReason');
+    expect(configuracion.data.maxLength).toBe(120);
   });
 });

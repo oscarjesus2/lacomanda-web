@@ -126,4 +126,24 @@ describe('TecladoTactilComponent', () => {
 
     expect(evitado).toBeTrue();
   });
+
+  it('no se abre al tocar el campo en una pantalla táctil', () => {
+    const campoReal = document.createElement('input');
+    teclado.destino = campoReal;
+    spyOnProperty(navigator, 'maxTouchPoints', 'get').and.returnValue(1);
+
+    teclado.ngAfterViewInit();
+    campoReal.dispatchEvent(new Event('pointerup'));
+
+    expect(campoReal.getAttribute('inputmode')).toBe('none');
+    expect(teclado.abierto).toBeFalse();
+  });
+
+  it('se abre y se cierra únicamente mediante su control visible', () => {
+    teclado.alternar();
+    expect(teclado.abierto).toBeTrue();
+
+    teclado.alternar();
+    expect(teclado.abierto).toBeFalse();
+  });
 });

@@ -82,7 +82,6 @@ export class TecladoTactilComponent implements AfterViewInit, OnDestroy {
 
   private mayus = false;
   private simbolos = false;
-  private abrirAlTocar?: (evento: PointerEvent) => void;
 
   constructor() {
     this.redibujar();
@@ -97,19 +96,12 @@ export class TecladoTactilComponent implements AfterViewInit, OnDestroy {
     const campo = this.campoDestino;
     if (!campo || !this.esPantallaTactil) return;
 
-    // En una estación táctil no hay teclado físico: tocar el campo ofrece este,
-    // y se evita el del sistema, que taparía el diálogo.
+    // Se evita el teclado del sistema, que taparía el diálogo. El teclado de
+    // LaComanda se abre únicamente mediante su botón «Mostrar teclado».
     campo.setAttribute('inputmode', 'none');
-    this.abrirAlTocar = () => this.abrir();
-    campo.addEventListener('pointerup', this.abrirAlTocar);
   }
 
   ngOnDestroy(): void {
-    const campo = this.campoDestino;
-    if (campo && this.abrirAlTocar) {
-      campo.removeEventListener('pointerup', this.abrirAlTocar);
-    }
-
     // El panel cuelga del body: si el diálogo se cierra, se va con él.
     document.body.classList.remove(TecladoTactilComponent.MarcaAbierto);
     this.panel?.nativeElement.remove();

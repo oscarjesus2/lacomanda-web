@@ -10,7 +10,9 @@ export class Producto {
     public IdProducto: number;
     public NombreCorto: string;
     public IdFamilia: number;
+    public Familia?: string;
     public IdSubFamilia: number;
+    public SubFamilia?: string;
     public Posicion: number;
     public Precio: number;
     public R: number;

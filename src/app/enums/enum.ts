@@ -35,6 +35,15 @@ export enum CanalVentaEnum {
   OTROS = 6,
 }
 
+export enum PedidoEstadoEnum {
+  Activo = 1,
+  Pagado = 2,
+  Anulado = 3,
+  Transferido = 4,
+  Unido = 5,
+  PendienteCobro = 6,
+}
+
 export enum NivelUsuarioEnum {
   Administrador = 1,
   Cajero = 2,

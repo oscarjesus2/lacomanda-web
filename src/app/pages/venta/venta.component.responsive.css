@@ -16,6 +16,63 @@
   display: none;
 }
 
+/* Estado operativo de cada línea: comprensible por icono y texto, no solo
+   mediante el color que se utilizaba anteriormente. */
+.product-cell {
+  min-width: 0;
+}
+
+.product-cell__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-cell__detail {
+  font-size: small;
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+.product-send-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 4px;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.product-send-status mat-icon {
+  width: 13px;
+  height: 13px;
+  font-size: 13px;
+  line-height: 13px;
+}
+
+.product-send-status--sent {
+  background: #E8F1FB;
+  color: #135B9E;
+}
+
+.product-send-status--pending {
+  background: #FFF1D6;
+  color: #8A4B00;
+}
+
+.product-row--sent .mat-column-NombreProducto {
+  box-shadow: inset 3px 0 #2F7DBD;
+}
+
+.product-row--pending .mat-column-NombreProducto {
+  box-shadow: inset 3px 0 var(--color-accent-dark);
+}
+
 /* Tablet horizontal, iPad Pro y portatiles compactos. */
 @media (max-width: 1365px) and (min-width: 1024px) {
   .container {
@@ -209,6 +266,12 @@
     min-height: 0;
   }
 
+  .cash-center {
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 18px;
+  }
+
   .table-info {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -294,6 +357,26 @@
     grid-auto-rows: minmax(76px, 1fr);
   }
 
+  /*
+   * La barra de ambientes/acciones ocupa la parte inferior de la columna.
+   * El catálogo debe desplazarse dentro del espacio restante para que sus
+   * últimas filas nunca queden ocultas detrás de esa barra.
+   */
+  .tables-grid,
+  .products-grid {
+    align-content: start;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .channel-orders-empty {
+    padding: 20px;
+    overflow-y: auto;
+  }
+
   .tables-grid button,
   .products-grid button,
   .static-buttons-row button {
@@ -346,6 +429,67 @@
     font-size: 11px;
   }
 
+  .cash-center {
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .cash-center__hero {
+    align-items: flex-start;
+    gap: 11px;
+  }
+
+  .cash-center__hero-icon {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+    border-radius: 13px;
+  }
+
+  .cash-center__hero-icon mat-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
+  }
+
+  .cash-center__hero h2 {
+    font-size: 18px;
+  }
+
+  .cash-center__hero p {
+    font-size: 11px;
+  }
+
+  .cash-center__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .cash-center__metric {
+    gap: 7px;
+    padding: 10px;
+  }
+
+  .cash-center__metric--amount {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .cash-center__metric-copy strong {
+    font-size: 16px;
+  }
+
+  .cash-center__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .cash-center__action {
+    min-width: 0;
+    padding: 9px 10px;
+    white-space: normal;
+  }
+
   .compact-view-switcher button {
     min-height: 44px;
     padding: 5px 7px;
@@ -374,6 +518,31 @@
   .products-grid button {
     padding: 6px 4px;
     font-size: 12px;
+  }
+
+  .channel-orders-empty {
+    padding: 16px;
+  }
+
+  .channel-orders-empty__icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 10px;
+    border-radius: 15px;
+  }
+
+  .channel-orders-empty__icon mat-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 26px;
+  }
+
+  .channel-orders-empty h2 {
+    font-size: 18px;
+  }
+
+  .channel-orders-empty p {
+    font-size: 11px;
   }
 
   .button-row button {
@@ -406,6 +575,120 @@
   .compact-view-switcher button {
     gap: 4px;
     font-size: 11px;
+  }
+}
+
+/* Teléfonos estrechos: la acción principal permanece visible y las acciones
+   secundarias aparecen solo cuando la persona las solicita. */
+@media (max-width: 420px) {
+  .cash-center {
+    padding: 11px;
+  }
+
+  .cash-center__metric-icon {
+    display: none;
+  }
+
+  .cash-center__action {
+    min-height: 44px;
+    font-size: 11px;
+  }
+
+  .data-grid {
+    overflow-x: hidden;
+  }
+
+  .data-grid > table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .data-grid th,
+  .data-grid td {
+    padding: 6px 4px;
+    font-size: 11px;
+  }
+
+  .data-grid .mat-column-NombreProducto {
+    width: auto;
+  }
+
+  .data-grid .mat-column-Precio {
+    width: 48px;
+  }
+
+  .data-grid .mat-column-Cantidad {
+    width: 44px;
+  }
+
+  .data-grid .mat-column-actions {
+    width: 120px;
+    min-width: 120px;
+    padding-inline: 2px;
+  }
+
+  .product-cell__name {
+    white-space: nowrap;
+  }
+
+  .product-row-actions {
+    justify-content: center;
+  }
+
+  .product-row-actions button {
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    line-height: 38px;
+  }
+
+  .compact-order-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .compact-order-actions > .button-row {
+    display: contents;
+  }
+
+  .compact-actions-toggle-row {
+    display: contents;
+  }
+
+  .compact-actions-toggle-row button,
+  .compact-order-actions__primary,
+  .compact-order-actions__secondary {
+    min-width: 0;
+    min-height: 46px;
+    padding: 7px 6px;
+    font-size: 11px;
+  }
+
+  .compact-actions-toggle-row button {
+    order: 0;
+  }
+
+  .compact-actions-toggle-row mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    line-height: 18px;
+  }
+
+  .compact-order-actions__primary {
+    order: 1;
+  }
+
+  .compact-order-actions__secondary {
+    order: 2;
+  }
+
+  .compact-order-actions:not(.compact-order-actions--open)
+    .compact-order-actions__secondary {
+    display: none;
   }
 }
 
