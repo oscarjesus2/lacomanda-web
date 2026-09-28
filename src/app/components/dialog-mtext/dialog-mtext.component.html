@@ -15,7 +15,7 @@
       [attr.maxlength]="maxLength > 0 ? maxLength : null"
       [(ngModel)]="inputValue"
       (keydown.enter)="accept()"
-      placeholder="..." />
+      [placeholder]="placeholder" />
   </div>
 
   <div class="mt-actions">

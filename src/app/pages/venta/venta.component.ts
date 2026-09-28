@@ -41,7 +41,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { DialogEmitirComprobanteComponent } from 'src/app/components/dialog-emitir-comprobante/dialog-emitir-comprobante.component';
 import { HeaderService } from 'src/app/services/header.service';
 import { faFileInvoiceDollar, faFileInvoice, faPercentage, faFileAlt, faChartPie } from '@fortawesome/free-solid-svg-icons';
-import { faUtensils, faShoppingBag, faTruck, faSync, faConciergeBell, faEye, faList, faPaperPlane, faReceipt, faTimes, faLock, faRunning, faWalking , faL } from '@fortawesome/free-solid-svg-icons';
+import { faUtensils, faShoppingBag, faTruck, faSync, faConciergeBell, faEye, faPaperPlane, faReceipt, faTimes, faLock, faRunning, faWalking , faL } from '@fortawesome/free-solid-svg-icons';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import { PedidoEspacioDTO } from 'src/app/interfaces/pedidoespacioDTO.interface';
 import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mcant.component';
@@ -61,7 +61,7 @@ import { SocioNegocio } from 'src/app/models/socionegocio.models';
 import { Cliente } from 'src/app/models/cliente.models';
 import { DialogDividirCuentaComponent } from 'src/app/components/dialog-dividir-cuenta/dialog-dividir-cuenta.component';
 import { DialogReportesComponent } from 'src/app/components/dialog-reportes/dialog-reportes.component';
-import { EnumTipoDocumento, NivelUsuarioEnum } from 'src/app/enums/enum';
+import { EnumTipoDocumento, NivelUsuarioEnum, PedidoEstadoEnum } from 'src/app/enums/enum';
 import { DialogDescuentoComponent } from 'src/app/components/dialog-descuento/dialog-descuento.component';
 import { PedidoDescuentoDTO } from 'src/app/interfaces/pedidoDescuentoDTO.interface';
 import { TrasladarProductoDTO } from 'src/app/interfaces/trasladarProductoDTO.interface';
@@ -75,7 +75,7 @@ import { DialogDocumentosEmitidosComponent } from 'src/app/components/dialog-doc
 import { CanalVentaEnum } from 'src/app/enums/enum';
 import { DialogDeliveryComponent } from 'src/app/components/dialog-delivery/dialog-delivery.component';
 import { DeliveryDialogResult } from 'src/app/models/delivery.models';
-import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { TenantTextCatalogService, TenantTextKey } from 'src/app/services/localization/tenant-text-catalog.service';
 import { MesaClienteService } from 'src/app/services/mesa-cliente.service';
 import { SolicitudesMesaRealtimeService } from 'src/app/services/solicitudes-mesa-realtime.service';
 import { SolicitudMesaPendiente } from 'src/app/models/mesa-cliente.models';
@@ -96,6 +96,7 @@ import { SolicitudAutorizacion, SolicitudAutorizacionCreada } from 'src/app/mode
 import { DialogAnfitrionasComponent } from 'src/app/components/dialog-anfitrionas/dialog-anfitrionas.component';
 import { DialogTurnoComponent } from 'src/app/components/dialog-turno/dialog-turno.component';
 import { DialogCerrarTurnoComponent } from 'src/app/components/dialog-cerrar-turno/dialog-cerrar-turno.component';
+import { PedidoPendienteCierre } from 'src/app/interfaces/cerrarTurno.interface';
 
 @Component({
   selector: 'app-venta',
@@ -108,6 +109,7 @@ import { DialogCerrarTurnoComponent } from 'src/app/components/dialog-cerrar-tur
 
 export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   public vistaCompacta: 'catalogo' | 'pedido' = 'catalogo';
+  public accionesCompactasAbiertas = false;
 
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
   isEdited: boolean;
@@ -156,6 +158,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   public listaTipoPedidos: CanalVenta[];
   public listaPedidosPendientes: PedidoDeliveryDTO[] = [];
   public listaPedido_x_Canal: PedidoDeliveryDTO[];
+  public mostrandoPendientesCobro = false;
+  public pedidoPendienteCobroSeleccionado: PedidoDeliveryDTO | null = null;
 
   public listEmpleados: Empleado[];
   public listObservacion: Observacion[];
@@ -197,6 +201,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly skeletonItems = Array(21).fill(0);
   /** true cuando la carga inicial falló (backend caído) */
   errorCargaInicial: boolean = false;
+  /** Descarta respuestas antiguas cuando se cambia rápidamente entre mesas o pedidos. */
+  private secuenciaSeleccionPedido = 0;
   productoParaTraslado: PedidoDet | null = null;
   ambienteActual: Ambiente | null = null;
   private descuentoAplicado = false;
@@ -215,17 +221,79 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   isPanelProductoDisabled = false;
   isComboDisabled = false;
   isVerComplementoDisabled = false;
-  isPriorizarDespachoDisabled = false;
   isEnviarPedidoDisabled = false;
 
-  isAnularPedidoDisabled = false;
   isPrecuentaDisabled    = false;
 
   /** true cuando la ruta activa es /mozo; false en /caja */
   isModoMozo = false;
-  isReImprimirDisabled = false;
   isBloquearDisabled = false;
-  selectedRow: PedidoDet;
+  selectedRow: PedidoDet | null = null;
+
+  /** La acción solo tiene sentido para una fila que realmente contiene complementos. */
+  get puedeVerComplementos(): boolean {
+    return !this.isVerComplementoDisabled
+      && this.selectedRow?.Producto?.Tipo === 2
+      && (this.selectedRow.PedidoComplemento?.length ?? 0) > 0;
+  }
+
+  /** El menú solo aplica a la fila seleccionada de un producto compuesto. */
+  get mostrarMenuMozo(): boolean {
+    return !this.isComboDisabled
+      && this.selectedRow?.Producto?.Tipo === 1;
+  }
+
+  /** Los complementos solo aparecen cuando la fila seleccionada realmente los tiene. */
+  get mostrarComplementosMozo(): boolean {
+    return this.puedeVerComplementos;
+  }
+
+  /** Hay algo nuevo que cocina todavía no ha recibido. */
+  get hayProductosPendientesEnvio(): boolean {
+    return (this.listProductGrid ?? []).some(item => !item.Item);
+  }
+
+  /** Enviar pedido solo tiene sentido dentro de la edición y con líneas nuevas. */
+  get mostrarEnviarPedidoMozo(): boolean {
+    return this.procesarPedido
+      && !this.esPedidoPendienteCobro
+      && (this.enviandoPedido
+        || (!this.isEnviarPedidoDisabled && this.hayProductosPendientesEnvio));
+  }
+
+  /** La precuenta requiere licencia y una cuenta ya persistida. */
+  get mostrarPrecuentaMozo(): boolean {
+    return this.precuentaHabilitada
+      && !this.isPrecuentaDisabled
+      && this.puedeOperarPedidoPersistido
+      && !this.hayProductosPendientesEnvio;
+  }
+
+  /** La anulación completa se ofrece antes de entrar a modificar el pedido. */
+  get mostrarAnularPedidoMozo(): boolean {
+    return !this.procesarPedido
+      && !this.esPedidoPendienteCobro
+      && !this.isAnularPedidoDisabled;
+  }
+
+  /** Rehacer reemplaza a Bloquear siempre que haya un pedido o espacio en contexto. */
+  get mostrarRehacerMozo(): boolean {
+    return !this.isBloquearDisabled && this.hayContextoPedidoActivo;
+  }
+
+  /** Controla si el desplegable compacto tiene alguna acción real que mostrar. */
+  get hayAccionesSecundariasMozo(): boolean {
+    return this.mostrarMenuMozo
+      || this.mostrarComplementosMozo
+      || this.mostrarPrecuentaMozo
+      || this.mostrarAnularPedidoMozo
+      || this.mostrarRehacerMozo;
+  }
+
+  /** Una línea con ítem asignado ya fue persistida y enviada a preparación. */
+  productoEnviadoACocina(pedidoDet: PedidoDet): boolean {
+    return (pedidoDet?.Item ?? 0) > 0;
+  }
   isAdmin = false;
   reservasHabilitadas = false;
   comprobantesHabilitados = false;
@@ -236,6 +304,19 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get comprobantesAgotados(): boolean {
     return this.cuotaComprobantes?.Agotada ?? false;
+  }
+
+  /** Solo un pedido persistido puede anularse; no depende del historial de la pantalla. */
+  get isAnularPedidoDisabled(): boolean {
+    return this.idPedidoCobrar <= 0
+      || this.nroCuentaCobrar <= 0
+      || this.enviandoPedido;
+  }
+
+  /** En caja, un pedido normal solo se anula antes de entrar a procesarlo. */
+  get mostrarAnularPedidoCaja(): boolean {
+    return !this.isAnularPedidoDisabled
+      && (!this.procesarPedido || this.esPedidoPendienteCobro);
   }
   listaSociosNegocio: SocioNegocio[];
   public canalVentaEnum = CanalVentaEnum;
@@ -323,7 +404,6 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   faSync = faSync;
   faConciergeBell = faConciergeBell;
   faEye = faEye;
-  faList = faList;
   faPaperPlane = faPaperPlane;
   faReceipt = faReceipt;
   faTimes = faTimes;
@@ -331,8 +411,15 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   faRunning = faRunning;
   espacios: { name: string; active: boolean; price: number, indice: number }[] = [];
 
+  /** Hay una operación contextual que debe poder descartarse con Rehacer. */
+  get hayContextoPedidoActivo(): boolean {
+    return this.procesarPedido
+      || this.mesaSeleccionada
+      || Number(this.idPedidoCobrar) > 0;
+  }
+
   toggleBloquear() {
-    if (!this.procesarPedido) {
+    if (!this.hayContextoPedidoActivo) {
       this.salir(); // Llamar a la función salir si está visible el botón Bloquear
     } else {
       this.RehacerPantalla(); // Llamar a la función Rehacer si está visible el botón Rehacer
@@ -423,6 +510,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    this.secuenciaSeleccionPedido++;
+    this.mostrandoPendientesCobro = false;
     this.limpiarPedido();
     this.idCanalVentaSelected = idCanalVenta;
     if (idCanalVenta === this.canalVentaEnum.ENTRADAS) {
@@ -430,6 +519,144 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       this.listaPedido_x_Canal = this.listaPedidosPendientes.filter(x => x.Estado === 1 && x.IdCanalVenta === idCanalVenta);
     }
+  }
+
+  get pedidosPendientesCobro(): PedidoDeliveryDTO[] {
+    if (!this.esEstacionCaja) {
+      return [];
+    }
+
+    return (this.listaPedidosPendientes ?? []).filter(
+      pedido => pedido.Visible !== false
+        && pedido.Estado === PedidoEstadoEnum.PendienteCobro
+    );
+  }
+
+  get esEstacionCaja(): boolean {
+    return !this.isModoMozo;
+  }
+
+  /** El centro de caja reemplaza la grilla vacía mientras no hay una operación seleccionada. */
+  get mostrarCentroCaja(): boolean {
+    return this.esEstacionCaja && !this.hayContextoPedidoActivo;
+  }
+
+  /** Cuentas que todavía requieren atención dentro del turno actual. */
+  get cuentasAbiertas(): PedidoDeliveryDTO[] {
+    return (this.listaPedidosPendientes ?? []).filter(
+      pedido => pedido.Visible !== false
+        && (pedido.Estado === PedidoEstadoEnum.Activo
+          || pedido.Estado === PedidoEstadoEnum.PendienteCobro)
+    );
+  }
+
+  /** Llevar y delivery gestionan pedidos propios, no espacios físicos. */
+  get canalAdmitePedidosDirectos(): boolean {
+    return this.idCanalVentaSelected === this.canalVentaEnum.PARA_LLEVAR
+      || this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY;
+  }
+
+  get operacionesAbiertasCanalActual(): PedidoDeliveryDTO[] {
+    return this.cuentasAbiertas.filter(
+      pedido => pedido.IdCanalVenta === this.idCanalVentaSelected
+    );
+  }
+
+  get cantidadOperacionesAbiertasCanal(): number {
+    return this.operacionesAbiertasCanalActual.length;
+  }
+
+  get importePendienteCanal(): number {
+    return this.operacionesAbiertasCanalActual.reduce(
+      (total, pedido) => total + (Number(pedido.Total) || 0),
+      0
+    );
+  }
+
+  get cantidadPendientesCobroCanal(): number {
+    return this.operacionesAbiertasCanalActual.filter(
+      pedido => pedido.Estado === PedidoEstadoEnum.PendienteCobro
+    ).length;
+  }
+
+  get iconoEstadoInicialCanal(): string {
+    if (this.idCanalVentaSelected === this.canalVentaEnum.PARA_LLEVAR) {
+      return 'takeout_dining';
+    }
+    if (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) {
+      return 'local_shipping';
+    }
+    return 'point_of_sale';
+  }
+
+  get etiquetaEstadoInicialCanal(): TenantTextKey {
+    if (this.idCanalVentaSelected === this.canalVentaEnum.PARA_LLEVAR) {
+      return 'takeawayReady';
+    }
+    if (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) {
+      return 'deliveryReady';
+    }
+    return 'cashReady';
+  }
+
+  get tituloEstadoInicialCanal(): TenantTextKey {
+    if (this.idCanalVentaSelected === this.canalVentaEnum.PARA_LLEVAR) {
+      return 'selectTakeawayOrderToStart';
+    }
+    if (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) {
+      return 'selectDeliveryOrderToStart';
+    }
+    return 'selectSpaceToStart';
+  }
+
+  get ayudaEstadoInicialCanal(): TenantTextKey {
+    if (this.idCanalVentaSelected === this.canalVentaEnum.PARA_LLEVAR) {
+      return 'selectTakeawayOrderHint';
+    }
+    if (this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY) {
+      return 'selectDeliveryOrderHint';
+    }
+    return 'selectSpaceToStartHint';
+  }
+
+  get tituloCanalSinPedidos(): TenantTextKey {
+    return this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY
+      ? 'noDeliveryOrders'
+      : 'noTakeawayOrders';
+  }
+
+  get ayudaCanalSinPedidos(): TenantTextKey {
+    return this.idCanalVentaSelected === this.canalVentaEnum.DELIVERY
+      ? 'noDeliveryOrdersHint'
+      : 'noTakeawayOrdersHint';
+  }
+
+  nombreEspacioOriginal(pedido: PedidoDeliveryDTO): string {
+    if (!pedido.IdEspacio) {
+      return '';
+    }
+
+    const espacio = (this.listaEspaciosTotal ?? []).find(
+      item => item.IdEspacio === pedido.IdEspacio
+    );
+    if (!espacio) {
+      return `#${pedido.IdEspacio}`;
+    }
+
+    return `${espacio.Descripcion ?? ''} ${espacio.Numero ?? ''}`.trim()
+      || `#${pedido.IdEspacio}`;
+  }
+
+  mostrarPedidosPendientesCobro(): void {
+    if (!this.esEstacionCaja) {
+      return;
+    }
+
+    this.limpiarPedido();
+    this.mostrandoPendientesCobro = true;
+    this.listaPedido_x_Canal = this.pedidosPendientesCobro;
+    this.MostrarOcultarPanelEspacio = true;
+    this.MostrarOcultarPanelProducto = false;
   }
 
   seleccionarCanalDelivery(): void {
@@ -668,7 +895,12 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   public abrirDialogoCerrarTurno(): void {
     if (!this.turnoAbierto || !this.puedeCerrarTurno) return;
     this.dialog.open(DialogCerrarTurnoComponent, { width: 'min(900px, 96vw)' })
-      .afterClosed().subscribe(() => {
+      .afterClosed().subscribe((result?: { pedidoPendienteCobro?: PedidoPendienteCierre }) => {
+        if (result?.pedidoPendienteCobro) {
+          void this.abrirPedidoPendienteDesdeCierre(result.pedidoPendienteCobro);
+          return;
+        }
+
         this.TurnoService.ObtenerTurnoByIP(this.storageService.getCurrentIP())
           .subscribe({ next: response => {
             if (!response?.Data) window.location.reload();
@@ -682,54 +914,39 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.spinnerService.show();
 
     this.ambienteActual = ambiente;
+    // Los filtros son vistas temporales. Se trabaja con copias para no dejar
+    // Visible/Color alterados en la lista maestra al cancelar una operación.
+    const espaciosDelAmbiente = this.listaEspaciosTotal
+      .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
+      .map(espacio => new Espacios({ ...espacio }));
+
     if (this.aplicarFiltroCambioEspacio) {
-      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
-        .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
-        .map(espacio => {
-          if ([1, 3, 4].includes(espacio.Ocupado)) {
-            espacio.Visible = false;
-          }
-          else if (espacio.Ocupado === 2) {
-            espacio.Color = "White";
-          }
-          else if (espacio.Ocupado === 5) {
-            espacio.Color = "LightCyan";
-          }
-          else {
-            espacio.Color = "White";
-          }
-          return espacio;
-        });
+      this.listaEspacios_x_Ambiente = espaciosDelAmbiente.map(espacio => {
+        espacio.Visible = espacio.Numero > 0 && ![1, 3, 4].includes(espacio.Ocupado);
+        espacio.Color = espacio.Ocupado === 5 ? "LightCyan" : "White";
+        return espacio;
+      });
     } else if (this.aplicarFiltroUnirEspacio) {
-      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
-        .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
-        .map(espacio => {
-          if ([1, 4].includes(espacio.Ocupado) && this.espacioSelected.IdEspacio != espacio.IdEspacio) {
-            espacio.Visible = true;
-          }
-          else {
-            espacio.Visible = false;
-          }
-          return espacio;
-        });
+      this.listaEspacios_x_Ambiente = espaciosDelAmbiente.map(espacio => {
+        espacio.Visible = [1, 4].includes(espacio.Ocupado)
+          && this.espacioSelected.IdEspacio !== espacio.IdEspacio;
+        return espacio;
+      });
     } else if (this.aplicarFiltroTrasladoProducto) {
       // Mostrar todas las mesas excepto la actual; fantasmas (Numero=0) permanecen ocultas
-      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
-        .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
-        .map(espacio => {
-          espacio.Visible = espacio.Numero > 0 && espacio.IdEspacio !== this.espacioSelected.IdEspacio;
-          return espacio;
-        });
+      this.listaEspacios_x_Ambiente = espaciosDelAmbiente.map(espacio => {
+        espacio.Visible = espacio.Numero > 0
+          && espacio.IdEspacio !== this.espacioSelected.IdEspacio;
+        return espacio;
+      });
     } else if (this.aplicarFiltroTrasladarAEspacio) {
       // Solo mesas libres (Ocupado===0); fantasmas (Numero=0) permanecen ocultas
-      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal
-        .filter(x => x.IdAmbiente === ambiente.IdAmbiente)
-        .map(espacio => {
-          espacio.Visible = espacio.Numero > 0 && espacio.Ocupado === 0;
-          return espacio;
-        });
+      this.listaEspacios_x_Ambiente = espaciosDelAmbiente.map(espacio => {
+        espacio.Visible = espacio.Numero > 0 && espacio.Ocupado === 0;
+        return espacio;
+      });
     } else {
-      this.listaEspacios_x_Ambiente = this.listaEspaciosTotal.filter(x => x.IdAmbiente === ambiente.IdAmbiente);
+      this.listaEspacios_x_Ambiente = espaciosDelAmbiente;
     }
     this.displayValueAmbiente = ambiente.Descripcion;
     this.spinnerService.hide();
@@ -760,6 +977,10 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   seleccionarVistaCompacta(vista: 'catalogo' | 'pedido'): void {
     this.vistaCompacta = vista;
+  }
+
+  alternarAccionesCompactas(): void {
+    this.accionesCompactasAbiertas = !this.accionesCompactasAbiertas;
   }
 
   solicitudQrPendiente(espacio: Espacios): SolicitudMesaPendiente | undefined {
@@ -865,7 +1086,19 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Las operaciones comerciales requieren un pedido ya guardado y en procesamiento. */
   get puedeOperarPedidoPersistido(): boolean {
-    return this.procesarPedido && this.pedidoPersistido;
+    return this.procesarPedido
+      && this.pedidoPersistido
+      && !this.esPedidoPendienteCobro;
+  }
+
+  get esPedidoPendienteCobro(): boolean {
+    return this.pedidoPendienteCobroSeleccionado?.Estado
+      === PedidoEstadoEnum.PendienteCobro;
+  }
+
+  get puedeCobrarPedido(): boolean {
+    return this.pedidoPersistido
+      && (this.procesarPedido || this.esPedidoPendienteCobro);
   }
 
   /** true cuando hay un pedido de llevar/delivery cargado */
@@ -1303,13 +1536,25 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async openPedido(
     pedido: Pick<PedidoDeliveryDTO, 'IdPedido' | 'NroCuenta'>
+      & Partial<Pick<PedidoDeliveryDTO, 'Estado' | 'IdCanalVenta' | 'IdEspacio' | 'Cliente' | 'Total'>>
+      & { NroPedido?: string | number }
   ) {
-    this.limpiarPedido();
+    const secuencia = ++this.secuenciaSeleccionPedido;
+    const esPendienteCobro = pedido.Estado === PedidoEstadoEnum.PendienteCobro;
     const listData: ApiResponse<PedidoEspacioDTO[]> = await lastValueFrom(this.pedidoService.FindPedidoByIdPedidoNroCuenta(pedido.IdPedido, pedido.NroCuenta));
+    if (secuencia !== this.secuenciaSeleccionPedido) {
+      return;
+    }
     if (listData.Data.length > 0) {
+      // Conserva el pedido anterior durante la consulta y reemplaza el estado
+      // completo en un solo ciclo de renderizado cuando la respuesta está lista.
+      this.limpiarPedido();
       this.rellenarHeaderPedido(listData.Data);
       this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
       this.actualizarDatosGrilla();
+      if (esPendienteCobro) {
+        this.activarPedidoPendienteCobro(pedido, listData.Data[0]);
+      }
     } else {
 
 
@@ -1322,36 +1567,84 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private async abrirPedidoPendienteDesdeCierre(
+    pedido: PedidoPendienteCierre
+  ): Promise<void> {
+    await this.openPedido({
+      IdPedido: pedido.IdPedido,
+      NroCuenta: pedido.NroCuenta,
+      Estado: pedido.Estado,
+      IdCanalVenta: pedido.IdCanalVenta,
+      IdEspacio: pedido.IdEspacio ?? null,
+      NroPedido: String(pedido.NroPedido),
+      Cliente: pedido.Cliente,
+      Total: pedido.MontoPendiente,
+    });
+  }
+
+  private activarPedidoPendienteCobro(
+    pedido: Pick<PedidoDeliveryDTO, 'IdPedido' | 'NroCuenta'>
+      & Partial<Omit<PedidoDeliveryDTO, 'NroPedido'>>
+      & { NroPedido?: string | number },
+    detalle: PedidoEspacioDTO
+  ): void {
+    this.pedidoPendienteCobroSeleccionado = {
+      IdPedido: pedido.IdPedido,
+      NroCuenta: pedido.NroCuenta,
+      IdEspacio: pedido.IdEspacio ?? detalle.IdEspacio ?? null,
+      NroPedido: String(pedido.NroPedido ?? detalle.NroPedido),
+      Cliente: pedido.Cliente ?? detalle.Cliente,
+      IdCanalVenta: pedido.IdCanalVenta ?? detalle.IdCanalVenta,
+      Estado: PedidoEstadoEnum.PendienteCobro,
+      Total: pedido.Total ?? detalle.Total,
+      Posicion: 0,
+      Visible: true,
+    };
+    this.mostrandoPendientesCobro = true;
+    this.idCanalVentaSelected = this.pedidoPendienteCobroSeleccionado.IdCanalVenta;
+    this.espacioSelected.IdEspacio = this.pedidoPendienteCobroSeleccionado.IdEspacio ?? 0;
+    this.procesarPedido = true;
+    this.isPanelProductoDisabled = true;
+    this.isEnviarPedidoDisabled = true;
+    this.isComboDisabled = true;
+    this.isVerComplementoDisabled = true;
+    this.isPrecuentaDisabled = true;
+    this.MostrarOcultarPanelEspacio = true;
+    this.MostrarOcultarPanelProducto = false;
+  }
+
   async openDialogEspacio(espacio: Espacios) {
+    const secuencia = ++this.secuenciaSeleccionPedido;
     this.spinnerService.show();
 
     if (this.aplicarFiltroTrasladoProducto) {
       await this.ejecutarTraslado(espacio);
-      this.spinnerService.hide();
+      if (secuencia === this.secuenciaSeleccionPedido) this.spinnerService.hide();
       return;
     }
 
     if (this.aplicarFiltroTrasladarAEspacio) {
       await this.ejecutarTrasladarAEspacio(espacio);
-      this.spinnerService.hide();
+      if (secuencia === this.secuenciaSeleccionPedido) this.spinnerService.hide();
       return;
     }
 
     const solicitudQr = this.solicitudQrPendiente(espacio);
     if (solicitudQr) {
-      this.spinnerService.hide();
+      if (secuencia === this.secuenciaSeleccionPedido) this.spinnerService.hide();
       await this.confirmarSolicitudQr(espacio, solicitudQr);
       return;
     }
 
     if (espacio.Ocupado === 0 || espacio.Ocupado === 2) {
-      await this.handleEspacioDisponible(espacio);
+      await this.handleEspacioDisponible(espacio, secuencia);
     } else if (espacio.Ocupado === 1 || espacio.Ocupado === 4) {
-      await this.handleEspacioOcupada(espacio);
+      await this.handleEspacioOcupada(espacio, secuencia);
     } else {
-      await this.handleEspacioDividirCuenta(espacio);
+      await this.handleEspacioDividirCuenta(espacio, secuencia);
     }
 
+    if (secuencia !== this.secuenciaSeleccionPedido) return;
     this.RehacerPantallaRefresh = 'RehacerPantalla';
     this.spinnerService.hide();
   }
@@ -1369,6 +1662,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.aplicarFiltroTrasladoProducto = true;
     this.MostrarOcultarPanelEspacio = true;
     this.MostrarOcultarPanelProducto = false;
+    // En la vista compacta la columna de mesas está separada del pedido.
+    // Llevarla al frente evita que el usuario tenga que cambiarla manualmente.
+    this.seleccionarVistaCompacta('catalogo');
     if (this.ambienteActual) {
       this.MostrarEspacios_x_Ambiente(this.ambienteActual);
     }
@@ -1459,9 +1755,14 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  async handleEspacioDisponible(espacio: Espacios) {
+  async handleEspacioDisponible(
+    espacio: Espacios,
+    secuencia = this.secuenciaSeleccionPedido
+  ) {
+    if (secuencia !== this.secuenciaSeleccionPedido) return;
     if (this.aplicarFiltroCambioEspacio) {
       const response = await lastValueFrom(this.espaciosService.CambiarEspacio(this.espacioSelected.IdEspacio, espacio.IdEspacio));
+      if (secuencia !== this.secuenciaSeleccionPedido) return;
       if (response.Data) this.RehacerPantalla();
     } else {
       this.limpiarPedido();
@@ -1491,14 +1792,21 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  async handleEspacioOcupada(espacio: Espacios) {
+  async handleEspacioOcupada(
+    espacio: Espacios,
+    secuencia = this.secuenciaSeleccionPedido
+  ) {
     if (this.aplicarFiltroUnirEspacio) {
       const response = await lastValueFrom(this.espaciosService.UnirEspacio(this.espacioSelected.IdEspacio, espacio.IdEspacio, this.storageService.getCurrentSession().User.IdUsuario));
+      if (secuencia !== this.secuenciaSeleccionPedido) return;
       if (response.Data) this.RehacerPantalla();
     } else {
-      this.limpiarPedido();
       const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdEspacio(espacio.IdEspacio));
+      if (secuencia !== this.secuenciaSeleccionPedido) return;
       if (listData.Data.length > 0) {
+        // No se limpia la mesa anterior hasta tener preparada la nueva. Así la
+        // interfaz nunca pasa fugazmente por el centro de caja entre ambas.
+        this.limpiarPedido();
         this.espacioSelected = espacio;
         this.rellenarHeaderPedido(listData.Data);
         this.listProductGrid = this.getPedidoDetByResponse(listData.Data);
@@ -1511,10 +1819,14 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  async handleEspacioDividirCuenta(espacio: Espacios) {
-    this.limpiarPedido();
+  async handleEspacioDividirCuenta(
+    espacio: Espacios,
+    secuencia = this.secuenciaSeleccionPedido
+  ) {
     const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdEspacio(espacio.IdEspacio));
+    if (secuencia !== this.secuenciaSeleccionPedido) return;
     if (listData.Data.length > 0) {
+      this.limpiarPedido();
       this.openDialogoDividirCuenta(espacio, listData.Data[0].IdPedido);
     } else {
       await this.showWarningAndReloadEspacios(
@@ -2143,7 +2455,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async AnularPedido() {
 
-    if (this.espacioSelected.IdEspacio == null) {
+    if (!this.esPedidoPendienteCobro && this.espacioSelected.IdEspacio == null) {
       Swal.fire(
         this.textCatalog.get('cancelOrder'),
         this.textCatalog.get('selectSpace'),
@@ -2170,9 +2482,14 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     const dialogRef = this.dialog.open(DialogMTextComponent, {
       width: '800px',
       data: {
-        title: this.textCatalog.get('confirmVoidSpaceOrder', {
-          space: `${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}`
-        })
+        title: this.esPedidoPendienteCobro
+          ? this.textCatalog.get('voidOrderTitle', { number: this.numeroPedido })
+          : this.textCatalog.get('confirmVoidSpaceOrder', {
+              space: `${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}`
+            }),
+        placeholder: this.textCatalog.get('enterVoidReason'),
+        requiredMessage: this.textCatalog.get('voidReasonRequired'),
+        maxLength: 120,
       }
     });
 
@@ -2180,12 +2497,42 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       const motivo = (result?.value ?? '').toString().trim();
       if (!motivo) return;
 
-      if (this.puedeAprobarSolicitudes) {
+      if (this.esPedidoPendienteCobro) {
+        void this.realizarAnulacionPedidoPendiente(motivo);
+      } else if (this.puedeAprobarSolicitudes) {
         void this.RealizarAnulacionPedido(this.espacioSelected, motivo);
       } else {
         void this.solicitarAnulacionPedido(motivo);
       }
     });
+  }
+
+  private async realizarAnulacionPedidoPendiente(motivo: string): Promise<void> {
+    this.spinnerService.show();
+    try {
+      const response = await lastValueFrom(
+        this.pedidoService.AnularPedidoPendiente({
+          IdPedido: this.idPedidoCobrar,
+          NroCuenta: this.nroCuentaCobrar,
+          MotivoAnula: motivo,
+          Ip: this.storageService.getCurrentIP() || null,
+        })
+      );
+
+      if (!response?.Success) {
+        return;
+      }
+
+      await this.imprimir(response.Data ?? []);
+      this.listaPedidosPendientes = (this.listaPedidosPendientes ?? []).filter(
+        pedido => pedido.IdPedido !== this.idPedidoCobrar
+          || pedido.NroCuenta !== this.nroCuentaCobrar
+      );
+      this.limpiarPedido();
+      this.RehacerPantalla();
+    } finally {
+      this.spinnerService.hide();
+    }
   }
 
   /** Pide aprobación para asignar la cuenta a otro camarero. */
@@ -2297,10 +2644,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.procesarPedido = true;
-    this.isAnularPedidoDisabled = true;
     this.isComboDisabled = false;
     this.isVerComplementoDisabled = false;
-    this.isReImprimirDisabled = false;
     this.MostrarOcultarPanelEspacio = !verPanelProducto;
     this.MostrarOcultarPanelProducto = verPanelProducto;
     this.isCanalVentaDisabled = true;
@@ -2326,19 +2671,20 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   }
 
-  VerPedido() {
-    if (this.selectedRow.PedidoComplemento.length == 0) {
-      return;
-    }
-    this.AgregarProductoComplemento(this.selectedRow);
+  VerPedido(): void {
+    const selectedRow = this.selectedRow;
+    if (!selectedRow || !this.puedeVerComplementos) return;
+
+    this.AgregarProductoComplemento(selectedRow);
   }
 
   VerMenu(): void {
-    if (!this.selectedRow || this.selectedRow.Producto?.Tipo !== 1) {
+    const selectedRow = this.selectedRow;
+    if (!selectedRow || selectedRow.Producto?.Tipo !== 1) {
       return;
     }
 
-    this.AgregarProductoMenu(this.selectedRow);
+    this.AgregarProductoMenu(selectedRow);
   }
 
    aplicarDescuento(): void {
@@ -2359,7 +2705,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Sin permiso, el descuento se pide y lo aplica quien lo aprueba.
-    this.openDialogoDescuento(this.selectedRow, !this.puedeAplicarDescuento);
+    if (this.selectedRow) {
+      this.openDialogoDescuento(this.selectedRow, !this.puedeAplicarDescuento);
+    }
     
    }
    quitarDescuento() {
@@ -2757,6 +3105,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private limpiarPedido(): void {
     this.listProductGrid = [];
+    this.selectedRow = null;
+    this.accionesCompactasAbiertas = false;
     this.actualizarDatosGrilla();
     this.gridListaPedidoDetProducto.data = [];
     this.mozoSelected = new Empleado;
@@ -2772,6 +3122,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clienteSelected = new Cliente;
     this.socioNegocioSelected = new SocioNegocio;
     this.preciosSocioNegocio.clear();
+    this.pedidoPendienteCobroSeleccionado = null;
+    this.isEnviarPedidoDisabled = false;
+    this.isPanelProductoDisabled = false;
   }
 
 
@@ -2818,6 +3171,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private rellenarHeaderPedido(listData: PedidoEspacioDTO[]): void {
     var firstItem = listData[0];
+    this.espacioSelected.IdEspacio = firstItem.IdEspacio;
     this.espacioSelected.NroPersonas = firstItem.NroPax;
     this.mozoSelected = this.getMozoByMozoId(firstItem.IdEmpleado);
     this.clienteSelected = new Cliente({

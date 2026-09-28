@@ -25,9 +25,20 @@
         <td mat-cell *matCellDef="let product">{{ product.Precio }}</td>
       </ng-container>
 
-      <ng-container matColumnDef="family">
-        <th mat-header-cell *matHeaderCellDef>{{ 'family' | tenantText }}</th>
-        <td mat-cell *matCellDef="let product">{{ product.Familia }}</td>
+      <ng-container matColumnDef="category">
+        <th mat-header-cell *matHeaderCellDef>
+          {{ 'family' | tenantText }} / {{ 'subfamily' | tenantText }}
+        </th>
+        <td mat-cell *matCellDef="let product" class="ps-category-cell">
+          <span *ngIf="product.Familia" class="ps-category-cell__family">
+            {{ product.Familia }}
+          </span>
+          <span *ngIf="product.SubFamilia" class="ps-category-cell__subfamily">
+            {{ product.SubFamilia }}
+          </span>
+          <span *ngIf="!product.Familia && !product.SubFamilia"
+                class="ps-category-cell__empty">—</span>
+        </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

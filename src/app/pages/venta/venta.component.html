@@ -79,16 +79,16 @@
         <button (click)="Refresh()">
           <fa-icon [icon]="faSync"></fa-icon> {{ 'refresh' | tenantText }}
         </button>
-        <button *ngIf="reservasHabilitadas" type="button" class="channel-buttons__reservations" (click)="abrirAgendaReservas()">
-          <mat-icon>event_available</mat-icon> Reservas
+        <button *ngIf="isModoMozo && reservasHabilitadas" type="button" class="channel-buttons__reservations" (click)="abrirAgendaReservas()">
+          <mat-icon>event_available</mat-icon> {{ 'reservations' | tenantText }}
         </button>
-        <app-solicitudes-autorizacion-boton variante="canal"></app-solicitudes-autorizacion-boton>
-        <button *ngIf="solicitudesQrPendientes.length > 0"
+        <app-solicitudes-autorizacion-boton *ngIf="isModoMozo" variante="canal"></app-solicitudes-autorizacion-boton>
+        <button *ngIf="isModoMozo && solicitudesQrPendientes.length > 0"
                 type="button"
                 class="channel-buttons__qr-requests"
                 (click)="abrirSolicitudesMesa()">
           <mat-icon>qr_code_scanner</mat-icon>
-          Solicitudes
+          {{ 'tableRequests' | tenantText }}
           <span class="channel-buttons__count">{{ solicitudesQrPendientes.length }}</span>
         </button>
       </div>
@@ -115,7 +115,7 @@
 
     <div class="order-workspace">
     <div class="middle-section">
-      <div class="table-info">
+      <div class="table-info" *ngIf="!mostrarCentroCaja">
         <div class="table-info__item" *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO && espacioSelected?.Descripcion && espacioSelected?.Numero">
           <span class="table-info__icon-wrap"><mat-icon>table_restaurant</mat-icon></span>
           <div class="table-info__text">
@@ -207,57 +207,168 @@
         <mat-icon inline>hourglass_top</mat-icon>
         {{ 'accountRequestsPending' | tenantText }}: {{ resumenSolicitudesCuenta }}
       </div>
-      <div #scrollContainer class="data-grid">
+      <div class="pending-charge-notice" *ngIf="esPedidoPendienteCobro" role="status">
+        <mat-icon>payments</mat-icon>
+        <span>
+          <strong>{{ 'pendingPayment' | tenantText }}</strong>
+          {{ 'pendingPaymentReadOnlyHint' | tenantText }}
+        </span>
+      </div>
+      <section *ngIf="mostrarCentroCaja"
+               class="cash-center"
+               aria-labelledby="cash-center-title">
+        <div class="cash-center__hero">
+          <span class="cash-center__hero-icon" aria-hidden="true">
+            <mat-icon>{{ iconoEstadoInicialCanal }}</mat-icon>
+          </span>
+          <div>
+            <span class="cash-center__eyebrow">{{ etiquetaEstadoInicialCanal | tenantText }}</span>
+            <h2 id="cash-center-title">{{ tituloEstadoInicialCanal | tenantText }}</h2>
+            <p>{{ ayudaEstadoInicialCanal | tenantText }}</p>
+          </div>
+        </div>
+
+        <div class="cash-center__summary" role="list" [attr.aria-label]="'cashSummary' | tenantText">
+          <article class="cash-center__metric" role="listitem">
+            <span class="cash-center__metric-icon"><mat-icon>receipt_long</mat-icon></span>
+            <span class="cash-center__metric-copy">
+              <span>{{ (idCanalVentaSelected === canalVentaEnum.ESPACIO ? 'openAccounts' : 'openOrders') | tenantText }}</span>
+              <strong>{{ cantidadOperacionesAbiertasCanal }}</strong>
+            </span>
+          </article>
+          <article class="cash-center__metric cash-center__metric--amount" role="listitem">
+            <span class="cash-center__metric-icon"><mat-icon>payments</mat-icon></span>
+            <span class="cash-center__metric-copy">
+              <span>{{ 'amountToCollect' | tenantText }}</span>
+              <strong>{{ config?.SimboloMoneda || '-' }} {{ importePendienteCanal | number:'1.2-2' }}</strong>
+            </span>
+          </article>
+          <article class="cash-center__metric"
+                   [class.cash-center__metric--attention]="cantidadPendientesCobroCanal > 0"
+                   role="listitem">
+            <span class="cash-center__metric-icon"><mat-icon>pending_actions</mat-icon></span>
+            <span class="cash-center__metric-copy">
+              <span>{{ 'pendingPayment' | tenantText }}</span>
+              <strong>{{ cantidadPendientesCobroCanal }}</strong>
+            </span>
+          </article>
+        </div>
+
+        <div class="cash-center__quick-access">
+          <span class="cash-center__section-title">{{ 'quickAccess' | tenantText }}</span>
+          <div class="cash-center__actions">
+            <button *ngIf="pedidosPendientesCobro.length > 0"
+                    type="button"
+                    class="cash-center__action cash-center__action--attention"
+                    (click)="mostrarPedidosPendientesCobro()"
+                    [disabled]="isCanalVentaDisabled">
+              <mat-icon>payments</mat-icon>
+              <span>{{ 'pendingPayment' | tenantText }}</span>
+              <strong>{{ pedidosPendientesCobro.length }}</strong>
+            </button>
+            <button *ngIf="reservasHabilitadas"
+                    type="button"
+                    class="cash-center__action"
+                    (click)="abrirAgendaReservas()">
+              <mat-icon>event_available</mat-icon>
+              <span>{{ 'reservations' | tenantText }}</span>
+            </button>
+            <app-solicitudes-autorizacion-boton variante="panel"></app-solicitudes-autorizacion-boton>
+            <button *ngIf="solicitudesQrPendientes.length > 0"
+                    type="button"
+                    class="cash-center__action cash-center__action--attention"
+                    (click)="abrirSolicitudesMesa()">
+              <mat-icon>qr_code_scanner</mat-icon>
+              <span>{{ 'tableRequests' | tenantText }}</span>
+              <strong>{{ solicitudesQrPendientes.length }}</strong>
+            </button>
+            <button *ngIf="reportesHabilitados"
+                    type="button"
+                    class="cash-center__action"
+                    (click)="OpenDialogDocumentosEmitidos()">
+              <fa-icon [icon]="faFileAlt"></fa-icon>
+              <span>{{ 'issuedDocuments' | tenantText }}</span>
+            </button>
+            <button *ngIf="reportesHabilitados"
+                    type="button"
+                    class="cash-center__action"
+                    (click)="openDialogReportes()">
+              <fa-icon [icon]="faChartPie"></fa-icon>
+              <span>{{ 'expensesReports' | tenantText }}</span>
+            </button>
+            <button *ngIf="!isBloquearDisabled"
+                    type="button"
+                    class="cash-center__action"
+                    (click)="toggleBloquear()">
+              <fa-icon [icon]="faLock"></fa-icon>
+              <span>{{ 'lock' | tenantText }}</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div #scrollContainer class="data-grid" *ngIf="!mostrarCentroCaja">
         <!-- <div  mat-table > -->
           <table mat-table [dataSource]="gridListaPedidoDetProducto">
             <ng-container matColumnDef="NombreProducto">
               <th mat-header-cell *matHeaderCellDef>{{ 'product' | tenantText }}</th>
-              <td mat-cell *matCellDef="let product"  [ngStyle]="{'color': product.Item > 0 ? 'blue' : 'black'}">
-                <table>
-                  <tr>{{product.Producto.NombreCorto}}
-                  </tr>
-                  <tr *ngIf="solicitudPendiente(product) as solicitud" class="solicitud-pendiente">
+              <td mat-cell *matCellDef="let product">
+                <div class="product-cell">
+                  <div class="product-cell__name"
+                       [matTooltip]="product.Producto.NombreCorto">
+                    {{ product.Producto.NombreCorto }}
+                  </div>
+                  <span class="product-send-status"
+                        [class.product-send-status--sent]="productoEnviadoACocina(product)"
+                        [class.product-send-status--pending]="!productoEnviadoACocina(product)"
+                        [matTooltip]="(productoEnviadoACocina(product)
+                          ? 'sentToKitchen'
+                          : 'pendingSendToKitchen') | tenantText">
+                    <mat-icon>{{ productoEnviadoACocina(product) ? 'check_circle' : 'schedule' }}</mat-icon>
+                    {{ (productoEnviadoACocina(product) ? 'sent' : 'toSend') | tenantText }}
+                  </span>
+                  <div *ngIf="solicitudPendiente(product) as solicitud" class="solicitud-pendiente">
                     <mat-icon inline>hourglass_top</mat-icon>
                     {{ 'voidPending' | tenantText }} · {{ solicitud.UsuarioSolicita }}
-                  </tr>
-                  <tr *ngIf="product.Observacion" style="font-style: italic; font-size: small;">
+                  </div>
+                  <div *ngIf="product.Observacion" class="product-cell__detail">
                     {{ 'observation' | tenantText }}:
                     {{product.Observacion}}
-                  </tr>
-                  <tr *ngIf="product.Anfitriona" style="font-style: italic; font-size: small;">
+                  </div>
+                  <div *ngIf="product.Anfitriona" class="product-cell__detail">
                     {{ 'hostess' | tenantText }}:
                     {{product.Anfitriona}}
-                  </tr>
-                  <tr *ngIf="product.NroCupon" style="font-style: italic; font-size: small;">
+                  </div>
+                  <div *ngIf="product.NroCupon" class="product-cell__detail">
                     {{ 'couponNumber' | tenantText }}:
                     {{product.NroCupon}}
-                  </tr>
-                  <tr *ngIf="product.PedidoComplemento?.length" style="font-style: italic; font-size: small;">
+                  </div>
+                  <div *ngIf="product.PedidoComplemento?.length" class="product-cell__detail">
                     {{ 'withComplement' | tenantText }}
-                  </tr>
-                  <tr *ngIf="product.PedidoMenu?.length" style="font-style: italic; font-size: small;">
+                  </div>
+                  <div *ngIf="product.PedidoMenu?.length" class="product-cell__detail">
                     {{ 'menuConfigured' | tenantText }}
-                  </tr>
-                  <tr
+                  </div>
+                  <div
                     *ngFor="let menuItem of product.PedidoMenu"
-                    style="font-style: italic; font-size: small;">
+                    class="product-cell__detail">
                     {{ menuItem.SeccionMenu }}:
                     {{ menuItem.ProductoSeccionMenu?.NombreCorto }}
                     x{{ menuItem.Cantidad }}
-                  </tr>
-                </table>
+                  </div>
+                </div>
               </td>
             </ng-container>
 
             <ng-container matColumnDef="Precio">
               <th mat-header-cell *matHeaderCellDef>{{ 'price' | tenantText }}</th>
-              <td mat-cell *matCellDef="let product" [ngStyle]="{'color': product.Item > 0 ? 'blue' : 'black'}">
+              <td mat-cell *matCellDef="let product">
                 {{product.Precio}} </td>
             </ng-container>
 
             <ng-container matColumnDef="Cantidad">
               <th mat-header-cell *matHeaderCellDef>{{ 'quantity' | tenantText }}</th>
-              <td mat-cell *matCellDef="let product" [ngStyle]="{'color': product.Item > 0 ? 'blue' : 'black'}">
+              <td mat-cell *matCellDef="let product">
                 {{product.Cantidad}} </td>
             </ng-container>
 
@@ -280,7 +391,8 @@
                   </button>
                   <button mat-icon-button color="primary"
                     [matTooltip]="'moreOptions' | tenantText"
-                    [matMenuTriggerFor]="MasOpciones">
+                    [matMenuTriggerFor]="MasOpciones"
+                    [disabled]="esPedidoPendienteCobro">
                     <mat-icon>more</mat-icon>
                   </button>
                 </div>
@@ -288,7 +400,8 @@
 
                   <button mat-icon-button color="accent"
                     [matTooltip]="(solicitudPendiente(product) ? (puedeAprobarSolicitudes ? 'approve' : 'withdrawRequest') : 'delete') | tenantText"
-                    (click)="deleteProductGrid(product)">
+                    (click)="deleteProductGrid(product)"
+                    [disabled]="esPedidoPendienteCobro">
                     <mat-icon>{{ solicitudPendiente(product) ? (puedeAprobarSolicitudes ? 'task_alt' : 'undo') : 'delete' }}</mat-icon>
                   </button>
                   <button mat-icon-button color="primary"
@@ -319,7 +432,12 @@
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selectRow(row)" [class.selected-row]="selectedRow === row"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                (click)="selectRow(row)"
+                [class.selected-row]="selectedRow === row"
+                [class.product-row--sent]="productoEnviadoACocina(row)"
+                [class.product-row--pending]="!productoEnviadoACocina(row)">
+            </tr>
           </table>
           <!-- <mat-paginator [pageSizeOptions]="[6]" showFirstLastButtons></mat-paginator> -->
         </div>
@@ -328,7 +446,7 @@
 
     <!-- Tres filas estáticas debajo del datagridview -->
     <!-- Primera fila: Importe, Dscto, Total -->
-    <div class="total-section">
+    <div class="total-section" *ngIf="!mostrarCentroCaja">
       <div class="total-section__item">
         <span class="total-section__label">{{ 'amount' | tenantText }}</span>
         <span class="total-section__value">{{ config?.SimboloMoneda || '-' }} {{ sumaImporte | number:'1.2-2' }}</span>
@@ -350,50 +468,49 @@
   <!-- ══ Botones CAJA ══════════════════════════════════════ -->
   <ng-container *ngIf="!isModoMozo">
 
-    <div class="button-row">
-      <button *ngIf="descuentosHabilitados" [disabled]="!puedeOperarPedidoPersistido" (click)="aplicarDescuento()">
+    <div class="button-row"
+         *ngIf="(descuentosHabilitados && puedeOperarPedidoPersistido)
+           || (precuentaHabilitada && puedeOperarPedidoPersistido)">
+      <button *ngIf="descuentosHabilitados && puedeOperarPedidoPersistido"
+              (click)="aplicarDescuento()">
         <fa-icon [icon]="faPercentage"></fa-icon>{{textDescuento}}
       </button>
-      <button *ngIf="precuentaHabilitada" [disabled]="!puedeOperarPedidoPersistido" (click)="ImprimirPrecuenta()">
+      <button *ngIf="precuentaHabilitada && puedeOperarPedidoPersistido"
+              (click)="ImprimirPrecuenta()">
         <fa-icon [icon]="faReceipt"></fa-icon> {{ 'preBill' | tenantText }}
-      </button>
-      <button *ngIf="reportesHabilitados" (click)="OpenDialogDocumentosEmitidos()">
-        <fa-icon [icon]="faFileAlt"></fa-icon> {{ 'issuedDocuments' | tenantText }}
-      </button>
-      <button *ngIf="reportesHabilitados" (click)="openDialogReportes()">
-        <fa-icon [icon]="faChartPie"></fa-icon> {{ 'expensesReports' | tenantText }}
       </button>
     </div>
 
     <!-- Combo / Ver Complementos: visible solo si la fila seleccionada lo requiere -->
     <div class="button-row"
-         *ngIf="selectedRow && (selectedRow.Producto?.Tipo === 1 || selectedRow.Producto?.Tipo === 2)">
-      <button *ngIf="selectedRow.Producto?.Tipo === 1"
-              [disabled]="isComboDisabled"
+         *ngIf="selectedRow
+           && ((selectedRow.Producto?.Tipo === 1 && !isComboDisabled)
+             || (selectedRow.Producto?.Tipo === 2 && puedeVerComplementos))">
+      <button *ngIf="selectedRow.Producto?.Tipo === 1 && !isComboDisabled"
               (click)="VerMenu()">
         <fa-icon [icon]="faConciergeBell"></fa-icon> {{ 'viewMenu' | tenantText }}
       </button>
-      <button *ngIf="selectedRow.Producto?.Tipo === 2"
+      <button *ngIf="selectedRow.Producto?.Tipo === 2 && puedeVerComplementos"
               (click)="VerPedido()">
         <fa-icon [icon]="faEye"></fa-icon> {{ 'viewComplements' | tenantText }}
       </button>
     </div>
 
     <div class="button-row">
-      <button *ngIf="comprobantesHabilitados && mostrarBoleta"
-              [disabled]="!puedeOperarPedidoPersistido || comprobantesAgotados"
+      <button *ngIf="comprobantesHabilitados && mostrarBoleta && puedeCobrarPedido && !comprobantesAgotados"
               (click)="OpenDialogEmitirComprobante(idTipoDocBoleta)">
         <fa-icon [icon]="faFileInvoiceDollar"></fa-icon> {{ textoBoleta }}
       </button>
-      <button *ngIf="comprobantesHabilitados && mostrarFactura"
-              [disabled]="!puedeOperarPedidoPersistido || comprobantesAgotados"
+      <button *ngIf="comprobantesHabilitados && mostrarFactura && puedeCobrarPedido && !comprobantesAgotados"
               (click)="OpenDialogEmitirComprobante(idTipoDocFactura)">
         <fa-icon [icon]="faFileInvoice"></fa-icon> {{ textoFactura }}
       </button>
-      <button *ngIf="comprobantesHabilitados" [disabled]="!puedeOperarPedidoPersistido || comprobantesAgotados" (click)="OpenDialogEmitirComprobante(TipoDocumento.Express)">
+      <button *ngIf="comprobantesHabilitados && puedeCobrarPedido && !comprobantesAgotados"
+              (click)="OpenDialogEmitirComprobante(TipoDocumento.Express)">
         <fa-icon [icon]="faReceipt"></fa-icon> {{ 'express' | tenantText }}
       </button>
-      <button class="btn--primary-action"
+      <button *ngIf="procesarPedido && (!isEnviarPedidoDisabled || enviandoPedido)"
+              class="btn--primary-action"
               [class.is-processing]="enviandoPedido"
               [disabled]="isEnviarPedidoDisabled || enviandoPedido"
               [attr.aria-busy]="enviandoPedido"
@@ -402,9 +519,13 @@
         <fa-icon *ngIf="!enviandoPedido" [icon]="faPaperPlane"></fa-icon>
         {{ (enviandoPedido ? 'sendingOrder' : 'sendOrder') | tenantText }}
       </button>
-      <button [disabled]="isBloquearDisabled" (click)="toggleBloquear()">
-        <fa-icon [icon]="!procesarPedido ? faLock : faSync"></fa-icon>
-        {{ (!procesarPedido ? 'lock' : 'reset') | tenantText }}
+      <button *ngIf="mostrarAnularPedidoCaja" (click)="AnularPedido()">
+        <fa-icon [icon]="faTimes"></fa-icon>
+        {{ (solicitudCuentaPendiente('AnularPedido') ? 'withdrawRequest' : 'cancelOrder') | tenantText }}
+      </button>
+      <button *ngIf="!isBloquearDisabled && hayContextoPedidoActivo" (click)="toggleBloquear()">
+        <fa-icon [icon]="faSync"></fa-icon>
+        {{ 'reset' | tenantText }}
       </button>
     </div>
 
@@ -413,21 +534,35 @@
   <!-- ══ Botones MOZO ══════════════════════════════════════ -->
   <ng-container *ngIf="isModoMozo">
 
-    <div class="button-row">
-      <button
-        [disabled]="isComboDisabled || !selectedRow || selectedRow.Producto?.Tipo !== 1"
+    <div class="compact-order-actions"
+         [class.compact-order-actions--open]="accionesCompactasAbiertas">
+
+    <div class="button-row compact-actions-toggle-row"
+         *ngIf="hayAccionesSecundariasMozo">
+      <button type="button"
+              [attr.aria-expanded]="accionesCompactasAbiertas"
+              (click)="alternarAccionesCompactas()">
+        <mat-icon>{{ accionesCompactasAbiertas ? 'expand_less' : 'apps' }}</mat-icon>
+        {{ 'actions' | tenantText }}
+      </button>
+    </div>
+
+    <div class="button-row"
+         *ngIf="mostrarMenuMozo || mostrarComplementosMozo || mostrarEnviarPedidoMozo">
+      <button *ngIf="mostrarMenuMozo"
+        class="compact-order-actions__secondary"
         (click)="VerMenu()">
         <fa-icon [icon]="faConciergeBell"></fa-icon> {{ 'viewMenu' | tenantText }}
       </button>
-      <button [disabled]="isVerComplementoDisabled" (click)="VerPedido()">
+      <button *ngIf="mostrarComplementosMozo"
+              class="compact-order-actions__secondary"
+              (click)="VerPedido()">
         <fa-icon [icon]="faEye"></fa-icon> {{ 'viewComplement' | tenantText }}
       </button>
-      <button [disabled]="isPriorizarDespachoDisabled">
-        <fa-icon [icon]="faList"></fa-icon> {{ 'prioritizeDispatch' | tenantText }}
-      </button>
-      <button class="btn--primary-action"
+      <button *ngIf="mostrarEnviarPedidoMozo"
+              class="btn--primary-action compact-order-actions__primary"
               [class.is-processing]="enviandoPedido"
-              [disabled]="isEnviarPedidoDisabled || enviandoPedido"
+              [disabled]="enviandoPedido"
               [attr.aria-busy]="enviandoPedido"
               (click)="EnviarPedido()">
         <span *ngIf="enviandoPedido" class="button-processing-spinner" aria-hidden="true"></span>
@@ -436,21 +571,27 @@
       </button>
     </div>
 
-    <div class="button-row">
-      <button *ngIf="precuentaHabilitada" [disabled]="isPrecuentaDisabled || !puedeOperarPedidoPersistido" (click)="ImprimirPrecuenta()">
+    <div class="button-row"
+         *ngIf="mostrarPrecuentaMozo || mostrarAnularPedidoMozo || mostrarRehacerMozo">
+      <button *ngIf="mostrarPrecuentaMozo"
+              class="compact-order-actions__secondary"
+              (click)="ImprimirPrecuenta()">
         <fa-icon [icon]="faReceipt"></fa-icon> {{ 'preBill' | tenantText }}
       </button>
-      <button [disabled]="isAnularPedidoDisabled" (click)="AnularPedido()">
+      <button *ngIf="mostrarAnularPedidoMozo"
+              class="compact-order-actions__secondary"
+              (click)="AnularPedido()">
         <fa-icon [icon]="faTimes"></fa-icon>
         {{ (solicitudCuentaPendiente('AnularPedido') ? 'withdrawRequest' : 'cancelOrder') | tenantText }}
       </button>
-      <button [disabled]="isReImprimirDisabled">
-        <fa-icon [icon]="faReceipt"></fa-icon> {{ 'reprint' | tenantText }}
+      <button *ngIf="mostrarRehacerMozo"
+              class="compact-order-actions__secondary"
+              (click)="toggleBloquear()">
+        <fa-icon [icon]="faSync"></fa-icon>
+        {{ 'reset' | tenantText }}
       </button>
-      <button [disabled]="isBloquearDisabled" (click)="toggleBloquear()">
-        <fa-icon [icon]="!procesarPedido ? faLock : faSync"></fa-icon>
-        {{ (!procesarPedido ? 'lock' : 'reset') | tenantText }}
-      </button>
+    </div>
+
     </div>
 
   </ng-container>
@@ -508,7 +649,7 @@
     </div>
 
     <!-- Alterna entre los espacios y los productos -->
-    <ng-container *ngIf="!errorCargaInicial && MostrarOcultarPanelEspacio && (idCanalVentaSelected==canalVentaEnum.ESPACIO || aplicarFiltroTrasladarAEspacio)">
+    <ng-container *ngIf="!errorCargaInicial && !mostrandoPendientesCobro && MostrarOcultarPanelEspacio && (idCanalVentaSelected==canalVentaEnum.ESPACIO || aplicarFiltroTrasladarAEspacio)">
 
       <!-- Skeleton mientras carga -->
       <div *ngIf="isLoadingEspacios" class="tables-grid">
@@ -534,14 +675,35 @@
 
     </ng-container>
 
-    <div *ngIf="!errorCargaInicial && MostrarOcultarPanelEspacio && idCanalVentaSelected!=canalVentaEnum.ESPACIO && !aplicarFiltroTrasladarAEspacio" class="tables-grid">
-      <button *ngFor="let pedido of listaPedido_x_Canal"
-        [style.background]="'LightCyan'"
-        (click)="openPedido(pedido)"
-        [style.visibility]="pedido.Visible === false ? 'hidden' : 'visible'">
-        <div style="text-align: center;">{{pedido.NroPedido}} <br> {{config?.SimboloMoneda || '-'}}.{{pedido.Total}} <br> {{pedido.Cliente}}</div>
-      </button>
-    </div>
+    <ng-container *ngIf="!errorCargaInicial
+                         && !mostrandoPendientesCobro
+                         && MostrarOcultarPanelEspacio
+                         && canalAdmitePedidosDirectos
+                         && !aplicarFiltroTrasladarAEspacio">
+      <div *ngIf="(listaPedido_x_Canal?.length || 0) > 0" class="tables-grid">
+        <button *ngFor="let pedido of listaPedido_x_Canal"
+          [style.background]="'LightCyan'"
+          (click)="openPedido(pedido)"
+          [style.visibility]="pedido.Visible === false ? 'hidden' : 'visible'">
+          <div style="text-align: center;">{{pedido.NroPedido}} <br> {{config?.SimboloMoneda || '-'}}.{{pedido.Total}} <br> {{pedido.Cliente}}</div>
+        </button>
+      </div>
+
+      <section *ngIf="(listaPedido_x_Canal?.length || 0) === 0"
+               class="channel-orders-empty"
+               role="status">
+        <span class="channel-orders-empty__icon" aria-hidden="true">
+          <mat-icon>{{ iconoEstadoInicialCanal }}</mat-icon>
+        </span>
+        <span class="channel-orders-empty__eyebrow">{{ etiquetaEstadoInicialCanal | tenantText }}</span>
+        <h2>{{ tituloCanalSinPedidos | tenantText }}</h2>
+        <p>{{ ayudaCanalSinPedidos | tenantText }}</p>
+        <button type="button" (click)="NuevoPedidoLlevar()">
+          <mat-icon>add</mat-icon>
+          {{ 'newOrder' | tenantText }}
+        </button>
+      </section>
+    </ng-container>
 
     <div *ngIf="!isLoadingEspacios
                   && MostrarOcultarPanelProducto
@@ -553,6 +715,27 @@
       <mat-icon>restaurant_menu</mat-icon>
       <strong>{{ 'emptyProductCatalogTitle' | tenantText }}</strong>
       <span>{{ 'emptyProductCatalogHelp' | tenantText }}</span>
+    </div>
+
+    <div *ngIf="!errorCargaInicial && mostrandoPendientesCobro && MostrarOcultarPanelEspacio"
+         class="pending-charge-grid">
+      <div class="pending-charge-grid__empty" *ngIf="pedidosPendientesCobro.length === 0">
+        <mat-icon>task_alt</mat-icon>
+        <span>{{ 'noPendingPayments' | tenantText }}</span>
+      </div>
+      <button *ngFor="let pedido of pedidosPendientesCobro"
+              type="button"
+              class="pending-charge-card"
+              [class.pending-charge-card--selected]="pedidoPendienteCobroSeleccionado?.IdPedido === pedido.IdPedido && pedidoPendienteCobroSeleccionado?.NroCuenta === pedido.NroCuenta"
+              (click)="openPedido(pedido)">
+        <span class="pending-charge-card__status">{{ 'pendingPayment' | tenantText }}</span>
+        <strong>{{ pedido.NroPedido }}</strong>
+        <span *ngIf="pedido.IdEspacio">
+          {{ 'originalSpace' | tenantText }}: {{ nombreEspacioOriginal(pedido) }}
+        </span>
+        <span *ngIf="pedido.Cliente">{{ pedido.Cliente }}</span>
+        <b>{{ config?.SimboloMoneda || '-' }} {{ pedido.Total | number:'1.2-2' }}</b>
+      </button>
     </div>
 
     <div *ngIf="!isLoadingEspacios
@@ -598,49 +781,56 @@
       </div>
 
       <!-- Acciones de mesa -->
-      <div class="static-buttons-row static-buttons-row--acciones">
-        <button *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO && !aplicarFiltroTrasladarAEspacio"
+      <div class="static-buttons-row static-buttons-row--acciones"
+           *ngIf="!aplicarFiltroTrasladarAEspacio
+             && ((idCanalVentaSelected == canalVentaEnum.ESPACIO && mesaSeleccionada)
+               || (canalAdmitePedidosDirectos && (listaPedido_x_Canal?.length || 0) > 0))">
+        <button *ngIf="canalAdmitePedidosDirectos && !aplicarFiltroTrasladarAEspacio"
                 class="process-pedido" (click)="NuevoPedidoLlevar()">
           {{ 'newOrder' | tenantText }}
         </button>
-        <button *ngIf="!aplicarFiltroTrasladarAEspacio" class="process-pedido"
-                [disabled]="idCanalVentaSelected == canalVentaEnum.ESPACIO && !mesaSeleccionada"
+        <button *ngIf="!aplicarFiltroTrasladarAEspacio
+                        && ((idCanalVentaSelected == canalVentaEnum.ESPACIO
+                              && mesaSeleccionada)
+                          || (canalAdmitePedidosDirectos && pedidoLlevarSeleccionado))"
+                class="process-pedido"
                 (click)="processPedido(true)">
           {{ 'processOrder' | tenantText }}
         </button>
-        <button *ngIf="idCanalVentaSelected != canalVentaEnum.ESPACIO && !aplicarFiltroTrasladarAEspacio"
-                [disabled]="!pedidoLlevarSeleccionado"
+        <button *ngIf="canalAdmitePedidosDirectos
+                        && !aplicarFiltroTrasladarAEspacio
+                        && pedidoLlevarSeleccionado"
                 (click)="iniciarTrasladarAEspacio()">
           {{ 'moveToTable' | tenantText }}
         </button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO"
-                [disabled]="!mesaSeleccionada"
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO
+                        && mesaSeleccionada
+                        && pedidoPersistido"
                 (click)="CambiarMozo()">
           {{ (solicitudCuentaPendiente('CambiarCamarero') ? 'withdrawRequest' : 'changeOrderAttendant') | tenantText }}
         </button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO"
-                [disabled]="!mesaSeleccionada"
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO
+                        && mesaSeleccionada
+                        && pedidoPersistido"
                 (click)="CambiarEspacio()">
           {{ 'changeSpace' | tenantText }}
         </button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO"
-                [disabled]="!mesaSeleccionada"
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO
+                        && mesaSeleccionada
+                        && pedidoPersistido"
                 (click)="UnirEspacio()">
           {{ 'mergeAccount' | tenantText }}
         </button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO"
-                [disabled]="!mesaSeleccionada"
+        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO
+                        && mesaSeleccionada
+                        && pedidoPersistido"
                 (click)="dividirCuenta()">
           {{ 'splitAccount' | tenantText }}
-        </button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO"
-                [disabled]="!mesaSeleccionada">
-          {{ 'activateSpace' | tenantText }}
         </button>
       </div>
 
     </div>
-    <div *ngIf="procesarPedido && aplicarFiltroUnirEspacio==false && aplicarFiltroCambioEspacio==false">
+    <div *ngIf="procesarPedido && !esPedidoPendienteCobro && aplicarFiltroUnirEspacio==false && aplicarFiltroCambioEspacio==false">
 
       <!-- Fila FAMILIA -->
       <div class="static-buttons-row static-buttons-row--familia">

@@ -5,7 +5,7 @@ export interface PedidoEspacioDTO {
   IdPedido: number;       // Identificador del pedido
   NroCuenta: number;
   NroPax: number;
-  IdEspacio: string;         // Identificador de la espacio
+  IdEspacio: number;         // Identificador del espacio original
   Cliente: string;
   Direccion: string;
   Referencia: string;
@@ -20,7 +20,8 @@ export interface PedidoEspacioDTO {
   IdMozo: string;         // Identificador del mozo
   NombreMozo: string;     // Nombre del mozo
   IdAmbiente: string;     // Identificador del ambiente (si tu sistema tiene diferentes ambientes)
-  EstadoPedido: string;   
+  Estado: number;
+  IdCanalVenta: number;
   Total: number;          // Total del pedido
   Descuento: number;      
   Importe: number;        

@@ -14,8 +14,8 @@ import { combineLatest, map } from 'rxjs';
   styleUrls: ['./solicitudes-autorizacion-boton.component.css'],
 })
 export class SolicitudesAutorizacionBotonComponent {
-  /** 'icono' para la cabecera general; 'canal' para la barra de la pantalla de venta. */
-  @Input() variante: 'icono' | 'canal' = 'icono';
+  /** Adapta el acceso a la cabecera, la barra de canal o el centro de caja. */
+  @Input() variante: 'icono' | 'canal' | 'panel' = 'icono';
 
   readonly esAprobador$ = this.realtime.esAprobador$;
   readonly pendientes$ = combineLatest([

@@ -33,6 +33,9 @@ export interface PedidoPendienteCierre {
   Cliente: string;
   MontoPendiente: number;
   FechaPedido: Date | string;
+  Estado: number;
+  EstadoDescripcion: string;
+  EsPendienteCobro: boolean;
 }
 
 export interface AnularPedidoPendienteRequest {

@@ -320,6 +320,14 @@ export class DialogCerrarTurnoComponent implements OnInit {
       });
   }
 
+  cobrarPedidoPendiente(pedido: PedidoPendienteCierre): void {
+    if (!pedido.EsPendienteCobro || this.procesando) {
+      return;
+    }
+
+    this.dialogRef.close({ pedidoPendienteCobro: pedido });
+  }
+
   private confirmarVentasCredito(
     ventas: VentaSinPago[],
     confirmarDescargaStock: boolean

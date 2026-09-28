@@ -25,5 +25,15 @@
       {{ 'notificationsShort' | tenantText }}
       <span *ngIf="estado.pendientes > 0" class="approval-button__count">{{ estado.pendientes }}</span>
     </button>
+
+    <button *ngIf="variante === 'panel'"
+            type="button"
+            class="approval-button approval-button--panel"
+            [class.approval-button--pending]="estado.pendientes > 0"
+            (click)="abrir()">
+      <mat-icon>{{ estado.pendientes > 0 ? 'notifications_active' : 'notifications' }}</mat-icon>
+      <span>{{ 'notificationsShort' | tenantText }}</span>
+      <strong *ngIf="estado.pendientes > 0" class="approval-button__count">{{ estado.pendientes }}</strong>
+    </button>
   </ng-container>
 </ng-container>

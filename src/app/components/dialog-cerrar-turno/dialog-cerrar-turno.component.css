@@ -1,1 +1,12 @@
-/* Este diálogo utiliza únicamente las primitivas globales de styles.scss. */
+.dialog-data-table__actions {
+  display: flex;
+  gap: 0.45rem;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.status-badge--warning {
+  background: #fff3dc;
+  border-color: #eba43a;
+  color: #8b4d00;
+}

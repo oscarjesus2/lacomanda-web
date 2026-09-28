@@ -39,6 +39,19 @@
   width: 100%;
 }
 
+.ps-table .mat-column-name {
+  width: 52%;
+}
+
+.ps-table .mat-column-price {
+  width: 14%;
+  white-space: nowrap;
+}
+
+.ps-table .mat-column-category {
+  width: 34%;
+}
+
 /* Header */
 .ps-table .mat-mdc-header-cell {
   background: var(--color-primary);
@@ -128,4 +141,91 @@
 .ps-btn--cancel:hover {
   background: var(--color-bg);
   color: var(--color-text);
+}
+
+.ps-category-cell__family,
+.ps-category-cell__subfamily {
+  display: block;
+  line-height: 1.25;
+}
+
+.ps-category-cell__family {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.ps-category-cell__subfamily {
+  margin-top: 3px;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.ps-category-cell__empty {
+  color: var(--color-text-muted);
+}
+
+/* En teléfono las tres acciones no caben correctamente en una sola fila. El
+   teclado ocupa una fila propia y Cerrar/Aceptar se reparten la siguiente. */
+@media (max-width: 480px) {
+  .ps-table .mat-mdc-header-cell,
+  .ps-table .mat-mdc-cell {
+    padding-inline: 8px;
+  }
+
+  .ps-table .mat-column-name {
+    width: 45%;
+  }
+
+  .ps-table .mat-column-price {
+    width: 17%;
+  }
+
+  .ps-table .mat-column-category {
+    width: 38%;
+  }
+
+  .ps-category-cell__family {
+    font-size: 0.78rem;
+  }
+
+  .ps-category-cell__subfamily {
+    font-size: 0.7rem;
+  }
+
+  .ps-table-wrap {
+    height: clamp(150px, 25dvh, 180px);
+  }
+
+  .ps-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ps-keypad {
+    display: block;
+    grid-column: 1 / -1;
+    width: 100%;
+    margin: 0;
+  }
+
+  .ps-keypad ::ng-deep .tt-llamador,
+  .ps-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ps-btn {
+    padding-inline: 12px;
+  }
+
+  /* Abierto, el propio teclado ya ofrece Ocultar y cerrar. Se elimina el
+     llamador duplicado y se compacta la lista para conservar visible todo el
+     buscador encima del teclado. */
+  :host-context(body.teclado-en-pantalla) .ps-keypad {
+    display: none;
+  }
+
+  :host-context(body.teclado-en-pantalla) .ps-table-wrap {
+    height: clamp(88px, 15dvh, 108px);
+  }
 }

@@ -10,6 +10,8 @@ interface DatosTecladoTexto {
   /** Algunas pantallas antiguas envían el valor inicial con este nombre. */
   texto?: string;
   maxLength?: number;
+  placeholder?: string;
+  requiredMessage?: string;
 }
 
 /**
@@ -25,6 +27,7 @@ export class DialogMTextComponent {
   inputValue = '';
   title: string;
   maxLength: number;
+  placeholder: string;
 
   constructor(
     public dialogRef: MatDialogRef<DialogMTextComponent>,
@@ -34,6 +37,7 @@ export class DialogMTextComponent {
     this.title = data?.title ?? '';
     this.inputValue = data?.text ?? data?.texto ?? '';
     this.maxLength = data?.maxLength ?? 0;
+    this.placeholder = data?.placeholder ?? '...';
 
     // El diálogo se ajusta a la pantalla; el teclado va aparte, sobre el borde.
     dialogRef.addPanelClass('dialog-window--texto');
@@ -48,7 +52,7 @@ export class DialogMTextComponent {
     if (!this.inputValue.trim()) {
       void Notificar.advertencia(
         this.textCatalog.get('validation'),
-        this.textCatalog.get('mustEnterText'),
+        this.data?.requiredMessage ?? this.textCatalog.get('mustEnterText'),
       );
       return;
     }
