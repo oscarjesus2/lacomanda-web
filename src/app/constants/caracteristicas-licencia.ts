@@ -10,6 +10,7 @@ export const CARACTERISTICAS_LICENCIA = {
   VentasParaLlevar: 'ventas.para_llevar',
   VentasDelivery: 'ventas.delivery',
   VentasEntradas: 'ventas.entradas',
+  VentasDirecta: 'ventas.directa',
   OperacionCaja: 'operacion.caja',
   OperacionComprobantes: 'operacion.comprobantes',
   OperacionReportes: 'operacion.reportes',
@@ -64,6 +65,7 @@ export type ExigenciaLicencia = CodigoCaracteristica | readonly CodigoCaracteris
 export const DEPENDENCIAS_CARACTERISTICA: Readonly<
   Partial<Record<CodigoCaracteristica, readonly CodigoCaracteristica[]>>
 > = {
+  [CARACTERISTICAS_LICENCIA.VentasDirecta]: [CARACTERISTICAS_LICENCIA.OperacionComprobantes],
   [CARACTERISTICAS_LICENCIA.VentasEntradas]: [CARACTERISTICAS_LICENCIA.VentasMesa],
   [CARACTERISTICAS_LICENCIA.VentasPromociones]: [CARACTERISTICAS_LICENCIA.OperacionComprobantes],
   [CARACTERISTICAS_LICENCIA.VentasReservasOnline]: [CARACTERISTICAS_LICENCIA.VentasMesa],

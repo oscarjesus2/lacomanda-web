@@ -63,6 +63,7 @@ export class DialogVentasgeneralesComponent implements OnInit {
   procesando = true;
   procesandoAccion = false;
   comprobantesHabilitados = false;
+  ventaDirectaHabilitada = false;
   correccionHabilitada = false;
   cuotaComprobantesAgotada = false;
 
@@ -83,6 +84,10 @@ export class DialogVentasgeneralesComponent implements OnInit {
       this.comprobantesHabilitados = this.licenciaTenantService.evaluar(
         estado,
         CARACTERISTICAS_LICENCIA.OperacionComprobantes,
+      );
+      this.ventaDirectaHabilitada = this.licenciaTenantService.evaluar(
+        estado,
+        CARACTERISTICAS_LICENCIA.VentasDirecta,
       );
       if (this.comprobantesHabilitados) this.cargarCuotaComprobantes();
       this.correccionHabilitada = this.licenciaTenantService.evaluar(
@@ -222,12 +227,12 @@ export class DialogVentasgeneralesComponent implements OnInit {
   }
 
   OpenDialogEmitirVenta(): void {
-    if (!this.comprobantesHabilitados || this.cuotaComprobantesAgotada) {
+    if (!this.ventaDirectaHabilitada || this.cuotaComprobantesAgotada) {
       void Swal.fire(
         this.texts.get('attention'),
         this.cuotaComprobantesAgotada
           ? 'La licencia alcanzó el máximo mensual de comprobantes.'
-          : 'La licencia actual no incluye la emisión de comprobantes.',
+          : 'La licencia actual no incluye ventas directas desde Administración.',
         'warning',
       );
       return;

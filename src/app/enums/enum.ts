@@ -27,7 +27,9 @@ export enum EstacionTipoEnum {
 }
 
 export enum CanalVentaEnum {
-  VENTA_NORMAL = 1,
+  VENTA_DIRECTA = 1,
+  /** Alias conservado para clientes antiguos. */
+  VENTA_NORMAL = VENTA_DIRECTA,
   ESPACIO = 2,
   PARA_LLEVAR = 3,
   DELIVERY = 4,

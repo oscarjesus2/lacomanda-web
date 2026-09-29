@@ -6,101 +6,38 @@
 
   <h2>{{ 'quickSaleRecord' | tenantText }}</h2>
 
-  <form #form="ngForm">
-    <!-- Fila: Caja / Fecha / Moneda -->
-    <div class="form-row">
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>{{ 'register' | tenantText }}</mat-label>
-        <mat-select [(ngModel)]="cajaSeleccionada"
-                    name="caja"
-                    [disabled]="!CajaEnabled"
-                    required
-                    #caja="ngModel">
-          <mat-option *ngFor="let item of listCaja"
-                      [value]="item.IdCaja"
-                      (click)="ValidarCaja(item)">
-            {{ item.Descripcion }}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="caja.invalid && (caja.dirty || caja.touched)">
-          {{ 'fieldRequired' | tenantText }}
-        </mat-error>
-      </mat-form-field>
-
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>{{ 'documentDate' | tenantText }}</mat-label>
-        <input matInput
-               [matDatepicker]="picker"
-               [(ngModel)]="fechaDocumento"
-               name="fechaDocumento"
-               required
-               #fechaDoc="ngModel">
-        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker #picker></mat-datepicker>
-        <mat-error *ngIf="fechaDoc.invalid && (fechaDoc.dirty || fechaDoc.touched)">
-          {{ 'fieldRequired' | tenantText }}
-        </mat-error>
-      </mat-form-field>
-
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>{{ 'currency' | tenantText }}</mat-label>
-        <mat-select [(ngModel)]="monedaSeleccionada"
-                    name="moneda"
-                    [disabled]="!MonedaEnabled">
-          <mat-option value="SOLES">{{ 'currencySoles' | tenantText }}</mat-option>
-          <mat-option value="DOLARES">{{ 'currencyDollars' | tenantText }}</mat-option>
-        </mat-select>
-      </mat-form-field>
+  <div class="direct-sale-callout">
+    <mat-icon>bolt</mat-icon>
+    <div>
+      <strong>Venta directa</strong>
+      <span>El comprobante se emite en esta operación, sin abrir mesa ni generar comanda.</span>
     </div>
+  </div>
 
-    <!-- Fila: info de turno -->
-    <div class="form-row" *ngIf="visibleInfoTurno">
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>{{ 'shift' | tenantText }}</mat-label>
-        <input matInput type="text" [(ngModel)]="turnoAbierto.NroTurno" name="turno" readonly>
-      </mat-form-field>
+  <form #form="ngForm" class="direct-sale-form">
+    <mat-form-field appearance="fill" class="form-field">
+      <mat-label>{{ 'documentDate' | tenantText }}</mat-label>
+      <input matInput
+             [matDatepicker]="picker"
+             [(ngModel)]="fechaDocumento"
+             name="fechaDocumento"
+             required
+             #fechaDoc="ngModel">
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+      <mat-error *ngIf="fechaDoc.invalid && (fechaDoc.dirty || fechaDoc.touched)">
+        {{ 'fieldRequired' | tenantText }}
+      </mat-error>
+    </mat-form-field>
 
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>{{ 'shiftDate' | tenantText }}</mat-label>
-        <input matInput type="text" [(ngModel)]="fechaTurnoAbierto" name="fechaTurno" readonly>
-      </mat-form-field>
-    </div>
-
-    <!-- Fila: Venta / Compra -->
-    <div class="form-row">
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>{{ 'sell' | tenantText }}</mat-label>
-        <input matInput type="text"
-               [(ngModel)]="tipoCambioVenta"
-               name="venta"
-               #venta="ngModel"
-               required
-               pattern="^[0-9]+(\.[0-9]*)?$"
-               [disabled]="!VentaEnabled">
-        <mat-error *ngIf="venta.invalid && (venta.dirty || venta.touched)">
-          {{ 'onlyNumericValues' | tenantText }}
-        </mat-error>
-      </mat-form-field>
-
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>{{ 'buy' | tenantText }}</mat-label>
-        <input matInput type="text"
-               [(ngModel)]="tipoCambioCompra"
-               name="compra"
-               #compra="ngModel"
-               required
-               pattern="^[0-9]+(\.[0-9]*)?$"
-               [disabled]="!CompraEnabled">
-        <mat-error *ngIf="compra.invalid && (compra.dirty || compra.touched)">
-          {{ 'onlyNumericValues' | tenantText }}
-        </mat-error>
-      </mat-form-field>
-    </div>
-
-    <!-- Observación a lo ancho -->
-    <mat-form-field appearance="fill" class="form-field form-field--grow">
+    <mat-form-field appearance="fill" class="form-field direct-sale-form__observation">
       <mat-label>{{ 'observation' | tenantText }}</mat-label>
-      <input matInput type="text" [(ngModel)]="observacionValue" name="observacion">
+      <input matInput
+             type="text"
+             [(ngModel)]="observacionValue"
+             name="observacion"
+             maxlength="500">
+      <mat-hint align="end">{{ observacionValue.length || 0 }}/500</mat-hint>
     </mat-form-field>
   </form>
 
@@ -136,8 +73,8 @@
 
         <!-- Cantidad -->
         <ng-container matColumnDef="Qty">
-          <mat-header-cell *matHeaderCellDef style="width: 70px;">{{ 'quantity' | tenantText }}</mat-header-cell>
-          <mat-cell *matCellDef="let element" style="width: 70px;">{{ element.Qty }}</mat-cell>
+          <mat-header-cell *matHeaderCellDef class="quantity-column">{{ 'quantity' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let element" class="quantity-column">{{ element.Qty }}</mat-cell>
           <mat-footer-cell *matFooterCellDef></mat-footer-cell>
         </ng-container>
 
@@ -181,10 +118,6 @@
 
     <!-- Botones principales -->
     <div class="invoice-actions">
-      <button mat-raised-button color="primary">
-        {{ 'discount' | tenantText }}
-      </button>
-
       <button mat-raised-button color="primary"
               (click)="OpenDialogEmitirComprobante(TipoDocumento.BoletaVenta)">
         {{ 'salesReceipt' | tenantText }}

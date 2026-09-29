@@ -4,13 +4,11 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { Observable, of } from 'rxjs';
 import { catchError, map, startWith } from 'rxjs/operators';
-import * as moment from 'moment';
 import Swal from 'sweetalert2';
 import { NgxSpinnerService } from 'ngx-spinner';
 
 import { Producto } from 'src/app/models/product.models';
 import { CajaDto } from 'src/app/models/caja.models';
-import { ProductoService } from 'src/app/services/product.service';
 import { CajaService } from 'src/app/services/caja.service';
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
 import { DialogEmitirComprobanteComponent } from '../dialog-emitir-comprobante/dialog-emitir-comprobante.component';
@@ -18,8 +16,9 @@ import { CanalVentaEnum, EnumTipoDocumento } from '../../enums/enum';
 import { PedidoCab } from 'src/app/models/pedido.models';
 import { PedidoDet } from 'src/app/models/pedidodet.models';
 import { StorageService } from 'src/app/services/storage.service';
-import { Turno } from 'src/app/models/turno.models';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { validarBorradorVentaDirecta } from './venta-directa.validator';
+import { VentaDirectaService } from 'src/app/services/venta-directa.service';
 
 export interface ProductElement {
   IdProducto: number;
@@ -50,22 +49,13 @@ export class DialogEmitirVentaComponent implements OnInit {
   displayedColumns: string[] = ['Producto', 'Qty', 'Precio', 'Total', 'actions'];
   dataSource = new MatTableDataSource<ProductElement>([]);
 
-  bTurnoIndenpendiente: boolean = false;
-  
   listCaja: CajaDto[];
   cajaSeleccionada: number = 0;
   monedaSeleccionada: string = 'SOLES';
-  turnoAbierto: Turno = new Turno();
-  fechaTurnoAbierto: string='';
   tipoCambioVenta: string = '0';
   tipoCambioCompra: string = '0';
-  visibleInfoTurno: boolean;
   observacionValue: string = '';
-  fechaDocumento: Date;
-  VentaEnabled: boolean = true;
-  CompraEnabled: boolean = true;
-  MonedaEnabled: boolean;
-  CajaEnabled: boolean = true;
+  fechaDocumento: Date = new Date();
 
   sumaTotal: number = 0;
   sumaDscto: number = 0;
@@ -78,7 +68,7 @@ export class DialogEmitirVentaComponent implements OnInit {
     public dialog: MatDialog,
     private storageService: StorageService,
     private cajaService: CajaService,
-    private productoService: ProductoService,
+    private ventaDirectaService: VentaDirectaService,
     private spinnerService: NgxSpinnerService,
     private texts: TenantTextCatalogService,
   ) {}
@@ -86,9 +76,15 @@ export class DialogEmitirVentaComponent implements OnInit {
   private async initializeCaja(): Promise<void> {
     try {
       this.listCaja = (await this.cajaService.getAllCaja(true).toPromise()).Data;
-      const defaultCajaId = this.listCaja.find(x => x.IdCaja === 0) ? 0 : 1;
-      this.cajaSeleccionada = defaultCajaId;
-      this.ValidarCaja(this.listCaja.find(x => x.IdCaja === defaultCajaId));
+      const caja = this.listCaja.find(item => item.CajaPorDefecto && item.Activo)
+        ?? this.listCaja.find(item => item.Activo);
+      if (!caja) {
+        throw new Error('No existe una caja administrativa activa.');
+      }
+
+      this.cajaSeleccionada = caja.IdCaja;
+      this.tipoCambioCompra = caja.TurnoAbierto?.TipoCambio?.toString() ?? '1';
+      this.tipoCambioVenta = caja.TurnoAbierto?.TipoCambioVenta?.toString() ?? '1';
     } catch (error) {
       console.error('Error loading Caja', error);
       throw error;  // Rethrow to be caught by ngOnInit
@@ -97,7 +93,8 @@ export class DialogEmitirVentaComponent implements OnInit {
 
   private async initializeProductos(): Promise<void> {
     try {
-      this.products = await this.productoService.getProductosParaVenta(this.storageService.getCurrentIP()).toPromise();
+      const response = await this.ventaDirectaService.listarProductos().toPromise();
+      this.products = response.Data ?? [];
       this.filteredProducts = this.productCtrl.valueChanges.pipe(
         startWith(''),
         map(value => this._filter(value)),
@@ -132,45 +129,6 @@ export class DialogEmitirVentaComponent implements OnInit {
 
   displayProductName(product?: Producto): string | undefined {
     return product ? product.NombreCorto : undefined;
-  }
-
-  ValidarCaja(oCaja: CajaDto): void {
-    if (oCaja.IdCaja != 0) {
-      if (oCaja.TurnoAbierto != null) {
-        this.turnoAbierto = oCaja.TurnoAbierto;
-        this.fechaTurnoAbierto = moment(new Date(this.turnoAbierto.FechaInicio)).format("DD/MM/YYYY HH:mm:ss");
-        this.tipoCambioCompra = oCaja.TurnoAbierto.TipoCambio.toString();
-        this.tipoCambioVenta = oCaja.TurnoAbierto.TipoCambioVenta.toString();
-        this.visibleInfoTurno = true;
-        this.monedaSeleccionada = 'SOLES';
-        this.MonedaEnabled = false;
-
-        this.CompraEnabled = false;
-        this.VentaEnabled = false;
-      } else {
-        Swal.fire({
-          title: this.texts.get('validation'),
-          text: this.texts.get('mustOpenShiftToIssue', { register: oCaja.Descripcion }),
-          icon: 'warning',
-          confirmButtonText: this.texts.get('ok')
-        });
-        this.cajaSeleccionada = 0;
-        this.visibleInfoTurno = false;
-        this.MonedaEnabled = true;
-      }
-    } else {
-      this.tipoCambioCompra = "0";
-      this.tipoCambioVenta = "0";
-
-      this.CompraEnabled = true;
-      this.VentaEnabled = true;
-      this.visibleInfoTurno = false;
-      this.MonedaEnabled = true;
-    }
-  }
-
-  Factura(): void {
-    this.cajaSeleccionada = 0;
   }
 
   AgregarItemGrid(product: Producto): void {
@@ -235,25 +193,6 @@ export class DialogEmitirVentaComponent implements OnInit {
     this.dataSource.data.push(newRow);
     this.dataSource.data = [...this.dataSource.data];
     this.productCtrl.setValue('');
-    this.ValidarTipoCambios();
-  }
-
-  ValidarTipoCambios() {
-    this.VentaEnabled = true;
-    this.CompraEnabled = true;
-
-    this.dataSource.data.forEach(item => {
-      if (item.Moneda === 'SOL' && this.monedaSeleccionada === 'DOLARES') {
-        this.CompraEnabled = false;
-        this.MonedaEnabled = true;
-      }
-      if (item.Moneda === 'DOL' && this.monedaSeleccionada === 'SOLES') {
-        this.MonedaEnabled = false;
-        this.VentaEnabled = false;
-      }
-    });
-
-    this.CajaEnabled = this.dataSource.data.length === 0;
   }
 
   onProductoSelected(event: any): void {
@@ -303,22 +242,7 @@ export class DialogEmitirVentaComponent implements OnInit {
       return;
     }
 
-    if (!selectedProduct.EsServicio && selectedProduct.Stock === 0) {
-      Swal.fire({
-        title: this.texts.get('validation'),
-        text: this.texts.get('productNoStockContinue'),
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: this.texts.get('yes'),
-        cancelButtonText: this.texts.get('no')
-      }).then(result => {
-        if (result.isConfirmed) {
-          this.AgregarItemGrid(selectedProduct);
-        }
-      });
-    } else {
-      this.AgregarItemGrid(selectedProduct);
-    }
+    this.AgregarItemGrid(selectedProduct);
   }
 
   calcularTotales(): void {
@@ -344,10 +268,7 @@ export class DialogEmitirVentaComponent implements OnInit {
   async aumentarProductGrid(pedidoDet: ProductElement) 
   {
     pedidoDet.Qty += 1;
-    this.dataSource.data.map(function(item) {
-      item.Total = item.Precio * pedidoDet.Qty
-      return item;
-    });
+    pedidoDet.Total = pedidoDet.Precio * pedidoDet.Qty;
     this.dataSource.data = [...this.dataSource.data];
     this.calcularTotales();
   }
@@ -355,10 +276,7 @@ export class DialogEmitirVentaComponent implements OnInit {
   async restarProductGrid(pedidoDet: ProductElement) {
     if (pedidoDet.Qty > 1) {
       pedidoDet.Qty -= 1;
-      this.dataSource.data.map(function(item) {
-        item.Total = item.Precio * pedidoDet.Qty
-        return item;
-      });
+      pedidoDet.Total = pedidoDet.Precio * pedidoDet.Qty;
    
     }else{
       var removeIndex = this.dataSource.data.map(function (item) { return item }).indexOf(pedidoDet);
@@ -366,7 +284,6 @@ export class DialogEmitirVentaComponent implements OnInit {
     }
     this.dataSource.data = [...this.dataSource.data];
     this.calcularTotales();
-    this.ValidarTipoCambios();
   }
 
   addPedido(): PedidoCab {
@@ -381,12 +298,12 @@ export class DialogEmitirVentaComponent implements OnInit {
     pedidoCab.NroPedido = 0;
     pedidoCab.FechaCambiada = this.fechaDocumento;
     pedidoCab.Total = this.sumaTotal;
-    pedidoCab.IdCanalVenta = CanalVentaEnum.VENTA_NORMAL;
+    pedidoCab.IdCanalVenta = CanalVentaEnum.VENTA_DIRECTA;
     pedidoCab.Estado = 1;
     pedidoCab.Moneda = this.monedaSeleccionada.substring(0, 3);
     pedidoCab.TipoCambioVenta = parseFloat(this.tipoCambioVenta);
     pedidoCab.TipoCambioCompra = parseFloat(this.tipoCambioCompra);
-    pedidoCab.IdEspacio = 9999;
+    pedidoCab.IdEspacio = 0;
     pedidoCab.IdCaja = this.cajaSeleccionada;
     pedidoCab.NumPrecuentas = 0;
     pedidoCab.FechaPrecuenta = null;
@@ -397,13 +314,7 @@ export class DialogEmitirVentaComponent implements OnInit {
     pedidoCab.UsuReg = this.storageService.getCurrentSession().User.IdUsuario;
     pedidoCab.UsuMod = this.storageService.getCurrentSession().User.IdUsuario;;
 
-    if (this.cajaSeleccionada !== 0) {
-      pedidoCab.IdTurno = this.turnoAbierto.IdTurno;
-      this.bTurnoIndenpendiente = false;
-    } else {
-      this.bTurnoIndenpendiente = true;
-      pedidoCab.IdTurno = 0;
-    }
+    pedidoCab.IdTurno = 0;
 
     let correlativo = 1;
     this.dataSource.data.forEach(item => {
@@ -461,10 +372,14 @@ export class DialogEmitirVentaComponent implements OnInit {
 
     // Aquí puedes continuar con la lógica que tenías para emitir el comprobante
     if (this.form.valid) {
-      if (this.dataSource.data.length <= 0) {
+      const error = validarBorradorVentaDirecta({
+        fechaDocumento: this.fechaDocumento,
+        detalles: this.dataSource.data,
+      });
+      if (error) {
         Swal.fire({
           title: this.texts.get('validation'),
-          text: this.texts.get('noSaleProductEntered'),
+          text: error,
           icon: 'warning',
           confirmButtonText: this.texts.get('ok')
         });
@@ -487,10 +402,16 @@ export class DialogEmitirVentaComponent implements OnInit {
                  idTipoPedido: '004', 
                  idTipoDoc: idTipoDoc,
                  pedidoCab: this.addPedido(),
-                 bTurnoIndenpendiente: this.bTurnoIndenpendiente,
+                 bTurnoIndenpendiente: true,
+                 modoVentaDirecta: true,
                  idCaja:this.cajaSeleccionada,
-                 idTurno: this.addPedido().IdTurno
+                 idTurno: 0
                }
+       });
+       dialogTurno.afterClosed().subscribe(resultado => {
+         if (resultado?.estado === 'Cobrado') {
+           this.dialogRef.close(resultado);
+         }
        });
     }
 

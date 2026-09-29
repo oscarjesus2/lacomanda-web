@@ -116,23 +116,23 @@ export class MenuVentasComponent implements OnInit {
       children: [
         { title: 'Configuración de Ambientes', route: '/ventas/configuracion-ambientes', icon: 'meeting_room',     label: 'Ambientes',    titleKey: 'zonesConfig',        labelKey: 'zones',              feature: C.VentasMesa      },
         { title: 'Configuración de Espacios',  route: '/ventas/configuracion-espacios',  icon: 'table_restaurant', label: 'Espacios',     titleKey: 'spacesConfig',       labelKey: 'spaces',             feature: C.VentasMesa      },
-        { title: 'Familia de Productos',        route: '/ventas/familia-productos',        icon: 'category',         label: 'Familias',     titleKey: 'productFamilies',    labelKey: 'families',           feature: C.OperacionCaja   },
-        { title: 'Sub Familia de Productos',    route: '/ventas/subfamilia-productos',     icon: 'account_tree',     label: 'Sub familias', titleKey: 'productSubfamilies', labelKey: 'subfamiliesShort',   feature: C.OperacionCaja   },
-        { title: 'Grupos de Productos',         route: '/ventas/grupos',                   icon: 'inventory_2',      label: 'Grupos',       titleKey: 'productGroups',      labelKey: 'groups',             feature: C.OperacionCaja   },
-        { title: 'Colores',                     route: '/ventas/colores',                  icon: 'palette',          label: 'Colores',      titleKey: 'colors',             labelKey: 'colors',             feature: C.OperacionCaja   },
+        { title: 'Familia de Productos',        route: '/ventas/familia-productos',        icon: 'category',         label: 'Familias',     titleKey: 'productFamilies',    labelKey: 'families',           anyFeature: [C.OperacionCaja, C.VentasDirecta] },
+        { title: 'Sub Familia de Productos',    route: '/ventas/subfamilia-productos',     icon: 'account_tree',     label: 'Sub familias', titleKey: 'productSubfamilies', labelKey: 'subfamiliesShort',   anyFeature: [C.OperacionCaja, C.VentasDirecta] },
+        { title: 'Grupos de Productos',         route: '/ventas/grupos',                   icon: 'inventory_2',      label: 'Grupos',       titleKey: 'productGroups',      labelKey: 'groups',             anyFeature: [C.OperacionCaja, C.VentasDirecta] },
+        { title: 'Colores',                     route: '/ventas/colores',                  icon: 'palette',          label: 'Colores',      titleKey: 'colors',             labelKey: 'colors',             anyFeature: [C.OperacionCaja, C.VentasDirecta] },
         { title: 'Áreas de impresión',          route: '/ventas/area-impresion',           icon: 'print',            label: 'Áreas de impresión', titleKey: 'printAreas',      labelKey: 'printAreas',         feature: C.OperacionCaja   },
-        { title: 'Productos',                   route: '/ventas/productos',                icon: 'restaurant_menu',  label: 'Productos',    titleKey: 'products',           labelKey: 'products',           feature: C.OperacionCaja   },
+        { title: 'Productos',                   route: '/ventas/productos',                icon: 'restaurant_menu',  label: 'Productos',    titleKey: 'products',           labelKey: 'products',           anyFeature: [C.OperacionCaja, C.VentasDirecta] },
         { title: 'Socios de Negocio',           route: '/ventas/socios-negocio',           icon: 'handshake',        label: 'Socios',       titleKey: 'businessPartners',   labelKey: 'partners',           feature: C.OperacionCaja   },
         { title: 'Configuración de menús',      route: '/ventas/configuracion-combos',     icon: 'tune',             label: 'Menús',        titleKey: 'combosConfig',       labelKey: 'combos',             feature: C.ProductosMenus  },
         { title: 'Observaciones',               route: '/ventas/observaciones',            icon: 'sticky_note_2',    label: 'Observac.',    titleKey: 'observations',       labelKey: 'observations',       feature: C.OperacionCaja   },
         { title: 'Empleados',                   route: '/ventas/empleados',                icon: 'badge',            label: 'Empleados',    titleKey: 'employees',          labelKey: 'employees'          },
         { title: 'Usuarios',                    route: '/ventas/usuarios',                 icon: 'manage_accounts',  label: 'Usuarios',     titleKey: 'users',              labelKey: 'users', permitidoGerente: true },
         { title: 'Caja',                        route: '/ventas/caja',                     icon: 'point_of_sale',    label: 'Caja',         titleKey: 'register',           labelKey: 'register',           feature: C.OperacionCaja   },
-        { title: 'Estacion',                    route: '/ventas/estacion',                 icon: 'computer',         label: 'Estación',     titleKey: 'station',            labelKey: 'station'            },
+        { title: 'Estacion',                    route: '/ventas/estacion',                 icon: 'computer',         label: 'Estación',     titleKey: 'station',            labelKey: 'station',            feature: C.OperacionCaja },
         { title: 'Descuentos',                  route: '/ventas/descuentos',               icon: 'local_offer',      label: 'Descuentos',   titleKey: 'discounts',          labelKey: 'discounts',          feature: C.VentasDescuentos },
-        { title: 'Tarjetas',                    route: '/ventas/tarjetas',                 icon: 'credit_card',      label: 'Tarjetas',     titleKey: 'cards',              labelKey: 'cards',              feature: C.OperacionCaja   },
+        { title: 'Tarjetas',                    route: '/ventas/tarjetas',                 icon: 'credit_card',      label: 'Tarjetas',     titleKey: 'cards',              labelKey: 'cards',              anyFeature: [C.OperacionCaja, C.VentasDirecta] },
         { title: 'Promociones',                 route: '/ventas/promociones',              icon: 'campaign',         label: 'Promociones',  titleKey: 'promotions',         labelKey: 'promotions',         feature: C.VentasPromociones },
-        { title: 'Clientes',                    route: '/ventas/clientes',                 icon: 'people',           label: 'Clientes',     titleKey: 'customers',          labelKey: 'customers',          feature: C.OperacionCaja   },
+        { title: 'Clientes',                    route: '/ventas/clientes',                 icon: 'people',           label: 'Clientes',     titleKey: 'customers',          labelKey: 'customers',          anyFeature: [C.OperacionCaja, C.VentasDirecta] },
       ]
     },
     {
@@ -171,7 +171,7 @@ export class MenuVentasComponent implements OnInit {
       title: 'Configuracion', titleKey: 'menuConfiguration',
       children: [
         { title: 'Configuración Inicial',      route: '/ventas/config-inicial',  icon: 'settings',  label: 'Config. inicial', titleKey: 'initialSetup',          labelKey: 'initialSetupShort' },
-        { title: 'Configurar esta estación',   route: '/ventas/config-estacion', icon: 'computer',  label: 'Esta estación',   titleKey: 'configureThisStation',  labelKey: 'thisStation'       },
+        { title: 'Configurar esta estación',   route: '/ventas/config-estacion', icon: 'computer',  label: 'Esta estación',   titleKey: 'configureThisStation',  labelKey: 'thisStation', feature: C.OperacionCaja },
         { title: 'Facturación electrónica SUNAT', route: '/ventas/configuracion-sunat', icon: 'verified_user', label: 'Facturación electrónica', feature: C.OperacionComprobantes, soloPeru: true, soloSoporteLaComanda: true },
         { title: 'Monitor de envíos SUNAT', route: '/ventas/monitor-envios-sunat', icon: 'outbox', label: 'Monitor SUNAT', monitorEnviosSunat: true, feature: C.OperacionComprobantes, soloPeru: true, soloSoporteLaComanda: true },
         { title: 'Cobro móvil de la cuenta', route: '/ventas/configuracion-pago-cuenta-online', icon: 'payments', label: 'Cobro móvil', feature: C.VentasPagoCuentaOnline, soloPagoMovil: true, soloSoporteLaComanda: true }
@@ -195,6 +195,8 @@ export class MenuVentasComponent implements OnInit {
     return section.children.filter((item: any) =>
       (!this.esGerente || item.permitidoGerente) &&
       this.cubiertoPorLicencia(item.feature) &&
+      (!item.anyFeature || item.anyFeature.some((feature: ExigenciaLicencia) =>
+        this.cubiertoPorLicencia(feature))) &&
       (!item.soloPeru || this.paisISO2 === 'PE') &&
       (!item.soloSoporteLaComanda || this.esUsuarioSoporteLaComanda) &&
       (!item.requiereAnfitrionas || this.anfitrionasHabilitadas) &&
