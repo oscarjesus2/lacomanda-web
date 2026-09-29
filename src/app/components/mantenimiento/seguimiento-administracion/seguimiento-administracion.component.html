@@ -1,0 +1,184 @@
+<div class="mant-panel dialog-panel--workspace tracking-admin">
+  <button class="close-button" type="button" (click)="cerrar()" aria-label="Cerrar">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <div class="mant-title tracking-admin__title">
+    <span class="tracking-admin__title-icon">
+      <mat-icon>{{ esComandas ? 'fact_check' : 'workspace_premium' }}</mat-icon>
+    </span>
+    <span>
+      {{ titulo }}
+      <small>{{ descripcion }}</small>
+    </span>
+  </div>
+
+  <div class="dialog-toolbar tracking-admin__toolbar">
+    <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+      <mat-form-field appearance="fill">
+        <mat-label>Desde</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaDesde">
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Hasta</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaHasta">
+      </mat-form-field>
+      <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide">
+        <mat-label>Buscar en resultados</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [(ngModel)]="busqueda" placeholder="Comanda, producto, anfitriona, estado…">
+      </mat-form-field>
+    </div>
+    <div class="dialog-toolbar__actions">
+      <button mat-stroked-button type="button" (click)="consultar()" [disabled]="cargando">
+        <mat-icon>search</mat-icon> Consultar
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="exportarExcel()"
+        [disabled]="cargando || (esComandas ? !seguimiento : !comision || !rendimiento)">
+        <mat-icon>download</mat-icon> Excel
+      </button>
+    </div>
+  </div>
+
+  <div class="tracking-admin__help" *ngIf="esComandas">
+    <mat-icon>info</mat-icon>
+    <span>Este resumen permite controlar el período completo. Para reconstruir un caso concreto, utiliza <strong>Trazabilidad de comandas</strong>.</span>
+  </div>
+  <div class="tracking-admin__help" *ngIf="!esComandas">
+    <mat-icon>info</mat-icon>
+    <span>El importe asignado es el consumo neto repartido entre las anfitrionas del producto; no representa un porcentaje de pago o comisión configurado.</span>
+  </div>
+
+  <ng-container *ngIf="esComandas && seguimiento as reporte">
+    <div class="tracking-admin__summary tracking-admin__summary--six">
+      <article><mat-icon>receipt_long</mat-icon><span>Comandas</span><strong>{{ reporte.CantidadComandas }}</strong></article>
+      <article class="is-success"><mat-icon>paid</mat-icon><span>Pagado</span><strong>{{ simbolo }} {{ reporte.TotalPagado | number:'1.2-2' }}</strong></article>
+      <article class="is-warning"><mat-icon>schedule</mat-icon><span>Pendiente</span><strong>{{ simbolo }} {{ reporte.TotalPendiente | number:'1.2-2' }}</strong></article>
+      <article class="is-danger"><mat-icon>cancel</mat-icon><span>Comandas anuladas</span><strong>{{ simbolo }} {{ reporte.TotalAnulado | number:'1.2-2' }}</strong></article>
+      <article class="is-danger"><mat-icon>remove_shopping_cart</mat-icon><span>Productos anulados</span><strong>{{ simbolo }} {{ reporte.TotalProductosAnulados | number:'1.2-2' }}</strong></article>
+      <article><mat-icon>percent</mat-icon><span>Descuentos</span><strong>{{ simbolo }} {{ reporte.TotalDescuentos | number:'1.2-2' }}</strong></article>
+    </div>
+
+    <mat-tab-group class="tracking-admin__tabs" animationDuration="150ms">
+      <mat-tab [label]="'Comandas (' + comandasFiltradas.length + ')'">
+        <div class="tracking-admin__table-scroll">
+          <table class="tracking-admin__table">
+            <thead><tr><th>Turno</th><th>Fecha</th><th>Canal</th><th>Comanda</th><th>Cuenta</th><th>Espacio</th><th>Mozo</th><th>Descuento</th><th>Total</th><th>Estado</th><th>Registrado por</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of comandasFiltradas">
+                <td>{{ row.IdTurno }}</td><td>{{ row.FechaTrabajo | date:'dd/MM/yyyy' }}</td><td>{{ row.TipoPedido }}</td><td>{{ row.NroPedido }}</td><td>{{ row.NroCuenta }}</td><td>{{ row.Mesa }}</td><td>{{ row.Mozo }}</td><td class="number">{{ simbolo }} {{ row.Descuento | number:'1.2-2' }}</td><td class="number"><strong>{{ simbolo }} {{ row.Total | number:'1.2-2' }}</strong></td><td><span class="tracking-admin__status">{{ row.Estado }}</span></td><td>{{ row.UsuarioRegistra }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="tracking-admin__empty" *ngIf="!comandasFiltradas.length">No se encontraron comandas para el filtro.</div>
+        </div>
+      </mat-tab>
+      <mat-tab [label]="'Productos anulados (' + anuladosFiltrados.length + ')'">
+        <div class="tracking-admin__table-scroll">
+          <table class="tracking-admin__table">
+            <thead><tr><th>Fecha</th><th>Comanda</th><th>Cuenta</th><th>Producto</th><th>Cant.</th><th>Subtotal</th><th>Anulado por</th><th>Fecha anulación</th><th>Motivo</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of anuladosFiltrados">
+                <td>{{ row.FechaTrabajo | date:'dd/MM/yyyy' }}</td><td>{{ row.NroPedido }}</td><td>{{ row.NroCuenta }}</td><td>{{ row.Producto }}</td><td>{{ row.Cantidad }}</td><td class="number">{{ simbolo }} {{ row.Subtotal | number:'1.2-2' }}</td><td>{{ row.UsuarioAnula }}</td><td>{{ row.FechaAnula | date:'dd/MM/yyyy HH:mm' }}</td><td>{{ row.MotivoAnula }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="tracking-admin__empty" *ngIf="!anuladosFiltrados.length">No se encontraron productos anulados.</div>
+        </div>
+      </mat-tab>
+      <mat-tab [label]="'Descuentos (' + descuentosFiltrados.length + ')'">
+        <div class="tracking-admin__table-scroll">
+          <table class="tracking-admin__table">
+            <thead><tr><th>Fecha</th><th>Comanda</th><th>Producto</th><th>Tipo</th><th>Cant.</th><th>Subtotal</th><th>Descuento</th><th>Estado</th><th>Autorizado por</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of descuentosFiltrados">
+                <td>{{ row.FechaTrabajo | date:'dd/MM/yyyy' }}</td><td>{{ row.NroPedido }}</td><td>{{ row.Producto }}</td><td>{{ row.TipoDescuento }}</td><td>{{ row.Cantidad }}</td><td class="number">{{ simbolo }} {{ row.Subtotal | number:'1.2-2' }}</td><td class="number">{{ simbolo }} {{ row.MontoDescuento | number:'1.2-2' }}</td><td>{{ row.Estado }}</td><td>{{ row.UsuarioDescuento }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="tracking-admin__empty" *ngIf="!descuentosFiltrados.length">No se encontraron descuentos.</div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </ng-container>
+
+  <ng-container *ngIf="!esComandas && comision">
+    <ng-container *ngIf="rendimiento as reporte">
+    <div class="tracking-admin__summary">
+      <article class="is-success"><mat-icon>payments</mat-icon><span>Importe asignado</span><strong>{{ simbolo }} {{ reporte.TotalImporteAsignado | number:'1.2-2' }}</strong></article>
+      <article><mat-icon>badge</mat-icon><span>Anfitrionas</span><strong>{{ reporte.CantidadAnfitrionas }}</strong></article>
+      <article><mat-icon>confirmation_number</mat-icon><span>Asignaciones</span><strong>{{ reporte.TotalAsignaciones }}</strong></article>
+      <article><mat-icon>local_bar</mat-icon><span>Unidades</span><strong>{{ reporte.TotalUnidades }}</strong></article>
+      <article class="is-danger"><mat-icon>cancel</mat-icon><span>Anulaciones</span><strong>{{ reporte.TotalAnulaciones }} · {{ simbolo }} {{ reporte.TotalImporteAnulado | number:'1.2-2' }}</strong></article>
+    </div>
+
+    <mat-tab-group class="tracking-admin__tabs" animationDuration="150ms">
+      <mat-tab label="Rendimiento">
+        <div class="tracking-admin__performance">
+          <section class="tracking-admin__ranking">
+            <header><span><mat-icon>leaderboard</mat-icon> Rendimiento comercial</span><small>Importe neto asignado</small></header>
+            <div class="tracking-admin__bar" *ngFor="let row of rendimientoFiltrado | slice:0:10; let posicion = index">
+              <span class="tracking-admin__rank">{{ posicion + 1 }}.º</span>
+              <strong [title]="row.Anfitriona">{{ row.Anfitriona }}</strong>
+              <span class="tracking-admin__bar-track"><span [style.width.%]="anchoBarra(row)"></span></span>
+              <span class="number">{{ simbolo }} {{ row.ImporteAsignado | number:'1.2-2' }}</span>
+            </div>
+            <div class="tracking-admin__empty" *ngIf="!rendimientoFiltrado.length">No hay actividad para construir el ranking.</div>
+          </section>
+
+          <section class="tracking-admin__trend">
+            <header><span><mat-icon>monitoring</mat-icon> Evolución diaria</span><small>{{ reporte.Tendencia.length }} días con actividad</small></header>
+            <div class="tracking-admin__trend-list">
+              <article *ngFor="let dia of reporte.Tendencia">
+                <strong>{{ dia.Fecha | date:'dd/MM/yyyy' }}</strong>
+                <span>{{ dia.Comandas }} comandas</span>
+                <span>{{ dia.Asignaciones }} asignaciones</span>
+                <span>{{ dia.Unidades }} unidades</span>
+                <strong class="number">{{ simbolo }} {{ dia.ImporteAsignado | number:'1.2-2' }}</strong>
+              </article>
+            </div>
+          </section>
+        </div>
+
+        <div class="tracking-admin__table-scroll tracking-admin__table-scroll--performance">
+          <table class="tracking-admin__table">
+            <thead><tr><th>Anfitriona</th><th>Asignaciones</th><th>Unidades asociadas</th><th>Comandas</th><th>Turnos</th><th>Importe asignado</th><th>Promedio/comanda</th><th>Participación</th><th>Producto principal</th><th>Descuentos</th><th>Reimp.</th><th>Anulaciones</th><th>Importe anulado</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of rendimientoFiltrado">
+                <td><strong>{{ row.Anfitriona }}</strong></td><td>{{ row.Asignaciones }}</td><td>{{ row.UnidadesAsociadas }}</td><td>{{ row.Comandas }}</td><td>{{ row.Turnos }}</td><td class="number"><strong>{{ simbolo }} {{ row.ImporteAsignado | number:'1.2-2' }}</strong></td><td class="number">{{ simbolo }} {{ row.PromedioPorComanda | number:'1.2-2' }}</td><td>{{ row.ParticipacionPorcentaje | number:'1.1-2' }} %</td><td>{{ row.ProductoPrincipal || '—' }}</td><td class="number">{{ simbolo }} {{ row.DescuentosAsignados | number:'1.2-2' }}</td><td>{{ row.Reimpresiones }}</td><td>{{ row.Anulaciones }}</td><td class="number">{{ simbolo }} {{ row.ImporteAnulado | number:'1.2-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </mat-tab>
+
+      <mat-tab [label]="'Comisiones / detalle (' + comisionesFiltradas.length + ')'">
+        <div class="tracking-admin__commission-note">
+          <mat-icon>calculate</mat-icon>
+          <span>Si un producto tiene varias anfitrionas, su importe neto se reparte entre ellas. Las unidades se muestran aparte para no confundirlas con asignaciones.</span>
+        </div>
+        <div class="tracking-admin__table-scroll">
+          <table class="tracking-admin__table">
+            <thead><tr><th>Fecha</th><th>Turno</th><th>Comanda</th><th>Cuenta</th><th>Anfitrionas</th><th>Asignaciones</th><th>Producto</th><th>Cant.</th><th>Importe neto</th><th>Importe/anfitriona</th><th>Reimp.</th><th>Tipo</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of comisionesFiltradas">
+                <td>{{ row.FechaTrabajo | date:'dd/MM/yyyy' }}</td><td>{{ row.IdTurno }}</td><td>{{ row.NroPedido }}</td><td>{{ row.NroCuenta }}</td><td><strong>{{ row.Anfitrionas }}</strong></td><td>{{ row.CantidadAnfitrionas }}</td><td>{{ row.Producto }}</td><td>{{ row.Cantidad }}</td><td class="number">{{ simbolo }} {{ row.ImporteNeto | number:'1.2-2' }}</td><td class="number">{{ simbolo }} {{ row.ImportePorAnfitriona | number:'1.2-2' }}</td><td>{{ row.NumeroReimpresiones }}</td><td>{{ row.TipoIngreso }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="tracking-admin__empty" *ngIf="!comisionesFiltradas.length">No se encontraron consumos asignados.</div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+    </ng-container>
+  </ng-container>
+
+  <div class="tracking-admin__loading" *ngIf="cargando">
+    <span></span>
+    <strong>Analizando información…</strong>
+  </div>
+</div>

@@ -326,6 +326,10 @@
           <span class="rpt-stat__label">{{ 'hostessCards' | tenantText }}</span>
           <span class="rpt-stat__value">{{ comisionAnfitriona.CantidadFichas }}</span>
         </div>
+        <div class="rpt-stat">
+          <span class="rpt-stat__label">{{ 'hostessUnits' | tenantText }}</span>
+          <span class="rpt-stat__value">{{ comisionAnfitriona.CantidadUnidades }}</span>
+        </div>
         <div class="rpt-stat rpt-stat--total">
           <span class="rpt-stat__label">{{ 'assignedAmount' | tenantText }}</span>
           <span class="rpt-stat__value rpt-stat__value--total">
@@ -495,17 +499,26 @@
             <span>{{ 'shiftExpenses' | tenantText }}</span>
           </div>
           <div class="rpt-actions">
-            <button class="rpt-action-btn" disabled>
+            <button class="rpt-action-btn"
+                    [disabled]="!idTurno || !idCaja"
+                    (click)="abrirRegistroEgreso()"
+                    matTooltip="Registrar un egreso en el turno abierto">
               <mat-icon>edit_note</mat-icon>
               <span>{{ 'expenseEntry' | tenantText }}</span>
             </button>
-            <button class="rpt-action-btn" disabled>
-              <mat-icon>list_alt</mat-icon>
-              <span>{{ 'detailedReport' | tenantText }}</span>
+            <button class="rpt-action-btn"
+                    [disabled]="!!loadingPdf || !puedeVerReportesVentas"
+                    (click)="verEgresosDetallado()"
+                    [matTooltip]="(!puedeVerReportesVentas ? 'salesReportsPermissionRequired' : 'viewPdf') | tenantText">
+              <mat-icon>{{ loadingPdf === 'egresos-detallado' ? 'hourglass_empty' : 'list_alt' }}</mat-icon>
+              <span>{{ (loadingPdf === 'egresos-detallado' ? 'generating' : 'detailedReport') | tenantText }}</span>
             </button>
-            <button class="rpt-action-btn" disabled>
-              <mat-icon>segment</mat-icon>
-              <span>{{ 'summaryReport' | tenantText }}</span>
+            <button class="rpt-action-btn"
+                    [disabled]="!!loadingPdf || !puedeVerReportesVentas"
+                    (click)="verEgresosResumido()"
+                    [matTooltip]="(!puedeVerReportesVentas ? 'salesReportsPermissionRequired' : 'viewPdf') | tenantText">
+              <mat-icon>{{ loadingPdf === 'egresos-resumido' ? 'hourglass_empty' : 'segment' }}</mat-icon>
+              <span>{{ (loadingPdf === 'egresos-resumido' ? 'generating' : 'summaryReport') | tenantText }}</span>
             </button>
           </div>
         </div>

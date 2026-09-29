@@ -36,6 +36,10 @@ export class ReservasService {
     return this.http.get<ApiResponse<ConfiguracionReservas>>(`${this.basePath}/configuracion`);
   }
 
+  obtenerEstadoPublicacion(): Observable<ApiResponse<boolean>> {
+    return this.http.get<ApiResponse<boolean>>(`${this.basePath}/estado-publicacion`);
+  }
+
   guardarConfiguracion(value: ConfiguracionReservas): Observable<ApiResponse<ConfiguracionReservas>> {
     return this.http.put<ApiResponse<ConfiguracionReservas>>(`${this.basePath}/configuracion`, value);
   }

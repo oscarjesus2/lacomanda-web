@@ -97,6 +97,7 @@ import { DialogAnfitrionasComponent } from 'src/app/components/dialog-anfitriona
 import { DialogTurnoComponent } from 'src/app/components/dialog-turno/dialog-turno.component';
 import { DialogCerrarTurnoComponent } from 'src/app/components/dialog-cerrar-turno/dialog-cerrar-turno.component';
 import { PedidoPendienteCierre } from 'src/app/interfaces/cerrarTurno.interface';
+import { ReservasService } from 'src/app/services/reservas.service';
 
 @Component({
   selector: 'app-venta',
@@ -357,6 +358,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     private agenteImpresionLocal: AgenteImpresionLocalService,
     private estadoImpresion: EstadoImpresionService,
     private licenciaTenantService: LicenciaTenantService,
+    private reservasService: ReservasService,
     private confirmacionImpresionPedidos: ConfirmacionImpresionPedidosService,
     private solicitudAutorizacionService: SolicitudAutorizacionService,
     private solicitudesAutorizacionRealtime: SolicitudesAutorizacionRealtimeService,
@@ -731,9 +733,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       const permitido = (codigo: Parameters<LicenciaTenantService['evaluar']>[1]) =>
         this.licenciaTenantService.evaluar(estado, codigo);
 
-      this.reservasHabilitadas = permitido(
+      this.actualizarVisibilidadReservas(permitido(
         CARACTERISTICAS_LICENCIA.VentasReservasOnline,
-      );
+      ));
       this.comprobantesHabilitados = permitido(
         CARACTERISTICAS_LICENCIA.OperacionComprobantes,
       );
@@ -867,6 +869,22 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       this.spinnerService.hide();
       this.errorCargaInicial = true;
     }
+  }
+
+  private actualizarVisibilidadReservas(incluidasEnLicencia: boolean): void {
+    this.reservasHabilitadas = false;
+    if (!incluidasEnLicencia) {
+      return;
+    }
+
+    this.reservasService.obtenerEstadoPublicacion().subscribe({
+      next: response => {
+        this.reservasHabilitadas = response?.Data === true;
+      },
+      error: () => {
+        this.reservasHabilitadas = false;
+      },
+    });
   }
 
   public salir(): void {
@@ -1281,6 +1299,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       maxHeight: '92vh',
       data: {
         idTurno: this.turnoAbierto?.IdTurno,
+        idCaja: this.turnoAbierto?.IdCaja,
         config: this.config,
         isAdmin: this.isAdmin,
         puedeVerReportesVentas: this.puedeCerrarTurno

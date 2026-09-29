@@ -60,6 +60,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
   guardando = false;
   stockActual = 0;
   articulo = new ArticuloGuardar();
+  tipoFormulario: 'A' | 'I' | 'P' | 'S' = 'A';
   readonly creacionRapida: boolean;
 
   get esProductoVentaEditado(): boolean {
@@ -139,7 +140,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
       this.normalizar(item.DescripcionCompra || item.Descripcion).includes(filtro) ||
       this.normalizar(item.GrupoCompra).includes(filtro) ||
       this.normalizar(item.UnidadStock).includes(filtro) ||
-      this.normalizar(this.descripcionTipo(item.InsumoProducto)).includes(filtro) ||
+      this.normalizar(this.descripcionTipo(item.InsumoProducto, item.EsServicio)).includes(filtro) ||
       this.normalizar(item.Activo ? 'activo' : 'inactivo').includes(filtro)
     );
     this.dataSource.paginator?.firstPage();
@@ -152,6 +153,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
       IdAreaAlmacen: this.areas[0]?.IdArea ?? null
     });
     this.usarSubAreaFija = false;
+    this.tipoFormulario = 'A';
     this.cargarGrupos('A');
     this.showForm = true;
   }
@@ -163,6 +165,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
       Descripcion: row.Descripcion,
       DescripcionCompra: row.DescripcionCompra || row.Descripcion,
       InsumoProducto: row.InsumoProducto,
+      EsServicio: row.EsServicio,
       IdUnidadStock: row.IdUnidadStock,
       IdUnidadReceta: row.IdUnidadReceta,
       FactorReceta: row.FactorReceta || 1,
@@ -184,12 +187,22 @@ export class ArticuloMantenimientoComponent implements OnInit {
       }))
     });
     this.usarSubAreaFija = !!row.IdSubAreaAlmacenDescarga;
+    this.tipoFormulario = row.EsServicio ? 'S' : row.InsumoProducto;
     this.cargarGrupos(row.InsumoProducto === 'I' ? 'I' : 'A');
     this.showForm = true;
   }
 
   cambiarTipo(): void {
     if (this.esProductoVentaEditado) {
+      return;
+    }
+
+    this.articulo.EsServicio = this.tipoFormulario === 'S';
+    this.articulo.InsumoProducto = this.tipoFormulario === 'S'
+      ? 'A'
+      : this.tipoFormulario as 'A' | 'I';
+    if (this.articulo.EsServicio) {
+      this.limpiarConfiguracionAlmacen();
       return;
     }
 
@@ -263,17 +276,20 @@ export class ArticuloMantenimientoComponent implements OnInit {
       return;
     }
 
-    if (this.articulo.StockMaximo < this.articulo.StockMinimo) {
+    if (!this.articulo.EsServicio &&
+        this.articulo.StockMaximo < this.articulo.StockMinimo) {
       Swal.fire('Validación', 'El stock máximo no puede ser menor que el stock mínimo.', 'info');
       return;
     }
 
-    if (this.articulo.IdUnidadReceta && this.articulo.FactorReceta <= 0) {
+    if (!this.articulo.EsServicio &&
+        this.articulo.IdUnidadReceta && this.articulo.FactorReceta <= 0) {
       Swal.fire('Validación', 'Indique un factor de conversión mayor que cero.', 'info');
       return;
     }
 
-    if (this.articulo.PresentacionesCompra.some(p =>
+    if (!this.articulo.EsServicio &&
+        this.articulo.PresentacionesCompra.some(p =>
       !p.IdUnidadCompra || p.FactorConversionStock <= 0
     )) {
       Swal.fire(
@@ -328,7 +344,11 @@ export class ArticuloMantenimientoComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  descripcionTipo(tipo: string): string {
+  descripcionTipo(tipo: string, esServicio = false): string {
+    if (esServicio) {
+      return 'Servicio';
+    }
+
     switch (tipo) {
       case 'A':
         return 'Artículo';
@@ -359,6 +379,25 @@ export class ArticuloMantenimientoComponent implements OnInit {
         this.mostrarError(error, 'No se pudieron cargar los artículos.');
       }
     });
+  }
+
+  private limpiarConfiguracionAlmacen(): void {
+    this.stockActual = 0;
+    this.articulo.IdUnidadStock = null;
+    this.articulo.IdUnidadReceta = null;
+    this.articulo.FactorReceta = 1;
+    this.articulo.IdGrupoCompra = null;
+    this.articulo.IdAreaAlmacen = null;
+    this.articulo.IdSubAreaAlmacenDescarga = null;
+    this.articulo.StockMinimo = 0;
+    this.articulo.StockMaximo = 0;
+    this.articulo.Porcionable = false;
+    this.articulo.Porcionado = false;
+    this.articulo.AutoPorcion = false;
+    this.articulo.Produccion = false;
+    this.articulo.Inventario = false;
+    this.articulo.PresentacionesCompra = [];
+    this.usarSubAreaFija = false;
   }
 
   private cargarGrupos(tipo: 'A' | 'I'): void {

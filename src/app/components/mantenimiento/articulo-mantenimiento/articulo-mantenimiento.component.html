@@ -46,7 +46,9 @@
 
             <ng-container matColumnDef="tipo">
               <mat-header-cell *matHeaderCellDef>Tipo</mat-header-cell>
-              <mat-cell *matCellDef="let row">{{ descripcionTipo(row.InsumoProducto) }}</mat-cell>
+              <mat-cell *matCellDef="let row">
+                {{ descripcionTipo(row.InsumoProducto, row.EsServicio) }}
+              </mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="unidad">
@@ -61,7 +63,9 @@
 
             <ng-container matColumnDef="stock">
               <mat-header-cell *matHeaderCellDef>Stock</mat-header-cell>
-              <mat-cell *matCellDef="let row">{{ row.Stock | number:'1.0-4' }}</mat-cell>
+              <mat-cell *matCellDef="let row">
+                {{ row.EsServicio ? 'No aplica' : (row.Stock | number:'1.0-4') }}
+              </mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="impuesto">
@@ -170,13 +174,14 @@
             <mat-label>Tipo</mat-label>
             <mat-select
               name="tipo"
-              [(ngModel)]="articulo.InsumoProducto"
+              [(ngModel)]="tipoFormulario"
               (selectionChange)="cambiarTipo()"
               [disabled]="esProductoVentaEditado"
               required
             >
               <mat-option value="A">Artículo</mat-option>
               <mat-option value="I">Insumo</mat-option>
+              <mat-option value="S" *ngIf="!esProductoVentaEditado">Servicio</mat-option>
               <mat-option value="P" *ngIf="esProductoVentaEditado">
                 Producto de venta
               </mat-option>
@@ -185,7 +190,9 @@
 
           <mat-form-field appearance="fill">
             <mat-label>
-              {{ articulo.Produccion ? 'Costo unitario' : 'Precio de compra' }}
+              {{ articulo.EsServicio
+                ? 'Costo del servicio'
+                : (articulo.Produccion ? 'Costo unitario' : 'Precio de compra') }}
             </mat-label>
             <input
               matInput
@@ -219,9 +226,19 @@
             </mat-select>
           </mat-form-field>
         </div>
+        <div class="dialog-notice" *ngIf="articulo.EsServicio">
+          <mat-icon>design_services</mat-icon>
+          <div class="dialog-notice__content">
+            <strong class="dialog-notice__title">Servicio sin movimiento de stock</strong>
+            <span class="dialog-notice__text">
+              Podrá utilizarse en egresos de caja. No requiere unidad, almacén,
+              presentación, conversión ni configuración de inventario.
+            </span>
+          </div>
+        </div>
       </section>
 
-      <section class="dialog-form-section">
+      <section class="dialog-form-section" *ngIf="!articulo.EsServicio">
         <h3 class="dialog-form-section__title">Stock y abastecimiento</h3>
         <div class="dialog-form-grid">
           <mat-form-field appearance="fill">
@@ -331,7 +348,7 @@
         </div>
       </section>
 
-      <section class="dialog-form-section">
+      <section class="dialog-form-section" *ngIf="!articulo.EsServicio">
         <h3 class="dialog-form-section__title">Presentaciones de compra</h3>
         <p class="dialog-form-section__hint">
           La unidad base de stock no cambia. Configure aquí cómo se convierten
@@ -413,7 +430,7 @@
         </button>
       </section>
 
-      <section class="dialog-form-section">
+      <section class="dialog-form-section" *ngIf="!articulo.EsServicio">
         <h3 class="dialog-form-section__title">Conversión para recetas</h3>
         <div class="dialog-form-grid">
           <mat-form-field appearance="fill">
@@ -451,7 +468,7 @@
         </div>
       </section>
 
-      <section class="dialog-form-section">
+      <section class="dialog-form-section" *ngIf="!articulo.EsServicio">
         <h3 class="dialog-form-section__title">Comportamiento de almacén</h3>
         <div class="dialog-toggle-grid">
           <mat-checkbox name="inventario" [(ngModel)]="articulo.Inventario">

@@ -46,6 +46,10 @@ import { ReservasMantenimientoComponent } from 'src/app/components/mantenimiento
 import { ReportesTermicosAdministracionComponent } from 'src/app/components/mantenimiento/reportes-termicos-administracion/reportes-termicos-administracion.component';
 import { TipoReporteTermicoAdministracion } from 'src/app/models/reportes-termicos-administracion.models';
 import { MonitorComandasComponent } from 'src/app/components/mantenimiento/monitor-comandas/monitor-comandas.component';
+import {
+  SeguimientoAdministracionComponent,
+  VistaSeguimientoAdministracion,
+} from 'src/app/components/mantenimiento/seguimiento-administracion/seguimiento-administracion.component';
 import { SunatConfigurationComponent } from 'src/app/components/mantenimiento/sunat-configuration/sunat-configuration.component';
 import { CpeEnvioMonitorComponent } from 'src/app/components/mantenimiento/cpe-envio-monitor/cpe-envio-monitor.component';
 import { PagoCuentaOnlineConfigurationComponent } from 'src/app/components/mantenimiento/pago-cuenta-online-configuration/pago-cuenta-online-configuration.component';
@@ -83,6 +87,7 @@ export class MenuVentasComponent implements OnInit {
     habilitadas: new Set<string>(),
   };
   private paisISO2 = '';
+  private anfitrionasHabilitadas = false;
   private esUsuarioSoporteLaComanda = false;
 
   private get esGerente(): boolean {
@@ -147,7 +152,9 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Resumen de Documentos', route: '/ventas/resumen-documentos', icon: 'receipt_long', label: 'Resumen de documentos', reporteTermico: 'resumen-documentos', feature: C.OperacionReportes, grupoReporte: 'turno' },
         // MonitorComandasController apila las dos características, así que la
         // opción solo aparece cuando la licencia cubre ambas.
+        { title: 'Resumen y control de comandas', route: '/ventas/reportes/seguimiento-comandas', icon: 'fact_check', label: 'Control de comandas', seguimientoAdministracion: 'comandas', feature: [C.OperacionReportes, C.ReportesSeguimientoComandas], grupoReporte: 'analisis' },
         { title: 'Trazabilidad de comandas', route: '/ventas/reportes/monitor-comandas', icon: 'account_tree', label: 'Monitor comandas', monitorComandas: true, feature: [C.ReportesAnaliticos, C.ReportesSeguimientoComandas], grupoReporte: 'analisis' },
+        { title: 'Comisiones y rendimiento de anfitrionas', route: '/ventas/reportes/anfitrionas', icon: 'workspace_premium', label: 'Anfitrionas', seguimientoAdministracion: 'anfitrionas', requiereAnfitrionas: true, feature: [C.OperacionReportes, C.ReportesComisionAnfitrionas], grupoReporte: 'analisis' },
         { title: 'Contable',           route: '/ventas/contable',           icon: 'calculate',  label: 'Contable',     titleKey: 'accounting',     labelKey: 'accounting', feature: C.OperacionReportes, grupoReporte: 'analisis' },
         { title: 'Productividad por empleado', route: '/ventas/reportes/productividad-empleados', icon: 'groups', label: 'Productividad', reporte: 'productividad-empleados', feature: C.ReportesAnaliticos, grupoReporte: 'analisis' },
         { title: 'Espacios y servicio', route: '/ventas/reportes/mesas-servicio', icon: 'table_restaurant', label: 'Espacios y servicio', reporte: 'mesas-servicio', feature: C.ReportesAnaliticos, grupoReporte: 'analisis' },
@@ -190,6 +197,7 @@ export class MenuVentasComponent implements OnInit {
       this.cubiertoPorLicencia(item.feature) &&
       (!item.soloPeru || this.paisISO2 === 'PE') &&
       (!item.soloSoporteLaComanda || this.esUsuarioSoporteLaComanda) &&
+      (!item.requiereAnfitrionas || this.anfitrionasHabilitadas) &&
       (!item.soloPagoMovil || ['ES', 'PE'].includes(this.paisISO2)));
   }
 
@@ -218,6 +226,12 @@ export class MenuVentasComponent implements OnInit {
     }
     if (item.monitorComandas) {
       this.OpenMonitorComandasComponent();
+      return;
+    }
+    if (item.seguimientoAdministracion) {
+      this.OpenSeguimientoAdministracionComponent(
+        item.seguimientoAdministracion as VistaSeguimientoAdministracion,
+      );
       return;
     }
     if (item.reporteTermico) {
@@ -372,6 +386,21 @@ export class MenuVentasComponent implements OnInit {
       maxWidth: '1760px',
       maxHeight: '980px',
       panelClass: 'dialog-window--workspace',
+    });
+  }
+
+  OpenSeguimientoAdministracionComponent(
+    vista: VistaSeguimientoAdministracion,
+  ): void {
+    this.dialog.open(SeguimientoAdministracionComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'calc(100vw - 24px)',
+      height: 'calc(100vh - 24px)',
+      maxWidth: '1760px',
+      maxHeight: '980px',
+      panelClass: 'dialog-window--workspace',
+      data: { vista },
     });
   }
 
@@ -712,9 +741,11 @@ export class MenuVentasComponent implements OnInit {
     const cachedConfiguration = this.configuracionService.snapshot;
     if (cachedConfiguration) {
       this.paisISO2 = (cachedConfiguration.PaisISO2 ?? '').toUpperCase();
+      this.anfitrionasHabilitadas = cachedConfiguration.Anfitrionas === true;
     }
     this.configuracionService.config$.subscribe(configuration => {
       this.paisISO2 = (configuration?.PaisISO2 ?? '').toUpperCase();
+      this.anfitrionasHabilitadas = configuration?.Anfitrionas === true;
     });
   }
 

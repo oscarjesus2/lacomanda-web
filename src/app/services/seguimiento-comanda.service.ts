@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import {
   ComisionAnfitrionaReporte,
+  RendimientoAnfitrionaReporte,
   SeguimientoComandaFiltro,
   SeguimientoComandaReporte,
 } from '../interfaces/seguimiento-comanda.interface';
@@ -30,6 +31,15 @@ export class SeguimientoComandaService {
   ): Observable<ApiResponse<ComisionAnfitrionaReporte>> {
     return this.http.get<ApiResponse<ComisionAnfitrionaReporte>>(
       `${this.basePath}/comision-anfitriona`,
+      { params: this.crearParametros(filtro) },
+    );
+  }
+
+  obtenerRendimientoAnfitrionas(
+    filtro: SeguimientoComandaFiltro,
+  ): Observable<ApiResponse<RendimientoAnfitrionaReporte>> {
+    return this.http.get<ApiResponse<RendimientoAnfitrionaReporte>>(
+      `${this.basePath}/rendimiento-anfitrionas`,
       { params: this.crearParametros(filtro) },
     );
   }

@@ -1,4 +1,4 @@
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { CanalVentaEnum, PedidoEstadoEnum } from 'src/app/enums/enum';
 
 import { VentaComponent } from './venta.component';
@@ -253,6 +253,56 @@ describe('VentaComponent - centro de caja', () => {
     expect(component.etiquetaEstadoInicialCanal).toBe('takeawayReady');
     expect(component.tituloEstadoInicialCanal).toBe('selectTakeawayOrderToStart');
     expect(component.tituloCanalSinPedidos).toBe('noTakeawayOrders');
+  });
+});
+
+describe('VentaComponent - acceso a reservas', () => {
+  function crearComponente(publicada: boolean): VentaComponent {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    (component as any).reservasService = {
+      obtenerEstadoPublicacion: () => of({ Data: publicada }),
+    };
+    component.reservasHabilitadas = false;
+    return component;
+  }
+
+  it('oculta Reservas cuando su publicación está desactivada', () => {
+    const component = crearComponente(false);
+
+    (component as any).actualizarVisibilidadReservas(true);
+
+    expect(component.reservasHabilitadas).toBeFalse();
+  });
+
+  it('muestra Reservas cuando la licencia y su publicación están activas', () => {
+    const component = crearComponente(true);
+
+    (component as any).actualizarVisibilidadReservas(true);
+
+    expect(component.reservasHabilitadas).toBeTrue();
+  });
+
+  it('no consulta la configuración cuando la licencia no incluye reservas', () => {
+    const component = crearComponente(true);
+    const obtenerEstadoPublicacion = spyOn(
+      (component as any).reservasService,
+      'obtenerEstadoPublicacion',
+    ).and.callThrough();
+
+    (component as any).actualizarVisibilidadReservas(false);
+
+    expect(obtenerEstadoPublicacion).not.toHaveBeenCalled();
+    expect(component.reservasHabilitadas).toBeFalse();
+  });
+
+  it('oculta Reservas cuando el estado de publicación no está disponible', () => {
+    const component = crearComponente(true);
+    (component as any).reservasService.obtenerEstadoPublicacion = () =>
+      throwError(() => new Error('Configuración no publicada'));
+
+    (component as any).actualizarVisibilidadReservas(true);
+
+    expect(component.reservasHabilitadas).toBeFalse();
   });
 });
 
