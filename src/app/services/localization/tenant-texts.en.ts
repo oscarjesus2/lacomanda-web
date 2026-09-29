@@ -822,6 +822,7 @@ export const EN_TEXTS = {
   requiredIfNoPrice: 'Required if "No price".',
   idAndClassification: 'Identification and classification',
   configAndPrintAreas: 'Configuration and print areas',
+  productConfiguration: 'Product configuration',
   advancedConfiguration: 'Advanced configuration',
   advancedConfigurationHint: 'Only open this section when the product needs special behavior.',
   showAdvancedConfiguration: 'Configure',

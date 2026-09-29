@@ -447,13 +447,13 @@
           <mat-label>{{ 'type' | tenantText }}</mat-label>
           <mat-select [(ngModel)]="p.Tipo" name="tipo" required #tipo="ngModel">
             <mat-option [value]="0">{{ 'productTypeMenuCard' | tenantText }}</mat-option>
-            <mat-option [value]="1">{{ 'productTypeMenu' | tenantText }}</mat-option>
-            <mat-option [value]="2">{{ 'productTypeWithComplements' | tenantText }}</mat-option>
-            <mat-option [value]="3">{{ 'productTypeComplement' | tenantText }}</mat-option>
+            <mat-option *ngIf="productosMenusHabilitados" [value]="1">{{ 'productTypeMenu' | tenantText }}</mat-option>
+            <mat-option *ngIf="productosMenusHabilitados" [value]="2">{{ 'productTypeWithComplements' | tenantText }}</mat-option>
+            <mat-option *ngIf="productosMenusHabilitados" [value]="3">{{ 'productTypeComplement' | tenantText }}</mat-option>
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field class="form-field" appearance="fill" *ngIf="p.Tipo === 1">
+        <mat-form-field class="form-field" appearance="fill" *ngIf="productosMenusHabilitados && p.Tipo === 1">
           <mat-label>{{ 'menuSection' | tenantText }}</mat-label>
           <mat-select [(ngModel)]="p.IdClaseCombo" name="clasecombo" required #clasecombo="ngModel">
             <mat-option [value]="0">{{ 'mainCombo' | tenantText }}</mat-option>
@@ -505,9 +505,9 @@
     <!-- ── Columna derecha: configuración y áreas ─────────────────────── -->
     <div class="prod-col prod-col--right">
       <p class="prod-col-label">
-        {{ (mostrarConfiguracionAvanzada
-          ? 'configAndPrintAreas'
-          : 'printAreas') | tenantText }}
+        {{ (operacionCajaHabilitada
+          ? (mostrarConfiguracionAvanzada ? 'configAndPrintAreas' : 'printAreas')
+          : 'productConfiguration') | tenantText }}
       </p>
 
       <section class="product-image-card">
@@ -681,7 +681,7 @@
       <!-- Áreas de impresión -->
       </ng-container>
 
-      <div class="prod-areas-card">
+      <div *ngIf="operacionCajaHabilitada" class="prod-areas-card">
         <p class="prod-areas-title">{{ 'printAreas' | tenantText }}</p>
         <mat-selection-list
           [(ngModel)]="selectedAreas"

@@ -826,6 +826,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   requiredIfNoPrice: 'Requerido si "Sin precio".',
   idAndClassification: 'Identificación y clasificación',
   configAndPrintAreas: 'Configuración y áreas de impresión',
+  productConfiguration: 'Configuración del producto',
   advancedConfiguration: 'Configuración avanzada',
   advancedConfigurationHint: 'Abra esta sección solo cuando el producto necesite un comportamiento especial.',
   showAdvancedConfiguration: 'Configurar',

@@ -1,4 +1,4 @@
-<ng-container *ngIf="esAprobador$ | async">
+<ng-container *ngIf="puedeVerCentro$ | async">
   <ng-container *ngIf="{ pendientes: (pendientes$ | async) ?? 0 } as estado">
     <button *ngIf="variante === 'icono'"
             mat-icon-button

@@ -66,6 +66,8 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   filtered = new MatTableDataSource<Producto>([]);
   filtro = '';
   puedeImportarCartaIa = false;
+  operacionCajaHabilitada = false;
+  productosMenusHabilitados = false;
   procesandoCartaIa = false;
   confirmandoCartaIa = false;
   previsualizacionCarta: CartaIaPrevisualizacion | null = null;
@@ -134,10 +136,45 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarTodo();
-    this.cargarAreasImpresion();
     this.cargarConfiguracion();
     this.cargarAccesoImportacionCartaIa();
     this.cargarAccesoAlmacen();
+    this.cargarCatalogosDeRestaurante();
+  }
+
+  /**
+   * Los productos también existen en Comercio, pero las áreas de impresión y
+   * las secciones de menú pertenecen a la operación de restaurante. Consultar
+   * esos catálogos sin licencia provoca un 403 aunque el mantenimiento de
+   * productos sí esté permitido.
+   */
+  private cargarCatalogosDeRestaurante(): void {
+    this.licenciaTenantService
+      .tieneCaracteristica(CARACTERISTICAS_LICENCIA.OperacionCaja)
+      .subscribe(habilitada => {
+        this.operacionCajaHabilitada = habilitada;
+        if (habilitada) {
+          this.cargarAreasImpresion();
+          return;
+        }
+
+        this.areas = [];
+        this.areasCartaIaCargadas = true;
+      });
+
+    this.licenciaTenantService
+      .tieneCaracteristica(CARACTERISTICAS_LICENCIA.ProductosMenus)
+      .subscribe(habilitada => {
+        this.productosMenusHabilitados = habilitada;
+        if (!habilitada) {
+          this.seccionMenu = [];
+          return;
+        }
+
+        this.claseComboService.getSeccionMenu().subscribe(response => {
+          if (response.Success) this.seccionMenu = response.Data || [];
+        });
+      });
   }
 
   private cargarAccesoAlmacen(): void {
@@ -227,7 +264,6 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
         this.seleccionarImpuestoGeneralSiCorresponde();
       }
     });
-    this.claseComboService.getSeccionMenu().subscribe(r => { if (r.Success) this.seccionMenu = r.Data; });
   }
 
   private cargarAreasImpresion(): void {

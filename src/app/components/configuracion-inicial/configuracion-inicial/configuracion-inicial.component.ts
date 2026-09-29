@@ -12,6 +12,7 @@ import { TenantTextCatalogService } from 'src/app/services/localization/tenant-t
 import { combineLatest } from 'rxjs';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
+import { esConfiguracionPersistida } from '../configuracion-persistida';
 
 @Component({
   selector: 'app-configuracion-inicial',
@@ -19,7 +20,7 @@ import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-lice
   styleUrls: ['./configuracion-inicial.component.css']
 })
 export class ConfiguracionInicialComponent implements OnInit {
-  readonly esModoInicial: boolean;
+  esModoInicial: boolean;
   licenciaCargada = false;
   puedePrecuentas = false;
   puedeCambioEspacio = false;
@@ -100,6 +101,11 @@ export class ConfiguracionInicialComponent implements OnInit {
       this.configSrv.get(),
       this.licenciaSrv.obtenerEstado(),
     ]).subscribe(([cfg, estadoLicencia]) => {
+      // El servidor devuelve una propuesta con IdConfig=0 si aún no existe la
+      // configuración. La existencia real manda sobre el punto desde el que se
+      // abrió el diálogo, evitando intentar actualizar una fila inexistente.
+      this.esModoInicial = !esConfiguracionPersistida(cfg);
+
       if (cfg) {
         this.form.patchValue(cfg);
         this.formInicial.patchValue({

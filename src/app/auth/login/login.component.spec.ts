@@ -128,4 +128,32 @@ describe('LoginComponent - progreso del retorno de Keycloak', () => {
 
     expect(indicatorHandle.close).toHaveBeenCalledTimes(1);
   });
+
+  it('no considera completa una propuesta que todavía no fue guardada', () => {
+    const propuesta = {
+      IdConfig: 0,
+      RazonSocial: 'La Comanda',
+      NombreComercial: 'La Comanda - Lima',
+      Direccion: 'Calle X',
+      Telefono: '+51926612691',
+      NumeroIdentificacion: '20616513339',
+      IdTipoIdentidad: 'RUC',
+    };
+
+    expect((component as any).isConfigValid(propuesta)).toBeFalse();
+  });
+
+  it('acepta una configuración persistida con los datos obligatorios', () => {
+    const configuracion = {
+      IdConfig: 1,
+      RazonSocial: 'La Comanda',
+      NombreComercial: 'La Comanda - Lima',
+      Direccion: 'Calle X',
+      Telefono: '+51926612691',
+      NumeroIdentificacion: '20616513339',
+      IdTipoIdentidad: 'RUC',
+    };
+
+    expect((component as any).isConfigValid(configuracion)).toBeTrue();
+  });
 });
