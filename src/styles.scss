@@ -1939,6 +1939,18 @@ body {
   max-width: 100% !important;
 }
 
+/* Superficie sólida reutilizable para diálogos que se muestran sobre el
+   contenedor transparente de Angular Material. */
+.dialog-panel--surface {
+  box-sizing: border-box;
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--color-primary);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+  color: var(--color-text);
+}
+
 /* Variante global para formularios largos que deben aprovechar mejor el alto
    disponible sin perder la separación visual del sistema. */
 .dialog-panel--dense .dialog-summary {
@@ -1980,6 +1992,125 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* Cabecera, paneles y líneas reutilizables para formularios operativos.
+   Mantener estas decisiones aquí permite cambiar su aspecto en todo el
+   sistema sin editar cada componente. */
+.dialog-feature-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-right: 42px;
+}
+
+.dialog-feature-header h2,
+.dialog-feature-header p {
+  margin: 0;
+}
+
+.dialog-feature-header h2 {
+  color: var(--color-primary-dark);
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+}
+
+.dialog-feature-header p {
+  margin-top: 3px;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.dialog-feature-header__icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-text-light);
+}
+
+.dialog-inline-panel {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.dialog-inline-panel__intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: var(--color-primary-dark);
+}
+
+.dialog-inline-panel__intro div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dialog-inline-panel__intro span {
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+}
+
+.dialog-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.dialog-line-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.dialog-line-card {
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.dialog-amount {
+  display: flex;
+  min-width: 100px;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.dialog-amount small,
+.dialog-total-bar span {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dialog-amount strong,
+.dialog-total-bar strong {
+  color: var(--color-primary-dark);
+}
+
+.dialog-total-bar {
+  display: flex;
+  min-width: 190px;
+  margin-right: auto;
+  flex-direction: column;
+}
+
+.dialog-total-bar strong {
+  font-size: 1.45rem;
 }
 
 .dialog-summary {

@@ -1,0 +1,291 @@
+<div class="expense-dialog dialog-panel dialog-panel--wide dialog-panel--surface">
+  <button mat-icon-button class="expense-dialog__close" type="button" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <header class="dialog-feature-header">
+    <div class="dialog-feature-header__icon"><mat-icon>payments</mat-icon></div>
+    <div>
+      <h2>REGISTRO DE EGRESO</h2>
+      <p>Caja {{ data.idCaja }} · Turno {{ data.idTurno }}</p>
+    </div>
+  </header>
+
+  <div class="dialog-notice" *ngIf="cargando">
+    <mat-icon>hourglass_empty</mat-icon>
+    <div class="dialog-notice__content">
+      <strong class="dialog-notice__title">Preparando el registro</strong>
+      <span class="dialog-notice__text">Cargando beneficiarios, artículos y almacenes…</span>
+    </div>
+  </div>
+
+  <div class="dialog-form" *ngIf="!cargando && catalogo">
+    <div class="dialog-notice" *ngIf="catalogo.Articulos.length === 0">
+      <mat-icon>info</mat-icon>
+      <div class="dialog-notice__content">
+        <strong class="dialog-notice__title">Faltan artículos configurados</strong>
+        <span class="dialog-notice__text">Configure al menos un artículo o servicio activo.</span>
+      </div>
+    </div>
+
+    <section class="dialog-form-section">
+      <h3 class="dialog-form-section__title">
+        <mat-icon>account_balance_wallet</mat-icon>
+        Datos del egreso
+      </h3>
+      <p class="dialog-form-section__hint">
+        Busca al proveedor por nombre o identificación. Si todavía no existe, puedes crearlo sin salir de esta pantalla.
+      </p>
+
+      <div class="dialog-form-grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Categoría de egreso</mat-label>
+          <mat-select [(ngModel)]="idSubTipoMovimiento">
+            <mat-option
+              *ngFor="let categoria of catalogo.Categorias"
+              [value]="categoria.IdSubTipoMovimiento">
+              {{ categoria.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field
+          appearance="fill"
+          class="dialog-form-grid__wide"
+          *ngIf="!registrandoBeneficiario">
+          <mat-label>Buscar proveedor o beneficiario</mat-label>
+          <input
+            #beneficiarioInput
+            matInput
+            autocomplete="off"
+            [value]="beneficiarioBusqueda"
+            [matAutocomplete]="beneficiariosAuto"
+            (input)="buscarBeneficiario(beneficiarioInput.value)"
+            placeholder="Escribe nombre, RUC, DNI…">
+          <mat-icon matPrefix>search</mat-icon>
+          <mat-autocomplete
+            #beneficiariosAuto="matAutocomplete"
+            (optionSelected)="seleccionarBeneficiario($event)">
+            <mat-option
+              *ngFor="let beneficiario of beneficiariosFiltrados"
+              [value]="beneficiario">
+              <strong>{{ beneficiario.RazonSocial }}</strong>
+              <small *ngIf="beneficiario.NumeroIdentificacion">
+                · {{ beneficiario.NumeroIdentificacion }}
+              </small>
+            </mat-option>
+            <mat-option disabled *ngIf="beneficiariosFiltrados.length === 0">
+              No se encontraron coincidencias
+            </mat-option>
+          </mat-autocomplete>
+          <mat-hint *ngIf="idProveedor">Beneficiario seleccionado</mat-hint>
+        </mat-form-field>
+
+        <div class="dialog-form-action">
+          <button mat-stroked-button type="button" (click)="alternarNuevoBeneficiario()">
+            <mat-icon>{{ registrandoBeneficiario ? 'search' : 'person_add' }}</mat-icon>
+            {{ registrandoBeneficiario ? 'Buscar existente' : 'Nuevo beneficiario' }}
+          </button>
+        </div>
+
+        <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+          <mat-label>Concepto*</mat-label>
+          <textarea
+            #conceptoInput
+            matInput
+            rows="2"
+            maxlength="200"
+            [(ngModel)]="concepto"
+            placeholder="Ej.: compra urgente de insumos o pago de mantenimiento"></textarea>
+          <mat-hint align="end">{{ concepto.length }}/200</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Referencia (opcional)</mat-label>
+          <input matInput maxlength="15" [(ngModel)]="referencia" placeholder="Boleta, vale…">
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-inline-panel" *ngIf="registrandoBeneficiario">
+        <div class="dialog-inline-panel__intro">
+          <mat-icon>person_add</mat-icon>
+          <div>
+            <strong>Alta rápida de beneficiario</strong>
+            <span>Al registrar el egreso se crearán ambos registros en una sola operación.</span>
+          </div>
+        </div>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Tipo de identificación*</mat-label>
+            <mat-select [(ngModel)]="nuevoProveedor.IdTipoIdentidad">
+              <mat-option
+                *ngFor="let tipo of catalogo.Proveedor.TiposIdentidad"
+                [value]="tipo.IdTipoIdentidad">
+                {{ tipo.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Identificación fiscal*</mat-label>
+            <input matInput maxlength="20" [(ngModel)]="nuevoProveedor.NumeroIdentificacion">
+          </mat-form-field>
+          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+            <mat-label>Razón social o nombre*</mat-label>
+            <input matInput maxlength="250" [(ngModel)]="nuevoProveedor.RazonSocial">
+          </mat-form-field>
+          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+            <mat-label>Dirección*</mat-label>
+            <input matInput maxlength="250" [(ngModel)]="nuevoProveedor.Direccion">
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Teléfono</mat-label>
+            <input matInput maxlength="30" [(ngModel)]="nuevoProveedor.Telefono">
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Persona de contacto</mat-label>
+            <input matInput maxlength="120" [(ngModel)]="nuevoProveedor.Contacto">
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Correo</mat-label>
+            <input matInput type="email" maxlength="160" [(ngModel)]="nuevoProveedor.Email">
+          </mat-form-field>
+        </div>
+      </div>
+    </section>
+
+    <section class="dialog-form-section">
+      <div class="dialog-section-heading">
+        <div>
+          <h3 class="dialog-form-section__title">
+            <mat-icon>receipt_long</mat-icon>
+            Detalle del egreso
+          </h3>
+          <p class="dialog-form-section__hint">
+            Los artículos con inventario ingresan al almacén; los servicios solo documentan la salida de caja.
+          </p>
+        </div>
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="agregarLinea()"
+          [disabled]="lineas.length >= 50">
+          <mat-icon>add</mat-icon>
+          Agregar línea
+        </button>
+      </div>
+
+      <div class="dialog-line-list">
+        <article
+          class="dialog-line-card expense-line"
+          *ngFor="let linea of lineas; let i = index; trackBy: trackByIndex">
+          <div class="expense-line__fields">
+            <mat-form-field appearance="fill" class="expense-line__article">
+              <mat-label>Artículo o servicio</mat-label>
+              <mat-select
+                [(ngModel)]="linea.IdProducto"
+                (selectionChange)="seleccionarArticulo(linea)">
+                <mat-option
+                  *ngFor="let articulo of catalogo.Articulos"
+                  [value]="articulo.IdProducto">
+                  {{ articulo.Descripcion }}
+                  · {{ articulo.EsServicio
+                    ? 'Servicio'
+                    : (articulo.Inventariable ? 'Mercadería' : 'Artículo no inventariable') }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field
+              appearance="fill"
+              *ngIf="linea.IdProducto && !linea.EsServicio">
+              <mat-label>Presentación</mat-label>
+              <mat-select
+                [(ngModel)]="linea.IdPresentacionCompra"
+                (selectionChange)="seleccionarPresentacion(linea)">
+                <mat-option
+                  *ngFor="let presentacion of presentacionesDisponibles(linea)"
+                  [value]="valorPresentacion(presentacion)">
+                  {{ presentacion.UnidadCompra }}
+                  <span *ngIf="presentacion.FactorConversionStock !== 1">
+                    ({{ presentacion.FactorConversionStock }} {{ buscarArticulo(linea.IdProducto)?.UnidadMedida }})
+                  </span>
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill">
+              <mat-label>Cantidad</mat-label>
+              <input matInput type="number" min="0.001" step="0.001" [(ngModel)]="linea.Cantidad">
+            </mat-form-field>
+
+            <mat-form-field appearance="fill">
+              <mat-label>Precio</mat-label>
+              <span matPrefix>{{ data.simbolo }}&nbsp;</span>
+              <input matInput type="number" min="0" step="0.01" [(ngModel)]="linea.Precio">
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" *ngIf="linea.Inventariable">
+              <mat-label>Almacén de ingreso</mat-label>
+              <mat-select [(ngModel)]="linea.IdSubAreaAlmacen">
+                <mat-option
+                  *ngFor="let subArea of catalogo.SubAreas"
+                  [value]="subArea.IdSubAreaAlmacen">
+                  {{ subArea.AreaAlmacen }} · {{ subArea.Descripcion }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="expense-line__summary">
+            <span
+              class="status-pill"
+              [class.status-pill--inactive]="!linea.Inventariable">
+              {{ linea.EsServicio
+                ? 'Servicio · no mueve stock'
+                : (linea.Inventariable ? 'Ingresa a stock' : 'No mueve stock') }}
+            </span>
+            <div class="dialog-amount">
+              <small>Subtotal</small>
+              <strong>{{ data.simbolo }} {{ subtotal(linea) | number:'1.2-2' }}</strong>
+            </div>
+            <button
+              mat-icon-button
+              type="button"
+              color="warn"
+              (click)="eliminarLinea(i)"
+              matTooltip="Quitar línea">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        </article>
+      </div>
+
+      <div class="dialog-notice" *ngIf="hayArticulosDuplicados">
+        <mat-icon>warning</mat-icon>
+        <div class="dialog-notice__content">
+          <strong class="dialog-notice__title">Artículo duplicado</strong>
+          <span class="dialog-notice__text">Un mismo artículo no puede aparecer dos veces.</span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="dialog-form-footer">
+      <div class="dialog-total-bar">
+        <span>Total egreso</span>
+        <strong>{{ data.simbolo }} {{ total | number:'1.2-2' }}</strong>
+      </div>
+      <button mat-stroked-button type="button" (click)="cerrar()" [disabled]="guardando">
+        Cancelar
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="guardar()"
+        [disabled]="guardando">
+        <mat-icon>{{ guardando ? 'hourglass_empty' : 'save' }}</mat-icon>
+        {{ guardando ? 'Registrando…' : 'Registrar egreso' }}
+      </button>
+    </footer>
+  </div>
+</div>

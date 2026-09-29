@@ -71,6 +71,7 @@ export interface SeguimientoDescuento {
 export interface ComisionAnfitrionaReporte {
   Detalles: ComisionAnfitrionaDetalle[];
   CantidadFichas: number;
+  CantidadUnidades: number;
   TotalAsignado: number;
 }
 
@@ -90,4 +91,42 @@ export interface ComisionAnfitrionaDetalle {
   FechaReimpresion?: string;
   NumeroReimpresiones: number;
   TipoIngreso: string;
+}
+
+export interface RendimientoAnfitrionaReporte {
+  Anfitrionas: RendimientoAnfitrionaResumen[];
+  Tendencia: RendimientoAnfitrionaTendencia[];
+  CantidadAnfitrionas: number;
+  TotalAsignaciones: number;
+  TotalUnidades: number;
+  TotalComandas: number;
+  TotalImporteAsignado: number;
+  TotalDescuentos: number;
+  TotalAnulaciones: number;
+  TotalImporteAnulado: number;
+  TotalReimpresiones: number;
+}
+
+export interface RendimientoAnfitrionaResumen {
+  Anfitriona: string;
+  Asignaciones: number;
+  UnidadesAsociadas: number;
+  Comandas: number;
+  Turnos: number;
+  ImporteAsignado: number;
+  DescuentosAsignados: number;
+  PromedioPorComanda: number;
+  ParticipacionPorcentaje: number;
+  ProductoPrincipal: string;
+  Reimpresiones: number;
+  Anulaciones: number;
+  ImporteAnulado: number;
+}
+
+export interface RendimientoAnfitrionaTendencia {
+  Fecha: string;
+  Asignaciones: number;
+  Unidades: number;
+  Comandas: number;
+  ImporteAsignado: number;
 }

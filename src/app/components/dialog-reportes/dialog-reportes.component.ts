@@ -1,6 +1,6 @@
 import { formatDate } from '@angular/common';
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { lastValueFrom } from 'rxjs';
@@ -15,9 +15,12 @@ import { SeguimientoComandaService } from 'src/app/services/seguimiento-comanda.
 import { TurnoService } from 'src/app/services/turno.service';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
+import { DialogEgresoCajaComponent } from '../dialog-egreso-caja/dialog-egreso-caja.component';
+import { EgresoCajaRegistrado } from 'src/app/models/egreso-caja.models';
 
 export interface DialogReportesData {
   idTurno: number;
+  idCaja: number;
   config: Configuracion | null;
   isAdmin: boolean;
   puedeVerReportesVentas: boolean;
@@ -31,6 +34,7 @@ export interface DialogReportesData {
 export class DialogReportesComponent implements OnInit, OnDestroy {
 
   idTurno: number;
+  idCaja: number;
   config: Configuracion | null;
   isAdmin: boolean;
   puedeVerReportesVentas: boolean;
@@ -75,10 +79,12 @@ export class DialogReportesComponent implements OnInit, OnDestroy {
     @Inject(MAT_DIALOG_DATA) public data: DialogReportesData,
     private turnoService: TurnoService,
     private seguimientoComandaService: SeguimientoComandaService,
+    private dialog: MatDialog,
     private spinnerService: NgxSpinnerService,
     private sanitizer: DomSanitizer
   ) {
     this.idTurno  = data.idTurno;
+    this.idCaja   = data.idCaja;
     this.config   = data.config;
     this.isAdmin  = data.isAdmin ?? false;
     this.puedeVerReportesVentas = data.puedeVerReportesVentas ?? this.isAdmin;
@@ -127,6 +133,56 @@ export class DialogReportesComponent implements OnInit, OnDestroy {
       () => this.turnoService.GetResuDocumentos(this.idTurno));
   }
 
+  verEgresosDetallado(): Promise<void> {
+    return this.abrirPdf(
+      'egresos-detallado',
+      'Egresos del turno — Detallado',
+      () => this.turnoService.GetEgresosDetallado(this.idTurno),
+    );
+  }
+
+  verEgresosResumido(): Promise<void> {
+    return this.abrirPdf(
+      'egresos-resumido',
+      'Egresos del turno — Resumen',
+      () => this.turnoService.GetEgresosResumido(this.idTurno),
+    );
+  }
+
+  abrirRegistroEgreso(): void {
+    if (!this.idCaja || !this.idTurno) {
+      Swal.fire(
+        'Registro de egresos',
+        'Se requiere una caja con turno abierto.',
+        'warning',
+      );
+      return;
+    }
+
+    const ref = this.dialog.open(DialogEgresoCajaComponent, {
+      width: '920px',
+      maxWidth: '96vw',
+      maxHeight: '94vh',
+      autoFocus: false,
+      data: {
+        idCaja: this.idCaja,
+        idTurno: this.idTurno,
+        simbolo: this.simbolo,
+      },
+    });
+
+    ref.afterClosed().subscribe((resultado?: EgresoCajaRegistrado) => {
+      if (!resultado?.Documento) {
+        return;
+      }
+
+      this.mostrarPdfBase64(
+        resultado.Documento,
+        `Comprobante ${resultado.NumeroDocumento}`,
+      );
+    });
+  }
+
   private async abrirPdf(
     key: string,
     titulo: string,
@@ -172,6 +228,15 @@ export class DialogReportesComponent implements OnInit, OnDestroy {
       // Abrir en nueva pestaña — el visor nativo del navegador incluye botón imprimir
       window.open(this.pdfBlobUrl, '_blank');
     }
+  }
+
+  private mostrarPdfBase64(base64: string, titulo: string): void {
+    this.revokePdf();
+    const blob = this.base64ToBlob(base64, 'application/pdf');
+    this.pdfBlobUrl = URL.createObjectURL(blob);
+    this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfBlobUrl);
+    this.pdfTitulo = titulo;
+    this.activarVistaAmplia();
   }
 
   // ── Seguimiento de comandas y comisión anfitriona ──────

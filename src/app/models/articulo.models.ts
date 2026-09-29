@@ -4,6 +4,7 @@ export interface Articulo {
   Descripcion: string;
   DescripcionCompra: string;
   InsumoProducto: 'A' | 'I' | 'P';
+  EsServicio: boolean;
   IdUnidadStock: number | null;
   UnidadStock: string;
   IdUnidadReceta: number | null;
@@ -47,6 +48,7 @@ export class ArticuloGuardar {
   Descripcion = '';
   DescripcionCompra = '';
   InsumoProducto: 'A' | 'I' | 'P' = 'A';
+  EsServicio = false;
   IdUnidadStock: number | null = null;
   IdUnidadReceta: number | null = null;
   FactorReceta = 1;

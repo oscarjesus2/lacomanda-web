@@ -45,6 +45,14 @@ export class TurnoService {
         return this.http.get<ApiResponse<string>>(`${this.basePath}/ResumenVenta/${idTurno}`);
     }
 
+    GetEgresosDetallado(idTurno: number): Observable<ApiResponse<string>> {
+        return this.http.get<ApiResponse<string>>(`${this.basePath}/EgresosDetallado/${idTurno}`);
+    }
+
+    GetEgresosResumido(idTurno: number): Observable<ApiResponse<string>> {
+        return this.http.get<ApiResponse<string>>(`${this.basePath}/EgresosResumido/${idTurno}`);
+    }
+
     // Cierra el turno abierto de la caja. El backend resuelve el turno y ejecuta todo el flujo.
     CerrarTurno(request: CerrarTurnoRequest): Observable<ApiResponse<CerrarTurnoResult>> {
         return this.http.post<ApiResponse<CerrarTurnoResult>>(`${this.basePath}/Cerrar`, request);
