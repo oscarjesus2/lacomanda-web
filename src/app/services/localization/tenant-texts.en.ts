@@ -1269,6 +1269,13 @@ export const EN_TEXTS = {
   servicePercent: '% Service',
   min0Percent: 'Minimum 0%',
   receiptFooter: 'Footer (receipt)',
+  creditSaleBankDetails: 'Bank details for credit sales',
+  creditSaleBankDetailsHint:
+    'Optional. These details belong to the business and are only printed on credit-sale receipts.',
+  bankName: 'Bank',
+  bankAccountNumber: 'Account number',
+  interbankAccountCode: 'Interbank account code (CCI)',
+  bicSwift: 'BIC / SWIFT',
   operation: 'Operation',
   transfer: 'Transfer',
   allowPreBills: 'Allow pre-bills',

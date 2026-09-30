@@ -71,12 +71,11 @@ export class DialogCerrarTurnoComponent implements OnInit {
   }
 
   private cargarCajas(): void {
-    this.cajaService.getAllCaja(false).subscribe({
+    this.cajaService.getAllCaja(true).subscribe({
       next: (r) => {
-        this.listCaja = r?.Data ?? [];
-        const cajaInicial =
-          this.listCaja.find(caja => caja.TurnoAbierto != null)
-          ?? this.listCaja[0];
+        this.listCaja = (r?.Data ?? [])
+          .filter(caja => caja.TurnoAbierto != null);
+        const cajaInicial = this.listCaja[0];
         if (cajaInicial) {
           this.idCajaSel = cajaInicial.IdCaja;
           this.onCajaChange();

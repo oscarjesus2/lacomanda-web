@@ -1274,6 +1274,13 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   servicePercent: '% Servicio',
   min0Percent: 'Mínimo 0%',
   receiptFooter: 'Pie de Página (Comprobante)',
+  creditSaleBankDetails: 'Datos bancarios para ventas al crédito',
+  creditSaleBankDetailsHint:
+    'Opcional. Estos datos pertenecen al negocio y solo se imprimirán en comprobantes de ventas al crédito.',
+  bankName: 'Banco',
+  bankAccountNumber: 'Número de cuenta',
+  interbankAccountCode: 'Cuenta interbancaria (CCI)',
+  bicSwift: 'BIC / SWIFT',
   operation: 'Operación',
   transfer: 'Traslado',
   allowPreBills: 'Permitir Precuentas',
