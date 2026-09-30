@@ -510,7 +510,7 @@
           : 'productConfiguration') | tenantText }}
       </p>
 
-      <section class="product-image-card">
+      <section *ngIf="mostrarFotoCartaDigital" class="product-image-card">
         <div class="product-image-card__preview" [class.product-image-card__preview--empty]="!imagenPrevisualizacion">
           <img *ngIf="imagenPrevisualizacion" [src]="imagenPrevisualizacion" [alt]="p.NombreCorto || 'Producto'">
           <mat-icon *ngIf="!imagenPrevisualizacion">add_photo_alternate</mat-icon>

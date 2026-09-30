@@ -9,8 +9,8 @@ import { CanalVentaService } from 'src/app/services/canal-venta.service';
 import { CajaDocumentosDialogComponent } from './caja-documentos-dialog/caja-documentos-dialog.component';
 import { CanalVenta } from 'src/app/models/canalventa.models';
 import { CanalVentaEnum } from 'src/app/enums/enum';
-import { faL } from '@fortawesome/free-solid-svg-icons';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 
 @Component({
   selector: 'app-caja-mantenimiento',
@@ -24,6 +24,7 @@ export class CajaMantenimientoComponent implements OnInit {
   filtered = new MatTableDataSource<CajaDto>([]);
   filtro = '';
   showForm = false;
+  modoComercio = false;
 
   canales: CanalVenta[] = [];        // canales activos incluidos en la licencia
   canalesSeleccionados: number[] = []; // IDs de canales habilitados para la caja actual
@@ -46,12 +47,21 @@ export class CajaMantenimientoComponent implements OnInit {
     private service: CajaService,
     private dialogRef: MatDialogRef<CajaMantenimientoComponent>,
     private canalSrv: CanalVentaService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private licenciaTenantService: LicenciaTenantService,
   ) {}
 
   ngOnInit(): void {
-    this.cargar();
-    this.canalSrv.listarDisponibles().subscribe(x => this.canales = x);
+    this.licenciaTenantService.obtenerEstado().subscribe(estado => {
+      this.modoComercio = estado.licencia?.PlanCodigo?.toUpperCase() === 'COMERCIO';
+      this.displayedColumns = this.modoComercio
+        ? ['descripcion', 'activo', 'cajaDefault', 'nroPedido', 'actions']
+        : ['descripcion', 'activo', 'cajaDefault', 'canal', 'nroPedido', 'actions'];
+      this.cargar();
+      if (!this.modoComercio) {
+        this.canalSrv.listarDisponibles().subscribe(x => this.canales = x);
+      }
+    });
   }
 
   private blank(): CajaDto {
@@ -113,13 +123,19 @@ export class CajaMantenimientoComponent implements OnInit {
 
   nuevo(): void {
     this.m = this.blank();
+    this.normalizarCamposComercio();
     this.canalesSeleccionados = [];
     this.showForm = true;
   }
 
   onEdit(row: CajaDto): void {
     this.m = { ...row };
+    this.normalizarCamposComercio();
     this.canalesSeleccionados = [];
+    if (this.modoComercio) {
+      this.showForm = true;
+      return;
+    }
     // Cargar canales existentes de la caja
     this.service.getCanalesVentaByCaja(row.IdCaja).subscribe(canales => {
       this.canalesSeleccionados = canales.map(c => c.IdCanalVenta);
@@ -147,8 +163,11 @@ export class CajaMantenimientoComponent implements OnInit {
 
   onSubmit(): void {
     if (this.form.invalid) { this.touchForm(); return; }
+    this.normalizarCamposComercio();
     // Incluir los canales en el mismo DTO que va al Create/Update
-    this.m.IdCanalesVenta = [...this.canalesSeleccionados];
+    if (!this.modoComercio) {
+      this.m.IdCanalesVenta = [...this.canalesSeleccionados];
+    }
     const obs = this.m.IdCaja ? this.service.actualizar(this.m) : this.service.crear(this.m);
     obs.subscribe(r => {
       if (r.Success) {
@@ -174,5 +193,15 @@ export class CajaMantenimientoComponent implements OnInit {
     ref.afterClosed().subscribe(saved => {
       if (saved) Notificar.exito('Documentos actualizados', '');
     });
+  }
+
+  private normalizarCamposComercio(): void {
+    if (!this.modoComercio) return;
+
+    this.m.EmitePrecuenta = false;
+    this.m.EmiteComanda = false;
+    this.m.PermiteDividirPedido = false;
+    this.m.PrecuentaLlevarDeliveryAutomatica = false;
+    this.m.PermitirPagoTaxistas = false;
   }
 }

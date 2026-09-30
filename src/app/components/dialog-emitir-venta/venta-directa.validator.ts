@@ -6,6 +6,8 @@ export interface VentaDirectaBorrador {
     IdProducto: number;
     Qty: number;
     Precio: number;
+    PrecioMinimo?: number;
+    Producto?: string;
   }>;
 }
 
@@ -23,6 +25,14 @@ export function validarBorradorVentaDirecta(
   if (borrador.detalles.some(detalle =>
       detalle.IdProducto <= 0 || detalle.Qty <= 0 || detalle.Precio <= 0)) {
     return 'Todos los productos deben tener cantidad y precio mayores que cero.';
+  }
+
+  const detalleBajoMinimo = borrador.detalles.find(detalle =>
+    Number(detalle.PrecioMinimo || 0) > 0
+    && detalle.Precio < Number(detalle.PrecioMinimo));
+  if (detalleBajoMinimo) {
+    const producto = detalleBajoMinimo.Producto || 'El producto';
+    return `${producto} no puede venderse por debajo de ${Number(detalleBajoMinimo.PrecioMinimo).toFixed(2)}.`;
   }
 
   return null;

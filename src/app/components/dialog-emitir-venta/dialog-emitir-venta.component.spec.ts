@@ -76,6 +76,48 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
     expect(component.tipoCambioVenta).toBe('3.8');
   });
 
+  it('no ofrece cajas activas que no tengan turno abierto', async () => {
+    const { component, cajaService } = crear();
+    cajaService.getAllCaja.and.returnValue(of({
+      Data: [
+        caja(1, undefined, true),
+        caja(2, { IdTurno: 20, TipoCambio: 3.7, TipoCambioVenta: 3.8 }),
+      ],
+    }));
+
+    await (component as any).initializeCaja();
+
+    expect(component.listCaja.map(item => item.IdCaja)).toEqual([2]);
+    expect(component.cajaSeleccionada).toBe(2);
+  });
+
+  it('informa cuando ninguna caja tiene turno abierto', async () => {
+    const { component, cajaService } = crear();
+    cajaService.getAllCaja.and.returnValue(of({
+      Data: [caja(1, undefined, true)],
+    }));
+
+    await expectAsync((component as any).initializeCaja())
+      .toBeRejectedWithError('No existe una caja activa con turno abierto.');
+  });
+
+  it('muestra el motivo real cuando la apertura no encuentra una caja con turno', async () => {
+    const { component, cajaService } = crear();
+    cajaService.getAllCaja.and.returnValue(of({
+      Data: [caja(1, undefined, true)],
+    }));
+    const alert = spyOn(Swal, 'fire');
+    spyOn(console, 'log');
+
+    await component.ngOnInit();
+
+    expect(alert).toHaveBeenCalledWith(
+      'unexpectedError',
+      'No existe una caja activa con turno abierto.',
+      'error',
+    );
+  });
+
   it('inicializa moneda, caja y catálogo en una sola apertura', async () => {
     const { component, cajaService } = crear();
     cajaService.getAllCaja.and.returnValue(of({
@@ -116,6 +158,7 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
       Producto: 'Producto',
       Qty: 1,
       Precio: 25,
+      PrecioMinimo: 0,
       Total: 25,
       Moneda: 'SOL',
       CodDscto: '',
@@ -146,6 +189,7 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
       Producto: 'Producto con IGV',
       Qty: 1,
       Precio: 118,
+      PrecioMinimo: 0,
       Total: 118,
       Moneda: 'PEN',
       CodDscto: '',
@@ -175,6 +219,7 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
       IdProducto: 21,
       NombreCorto: 'Producto gravado',
       Precio: 118,
+      PrecioMinimo: 0,
       SinPrecio: false,
       IdMoneda: 'SOLES',
       Tipo: 0,
@@ -203,6 +248,7 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
       Producto: 'Producto',
       Qty: 2,
       Precio: 25,
+      PrecioMinimo: 0,
       Total: 50,
       Moneda: 'PEN',
       CodDscto: '',
@@ -228,6 +274,7 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
       Producto: 'Producto',
       Qty: 2,
       Precio: 25,
+      PrecioMinimo: 0,
       Total: 50,
       Moneda: 'PEN',
       CodDscto: '',
@@ -257,6 +304,7 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
       IdProducto: 10,
       NombreCorto: 'Producto sin precio',
       Precio: 0,
+      PrecioMinimo: 94.4,
       SinPrecio: true,
       IdMoneda: 'PEN',
       Tipo: 0,
@@ -267,6 +315,7 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
 
     const config = dialog.open.calls.mostRecent().args[1] as any;
     expect(config.data.title).toBe('Precio del producto · S/ PEN');
+    expect(config.data.minAmount).toBe(94.4);
   });
 
   it('muestra el símbolo correspondiente cuando el producto usa otra moneda', () => {
@@ -276,6 +325,7 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
       IdProducto: 11,
       NombreCorto: 'Producto en euros',
       Precio: 0,
+      PrecioMinimo: 10,
       SinPrecio: true,
       IdMoneda: 'EUROS',
       Tipo: 0,
@@ -309,6 +359,7 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
       IdProducto: 10,
       NombreCorto: 'Producto',
       Precio: 0,
+      PrecioMinimo: 10,
       SinPrecio: true,
       IdMoneda: 'SOL',
       Tipo: 0,
@@ -330,6 +381,32 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
     expect(producto.Precio).toBe(38);
   });
 
+  it('convierte el precio mínimo a la moneda efectiva de la venta', () => {
+    const { component } = crear();
+    const producto = {
+      IdProducto: 10,
+      NombreCorto: 'Producto',
+      Precio: 0,
+      PrecioMinimo: 94.4,
+      SinPrecio: true,
+      IdMoneda: 'PEN',
+      Tipo: 0,
+      ExclusivoParaAnfitriona: false,
+      PermitirParaTragoCortesia: false,
+      Impuestos: [],
+    };
+    component.monedaSeleccionada = 'USD';
+    component.tipoCambioCompra = '4';
+
+    expect((component as any).precioMinimoEnMonedaVenta(producto)).toBe(23.6);
+
+    producto.IdMoneda = 'USD';
+    producto.PrecioMinimo = 25;
+    component.monedaSeleccionada = 'PEN';
+    component.tipoCambioVenta = '4';
+    expect((component as any).precioMinimoEnMonedaVenta(producto)).toBe(100);
+  });
+
   it('incluye los impuestos fijos dentro del desglose sin sumarlos otra vez al total', () => {
     const { component } = crear();
     component.dataSource.data = [{
@@ -337,6 +414,7 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
       Producto: 'Producto con impuesto fijo',
       Qty: 2,
       Precio: 5,
+      PrecioMinimo: 0,
       Total: 10,
       Moneda: 'PEN',
       CodDscto: '',
