@@ -10,7 +10,7 @@
 
   <section class="booking-shell" *ngIf="tenantId && !cargando; else loadingOrError">
     <header class="booking-brand"><img src="/assets/logo.svg" alt="LaComanda"><span>COMPROBANTES ELECTRÓNICOS</span></header>
-    <div class="booking-hero"><span class="booking-hero__eyebrow">Consulta segura</span><h1>{{ nombreSucursal() }}</h1><p>Ingresa los datos impresos en tu comprobante para descargar sus archivos oficiales.</p></div>
+    <div class="booking-hero"><span class="booking-hero__eyebrow">Consulta segura</span><h1>{{ nombreComercial() }}</h1><p>Ingresa los datos impresos en tu comprobante para descargar sus archivos oficiales.</p></div>
 
     <section class="booking-card document-card">
       <form class="booking-form" (ngSubmit)="consultar()">

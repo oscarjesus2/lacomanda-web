@@ -148,8 +148,9 @@ export class ComprobantesPublicosComponent implements OnInit, OnDestroy {
     return !this.cargando && !this.tenantId && !this.error && this.sucursales.length > 1;
   }
 
-  nombreSucursal(): string {
-    return this.sucursales.find(x => x.TenantId === this.tenantId)?.Nombre ?? 'tu restaurante';
+  nombreComercial(): string {
+    const tenant = this.sucursales.find(x => x.TenantId === this.tenantId);
+    return tenant?.NombreComercial?.trim() || tenant?.Nombre || 'tu negocio';
   }
 
   get documentoClientePlaceholder(): string {

@@ -1,6 +1,7 @@
 export interface SucursalComprobantePublico {
   TenantId: string;
   Nombre: string;
+  NombreComercial?: string;
 }
 
 export interface TipoDocumentoComprobantePublico {
