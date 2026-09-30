@@ -10,6 +10,7 @@ export interface VentaDirectaProducto {
   IdProducto: number;
   NombreCorto: string;
   Precio: number;
+  PrecioMinimo: number;
   SinPrecio: boolean;
   IdMoneda: string;
   Tipo: number;

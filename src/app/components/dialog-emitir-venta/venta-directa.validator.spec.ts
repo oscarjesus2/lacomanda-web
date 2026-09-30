@@ -59,6 +59,37 @@ describe('validaciones de venta directa', () => {
     expect(error).toContain('mayores que cero');
   });
 
+  it('rechaza un precio inferior al mínimo configurado del producto', () => {
+    const error = validarBorradorVentaDirecta({
+      fechaDocumento: new Date(2026, 8, 29),
+      detalles: [{
+        IdProducto: 10,
+        Producto: 'Revisión documental',
+        Qty: 1,
+        Precio: 10,
+        PrecioMinimo: 94.4,
+      }],
+    });
+
+    expect(error).toContain('Revisión documental');
+    expect(error).toContain('94.40');
+  });
+
+  it('acepta un precio igual al mínimo configurado del producto', () => {
+    const error = validarBorradorVentaDirecta({
+      fechaDocumento: new Date(2026, 8, 29),
+      detalles: [{
+        IdProducto: 10,
+        Producto: 'Revisión documental',
+        Qty: 1,
+        Precio: 94.4,
+        PrecioMinimo: 94.4,
+      }],
+    });
+
+    expect(error).toBeNull();
+  });
+
   it('rechaza una solicitud sin tipo de comprobante', () => {
     const error = validarSolicitudVentaDirecta({
       IdCaja: 3,

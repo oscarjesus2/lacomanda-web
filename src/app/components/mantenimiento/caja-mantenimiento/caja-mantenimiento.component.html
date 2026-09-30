@@ -72,7 +72,7 @@
     </div>
 
     <!-- Canales de venta habilitados para esta caja -->
-    <div class="caja-canales-section">
+    <div *ngIf="!modoComercio" class="caja-canales-section">
       <p class="caja-canales-label">{{ 'enabledSalesChannels' | tenantText }}</p>
       <div class="caja-canales-chips">
         <mat-checkbox
@@ -86,7 +86,7 @@
     </div>
 
     <!-- Canal por Defecto — solo muestra los canales seleccionados arriba -->
-    <div class="form-row">
+    <div *ngIf="!modoComercio" class="form-row">
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>{{ 'defaultSalesChannel' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="m.IdCanalVentaDefecto" name="canal" required
@@ -101,18 +101,18 @@
 
     <div class="toggles">
       <mat-slide-toggle [(ngModel)]="m.Activo" name="activo">{{ 'active' | tenantText }}</mat-slide-toggle>
-      <mat-slide-toggle [(ngModel)]="m.EmitePrecuenta" name="precuenta">{{ 'emitsPreBill' | tenantText }}</mat-slide-toggle>
-      <mat-slide-toggle [(ngModel)]="m.EmiteComanda" name="comanda">{{ 'emitsKitchenTicket' | tenantText }}</mat-slide-toggle>
+      <mat-slide-toggle *ngIf="!modoComercio" [(ngModel)]="m.EmitePrecuenta" name="precuenta">{{ 'emitsPreBill' | tenantText }}</mat-slide-toggle>
+      <mat-slide-toggle *ngIf="!modoComercio" [(ngModel)]="m.EmiteComanda" name="comanda">{{ 'emitsKitchenTicket' | tenantText }}</mat-slide-toggle>
       <mat-slide-toggle [(ngModel)]="m.EmiteDescuento" name="descuento">{{ 'emitsDiscount' | tenantText }}</mat-slide-toggle>
-      <mat-slide-toggle [(ngModel)]="m.PermiteDividirPedido" name="dividir">{{ 'allowsSplitOrder' | tenantText }}</mat-slide-toggle>
+      <mat-slide-toggle *ngIf="!modoComercio" [(ngModel)]="m.PermiteDividirPedido" name="dividir">{{ 'allowsSplitOrder' | tenantText }}</mat-slide-toggle>
       <mat-slide-toggle [(ngModel)]="m.PermiteCierreParcial" name="cierreParcial">{{ 'allowsPartialClose' | tenantText }}</mat-slide-toggle>
       <mat-slide-toggle [(ngModel)]="m.EnvioElectronicoOnline" name="envioElec">{{ 'onlineElectronicSubmission' | tenantText }}</mat-slide-toggle>
-      <mat-slide-toggle [(ngModel)]="m.PrecuentaLlevarDeliveryAutomatica" name="autoPrecDelivery">
+      <mat-slide-toggle *ngIf="!modoComercio" [(ngModel)]="m.PrecuentaLlevarDeliveryAutomatica" name="autoPrecDelivery">
         {{ 'automaticDeliveryPreBill' | tenantText }}
       </mat-slide-toggle>
 
       <!-- Solo aplica cuando la caja tiene habilitado el canal Entradas -->
-      <mat-slide-toggle *ngIf="entradaSeleccionada"
+      <mat-slide-toggle *ngIf="!modoComercio && entradaSeleccionada"
                         [(ngModel)]="m.PermitirPagoTaxistas" name="pagoTaxistas">
         {{ 'allowTaxiPayments' | tenantText }}
       </mat-slide-toggle>

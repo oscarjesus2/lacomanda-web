@@ -23,7 +23,7 @@
         (selectionChange)="onCajaSeleccionada($event.value)"
       >
         <mat-option *ngFor="let caja of listCaja" [value]="caja.IdCaja">
-          {{ caja.Descripcion }}{{ caja.TurnoAbierto ? ' · turno abierto' : ' · sin turno' }}
+          {{ caja.Descripcion }} · turno abierto
         </mat-option>
       </mat-select>
       <mat-hint>La serie y el turno corresponden a esta caja.</mat-hint>

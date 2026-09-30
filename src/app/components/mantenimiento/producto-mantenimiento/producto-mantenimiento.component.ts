@@ -154,6 +154,10 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
       .obtenerEstado()
       .subscribe(estado => {
         this.modoComercio = estado.licencia?.PlanCodigo === 'COMERCIO';
+        if (this.modoComercio) {
+          this.aplicarDefaultsComercio();
+          this.limpiarEdicionImagen();
+        }
         const tieneOperacionCaja = this.licenciaTenantService.evaluar(
           estado,
           CARACTERISTICAS_LICENCIA.OperacionCaja,
@@ -207,6 +211,10 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   }
 
   get mostrarDescripcionCarta(): boolean {
+    return !this.modoComercio;
+  }
+
+  get mostrarFotoCartaDigital(): boolean {
     return !this.modoComercio;
   }
 
@@ -720,9 +728,10 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
 
     this.selectedAreas = (row.ProductoAreaImpresion || []).map(a => a.IdAreaImpresion);
 
-    if (row.TieneImagen) {
+    if (!this.modoComercio && row.TieneImagen) {
       this.productoService.obtenerImagen(row.IdProducto).subscribe({
         next: imagen => {
+          if (this.modoComercio) return;
           this.liberarPrevisualizacionImagen();
           this.imagenPrevisualizacion = URL.createObjectURL(imagen);
         },
@@ -736,6 +745,10 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
 
   seleccionarImagen(event: Event): void {
     const input = event.target as HTMLInputElement;
+    if (this.modoComercio) {
+      input.value = '';
+      return;
+    }
     const archivo = input.files?.[0];
     input.value = '';
     if (!archivo) return;
@@ -751,6 +764,10 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   }
 
   quitarImagen(): void {
+    if (this.modoComercio) {
+      this.limpiarEdicionImagen();
+      return;
+    }
     this.liberarPrevisualizacionImagen();
     this.imagenSeleccionada = undefined;
     this.eliminarImagenPendiente = !!this.p.IdProducto && !!this.p.TieneImagen;
@@ -976,7 +993,9 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
       this.limpiarEdicionImagen();
       Notificar.exito('Ok', eraEdicion ? 'Producto actualizado' : 'Producto creado');
     };
-    if (!idProducto || (!this.imagenSeleccionada && !this.eliminarImagenPendiente)) {
+    if (this.modoComercio ||
+        !idProducto ||
+        (!this.imagenSeleccionada && !this.eliminarImagenPendiente)) {
       finalizar();
       return;
     }

@@ -30,6 +30,7 @@ export interface ProductElement {
   Producto: string;
   Qty: number;
   Precio: number;
+  PrecioMinimo: number;
   Total: number;
   Moneda: string;
   CodDscto: string;
@@ -84,14 +85,13 @@ export class DialogEmitirVentaComponent implements OnInit {
 
   private async initializeCaja(): Promise<void> {
     const response = await firstValueFrom(this.cajaService.getAllCaja(true));
-    this.listCaja = (response.Data ?? []).filter(item => item.Activo);
+    this.listCaja = (response.Data ?? []).filter(item =>
+      item.Activo && !!item.TurnoAbierto?.IdTurno);
     const caja = this.listCaja.find(item =>
-      item.CajaPorDefecto && !!item.TurnoAbierto)
-      ?? this.listCaja.find(item => !!item.TurnoAbierto)
-      ?? this.listCaja.find(item => item.CajaPorDefecto)
+      item.CajaPorDefecto)
       ?? this.listCaja[0];
     if (!caja) {
-      throw new Error('No existe una caja administrativa activa.');
+      throw new Error('No existe una caja activa con turno abierto.');
     }
 
     this.onCajaSeleccionada(caja.IdCaja);
@@ -118,7 +118,10 @@ export class DialogEmitirVentaComponent implements OnInit {
         this.initializeProductos(),
       ]);
     } catch (e) {
-      Swal.fire(this.texts.get('unexpectedError'), e.error, 'error');
+      const message = e instanceof Error
+        ? e.message
+        : (e as any)?.error?.Message || (e as any)?.error || this.texts.get('unexpectedError');
+      Swal.fire(this.texts.get('unexpectedError'), message, 'error');
       console.log(e);
     } finally {
       this.spinnerService.hide();
@@ -172,7 +175,7 @@ export class DialogEmitirVentaComponent implements OnInit {
         quantity: '',
         hideNumber: false,
         decimalActive: true,
-        minAmount: 10
+        minAmount: product.PrecioMinimo || 0,
       }
     });
   
@@ -197,6 +200,7 @@ export class DialogEmitirVentaComponent implements OnInit {
       Producto: product.NombreCorto,
       Qty: 1,
       Precio: Math.round(dPrecio * 100) / 100,
+      PrecioMinimo: this.precioMinimoEnMonedaVenta(product),
       Total: Math.round(dPrecio * 100) / 100,
       CodDscto: '',
       NroCupon: '',
@@ -488,6 +492,18 @@ export class DialogEmitirVentaComponent implements OnInit {
     }
     if (codigo === 'EURO' || codigo === 'EUROS') return 'EUR';
     return codigo || 'PEN';
+  }
+
+  private precioMinimoEnMonedaVenta(product: VentaDirectaProducto): number {
+    const minimo = Number(product.PrecioMinimo || 0);
+    const monedaProducto = this.normalizarCodigoMoneda(product.IdMoneda);
+    if (monedaProducto === 'PEN' && this.monedaSeleccionada === 'USD') {
+      return this.redondear(minimo / parseFloat(this.tipoCambioCompra));
+    }
+    if (monedaProducto === 'USD' && this.monedaSeleccionada === 'PEN') {
+      return this.redondear(minimo * parseFloat(this.tipoCambioVenta));
+    }
+    return this.redondear(minimo);
   }
 
   private simboloPorCodigo(codigo: string): string {
