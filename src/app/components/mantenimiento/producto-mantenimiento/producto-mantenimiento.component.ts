@@ -206,6 +206,10 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
       });
   }
 
+  get mostrarDescripcionCarta(): boolean {
+    return !this.modoComercio;
+  }
+
   ngOnDestroy(): void {
     this.liberarPrevisualizacionImagen();
   }
@@ -888,16 +892,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     if (this.productoForm.invalid) { this.markTouched(this.productoForm); return; }
     this.p.InsumoProducto='P';
 
-    const payload: any = {
-      ...this.p,
-      IdSeccionMenu: this.p.IdClaseCombo ?? 0,
-      ConfiguracionAvanzada:
-        this.configuracionAvanzadaHabilitada,
-      ControlDirectoStock: !!this.p.ControlDirectoStock,
-      AreasImpresionIds: this.modoComercio ? [] : this.selectedAreas
-    };
-
-
+    const payload = this.construirPayload();
     const obs = this.p.IdProducto ? this.productoService.actualizar(payload) : this.productoService.crear(payload);
 
     const eraEdicion = !!this.p.IdProducto;
@@ -909,6 +904,22 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
       },
       error: error => Swal.fire('Error', error?.error?.Message || 'No se pudo guardar el producto.', 'error')
     });
+  }
+
+  private construirPayload() {
+    const camposProducto = { ...this.p };
+    if (this.modoComercio) {
+      delete camposProducto.DescripcionCarta;
+    }
+
+    return {
+      ...camposProducto,
+      IdSeccionMenu: this.p.IdClaseCombo ?? 0,
+      ConfiguracionAvanzada:
+        this.configuracionAvanzadaHabilitada,
+      ControlDirectoStock: !!this.p.ControlDirectoStock,
+      AreasImpresionIds: this.modoComercio ? [] : this.selectedAreas
+    };
   }
 
   cancelar(): void { this.resetForm(); this.cargarTodo(); this.showForm = false; }
@@ -948,6 +959,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
 
   private aplicarDefaultsComercio(): void {
     if (!this.modoComercio) return;
+    this.p.DescripcionCarta = undefined;
     this.p.Tipo = 0;
     this.p.IdClaseCombo = 0;
     this.p.Qty = 0;

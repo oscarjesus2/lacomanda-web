@@ -5429,6 +5429,7 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 /* ── Venta directa: patrón compartido de formularios administrativos ─────── */
 .mant-panel--invoice {
   padding-bottom: 18px;
+  width: 100%;
 }
 
 .direct-sale-callout {
@@ -5460,13 +5461,19 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 
 .direct-sale-form {
   display: grid;
-  grid-template-columns: minmax(220px, 0.55fr) minmax(180px, 0.35fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(260px, 1fr) minmax(220px, 0.72fr);
   gap: 12px;
   align-items: start;
 }
 
 .direct-sale-form__observation {
+  grid-column: 1 / -1;
   width: 100%;
+
+  textarea {
+    min-height: 72px;
+    resize: vertical;
+  }
 }
 
 .invoice-layout {
@@ -5478,15 +5485,37 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 
 .mant-table-card--invoice {
   flex: 1 1 auto;
-  max-height: 320px;
+  max-height: 380px;
   overflow: auto;
 
   .product-column {
-    min-width: 280px;
+    flex: 1 1 320px;
+    min-width: 300px;
   }
 
   .quantity-column {
-    width: 70px;
+    flex: 0 0 76px;
+    justify-content: center;
+  }
+
+  .mat-column-Precio,
+  .mat-column-Total {
+    flex: 0 0 108px;
+    justify-content: flex-end;
+  }
+
+  .actions-header,
+  .actions-cell,
+  .actions-footer {
+    flex: 0 0 132px;
+    min-width: 132px;
+    justify-content: flex-end;
+    padding-inline: 4px;
+  }
+
+  .actions-cell button {
+    width: 40px;
+    height: 40px;
   }
 }
 
@@ -5494,6 +5523,11 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 0 0 124px;
+
+  button {
+    width: 100%;
+  }
 }
 
 .invoice-totals {
@@ -5529,6 +5563,11 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
   font-weight: 800;
 }
 
+.invoice-totals__item--strong {
+  padding-left: 14px;
+  border-left: 1px solid var(--color-border);
+}
+
 @media (max-width: 760px) {
   .direct-sale-form {
     grid-template-columns: 1fr;
@@ -5540,6 +5579,12 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 
   .invoice-actions {
     width: 100%;
+    flex: 1 1 auto;
     flex-direction: row;
+  }
+
+  .invoice-totals__item--strong {
+    padding-left: 0;
+    border-left: 0;
   }
 }

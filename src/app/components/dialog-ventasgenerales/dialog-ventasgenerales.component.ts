@@ -241,8 +241,8 @@ export class DialogVentasgeneralesComponent implements OnInit {
     const dialogRef = this.dialog.open(DialogEmitirVentaComponent, {
       disableClose: true,
       hasBackdrop: true,
-      width: '900px',
-      maxWidth: '95vw',
+      width: '1100px',
+      maxWidth: '96vw',
     });
     dialogRef.afterClosed().subscribe(() => {
       this.cargarCuotaComprobantes();

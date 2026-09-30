@@ -834,6 +834,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   directStockControl: 'Control directo de stock',
   directStockControlHint: 'Descuenta el stock propio de este producto al venderlo.',
   tax: 'Impuesto',
+  taxes: 'Impuestos',
   noPrice: 'Sin precio',
   exclusiveHostess: 'Exclusivo anfitriona',
   allowsCourtesyDrink: 'Permite trago cortesía',

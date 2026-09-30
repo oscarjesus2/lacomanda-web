@@ -207,7 +207,7 @@
             <mat-hint class="form-field-guidance">Nombre descriptivo general del producto.</mat-hint>
           </mat-form-field>
 
-          <mat-form-field appearance="fill" class="menu-import-product__description" subscriptSizing="dynamic">
+          <mat-form-field *ngIf="mostrarDescripcionCarta" appearance="fill" class="menu-import-product__description" subscriptSizing="dynamic">
             <mat-label>Descripción para la carta</mat-label>
             <textarea
               matInput
@@ -551,7 +551,7 @@
         </mat-form-field>
       </div>
 
-      <div class="form-row">
+      <div class="form-row" *ngIf="mostrarDescripcionCarta">
         <mat-form-field class="form-field form-field--wide" appearance="fill" subscriptSizing="dynamic">
           <mat-label>{{ 'digitalMenuDescription' | tenantText }}</mat-label>
           <textarea matInput rows="3" [(ngModel)]="p.DescripcionCarta"

@@ -4,8 +4,10 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { ImpresionDTO } from '../interfaces/impresionDTO.interface';
-import { EmitirVentaDirectaRequest } from '../models/venta-directa.models';
-import { Producto } from '../models/product.models';
+import {
+  EmitirVentaDirectaRequest,
+  VentaDirectaProducto,
+} from '../models/venta-directa.models';
 
 @Injectable({ providedIn: 'root' })
 export class VentaDirectaService {
@@ -13,8 +15,8 @@ export class VentaDirectaService {
 
   constructor(private readonly http: HttpClient) {}
 
-  listarProductos(): Observable<ApiResponse<Producto[]>> {
-    return this.http.get<ApiResponse<Producto[]>>(
+  listarProductos(): Observable<ApiResponse<VentaDirectaProducto[]>> {
+    return this.http.get<ApiResponse<VentaDirectaProducto[]>>(
       `${this.basePath}/productos`,
     );
   }
