@@ -7,6 +7,73 @@
   width: min(900px, calc(100vw - 32px));
 }
 
+.cobranza-panel__credit-option {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.cobranza-panel__credit-option--active {
+  border-color: var(--color-accent-dark);
+  background: var(--color-surface-warm);
+}
+
+.cobranza-panel__credit-option .mat-checkbox-layout,
+.cobranza-panel__credit-option .mat-checkbox-label {
+  width: 100%;
+}
+
+.cobranza-panel__credit-title,
+.cobranza-panel__credit-help {
+  display: block;
+  white-space: normal;
+}
+
+.cobranza-panel__credit-title {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.cobranza-panel__credit-help {
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.cobranza-panel__credit-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 120px;
+  padding: 20px;
+  border: 1px solid var(--color-accent-dark);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+  color: var(--color-text);
+}
+
+.cobranza-panel__credit-summary mat-icon {
+  width: 40px;
+  height: 40px;
+  font-size: 40px;
+  color: var(--color-primary);
+}
+
+.cobranza-panel__credit-summary strong,
+.cobranza-panel__credit-summary span {
+  display: block;
+  white-space: normal;
+}
+
+.cobranza-panel__credit-summary span {
+  margin-top: 4px;
+  color: var(--color-text-muted);
+}
+
 /* ── LAYOUT 2 COLUMNAS ─────────────────────────────────────── */
 .cobranza-panel__layout {
   display: grid;

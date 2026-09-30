@@ -71,12 +71,15 @@ export class CajaMantenimientoComponent implements OnInit {
       IdCanalesVenta: [],
       EmitePrecuenta: true, EmiteComanda: true, EmiteDescuento: true, PermiteDividirPedido: true,
       PermiteCierreParcial: false, EnvioElectronicoOnline: false, PrecuentaLlevarDeliveryAutomatica: false,
-      PermitirPagoTaxistas: false
+      PermitirPagoTaxistas: false, PermiteVentaCredito: false
     };
   }
 
   cargar(): void {
-    this.service.getAllCaja(false).subscribe(r => {
+    // El mantenimiento debe incluir también la caja marcada como predeterminada.
+    // Esa misma caja participa en apertura de turno y necesita poder configurar
+    // documentos, series y capacidades como la venta al crédito.
+    this.service.getAllCaja(true).subscribe(r => {
       if (r.Success) {
         this.cajas = r.Data ?? [];
         this.filtered.data = this.cajas;

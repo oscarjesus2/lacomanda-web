@@ -580,6 +580,13 @@ export const EN_TEXTS = {
   invalidEmailFormat: 'The email format is incorrect.',
   addCustomerData: 'Add customer details',
   totalToPay: 'Total to pay',
+  creditSale: 'Credit sale',
+  creditSaleHelp:
+    'Issue the document now and leave its amount pending for later payment.',
+  creditSaleSelected: 'This sale will be pending payment',
+  creditSaleNoPayments:
+    'No cash, card, or other payment method will be recorded.',
+  issueCreditSale: 'Issue on credit',
   paidReference: 'of {{symbol}} {{total}} · paid {{symbol}} {{paid}}',
   cashPayments: 'Cash payments',
   exact: 'EXACT',
@@ -766,6 +773,7 @@ export const EN_TEXTS = {
   onlineElectronicSubmission: 'Online electronic submission',
   automaticDeliveryPreBill: 'Automatic delivery pre-bill',
   allowTaxiPayments: 'Allow taxi payments',
+  allowCreditSales: 'Allow credit sales',
 
   // Discount maintenance (descuento)
   maintenanceDiscounts: 'Discount maintenance',

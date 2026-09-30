@@ -62,6 +62,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   monedaAlternativa: Moneda | null = null;
 
   ChkVentaAlCredito: boolean = false;
+  permiteVentaCredito: boolean = false;
   tipoIdentidad: TipoIdentidad = new TipoIdentidad({ IdTipoIdentidad: '' });
   cliente: Cliente = new Cliente({ TipoIdentidad: this.tipoIdentidad });
 
@@ -443,6 +444,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
           return;
         }
 
+        this.permiteVentaCredito = caja.PermiteVentaCredito === true;
+
         const tipo = this.listTipoDocumento.find(z => z.IdTipoDocumento === this.tipoDocumento?.IdTipoDocumento);
         if (!tipo) {
           Swal.fire({
@@ -783,7 +786,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
       // ── Si se usa cliente genérico: no se necesitan datos del cliente ─
       if (usarClienteGenerico) {
-        this.cobrar(false);
+        this.cobrar();
         return;
       }
 
@@ -901,7 +904,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         return;
       }
 
-      this.cobrar(false);
+      this.cobrar();
     } catch (error) {
       Swal.fire(this.texts.get('error'), error.message, 'error');
     }
@@ -912,7 +915,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     return re.test(String(email).toLowerCase());
   }
 
-  cobrar(alCredito: boolean): void {
+  cobrar(): void {
     let mensaje = this.texts.get('confirmChargeAccount');
     if (this.ChkVentaAlCredito) {
       mensaje = this.texts.get('confirmCreditSale');
@@ -927,12 +930,13 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         cancelButtonText: this.texts.get('no')
       }).then((result) => {
         if (result.isConfirmed) {
-          this.procesarCobro(alCredito);
+          this.procesarCobro();
         }
       });
     } else {
-      if (parseFloat(this.lbltotal) >= parseFloat(this.lblmonto)) {
-        this.procesarCobro(alCredito);
+      if (this.ChkVentaAlCredito ||
+          parseFloat(this.lbltotal) >= parseFloat(this.lblmonto)) {
+        this.procesarCobro();
       } else {
         Swal.fire(
           this.texts.get('message'),
@@ -980,7 +984,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
 
-  async procesarCobro(alCredito: boolean): Promise<void> {
+  async procesarCobro(): Promise<void> {
     if (!this.ChkVentaAlCredito && parseFloat(this.lbltotal) < parseFloat(this.lblmonto)) {
       Swal.fire(
         this.texts.get('message'),
@@ -1119,7 +1123,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       UsuRegistra: UsuReg,
       IdTurno: this.idTurno,
       Propina: parseFloat(this.lblpropinas),
-      ByteTicket: null
+      ByteTicket: null,
+      VentaAlCredito: this.ChkVentaAlCredito,
     });
 
     if (this.solesValue > 0) {
@@ -1215,6 +1220,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         FechaDocumento: this.fechaLocalIso(fecha),
         Observacion: this.pedidoCab.Observacion,
         UsarClienteGenerico: usarClienteGenerico,
+        VentaAlCredito: this.ChkVentaAlCredito,
         Cliente: usarClienteGenerico ? null : this.cliente,
         Detalles: (this.pedidoCab.ListaPedidoDet ?? []).map(detalle => ({
           IdProducto: detalle.Producto.IdProducto,
@@ -1408,6 +1414,9 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   /** true cuando el pago acumulado cubre el monto a cobrar. */
   get pagoCompleto(): boolean {
     const monto = parseFloat(this.lblmonto) || 0;
+    if (this.ChkVentaAlCredito) {
+      return this.permiteVentaCredito && monto > 0;
+    }
     return monto > 0 && parseFloat(this.lbltotal) >= monto;
   }
 
@@ -1417,6 +1426,25 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     if (monto === 0) return 0;
     const total = parseFloat(this.lbltotal) || 0;
     return Math.min((total / monto) * 100, 100);
+  }
+
+  onVentaCreditoChange(checked: boolean): void {
+    this.ChkVentaAlCredito = checked;
+    if (!checked) {
+      this.calcularMonto();
+      return;
+    }
+
+    this.solesValue = 0;
+    this.dolaresValue = 0;
+    this.tarjetaValue = 0;
+    this.lblcal = '0.00';
+    this.lblmontotarjeta = '0.00';
+    this.lblpropinas = '0.00';
+    this.dataSourcePago.data = [];
+    this.nuevoRegistro = new Pago();
+    this.nuevoRegistro.Tarjeta = new Tarjeta();
+    this.calcularMonto();
   }
 
 }

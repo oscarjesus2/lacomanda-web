@@ -1,0 +1,44 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="320"
+  height="320"
+  viewBox="0 0 320 320"
+  fill="none"
+  role="img"
+  aria-labelledby="title description"
+>
+  <title id="title">Símbolo de LaComanda servicios informáticos</title>
+  <desc id="description">
+    Campana original de LaComanda acompañada por una insignia tecnológica.
+  </desc>
+
+  <circle cx="160" cy="160" r="116" fill="#F4511E" />
+  <circle cx="160" cy="91" r="10" fill="#FFFFFF" />
+  <rect x="130" y="96" width="60" height="14" rx="7" fill="#FFFFFF" />
+  <path
+    d="M85 190C88 141 119 110 160 110C201 110 232 141 235 190H85Z"
+    fill="#FFFFFF"
+  />
+  <rect x="74" y="188" width="172" height="16" rx="8" fill="#FFFFFF" />
+
+  <rect
+    x="202"
+    y="190"
+    width="78"
+    height="66"
+    rx="19"
+    fill="#17243A"
+    stroke="#FFFFFF"
+    stroke-width="7"
+  />
+  <g
+    stroke="#FFFFFF"
+    stroke-width="6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M229 207L216 223L229 239" />
+    <path d="M253 207L266 223L253 239" />
+    <path d="M249 202L233 244" />
+  </g>
+</svg>

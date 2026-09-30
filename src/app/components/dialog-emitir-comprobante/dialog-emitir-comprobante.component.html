@@ -143,6 +143,28 @@
         </span>
       </div>
 
+      <div *ngIf="permiteVentaCredito"
+           class="cobranza-panel__credit-option"
+           [class.cobranza-panel__credit-option--active]="ChkVentaAlCredito">
+        <mat-checkbox
+          color="primary"
+          [checked]="ChkVentaAlCredito"
+          (change)="onVentaCreditoChange($event.checked)">
+          <span class="cobranza-panel__credit-title">{{ 'creditSale' | tenantText }}</span>
+          <span class="cobranza-panel__credit-help">{{ 'creditSaleHelp' | tenantText }}</span>
+        </mat-checkbox>
+      </div>
+
+      <div *ngIf="ChkVentaAlCredito" class="cobranza-panel__credit-summary">
+        <mat-icon>schedule</mat-icon>
+        <div>
+          <strong>{{ 'creditSaleSelected' | tenantText }}</strong>
+          <span>{{ 'creditSaleNoPayments' | tenantText }}</span>
+        </div>
+      </div>
+
+      <ng-container *ngIf="!ChkVentaAlCredito">
+
       <!-- HERO: FALTA / VUELTO -->
       <div class="cobranza-panel__hero"
            [class.cobranza-panel__hero--falta]="!pagoCompleto"
@@ -345,14 +367,16 @@
         </mat-table>
       </div>
 
+      </ng-container>
+
       <!-- COBRAR -->
       <div class="cobranza-panel__results-row">
         <div class="cobranza-panel__submit">
           <button mat-raised-button color="primary"
                   [disabled]="!pagoCompleto"
                   (click)="cmdCobrarClick()">
-            <mat-icon>payment</mat-icon>
-            {{ 'charge' | tenantText }}
+            <mat-icon>{{ ChkVentaAlCredito ? 'schedule' : 'payment' }}</mat-icon>
+            {{ (ChkVentaAlCredito ? 'issueCreditSale' : 'charge') | tenantText }}
           </button>
         </div>
       </div>

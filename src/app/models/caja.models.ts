@@ -21,5 +21,6 @@ export class CajaDto {
     public EnvioElectronicoOnline: boolean;
     public PrecuentaLlevarDeliveryAutomatica: boolean;
     public PermitirPagoTaxistas: boolean;
+    public PermiteVentaCredito: boolean;
   }
 

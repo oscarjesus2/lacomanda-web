@@ -107,6 +107,9 @@
       <mat-slide-toggle *ngIf="!modoComercio" [(ngModel)]="m.PermiteDividirPedido" name="dividir">{{ 'allowsSplitOrder' | tenantText }}</mat-slide-toggle>
       <mat-slide-toggle [(ngModel)]="m.PermiteCierreParcial" name="cierreParcial">{{ 'allowsPartialClose' | tenantText }}</mat-slide-toggle>
       <mat-slide-toggle [(ngModel)]="m.EnvioElectronicoOnline" name="envioElec">{{ 'onlineElectronicSubmission' | tenantText }}</mat-slide-toggle>
+      <mat-slide-toggle [(ngModel)]="m.PermiteVentaCredito" name="ventaCredito">
+        {{ 'allowCreditSales' | tenantText }}
+      </mat-slide-toggle>
       <mat-slide-toggle *ngIf="!modoComercio" [(ngModel)]="m.PrecuentaLlevarDeliveryAutomatica" name="autoPrecDelivery">
         {{ 'automaticDeliveryPreBill' | tenantText }}
       </mat-slide-toggle>
