@@ -11,7 +11,11 @@ describe('ComprobantesPublicosComponent', () => {
     service.listarSucursales.and.returnValue(of({
       Success: true,
       Message: 'Sucursales disponibles.',
-      Data: [{ TenantId: 'Y9383590H', Nombre: 'Burjassot' }]
+      Data: [{
+        TenantId: 'Y9383590H',
+        Nombre: 'Burjassot',
+        NombreComercial: 'La Comanda España'
+      }]
     }));
     service.obtenerConfiguracion.and.returnValue(of({
       Success: true,
@@ -47,6 +51,15 @@ describe('ComprobantesPublicosComponent', () => {
     expect(component.tiposDocumento.some(item => item.Descripcion === 'Boleta')).toBeFalse();
     expect(component.tipoDocumento).toBe(1);
     expect(component.documentoClientePlaceholder).toBe('DNI / NIE / NIF / PAS');
+    expect(component.nombreComercial()).toBe('La Comanda España');
+  });
+
+  it('usa la sucursal como respaldo si el API antiguo no devuelve nombre comercial', () => {
+    const component = Object.create(ComprobantesPublicosComponent.prototype);
+    component.tenantId = 'tenant-antiguo';
+    component.sucursales = [{ TenantId: 'tenant-antiguo', Nombre: 'Centro' }];
+
+    expect(component.nombreComercial()).toBe('Centro');
   });
 
   it('no permite consultar hasta seleccionar un tipo del catálogo', () => {

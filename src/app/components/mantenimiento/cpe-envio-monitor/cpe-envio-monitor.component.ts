@@ -131,7 +131,7 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
   async reintentarTodos(): Promise<void> {
     await this.reintentar(
       this.reintentables,
-      `¿Reintentar las ${this.reintentables.length} operaciones con error técnico?`,
+      `¿Programar nuevamente las ${this.reintentables.length} operaciones pendientes?`,
     );
   }
 
@@ -179,7 +179,7 @@ export class CpeEnvioMonitorComponent implements OnInit, OnDestroy {
 
     const confirmado = await Notificar.confirmar({
       titulo,
-      detalle: 'Solo se reintentarán fallos técnicos sin respuesta fiscal concluyente. Los comprobantes rechazados por SUNAT requieren un nuevo correlativo.',
+      detalle: 'Se programarán los comprobantes que no llegaron a la cola y los fallos técnicos sin respuesta fiscal concluyente. Los comprobantes rechazados por SUNAT requieren un nuevo correlativo.',
       textoConfirmar: 'Reintentar',
       textoCancelar: 'Cancelar',
     });
