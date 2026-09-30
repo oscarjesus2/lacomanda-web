@@ -583,6 +583,13 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   invalidEmailFormat: 'El formato del correo es incorrecto.',
   addCustomerData: 'Añadir datos del cliente',
   totalToPay: 'Total a pagar',
+  creditSale: 'Venta al crédito',
+  creditSaleHelp:
+    'Emite el comprobante ahora y deja el importe pendiente para cobrarlo después.',
+  creditSaleSelected: 'Esta venta quedará pendiente de pago',
+  creditSaleNoPayments:
+    'No se registrará efectivo, tarjeta ni ninguna otra forma de pago.',
+  issueCreditSale: 'Emitir al crédito',
   paidReference: 'de {{symbol}} {{total}} · pagado {{symbol}} {{paid}}',
   cashPayments: 'Pagos en efectivo',
   exact: 'EXACTO',
@@ -770,6 +777,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   onlineElectronicSubmission: 'Envío electrónico online',
   automaticDeliveryPreBill: 'Precuenta delivery automática',
   allowTaxiPayments: 'Permitir pago a taxistas',
+  allowCreditSales: 'Permitir venta al crédito',
 
   // Mantenimiento de descuentos
   maintenanceDiscounts: 'Mantenimiento de descuentos',

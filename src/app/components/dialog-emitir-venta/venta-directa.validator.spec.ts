@@ -145,4 +145,34 @@ describe('validaciones de venta directa', () => {
 
     expect(error).toContain('pago');
   });
+
+  it('acepta una venta al crédito sin formas de pago', () => {
+    const error = validarSolicitudVentaDirecta({
+      IdCaja: 3,
+      IdTipoDocumento: 2,
+      FechaDocumento: '2026-09-29',
+      UsarClienteGenerico: true,
+      VentaAlCredito: true,
+      Cliente: null,
+      Detalles: [{ IdProducto: 10, Cantidad: 2, Precio: 5 }],
+      Pagos: [],
+    });
+
+    expect(error).toBeNull();
+  });
+
+  it('rechaza pagos mezclados con la modalidad al crédito', () => {
+    const error = validarSolicitudVentaDirecta({
+      IdCaja: 3,
+      IdTipoDocumento: 2,
+      FechaDocumento: '2026-09-29',
+      UsarClienteGenerico: true,
+      VentaAlCredito: true,
+      Cliente: null,
+      Detalles: [{ IdProducto: 10, Cantidad: 1, Precio: 5 }],
+      Pagos: [{ IdTipoPago: 1, MontoPagado: 5 }],
+    });
+
+    expect(error).toContain('no debe incluir');
+  });
 });

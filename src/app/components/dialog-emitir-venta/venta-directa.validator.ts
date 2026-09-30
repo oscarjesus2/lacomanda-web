@@ -73,7 +73,12 @@ export function validarSolicitudVentaDirecta(
     (acumulado, pago) => acumulado + pago.MontoPagado,
     0,
   );
-  if (request.Pagos.length === 0 || pagado + 0.01 < total) {
+  if (request.VentaAlCredito && request.Pagos.length > 0) {
+    return 'Una venta al crédito no debe incluir formas de pago.';
+  }
+
+  if (!request.VentaAlCredito &&
+      (request.Pagos.length === 0 || pagado + 0.01 < total)) {
     return 'El pago registrado no cubre el total de la venta.';
   }
 

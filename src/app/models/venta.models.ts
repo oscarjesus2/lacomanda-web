@@ -21,6 +21,7 @@ export class Venta {
     Propina: number;
     ByteTicket: Uint8Array;
     Estado: number;
+    VentaAlCredito: boolean;
     constructor(init?: Partial<Venta>) {
         Object.assign(this, init);
     }

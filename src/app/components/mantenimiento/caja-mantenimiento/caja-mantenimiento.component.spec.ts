@@ -36,12 +36,13 @@ describe('CajaMantenimientoComponent - licencia Comercio', () => {
   }
 
   it('oculta la columna de canal y no solicita su catálogo para Comercio', () => {
-    const { component, canalSrv } = crear();
+    const { component, service, canalSrv } = crear();
 
     component.ngOnInit();
 
     expect(component.modoComercio).toBeTrue();
     expect(component.displayedColumns).not.toContain('canal');
+    expect(service.getAllCaja).toHaveBeenCalledWith(true);
     expect(canalSrv.listarDisponibles).not.toHaveBeenCalled();
   });
 
@@ -86,6 +87,7 @@ describe('CajaMantenimientoComponent - licencia Comercio', () => {
       EnvioElectronicoOnline: true,
       PrecuentaLlevarDeliveryAutomatica: true,
       PermitirPagoTaxistas: true,
+      PermiteVentaCredito: true,
     } as any;
 
     component.onEdit(caja);
@@ -95,6 +97,7 @@ describe('CajaMantenimientoComponent - licencia Comercio', () => {
     expect(component.m.IdCanalesVenta).toEqual([1]);
     expect(component.m.EmitePrecuenta).toBeFalse();
     expect(component.m.EmiteComanda).toBeFalse();
+    expect(component.m.PermiteVentaCredito).toBeTrue();
   });
 
   it('al guardar Comercio conserva los canales y normaliza los campos ocultos', () => {
@@ -104,12 +107,14 @@ describe('CajaMantenimientoComponent - licencia Comercio', () => {
     component.form = { invalid: false } as any;
     component.m.IdCanalesVenta = [99];
     component.m.EmiteComanda = true;
+    component.m.PermiteVentaCredito = true;
     service.crear.and.returnValue(NEVER);
 
     component.onSubmit();
 
     expect(component.m.IdCanalesVenta).toEqual([99]);
     expect(component.m.EmiteComanda).toBeFalse();
+    expect(component.m.PermiteVentaCredito).toBeTrue();
     expect(service.crear).toHaveBeenCalledWith(component.m);
   });
 
