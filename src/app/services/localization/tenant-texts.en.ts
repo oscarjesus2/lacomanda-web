@@ -830,6 +830,7 @@ export const EN_TEXTS = {
   directStockControl: 'Direct stock control',
   directStockControlHint: 'Deduct this product’s own stock when it is sold.',
   tax: 'Tax',
+  taxes: 'Taxes',
   noPrice: 'No price',
   exclusiveHostess: 'Hostess exclusive',
   allowsCourtesyDrink: 'Allows courtesy drink',

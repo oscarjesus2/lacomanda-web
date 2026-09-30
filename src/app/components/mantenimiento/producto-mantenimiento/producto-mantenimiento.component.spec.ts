@@ -78,8 +78,20 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
     expect(dependencias.componente.operacionCajaHabilitada).toBeFalse();
     expect(dependencias.componente.productosMenusHabilitados).toBeFalse();
     expect(dependencias.componente.modoComercio).toBeTrue();
+    expect(dependencias.componente.mostrarDescripcionCarta).toBeFalse();
     expect(dependencias.componente.displayedColumns).not.toContain('tipo');
     expect(dependencias.componente.displayedColumns).not.toContain('posicion');
+
+    dependencias.componente.p.DescripcionCarta = 'Debe limpiarse';
+    (dependencias.componente as any).aplicarDefaultsComercio();
+    expect(dependencias.componente.p.DescripcionCarta).toBeUndefined();
+
+    dependencias.componente.p.DescripcionCarta = 'No debe enviarse';
+    const payload = (dependencias.componente as any).construirPayload();
+    expect(Object.prototype.hasOwnProperty.call(
+      payload,
+      'DescripcionCarta',
+    )).toBeFalse();
   });
 
   it('carga áreas y secciones cuando ambas características están incluidas', () => {
@@ -94,5 +106,10 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
     expect(dependencias.claseComboService.getSeccionMenu).toHaveBeenCalledTimes(1);
     expect(dependencias.componente.operacionCajaHabilitada).toBeTrue();
     expect(dependencias.componente.productosMenusHabilitados).toBeTrue();
+    expect(dependencias.componente.mostrarDescripcionCarta).toBeTrue();
+
+    dependencias.componente.p.DescripcionCarta = 'Texto para la carta';
+    const payload = (dependencias.componente as any).construirPayload();
+    expect(payload.DescripcionCarta).toBe('Texto para la carta');
   });
 });

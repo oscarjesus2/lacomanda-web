@@ -1,5 +1,23 @@
 import { Cliente } from './cliente.models';
 
+export interface VentaDirectaProductoImpuesto {
+  IdImpuestoPais: string;
+  Tasa: number;
+  FijoPorUnidad: number;
+}
+
+export interface VentaDirectaProducto {
+  IdProducto: number;
+  NombreCorto: string;
+  Precio: number;
+  SinPrecio: boolean;
+  IdMoneda: string;
+  Tipo: number;
+  ExclusivoParaAnfitriona: boolean;
+  PermitirParaTragoCortesia: boolean;
+  Impuestos: VentaDirectaProductoImpuesto[];
+}
+
 export interface VentaDirectaDetalle {
   IdProducto: number;
   Cantidad: number;

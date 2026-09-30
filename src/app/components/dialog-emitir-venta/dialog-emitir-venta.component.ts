@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, NgForm } from '@angular/forms';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
-import { Observable, of } from 'rxjs';
+import { firstValueFrom, Observable, of } from 'rxjs';
 import { catchError, map, startWith } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { NgxSpinnerService } from 'ngx-spinner';
@@ -19,6 +19,11 @@ import { StorageService } from 'src/app/services/storage.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { validarBorradorVentaDirecta } from './venta-directa.validator';
 import { VentaDirectaService } from 'src/app/services/venta-directa.service';
+import { ConfiguracionService } from 'src/app/services/configuracion.service';
+import {
+  VentaDirectaProducto,
+  VentaDirectaProductoImpuesto,
+} from 'src/app/models/venta-directa.models';
 
 export interface ProductElement {
   IdProducto: number;
@@ -32,7 +37,8 @@ export interface ProductElement {
   NroCupon: string;
   Tipo: number;
   ExclusivoParaAnfitriona: boolean;
-  PermitirParaTragoCortesia: boolean; 
+  PermitirParaTragoCortesia: boolean;
+  Impuestos: VentaDirectaProductoImpuesto[];
 }
 
 @Component({
@@ -44,14 +50,15 @@ export class DialogEmitirVentaComponent implements OnInit {
   @ViewChild('form') form: NgForm;
   TipoDocumento = EnumTipoDocumento; 
   productCtrl = new FormControl();
-  filteredProducts: Observable<Producto[]>;
-  products: Producto[];
+  filteredProducts: Observable<VentaDirectaProducto[]>;
+  products: VentaDirectaProducto[] = [];
   displayedColumns: string[] = ['Producto', 'Qty', 'Precio', 'Total', 'actions'];
   dataSource = new MatTableDataSource<ProductElement>([]);
 
   listCaja: CajaDto[] = [];
   cajaSeleccionada: number = 0;
-  monedaSeleccionada: string = 'SOLES';
+  monedaSeleccionada: string = 'PEN';
+  simboloMoneda: string = 'S/';
   tipoCambioVenta: string = '0';
   tipoCambioCompra: string = '0';
   observacionValue: string = '';
@@ -60,7 +67,8 @@ export class DialogEmitirVentaComponent implements OnInit {
   sumaTotal: number = 0;
   sumaDscto: number = 0;
   sumaImporte: number = 0;
-  sumaImpuestoBolsa: number = 0;
+  sumaSubtotal: number = 0;
+  sumaImpuestos: number = 0;
   sumaGranTotal: number = 0;
 
   constructor(
@@ -69,53 +77,46 @@ export class DialogEmitirVentaComponent implements OnInit {
     private storageService: StorageService,
     private cajaService: CajaService,
     private ventaDirectaService: VentaDirectaService,
+    private configuracionService: ConfiguracionService,
     private spinnerService: NgxSpinnerService,
     private texts: TenantTextCatalogService,
   ) {}
 
   private async initializeCaja(): Promise<void> {
-    try {
-      const response = await this.cajaService.getAllCaja(true).toPromise();
-      this.listCaja = (response.Data ?? []).filter(item => item.Activo);
-      const caja = this.listCaja.find(item =>
-        item.CajaPorDefecto && !!item.TurnoAbierto)
-        ?? this.listCaja.find(item => !!item.TurnoAbierto)
-        ?? this.listCaja.find(item => item.CajaPorDefecto)
-        ?? this.listCaja[0];
-      if (!caja) {
-        throw new Error('No existe una caja administrativa activa.');
-      }
-
-      this.onCajaSeleccionada(caja.IdCaja);
-    } catch (error) {
-      console.error('Error loading Caja', error);
-      throw error;  // Rethrow to be caught by ngOnInit
+    const response = await firstValueFrom(this.cajaService.getAllCaja(true));
+    this.listCaja = (response.Data ?? []).filter(item => item.Activo);
+    const caja = this.listCaja.find(item =>
+      item.CajaPorDefecto && !!item.TurnoAbierto)
+      ?? this.listCaja.find(item => !!item.TurnoAbierto)
+      ?? this.listCaja.find(item => item.CajaPorDefecto)
+      ?? this.listCaja[0];
+    if (!caja) {
+      throw new Error('No existe una caja administrativa activa.');
     }
+
+    this.onCajaSeleccionada(caja.IdCaja);
   }
 
   private async initializeProductos(): Promise<void> {
-    try {
-      const response = await this.ventaDirectaService.listarProductos().toPromise();
-      this.products = response.Data ?? [];
-      this.filteredProducts = this.productCtrl.valueChanges.pipe(
-        startWith(''),
-        map(value => this._filter(value)),
-        catchError(error => {
-          console.error('Error loading products', error);
-          return of([]);  // Return an empty array on error
-        })
-      );
-    } catch (error) {
-      console.error('Error loading products', error);
-      throw error;  // Rethrow to be caught by ngOnInit
-    }
+    const response = await firstValueFrom(
+      this.ventaDirectaService.listarProductos(),
+    );
+    this.products = response.Data ?? [];
+    this.filteredProducts = this.productCtrl.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filter(value)),
+      catchError(() => of([])),
+    );
   }
   
   async ngOnInit() {
     this.spinnerService.show();
     try {
-      await this.initializeCaja();
-      await this.initializeProductos();
+      await Promise.all([
+        this.initializeMoneda(),
+        this.initializeCaja(),
+        this.initializeProductos(),
+      ]);
     } catch (e) {
       Swal.fire(this.texts.get('unexpectedError'), e.error, 'error');
       console.log(e);
@@ -124,19 +125,27 @@ export class DialogEmitirVentaComponent implements OnInit {
     }
   }
 
-  private _filter(value: any): Producto[] {
+  private async initializeMoneda(): Promise<void> {
+    const configuracion = this.configuracionService.snapshot
+      ?? await firstValueFrom(this.configuracionService.get());
+    this.monedaSeleccionada = this.normalizarCodigoMoneda(
+      configuracion.CodigoISO4217 || configuracion.IdMoneda,
+    );
+    this.simboloMoneda = configuracion.SimboloMoneda
+      || this.simboloPorCodigo(this.monedaSeleccionada);
+  }
+
+  private _filter(value: any): VentaDirectaProducto[] {
     const filterValue = typeof value === 'string' ? value.toLowerCase() : '';
     return this.products.filter(product => product.NombreCorto.toLowerCase().includes(filterValue));
   }
 
-  displayProductName(product?: Producto): string | undefined {
+  displayProductName(product?: VentaDirectaProducto): string | undefined {
     return product ? product.NombreCorto : undefined;
   }
 
-  AgregarItemGrid(product: Producto): void {
-    let bSinPrecio = product.SinPrecio;
-  
-    if (bSinPrecio) {
+  AgregarItemGrid(product: VentaDirectaProducto): void {
+    if (product.SinPrecio) {
       this.abrirDialogoCantidad(product).then(result => {
         if (result) {
           this.actualizarPrecioProducto(product, result);
@@ -150,11 +159,16 @@ export class DialogEmitirVentaComponent implements OnInit {
     }
   }
 
-  abrirDialogoCantidad(product: Producto): Promise<any> {
-    let sTitulo = product.IdMoneda === 'SOL' ? 'Precio del Producto-SOLES' : 'Precio del Producto-DOLARES';
+  abrirDialogoCantidad(product: VentaDirectaProducto): Promise<any> {
+    const codigoMoneda = this.normalizarCodigoMoneda(
+      product.IdMoneda || this.monedaSeleccionada,
+    );
+    const simbolo = codigoMoneda === this.monedaSeleccionada
+      ? this.simboloMoneda
+      : this.simboloPorCodigo(codigoMoneda);
     const dialogRef = this.dialog.open(DialogMCantComponent, {
       data: {
-        title: sTitulo,
+        title: `Precio del producto · ${simbolo} ${codigoMoneda}`,
         quantity: '',
         hideNumber: false,
         decimalActive: true,
@@ -165,18 +179,19 @@ export class DialogEmitirVentaComponent implements OnInit {
     return dialogRef.afterClosed().toPromise();
   }
 
-  actualizarPrecioProducto(product: Producto, result: any): void {
-    if (product.IdMoneda === 'SOL' && this.monedaSeleccionada === 'DOLARES') {
+  actualizarPrecioProducto(product: VentaDirectaProducto, result: any): void {
+    const monedaProducto = this.normalizarCodigoMoneda(product.IdMoneda);
+    if (monedaProducto === 'PEN' && this.monedaSeleccionada === 'USD') {
       product.Precio = Math.round((result.value / parseFloat(this.tipoCambioCompra)) * 100) / 100;
-    } else if (product.IdMoneda === 'DOL' && this.monedaSeleccionada === 'SOLES') {
+    } else if (monedaProducto === 'USD' && this.monedaSeleccionada === 'PEN') {
       product.Precio = Math.round((result.value * parseFloat(this.tipoCambioVenta)) * 100) / 100;
     } else {
       product.Precio = parseFloat(result.value);
     }
   }
 
-  agregarNuevaFila(product: Producto): void {
-    let dPrecio = product.Precio;
+  agregarNuevaFila(product: VentaDirectaProducto): void {
+    const dPrecio = product.Precio;
     const newRow: ProductElement = {
       IdProducto: product.IdProducto,
       Producto: product.NombreCorto,
@@ -189,7 +204,8 @@ export class DialogEmitirVentaComponent implements OnInit {
       Tipo: product.Tipo,
       ExclusivoParaAnfitriona: product.ExclusivoParaAnfitriona,
       PermitirParaTragoCortesia: product.PermitirParaTragoCortesia,
-      Moneda: product.IdMoneda
+      Moneda: this.normalizarCodigoMoneda(product.IdMoneda),
+      Impuestos: product.Impuestos ?? [],
     };
   
     this.dataSource.data.push(newRow);
@@ -205,33 +221,32 @@ export class DialogEmitirVentaComponent implements OnInit {
   }
 
   onProductoSelected(event: any): void {
-    const selectedProduct: Producto = event.option.value;
+    const selectedProduct: VentaDirectaProducto = event.option.value;
 
+    if (selectedProduct.Tipo === 1) {
+      Swal.fire({
+        title: this.texts.get('validation'),
+        text: this.texts.get('cannotAddQtyCombo'),
+        icon: 'warning',
+        confirmButtonText: this.texts.get('ok')
+      });
+      return;
+    }
 
-    
-    if (selectedProduct.Tipo === 1)
-      {
-        Swal.fire({
-          title: this.texts.get('validation'),
-          text: this.texts.get('cannotAddQtyCombo'),
-          icon: 'warning',
-          confirmButtonText: this.texts.get('ok')
-        });
-        return;
-      }
+    if (selectedProduct.Tipo === 2) {
+      Swal.fire({
+        title: this.texts.get('validation'),
+        text: this.texts.get('cannotAddQtyComplements'),
+        icon: 'warning',
+        confirmButtonText: this.texts.get('ok')
+      });
+      return;
+    }
 
-      if (selectedProduct.Tipo === 2)
-      {
-        Swal.fire({
-          title: this.texts.get('validation'),
-          text: this.texts.get('cannotAddQtyComplements'),
-          icon: 'warning',
-          confirmButtonText: this.texts.get('ok')
-        });
-        return;
-      }
-
-    if (selectedProduct.IdMoneda === 'SOL' && this.monedaSeleccionada === 'DOLARES' && parseFloat(this.tipoCambioCompra) === 0) {
+    const monedaProducto = this.normalizarCodigoMoneda(selectedProduct.IdMoneda);
+    if (monedaProducto === 'PEN'
+        && this.monedaSeleccionada === 'USD'
+        && parseFloat(this.tipoCambioCompra) === 0) {
       Swal.fire({
         title: this.texts.get('validation'),
         text: this.texts.get('productInSolesNeedBuyRate', { product: selectedProduct.NombreCorto }),
@@ -241,7 +256,9 @@ export class DialogEmitirVentaComponent implements OnInit {
       return;
     }
 
-    if (selectedProduct.IdMoneda === 'DOL' && this.monedaSeleccionada === 'SOLES' && parseFloat(this.tipoCambioVenta) === 0) {
+    if (monedaProducto === 'USD'
+        && this.monedaSeleccionada === 'PEN'
+        && parseFloat(this.tipoCambioVenta) === 0) {
       Swal.fire({
         title: this.texts.get('validation'),
         text: this.texts.get('productInDollarsNeedSellRate', { product: selectedProduct.NombreCorto }),
@@ -257,16 +274,19 @@ export class DialogEmitirVentaComponent implements OnInit {
   calcularTotales(): void {
     let totalAux = 0;
     let desctoAux = 0;
+    let impuestosAux = 0;
 
     this.dataSource.data.forEach(item => {
       totalAux += item.Total;
       desctoAux += item.MontoDscto;
+      impuestosAux += this.calcularImpuestosLinea(item);
     });
 
-    this.sumaImporte = totalAux;
-    this.sumaDscto = desctoAux;
-    this.sumaTotal = totalAux - desctoAux;
-    this.sumaImpuestoBolsa = 0;
+    this.sumaImporte = this.redondear(totalAux);
+    this.sumaDscto = this.redondear(desctoAux);
+    this.sumaTotal = this.redondear(totalAux - desctoAux);
+    this.sumaImpuestos = this.redondear(impuestosAux);
+    this.sumaSubtotal = this.redondear(this.sumaTotal - this.sumaImpuestos);
     this.sumaGranTotal = this.sumaTotal;
   }
 
@@ -274,24 +294,24 @@ export class DialogEmitirVentaComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  async aumentarProductGrid(pedidoDet: ProductElement) 
-  {
+  aumentarProductGrid(pedidoDet: ProductElement): void {
     pedidoDet.Qty += 1;
     pedidoDet.Total = pedidoDet.Precio * pedidoDet.Qty;
     this.dataSource.data = [...this.dataSource.data];
     this.calcularTotales();
   }
 
-  async restarProductGrid(pedidoDet: ProductElement) {
+  restarProductGrid(pedidoDet: ProductElement): void {
     if (pedidoDet.Qty > 1) {
       pedidoDet.Qty -= 1;
       pedidoDet.Total = pedidoDet.Precio * pedidoDet.Qty;
-   
-    }else{
-      var removeIndex = this.dataSource.data.map(function (item) { return item }).indexOf(pedidoDet);
-      this.dataSource.data.splice(removeIndex, 1);
     }
     this.dataSource.data = [...this.dataSource.data];
+    this.calcularTotales();
+  }
+
+  eliminarProductGrid(pedidoDet: ProductElement): void {
+    this.dataSource.data = this.dataSource.data.filter(item => item !== pedidoDet);
     this.calcularTotales();
   }
 
@@ -309,7 +329,7 @@ export class DialogEmitirVentaComponent implements OnInit {
     pedidoCab.Total = this.sumaTotal;
     pedidoCab.IdCanalVenta = CanalVentaEnum.VENTA_DIRECTA;
     pedidoCab.Estado = 1;
-    pedidoCab.Moneda = this.monedaSeleccionada.substring(0, 3);
+    pedidoCab.Moneda = this.monedaSeleccionada;
     pedidoCab.TipoCambioVenta = parseFloat(this.tipoCambioVenta);
     pedidoCab.TipoCambioCompra = parseFloat(this.tipoCambioCompra);
     pedidoCab.IdEspacio = 0;
@@ -439,5 +459,43 @@ export class DialogEmitirVentaComponent implements OnInit {
 
   private get cajaActual(): CajaDto | undefined {
     return this.listCaja.find(item => item.IdCaja === this.cajaSeleccionada);
+  }
+
+  private calcularImpuestosLinea(item: ProductElement): number {
+    const impuestos = item.Impuestos ?? [];
+    const tasa = impuestos.reduce(
+      (total, impuesto) => total + Number(impuesto.Tasa || 0),
+      0,
+    );
+    const fijoPorUnidad = impuestos.reduce(
+      (total, impuesto) => total + Number(impuesto.FijoPorUnidad || 0),
+      0,
+    );
+    const importe = Math.max(0, item.Total - item.MontoDscto);
+    const fijo = this.redondear(fijoPorUnidad * item.Qty);
+    const baseConImpuesto = Math.max(0, importe - fijo);
+    const proporcional = tasa <= 0
+      ? 0
+      : this.redondear(baseConImpuesto - (baseConImpuesto / (1 + tasa)));
+    return fijo + proporcional;
+  }
+
+  private normalizarCodigoMoneda(value: string | null | undefined): string {
+    const codigo = value?.trim().toUpperCase() ?? '';
+    if (codigo === 'SOL' || codigo === 'SOLES') return 'PEN';
+    if (codigo === 'DOL' || codigo === 'DOLARES' || codigo === 'DÓLARES') {
+      return 'USD';
+    }
+    if (codigo === 'EURO' || codigo === 'EUROS') return 'EUR';
+    return codigo || 'PEN';
+  }
+
+  private simboloPorCodigo(codigo: string): string {
+    return ({ PEN: 'S/', USD: 'US$', EUR: '€' } as Record<string, string>)[codigo]
+      ?? codigo;
+  }
+
+  private redondear(value: number): number {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
   }
 }
