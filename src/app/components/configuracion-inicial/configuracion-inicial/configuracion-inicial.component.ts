@@ -37,6 +37,7 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
   monedas: Moneda[] = [];
   logoPreviewUrl: string | null = null;
   logoProcesando = false;
+  paisInicial = '';
 
   // paises = ['PE','ES','AR','CL','MX','CO','US','FR','DE','IT','PT'];
   paises = ['PE','ES'];
@@ -50,6 +51,11 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
     Direccion: ['', [Validators.required, Validators.maxLength(200)]],
     Telefono: ['', [Validators.required, Validators.maxLength(30)]],
     PiePagina: ['', [Validators.maxLength(200)]],
+    BancoNombre: ['', [Validators.maxLength(120)]],
+    NumeroCuentaBancaria: ['', [Validators.maxLength(50)]],
+    Cci: ['', [Validators.maxLength(30)]],
+    Iban: ['', [Validators.maxLength(50)]],
+    BicSwift: ['', [Validators.maxLength(20)]],
 
     Traslado: [false],
     Precuentas: [true],
@@ -78,6 +84,11 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
     NombreComercial: ['', [Validators.required, Validators.maxLength(120)]],
     Direccion: ['', [Validators.required, Validators.maxLength(120)]],
     Telefono: ['', [Validators.required, Validators.maxLength(50)]],
+    BancoNombre: ['', [Validators.maxLength(120)]],
+    NumeroCuentaBancaria: ['', [Validators.maxLength(50)]],
+    Cci: ['', [Validators.maxLength(30)]],
+    Iban: ['', [Validators.maxLength(50)]],
+    BicSwift: ['', [Validators.maxLength(20)]],
   });
 
   mascaraHint?: string;
@@ -109,12 +120,18 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
       this.esModoInicial = !esConfiguracionPersistida(cfg);
 
       if (cfg) {
+        this.paisInicial = (cfg.PaisISO2 || '').toUpperCase();
         this.form.patchValue(cfg);
         this.formInicial.patchValue({
           RazonSocial: cfg.RazonSocial,
           NombreComercial: cfg.NombreComercial,
           Direccion: cfg.Direccion,
           Telefono: cfg.Telefono,
+          BancoNombre: cfg.BancoNombre || '',
+          NumeroCuentaBancaria: cfg.NumeroCuentaBancaria || '',
+          Cci: cfg.Cci || '',
+          Iban: cfg.Iban || '',
+          BicSwift: cfg.BicSwift || '',
         });
         if (cfg.TieneLogo) this.cargarLogo();
       }
@@ -187,6 +204,13 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
     // cuando cambia la moneda, sincronizar símbolo e ISO
     this.form.get('IdMoneda')!.valueChanges
       .subscribe(idMoneda => this.onMonedaChange(idMoneda));
+  }
+
+  get paisDatosBancarios(): string {
+    const pais = this.esModoInicial
+      ? this.paisInicial
+      : this.form.get('PaisISO2')?.value;
+    return (pais || '').toUpperCase();
   }
 
   private normalizarSegunLicencia(): void {
