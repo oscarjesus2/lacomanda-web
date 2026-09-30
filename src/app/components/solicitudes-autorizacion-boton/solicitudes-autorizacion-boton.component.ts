@@ -17,7 +17,7 @@ export class SolicitudesAutorizacionBotonComponent {
   /** Adapta el acceso a la cabecera, la barra de canal o el centro de caja. */
   @Input() variante: 'icono' | 'canal' | 'panel' = 'icono';
 
-  readonly esAprobador$ = this.realtime.esAprobador$;
+  readonly puedeVerCentro$ = this.realtime.puedeVerCentroNotificaciones$;
   readonly pendientes$ = combineLatest([
     this.realtime.pendientes$,
     this.realtime.comprobantesFiscalesPendientes$,

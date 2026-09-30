@@ -44,8 +44,14 @@ export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy
         this.comprobantesFiscales = comprobantes;
       }),
     );
-    void this.realtime.sincronizar();
-    void this.cargarPreferencias();
+    void this.inicializar();
+  }
+
+  private async inicializar(): Promise<void> {
+    await this.realtime.sincronizar();
+    if (this.realtime.esAprobador) {
+      await this.cargarPreferencias();
+    }
   }
 
   /** Etiqueta del tipo de solicitud, para no mostrar el nombre técnico. */

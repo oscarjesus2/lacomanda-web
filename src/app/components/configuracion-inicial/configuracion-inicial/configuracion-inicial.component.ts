@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, Optional } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, Optional } from '@angular/core';
 import { FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
@@ -12,14 +12,15 @@ import { TenantTextCatalogService } from 'src/app/services/localization/tenant-t
 import { combineLatest } from 'rxjs';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
+import { esConfiguracionPersistida } from '../configuracion-persistida';
 
 @Component({
   selector: 'app-configuracion-inicial',
   templateUrl: './configuracion-inicial.component.html',
   styleUrls: ['./configuracion-inicial.component.css']
 })
-export class ConfiguracionInicialComponent implements OnInit {
-  readonly esModoInicial: boolean;
+export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
+  esModoInicial: boolean;
   licenciaCargada = false;
   puedePrecuentas = false;
   puedeCambioEspacio = false;
@@ -34,6 +35,8 @@ export class ConfiguracionInicialComponent implements OnInit {
   tiposEnum = TipoIdentidadEnum;
   enumKeys = Object.keys(TipoIdentidadEnum).filter(k => isNaN(Number(k)));
   monedas: Moneda[] = [];
+  logoPreviewUrl: string | null = null;
+  logoProcesando = false;
 
   // paises = ['PE','ES','AR','CL','MX','CO','US','FR','DE','IT','PT'];
   paises = ['PE','ES'];
@@ -100,6 +103,11 @@ export class ConfiguracionInicialComponent implements OnInit {
       this.configSrv.get(),
       this.licenciaSrv.obtenerEstado(),
     ]).subscribe(([cfg, estadoLicencia]) => {
+      // El servidor devuelve una propuesta con IdConfig=0 si aún no existe la
+      // configuración. La existencia real manda sobre el punto desde el que se
+      // abrió el diálogo, evitando intentar actualizar una fila inexistente.
+      this.esModoInicial = !esConfiguracionPersistida(cfg);
+
       if (cfg) {
         this.form.patchValue(cfg);
         this.formInicial.patchValue({
@@ -108,6 +116,7 @@ export class ConfiguracionInicialComponent implements OnInit {
           Direccion: cfg.Direccion,
           Telefono: cfg.Telefono,
         });
+        if (cfg.TieneLogo) this.cargarLogo();
       }
 
       this.puedePrecuentas = this.licenciaSrv.evaluar(
@@ -286,6 +295,93 @@ export class ConfiguracionInicialComponent implements OnInit {
 
   salir() {
     this.dialogRef.close();
+  }
+
+  ngOnDestroy(): void {
+    this.liberarLogoPreview();
+  }
+
+  seleccionarLogo(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = '';
+    if (!archivo) return;
+
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(archivo.type)
+        || archivo.size > 2 * 1024 * 1024) {
+      this.snack.open(
+        this.texts.get('businessLogoInvalid'),
+        this.texts.get('ok'),
+        { duration: 3500 },
+      );
+      return;
+    }
+
+    this.logoProcesando = true;
+    this.configSrv.guardarLogo(archivo).subscribe({
+      next: () => {
+        this.mostrarLogo(archivo);
+        this.logoProcesando = false;
+        this.snack.open(
+          this.texts.get('businessLogoSaved'),
+          this.texts.get('ok'),
+          { duration: 2500 },
+        );
+      },
+      error: error => {
+        this.logoProcesando = false;
+        this.snack.open(
+          error?.error?.Message || this.texts.get('couldNotSave'),
+          this.texts.get('ok'),
+          { duration: 3500 },
+        );
+      },
+    });
+  }
+
+  eliminarLogo(): void {
+    if (!this.logoPreviewUrl || this.logoProcesando) return;
+    this.logoProcesando = true;
+    this.configSrv.eliminarLogo().subscribe({
+      next: () => {
+        this.liberarLogoPreview();
+        this.logoProcesando = false;
+        this.snack.open(
+          this.texts.get('businessLogoRemoved'),
+          this.texts.get('ok'),
+          { duration: 2500 },
+        );
+      },
+      error: error => {
+        this.logoProcesando = false;
+        this.snack.open(
+          error?.error?.Message || this.texts.get('couldNotSave'),
+          this.texts.get('ok'),
+          { duration: 3500 },
+        );
+      },
+    });
+  }
+
+  private cargarLogo(): void {
+    this.logoProcesando = true;
+    this.configSrv.obtenerLogo().subscribe({
+      next: blob => {
+        this.mostrarLogo(blob);
+        this.logoProcesando = false;
+      },
+      error: () => (this.logoProcesando = false),
+    });
+  }
+
+  private mostrarLogo(archivo: Blob): void {
+    this.liberarLogoPreview();
+    this.logoPreviewUrl = URL.createObjectURL(archivo);
+  }
+
+  private liberarLogoPreview(): void {
+    if (this.logoPreviewUrl) URL.revokeObjectURL(this.logoPreviewUrl);
+    this.logoPreviewUrl = null;
   }
 
   guardar(): void {

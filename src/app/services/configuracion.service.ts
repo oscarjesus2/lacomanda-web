@@ -57,4 +57,25 @@ export class ConfiguracionService {
         tap(cfg => this._config$.next(cfg))
       );
   }
+
+  obtenerLogo(): Observable<Blob> {
+    return this.http.get(`${this.base}/logo`, { responseType: 'blob' });
+  }
+
+  guardarLogo(logo: File): Observable<ApiResponse<unknown>> {
+    const formData = new FormData();
+    formData.append('logo', logo, logo.name);
+    return this.http.put<ApiResponse<unknown>>(`${this.base}/logo`, formData)
+      .pipe(tap(() => this.actualizarIndicadorLogo(true)));
+  }
+
+  eliminarLogo(): Observable<ApiResponse<unknown>> {
+    return this.http.delete<ApiResponse<unknown>>(`${this.base}/logo`)
+      .pipe(tap(() => this.actualizarIndicadorLogo(false)));
+  }
+
+  private actualizarIndicadorLogo(tieneLogo: boolean): void {
+    const actual = this._config$.value;
+    if (actual) this._config$.next({ ...actual, TieneLogo: tieneLogo });
+  }
 }

@@ -27,6 +27,7 @@ import {
 import { Usuario } from 'src/app/models/usuario.models';
 import Swal from 'sweetalert2';
 import { firstValueFrom } from 'rxjs';
+import { esConfiguracionPersistida } from 'src/app/components/configuracion-inicial/configuracion-persistida';
 
 interface PendingLogin {
   TenantId: string;
@@ -129,16 +130,17 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // 3. Sesión ya activa y vigente → navegar directo. Una sesión persistida
-    //    con un token vencido no debe sacarnos del login para volver después de
-    //    un 401: esa carrera dejaba el selector oculto hasta pulsar F5.
+    // 3. Sesión ya activa y vigente → validar también la configuración.
+    //    Una sesión persistida con un token vencido no debe sacarnos del login
+    //    para volver después de un 401: esa carrera dejaba el selector oculto
+    //    hasta pulsar F5.
     const currentSession = this.storageService.getCurrentSession();
     if (currentSession && this.keycloakAuth.isTokenActive(currentSession.Token)) {
       this.textCatalog.setCulture(
         currentSession.Cultura ?? currentSession.CulturaTenant,
       );
       const route = this.keycloakAuth.getTargetRoute(currentSession.Token);
-      this.router.navigateByUrl(route);
+      this.ensureConfigThenNavigate(route);
       return;
     }
 
@@ -483,7 +485,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   // ── Config guard ──────────────────────────────────────────────────────────
 
   private isConfigValid(cfg: Configuracion | null | undefined): boolean {
-    if (!cfg) return false;
+    if (!esConfiguracionPersistida(cfg)) return false;
     return !!cfg.RazonSocial && !!cfg.NombreComercial && !!cfg.Direccion &&
            !!cfg.Telefono && !!cfg.NumeroIdentificacion &&
            cfg.IdTipoIdentidad !== null && cfg.IdTipoIdentidad !== undefined;

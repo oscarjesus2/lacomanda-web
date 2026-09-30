@@ -826,6 +826,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   requiredIfNoPrice: 'Requerido si "Sin precio".',
   idAndClassification: 'Identificación y clasificación',
   configAndPrintAreas: 'Configuración y áreas de impresión',
+  productConfiguration: 'Configuración del producto',
   advancedConfiguration: 'Configuración avanzada',
   advancedConfigurationHint: 'Abra esta sección solo cuando el producto necesite un comportamiento especial.',
   showAdvancedConfiguration: 'Configurar',
@@ -1236,7 +1237,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
 
   // Configuración inicial (configuracion-inicial)
   initialSetup: 'Configuración Inicial',
-  configurationMaintenance: 'Configuración del restaurante',
+  configurationMaintenance: 'Configuración del negocio',
   essentialBusinessData: 'Datos indispensables del negocio',
   initialSetupHint:
     'Completa solo estos datos para empezar. El país, la moneda, la identidad fiscal y los valores operativos se aplican automáticamente.',
@@ -1244,6 +1245,17 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
     'Después podrás desactivar o ajustar cualquier opción incluida en tu licencia desde Configuración.',
   saveAndStart: 'Guardar y empezar',
   businessData: 'Datos de Negocio',
+  businessLogo: 'Logo del negocio',
+  businessLogoHint:
+    'Se incluirá en los comprobantes A4. Usa una imagen horizontal o cuadrada con fondo transparente para obtener el mejor resultado.',
+  businessLogoFormats: 'PNG, JPG o WebP · máximo 2 MB',
+  noBusinessLogo: 'Aún no hay un logo configurado',
+  uploadLogo: 'Subir logo',
+  replaceLogo: 'Reemplazar logo',
+  removeLogo: 'Eliminar logo',
+  businessLogoInvalid: 'Selecciona una imagen PNG, JPG o WebP de hasta 2 MB.',
+  businessLogoSaved: 'Logo del negocio guardado.',
+  businessLogoRemoved: 'Logo del negocio eliminado.',
   countryIso2: 'País (ISO2)',
   defaultCurrency: 'Moneda por defecto',
   symbol: 'Símbolo',

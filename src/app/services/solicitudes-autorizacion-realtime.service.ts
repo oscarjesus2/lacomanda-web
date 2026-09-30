@@ -1,6 +1,13 @@
 import { Injectable, NgZone } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
-import { BehaviorSubject, Subject, firstValueFrom } from 'rxjs';
+import {
+  BehaviorSubject,
+  Subject,
+  combineLatest,
+  distinctUntilChanged,
+  firstValueFrom,
+  map,
+} from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { NivelUsuarioEnum } from '../enums/enum';
 import {
@@ -12,6 +19,8 @@ import { StorageService } from './storage.service';
 import { UsuarioService } from './usuario.service';
 import { ComprobanteFiscalPendiente } from '../models/comprobante-fiscal-pendiente.models';
 import { ComprobantesFiscalesPendientesService } from './comprobantes-fiscales-pendientes.service';
+import { LicenciaTenantService } from './licencia-tenant.service';
+import { CARACTERISTICAS_LICENCIA } from '../constants/caracteristicas-licencia';
 
 /**
  * Canal en tiempo real de solicitudes de autorización.
@@ -30,6 +39,20 @@ export class SolicitudesAutorizacionRealtimeService {
 
   private readonly esAdministradorSubject = new BehaviorSubject<boolean>(false);
   readonly esAdministrador$ = this.esAdministradorSubject.asObservable();
+
+  private readonly comprobantesFiscalesHabilitadosSubject =
+    new BehaviorSubject<boolean>(false);
+
+  /** El centro se muestra solo si al menos una de sus bandejas está habilitada. */
+  readonly puedeVerCentroNotificaciones$ = combineLatest([
+    this.esAprobador$,
+    this.esAdministrador$,
+    this.comprobantesFiscalesHabilitadosSubject,
+  ]).pipe(
+    map(([esAprobador, esAdministrador, comprobantesHabilitados]) =>
+      esAprobador || (esAdministrador && comprobantesHabilitados)),
+    distinctUntilChanged(),
+  );
 
   private readonly comprobantesFiscalesSubject =
     new BehaviorSubject<ComprobanteFiscalPendiente[]>([]);
@@ -60,6 +83,7 @@ export class SolicitudesAutorizacionRealtimeService {
     private readonly comprobantesFiscalesApi:
       ComprobantesFiscalesPendientesService,
     private readonly usuarioService: UsuarioService,
+    private readonly licenciaTenantService: LicenciaTenantService,
     private readonly zone: NgZone,
   ) {}
 
@@ -93,6 +117,7 @@ export class SolicitudesAutorizacionRealtimeService {
     this.hub = undefined;
     this.esAprobadorSubject.next(false);
     this.esAdministradorSubject.next(false);
+    this.comprobantesFiscalesHabilitadosSubject.next(false);
     this.apruebaDescuentosSubject.next(false);
     this.pendientesSubject.next([]);
     this.comprobantesFiscalesSubject.next([]);
@@ -132,7 +157,8 @@ export class SolicitudesAutorizacionRealtimeService {
   }
 
   async sincronizarComprobantesFiscales(): Promise<void> {
-    if (!this.esAdministrador) {
+    if (!this.esAdministrador
+        || !this.comprobantesFiscalesHabilitadosSubject.value) {
       this.comprobantesFiscalesSubject.next([]);
       return;
     }
@@ -173,11 +199,24 @@ export class SolicitudesAutorizacionRealtimeService {
 
   private async cargarPermiso(): Promise<void> {
     try {
-      const response = await firstValueFrom(this.usuarioService.getUsuarioActual());
+      const [response, solicitudesHabilitadas, comprobantesHabilitados] =
+        await Promise.all([
+          firstValueFrom(this.usuarioService.getUsuarioActual()),
+          firstValueFrom(this.licenciaTenantService.tieneCaracteristica(
+            CARACTERISTICAS_LICENCIA.OperacionCaja,
+          )),
+          firstValueFrom(this.licenciaTenantService.tieneCaracteristica([
+            CARACTERISTICAS_LICENCIA.OperacionComprobantes,
+            CARACTERISTICAS_LICENCIA.VentasCorreccionDocumentos,
+          ])),
+        ]);
       const usuario = response?.Data;
       const esAdministrador = usuario?.IdNivel === NivelUsuarioEnum.Administrador;
       this.esAdministradorSubject.next(!!usuario?.Activo && esAdministrador);
-      const esAprobador = !!usuario?.Activo && (
+      this.comprobantesFiscalesHabilitadosSubject.next(
+        comprobantesHabilitados,
+      );
+      const esAprobador = solicitudesHabilitadas && !!usuario?.Activo && (
         esAdministrador
         || (usuario.IdNivel === NivelUsuarioEnum.Cajero && !!usuario.PuedeAprobarSolicitudes)
       );
@@ -188,6 +227,7 @@ export class SolicitudesAutorizacionRealtimeService {
     } catch {
       this.esAprobadorSubject.next(false);
       this.esAdministradorSubject.next(false);
+      this.comprobantesFiscalesHabilitadosSubject.next(false);
       this.apruebaDescuentosSubject.next(false);
     }
   }

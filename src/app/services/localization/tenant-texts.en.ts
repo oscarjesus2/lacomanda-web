@@ -822,6 +822,7 @@ export const EN_TEXTS = {
   requiredIfNoPrice: 'Required if "No price".',
   idAndClassification: 'Identification and classification',
   configAndPrintAreas: 'Configuration and print areas',
+  productConfiguration: 'Product configuration',
   advancedConfiguration: 'Advanced configuration',
   advancedConfigurationHint: 'Only open this section when the product needs special behavior.',
   showAdvancedConfiguration: 'Configure',
@@ -1231,7 +1232,7 @@ export const EN_TEXTS = {
 
   // Initial setup (configuracion-inicial)
   initialSetup: 'Initial setup',
-  configurationMaintenance: 'Restaurant configuration',
+  configurationMaintenance: 'Business configuration',
   essentialBusinessData: 'Essential business details',
   initialSetupHint:
     'Complete only these details to start. Country, currency, fiscal identity and operating defaults are applied automatically.',
@@ -1239,6 +1240,17 @@ export const EN_TEXTS = {
     'You can later disable or adjust any option included in your licence from Configuration.',
   saveAndStart: 'Save and start',
   businessData: 'Business details',
+  businessLogo: 'Business logo',
+  businessLogoHint:
+    'It will be included on A4 receipts. Use a horizontal or square image with a transparent background for the best result.',
+  businessLogoFormats: 'PNG, JPG or WebP · maximum 2 MB',
+  noBusinessLogo: 'No logo has been configured yet',
+  uploadLogo: 'Upload logo',
+  replaceLogo: 'Replace logo',
+  removeLogo: 'Remove logo',
+  businessLogoInvalid: 'Select a PNG, JPG or WebP image up to 2 MB.',
+  businessLogoSaved: 'Business logo saved.',
+  businessLogoRemoved: 'Business logo removed.',
   countryIso2: 'Country (ISO2)',
   defaultCurrency: 'Default currency',
   symbol: 'Symbol',

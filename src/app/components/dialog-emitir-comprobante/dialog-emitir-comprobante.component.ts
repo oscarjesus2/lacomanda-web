@@ -39,6 +39,10 @@ import { CajaTipoDocumento } from 'src/app/models/caja-tipo-documento.model';
 import { CajaTipoDocumentoService } from 'src/app/services/caja-tipo-documento.service';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { EstadoImpresionService } from 'src/app/services/estado-impresion.service';
+import { VentaDirectaService } from 'src/app/services/venta-directa.service';
+import { EmitirVentaDirectaRequest } from 'src/app/models/venta-directa.models';
+import { validarSolicitudVentaDirecta } from '../dialog-emitir-venta/venta-directa.validator';
+import { ReprintFormat, ReprintFormatService } from 'src/app/services/reprint-format.service';
 
 
 @Component({
@@ -110,6 +114,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   bTurnoIndenpendiente: boolean;
   pedidoCab: PedidoCab;
   idTurno: number;
+  modoVentaDirecta = false;
   listaDescuentoCodigo: DescuentoCodigo[] = [];
 
   constructor(
@@ -131,6 +136,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     private monedaService: MonedaService,
     private texts: TenantTextCatalogService,
     private estadoImpresion: EstadoImpresionService,
+    private ventaDirectaService: VentaDirectaService,
+    private reprintFormat: ReprintFormatService,
   ) {
     this.dataSourcePago = new MatTableDataSource([]);
     this.nuevoRegistro.Tarjeta = new Tarjeta();
@@ -143,6 +150,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     this.pedidoCab = data.pedidoCab;
     this.listaDescuentoCodigo = data.listaDescuentoCodigo;
     this.idTurno = data.idTurno;
+    this.modoVentaDirecta = data.modoVentaDirecta === true;
     if (this.idTipoPedido === '003') {
       if (data.ruc.trim() != "" && data.ruc.trim() != "0") {
         this.cliente.NumeroIdentificacion = data.ruc;
@@ -981,9 +989,17 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       );
       return;
     }
+
+    const formatoVentaDirecta = this.modoVentaDirecta
+      ? await this.reprintFormat.choose()
+      : null;
+    if (this.modoVentaDirecta && formatoVentaDirecta === null) return;
+
     const listaImpresionDTO: ImpresionDTO[] = await this.grabarDocumento();
     if (listaImpresionDTO) {
-      if (this.idTipoPedido === '005') {
+      if (this.modoVentaDirecta) {
+        await this.presentarVentaDirecta(listaImpresionDTO, formatoVentaDirecta!);
+      } else if (this.idTipoPedido === '005') {
 
         Swal.fire({
           title: this.texts.get('preferredFormat'),
@@ -1012,6 +1028,34 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
       this.dialogRef.close({ estado: 'Cobrado', listaImpresionDTO: listaImpresionDTO });
     }
+  }
+
+  private async presentarVentaDirecta(
+    documentosEmitidos: ImpresionDTO[],
+    formato: ReprintFormat,
+  ): Promise<void> {
+    if (formato === 1) {
+      await this.imprimirYAvisarSiFalla(documentosEmitidos);
+      return;
+    }
+
+    const idVenta = documentosEmitidos.find(documento => documento.IdVenta > 0)?.IdVenta;
+    if (!idVenta) {
+      await Swal.fire(
+        this.texts.get('error'),
+        'La venta fue emitida, pero no se pudo identificar el comprobante A4.',
+        'warning',
+      );
+      return;
+    }
+
+    const response = await this.ventaService
+      .getImpresionComprobanteVenta(idVenta, formato)
+      .toPromise();
+    if (!response.Success || !response.Data?.length) {
+      throw new Error(response.Message || 'No se pudo generar el comprobante A4.');
+    }
+    await this.ventaService.showPDF(response.Data[0].Documento);
   }
   imprimirPromocionesA4() {
     throw new Error('Method not implemented.');
@@ -1160,11 +1204,50 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         || !this.cliente.NumeroIdentificacion
         || this.cliente.NumeroIdentificacion === '00000001';
 
-    var resultGenerateComprobante: ApiResponse<ImpresionDTO[]> = await this.ventaService.guardarDocumentoVenta(
-      this.idTipoPedido, venta, this.cliente, this.pedidoCab,
-      this.listaDescuentoCodigo, listPago, this.bTurnoIndenpendiente,
-      usarClienteGenerico
-    ).toPromise();
+    let resultGenerateComprobante: ApiResponse<ImpresionDTO[]>;
+    if (this.modoVentaDirecta) {
+      const fecha = this.pedidoCab.FechaCambiada
+        ? new Date(this.pedidoCab.FechaCambiada)
+        : new Date();
+      const request: EmitirVentaDirectaRequest = {
+        IdCaja: this.idCaja,
+        IdTipoDocumento: this.tipoDocumento.IdTipoDocumento,
+        FechaDocumento: this.fechaLocalIso(fecha),
+        Observacion: this.pedidoCab.Observacion,
+        UsarClienteGenerico: usarClienteGenerico,
+        Cliente: usarClienteGenerico ? null : this.cliente,
+        Detalles: (this.pedidoCab.ListaPedidoDet ?? []).map(detalle => ({
+          IdProducto: detalle.Producto.IdProducto,
+          Cantidad: detalle.Cantidad,
+          Precio: detalle.Precio,
+        })),
+        Pagos: listPago.map(pago => ({
+          IdTipoPago: pago.IdTipoPago,
+          MontoPagado: pago.MontoPagado,
+          MontoRecibido: pago.MontoRecibido,
+          TipoCambio: pago.TipoCambio,
+          IdTarjeta: pago.IdTarjeta,
+          Autorizacion: pago.Autorizacion,
+          IdMoneda: pago.IdMoneda,
+        })),
+      };
+      const error = validarSolicitudVentaDirecta(request);
+      if (error) {
+        this.spinnerService.hide();
+        await Swal.fire(this.texts.get('validation'), error, 'warning');
+        return null;
+      }
+
+      resultGenerateComprobante = await this.ventaDirectaService
+        .emitir(request)
+        .toPromise();
+    } else {
+      resultGenerateComprobante = await this.ventaService.guardarDocumentoVenta(
+        this.idTipoPedido, venta, this.cliente, this.pedidoCab,
+        this.listaDescuentoCodigo, listPago, this.bTurnoIndenpendiente,
+        usarClienteGenerico
+      ).toPromise();
+    }
     if (resultGenerateComprobante.Success) {
       this.spinnerService.hide();
       return resultGenerateComprobante.Data;
@@ -1172,6 +1255,13 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       this.spinnerService.hide();
       return null;
     }
+  }
+
+  private fechaLocalIso(fecha: Date): string {
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   buscarCliente(): void {
