@@ -3674,6 +3674,75 @@ mat-row:hover mat-cell {
   color: rgba(59, 34, 10, 0.8);
 }
 
+.config-panel .business-branding-card {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) 210px auto;
+  align-items: center;
+  gap: 20px;
+  background: var(--color-surface-warm);
+}
+
+.config-panel .business-branding-card__copy h3 {
+  margin: 0 0 7px;
+  color: var(--color-primary-dark);
+  font-size: .9rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.config-panel .business-branding-card__copy p,
+.config-panel .business-branding-card__copy small {
+  display: block;
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.config-panel .business-branding-card__copy small {
+  margin-top: 6px;
+  font-weight: 700;
+}
+
+.config-panel .business-branding-card__preview {
+  display: grid;
+  place-items: center;
+  min-height: 104px;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.config-panel .business-branding-card__preview img {
+  display: block;
+  max-width: 100%;
+  max-height: 96px;
+  object-fit: contain;
+}
+
+.config-panel .business-branding-card__placeholder {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  color: var(--color-text-muted);
+  text-align: center;
+  font-size: .75rem;
+}
+
+.config-panel .business-branding-card__placeholder mat-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--color-primary-light);
+  font-size: 32px;
+}
+
+.config-panel .business-branding-card__actions {
+  display: grid;
+  justify-items: stretch;
+  gap: 8px;
+}
+
 /* Un poco menos de espacio entre filas dentro de config */
 .config-panel .form-row {
   margin-bottom: 10px;
@@ -3750,6 +3819,10 @@ mat-row:hover mat-cell {
    ========================= */
 
 @media (max-width: 768px) {
+  .config-panel .business-branding-card {
+    grid-template-columns: 1fr;
+  }
+
   .config-panel section.card {
     padding: 12px 12px 10px;
   }
@@ -5387,7 +5460,7 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 
 .direct-sale-form {
   display: grid;
-  grid-template-columns: minmax(180px, 0.35fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(220px, 0.55fr) minmax(180px, 0.35fr) minmax(280px, 1fr);
   gap: 12px;
   align-items: start;
 }

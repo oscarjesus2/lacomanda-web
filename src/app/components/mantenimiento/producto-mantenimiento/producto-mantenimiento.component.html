@@ -442,7 +442,7 @@
         </mat-form-field>
       </div>
 
-      <div class="form-row">
+      <div class="form-row" *ngIf="!modoComercio">
         <mat-form-field class="form-field" appearance="fill">
           <mat-label>{{ 'type' | tenantText }}</mat-label>
           <mat-select [(ngModel)]="p.Tipo" name="tipo" required #tipo="ngModel">
@@ -488,7 +488,7 @@
         </button>
       </div>
 
-      <div class="form-row prod-posicion-row">
+      <div class="form-row prod-posicion-row" *ngIf="!modoComercio">
         <mat-form-field class="form-field" appearance="fill">
           <mat-label>{{ 'position' | tenantText }}</mat-label>
           <input matInput [value]="p.Posicion || ''" name="posicion"

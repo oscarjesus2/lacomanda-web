@@ -9,6 +9,7 @@ describe('MenuVentasComponent por licencia', () => {
   function crear(
     habilitadas: string[],
     nivel = NivelUsuarioEnum.Administrador,
+    planCodigo = 'INTEGRAL',
   ): MenuVentasComponent {
     const licencia = {
       evaluar: (estado: any, exigencia: any) =>
@@ -31,7 +32,7 @@ describe('MenuVentasComponent por licencia', () => {
     );
 
     (component as any).estadoLicencia = {
-      licencia: {},
+      licencia: { PlanCodigo: planCodigo },
       sinSuscripcion: false,
       error: false,
       habilitadas: new Set(habilitadas),
@@ -106,5 +107,24 @@ describe('MenuVentasComponent por licencia', () => {
     expect(conSoporte).toContain('Facturación electrónica');
     expect(conSoporte).toContain('Monitor SUNAT');
     expect(conSoporte).toContain('Cobro móvil');
+  });
+
+  it('en Comercio muestra caja y turnos sin opciones propias de restaurante', () => {
+    const component = crear(
+      [C.OperacionCaja, C.VentasDirecta],
+      NivelUsuarioEnum.Administrador,
+      'COMERCIO',
+    );
+
+    const visibles = component.seccionesVisibles
+      .flatMap(section => component.itemsVisibles(section))
+      .map(item => item.label);
+
+    expect(visibles).toContain('Caja');
+    expect(visibles).toContain('Abrir turno');
+    expect(visibles).toContain('Cerrar turno');
+    expect(visibles).not.toContain('Áreas de impresión');
+    expect(visibles).not.toContain('Estación');
+    expect(visibles).not.toContain('Esta estación');
   });
 });

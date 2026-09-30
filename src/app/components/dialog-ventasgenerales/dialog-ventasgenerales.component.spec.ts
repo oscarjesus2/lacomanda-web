@@ -1,20 +1,27 @@
 import { DialogVentasgeneralesComponent } from './dialog-ventasgenerales.component';
 import { VentasInterface } from 'src/app/interfaces/ventas.interface';
+import { of } from 'rxjs';
 
 describe('DialogVentasgeneralesComponent', () => {
   let component: DialogVentasgeneralesComponent;
+  let ventaService: jasmine.SpyObj<any>;
+  let spinner: jasmine.SpyObj<any>;
+  let reprintFormat: jasmine.SpyObj<any>;
 
   beforeEach(() => {
+    ventaService = jasmine.createSpyObj('VentaService', [
+      'getListadoVentas',
+      'descargarArchivoComprobante',
+      'enviarComprobantePorCorreo',
+      'getImpresionComprobanteVenta',
+      'anularDocumentoVenta',
+    ]);
+    spinner = jasmine.createSpyObj('NgxSpinnerService', ['show', 'hide']);
+    reprintFormat = jasmine.createSpyObj('ReprintFormatService', ['choose']);
     component = new DialogVentasgeneralesComponent(
       jasmine.createSpyObj('MatDialogRef', ['close']),
-      jasmine.createSpyObj('VentaService', [
-        'getListadoVentas',
-        'descargarArchivoComprobante',
-        'enviarComprobantePorCorreo',
-        'getImpresionComprobanteVenta',
-        'anularDocumentoVenta',
-      ]),
-      jasmine.createSpyObj('NgxSpinnerService', ['show', 'hide']),
+      ventaService,
+      spinner,
       jasmine.createSpyObj('MatDialog', ['open']),
       jasmine.createSpyObj('TenantTextCatalogService', ['get']),
       jasmine.createSpyObj('LicenciaTenantService', [
@@ -23,7 +30,7 @@ describe('DialogVentasgeneralesComponent', () => {
         'obtenerCuotaComprobantes',
       ]),
       { snapshot: { PaisISO2: 'PE' } } as any,
-      jasmine.createSpyObj('ReprintFormatService', ['choose']),
+      reprintFormat,
       { getCurrentUser: () => ({ IdNivel: 1 }) } as any,
     );
   });
@@ -97,6 +104,54 @@ describe('DialogVentasgeneralesComponent', () => {
       .toBe('danger');
     expect(component.claseEstadoFiscal(component.dataSource.data[2]))
       .toBe('success');
+  });
+
+  it('no descarga el PDF cuando se cancela la selección de formato', async () => {
+    component.ventaSeleccionada = venta();
+    reprintFormat.choose.and.resolveTo(null);
+
+    await component.descargarArchivo('pdf');
+
+    expect(ventaService.getImpresionComprobanteVenta).not.toHaveBeenCalled();
+    expect(spinner.show).not.toHaveBeenCalled();
+  });
+
+  it('descarga la representación A4 seleccionada', async () => {
+    component.ventaSeleccionada = venta({ IdVenta: 19, Documento: 'F001-19' });
+    reprintFormat.choose.and.resolveTo(2);
+    ventaService.getImpresionComprobanteVenta.and.returnValue(of({
+      Success: true,
+      Message: 'ok',
+      Data: [{ Documento: 'JVBERg==' }],
+    }));
+    const enlace = jasmine.createSpyObj('HTMLAnchorElement', ['click']);
+    spyOn(document, 'createElement').and.returnValue(enlace as HTMLAnchorElement);
+    spyOn(URL, 'createObjectURL').and.returnValue('blob:pdf');
+    spyOn(URL, 'revokeObjectURL');
+
+    await component.descargarArchivo('pdf');
+
+    expect(ventaService.getImpresionComprobanteVenta).toHaveBeenCalledWith(19, 2);
+    expect(enlace.download).toBe('F001-19-A4.pdf');
+    expect(enlace.click).toHaveBeenCalled();
+    expect(spinner.hide).toHaveBeenCalled();
+  });
+
+  it('mantiene la descarga XML sin solicitar formato de impresión', async () => {
+    component.ventaSeleccionada = venta({ IdVenta: 20, Documento: 'F001-20' });
+    ventaService.descargarArchivoComprobante.and.returnValue(
+      of(new Blob(['xml'], { type: 'application/xml' })),
+    );
+    const enlace = jasmine.createSpyObj('HTMLAnchorElement', ['click']);
+    spyOn(document, 'createElement').and.returnValue(enlace as HTMLAnchorElement);
+    spyOn(URL, 'createObjectURL').and.returnValue('blob:xml');
+    spyOn(URL, 'revokeObjectURL');
+
+    await component.descargarArchivo('xml');
+
+    expect(reprintFormat.choose).not.toHaveBeenCalled();
+    expect(ventaService.descargarArchivoComprobante).toHaveBeenCalledWith(20, 'xml');
+    expect(enlace.download).toBe('F001-20.xml');
   });
 
   function venta(

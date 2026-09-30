@@ -175,6 +175,54 @@
       </div>
     </section>
 
+    <section class="card business-branding-card">
+      <div class="business-branding-card__copy">
+        <h3>{{ 'businessLogo' | tenantText }}</h3>
+        <p>{{ 'businessLogoHint' | tenantText }}</p>
+        <small>{{ 'businessLogoFormats' | tenantText }}</small>
+      </div>
+
+      <div class="business-branding-card__preview">
+        <img
+          *ngIf="logoPreviewUrl; else logoPlaceholder"
+          [src]="logoPreviewUrl"
+          [alt]="'businessLogo' | tenantText" />
+        <ng-template #logoPlaceholder>
+          <div class="business-branding-card__placeholder">
+            <mat-icon>add_photo_alternate</mat-icon>
+            <span>{{ 'noBusinessLogo' | tenantText }}</span>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="business-branding-card__actions">
+        <input
+          #logoInput
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          hidden
+          (change)="seleccionarLogo($event)" />
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="logoInput.click()"
+          [disabled]="logoProcesando">
+          <mat-icon>upload</mat-icon>
+          {{ logoPreviewUrl ? ('replaceLogo' | tenantText) : ('uploadLogo' | tenantText) }}
+        </button>
+        <button
+          *ngIf="logoPreviewUrl"
+          mat-button
+          color="warn"
+          type="button"
+          (click)="eliminarLogo()"
+          [disabled]="logoProcesando">
+          <mat-icon>delete</mat-icon>
+          {{ 'removeLogo' | tenantText }}
+        </button>
+      </div>
+    </section>
+
     <!-- =========================
          2. OPERACIÓN
     ========================== -->

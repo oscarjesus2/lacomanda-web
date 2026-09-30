@@ -10,11 +10,25 @@
     <mat-icon>bolt</mat-icon>
     <div>
       <strong>Venta directa</strong>
-      <span>El comprobante se emite en esta operación, sin abrir mesa ni generar comanda.</span>
     </div>
   </div>
 
   <form #form="ngForm" class="direct-sale-form">
+    <mat-form-field appearance="fill" class="form-field">
+      <mat-label>Caja</mat-label>
+      <mat-select
+        [(ngModel)]="cajaSeleccionada"
+        name="caja"
+        required
+        (selectionChange)="onCajaSeleccionada($event.value)"
+      >
+        <mat-option *ngFor="let caja of listCaja" [value]="caja.IdCaja">
+          {{ caja.Descripcion }}{{ caja.TurnoAbierto ? ' · turno abierto' : ' · sin turno' }}
+        </mat-option>
+      </mat-select>
+      <mat-hint>La serie y el turno corresponden a esta caja.</mat-hint>
+    </mat-form-field>
+
     <mat-form-field appearance="fill" class="form-field">
       <mat-label>{{ 'documentDate' | tenantText }}</mat-label>
       <input matInput

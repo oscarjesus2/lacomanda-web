@@ -42,6 +42,7 @@ import { EstadoImpresionService } from 'src/app/services/estado-impresion.servic
 import { VentaDirectaService } from 'src/app/services/venta-directa.service';
 import { EmitirVentaDirectaRequest } from 'src/app/models/venta-directa.models';
 import { validarSolicitudVentaDirecta } from '../dialog-emitir-venta/venta-directa.validator';
+import { ReprintFormat, ReprintFormatService } from 'src/app/services/reprint-format.service';
 
 
 @Component({
@@ -136,6 +137,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     private texts: TenantTextCatalogService,
     private estadoImpresion: EstadoImpresionService,
     private ventaDirectaService: VentaDirectaService,
+    private reprintFormat: ReprintFormatService,
   ) {
     this.dataSourcePago = new MatTableDataSource([]);
     this.nuevoRegistro.Tarjeta = new Tarjeta();
@@ -987,9 +989,17 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       );
       return;
     }
+
+    const formatoVentaDirecta = this.modoVentaDirecta
+      ? await this.reprintFormat.choose()
+      : null;
+    if (this.modoVentaDirecta && formatoVentaDirecta === null) return;
+
     const listaImpresionDTO: ImpresionDTO[] = await this.grabarDocumento();
     if (listaImpresionDTO) {
-      if (this.idTipoPedido === '005') {
+      if (this.modoVentaDirecta) {
+        await this.presentarVentaDirecta(listaImpresionDTO, formatoVentaDirecta!);
+      } else if (this.idTipoPedido === '005') {
 
         Swal.fire({
           title: this.texts.get('preferredFormat'),
@@ -1018,6 +1028,34 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
       this.dialogRef.close({ estado: 'Cobrado', listaImpresionDTO: listaImpresionDTO });
     }
+  }
+
+  private async presentarVentaDirecta(
+    documentosEmitidos: ImpresionDTO[],
+    formato: ReprintFormat,
+  ): Promise<void> {
+    if (formato === 1) {
+      await this.imprimirYAvisarSiFalla(documentosEmitidos);
+      return;
+    }
+
+    const idVenta = documentosEmitidos.find(documento => documento.IdVenta > 0)?.IdVenta;
+    if (!idVenta) {
+      await Swal.fire(
+        this.texts.get('error'),
+        'La venta fue emitida, pero no se pudo identificar el comprobante A4.',
+        'warning',
+      );
+      return;
+    }
+
+    const response = await this.ventaService
+      .getImpresionComprobanteVenta(idVenta, formato)
+      .toPromise();
+    if (!response.Success || !response.Data?.length) {
+      throw new Error(response.Message || 'No se pudo generar el comprobante A4.');
+    }
+    await this.ventaService.showPDF(response.Data[0].Documento);
   }
   imprimirPromocionesA4() {
     throw new Error('Method not implemented.');
@@ -1172,6 +1210,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         ? new Date(this.pedidoCab.FechaCambiada)
         : new Date();
       const request: EmitirVentaDirectaRequest = {
+        IdCaja: this.idCaja,
         IdTipoDocumento: this.tipoDocumento.IdTipoDocumento,
         FechaDocumento: this.fechaLocalIso(fecha),
         Observacion: this.pedidoCab.Observacion,

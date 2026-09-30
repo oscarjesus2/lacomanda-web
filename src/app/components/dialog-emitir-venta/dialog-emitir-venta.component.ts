@@ -49,7 +49,7 @@ export class DialogEmitirVentaComponent implements OnInit {
   displayedColumns: string[] = ['Producto', 'Qty', 'Precio', 'Total', 'actions'];
   dataSource = new MatTableDataSource<ProductElement>([]);
 
-  listCaja: CajaDto[];
+  listCaja: CajaDto[] = [];
   cajaSeleccionada: number = 0;
   monedaSeleccionada: string = 'SOLES';
   tipoCambioVenta: string = '0';
@@ -75,16 +75,18 @@ export class DialogEmitirVentaComponent implements OnInit {
 
   private async initializeCaja(): Promise<void> {
     try {
-      this.listCaja = (await this.cajaService.getAllCaja(true).toPromise()).Data;
-      const caja = this.listCaja.find(item => item.CajaPorDefecto && item.Activo)
-        ?? this.listCaja.find(item => item.Activo);
+      const response = await this.cajaService.getAllCaja(true).toPromise();
+      this.listCaja = (response.Data ?? []).filter(item => item.Activo);
+      const caja = this.listCaja.find(item =>
+        item.CajaPorDefecto && !!item.TurnoAbierto)
+        ?? this.listCaja.find(item => !!item.TurnoAbierto)
+        ?? this.listCaja.find(item => item.CajaPorDefecto)
+        ?? this.listCaja[0];
       if (!caja) {
         throw new Error('No existe una caja administrativa activa.');
       }
 
-      this.cajaSeleccionada = caja.IdCaja;
-      this.tipoCambioCompra = caja.TurnoAbierto?.TipoCambio?.toString() ?? '1';
-      this.tipoCambioVenta = caja.TurnoAbierto?.TipoCambioVenta?.toString() ?? '1';
+      this.onCajaSeleccionada(caja.IdCaja);
     } catch (error) {
       console.error('Error loading Caja', error);
       throw error;  // Rethrow to be caught by ngOnInit
@@ -193,6 +195,13 @@ export class DialogEmitirVentaComponent implements OnInit {
     this.dataSource.data.push(newRow);
     this.dataSource.data = [...this.dataSource.data];
     this.productCtrl.setValue('');
+  }
+
+  onCajaSeleccionada(idCaja: number): void {
+    this.cajaSeleccionada = idCaja;
+    const caja = this.listCaja.find(item => item.IdCaja === idCaja);
+    this.tipoCambioCompra = caja?.TurnoAbierto?.TipoCambio?.toString() ?? '1';
+    this.tipoCambioVenta = caja?.TurnoAbierto?.TipoCambioVenta?.toString() ?? '1';
   }
 
   onProductoSelected(event: any): void {
@@ -314,7 +323,7 @@ export class DialogEmitirVentaComponent implements OnInit {
     pedidoCab.UsuReg = this.storageService.getCurrentSession().User.IdUsuario;
     pedidoCab.UsuMod = this.storageService.getCurrentSession().User.IdUsuario;;
 
-    pedidoCab.IdTurno = 0;
+    pedidoCab.IdTurno = this.cajaActual?.TurnoAbierto?.IdTurno ?? 0;
 
     let correlativo = 1;
     this.dataSource.data.forEach(item => {
@@ -372,6 +381,14 @@ export class DialogEmitirVentaComponent implements OnInit {
 
     // Aquí puedes continuar con la lógica que tenías para emitir el comprobante
     if (this.form.valid) {
+      if (!this.cajaActual?.TurnoAbierto?.IdTurno) {
+        Swal.fire(
+          this.texts.get('validation'),
+          'La caja seleccionada no tiene un turno abierto. Abre el turno antes de registrar la venta.',
+          'warning',
+        );
+        return;
+      }
       const error = validarBorradorVentaDirecta({
         fechaDocumento: this.fechaDocumento,
         detalles: this.dataSource.data,
@@ -402,10 +419,12 @@ export class DialogEmitirVentaComponent implements OnInit {
                  idTipoPedido: '004', 
                  idTipoDoc: idTipoDoc,
                  pedidoCab: this.addPedido(),
+                 // Indicador heredado que enruta al flujo de venta directa.
+                 // La caja seleccionada sí debe tener un turno abierto real.
                  bTurnoIndenpendiente: true,
                  modoVentaDirecta: true,
                  idCaja:this.cajaSeleccionada,
-                 idTurno: 0
+                 idTurno: this.cajaActual.TurnoAbierto.IdTurno
                }
        });
        dialogTurno.afterClosed().subscribe(resultado => {
@@ -416,5 +435,9 @@ export class DialogEmitirVentaComponent implements OnInit {
     }
 
  
+  }
+
+  private get cajaActual(): CajaDto | undefined {
+    return this.listCaja.find(item => item.IdCaja === this.cajaSeleccionada);
   }
 }

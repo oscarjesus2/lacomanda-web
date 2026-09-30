@@ -278,22 +278,51 @@ export class DialogVentasgeneralesComponent implements OnInit {
   async descargarArchivo(formato: 'pdf' | 'xml'): Promise<void> {
     const venta = this.ventaSeleccionada;
     if (!venta) return;
+    const formatoImpresion = formato === 'pdf'
+      ? await this.reprintFormat.choose()
+      : null;
+    if (formato === 'pdf' && formatoImpresion === null) return;
+
     this.procesandoAccion = true;
     this.spinnerService.show();
     try {
-      const blob = await firstValueFrom(
-        this.ventaService.descargarArchivoComprobante(venta.IdVenta, formato),
-      );
+      let blob: Blob;
+      let nombreArchivo: string;
+      if (formato === 'pdf') {
+        const response = await firstValueFrom(
+          this.ventaService.getImpresionComprobanteVenta(
+            venta.IdVenta,
+            formatoImpresion!,
+          ),
+        );
+        if (!response.Success || !response.Data?.length) {
+          throw new Error(response.Message || 'No se pudo generar el comprobante.');
+        }
+        blob = this.pdfBase64ABlob(response.Data[0].Documento);
+        nombreArchivo = `${venta.Documento}-${formatoImpresion === 2 ? 'A4' : 'ticket'}.pdf`;
+      } else {
+        blob = await firstValueFrom(
+          this.ventaService.descargarArchivoComprobante(venta.IdVenta, formato),
+        );
+        nombreArchivo = `${venta.Documento}.xml`;
+      }
       const url = URL.createObjectURL(blob);
       const enlace = document.createElement('a');
       enlace.href = url;
-      enlace.download = `${venta.Documento}.${formato}`;
+      enlace.download = nombreArchivo;
       enlace.click();
       URL.revokeObjectURL(url);
+    } catch (error) {
+      await Swal.fire(this.texts.get('error'), String(error), 'error');
     } finally {
       this.procesandoAccion = false;
       this.spinnerService.hide();
     }
+  }
+
+  private pdfBase64ABlob(documento: string): Blob {
+    const bytes = Uint8Array.from(atob(documento), caracter => caracter.charCodeAt(0));
+    return new Blob([bytes], { type: 'application/pdf' });
   }
 
   async enviarPorCorreo(): Promise<void> {

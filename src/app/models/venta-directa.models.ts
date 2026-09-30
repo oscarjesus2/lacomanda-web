@@ -18,6 +18,7 @@ export interface VentaDirectaPago {
 }
 
 export interface EmitirVentaDirectaRequest {
+  IdCaja: number;
   IdTipoDocumento: number;
   FechaDocumento?: string;
   Observacion?: string;

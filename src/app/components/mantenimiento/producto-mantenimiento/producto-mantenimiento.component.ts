@@ -68,6 +68,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   puedeImportarCartaIa = false;
   operacionCajaHabilitada = false;
   productosMenusHabilitados = false;
+  modoComercio = false;
   procesandoCartaIa = false;
   confirmandoCartaIa = false;
   previsualizacionCarta: CartaIaPrevisualizacion | null = null;
@@ -150,23 +151,30 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
    */
   private cargarCatalogosDeRestaurante(): void {
     this.licenciaTenantService
-      .tieneCaracteristica(CARACTERISTICAS_LICENCIA.OperacionCaja)
-      .subscribe(habilitada => {
-        this.operacionCajaHabilitada = habilitada;
-        if (habilitada) {
+      .obtenerEstado()
+      .subscribe(estado => {
+        this.modoComercio = estado.licencia?.PlanCodigo === 'COMERCIO';
+        const tieneOperacionCaja = this.licenciaTenantService.evaluar(
+          estado,
+          CARACTERISTICAS_LICENCIA.OperacionCaja,
+        );
+        this.operacionCajaHabilitada = tieneOperacionCaja && !this.modoComercio;
+        this.productosMenusHabilitados = this.licenciaTenantService.evaluar(
+          estado,
+          CARACTERISTICAS_LICENCIA.ProductosMenus,
+        );
+        this.displayedColumns = this.modoComercio
+          ? ['nombre', 'nombreCompleto', 'precio', 'visible', 'activo', 'actions']
+          : ['nombre', 'nombreCompleto', 'precio', 'tipo', 'visible', 'activo', 'posicion', 'actions'];
+
+        if (this.operacionCajaHabilitada) {
           this.cargarAreasImpresion();
-          return;
+        } else {
+          this.areas = [];
+          this.areasCartaIaCargadas = true;
         }
 
-        this.areas = [];
-        this.areasCartaIaCargadas = true;
-      });
-
-    this.licenciaTenantService
-      .tieneCaracteristica(CARACTERISTICAS_LICENCIA.ProductosMenus)
-      .subscribe(habilitada => {
-        this.productosMenusHabilitados = habilitada;
-        if (!habilitada) {
+        if (!this.productosMenusHabilitados) {
           this.seccionMenu = [];
           return;
         }
@@ -687,6 +695,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
         !!(row.IdUnidadStock ||
            row.IdGrupoCompra)
     };
+    this.aplicarDefaultsComercio();
     this.usarSubAreaFija = !!row.IdSubAreaAlmacenDescarga;
     // El panel es solo visual: editar con él plegado conserva los datos.
     this.configuracionAvanzadaHabilitada = true;
@@ -795,7 +804,8 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     // Validaciones condicionales (front). El back valida también.
-    if (!this.p.Posicion) { Swal.fire('Validación', 'Debe elegir la Posición (8×9).', 'info'); return; }
+    this.aplicarDefaultsComercio();
+    if (!this.modoComercio && !this.p.Posicion) { Swal.fire('Validación', 'Debe elegir la Posición (8×9).', 'info'); return; }
 
     if (this.configuracionAvanzadaHabilitada &&
         this.p.SinPrecio &&
@@ -884,7 +894,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
       ConfiguracionAvanzada:
         this.configuracionAvanzadaHabilitada,
       ControlDirectoStock: !!this.p.ControlDirectoStock,
-      AreasImpresionIds: this.selectedAreas
+      AreasImpresionIds: this.modoComercio ? [] : this.selectedAreas
     };
 
 
@@ -931,8 +941,19 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     this.p.Inventario = false;
     this.p.ControlDirectoStock = false;
     this.p.PresentacionesCompra = [];
+    this.aplicarDefaultsComercio();
     this.selectedAreas = [];
     this.seleccionarImpuestoGeneralSiCorresponde();
+  }
+
+  private aplicarDefaultsComercio(): void {
+    if (!this.modoComercio) return;
+    this.p.Tipo = 0;
+    this.p.IdClaseCombo = 0;
+    this.p.Qty = 0;
+    this.p.Posicion = 0;
+    this.p.PosicionComplemento = 0;
+    this.p.FactorComplemento = 0;
   }
 
   private guardarImagenSiCorresponde(idProducto: number, eraEdicion: boolean): void {

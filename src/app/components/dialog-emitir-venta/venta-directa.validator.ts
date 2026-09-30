@@ -31,6 +31,10 @@ export function validarBorradorVentaDirecta(
 export function validarSolicitudVentaDirecta(
   request: EmitirVentaDirectaRequest,
 ): string | null {
+  if (request.IdCaja <= 0) {
+    return 'Selecciona la caja de la venta.';
+  }
+
   if (request.IdTipoDocumento <= 0) {
     return 'Selecciona el tipo de comprobante.';
   }

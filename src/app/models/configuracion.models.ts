@@ -16,6 +16,7 @@ export class Configuracion {
   Direccion: string;
   Telefono: string;
   PiePagina: string;
+  TieneLogo: boolean;
   Traslado: boolean;
   Precuentas: boolean;
   CambioEspacio: boolean;

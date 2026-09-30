@@ -3,7 +3,10 @@ import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-lice
 import { ProductoMantenimientoComponent } from './producto-mantenimiento.component';
 
 describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
-  function crearComponente(habilitadas: readonly string[]) {
+  function crearComponente(
+    habilitadas: readonly string[],
+    planCodigo = 'INTEGRAL',
+  ) {
     const respuestaVacia = of({ Success: true, Data: [] });
     const productoService = {
       getAllProductos: jasmine.createSpy().and.returnValue(respuestaVacia),
@@ -16,6 +19,15 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
     };
     const licenciaTenantService = {
       invalidar: jasmine.createSpy(),
+      obtenerEstado: jasmine.createSpy().and.returnValue(of({
+        licencia: { PlanCodigo: planCodigo, Caracteristicas: [] },
+        sinSuscripcion: false,
+        error: false,
+        habilitadas: new Set(habilitadas),
+      })),
+      evaluar: jasmine.createSpy().and.callFake(
+        (estado: any, codigo: string) => estado.habilitadas.has(codigo),
+      ),
       tieneCaracteristica: jasmine.createSpy().and.callFake(
         (codigo: string) => of(habilitadas.includes(codigo)),
       ),
@@ -54,7 +66,9 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
   it('no consulta catálogos de restaurante para la licencia Comercio', () => {
     const dependencias = crearComponente([
       CARACTERISTICAS_LICENCIA.AlmacenGestion,
-    ]);
+      CARACTERISTICAS_LICENCIA.OperacionCaja,
+      CARACTERISTICAS_LICENCIA.VentasDirecta,
+    ], 'COMERCIO');
 
     dependencias.componente.ngOnInit();
 
@@ -63,6 +77,9 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
     expect(dependencias.claseComboService.getSeccionMenu).not.toHaveBeenCalled();
     expect(dependencias.componente.operacionCajaHabilitada).toBeFalse();
     expect(dependencias.componente.productosMenusHabilitados).toBeFalse();
+    expect(dependencias.componente.modoComercio).toBeTrue();
+    expect(dependencias.componente.displayedColumns).not.toContain('tipo');
+    expect(dependencias.componente.displayedColumns).not.toContain('posicion');
   });
 
   it('carga áreas y secciones cuando ambas características están incluidas', () => {
