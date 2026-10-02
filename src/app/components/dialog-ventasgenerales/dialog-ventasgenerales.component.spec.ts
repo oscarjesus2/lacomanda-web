@@ -57,6 +57,13 @@ describe('DialogVentasgeneralesComponent', () => {
     expect(component.esDocumentoActivo(null)).toBeFalse();
   });
 
+  it('reconoce una venta pendiente para mostrar el registro de cobro', () => {
+    expect(component.esPagoPendiente(
+      venta({ EstadoPago: 'Pendiente de pago' }))).toBeTrue();
+    expect(component.esPagoPendiente(
+      venta({ EstadoPago: 'Pagado' }))).toBeFalse();
+  });
+
   it('valida el correo del cliente antes de habilitar el envío', () => {
     expect(component.tieneCorreoValido(
       venta({ ClienteCorreo: 'cliente@ejemplo.com' }))).toBeTrue();

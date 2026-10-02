@@ -40,6 +40,11 @@ export class SolicitudesAutorizacionRealtimeService {
   private readonly esAdministradorSubject = new BehaviorSubject<boolean>(false);
   readonly esAdministrador$ = this.esAdministradorSubject.asObservable();
 
+  private readonly esSoporteLaComandaSubject =
+    new BehaviorSubject<boolean>(false);
+  readonly esSoporteLaComanda$ =
+    this.esSoporteLaComandaSubject.asObservable();
+
   private readonly comprobantesFiscalesHabilitadosSubject =
     new BehaviorSubject<boolean>(false);
 
@@ -47,10 +52,17 @@ export class SolicitudesAutorizacionRealtimeService {
   readonly puedeVerCentroNotificaciones$ = combineLatest([
     this.esAprobador$,
     this.esAdministrador$,
+    this.esSoporteLaComanda$,
     this.comprobantesFiscalesHabilitadosSubject,
   ]).pipe(
-    map(([esAprobador, esAdministrador, comprobantesHabilitados]) =>
-      esAprobador || (esAdministrador && comprobantesHabilitados)),
+    map(([
+      esAprobador,
+      esAdministrador,
+      esSoporteLaComanda,
+      comprobantesHabilitados,
+    ]) => esAprobador || (
+      (esAdministrador || esSoporteLaComanda) && comprobantesHabilitados
+    )),
     distinctUntilChanged(),
   );
 
@@ -117,6 +129,7 @@ export class SolicitudesAutorizacionRealtimeService {
     this.hub = undefined;
     this.esAprobadorSubject.next(false);
     this.esAdministradorSubject.next(false);
+    this.esSoporteLaComandaSubject.next(false);
     this.comprobantesFiscalesHabilitadosSubject.next(false);
     this.apruebaDescuentosSubject.next(false);
     this.pendientesSubject.next([]);
@@ -157,7 +170,7 @@ export class SolicitudesAutorizacionRealtimeService {
   }
 
   async sincronizarComprobantesFiscales(): Promise<void> {
-    if (!this.esAdministrador
+    if ((!this.esAdministrador && !this.esSoporteLaComandaSubject.value)
         || !this.comprobantesFiscalesHabilitadosSubject.value) {
       this.comprobantesFiscalesSubject.next([]);
       return;
@@ -205,14 +218,16 @@ export class SolicitudesAutorizacionRealtimeService {
           firstValueFrom(this.licenciaTenantService.tieneCaracteristica(
             CARACTERISTICAS_LICENCIA.OperacionCaja,
           )),
-          firstValueFrom(this.licenciaTenantService.tieneCaracteristica([
+          firstValueFrom(this.licenciaTenantService.tieneCaracteristica(
             CARACTERISTICAS_LICENCIA.OperacionComprobantes,
-            CARACTERISTICAS_LICENCIA.VentasCorreccionDocumentos,
-          ])),
+          )),
         ]);
       const usuario = response?.Data;
       const esAdministrador = usuario?.IdNivel === NivelUsuarioEnum.Administrador;
       this.esAdministradorSubject.next(!!usuario?.Activo && esAdministrador);
+      this.esSoporteLaComandaSubject.next(
+        !!usuario?.Activo && usuario?.EsUsuarioSoporteLaComanda === true,
+      );
       this.comprobantesFiscalesHabilitadosSubject.next(
         comprobantesHabilitados,
       );
@@ -227,6 +242,7 @@ export class SolicitudesAutorizacionRealtimeService {
     } catch {
       this.esAprobadorSubject.next(false);
       this.esAdministradorSubject.next(false);
+      this.esSoporteLaComandaSubject.next(false);
       this.comprobantesFiscalesHabilitadosSubject.next(false);
       this.apruebaDescuentosSubject.next(false);
     }

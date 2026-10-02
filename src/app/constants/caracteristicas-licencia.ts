@@ -13,6 +13,7 @@ export const CARACTERISTICAS_LICENCIA = {
   VentasDirecta: 'ventas.directa',
   OperacionCaja: 'operacion.caja',
   OperacionComprobantes: 'operacion.comprobantes',
+  FiscalIntegracion: 'fiscal.integracion',
   OperacionReportes: 'operacion.reportes',
   ReportesAnaliticos: 'reportes.analiticos',
   PersonalControlHorario: 'personal.control_horario',
@@ -31,6 +32,7 @@ export const CARACTERISTICAS_LICENCIA = {
   DeliverySeguimiento: 'delivery.seguimiento',
   ProductosMenus: 'productos.menus',
   ProductosImportacionCartaIa: 'productos.importacion_carta_ia',
+  ProductosAsistenteCartaIa: 'productos.asistente_carta_ia',
   ReportesSeguimientoComandas: 'reportes.seguimiento_comandas',
   ReportesComisionAnfitrionas: 'reportes.comision_anfitrionas',
   LimiteUsuarios: 'limites.usuarios',
@@ -66,6 +68,7 @@ export const DEPENDENCIAS_CARACTERISTICA: Readonly<
   Partial<Record<CodigoCaracteristica, readonly CodigoCaracteristica[]>>
 > = {
   [CARACTERISTICAS_LICENCIA.VentasDirecta]: [CARACTERISTICAS_LICENCIA.OperacionComprobantes],
+  [CARACTERISTICAS_LICENCIA.FiscalIntegracion]: [CARACTERISTICAS_LICENCIA.OperacionComprobantes],
   [CARACTERISTICAS_LICENCIA.VentasEntradas]: [CARACTERISTICAS_LICENCIA.VentasMesa],
   [CARACTERISTICAS_LICENCIA.VentasPromociones]: [CARACTERISTICAS_LICENCIA.OperacionComprobantes],
   [CARACTERISTICAS_LICENCIA.VentasReservasOnline]: [CARACTERISTICAS_LICENCIA.VentasMesa],
@@ -79,6 +82,7 @@ export const DEPENDENCIAS_CARACTERISTICA: Readonly<
   [CARACTERISTICAS_LICENCIA.DeliverySeguimiento]: [CARACTERISTICAS_LICENCIA.VentasDelivery],
   [CARACTERISTICAS_LICENCIA.ReportesComisionAnfitrionas]: [CARACTERISTICAS_LICENCIA.VentasEntradas],
   [CARACTERISTICAS_LICENCIA.ProductosImportacionCartaIa]: [CARACTERISTICAS_LICENCIA.OperacionCaja],
+  [CARACTERISTICAS_LICENCIA.ProductosAsistenteCartaIa]: [CARACTERISTICAS_LICENCIA.VentasMesa],
 };
 
 /**

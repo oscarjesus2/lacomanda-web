@@ -11,6 +11,7 @@ export class PedidoMenu {
   public Cantidad: number;
   public Observacion: string;
   public Enviado: boolean;
+  public NumEnvios: number;
 
   constructor(init?: Partial<PedidoMenu>) {
     Object.assign(this, init);

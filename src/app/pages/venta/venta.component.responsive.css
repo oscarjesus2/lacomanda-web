@@ -352,6 +352,15 @@
     grid-auto-rows: minmax(78px, 1fr);
   }
 
+  .tables-grid.tables-grid--spaces {
+    grid-template-columns: repeat(var(--spaces-grid-columns, 7), minmax(86px, 1fr));
+    grid-template-rows: repeat(var(--spaces-grid-rows, 9), minmax(86px, 1fr));
+    grid-auto-rows: 86px;
+    gap: 5px;
+    padding: 6px;
+    overflow: auto;
+  }
+
   .products-grid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
     grid-auto-rows: minmax(76px, 1fr);
@@ -508,6 +517,22 @@
 
   .tables-grid {
     grid-auto-rows: minmax(82px, 1fr);
+  }
+
+  .spaces-overview {
+    padding: 11px 12px;
+  }
+
+  .spaces-overview h2 {
+    font-size: 16px;
+  }
+
+  .spaces-overview p {
+    font-size: 11px;
+  }
+
+  .tables-grid button.space-card {
+    padding: 5px 6px;
   }
 
   .products-grid {
@@ -689,6 +714,16 @@
   .compact-order-actions:not(.compact-order-actions--open)
     .compact-order-actions__secondary {
     display: none;
+  }
+}
+
+/* En pantallas de altura baja, deja crecer la matriz si hace falta leerla. */
+@media (min-width: 1024px) and (max-height: 950px) {
+  /* A zoom normal en pantallas bajas prima la legibilidad y se permite scroll.
+     A 50 % en 800 × 600 la altura CSS es suficiente para encajar las 9 filas. */
+  .tables-grid.tables-grid--spaces {
+    grid-template-rows: repeat(var(--spaces-grid-rows, 9), minmax(86px, 1fr));
+    grid-auto-rows: 86px;
   }
 }
 

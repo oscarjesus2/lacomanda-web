@@ -66,6 +66,49 @@ describe('VentaComponent - canales por estación', () => {
   });
 });
 
+describe('VentaComponent - posiciones del tablero de espacios', () => {
+  it('distingue mesas unidas, divididas, ocupadas y con precuenta usando su estado real', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    const casos = [
+      { ocupado: 0, precuenta: false, estado: 'free', etiqueta: 'Libre' },
+      { ocupado: 1, precuenta: false, estado: 'busy', etiqueta: 'En uso' },
+      { ocupado: 1, precuenta: true, estado: 'prebill', etiqueta: 'Precuenta' },
+      { ocupado: 2, precuenta: false, estado: 'free', etiqueta: 'Libre' },
+      { ocupado: 3, precuenta: false, estado: 'split', etiqueta: 'Dividida' },
+      { ocupado: 4, precuenta: false, estado: 'joined', etiqueta: 'Unida' },
+    ];
+
+    for (const caso of casos) {
+      const espacio = { Ocupado: caso.ocupado, TienePrecuenta: caso.precuenta } as any;
+      expect(component.estadoTableroEspacio(espacio)).toBe(caso.estado);
+      expect(component.etiquetaEstadoTableroEspacio(espacio)).toBe(caso.etiqueta);
+    }
+  });
+
+  it('respeta la matriz de siete columnas usada en el mantenimiento', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+
+    expect(component.posicionEnTablero(1)).toBe('1 / 1');
+    expect(component.posicionEnTablero(7)).toBe('1 / 7');
+    expect(component.posicionEnTablero(8)).toBe('2 / 1');
+    expect(component.posicionEnTablero(63)).toBe('9 / 7');
+    expect(component.posicionEnTablero(0)).toBeNull();
+    expect(component.posicionEnTablero(64)).toBeNull();
+  });
+
+  it('cuenta las mesas reales y no las casillas vacías del ambiente', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.listaEspacios_x_Ambiente = [
+      { Numero: 1, Visible: true },
+      { Numero: 2 },
+      { Numero: 0, Visible: false },
+      { Numero: 3, Visible: false },
+    ] as any;
+
+    expect(component.cantidadEspaciosTablero).toBe(2);
+  });
+});
+
 describe('VentaComponent - pedidos pendientes de cobro', () => {
   function pedido(estado: PedidoEstadoEnum, id = 1): any {
     return {
@@ -400,7 +443,20 @@ describe('VentaComponent - acciones de la fila seleccionada', () => {
   it('identifica explícitamente si una línea ya fue enviada a cocina', () => {
     const component = crearComponente(0);
 
-    expect(component.productoEnviadoACocina({ Item: 15 } as any)).toBeTrue();
+    expect(component.productoEnviadoACocina({
+      Item: 15,
+      NumEnvios: 1,
+      Producto: { Tipo: 0 },
+      PedidoMenu: [],
+      PedidoComplemento: [],
+    } as any)).toBeTrue();
+    expect(component.productoEnviadoACocina({
+      Item: 15,
+      NumEnvios: 0,
+      Producto: { Tipo: 1, IdClaseCombo: 2 },
+      PedidoMenu: [],
+      PedidoComplemento: [],
+    } as any)).toBeFalse();
     expect(component.productoEnviadoACocina({ Item: 0 } as any)).toBeFalse();
   });
 });
@@ -456,12 +512,33 @@ describe('VentaComponent - visibilidad contextual de acciones del mozo', () => {
   it('muestra Enviar pedido únicamente al editar líneas todavía no enviadas', () => {
     const component = crearComponente();
     component.procesarPedido = true;
-    component.listProductGrid = [{ Item: 4 }] as any;
+    component.listProductGrid = [{
+      Item: 4,
+      NumEnvios: 1,
+      Producto: { Tipo: 0 },
+      PedidoMenu: [],
+      PedidoComplemento: [],
+    }] as any;
 
     expect(component.mostrarEnviarPedidoMozo).toBeFalse();
 
     component.listProductGrid.push({ Item: 0 } as any);
 
+    expect(component.mostrarEnviarPedidoMozo).toBeTrue();
+  });
+
+  it('permite reintentar una opción de menú individual que quedó sin imprimir', () => {
+    const component = crearComponente();
+    component.procesarPedido = true;
+    component.listProductGrid = [{
+      Item: 4,
+      NumEnvios: 0,
+      Producto: { Tipo: 1, IdClaseCombo: 2 },
+      PedidoMenu: [],
+      PedidoComplemento: [],
+    }] as any;
+
+    expect(component.hayProductosPendientesEnvio).toBeTrue();
     expect(component.mostrarEnviarPedidoMozo).toBeTrue();
   });
 

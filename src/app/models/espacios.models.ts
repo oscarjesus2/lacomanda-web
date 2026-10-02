@@ -1,3 +1,6 @@
+export const ESPACIOS_TABLERO_FILAS = 9;
+export const ESPACIOS_TABLERO_COLUMNAS = 7;
+
 export class Espacios {
 
     public Activo: boolean;
@@ -18,6 +21,7 @@ export class Espacios {
     public Total: number;
     public NombreEmpleado:string;
     public Color: string;
+    public TienePrecuenta: boolean;
 
         
     constructor(init?: Partial<Espacios>) {

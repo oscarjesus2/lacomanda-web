@@ -26,6 +26,9 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
     const areaImpresionService = {
       listar: jasmine.createSpy().and.returnValue(of([])),
     };
+    const proveedorService = {
+      listar: jasmine.createSpy().and.returnValue(respuestaVacia),
+    };
     const licenciaTenantService = {
       invalidar: jasmine.createSpy(),
       obtenerEstado: jasmine.createSpy().and.returnValue(of({
@@ -61,7 +64,7 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
       {} as any,
       { listarActivas: () => respuestaVacia } as any,
       { listar: () => respuestaVacia } as any,
-      { listar: () => respuestaVacia } as any,
+      proveedorService as any,
     );
 
     return {
@@ -69,6 +72,7 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
       productoService,
       claseComboService,
       areaImpresionService,
+      proveedorService,
     };
   }
 
@@ -84,6 +88,7 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
     expect(dependencias.productoService.getAllProductos).toHaveBeenCalled();
     expect(dependencias.areaImpresionService.listar).not.toHaveBeenCalled();
     expect(dependencias.claseComboService.getSeccionMenu).not.toHaveBeenCalled();
+    expect(dependencias.proveedorService.listar).not.toHaveBeenCalled();
     expect(dependencias.componente.operacionCajaHabilitada).toBeFalse();
     expect(dependencias.componente.productosMenusHabilitados).toBeFalse();
     expect(dependencias.componente.modoComercio).toBeTrue();
@@ -135,6 +140,45 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
     dependencias.componente.quitarImagen();
     expect(dependencias.componente.imagenSeleccionada).toBeUndefined();
     expect(dependencias.componente.eliminarImagenPendiente).toBeFalse();
+  });
+
+  it('no consulta proveedores al abrir el mantenimiento ni sin Compras', () => {
+    const dependencias = crearComponente([
+      CARACTERISTICAS_LICENCIA.AlmacenGestion,
+    ]);
+
+    dependencias.componente.ngOnInit();
+    dependencias.componente.p.ControlDirectoStock = true;
+    dependencias.componente.toggleConfiguracionAvanzada();
+
+    expect(dependencias.proveedorService.listar).not.toHaveBeenCalled();
+    expect(dependencias.componente.comprasHabilitadas).toBeFalse();
+  });
+
+  it('carga proveedores una sola vez al abrir compras avanzadas', () => {
+    const dependencias = crearComponente([
+      CARACTERISTICAS_LICENCIA.AlmacenGestion,
+      CARACTERISTICAS_LICENCIA.AlmacenCompras,
+    ]);
+    dependencias.proveedorService.listar.and.returnValue(of({
+      Success: true,
+      Data: [
+        { IdProveedor: 1, RazonSocial: 'Activo', Activo: true },
+        { IdProveedor: 2, RazonSocial: 'Inactivo', Activo: false },
+      ],
+    }));
+
+    dependencias.componente.ngOnInit();
+    expect(dependencias.proveedorService.listar).not.toHaveBeenCalled();
+
+    dependencias.componente.p.ControlDirectoStock = true;
+    dependencias.componente.toggleConfiguracionAvanzada();
+    dependencias.componente.toggleConfiguracionAvanzada();
+    dependencias.componente.toggleConfiguracionAvanzada();
+
+    expect(dependencias.proveedorService.listar).toHaveBeenCalledTimes(1);
+    expect(dependencias.componente.proveedores.map(p => p.IdProveedor))
+      .toEqual([1]);
   });
 
   it('carga áreas y secciones cuando ambas características están incluidas', () => {
@@ -214,5 +258,33 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
     expect(dependencias.componente.eliminarImagenPendiente).toBeTrue();
     (dependencias.componente as any).guardarImagenSiCorresponde(25, true);
     expect(dependencias.productoService.eliminarImagen).toHaveBeenCalledWith(25);
+  });
+
+  it('una opción de menú nace exclusiva y Carta conserva venta individual', () => {
+    const { componente } = crearComponente([
+      CARACTERISTICAS_LICENCIA.ProductosMenus,
+    ]);
+
+    componente.p.Tipo = 1;
+    componente.p.IdClaseCombo = 4;
+    componente.p.VentaIndividual = true;
+    componente.cambiarSeccionMenu();
+
+    expect(componente.p.VentaIndividual).toBeFalse();
+    componente.p.Precio = 8;
+    componente.p.SinPrecio = true;
+    componente.p.PrecioMinimo = 3;
+    componente.p.VentaIndividual = false;
+    componente.cambiarVentaIndividual();
+
+    expect(componente.p.Visible).toBeTrue();
+    expect(componente.p.Precio).toBe(0);
+    expect(componente.p.SinPrecio).toBeFalse();
+    expect(componente.p.PrecioMinimo).toBe(0);
+
+    componente.p.Tipo = 0;
+    componente.cambiarTipoProducto();
+    expect(componente.p.IdClaseCombo).toBe(0);
+    expect(componente.p.VentaIndividual).toBeTrue();
   });
 });

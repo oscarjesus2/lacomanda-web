@@ -29,6 +29,7 @@ export interface PedidoEspacioDTO {
   NombreCuenta: string;
   IdProducto: number;
   Item: number;
+  NumEnvios: number;
   Qty: number;
   FactorComplemento: number;
   NombreCorto: string;

@@ -412,7 +412,8 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   get editorValido(): boolean {
     if (!this.editor) return false;
     return this.editor.producto.SeccionesMenu.every(
-      seccion => this.seleccionMenu(seccion) === this.requeridoMenu(seccion));
+      seccion => seccion.EsOpcional
+        || this.seleccionMenu(seccion) === this.requeridoMenu(seccion));
   }
 
   private solicitarAcceso(): void {

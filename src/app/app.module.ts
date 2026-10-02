@@ -154,7 +154,9 @@ import { ReportesTermicosAdministracionComponent } from './components/mantenimie
 import { MonitorComandasComponent } from './components/mantenimiento/monitor-comandas/monitor-comandas.component';
 import { SeguimientoAdministracionComponent } from './components/mantenimiento/seguimiento-administracion/seguimiento-administracion.component';
 import { SunatConfigurationComponent } from './components/mantenimiento/sunat-configuration/sunat-configuration.component';
+import { AeatConfigurationComponent } from './components/mantenimiento/aeat-configuration/aeat-configuration.component';
 import { CpeEnvioMonitorComponent } from './components/mantenimiento/cpe-envio-monitor/cpe-envio-monitor.component';
+import { AeatEnvioMonitorComponent } from './components/mantenimiento/aeat-envio-monitor/aeat-envio-monitor.component';
 import { PagoCuentaOnlineConfigurationComponent } from './components/mantenimiento/pago-cuenta-online-configuration/pago-cuenta-online-configuration.component';
 
 export const MY_DATE_FORMATS = {
@@ -282,7 +284,9 @@ export const MY_DATE_FORMATS = {
     MonitorComandasComponent,
     SeguimientoAdministracionComponent,
     SunatConfigurationComponent,
+    AeatConfigurationComponent,
     CpeEnvioMonitorComponent,
+    AeatEnvioMonitorComponent,
     PagoCuentaOnlineConfigurationComponent,
   ],
   imports: [

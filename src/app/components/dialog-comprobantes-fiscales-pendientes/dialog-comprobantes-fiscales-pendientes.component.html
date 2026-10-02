@@ -24,13 +24,13 @@
   <article *ngFor="let comprobante of comprobantes" class="request-card">
     <div class="request-info">
       <span class="request-type">
-        {{ comprobante.TipoDocumento }} · {{ comprobante.Caja }}
+        {{ comprobante.SistemaFiscal }} · {{ comprobante.TipoDocumento }} · {{ comprobante.Caja }}
       </span>
       <h3>{{ comprobante.NumeroDocumento }}</h3>
       <p>{{ comprobante.Cliente }}</p>
       <p class="request-reason">
         <strong>
-          {{ 'sunatResponse' | tenantText }}
+          {{ comprobante.SistemaFiscal === 'AEAT' ? 'Respuesta de la AEAT' : ('sunatResponse' | tenantText) }}
           <ng-container *ngIf="comprobante.CodigoRespuesta">
             {{ comprobante.CodigoRespuesta }}
           </ng-container>
@@ -51,9 +51,22 @@
       <button
         mat-raised-button
         color="primary"
+        [disabled]="procesando.has(claveProcesamiento(comprobante))"
         (click)="corregir(comprobante)">
-        <mat-icon>edit_document</mat-icon>
-        {{ 'correctAndReissue' | tenantText }}
+        <mat-icon>
+          {{ comprobante.AccionCodigo.startsWith('REINTENTAR_ENVIO_')
+            ? 'refresh'
+            : 'edit_document' }}
+        </mat-icon>
+        <ng-container *ngIf="comprobante.AccionCodigo === 'SUBSANAR_REGISTRO'">
+          Subsanar registro
+        </ng-container>
+        <ng-container *ngIf="comprobante.AccionCodigo.startsWith('REINTENTAR_ENVIO_')">
+          Reintentar envío
+        </ng-container>
+        <ng-container *ngIf="comprobante.AccionCodigo === 'SUSTITUIR_COMPROBANTE'">
+          {{ 'correctAndReissue' | tenantText }}
+        </ng-container>
       </button>
     </div>
   </article>
