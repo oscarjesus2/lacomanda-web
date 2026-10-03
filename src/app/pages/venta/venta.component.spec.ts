@@ -107,6 +107,22 @@ describe('VentaComponent - posiciones del tablero de espacios', () => {
 
     expect(component.cantidadEspaciosTablero).toBe(2);
   });
+
+  it('resume solo los espacios visibles y distingue los libres de los que están en uso', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.listaEspacios_x_Ambiente = [
+      { Numero: 1, Visible: true, Ocupado: 0 },
+      { Numero: 2, Visible: true, Ocupado: 1 },
+      { Numero: 3, Visible: true, Ocupado: 1, TienePrecuenta: true },
+      { Numero: 4, Visible: true, Ocupado: 3 },
+      { Numero: 5, Visible: true, Ocupado: 4 },
+      { Numero: 6, Visible: false, Ocupado: 1 },
+      { Numero: 0, Visible: true, Ocupado: 0 },
+    ] as any;
+
+    expect(component.cantidadEspaciosLibresTablero).toBe(1);
+    expect(component.cantidadEspaciosEnUsoTablero).toBe(4);
+  });
 });
 
 describe('VentaComponent - pedidos pendientes de cobro', () => {

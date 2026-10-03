@@ -159,6 +159,15 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       .filter(espacio => espacio.Numero > 0 && espacio.Visible !== false).length;
   }
 
+  get cantidadEspaciosLibresTablero(): number {
+    return (this.listaEspacios_x_Ambiente ?? [])
+      .filter(espacio => espacio.Numero > 0 && espacio.Visible !== false && this.estadoTableroEspacio(espacio) === 'free').length;
+  }
+
+  get cantidadEspaciosEnUsoTablero(): number {
+    return this.cantidadEspaciosTablero - this.cantidadEspaciosLibresTablero;
+  }
+
   posicionEnTablero(posicion: number): string | null {
     if (!Number.isInteger(posicion) || posicion < 1 || posicion > ESPACIOS_TABLERO_FILAS * ESPACIOS_TABLERO_COLUMNAS) {
       return null;

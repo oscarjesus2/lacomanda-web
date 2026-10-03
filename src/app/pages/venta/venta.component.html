@@ -660,14 +660,13 @@
 
       <div *ngIf="!isLoadingEspacios" class="spaces-overview">
         <div class="spaces-overview__copy">
-          <span class="spaces-overview__eyebrow">ESPACIOS · {{ displayValueAmbiente }}</span>
-          <h2>Elige un espacio</h2>
-          <p *ngIf="!aplicarFiltroTrasladarAEspacio && !aplicarFiltroUnirEspacio && !aplicarFiltroCambioEspacio && !aplicarFiltroTrasladoProducto">Abre una mesa o consulta su cuenta con un toque.</p>
-          <p *ngIf="aplicarFiltroTrasladarAEspacio || aplicarFiltroUnirEspacio || aplicarFiltroCambioEspacio || aplicarFiltroTrasladoProducto">Selecciona el espacio de destino.</p>
+          <span class="spaces-overview__eyebrow">ESPACIOS</span>
+          <h2 *ngIf="!aplicarFiltroTrasladarAEspacio && !aplicarFiltroUnirEspacio && !aplicarFiltroCambioEspacio && !aplicarFiltroTrasladoProducto">{{ displayValueAmbiente }}</h2>
+          <h2 *ngIf="aplicarFiltroTrasladarAEspacio || aplicarFiltroUnirEspacio || aplicarFiltroCambioEspacio || aplicarFiltroTrasladoProducto">Selecciona el espacio de destino</h2>
         </div>
         <span class="spaces-overview__count">
           <mat-icon aria-hidden="true">table_restaurant</mat-icon>
-          {{ cantidadEspaciosTablero }} espacios
+          {{ cantidadEspaciosLibresTablero }} libres · {{ cantidadEspaciosEnUsoTablero }} en uso
         </span>
       </div>
 
