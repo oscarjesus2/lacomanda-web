@@ -109,6 +109,25 @@ describe('MenuVentasComponent por licencia', () => {
     expect(conSoporte).toContain('Cobro móvil');
   });
 
+  it('muestra el monitor AEAT únicamente para soporte en España', () => {
+    const component = crear([C.OperacionComprobantes]);
+    (component as any).paisISO2 = 'ES';
+    const configuracion = component.ventasMenu.find(
+      section => section.title === 'Configuracion',
+    )!;
+
+    const sinSoporte = component.itemsVisibles(configuracion)
+      .map(item => item.label);
+    expect(sinSoporte).not.toContain('Monitor AEAT');
+
+    (component as any).esUsuarioSoporteLaComanda = true;
+    const conSoporte = component.itemsVisibles(configuracion)
+      .map(item => item.label);
+    expect(conSoporte).toContain('Sistema fiscal AEAT');
+    expect(conSoporte).toContain('Monitor AEAT');
+    expect(conSoporte).not.toContain('Monitor SUNAT');
+  });
+
   it('en Comercio muestra caja y turnos sin opciones propias de restaurante', () => {
     const component = crear(
       [C.OperacionCaja, C.VentasDirecta],

@@ -44,6 +44,7 @@ export interface PreparacionCorreccionVenta {
   FechaEmision: string;
   Total: number;
   Estado: number;
+  EstadoPago: number;
   EstadoFiscal: number;
   PaisISO2: string;
   EnvioElectronicoOnline: boolean;

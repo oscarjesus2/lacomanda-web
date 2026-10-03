@@ -92,6 +92,9 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   subAreasAlmacen: SubAreaAlmacen[] = [];
   proveedores: Proveedor[] = [];
   almacenHabilitado = false;
+  comprasHabilitadas = false;
+  private proveedoresCargados = false;
+  private proveedoresCargando = false;
   usarSubAreaFija = false;
   impuestoPais: ImpuestoPais[] = [];
   seccionMenu: SeccionMenu[] = [];
@@ -191,10 +194,23 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
 
   private cargarAccesoAlmacen(): void {
     this.licenciaTenantService
-      .tieneCaracteristica(CARACTERISTICAS_LICENCIA.AlmacenGestion)
-      .subscribe(habilitada => {
-        this.almacenHabilitado = habilitada;
-        if (!habilitada) {
+      .obtenerEstado()
+      .subscribe(estado => {
+        this.almacenHabilitado = this.licenciaTenantService.evaluar(
+          estado,
+          CARACTERISTICAS_LICENCIA.AlmacenGestion,
+        );
+        this.comprasHabilitadas = this.licenciaTenantService.evaluar(
+          estado,
+          CARACTERISTICAS_LICENCIA.AlmacenCompras,
+        );
+
+        if (!this.comprasHabilitadas) {
+          this.proveedores = [];
+          this.proveedoresCargados = false;
+        }
+
+        if (!this.almacenHabilitado) {
           this.areasAlmacen = [];
           this.subAreasAlmacen = [];
           return;
@@ -275,9 +291,6 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     this.grupoService.getGrupos('P').subscribe(r => { if (r.Success) this.grupos = r.Data; });
     this.grupoService.getGrupos('A').subscribe(r => { if (r.Success) this.gruposAlmacen = r.Data; });
     this.unidadMedidaService.listar().subscribe(r => { if (r.Success) this.unidadesMedida = r.Data || []; });
-    this.proveedorService.listar().subscribe(r => {
-      if (r.Success) this.proveedores = (r.Data || []).filter(p => p.Activo);
-    });
     this.impuestoPaisService.getImpuestoPais().subscribe(r => {
       if (r.Success) {
         this.impuestoPais = r.Data || [];
@@ -300,7 +313,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     });
   }
 
-  onFamiliaChange(): void {
+onFamiliaChange(): void {
   this.p.IdSubFamilia = undefined as any;
   if (this.p.IdFamilia) {
     this.familiaService.getSubFamilias().subscribe(r => {
@@ -312,6 +325,57 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     this.subfamilias = [];
   }
 }
+
+  esOpcionDeMenu(): boolean {
+    return this.p.Tipo === 1 && Number(this.p.IdClaseCombo ?? 0) > 0;
+  }
+
+  requierePrecioVentaIndividual(): boolean {
+    return this.esOpcionDeMenu()
+      && this.p.VentaIndividual
+      && !this.p.SinPrecio;
+  }
+
+  cambiarTipoProducto(): void {
+    if (this.p.Tipo !== 1) {
+      this.p.IdClaseCombo = 0;
+      this.p.VentaIndividual = true;
+    }
+  }
+
+  cambiarSeccionMenu(): void {
+    if (!this.esOpcionDeMenu()) {
+      this.p.VentaIndividual = true;
+      return;
+    }
+
+    // Las opciones nuevas nacen como exclusivas del menú. Carta, menú
+    // principal y complementos conservan siempre su comportamiento anterior.
+    this.p.VentaIndividual = false;
+    this.normalizarVentaIndividual();
+  }
+
+  cambiarVentaIndividual(): void {
+    this.normalizarVentaIndividual();
+  }
+
+  private normalizarVentaIndividual(): void {
+    if (!this.esOpcionDeMenu()) {
+      this.p.VentaIndividual = true;
+      return;
+    }
+
+    // Visible conserva la opción disponible dentro del menú. VentaIndividual
+    // controla por separado si aparece como botón directo en caja.
+    this.p.Visible = true;
+    if (this.p.VentaIndividual) {
+      return;
+    }
+
+    this.p.Precio = 0;
+    this.p.SinPrecio = false;
+    this.p.PrecioMinimo = 0;
+  }
 
   cambiarServicio(): void {
     if (this.p.EsServicio) {
@@ -331,6 +395,11 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   cambiarControlDirectoStock(): void {
     if (!this.p.ControlDirectoStock) {
       this.limpiarAlmacenDirecto();
+      return;
+    }
+
+    if (this.mostrarConfiguracionAvanzada) {
+      this.cargarProveedoresSiCorresponde();
     }
   }
 
@@ -361,7 +430,38 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     if (this.mostrarConfiguracionAvanzada) {
       this.configuracionAvanzadaHabilitada = true;
       this.seleccionarImpuestoGeneralSiCorresponde();
+      if (this.p.ControlDirectoStock) {
+        this.cargarProveedoresSiCorresponde();
+      }
     }
+  }
+
+  /**
+   * Los proveedores solo intervienen en las presentaciones de compra del
+   * control directo de stock. El listado básico de productos no debe consultar
+   * este catálogo, que además pertenece a la característica Almacén/Compras.
+   */
+  private cargarProveedoresSiCorresponde(): void {
+    if (!this.comprasHabilitadas ||
+        this.proveedoresCargados ||
+        this.proveedoresCargando) {
+      return;
+    }
+
+    this.proveedoresCargando = true;
+    this.proveedorService.listar().subscribe({
+      next: response => {
+        this.proveedores = response.Success
+          ? (response.Data || []).filter(proveedor => proveedor.Activo)
+          : [];
+        this.proveedoresCargados = response.Success;
+        this.proveedoresCargando = false;
+      },
+      error: () => {
+        this.proveedores = [];
+        this.proveedoresCargando = false;
+      },
+    });
   }
 
   cambiarUnidadStock(): void {
@@ -700,6 +800,8 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     this.limpiarEdicionImagen();
     this.p = {
       ...row,
+      VentaIndividual: row.VentaIndividual
+        ?? !(row.Tipo === 1 && Number(row.IdClaseCombo ?? 0) > 0),
       PresentacionesCompra: (row.PresentacionesCompra || [])
         .map(presentacion => ({ ...presentacion })),
       ControlDirectoStock:
@@ -826,7 +928,18 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   onSubmit(): void {
     // Validaciones condicionales (front). El back valida también.
     this.aplicarDefaultsComercio();
+    this.normalizarVentaIndividual();
     if (!this.modoComercio && !this.p.Posicion) { Swal.fire('Validación', 'Debe elegir la Posición (8×9).', 'info'); return; }
+
+    if (this.requierePrecioVentaIndividual()
+        && (!this.p.Precio || this.p.Precio <= 0)) {
+      Swal.fire(
+        'Validación',
+        'Si esta opción del menú se vende por separado, debe indicar un precio mayor que cero o activar “Sin precio”.',
+        'info'
+      );
+      return;
+    }
 
     if (this.configuracionAvanzadaHabilitada &&
         this.p.SinPrecio &&
@@ -948,6 +1061,7 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
     this.mostrarConfiguracionAvanzada = false;
     this.configuracionAvanzadaHabilitada = false;
     this.p.Visible = true; this.p.Activo = true; this.p.IdImpuestoPais = ''; this.p.Tipo = 0;
+    this.p.VentaIndividual = true;
     this.p.EsServicio = false;
     this.p.SinPrecio = false;
     this.p.InsumoProducto = 'P';

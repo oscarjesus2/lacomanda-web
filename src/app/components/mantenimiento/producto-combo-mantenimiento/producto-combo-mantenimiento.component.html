@@ -169,6 +169,15 @@
                 [(ngModel)]="cantidad" />
             </mat-form-field>
           </div>
+
+          <mat-checkbox
+            class="combo-optional-toggle"
+            [(ngModel)]="esOpcional">
+            {{ 'optionalMenuSection' | tenantText }}
+          </mat-checkbox>
+          <p class="combo-optional-hint">
+            {{ 'optionalMenuSectionHint' | tenantText }}
+          </p>
         </div>
 
         <div

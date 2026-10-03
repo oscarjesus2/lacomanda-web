@@ -6,8 +6,8 @@ export class PedidoComplemento {
     ItemRef: number;
     ProductoComplemento: Producto;
     Cantidad: number;
+    NumEnvios: number;
     constructor(init?: Partial<PedidoComplemento>) {
         Object.assign(this, init);
     }
   }
-  

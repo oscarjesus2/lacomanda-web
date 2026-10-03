@@ -21,6 +21,7 @@ export interface ProductoComboSeccion {
   IdSeccionMenu: number;
   Descripcion: string;
   Cantidad: number;
+  EsOpcional: boolean;
   Productos: ProductoComboProducto[];
 }
 
@@ -31,5 +32,6 @@ export interface ProductoComboConfiguracion {
 
 export interface GuardarProductoComboSeccion {
   Cantidad: number;
+  EsOpcional: boolean;
   IdProductos: number[];
 }

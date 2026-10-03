@@ -37,6 +37,7 @@ export class Producto {
     public FactorComplemento: number;
     public PrecioMinimo: number;
     public IdClaseCombo: number;
+    public VentaIndividual: boolean = true;
     public IdImpuestoPais: string;
     public InsumoProducto: string;
     public TieneReceta: boolean;

@@ -24,6 +24,7 @@ export class ProductoComboMantenimientoComponent implements OnInit {
   idProductoCombo: number | null = null;
   idSeccionMenu: number | null = null;
   cantidad = 1;
+  esOpcional = false;
   seleccionados: number[] = [];
   filtro = '';
 
@@ -80,6 +81,7 @@ export class ProductoComboMantenimientoComponent implements OnInit {
     this.configuracion.clear();
     this.idSeccionMenu = null;
     this.cantidad = 1;
+    this.esOpcional = false;
     this.seleccionados = [];
     this.filtro = '';
 
@@ -119,6 +121,7 @@ export class ProductoComboMantenimientoComponent implements OnInit {
     this.idSeccionMenu = seccion.IdSeccionMenu;
     const configurada = this.configuracion.get(seccion.IdSeccionMenu);
     this.cantidad = configurada?.Cantidad ?? 1;
+    this.esOpcional = configurada?.EsOpcional ?? false;
     this.seleccionados = configurada?.Productos
       .map(producto => producto.IdProducto) ?? [];
     this.filtro = '';
@@ -189,6 +192,7 @@ export class ProductoComboMantenimientoComponent implements OnInit {
         this.idSeccionMenu,
         {
           Cantidad: this.cantidad,
+          EsOpcional: this.esOpcional,
           IdProductos: this.seleccionados,
         }
       )

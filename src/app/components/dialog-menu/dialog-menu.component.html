@@ -19,7 +19,13 @@
         {{ pedidodet.Producto.NombreCorto }}
       </strong>
       <span class="dialog-notice__text">
-        {{ (soloLectura ? 'menuReadOnlyHint' : 'menuSelectionHint') | tenantText }}
+        {{
+          (soloLectura
+            ? 'menuReadOnlyHint'
+            : menuEnviado
+              ? 'menuDeferredSelectionHint'
+              : 'menuSelectionHint') | tenantText
+        }}
       </span>
     </div>
   </div>
@@ -31,14 +37,14 @@
 
   <ng-container *ngIf="!cargando && configuracion.Secciones.length">
     <div class="form-row menu-summary-row">
-      <mat-form-field class="form-field" appearance="fill">
+      <mat-form-field class="form-field menu-quantity-field" appearance="fill">
         <mat-label>{{ 'menuQuantity' | tenantText }}</mat-label>
         <input
           matInput
           type="number"
           min="1"
           step="1"
-          [disabled]="soloLectura"
+          [disabled]="menuEnviado"
           [(ngModel)]="cantidadMenu"
           (ngModelChange)="normalizarCantidadMenu($event)" />
       </mat-form-field>
@@ -48,18 +54,22 @@
           class="dialog-summary__item"
           *ngFor="let seccion of configuracion.Secciones; trackBy: trackSeccion">
           <span class="dialog-summary__label">{{ seccion.Descripcion }}</span>
+          <span class="menu-optional-label" *ngIf="seccion.EsOpcional">
+            {{ 'sectionOptional' | tenantText }}
+          </span>
           <strong class="dialog-summary__value">
             {{ cantidadSeleccionada(seccion) }} /
             {{ cantidadRequerida(seccion) }}
           </strong>
           <span
             class="status-badge"
-            [class.status-badge--danger]="!seccionCompleta(seccion)">
-            {{
-              (seccionCompleta(seccion)
-                ? 'sectionComplete'
-                : 'sectionPending') | tenantText
-            }}
+            [class.status-badge--danger]="
+              !seccion.EsOpcional && !seccionCompleta(seccion)
+            "
+            [class.status-badge--warning]="
+              seccion.EsOpcional && !seccionCompleta(seccion)
+            ">
+            {{ estadoSeccion(seccion) | tenantText }}
           </span>
         </div>
       </div>
@@ -76,6 +86,9 @@
             [value]="seccion.IdSeccionMenu"
             (click)="seleccionarSeccion(seccion)">
             {{ seccion.Descripcion }}
+            <span class="menu-section-optional" *ngIf="seccion.EsOpcional">
+              · {{ 'sectionOptional' | tenantText }}
+            </span>
             <mat-icon *ngIf="seccionCompleta(seccion)">check_circle</mat-icon>
           </mat-button-toggle>
         </mat-button-toggle-group>
@@ -85,7 +98,9 @@
     <div
       class="dialog-workspace-content menu-workspace"
       *ngIf="seccionSeleccionada as seccion">
-      <section class="dialog-table-card menu-column" *ngIf="!soloLectura">
+      <section
+        class="dialog-table-card menu-column"
+        *ngIf="!soloLectura && seccionEditable(seccion)">
         <div class="menu-column__header">
           <span class="dialog-summary__label">
             {{ 'chooseMenuOptions' | tenantText }}
@@ -126,6 +141,7 @@
                     mat-raised-button
                     color="primary"
                     [disabled]="
+                      !seccionEditable(seccion) ||
                       cantidadSeleccionada(seccion) >=
                       cantidadRequerida(seccion)
                     "
@@ -196,6 +212,7 @@
                     mat-icon-button
                     color="primary"
                     [disabled]="
+                      !seccionEditable(seccion) ||
                       seleccion.ItemMenu > 0 ||
                       cantidadSeleccionada(seccion) >=
                         cantidadRequerida(seccion)

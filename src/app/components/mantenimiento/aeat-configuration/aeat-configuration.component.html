@@ -1,0 +1,230 @@
+<div class="mant-panel dialog-panel--workspace dialog-panel--dense aeat-panel">
+  <button mat-icon-button class="close-button" type="button" aria-label="Cerrar" (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>Sistema fiscal AEAT</h2>
+
+  <div class="dialog-empty-state" *ngIf="loading">
+    <mat-icon>hourglass_top</mat-icon>
+    <span>Cargando la configuración fiscal del negocio…</span>
+  </div>
+
+  <form class="dialog-form dialog-form--workspace" *ngIf="!loading && configuration" (ngSubmit)="save()">
+    <div class="dialog-form-scroll">
+      <div class="dialog-notice" [class.dialog-notice--success]="configuration.CertificadoVigente">
+        <mat-icon>{{ configuration.CertificadoVigente ? 'verified_user' : 'info' }}</mat-icon>
+        <div class="dialog-notice__content">
+          <strong class="dialog-notice__title">{{ statusLabel }}</strong>
+          <span class="dialog-notice__text" *ngIf="!configuration.CertificadoConfigurado">
+            Elige cómo trabajará este negocio con la AEAT y registra su certificado electrónico.
+          </span>
+          <span class="dialog-notice__text" *ngIf="configuration.CertificadoConfigurado">
+            El certificado y el libro de registros pertenecen exclusivamente a este negocio de España.
+          </span>
+        </div>
+      </div>
+
+      <div class="dialog-summary">
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">NIF del obligado tributario</span>
+          <strong class="dialog-summary__value">{{ configuration.Nif || 'Pendiente' }}</strong>
+        </div>
+        <div class="dialog-summary__item" *ngIf="configuration.RazonSocialFiscal">
+          <span class="dialog-summary__label">Nombre fiscal del obligado</span>
+          <strong class="dialog-summary__value">{{ configuration.RazonSocialFiscal }}</strong>
+        </div>
+        <div class="dialog-summary__item">
+          <span class="dialog-summary__label">Modalidad actual</span>
+          <strong class="dialog-summary__value">{{ configuration.ModoFiscalDescripcion }}</strong>
+        </div>
+        <div class="dialog-summary__item" *ngIf="configuration.CertificadoConfigurado">
+          <span class="dialog-summary__label">Certificado</span>
+          <strong class="dialog-summary__value">{{ configuration.NombreCertificado }}</strong>
+        </div>
+        <div class="dialog-summary__item" *ngIf="configuration.CertificadoValidoHastaUtc">
+          <span class="dialog-summary__label">Válido hasta</span>
+          <strong class="dialog-summary__value">{{ configuration.CertificadoValidoHastaUtc | date:'dd/MM/yyyy HH:mm' }}</strong>
+        </div>
+      </div>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>account_balance</mat-icon>
+          Modalidad del sistema
+        </h3>
+        <p class="dialog-form-section__hint">
+          Las dos opciones generan registros encadenados e inalterables. La diferencia es cuándo se comunican a la AEAT.
+        </p>
+
+        <mat-radio-group class="aeat-modes" name="mode" [(ngModel)]="mode">
+          <label class="aeat-mode" [class.aeat-mode--selected]="mode === modes.VeriFactu">
+            <mat-radio-button [value]="modes.VeriFactu">
+              <strong>VERI*FACTU</strong>
+            </mat-radio-button>
+            <span>Remisión automática de cada alta y anulación. La AEAT devuelve su aceptación o rechazo.</span>
+            <small>El comprobante incorpora el QR de verificación y la indicación VERI*FACTU.</small>
+          </label>
+
+          <label
+            class="aeat-mode"
+            [class.aeat-mode--selected]="mode === modes.NoVeriFactu"
+            [class.aeat-mode--disabled]="!configuration.PuedeCambiarANoVeriFactu">
+            <mat-radio-button
+              [value]="modes.NoVeriFactu"
+              [disabled]="!configuration.PuedeCambiarANoVeriFactu">
+              <strong>NO VERI*FACTU</strong>
+            </mat-radio-button>
+            <span>Conservación local, encadenada y firmada electrónicamente. No se remite cada factura.</span>
+            <small>Los registros se envían únicamente cuando exista un requerimiento de la AEAT.</small>
+          </label>
+        </mat-radio-group>
+
+        <div class="dialog-notice dialog-notice--warning" *ngIf="!configuration.PuedeCambiarANoVeriFactu">
+          <mat-icon>lock</mat-icon>
+          <div class="dialog-notice__content">
+            <strong class="dialog-notice__title">Modalidad protegida durante el año natural</strong>
+            <span class="dialog-notice__text">
+              Este negocio ya inició VERI*FACTU. No puede volver a NO VERI*FACTU hasta el siguiente año.
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>business</mat-icon>
+          Identificación del sistema
+        </h3>
+        <div class="dialog-summary aeat-product-summary">
+          <div class="dialog-summary__item">
+            <span class="dialog-summary__label">Producto SIF</span>
+            <strong class="dialog-summary__value">
+              {{ configuration.ProductoNombre }} · {{ configuration.ProductoCodigo }}
+            </strong>
+          </div>
+          <div class="dialog-summary__item">
+            <span class="dialog-summary__label">Versión fiscal declarada</span>
+            <strong class="dialog-summary__value">{{ configuration.ProductoVersion }}</strong>
+          </div>
+          <div class="dialog-summary__item">
+            <span class="dialog-summary__label">Productor</span>
+            <strong class="dialog-summary__value">{{ configuration.ProductorRazonSocial }}</strong>
+          </div>
+          <div class="dialog-summary__item">
+            <span class="dialog-summary__label">NIF del productor</span>
+            <strong class="dialog-summary__value">{{ configuration.ProductorNif }}</strong>
+          </div>
+        </div>
+        <div class="dialog-form-action aeat-declaration-action">
+          <button mat-stroked-button type="button" (click)="openResponsibleDeclaration()">
+            <mat-icon>description</mat-icon>
+            Ver declaración responsable
+          </button>
+          <span *ngIf="!configuration.DeclaracionResponsableUrl">
+            Pendiente de firma y publicación para esta versión.
+          </span>
+        </div>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>NIF del obligado tributario</mat-label>
+            <input matInput name="nif" [(ngModel)]="nif" minlength="9" maxlength="9" autocomplete="off" required>
+            <mat-hint>Se imprimirá en el comprobante y formará parte de cada registro.</mat-hint>
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Número de instalación</mat-label>
+            <input matInput name="installationNumber" [(ngModel)]="installationNumber" maxlength="100" autocomplete="off" required>
+            <mat-hint>Identifica de forma estable esta instalación de LaComanda.</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>workspace_premium</mat-icon>
+          Certificado electrónico
+        </h3>
+        <p class="dialog-form-section__hint">
+          Se utiliza para la conexión autenticada con la AEAT y, en NO VERI*FACTU, para firmar los registros. Para cambiar cualquier configuración debes seleccionarlo nuevamente.
+        </p>
+        <div class="dialog-option">
+          <div class="dialog-option__content">
+            <strong class="dialog-option__title">{{ certificate?.name || 'Selecciona el certificado del contribuyente' }}</strong>
+            <span class="dialog-option__hint">PFX o P12 · máximo 2 MB · almacenamiento privado por tenant.</span>
+            <input #certificateSelector type="file" hidden accept=".pfx,.p12,application/x-pkcs12" (change)="selectCertificate($event)">
+            <div class="dialog-form-action">
+              <button mat-stroked-button type="button" (click)="certificateSelector.click()">
+                <mat-icon>upload_file</mat-icon>
+                {{ certificate ? 'Cambiar certificado' : 'Elegir certificado' }}
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Contraseña del certificado</mat-label>
+            <input matInput name="certificatePassword" [(ngModel)]="certificatePassword" type="password" autocomplete="new-password" required>
+            <mat-hint>Se cifra antes de guardarse y nunca se muestra de nuevo.</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="dialog-form-section" *ngIf="configuration.ModoFiscal === modes.NoVeriFactu">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>verified</mat-icon>
+          Integridad y conservación
+        </h3>
+        <p class="dialog-form-section__hint">
+          Comprueba las huellas, firmas XAdES y cadenas completas. También puedes descargar el libro fiscal firmado del periodo seleccionado.
+        </p>
+        <div class="dialog-form-action aeat-compliance-actions">
+          <button mat-stroked-button type="button" [disabled]="verifyingIntegrity" (click)="verifyIntegrity()">
+            <mat-icon>fact_check</mat-icon>
+            {{ verifyingIntegrity ? 'Comprobando…' : 'Comprobar integridad' }}
+          </button>
+          <button mat-stroked-button type="button" [disabled]="exportingArchive" (click)="exportArchive()">
+            <mat-icon>archive</mat-icon>
+            {{ exportingArchive ? 'Preparando…' : 'Exportar libro fiscal' }}
+          </button>
+        </div>
+      </section>
+
+      <section class="dialog-form-section" *ngIf="configuration.ModoFiscal === modes.NoVeriFactu">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>outbox</mat-icon>
+          Remisión de facturación por requerimiento AEAT
+        </h3>
+        <p class="dialog-form-section__hint">
+          Utiliza esta acción solo cuando la AEAT haya solicitado expresamente los registros de un periodo.
+        </p>
+        <div class="dialog-form-grid aeat-requirement-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Desde</mat-label>
+            <input matInput type="date" name="requirementFrom" [(ngModel)]="requirementFrom">
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Hasta</mat-label>
+            <input matInput type="date" name="requirementTo" [(ngModel)]="requirementTo">
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Referencia del requerimiento</mat-label>
+            <input matInput name="requirementReference" [(ngModel)]="requirementReference" maxlength="18">
+            <mat-hint align="end">{{ requirementReference.length }}/18</mat-hint>
+          </mat-form-field>
+          <button mat-stroked-button color="primary" type="button" [disabled]="sendingRequirement || !readyToSendRequirement" (click)="sendRequirement()">
+            <mat-icon>send</mat-icon>
+            {{ sendingRequirement ? 'Enviando…' : 'Remitir facturación' }}
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div class="dialog-form-actions">
+      <button mat-stroked-button type="button" (click)="close()">Cancelar</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="saving || !readyToSave">
+        <mat-icon>save</mat-icon>
+        {{ saving ? 'Guardando…' : 'Guardar configuración' }}
+      </button>
+    </div>
+  </form>
+</div>

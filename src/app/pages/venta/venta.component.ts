@@ -15,7 +15,7 @@ import { DialogObservacionComponent } from '../../components/dialog-observacion/
 //Models
 import { Producto } from '../../models/product.models';
 import { Ambiente } from '../../models/ambiente.models';
-import { Espacios } from '../../models/espacios.models';
+import { Espacios, ESPACIOS_TABLERO_COLUMNAS, ESPACIOS_TABLERO_FILAS } from '../../models/espacios.models';
 import { ProductGrid } from '../../models/product.grid.models';
 import { Empleado } from '../../models/empleado.models';
 import { PedidoDet } from '../../models/pedidodet.models';
@@ -151,6 +151,53 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   public selectedValueDos: string;
   public listaEspaciosTotal: Espacios[];
   public listaEspacios_x_Ambiente: Espacios[];
+  readonly columnasTableroEspacios = ESPACIOS_TABLERO_COLUMNAS;
+  readonly filasTableroEspacios = ESPACIOS_TABLERO_FILAS;
+
+  get cantidadEspaciosTablero(): number {
+    return (this.listaEspacios_x_Ambiente ?? [])
+      .filter(espacio => espacio.Numero > 0 && espacio.Visible !== false).length;
+  }
+
+  get cantidadEspaciosLibresTablero(): number {
+    return (this.listaEspacios_x_Ambiente ?? [])
+      .filter(espacio => espacio.Numero > 0 && espacio.Visible !== false && this.estadoTableroEspacio(espacio) === 'free').length;
+  }
+
+  get cantidadEspaciosEnUsoTablero(): number {
+    return this.cantidadEspaciosTablero - this.cantidadEspaciosLibresTablero;
+  }
+
+  posicionEnTablero(posicion: number): string | null {
+    if (!Number.isInteger(posicion) || posicion < 1 || posicion > ESPACIOS_TABLERO_FILAS * ESPACIOS_TABLERO_COLUMNAS) {
+      return null;
+    }
+
+    const indice = posicion - 1;
+    const fila = Math.floor(indice / ESPACIOS_TABLERO_COLUMNAS) + 1;
+    const columna = indice % ESPACIOS_TABLERO_COLUMNAS + 1;
+    return `${fila} / ${columna}`;
+  }
+
+  estadoTableroEspacio(espacio: Espacios): 'free' | 'busy' | 'split' | 'joined' | 'prebill' {
+    switch (espacio.Ocupado) {
+      case 1: return espacio.TienePrecuenta ? 'prebill' : 'busy';
+      case 3: return 'split';
+      case 4: return 'joined';
+      default: return 'free';
+    }
+  }
+
+  etiquetaEstadoTableroEspacio(espacio: Espacios): string {
+    switch (this.estadoTableroEspacio(espacio)) {
+      case 'busy': return 'En uso';
+      case 'split': return 'Dividida';
+      case 'joined': return 'Unida';
+      case 'prebill': return 'Precuenta';
+      default: return 'Libre';
+    }
+  }
+
   private solicitudesMesaSubscription?: Subscription;
   private solicitudesQrPorEspacio = new Map<number, SolicitudMesaPendiente>();
   private solicitudesQrConocidas = new Set<number>();
@@ -241,7 +288,12 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   /** El menú solo aplica a la fila seleccionada de un producto compuesto. */
   get mostrarMenuMozo(): boolean {
     return !this.isComboDisabled
-      && this.selectedRow?.Producto?.Tipo === 1;
+      && this.esMenuPrincipal(this.selectedRow?.Producto);
+  }
+
+  esMenuPrincipal(producto?: Producto): boolean {
+    return producto?.Tipo === 1
+      && Number(producto.IdClaseCombo ?? 0) === 0;
   }
 
   /** Los complementos solo aparecen cuando la fila seleccionada realmente los tiene. */
@@ -249,9 +301,11 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.puedeVerComplementos;
   }
 
-  /** Hay algo nuevo que cocina todavía no ha recibido. */
+  /** Hay una línea nueva o una comanda persistida que todavía no se imprimió. */
   get hayProductosPendientesEnvio(): boolean {
-    return (this.listProductGrid ?? []).some(item => !item.Item);
+    return (this.listProductGrid ?? []).some(item =>
+      !item.Item
+      || !this.productoEnviadoACocina(item));
   }
 
   /** Enviar pedido solo tiene sentido dentro de la edición y con líneas nuevas. */
@@ -291,9 +345,26 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       || this.mostrarRehacerMozo;
   }
 
-  /** Una línea con ítem asignado ya fue persistida y enviada a preparación. */
+  /**
+   * Una línea solo figura como enviada cuando todos los documentos de
+   * preparación que le corresponden ya fueron confirmados por impresión.
+   */
   productoEnviadoACocina(pedidoDet: PedidoDet): boolean {
-    return (pedidoDet?.Item ?? 0) > 0;
+    if ((pedidoDet?.Item ?? 0) <= 0) {
+      return false;
+    }
+
+    const producto = pedidoDet.Producto;
+    const esMenuPrincipal = producto?.Tipo === 1
+      && Number(producto.IdClaseCombo ?? 0) === 0;
+    const menuEnviado = !esMenuPrincipal
+      || (pedidoDet.PedidoMenu ?? []).every(opcion => (opcion.NumEnvios ?? 0) > 0);
+    const detalleEnviado = esMenuPrincipal
+      || (pedidoDet.NumEnvios ?? 0) > 0;
+    const complementosEnviados = (pedidoDet.PedidoComplemento ?? [])
+      .every(complemento => (complemento.NumEnvios ?? 0) > 0);
+
+    return detalleEnviado && menuEnviado && complementosEnviados;
   }
   isAdmin = false;
   reservasHabilitadas = false;
@@ -1966,7 +2037,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async aumentarProductGrid(oPedidoDet: PedidoDet) {
 
-    if (oPedidoDet.Producto.Tipo === 1 || oPedidoDet.Producto.Tipo === 2) {
+    if (this.esMenuPrincipal(oPedidoDet.Producto)
+        || oPedidoDet.Producto.Tipo === 2) {
       return;
     }
 
@@ -1983,7 +2055,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async restarProductGrid(pedidoDet: PedidoDet) {
 
-    if (pedidoDet.Producto.Tipo === 1 || pedidoDet.Producto.Tipo === 2) {
+    if (this.esMenuPrincipal(pedidoDet.Producto)
+        || pedidoDet.Producto.Tipo === 2) {
       return;
     }
 
@@ -2389,7 +2462,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       Ip: this.storageService.getCurrentIP()
     });
 
-    if (product.Tipo == 1) {
+    if (this.esMenuPrincipal(product)) {
       this.AgregarProductoMenu(pedidoDet);
     } else if (product.Tipo == 2) {
       this.AgregarProductoComplemento(pedidoDet);
@@ -2699,7 +2772,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   VerMenu(): void {
     const selectedRow = this.selectedRow;
-    if (!selectedRow || selectedRow.Producto?.Tipo !== 1) {
+    if (!selectedRow || !this.esMenuPrincipal(selectedRow.Producto)) {
       return;
     }
 
@@ -2807,10 +2880,10 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Reenviar un pedido sin productos nuevos no aporta nada y ademas el
-    // backend lo interpretaba como pedido vacio, dandolo por cobrado.
+    // Se permite reenviar una cuenta sin líneas nuevas cuando quedó alguna
+    // comanda pendiente de impresión. El backend conserva el pedido existente.
     if (this.listProductGrid.length > 0
-        && !this.listProductGrid.some(item => !item.Item)) {
+        && !this.hayProductosPendientesEnvio) {
       Swal.fire(
         this.textCatalog.get('sendOrder'),
         this.textCatalog.get('noNewProductsToSend'),
@@ -2911,11 +2984,13 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
               }
             : undefined;
           const impresas = await this.imprimir(impresiones, contextoLote);
-          if (impresas !== impresiones.length) {
+          if (impresiones.length === 0 || impresas !== impresiones.length) {
             await Swal.fire({
               icon: 'warning',
               title: 'Pedido guardado',
-              text: 'El pedido se guardó correctamente. Una o más comandas están pendientes de impresión. Comprueba que las impresoras estén encendidas; el sistema volverá a intentarlo automáticamente.',
+              text: impresiones.length === 0
+                ? 'El pedido se guardó correctamente, pero no se generó ninguna comanda. Comprueba que los productos tengan un área de impresión asignada.'
+                : 'El pedido se guardó correctamente. Una o más comandas están pendientes de impresión. Comprueba que las impresoras estén encendidas; el sistema volverá a intentarlo automáticamente.',
               confirmButtonText: 'Entendido',
             });
           }
@@ -3155,6 +3230,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       oPedidoDet = new PedidoDet(
         {
           Item: data.Item,
+          NumEnvios: data.NumEnvios,
           NroCuenta: data.NroCuenta,
           NombreCuenta: data.NombreCuenta,
           IdPedido: data.IdPedido,

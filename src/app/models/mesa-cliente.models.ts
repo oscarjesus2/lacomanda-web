@@ -57,6 +57,7 @@ export interface SeccionMenuCartaMesaCliente {
   IdSeccionMenu: number;
   Descripcion: string;
   Cantidad: number;
+  EsOpcional: boolean;
   Opciones: OpcionMenuCartaMesaCliente[];
 }
 

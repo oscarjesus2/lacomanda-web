@@ -265,7 +265,13 @@
       [disabled]="!esDocumentoActivo(ventaSeleccionada)"
       (click)="corregirVenta(tipoCorreccionPagos)">
       <mat-icon>payments</mat-icon>
-      <span>{{ 'modifyPayments' | tenantText }}</span>
+      <span>
+        {{
+          (esPagoPendiente(ventaSeleccionada)
+            ? 'registerPayment'
+            : 'modifyPayments') | tenantText
+        }}
+      </span>
     </button>
 
     <mat-divider></mat-divider>

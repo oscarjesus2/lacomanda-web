@@ -19,7 +19,7 @@ import Swal from 'sweetalert2';
 })
 export class DialogMenuComponent implements OnInit {
   readonly pedidodet: PedidoDet;
-  readonly soloLectura: boolean;
+  readonly menuEnviado: boolean;
 
   configuracion: ProductoComboConfiguracion = {
     IdProducto: 0,
@@ -40,7 +40,7 @@ export class DialogMenuComponent implements OnInit {
     private readonly dialogRef: MatDialogRef<DialogMenuComponent>,
   ) {
     this.pedidodet = data.pedidodet;
-    this.soloLectura = this.pedidodet.Item > 0;
+    this.menuEnviado = this.pedidodet.Item > 0;
     this.cantidadMenu = Math.max(1, Number(this.pedidodet.Cantidad) || 1);
     this.selecciones = (this.pedidodet.PedidoMenu ?? []).map(
       item =>
@@ -56,12 +56,16 @@ export class DialogMenuComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     try {
       if (this.data.configuracion) {
-        this.configuracion = this.data.configuracion;
+        this.configuracion = this.normalizarConfiguracion(
+          this.data.configuracion,
+        );
       } else {
         const response = await this.productoComboService
           .obtenerConfiguracion(this.pedidodet.Producto.IdProducto)
           .toPromise();
-        this.configuracion = response?.Data ?? this.configuracion;
+        this.configuracion = this.normalizarConfiguracion(
+          response?.Data ?? this.configuracion,
+        );
       }
       this.integrarSeccionesGuardadas();
 
@@ -86,6 +90,22 @@ export class DialogMenuComponent implements OnInit {
 
   seleccionarSeccion(seccion: ProductoComboSeccion): void {
     this.seccionSeleccionada = seccion;
+  }
+
+  get tieneSeccionesOpcionalesPendientes(): boolean {
+    return this.configuracion.Secciones.some(
+      seccion => seccion.EsOpcional && !this.seccionCompleta(seccion),
+    );
+  }
+
+  get soloLectura(): boolean {
+    return this.menuEnviado
+      && !this.tieneSeccionesOpcionalesPendientes
+      && !this.tieneSeleccionesNuevas;
+  }
+
+  get tieneSeleccionesNuevas(): boolean {
+    return this.selecciones.some(seleccion => seleccion.ItemMenu === 0);
   }
 
   opcionesDisponibles(seccion: ProductoComboSeccion): ProductoComboProducto[] {
@@ -116,12 +136,26 @@ export class DialogMenuComponent implements OnInit {
     );
   }
 
+  seccionEditable(seccion: ProductoComboSeccion): boolean {
+    return !this.menuEnviado || seccion.EsOpcional;
+  }
+
+  estadoSeccion(seccion: ProductoComboSeccion): string {
+    if (this.seccionCompleta(seccion)) {
+      return 'sectionComplete';
+    }
+
+    return seccion.EsOpcional && this.cantidadSeleccionada(seccion) === 0
+      ? 'sectionForLater'
+      : 'sectionPending';
+  }
+
   agregarOpcion(
     seccion: ProductoComboSeccion,
     producto: ProductoComboProducto,
   ): void {
     if (
-      this.soloLectura ||
+      !this.seccionEditable(seccion) ||
       this.cantidadSeleccionada(seccion) >= this.cantidadRequerida(seccion)
     ) {
       return;
@@ -163,7 +197,7 @@ export class DialogMenuComponent implements OnInit {
 
   aumentar(seccion: ProductoComboSeccion, seleccion: PedidoMenu): void {
     if (
-      this.soloLectura ||
+      !this.seccionEditable(seccion) ||
       seleccion.ItemMenu > 0 ||
       this.cantidadSeleccionada(seccion) >= this.cantidadRequerida(seccion)
     ) {
@@ -174,7 +208,7 @@ export class DialogMenuComponent implements OnInit {
   }
 
   disminuir(seleccion: PedidoMenu): void {
-    if (this.soloLectura || seleccion.ItemMenu > 0) {
+    if (seleccion.ItemMenu > 0) {
       return;
     }
 
@@ -187,7 +221,7 @@ export class DialogMenuComponent implements OnInit {
   }
 
   quitar(seleccion: PedidoMenu): void {
-    if (this.soloLectura || seleccion.ItemMenu > 0) {
+    if (seleccion.ItemMenu > 0) {
       return;
     }
 
@@ -195,7 +229,7 @@ export class DialogMenuComponent implements OnInit {
   }
 
   normalizarCantidadMenu(value: number): void {
-    if (this.soloLectura) {
+    if (this.menuEnviado) {
       return;
     }
 
@@ -225,7 +259,7 @@ export class DialogMenuComponent implements OnInit {
     }
 
     const seccionIncompleta = this.configuracion.Secciones.find(
-      seccion => !this.seccionCompleta(seccion),
+      seccion => !seccion.EsOpcional && !this.seccionCompleta(seccion),
     );
     if (seccionIncompleta) {
       void Swal.fire({
@@ -299,6 +333,7 @@ export class DialogMenuComponent implements OnInit {
               this.cantidadMenu,
           ),
         ),
+        EsOpcional: false,
         Productos: guardadas.map(item => ({
           IdProducto: item.IdProductoSeccionMenu,
           Nombre: this.nombreProducto(item),
@@ -323,5 +358,17 @@ export class DialogMenuComponent implements OnInit {
       confirmButtonText: this.textCatalog.get('accept'),
     });
     this.dialogRef.close();
+  }
+
+  private normalizarConfiguracion(
+    configuracion: ProductoComboConfiguracion,
+  ): ProductoComboConfiguracion {
+    return {
+      ...configuracion,
+      Secciones: (configuracion.Secciones ?? []).map(seccion => ({
+        ...seccion,
+        EsOpcional: Boolean(seccion.EsOpcional),
+      })),
+    };
   }
 }

@@ -211,6 +211,10 @@ export class DialogVentasgeneralesComponent implements OnInit {
     return venta?.Estado === 1;
   }
 
+  esPagoPendiente(venta: VentasInterface | null): boolean {
+    return venta?.EstadoPago === 'Pendiente de pago';
+  }
+
   tieneCorreoValido(venta: VentasInterface | null): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(venta?.ClienteCorreo?.trim() ?? '');
   }

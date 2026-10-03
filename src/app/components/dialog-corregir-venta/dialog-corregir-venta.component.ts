@@ -146,6 +146,10 @@ export class DialogCorregirVentaComponent implements OnInit {
       && this.preparacion.EnvioElectronicoOnline;
   }
 
+  get esCobroPendiente(): boolean {
+    return this.preparacion?.EstadoPago === 2;
+  }
+
   get totalPagos(): number {
     return this.pagos.reduce(
       (total, pago) => total + Number(pago.MontoPagado || 0)
@@ -177,7 +181,9 @@ export class DialogCorregirVentaComponent implements OnInit {
           && (pago.IdTipoPago !== 1
             || Number(pago.Vuelto || 0) < Number(pago.MontoPagado))
           && (pago.IdTipoPago !== 3
-            || (!!pago.IdTarjeta && !!pago.Autorizacion?.trim())));
+            || (!!pago.IdTarjeta && !!pago.Autorizacion?.trim()))
+          && (pago.IdTipoPago !== 6
+            || !!pago.Observacion?.trim()));
     }
 
     if (this.tipoCorreccion === TipoCorreccionVenta.Reemision) {
@@ -258,6 +264,10 @@ export class DialogCorregirVentaComponent implements OnInit {
     if (pago.IdTipoPago !== 3) {
       pago.IdTarjeta = undefined;
       pago.Autorizacion = undefined;
+    }
+
+    if (pago.IdTipoPago !== 6) {
+      pago.Observacion = undefined;
     }
 
     this.recalcularVueltos();
@@ -400,6 +410,9 @@ export class DialogCorregirVentaComponent implements OnInit {
         this.cliente = { ...response.Data.Cliente };
         this.idTipoDocumentoDestino =
           this.documentosDestino[0]?.IdTipoDocumento;
+        if (this.esCobroPendiente && !this.motivo) {
+          this.motivo = this.texts.get('creditSalePaymentReason');
+        }
         this.cargando = false;
         this.recalcularVueltos();
         this.cargarAuxiliares(response.Data.PaisISO2);
@@ -443,6 +456,7 @@ export class DialogCorregirVentaComponent implements OnInit {
       solicitud.Pagos = this.pagos.map(pago => ({
         ...pago,
         Vuelto: pago.IdTipoPago === 1 ? Number(pago.Vuelto || 0) : 0,
+        Observacion: pago.Observacion?.trim() || undefined,
       }));
     } else if (
       this.tipoCorreccion === TipoCorreccionVenta.Cliente
@@ -465,6 +479,13 @@ export class DialogCorregirVentaComponent implements OnInit {
   } {
     switch (tipo) {
       case TipoCorreccionVenta.Pagos:
+        if (this.esCobroPendiente) {
+          return {
+            titulo: this.texts.get('confirmPaymentRegistration'),
+            mensaje: this.texts.get('confirmPaymentRegistrationHint'),
+            boton: this.texts.get('applyPaymentRegistration'),
+          };
+        }
         return {
           titulo: this.texts.get('confirmPaymentChange'),
           mensaje: this.texts.get('confirmPaymentChangeHint'),

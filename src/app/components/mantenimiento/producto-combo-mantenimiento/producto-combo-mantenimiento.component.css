@@ -27,6 +27,18 @@
   margin-bottom: 0;
 }
 
+.combo-optional-toggle {
+  display: block;
+  margin-top: 14px;
+}
+
+.combo-optional-hint {
+  margin: 4px 0 0 30px;
+  color: var(--app-text-muted, #64748b);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .combo-column__table {
   max-height: none;
 }

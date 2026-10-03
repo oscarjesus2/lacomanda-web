@@ -392,8 +392,13 @@
         <mat-form-field class="form-field" appearance="fill">
           <mat-label>{{ 'price' | tenantText }}</mat-label>
           <input matInput type="number" [(ngModel)]="p.Precio" name="precio"
-                 min="0" step="0.01" [required]="!p.SinPrecio" #precio="ngModel">
-          <mat-error *ngIf="precio.invalid && (precio.dirty || precio.touched)">{{ 'invalidPrice' | tenantText }}</mat-error>
+                 [min]="requierePrecioVentaIndividual() ? 0.01 : 0"
+                 step="0.01"
+                 [required]="!p.SinPrecio"
+                 #precio="ngModel">
+          <mat-error *ngIf="precio.invalid && (precio.dirty || precio.touched)">
+            El precio debe ser mayor que cero, salvo que el producto se configure sin precio.
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field class="form-field" appearance="fill">
@@ -445,7 +450,13 @@
       <div class="form-row" *ngIf="!modoComercio">
         <mat-form-field class="form-field" appearance="fill">
           <mat-label>{{ 'type' | tenantText }}</mat-label>
-          <mat-select [(ngModel)]="p.Tipo" name="tipo" required #tipo="ngModel">
+          <mat-select
+            [(ngModel)]="p.Tipo"
+            name="tipo"
+            required
+            #tipo="ngModel"
+            (selectionChange)="cambiarTipoProducto()"
+          >
             <mat-option [value]="0">{{ 'productTypeMenuCard' | tenantText }}</mat-option>
             <mat-option *ngIf="productosMenusHabilitados" [value]="1">{{ 'productTypeMenu' | tenantText }}</mat-option>
             <mat-option *ngIf="productosMenusHabilitados" [value]="2">{{ 'productTypeWithComplements' | tenantText }}</mat-option>
@@ -455,11 +466,37 @@
 
         <mat-form-field class="form-field" appearance="fill" *ngIf="productosMenusHabilitados && p.Tipo === 1">
           <mat-label>{{ 'menuSection' | tenantText }}</mat-label>
-          <mat-select [(ngModel)]="p.IdClaseCombo" name="clasecombo" required #clasecombo="ngModel">
+          <mat-select
+            [(ngModel)]="p.IdClaseCombo"
+            name="clasecombo"
+            required
+            #clasecombo="ngModel"
+            (selectionChange)="cambiarSeccionMenu()"
+          >
             <mat-option [value]="0">{{ 'mainCombo' | tenantText }}</mat-option>
             <mat-option *ngFor="let cc of seccionMenu" [value]="cc.IdSeccionMenu">{{ cc.Descripcion }}</mat-option>
           </mat-select>
           <mat-error *ngIf="clasecombo.invalid && (clasecombo.dirty || clasecombo.touched)">{{ 'requiredForMenu' | tenantText }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field
+          class="form-field"
+          appearance="fill"
+          *ngIf="esOpcionDeMenu()"
+        >
+          <mat-label>¿Vender también por separado?</mat-label>
+          <mat-select
+            [(ngModel)]="p.VentaIndividual"
+            name="ventaIndividual"
+            required
+            (selectionChange)="cambiarVentaIndividual()"
+          >
+            <mat-option [value]="true">Sí</mat-option>
+            <mat-option [value]="false">No, solo dentro del menú</mat-option>
+          </mat-select>
+          <mat-hint>
+            Si eliges No, no aparecerá como producto independiente en la pantalla de venta.
+          </mat-hint>
         </mat-form-field>
 
         <mat-form-field class="form-field" appearance="fill" *ngIf="p.Tipo === 2">
@@ -534,7 +571,11 @@
 
       <ng-container *ngIf="mostrarConfiguracionAvanzada">
       <div class="form-row">
-        <mat-form-field class="form-field" appearance="fill">
+        <mat-form-field
+          *ngIf="!esOpcionDeMenu()"
+          class="form-field"
+          appearance="fill"
+        >
           <mat-label>{{ 'visible' | tenantText }}</mat-label>
           <mat-select [(ngModel)]="p.Visible" name="visible" required #visible="ngModel">
             <mat-option [value]="true">{{ 'yes' | tenantText }}</mat-option>
@@ -593,7 +634,11 @@
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field class="form-field" appearance="fill">
+        <mat-form-field
+          *ngIf="!esOpcionDeMenu() || p.VentaIndividual"
+          class="form-field"
+          appearance="fill"
+        >
           <mat-label>{{ 'noPrice' | tenantText }}</mat-label>
           <mat-select [(ngModel)]="p.SinPrecio" name="sinprecio" required #sinprecio="ngModel">
             <mat-option [value]="true">{{ 'yes' | tenantText }}</mat-option>
@@ -602,7 +647,7 @@
         </mat-form-field>
 
         <mat-form-field
-          *ngIf="p.SinPrecio"
+          *ngIf="p.SinPrecio && (!esOpcionDeMenu() || p.VentaIndividual)"
           class="form-field"
           appearance="fill"
         >

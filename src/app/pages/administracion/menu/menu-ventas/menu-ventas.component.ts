@@ -51,7 +51,9 @@ import {
   VistaSeguimientoAdministracion,
 } from 'src/app/components/mantenimiento/seguimiento-administracion/seguimiento-administracion.component';
 import { SunatConfigurationComponent } from 'src/app/components/mantenimiento/sunat-configuration/sunat-configuration.component';
+import { AeatConfigurationComponent } from 'src/app/components/mantenimiento/aeat-configuration/aeat-configuration.component';
 import { CpeEnvioMonitorComponent } from 'src/app/components/mantenimiento/cpe-envio-monitor/cpe-envio-monitor.component';
+import { AeatEnvioMonitorComponent } from 'src/app/components/mantenimiento/aeat-envio-monitor/aeat-envio-monitor.component';
 import { PagoCuentaOnlineConfigurationComponent } from 'src/app/components/mantenimiento/pago-cuenta-online-configuration/pago-cuenta-online-configuration.component';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { UsuarioService } from 'src/app/services/usuario.service';
@@ -176,8 +178,10 @@ export class MenuVentasComponent implements OnInit {
       children: [
         { title: 'Configuración Inicial',      route: '/ventas/config-inicial',  icon: 'settings',  label: 'Config. inicial', titleKey: 'initialSetup',          labelKey: 'initialSetupShort' },
         { title: 'Configurar esta estación',   route: '/ventas/config-estacion', icon: 'computer',  label: 'Esta estación',   titleKey: 'configureThisStation',  labelKey: 'thisStation', feature: C.OperacionCaja, ocultarEnComercio: true },
-        { title: 'Facturación electrónica SUNAT', route: '/ventas/configuracion-sunat', icon: 'verified_user', label: 'Facturación electrónica', feature: C.OperacionComprobantes, soloPeru: true, soloSoporteLaComanda: true },
-        { title: 'Monitor de envíos SUNAT', route: '/ventas/monitor-envios-sunat', icon: 'outbox', label: 'Monitor SUNAT', monitorEnviosSunat: true, feature: C.OperacionComprobantes, soloPeru: true, soloSoporteLaComanda: true },
+        { title: 'Facturación electrónica SUNAT', route: '/ventas/configuracion-sunat', icon: 'verified_user', label: 'Facturación electrónica', feature: C.FiscalIntegracion, soloPeru: true, soloSoporteLaComanda: true },
+        { title: 'Sistema fiscal AEAT', route: '/ventas/configuracion-aeat', icon: 'account_balance', label: 'Sistema fiscal AEAT', feature: C.FiscalIntegracion, soloEspana: true, soloSoporteLaComanda: true },
+        { title: 'Monitor de envíos SUNAT', route: '/ventas/monitor-envios-sunat', icon: 'outbox', label: 'Monitor SUNAT', monitorEnviosSunat: true, feature: C.FiscalIntegracion, soloPeru: true, soloSoporteLaComanda: true },
+        { title: 'Monitor de registros AEAT', route: '/ventas/monitor-envios-aeat', icon: 'fact_check', label: 'Monitor AEAT', monitorEnviosAeat: true, feature: C.FiscalIntegracion, soloEspana: true, soloSoporteLaComanda: true },
         { title: 'Cobro móvil de la cuenta', route: '/ventas/configuracion-pago-cuenta-online', icon: 'payments', label: 'Cobro móvil', feature: C.VentasPagoCuentaOnline, soloPagoMovil: true, soloSoporteLaComanda: true }
       ]
     }
@@ -202,6 +206,7 @@ export class MenuVentasComponent implements OnInit {
       (!item.anyFeature || item.anyFeature.some((feature: ExigenciaLicencia) =>
         this.cubiertoPorLicencia(feature))) &&
       (!item.soloPeru || this.paisISO2 === 'PE') &&
+      (!item.soloEspana || this.paisISO2 === 'ES') &&
       (!item.soloSoporteLaComanda || this.esUsuarioSoporteLaComanda) &&
       (!item.requiereAnfitrionas || this.anfitrionasHabilitadas) &&
       (!item.ocultarEnComercio || !this.esComercio) &&
@@ -229,6 +234,10 @@ export class MenuVentasComponent implements OnInit {
   openDialog(item: any): void {
     if (item.monitorEnviosSunat) {
       this.OpenCpeEnvioMonitorComponent();
+      return;
+    }
+    if (item.monitorEnviosAeat) {
+      this.OpenAeatEnvioMonitorComponent();
       return;
     }
     if (item.monitorComandas) {
@@ -348,6 +357,10 @@ export class MenuVentasComponent implements OnInit {
     if (item.title === 'Facturación electrónica SUNAT')
     {
       this.OpenSunatConfigurationComponent();
+    }
+    if (item.title === 'Sistema fiscal AEAT')
+    {
+      this.OpenAeatConfigurationComponent();
     }
     if (item.title === 'Cobro móvil de la cuenta')
     {
@@ -709,8 +722,32 @@ export class MenuVentasComponent implements OnInit {
     });
   }
 
+  OpenAeatConfigurationComponent(): void {
+    this.dialog.open(AeatConfigurationComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: '1040px',
+      height: '860px',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100vh - 32px)',
+      panelClass: 'dialog-window--workspace',
+    });
+  }
+
   OpenCpeEnvioMonitorComponent(): void {
     this.dialog.open(CpeEnvioMonitorComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: '1280px',
+      height: '852px',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100vh - 32px)',
+      panelClass: 'dialog-window--workspace',
+    });
+  }
+
+  OpenAeatEnvioMonitorComponent(): void {
+    this.dialog.open(AeatEnvioMonitorComponent, {
       disableClose: true,
       hasBackdrop: true,
       width: '1280px',

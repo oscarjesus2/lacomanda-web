@@ -380,13 +380,13 @@
                   <button mat-icon-button color="primary"
                     [matTooltip]="'increaseQuantity' | tenantText"
                     (click)="aumentarProductGrid(product)"
-                    [disabled]="product.Item > 0 || product.Producto?.Tipo === 1 || product.Producto?.Tipo === 2">
+                    [disabled]="product.Item > 0 || esMenuPrincipal(product.Producto) || product.Producto?.Tipo === 2">
                     <mat-icon>add</mat-icon>
                   </button>
                   <button mat-icon-button color="warn"
                     [matTooltip]="'decreaseQuantity' | tenantText"
                     (click)="restarProductGrid(product)"
-                    [disabled]="product.Item > 0 || product.Producto?.Tipo === 1 || product.Producto?.Tipo === 2">
+                    [disabled]="product.Item > 0 || esMenuPrincipal(product.Producto) || product.Producto?.Tipo === 2">
                     <mat-icon>remove</mat-icon>
                   </button>
                   <button mat-icon-button color="primary"
@@ -484,9 +484,9 @@
     <!-- Combo / Ver Complementos: visible solo si la fila seleccionada lo requiere -->
     <div class="button-row"
          *ngIf="selectedRow
-           && ((selectedRow.Producto?.Tipo === 1 && !isComboDisabled)
+           && ((esMenuPrincipal(selectedRow.Producto) && !isComboDisabled)
              || (selectedRow.Producto?.Tipo === 2 && puedeVerComplementos))">
-      <button *ngIf="selectedRow.Producto?.Tipo === 1 && !isComboDisabled"
+      <button *ngIf="esMenuPrincipal(selectedRow.Producto) && !isComboDisabled"
               (click)="VerMenu()">
         <fa-icon [icon]="faConciergeBell"></fa-icon> {{ 'viewMenu' | tenantText }}
       </button>
@@ -652,25 +652,54 @@
     <ng-container *ngIf="!errorCargaInicial && !mostrandoPendientesCobro && MostrarOcultarPanelEspacio && (idCanalVentaSelected==canalVentaEnum.ESPACIO || aplicarFiltroTrasladarAEspacio)">
 
       <!-- Skeleton mientras carga -->
-      <div *ngIf="isLoadingEspacios" class="tables-grid">
+      <div *ngIf="isLoadingEspacios" class="tables-grid tables-grid--spaces"
+           [style.--spaces-grid-columns]="columnasTableroEspacios"
+           [style.--spaces-grid-rows]="filasTableroEspacios">
         <div *ngFor="let s of skeletonItems" class="tables-grid__skeleton"></div>
       </div>
 
+      <div *ngIf="!isLoadingEspacios" class="spaces-overview">
+        <div class="spaces-overview__copy">
+          <span class="spaces-overview__eyebrow">ESPACIOS</span>
+          <h2 *ngIf="!aplicarFiltroTrasladarAEspacio && !aplicarFiltroUnirEspacio && !aplicarFiltroCambioEspacio && !aplicarFiltroTrasladoProducto">{{ displayValueAmbiente }}</h2>
+          <h2 *ngIf="aplicarFiltroTrasladarAEspacio || aplicarFiltroUnirEspacio || aplicarFiltroCambioEspacio || aplicarFiltroTrasladoProducto">Selecciona el espacio de destino</h2>
+        </div>
+        <span class="spaces-overview__count">
+          <mat-icon aria-hidden="true">table_restaurant</mat-icon>
+          {{ cantidadEspaciosLibresTablero }} libres · {{ cantidadEspaciosEnUsoTablero }} en uso
+        </span>
+      </div>
+
       <!-- Grid real una vez cargado -->
-      <div *ngIf="!isLoadingEspacios" class="tables-grid">
-        <button *ngFor="let espacio of listaEspacios_x_Ambiente"
-          [style.background]="espacio.Color"
+      <div *ngIf="!isLoadingEspacios" class="tables-grid tables-grid--spaces"
+           [style.--spaces-grid-columns]="columnasTableroEspacios"
+           [style.--spaces-grid-rows]="filasTableroEspacios">
+        <ng-container *ngFor="let espacio of listaEspacios_x_Ambiente">
+        <button *ngIf="espacio.Numero > 0 && espacio.Visible !== false"
+          type="button"
+          class="space-card"
+          [style.grid-area]="posicionEnTablero(espacio.Posicion)"
+          [attr.title]="espacio.Descripcion + ' ' + espacio.Numero + ' · ' + etiquetaEstadoTableroEspacio(espacio) + ' · Posición ' + espacio.Posicion + (espacio.NombreEmpleado ? ' · ' + espacio.NombreEmpleado : '')"
+          [ngClass]="'space-card--' + estadoTableroEspacio(espacio)"
+          [style.--space-source-color]="espacio.Color || '#ffffff'"
           [class.espacio-qr-pendiente]="!!solicitudQrPendiente(espacio)"
-          (click)="openDialogEspacio(espacio)"
-          [style.visibility]="espacio.Visible === false ? 'hidden' : 'visible'">
+          (click)="openDialogEspacio(espacio)">
           <span *ngIf="solicitudQrPendiente(espacio) as solicitud"
                 class="espacio-qr-alerta"
                 title="Cliente esperando confirmación">
             <mat-icon>qr_code_scanner</mat-icon>
             <strong>{{ solicitud.CodigoVisual }}</strong>
           </span>
-          <div style="text-align: center;">{{espacio.Descripcion}} {{espacio.Numero}} <br> {{config?.SimboloMoneda || '-'}}.{{espacio.Total}} <br> {{espacio.NombreEmpleado?.substring(0, 8)}}</div>
+          <strong class="space-card__name">{{ espacio.Descripcion }} {{ espacio.Numero }}</strong>
+          <span class="space-card__amount">{{ config?.SimboloMoneda || '-' }} {{ (espacio.Total || 0) | number:'1.2-2' }}</span>
+          <span class="space-card__employee" *ngIf="espacio.NombreEmpleado">{{ espacio.NombreEmpleado }}</span>
         </button>
+        </ng-container>
+        <div class="spaces-empty" *ngIf="cantidadEspaciosTablero === 0" role="status">
+          <mat-icon aria-hidden="true">table_restaurant</mat-icon>
+          <strong>No hay espacios en este ambiente</strong>
+          <span>Selecciona otro ambiente para continuar.</span>
+        </div>
       </div>
 
     </ng-container>
@@ -761,9 +790,17 @@
                   && (listProducts_x_SubFamilia?.length || 0) > 0"
          class="products-grid">
       <button *ngFor="let producto of listProducts_x_SubFamilia"
-      [style.background-color]="getProductColor(producto.Color)"
-      [style.visibility]="producto.Visible ? 'visible' : 'hidden'" (click)="AgregarProducto(producto)" [disabled]="isPanelProductoDisabled">
-        <div style="text-align: center;"> {{producto.NombreCorto}} <br> {{getSimboloProducto(producto.IdMoneda)}}{{producto.Precio}}</div>
+        type="button"
+        class="product-card"
+        [style.background-color]="getProductColor(producto.Color)"
+        [style.visibility]="producto.Visible ? 'visible' : 'hidden'"
+        [attr.title]="producto.Visible ? producto.NombreCorto : null"
+        (click)="AgregarProducto(producto)"
+        [disabled]="isPanelProductoDisabled">
+        <span class="product-card__content">
+          <strong class="product-card__name">{{ producto.NombreCorto }}</strong>
+          <span class="product-card__price">{{ getSimboloProducto(producto.IdMoneda) }} {{ producto.Precio | number:'1.2-2' }}</span>
+        </span>
       </button>
     </div>
 

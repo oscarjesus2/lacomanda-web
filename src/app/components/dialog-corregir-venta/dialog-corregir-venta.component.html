@@ -11,7 +11,11 @@
 
   <h2>
     {{
-      (origenRechazoFiscal ? 'correctAndReissueDocument' : 'correctIssuedSale')
+      (origenRechazoFiscal
+        ? 'correctAndReissueDocument'
+        : esCobroPendiente && tipoCorreccion === tipoPagos
+          ? 'registerPayment'
+          : 'correctIssuedSale')
         | tenantText
     }}
   </h2>
@@ -78,10 +82,17 @@
           [value]="tipoPagos">
           <span class="dialog-option__content">
             <span class="dialog-option__title">
-              {{ 'correctionPayments' | tenantText }}
+              {{
+                (esCobroPendiente ? 'registerPayment' : 'correctionPayments')
+                  | tenantText
+              }}
             </span>
             <span class="dialog-option__hint">
-              {{ 'correctionPaymentsHint' | tenantText }}
+              {{
+                (esCobroPendiente
+                  ? 'registerPaymentHint'
+                  : 'correctionPaymentsHint') | tenantText
+              }}
             </span>
           </span>
         </mat-radio-button>
@@ -130,6 +141,7 @@
                 <th class="is-numeric">{{ 'changeDue' | tenantText }}</th>
                 <th>{{ 'card' | tenantText }}</th>
                 <th>{{ 'authorization' | tenantText }}</th>
+                <th>{{ 'operationNumber' | tenantText }}</th>
                 <th></th>
               </tr>
             </thead>
@@ -188,6 +200,17 @@
                     <input matInput [(ngModel)]="pago.Autorizacion">
                   </mat-form-field>
                   <span *ngIf="pago.IdTipoPago !== 3">—</span>
+                </td>
+                <td>
+                  <mat-form-field *ngIf="pago.IdTipoPago === 6">
+                    <input
+                      matInput
+                      maxlength="100"
+                      required
+                      [(ngModel)]="pago.Observacion"
+                      [placeholder]="'operationNumberPlaceholder' | tenantText">
+                  </mat-form-field>
+                  <span *ngIf="pago.IdTipoPago !== 6">—</span>
                 </td>
                 <td>
                   <button

@@ -24,6 +24,15 @@ describe('catálogo central de características de licencia', () => {
     expect(resultado).toContain(CARACTERISTICAS_LICENCIA.VentasMesa);
   });
 
+  it('exige comprobantes para la integración fiscal', () => {
+    const resultado = expandirExigencia(
+      CARACTERISTICAS_LICENCIA.FiscalIntegracion,
+    );
+
+    expect(resultado).toContain(CARACTERISTICAS_LICENCIA.FiscalIntegracion);
+    expect(resultado).toContain(CARACTERISTICAS_LICENCIA.OperacionComprobantes);
+  });
+
   it('mantiene los análisis avanzados separados de los reportes básicos', () => {
     const resultado = expandirExigencia(
       CARACTERISTICAS_LICENCIA.ReportesAnaliticos,

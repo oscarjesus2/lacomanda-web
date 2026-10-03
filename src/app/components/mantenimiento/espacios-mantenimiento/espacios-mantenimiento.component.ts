@@ -7,7 +7,7 @@ import { NgForm } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { NgxSpinnerService } from 'ngx-spinner';
 
-import { Espacios } from 'src/app/models/espacios.models';
+import { Espacios, ESPACIOS_TABLERO_COLUMNAS, ESPACIOS_TABLERO_FILAS } from 'src/app/models/espacios.models';
 import { Ambiente } from 'src/app/models/ambiente.models';
 import { EspaciosService } from 'src/app/services/espacios.service';
 import { AmbienteService } from 'src/app/services/ambiente.service';
@@ -44,9 +44,9 @@ export class EspaciosMantenimientoComponent implements OnInit {
   // Tabla
   displayedColumns: string[] = ['descripcion', 'numero', 'posicion', 'ambiente', 'activo', 'visible', 'actions'];
 
-  // Grid (parametrizable en duro por mientras)
-  readonly GRID_ROWS = 9;
-  readonly GRID_COLS = 7;
+  // El selector y el tablero de caja comparten la misma matriz de posiciones.
+  readonly GRID_ROWS = ESPACIOS_TABLERO_FILAS;
+  readonly GRID_COLS = ESPACIOS_TABLERO_COLUMNAS;
 
   constructor(
     private dialogRef: MatDialogRef<EspaciosMantenimientoComponent>,

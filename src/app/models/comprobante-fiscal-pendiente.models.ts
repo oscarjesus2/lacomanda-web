@@ -1,5 +1,10 @@
 export interface ComprobanteFiscalPendiente {
   IdVenta: number;
+  IdRegistroFiscal: number | null;
+  SistemaFiscal: 'SUNAT' | 'AEAT' | string;
+  AccionCodigo: 'SUSTITUIR_COMPROBANTE' | 'SUBSANAR_REGISTRO' | string;
+  OperacionCodigo: 'EMISION' | 'ALTA' | 'ANULACION' | string;
+  RequiereComunicacionCliente: boolean;
   FechaEmisionUtc: Date;
   TipoDocumento: string;
   NumeroDocumento: string;
@@ -22,6 +27,21 @@ export function normalizarComprobantesFiscalesPendientes(
   const registrosRaw = raw?.Registros ?? raw?.registros ?? [];
   const registros = registrosRaw.map((item: any) => ({
     IdVenta: Number(item?.IdVenta ?? item?.idVenta ?? 0),
+    IdRegistroFiscal:
+      item?.IdRegistroFiscal ?? item?.idRegistroFiscal
+        ? Number(item?.IdRegistroFiscal ?? item?.idRegistroFiscal)
+        : null,
+    SistemaFiscal:
+      item?.SistemaFiscal ?? item?.sistemaFiscal ?? '',
+    AccionCodigo:
+      item?.AccionCodigo ?? item?.accionCodigo ?? '',
+    OperacionCodigo:
+      item?.OperacionCodigo ?? item?.operacionCodigo ?? '',
+    RequiereComunicacionCliente: Boolean(
+      item?.RequiereComunicacionCliente
+        ?? item?.requiereComunicacionCliente
+        ?? false,
+    ),
     FechaEmisionUtc: new Date(
       item?.FechaEmisionUtc ?? item?.fechaEmisionUtc,
     ),
