@@ -146,4 +146,16 @@ describe('MenuVentasComponent por licencia', () => {
     expect(visibles).not.toContain('Estación');
     expect(visibles).not.toContain('Esta estación');
   });
+
+  it('usa un icono genérico para Productos', () => {
+    const component = crear([C.VentasDirecta]);
+    const maestros = component.ventasMenu.find(
+      section => section.title === 'Maestros',
+    )!;
+    const productos = (maestros.children as any[]).find(
+      item => item.title === 'Productos',
+    );
+
+    expect(productos?.icon).toBe('sell');
+  });
 });

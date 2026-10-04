@@ -15,6 +15,8 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
       getAllCaja: jasmine.createSpy('getAllCaja').and.returnValue(of({
         Data: [],
       })),
+      getTipoDocumentoByCaja: jasmine.createSpy('getTipoDocumentoByCaja')
+        .and.returnValue(of([])),
     };
     const configuracionService = {
       snapshot: {
@@ -89,6 +91,56 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
 
     expect(component.listCaja.map(item => item.IdCaja)).toEqual([2]);
     expect(component.cajaSeleccionada).toBe(2);
+  });
+
+  it('muestra los documentos fiscales configurados para la caja seleccionada', async () => {
+    const { component, cajaService } = crear();
+    cajaService.getAllCaja.and.returnValue(of({
+      Data: [
+        caja(2, { IdTurno: 20, TipoCambio: 1, TipoCambioVenta: 1 }, true),
+      ],
+    }));
+    cajaService.getTipoDocumentoByCaja.and.returnValue(of([
+      {
+        IdTipoDocumento: EnumTipoDocumento.FacturaSimplificada,
+        Descripcion: 'Factura simplificada',
+      },
+      {
+        IdTipoDocumento: EnumTipoDocumento.FacturaVenta,
+        Descripcion: 'Factura completa',
+      },
+    ]));
+
+    await (component as any).initializeCaja();
+
+    expect(cajaService.getTipoDocumentoByCaja).toHaveBeenCalledWith(2);
+    expect(component.mostrarBoleta).toBeTrue();
+    expect(component.textoBoleta).toBe('Factura simplificada');
+    expect(component.idTipoDocBoleta).toBe(EnumTipoDocumento.FacturaSimplificada);
+    expect(component.mostrarFactura).toBeTrue();
+    expect(component.textoFactura).toBe('Factura completa');
+    expect(component.idTipoDocFactura).toBe(EnumTipoDocumento.FacturaVenta);
+  });
+
+  it('actualiza los documentos cuando el usuario cambia de caja', async () => {
+    const { component, cajaService } = crear();
+    component.listCaja = [
+      caja(7, { IdTurno: 70, TipoCambio: 1, TipoCambioVenta: 1 }, true),
+    ];
+    cajaService.getTipoDocumentoByCaja.and.returnValue(of([
+      {
+        IdTipoDocumento: EnumTipoDocumento.BoletaVenta,
+        Descripcion: 'Boleta electrónica',
+      },
+    ]));
+
+    component.onCajaSeleccionada(7);
+    await Promise.resolve();
+
+    expect(cajaService.getTipoDocumentoByCaja).toHaveBeenCalledWith(7);
+    expect(component.textoBoleta).toBe('Boleta electrónica');
+    expect(component.idTipoDocBoleta).toBe(EnumTipoDocumento.BoletaVenta);
+    expect(component.mostrarFactura).toBeFalse();
   });
 
   it('informa cuando ninguna caja tiene turno abierto', async () => {
@@ -241,6 +293,27 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
     expect(component.sumaTotal).toBe(118);
   });
 
+  it('permite agregar más de cinco líneas de producto', () => {
+    const { component } = crear();
+
+    for (let index = 1; index <= 6; index += 1) {
+      component.AgregarItemGrid({
+        IdProducto: index,
+        NombreCorto: `Producto ${index}`,
+        Precio: 2,
+        PrecioMinimo: 0,
+        SinPrecio: false,
+        IdMoneda: 'EUR',
+        Tipo: 0,
+        ExclusivoParaAnfitriona: false,
+        PermitirParaTragoCortesia: false,
+        Impuestos: [],
+      });
+    }
+
+    expect(component.dataSource.data.length).toBe(6);
+  });
+
   it('elimina visualmente la línea completa y recalcula el resumen', () => {
     const { component } = crear();
     const linea = {
@@ -265,6 +338,67 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
 
     expect(component.dataSource.data).toEqual([]);
     expect(component.sumaTotal).toBe(0);
+  });
+
+  it('incluye la descripción complementaria elegida en el detalle de la venta', () => {
+    const { component } = crear();
+    component.listCaja = [
+      caja(7, { IdTurno: 33, TipoCambio: 1, TipoCambioVenta: 1 }, true),
+    ];
+    component.onCajaSeleccionada(7);
+    component.dataSource.data = [{
+      IdProducto: 10,
+      Producto: 'Licencia La Comanda - Comercio',
+      Qty: 1,
+      Precio: 47.19,
+      PrecioMinimo: 0,
+      Total: 47.19,
+      Moneda: 'EUR',
+      CodDscto: '',
+      MontoDscto: 0,
+      NroCupon: '',
+      Tipo: 0,
+      ExclusivoParaAnfitriona: false,
+      PermitirParaTragoCortesia: false,
+      Impuestos: [],
+      IncluirDescripcionComplementaria: true,
+      DescripcionComplementaria:
+        '  Periodo mensual contratado: del 04/10/2026 al 04/11/2026.  ',
+    } satisfies ProductElement];
+
+    const pedido = component.addPedido();
+
+    expect(pedido.ListaPedidoDet[0].DescripcionComplementaria).toBe(
+      'Periodo mensual contratado: del 04/10/2026 al 04/11/2026.',
+    );
+  });
+
+  it('descarta la descripción complementaria cuando el usuario desmarca la opción', () => {
+    const { component } = crear();
+    const linea = {
+      IdProducto: 10,
+      Producto: 'Producto',
+      Qty: 1,
+      Precio: 10,
+      PrecioMinimo: 0,
+      Total: 10,
+      Moneda: 'EUR',
+      CodDscto: '',
+      MontoDscto: 0,
+      NroCupon: '',
+      Tipo: 0,
+      ExclusivoParaAnfitriona: false,
+      PermitirParaTragoCortesia: false,
+      Impuestos: [],
+      IncluirDescripcionComplementaria: true,
+      DescripcionComplementaria: 'Texto temporal',
+    } satisfies ProductElement;
+    component.dataSource.data = [linea];
+
+    component.alternarDescripcionComplementaria(linea, false);
+
+    expect(linea.IncluirDescripcionComplementaria).toBeFalse();
+    expect(linea.DescripcionComplementaria).toBe('');
   });
 
   it('aumenta y disminuye la cantidad sin ocultar la acción de eliminar', () => {

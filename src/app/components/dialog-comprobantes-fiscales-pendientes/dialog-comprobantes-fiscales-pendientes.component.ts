@@ -148,11 +148,17 @@ implements OnInit, OnDestroy {
             : 'EMISION',
         );
       const response = await firstValueFrom(request);
-      await Notificar.exito(
-        'Reintento programado',
-        response.Message ||
+      if ((response.Data?.Encolados ?? 0) > 0) {
+        await Notificar.exito(
+          'Reintento programado',
           `El envío de ${comprobante.NumeroDocumento} quedó nuevamente en cola.`,
-      );
+        );
+      } else {
+        await Notificar.advertencia(
+          'No se reencoló el comprobante',
+          'Su estado cambió o ya existe un envío activo. Actualiza la bandeja.',
+        );
+      }
       await this.notificaciones.sincronizarComprobantesFiscales();
     } catch {
       // El interceptor presenta el mensaje preciso del backend.

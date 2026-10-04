@@ -55,55 +55,65 @@
     </mat-form-field>
   </form>
 
-  <!-- Tabla + botones laterales -->
+  <!-- La tabla ocupa todo el ancho; los comprobantes se eligen debajo. -->
   <div class="invoice-layout">
+    <div class="direct-sale-product-search">
+      <mat-form-field appearance="fill" subscriptSizing="dynamic">
+        <mat-label>{{ 'searchByProduct' | tenantText }}</mat-label>
+        <input type="text"
+               matInput
+               [formControl]="productCtrl"
+               [matAutocomplete]="auto">
+        <mat-autocomplete #auto="matAutocomplete"
+                          (optionSelected)="onProductoSelected($event)"
+                          [displayWith]="displayProductName">
+          <mat-option *ngFor="let product of filteredProducts | async"
+                      [value]="product">
+            {{ product.NombreCorto }}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+    </div>
+
     <div class="mant-table-card mant-table-card--invoice">
-      <mat-table [dataSource]="dataSource">
+      <div class="direct-sale-lines-scroll">
+        <mat-table [dataSource]="dataSource" multiTemplateDataRows>
 
         <!-- Producto -->
         <ng-container matColumnDef="Producto">
           <mat-header-cell *matHeaderCellDef class="product-column">{{ 'product' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let element" class="product-column">
-            {{ element.Producto }}
+            <div class="direct-sale-product">
+              <div class="direct-sale-product__header">
+                <strong class="direct-sale-product__name">{{ element.Producto }}</strong>
+                <mat-checkbox
+                  class="direct-sale-product__toggle"
+                  [checked]="element.IncluirDescripcionComplementaria"
+                  (change)="alternarDescripcionComplementaria(element, $event.checked)"
+                >
+                  Añadir descripción
+                </mat-checkbox>
+              </div>
+            </div>
           </mat-cell>
-          <mat-footer-cell *matFooterCellDef class="product-column">
-            <mat-form-field appearance="fill">
-              <mat-label>{{ 'searchByProduct' | tenantText }}</mat-label>
-              <input type="text"
-                     matInput
-                     [formControl]="productCtrl"
-                     [matAutocomplete]="auto">
-              <mat-autocomplete #auto="matAutocomplete"
-                                (optionSelected)="onProductoSelected($event)"
-                                [displayWith]="displayProductName">
-                <mat-option *ngFor="let product of filteredProducts | async"
-                            [value]="product">
-                  {{ product.NombreCorto }}
-                </mat-option>
-              </mat-autocomplete>
-            </mat-form-field>
-          </mat-footer-cell>
         </ng-container>
 
         <!-- Cantidad -->
         <ng-container matColumnDef="Qty">
           <mat-header-cell *matHeaderCellDef class="quantity-column">{{ 'quantity' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let element" class="quantity-column">{{ element.Qty }}</mat-cell>
-          <mat-footer-cell *matFooterCellDef></mat-footer-cell>
         </ng-container>
 
         <!-- Precio -->
         <ng-container matColumnDef="Precio">
           <mat-header-cell *matHeaderCellDef>{{ 'price' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let element">{{ element.Precio }}</mat-cell>
-          <mat-footer-cell *matFooterCellDef></mat-footer-cell>
         </ng-container>
 
         <!-- Total -->
         <ng-container matColumnDef="Total">
           <mat-header-cell *matHeaderCellDef>{{ 'total' | tenantText }}</mat-header-cell>
           <mat-cell *matCellDef="let element">{{ element.Total }}</mat-cell>
-          <mat-footer-cell *matFooterCellDef></mat-footer-cell>
         </ng-container>
 
         <!-- Acciones -->
@@ -125,26 +135,65 @@
               <mat-icon>delete_outline</mat-icon>
             </button>
           </mat-cell>
-
-          <mat-footer-cell *matFooterCellDef class="actions-footer"></mat-footer-cell>
         </ng-container>
 
-        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-        <mat-footer-row *matFooterRowDef="displayedColumns"></mat-footer-row>
-      </mat-table>
+        <!-- Editor desplegable: ocupa una fila completa y no ensancha la columna Producto. -->
+        <ng-container matColumnDef="descriptionDetail">
+          <mat-cell *matCellDef="let element" class="direct-sale-description-cell">
+            <div class="direct-sale-product__editor">
+              <div class="direct-sale-product__help">
+                <mat-icon>notes</mat-icon>
+                <span>Este texto aparecerá junto al nombre del producto en el comprobante.</span>
+              </div>
+              <mat-form-field
+                appearance="outline"
+                subscriptSizing="dynamic"
+                class="direct-sale-product__description"
+              >
+                <mat-label>Descripción complementaria (opcional)</mat-label>
+                <textarea
+                  matInput
+                  rows="2"
+                  maxlength="1000"
+                  [(ngModel)]="element.DescripcionComplementaria"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="Ej.: Periodo mensual contratado: del 04/10/2026 al 04/11/2026."
+                ></textarea>
+                <mat-hint align="end">
+                  {{ element.DescripcionComplementaria?.length || 0 }}/1000
+                </mat-hint>
+              </mat-form-field>
+            </div>
+          </mat-cell>
+        </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+          <mat-row
+            *matRowDef="let row; columns: descriptionColumns; when: mostrarFilaDescripcion"
+            class="direct-sale-description-row"
+          ></mat-row>
+        </mat-table>
+      </div>
+
     </div>
 
-    <!-- Botones principales -->
-    <div class="invoice-actions">
-      <button mat-raised-button color="primary"
-              (click)="OpenDialogEmitirComprobante(TipoDocumento.BoletaVenta)">
-        {{ 'salesReceipt' | tenantText }}
+  </div>
+
+  <!-- Tipos de comprobante disponibles para la caja y el país del tenant. -->
+  <div class="invoice-actions invoice-actions--below">
+    <span class="invoice-actions__label">Emitir como</span>
+    <div class="invoice-actions__buttons">
+      <button *ngIf="mostrarBoleta"
+              mat-raised-button color="primary"
+              (click)="OpenDialogEmitirComprobante(idTipoDocBoleta)">
+        {{ textoBoleta }}
       </button>
 
-      <button mat-raised-button color="primary"
-              (click)="OpenDialogEmitirComprobante(TipoDocumento.FacturaVenta)">
-        {{ 'invoice' | tenantText }}
+      <button *ngIf="mostrarFactura"
+              mat-raised-button color="primary"
+              (click)="OpenDialogEmitirComprobante(idTipoDocFactura)">
+        {{ textoFactura }}
       </button>
     </div>
   </div>
