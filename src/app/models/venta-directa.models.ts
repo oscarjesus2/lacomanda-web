@@ -23,6 +23,7 @@ export interface VentaDirectaDetalle {
   IdProducto: number;
   Cantidad: number;
   Precio: number;
+  DescripcionComplementaria?: string;
 }
 
 export interface VentaDirectaPago {

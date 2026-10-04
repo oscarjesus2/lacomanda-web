@@ -293,6 +293,27 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
     expect(component.sumaTotal).toBe(118);
   });
 
+  it('permite agregar más de cinco líneas de producto', () => {
+    const { component } = crear();
+
+    for (let index = 1; index <= 6; index += 1) {
+      component.AgregarItemGrid({
+        IdProducto: index,
+        NombreCorto: `Producto ${index}`,
+        Precio: 2,
+        PrecioMinimo: 0,
+        SinPrecio: false,
+        IdMoneda: 'EUR',
+        Tipo: 0,
+        ExclusivoParaAnfitriona: false,
+        PermitirParaTragoCortesia: false,
+        Impuestos: [],
+      });
+    }
+
+    expect(component.dataSource.data.length).toBe(6);
+  });
+
   it('elimina visualmente la línea completa y recalcula el resumen', () => {
     const { component } = crear();
     const linea = {
@@ -317,6 +338,67 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
 
     expect(component.dataSource.data).toEqual([]);
     expect(component.sumaTotal).toBe(0);
+  });
+
+  it('incluye la descripción complementaria elegida en el detalle de la venta', () => {
+    const { component } = crear();
+    component.listCaja = [
+      caja(7, { IdTurno: 33, TipoCambio: 1, TipoCambioVenta: 1 }, true),
+    ];
+    component.onCajaSeleccionada(7);
+    component.dataSource.data = [{
+      IdProducto: 10,
+      Producto: 'Licencia La Comanda - Comercio',
+      Qty: 1,
+      Precio: 47.19,
+      PrecioMinimo: 0,
+      Total: 47.19,
+      Moneda: 'EUR',
+      CodDscto: '',
+      MontoDscto: 0,
+      NroCupon: '',
+      Tipo: 0,
+      ExclusivoParaAnfitriona: false,
+      PermitirParaTragoCortesia: false,
+      Impuestos: [],
+      IncluirDescripcionComplementaria: true,
+      DescripcionComplementaria:
+        '  Periodo mensual contratado: del 04/10/2026 al 04/11/2026.  ',
+    } satisfies ProductElement];
+
+    const pedido = component.addPedido();
+
+    expect(pedido.ListaPedidoDet[0].DescripcionComplementaria).toBe(
+      'Periodo mensual contratado: del 04/10/2026 al 04/11/2026.',
+    );
+  });
+
+  it('descarta la descripción complementaria cuando el usuario desmarca la opción', () => {
+    const { component } = crear();
+    const linea = {
+      IdProducto: 10,
+      Producto: 'Producto',
+      Qty: 1,
+      Precio: 10,
+      PrecioMinimo: 0,
+      Total: 10,
+      Moneda: 'EUR',
+      CodDscto: '',
+      MontoDscto: 0,
+      NroCupon: '',
+      Tipo: 0,
+      ExclusivoParaAnfitriona: false,
+      PermitirParaTragoCortesia: false,
+      Impuestos: [],
+      IncluirDescripcionComplementaria: true,
+      DescripcionComplementaria: 'Texto temporal',
+    } satisfies ProductElement;
+    component.dataSource.data = [linea];
+
+    component.alternarDescripcionComplementaria(linea, false);
+
+    expect(linea.IncluirDescripcionComplementaria).toBeFalse();
+    expect(linea.DescripcionComplementaria).toBe('');
   });
 
   it('aumenta y disminuye la cantidad sin ocultar la acción de eliminar', () => {

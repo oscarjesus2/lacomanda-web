@@ -13,6 +13,7 @@ export class PedidoDet {
     public Cantidad: number=0;
     public Subtotal: number;
     public Observacion: string;
+    public DescripcionComplementaria?: string;
     public Anfitriona: string;
     public Ip: string;
     public NroCuenta: number;

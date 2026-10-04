@@ -1226,6 +1226,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
           IdProducto: detalle.Producto.IdProducto,
           Cantidad: detalle.Cantidad,
           Precio: detalle.Precio,
+          DescripcionComplementaria: detalle.DescripcionComplementaria,
         })),
         Pagos: listPago.map(pago => ({
           IdTipoPago: pago.IdTipoPago,

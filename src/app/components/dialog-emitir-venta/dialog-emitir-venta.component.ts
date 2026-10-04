@@ -41,6 +41,8 @@ export interface ProductElement {
   ExclusivoParaAnfitriona: boolean;
   PermitirParaTragoCortesia: boolean;
   Impuestos: VentaDirectaProductoImpuesto[];
+  IncluirDescripcionComplementaria?: boolean;
+  DescripcionComplementaria?: string;
 }
 
 @Component({
@@ -54,6 +56,7 @@ export class DialogEmitirVentaComponent implements OnInit {
   filteredProducts: Observable<VentaDirectaProducto[]>;
   products: VentaDirectaProducto[] = [];
   displayedColumns: string[] = ['Producto', 'Qty', 'Precio', 'Total', 'actions'];
+  descriptionColumns: string[] = ['descriptionDetail'];
   dataSource = new MatTableDataSource<ProductElement>([]);
 
   listCaja: CajaDto[] = [];
@@ -188,7 +191,7 @@ export class DialogEmitirVentaComponent implements OnInit {
         minAmount: product.PrecioMinimo || 0,
       }
     });
-  
+
     return dialogRef.afterClosed().toPromise();
   }
 
@@ -220,6 +223,8 @@ export class DialogEmitirVentaComponent implements OnInit {
       PermitirParaTragoCortesia: product.PermitirParaTragoCortesia,
       Moneda: this.normalizarCodigoMoneda(product.IdMoneda),
       Impuestos: product.Impuestos ?? [],
+      IncluirDescripcionComplementaria: false,
+      DescripcionComplementaria: '',
     };
   
     this.dataSource.data.push(newRow);
@@ -376,6 +381,20 @@ export class DialogEmitirVentaComponent implements OnInit {
     this.calcularTotales();
   }
 
+  alternarDescripcionComplementaria(
+    detalle: ProductElement,
+    incluir: boolean,
+  ): void {
+    detalle.IncluirDescripcionComplementaria = incluir;
+    if (!incluir) {
+      detalle.DescripcionComplementaria = '';
+    }
+    this.dataSource.data = [...this.dataSource.data];
+  }
+
+  mostrarFilaDescripcion = (_: number, detalle: ProductElement): boolean =>
+    !!detalle.IncluirDescripcionComplementaria;
+
   addPedido(): PedidoCab {
      const pedidoCab: PedidoCab = new PedidoCab();
      const oListaPedidoDet: PedidoDet[] = [];
@@ -431,6 +450,10 @@ export class DialogEmitirVentaComponent implements OnInit {
       pedidoDet.NroCupon = "";
       pedidoDet.NumEnvios = 0;
       pedidoDet.Observacion = "";
+      pedidoDet.DescripcionComplementaria =
+        item.IncluirDescripcionComplementaria
+          ? item.DescripcionComplementaria?.trim() || undefined
+          : undefined;
       pedidoDet.Ip = this.storageService.getCurrentIP()
       pedidoDet.MotivoReimpresion = "";
       pedidoDet.NumReimpresion = null;
