@@ -15,6 +15,8 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
       getAllCaja: jasmine.createSpy('getAllCaja').and.returnValue(of({
         Data: [],
       })),
+      getTipoDocumentoByCaja: jasmine.createSpy('getTipoDocumentoByCaja')
+        .and.returnValue(of([])),
     };
     const configuracionService = {
       snapshot: {
@@ -89,6 +91,56 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
 
     expect(component.listCaja.map(item => item.IdCaja)).toEqual([2]);
     expect(component.cajaSeleccionada).toBe(2);
+  });
+
+  it('muestra los documentos fiscales configurados para la caja seleccionada', async () => {
+    const { component, cajaService } = crear();
+    cajaService.getAllCaja.and.returnValue(of({
+      Data: [
+        caja(2, { IdTurno: 20, TipoCambio: 1, TipoCambioVenta: 1 }, true),
+      ],
+    }));
+    cajaService.getTipoDocumentoByCaja.and.returnValue(of([
+      {
+        IdTipoDocumento: EnumTipoDocumento.FacturaSimplificada,
+        Descripcion: 'Factura simplificada',
+      },
+      {
+        IdTipoDocumento: EnumTipoDocumento.FacturaVenta,
+        Descripcion: 'Factura completa',
+      },
+    ]));
+
+    await (component as any).initializeCaja();
+
+    expect(cajaService.getTipoDocumentoByCaja).toHaveBeenCalledWith(2);
+    expect(component.mostrarBoleta).toBeTrue();
+    expect(component.textoBoleta).toBe('Factura simplificada');
+    expect(component.idTipoDocBoleta).toBe(EnumTipoDocumento.FacturaSimplificada);
+    expect(component.mostrarFactura).toBeTrue();
+    expect(component.textoFactura).toBe('Factura completa');
+    expect(component.idTipoDocFactura).toBe(EnumTipoDocumento.FacturaVenta);
+  });
+
+  it('actualiza los documentos cuando el usuario cambia de caja', async () => {
+    const { component, cajaService } = crear();
+    component.listCaja = [
+      caja(7, { IdTurno: 70, TipoCambio: 1, TipoCambioVenta: 1 }, true),
+    ];
+    cajaService.getTipoDocumentoByCaja.and.returnValue(of([
+      {
+        IdTipoDocumento: EnumTipoDocumento.BoletaVenta,
+        Descripcion: 'Boleta electrónica',
+      },
+    ]));
+
+    component.onCajaSeleccionada(7);
+    await Promise.resolve();
+
+    expect(cajaService.getTipoDocumentoByCaja).toHaveBeenCalledWith(7);
+    expect(component.textoBoleta).toBe('Boleta electrónica');
+    expect(component.idTipoDocBoleta).toBe(EnumTipoDocumento.BoletaVenta);
+    expect(component.mostrarFactura).toBeFalse();
   });
 
   it('informa cuando ninguna caja tiene turno abierto', async () => {

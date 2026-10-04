@@ -137,14 +137,16 @@
 
     <!-- Botones principales -->
     <div class="invoice-actions">
-      <button mat-raised-button color="primary"
-              (click)="OpenDialogEmitirComprobante(TipoDocumento.BoletaVenta)">
-        {{ 'salesReceipt' | tenantText }}
+      <button *ngIf="mostrarBoleta"
+              mat-raised-button color="primary"
+              (click)="OpenDialogEmitirComprobante(idTipoDocBoleta)">
+        {{ textoBoleta }}
       </button>
 
-      <button mat-raised-button color="primary"
-              (click)="OpenDialogEmitirComprobante(TipoDocumento.FacturaVenta)">
-        {{ 'invoice' | tenantText }}
+      <button *ngIf="mostrarFactura"
+              mat-raised-button color="primary"
+              (click)="OpenDialogEmitirComprobante(idTipoDocFactura)">
+        {{ textoFactura }}
       </button>
     </div>
   </div>

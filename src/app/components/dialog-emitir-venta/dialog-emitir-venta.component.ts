@@ -9,6 +9,7 @@ import { NgxSpinnerService } from 'ngx-spinner';
 
 import { Producto } from 'src/app/models/product.models';
 import { CajaDto } from 'src/app/models/caja.models';
+import { CajaTipoDocumento } from 'src/app/models/caja-tipo-documento.model';
 import { CajaService } from 'src/app/services/caja.service';
 import { DialogMCantComponent } from '../dialog-mcant/dialog-mcant.component';
 import { DialogEmitirComprobanteComponent } from '../dialog-emitir-comprobante/dialog-emitir-comprobante.component';
@@ -49,7 +50,6 @@ export interface ProductElement {
 })
 export class DialogEmitirVentaComponent implements OnInit {
   @ViewChild('form') form: NgForm;
-  TipoDocumento = EnumTipoDocumento; 
   productCtrl = new FormControl();
   filteredProducts: Observable<VentaDirectaProducto[]>;
   products: VentaDirectaProducto[] = [];
@@ -64,6 +64,15 @@ export class DialogEmitirVentaComponent implements OnInit {
   tipoCambioCompra: string = '0';
   observacionValue: string = '';
   fechaDocumento: Date = new Date();
+
+  mostrarFactura = false;
+  mostrarBoleta = false;
+  textoFactura = 'Factura';
+  textoBoleta = 'Boleta';
+  idTipoDocFactura: EnumTipoDocumento = EnumTipoDocumento.FacturaVenta;
+  idTipoDocBoleta: EnumTipoDocumento = EnumTipoDocumento.BoletaVenta;
+
+  private solicitudDocumentosCaja = 0;
 
   sumaTotal: number = 0;
   sumaDscto: number = 0;
@@ -94,7 +103,8 @@ export class DialogEmitirVentaComponent implements OnInit {
       throw new Error('No existe una caja activa con turno abierto.');
     }
 
-    this.onCajaSeleccionada(caja.IdCaja);
+    this.aplicarCajaSeleccionada(caja.IdCaja);
+    await this.cargarTiposDocumentoCaja(caja.IdCaja);
   }
 
   private async initializeProductos(): Promise<void> {
@@ -218,10 +228,57 @@ export class DialogEmitirVentaComponent implements OnInit {
   }
 
   onCajaSeleccionada(idCaja: number): void {
+    this.aplicarCajaSeleccionada(idCaja);
+    void this.cargarTiposDocumentoCaja(idCaja).catch(error => {
+      console.error('No se pudieron cargar los documentos de la caja.', error);
+    });
+  }
+
+  /** Mantiene la misma selección de documentos fiscales que venta.component. */
+  calcularBotonesDocumento(docs: CajaTipoDocumento[]): void {
+    const E = EnumTipoDocumento;
+
+    const docFactura = docs.find(d => d.IdTipoDocumento === E.FacturaVenta)
+      ?? docs.find(d => d.IdTipoDocumento === E.FacturaManual);
+    this.mostrarFactura = !!docFactura;
+    this.textoFactura = docFactura?.Descripcion ?? 'Factura';
+    this.idTipoDocFactura = docFactura?.IdTipoDocumento as EnumTipoDocumento
+      ?? E.FacturaVenta;
+
+    const docBoleta = docs.find(d => d.IdTipoDocumento === E.BoletaVenta)
+      ?? docs.find(d => d.IdTipoDocumento === E.FacturaSimplificada)
+      ?? docs.find(d => d.IdTipoDocumento === E.BoletaManual);
+    this.mostrarBoleta = !!docBoleta;
+    this.textoBoleta = docBoleta?.Descripcion ?? 'Boleta';
+    this.idTipoDocBoleta = docBoleta?.IdTipoDocumento as EnumTipoDocumento
+      ?? E.BoletaVenta;
+  }
+
+  private aplicarCajaSeleccionada(idCaja: number): void {
     this.cajaSeleccionada = idCaja;
     const caja = this.listCaja.find(item => item.IdCaja === idCaja);
     this.tipoCambioCompra = caja?.TurnoAbierto?.TipoCambio?.toString() ?? '1';
     this.tipoCambioVenta = caja?.TurnoAbierto?.TipoCambioVenta?.toString() ?? '1';
+  }
+
+  private async cargarTiposDocumentoCaja(idCaja: number): Promise<void> {
+    const solicitud = ++this.solicitudDocumentosCaja;
+    this.calcularBotonesDocumento([]);
+
+    try {
+      const documentos = await firstValueFrom(
+        this.cajaService.getTipoDocumentoByCaja(idCaja),
+      );
+      if (solicitud === this.solicitudDocumentosCaja
+          && idCaja === this.cajaSeleccionada) {
+        this.calcularBotonesDocumento(documentos);
+      }
+    } catch (error) {
+      if (solicitud === this.solicitudDocumentosCaja) {
+        this.calcularBotonesDocumento([]);
+      }
+      throw error;
+    }
   }
 
   onProductoSelected(event: any): void {

@@ -50,6 +50,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   nombreSucursal = '';
   turnoNumero   = 0;
   turnoActivo   = false;
+  esEstacionOperativa = false;
   cajasConTurnoAbierto = 0;
 
   // ── Config (moneda) ────────────────────────────────────────
@@ -163,6 +164,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
       },
       error: () => { this.cajasConTurnoAbierto = 0; },
     });
+
+    const tipoEstacion = this.storageService.getCurrentUser()?.TipoCompu as
+      EstacionTipoEnum | undefined;
+    this.esEstacionOperativa = tipoEstacion === EstacionTipoEnum.CAJA
+      || tipoEstacion === EstacionTipoEnum.MOZO;
+    if (!this.esEstacionOperativa) {
+      // Administración y Comercio pueden trabajar con una caja seleccionada
+      // sin convertir este navegador en una estación física. Consultar el
+      // turno por dispositivo en ese contexto produce un falso error.
+      this.turnoActivo = false;
+      this.turnoOpenShare = false;
+      return;
+    }
+
     const ip = this.storageService.getCurrentIP();
     if (!ip) {
       this.turnoActivo = false;
