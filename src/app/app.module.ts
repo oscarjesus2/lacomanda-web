@@ -32,6 +32,8 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { DialogMozoComponent } from './components/dialog-mozo/dialog-mozo.component';
 import { PedidosListComponent } from './components/pedidos-list/pedidos-list.component';
@@ -325,6 +327,8 @@ export const MY_DATE_FORMATS = {
     MatSidenavModule,
     MatListModule,
     MatButtonToggleModule,
+    MatProgressBarModule,
+    MatProgressSpinnerModule,
     MatChipsModule,
     MatAutocompleteModule, 
     FontAwesomeModule, 

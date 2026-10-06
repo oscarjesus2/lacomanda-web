@@ -292,11 +292,14 @@
         </div>
 
         <div class="ai-document-processing" *ngIf="procesandoFactura">
-          <mat-spinner diameter="34"></mat-spinner>
-          <div>
-            <strong>Estamos leyendo el documento…</strong>
-            <span>Puede tardar unos segundos. No cierres esta ventana.</span>
+          <div class="ai-document-processing__status">
+            <mat-spinner diameter="38"></mat-spinner>
+            <div>
+              <strong>Procesando {{ nombreDocumentoProcesando || 'el documento' }}…</strong>
+              <span>Estamos identificando proveedor, importes, impuestos, artículos y unidades de compra.</span>
+            </div>
           </div>
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
         </div>
 
         <div class="ai-document-preview" *ngIf="previsualizacionFactura && !procesandoFactura">
@@ -667,6 +670,57 @@
               [class.purchase-entry-line--review]="linea.RequiereRevision"
               *ngFor="let linea of lineas; let index = index"
             >
+              <div class="purchase-entry-line__header">
+                <div class="purchase-entry-line__identity">
+                  <span class="purchase-entry-line__number">Artículo {{ index + 1 }}</span>
+                  <strong>
+                    {{ linea.DescripcionOriginal || linea.Producto || linea.CodigoOriginal || 'Artículo pendiente de identificar' }}
+                  </strong>
+                  <span *ngIf="linea.CodigoOriginal || linea.UnidadMedidaOriginal">
+                    <ng-container *ngIf="linea.CodigoOriginal">Código {{ linea.CodigoOriginal }}</ng-container>
+                    <ng-container *ngIf="linea.CodigoOriginal && linea.UnidadMedidaOriginal"> · </ng-container>
+                    <ng-container *ngIf="linea.UnidadMedidaOriginal">
+                      Unidad leída: {{ linea.UnidadMedidaOriginal }}
+                    </ng-container>
+                  </span>
+                  <span class="purchase-entry-line__review-message" *ngIf="linea.MotivoRevision">
+                    {{ linea.MotivoRevision }}
+                  </span>
+                </div>
+                <div class="purchase-entry-line__actions" *ngIf="!soloLectura">
+                  <button
+                    mat-stroked-button
+                    color="primary"
+                    type="button"
+                    (click)="registrarArticuloLinea(linea)"
+                    *ngIf="!linea.IdProducto"
+                  >
+                    <mat-icon>add_box</mat-icon>
+                    Registrar nuevo artículo
+                  </button>
+                  <button
+                    mat-stroked-button
+                    color="primary"
+                    type="button"
+                    (click)="configurarPresentacionLinea(linea)"
+                    *ngIf="linea.IdProducto && linea.RequierePresentacion"
+                  >
+                    <mat-icon>inventory_2</mat-icon>
+                    Agregar presentación {{ linea.UnidadMedidaOriginal }}
+                  </button>
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    type="button"
+                    aria-label="Quitar artículo"
+                    matTooltip="Quitar artículo"
+                    (click)="quitarLinea(index)"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+
               <div class="purchase-entry-line__main">
                 <mat-form-field
                   appearance="fill"
@@ -801,18 +855,6 @@
                   </div>
                 </ng-template>
 
-                <button
-                  mat-icon-button
-                  class="purchase-entry-line__remove"
-                  color="warn"
-                  type="button"
-                  aria-label="Quitar artículo"
-                  matTooltip="Quitar artículo"
-                  (click)="quitarLinea(index)"
-                  *ngIf="!soloLectura"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
               </div>
 
               <div class="purchase-entry-line__fiscal">
@@ -853,21 +895,6 @@
                 </div>
               </div>
 
-              <div
-                class="purchase-entry-line__source"
-                *ngIf="linea.DescripcionOriginal || linea.CodigoOriginal || linea.UnidadMedidaOriginal"
-              >
-                <mat-icon>auto_awesome</mat-icon>
-                <span>
-                  Leído del documento:
-                  {{ linea.DescripcionOriginal || linea.CodigoOriginal || 'Sin descripción' }}
-                  <ng-container *ngIf="linea.UnidadMedidaOriginal"> · {{ linea.UnidadMedidaOriginal }}</ng-container>
-                </span>
-                <span *ngIf="linea.OrigenIa && linea.FactorConversionUnidad && linea.FactorConversionUnidad !== 1">
-                  Conversión: {{ linea.CantidadOriginal | number:'1.0-3' }} {{ linea.UnidadMedidaOriginal }}
-                  → {{ linea.Cantidad | number:'1.0-3' }} {{ linea.UnidadMedida }}
-                </span>
-              </div>
             </article>
           </div>
 

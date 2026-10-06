@@ -3,7 +3,7 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>{{ creacionRapida ? 'Nuevo artículo o insumo' : 'Mantenimiento de artículos' }}</h2>
+  <h2>{{ idArticuloEditar ? 'Configurar artículo y presentación' : (creacionRapida ? 'Nuevo artículo o insumo' : 'Mantenimiento de artículos') }}</h2>
 
   <ng-container *ngIf="!showForm">
     <div class="dialog-toolbar">

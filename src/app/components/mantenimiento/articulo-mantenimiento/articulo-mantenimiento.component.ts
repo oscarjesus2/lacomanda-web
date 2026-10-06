@@ -26,6 +26,10 @@ import { ProveedorService } from 'src/app/services/proveedor.service';
 
 export interface ArticuloMantenimientoData {
   creacionRapida?: boolean;
+  idArticuloEditar?: number;
+  descripcionSugerida?: string;
+  unidadCompraSugerida?: string;
+  factorConversionSugerido?: number;
 }
 
 @Component({
@@ -62,6 +66,14 @@ export class ArticuloMantenimientoComponent implements OnInit {
   articulo = new ArticuloGuardar();
   tipoFormulario: 'A' | 'I' | 'P' | 'S' = 'A';
   readonly creacionRapida: boolean;
+  readonly idArticuloEditar: number | null;
+  private readonly descripcionSugerida: string;
+  private readonly unidadCompraSugerida: string;
+  private readonly factorConversionSugerido: number;
+
+  get modoRapido(): boolean {
+    return this.creacionRapida || !!this.idArticuloEditar;
+  }
 
   get esProductoVentaEditado(): boolean {
     return this.articulo.IdProducto > 0 &&
@@ -82,6 +94,15 @@ export class ArticuloMantenimientoComponent implements OnInit {
     data: ArticuloMantenimientoData | null
   ) {
     this.creacionRapida = !!data?.creacionRapida;
+    this.idArticuloEditar = data?.idArticuloEditar || null;
+    this.descripcionSugerida = data?.descripcionSugerida?.trim() || '';
+    this.unidadCompraSugerida =
+      data?.unidadCompraSugerida?.trim() || '';
+    this.factorConversionSugerido =
+      data?.factorConversionSugerido &&
+      data.factorConversionSugerido > 0
+        ? data.factorConversionSugerido
+        : 1;
   }
 
   ngOnInit(): void {
@@ -122,8 +143,21 @@ export class ArticuloMantenimientoComponent implements OnInit {
         this.proveedores = (response.proveedores.Data || [])
           .filter(p => p.Activo);
         this.cargando = false;
-        if (this.creacionRapida) {
+        if (this.idArticuloEditar) {
+          const articulo = this.articulos.find(
+            item => item.IdProducto === this.idArticuloEditar
+          );
+          if (articulo) {
+            this.editar(articulo);
+            this.agregarPresentacionSugerida();
+          }
+        } else if (this.creacionRapida) {
           this.nuevo();
+          if (this.descripcionSugerida) {
+            this.articulo.Descripcion = this.descripcionSugerida;
+            this.articulo.DescripcionCompra = this.descripcionSugerida;
+          }
+          this.agregarPresentacionSugerida();
         }
       },
       error: error => {
@@ -318,7 +352,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
           return;
         }
         Notificar.exito(esEdicion ? 'Artículo actualizado' : 'Artículo creado', '');
-        if (this.creacionRapida && !esEdicion) {
+        if (this.modoRapido) {
           this.dialogRef.close(response.Data);
           return;
         }
@@ -333,7 +367,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
   }
 
   cancelar(): void {
-    if (this.creacionRapida) {
+    if (this.modoRapido) {
       this.dialogRef.close();
       return;
     }
@@ -409,6 +443,67 @@ export class ArticuloMantenimientoComponent implements OnInit {
       },
       error: error => this.mostrarError(error, 'No se pudieron cargar los grupos.')
     });
+  }
+
+  private agregarPresentacionSugerida(): void {
+    const unidad = this.unidadSugerida();
+    if (!unidad || unidad.IdUnidad === this.articulo.IdUnidadStock ||
+        this.articulo.PresentacionesCompra.some(
+          item => item.IdUnidadCompra === unidad.IdUnidad
+        )) {
+      return;
+    }
+
+    this.articulo.PresentacionesCompra = [
+      ...this.articulo.PresentacionesCompra,
+      {
+        IdProveedor: null,
+        IdUnidadCompra: unidad.IdUnidad,
+        FactorConversionStock: this.factorConversionSugerido
+      }
+    ];
+  }
+
+  private unidadSugerida(): UnidadMedida | undefined {
+    const sugerida = this.normalizarUnidad(this.unidadCompraSugerida);
+    if (!sugerida) {
+      return undefined;
+    }
+    return this.unidades.find(unidad =>
+      this.normalizarUnidad(unidad.Descripcion) === sugerida ||
+      this.normalizarUnidad(unidad.CodigoSunat) === sugerida
+    );
+  }
+
+  private normalizarUnidad(valor: string): string {
+    const unidad = this.normalizar(valor);
+    switch (unidad) {
+      case 'bx':
+      case 'cj':
+      case 'cajas':
+        return 'caja';
+      case 'sa':
+      case 'sac':
+      case 'sacos':
+        return 'saco';
+      case 'bd':
+      case 'bidones':
+        return 'bidon';
+      default:
+        if (unidad.startsWith('caja ')) {
+          return 'caja';
+        }
+        if (unidad.startsWith('saco ')) {
+          return 'saco';
+        }
+        if (unidad.startsWith('paquete ')) {
+          return 'paquete';
+        }
+        if (unidad.startsWith('bidon ')) {
+          return 'bidon';
+        }
+        return unidad;
+    }
   }
 
   private impuestoPredeterminado(): string {
