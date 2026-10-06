@@ -4748,11 +4748,9 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 }
 
 .ai-document-processing {
-  display: flex;
+  display: grid;
   min-height: 76px;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
+  gap: 12px;
   padding: 14px;
   border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-md);
@@ -4849,27 +4847,30 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 /* Detalle editable de compras. La línea se divide en datos operativos y
    resumen fiscal para que las descripciones nunca compitan con los importes. */
 .purchase-entry-detail {
-  max-height: min(48vh, 560px);
+  max-height: none;
 }
 
 .purchase-entry-lines {
   display: grid;
   flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  gap: 10px;
+  padding: 10px;
+  overflow: visible;
 }
 
 .purchase-entry-line {
   position: relative;
   display: grid;
-  gap: 10px;
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid var(--color-border);
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   background: var(--color-surface);
 }
 
 .purchase-entry-line:last-child {
-  border-bottom: 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .purchase-entry-line:hover {
@@ -4880,16 +4881,68 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
   box-shadow: inset 3px 0 0 var(--color-warning);
 }
 
+.purchase-entry-line__header {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px 4px;
+}
+
+.purchase-entry-line__identity {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.purchase-entry-line__identity > strong {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.purchase-entry-line__identity > span:not(.purchase-entry-line__number) {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.purchase-entry-line__number {
+  color: var(--color-primary-dark);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.purchase-entry-line__review-message {
+  color: var(--color-warning-dark, var(--color-primary-dark)) !important;
+  font-weight: 700;
+}
+
+.purchase-entry-line__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.purchase-entry-line__actions .mat-mdc-button-base:not(.mat-mdc-icon-button) {
+  min-height: 36px;
+}
+
 .purchase-entry-line__main {
   display: grid;
   grid-template-columns:
-    minmax(280px, 2.2fr)
-    minmax(92px, 0.58fr)
-    minmax(96px, 0.62fr)
-    minmax(110px, 0.7fr)
-    minmax(210px, 1.35fr)
-    44px;
-  gap: 10px;
+    minmax(250px, 2fr)
+    minmax(140px, 0.9fr)
+    minmax(100px, 0.62fr)
+    minmax(145px, 0.9fr)
+    minmax(145px, 0.9fr)
+    minmax(190px, 1.2fr);
+  gap: 8px;
   align-items: start;
 }
 
@@ -4948,10 +5001,10 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 .purchase-entry-line__fiscal {
   display: grid;
   grid-template-columns: minmax(280px, 1.8fr) repeat(3, minmax(120px, 0.65fr));
-  gap: 10px;
+  gap: 8px;
   align-items: stretch;
   margin-left: 0;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid color-mix(in srgb, var(--color-primary) 12%, var(--color-border));
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--color-primary) 3.5%, var(--color-surface));
@@ -4997,11 +5050,12 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 
 @media (max-width: 1100px) {
   .purchase-entry-line__main {
-    grid-template-columns: minmax(260px, 2fr) repeat(3, minmax(100px, 0.7fr)) 44px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .purchase-entry-line__article,
   .purchase-entry-line__subarea {
-    grid-column: 1 / -2;
+    grid-column: span 2;
   }
 
   .purchase-entry-line__fiscal {
@@ -5016,6 +5070,15 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 
   .purchase-entry-line {
     padding: 12px;
+  }
+
+  .purchase-entry-line__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .purchase-entry-line__actions {
+    flex-wrap: wrap;
   }
 
   .purchase-entry-line__main,
@@ -5349,6 +5412,18 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
   .booking-card { border-radius: 16px; }
   .booking-section-title { align-items: flex-start; flex-direction: column; gap: 3px; }
   .booking-form__wide { grid-column: auto; }
+}
+
+.ai-document-processing__status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.ai-document-processing .mat-mdc-progress-bar {
+  overflow: hidden;
+  border-radius: 999px;
 }
 
 /* Los diálogos de trabajo comparten un mismo comportamiento en teléfono:

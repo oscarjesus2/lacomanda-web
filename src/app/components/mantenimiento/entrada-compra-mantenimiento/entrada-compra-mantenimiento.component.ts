@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { forkJoin } from 'rxjs';
@@ -28,6 +28,8 @@ import {
 } from 'src/app/models/proveedor.models';
 import { ProveedorService } from 'src/app/services/proveedor.service';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { Articulo } from 'src/app/models/articulo.models';
+import { ArticuloMantenimientoComponent } from '../articulo-mantenimiento/articulo-mantenimiento.component';
 
 interface LineaCompraEdicion
   extends Omit<EntradaCompraLineaGuardar, 'IdProducto'> {
@@ -45,6 +47,9 @@ interface LineaCompraEdicion
   FactorConversionUnidad?: number;
   ConfianzaIa?: number;
   RequiereRevision?: boolean;
+  RequierePresentacion?: boolean;
+  ImpuestosDocumento?: string[];
+  ConflictoTributario?: boolean;
   MotivoRevision?: string;
 }
 
@@ -111,6 +116,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   facturaIaHabilitada = false;
   cuotaFacturaIa: CuotaDocumentosCompraIa | null = null;
   procesandoFactura = false;
+  nombreDocumentoProcesando = '';
   previsualizacionFactura: FacturaCompraIaPrevisualizacion | null = null;
   catalogoProveedor: ProveedorCatalogo | null = null;
   proveedorNuevo = new ProveedorGuardar();
@@ -120,7 +126,8 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       MatDialogRef<EntradaCompraMantenimientoComponent>,
     private readonly entradaCompraService: EntradaCompraService,
     private readonly licenciaTenantService: LicenciaTenantService,
-    private readonly proveedorService: ProveedorService
+    private readonly proveedorService: ProveedorService,
+    private readonly dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -246,9 +253,11 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     // Durante la lectura no conservamos la fecha actual del formulario nuevo.
     this.formulario.FechaEmision = '';
     this.procesandoFactura = true;
+    this.nombreDocumentoProcesando = archivo.name;
     this.entradaCompraService.previsualizarFactura(archivo).subscribe({
       next: response => {
         this.procesandoFactura = false;
+        this.nombreDocumentoProcesando = '';
         if (!response.Success || !response.Data) {
           Swal.fire(
             'No pudimos leer el documento',
@@ -265,6 +274,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       },
       error: error => {
         this.procesandoFactura = false;
+        this.nombreDocumentoProcesando = '';
         if (error?.error?.ErrorCode === 'AI_DOCUMENT_QUOTA_EXCEEDED') {
           this.cargarCuotaFacturaIa();
         }
@@ -288,26 +298,51 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       linea.IdPresentacionCompra = null;
       linea.Inventariable = false;
       linea.IdSubAreaAlmacen = null;
-      linea.Impuestos = [];
+      linea.Impuestos = linea.OrigenIa && linea.ImpuestosDocumento
+        ? [...linea.ImpuestosDocumento]
+        : [];
+      linea.ConflictoTributario = false;
       linea.RequiereRevision = true;
+      linea.MotivoRevision =
+        'Seleccione un artículo existente o regístrelo antes de guardar.';
       return;
     }
 
     linea.Producto = articulo.Descripcion;
-    linea.IdPresentacionCompra = null;
+    const presentacionSugerida = this.presentacionParaUnidad(
+      articulo,
+      linea.UnidadMedidaOriginal
+    );
+    linea.IdPresentacionCompra =
+      presentacionSugerida?.IdPresentacionCompra ?? null;
     this.actualizarPresentacionLinea(linea);
     linea.Inventariable = articulo.Inventariable;
-    linea.Impuestos = [...articulo.Impuestos];
+    const impuestosDocumento = linea.ImpuestosDocumento;
+    linea.Impuestos = linea.OrigenIa && impuestosDocumento !== undefined
+      ? [...impuestosDocumento]
+      : [...articulo.Impuestos];
+    linea.ConflictoTributario = !!linea.OrigenIa &&
+      impuestosDocumento !== undefined &&
+      !this.mismosImpuestos(articulo.Impuestos, impuestosDocumento);
     linea.IdSubAreaAlmacen = articulo.Inventariable
       ? (this.catalogos?.SubAreas.length === 1
           ? this.catalogos.SubAreas[0].IdSubAreaAlmacen
           : linea.IdSubAreaAlmacen)
       : null;
+    linea.RequierePresentacion = !!linea.OrigenIa &&
+      !!linea.UnidadMedidaOriginal &&
+      !presentacionSugerida &&
+      this.esUnidadPresentacion(linea.UnidadMedidaOriginal) &&
+      this.normalizarUnidad(linea.UnidadMedidaOriginal) !==
+        this.normalizarUnidad(articulo.UnidadMedida);
+    this.actualizarMotivoSeleccionArticulo(linea, articulo);
     this.actualizarRevisionLinea(linea);
   }
 
   actualizarRevisionLinea(linea: LineaCompraEdicion): void {
     linea.RequiereRevision = !linea.IdProducto ||
+      !!linea.RequierePresentacion ||
+      !!linea.ConflictoTributario ||
       linea.Cantidad <= 0 ||
       linea.Importe < 0 ||
       (linea.Inventariable && !linea.IdSubAreaAlmacen);
@@ -452,6 +487,73 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   quitarLinea(index: number): void {
     this.lineas.splice(index, 1);
     this.lineas = [...this.lineas];
+  }
+
+  registrarArticuloLinea(linea: LineaCompraEdicion): void {
+    this.abrirMantenimientoArticulo(linea, null);
+  }
+
+  configurarPresentacionLinea(linea: LineaCompraEdicion): void {
+    if (!linea.IdProducto) {
+      return;
+    }
+    this.abrirMantenimientoArticulo(linea, linea.IdProducto);
+  }
+
+  private abrirMantenimientoArticulo(
+    linea: LineaCompraEdicion,
+    idArticuloEditar: number | null
+  ): void {
+    const reference = this.dialog.open(ArticuloMantenimientoComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'calc(100vw - 48px)',
+      height: 'calc(100vh - 48px)',
+      maxWidth: '1120px',
+      maxHeight: '840px',
+      panelClass: 'dialog-window--workspace',
+      data: {
+        creacionRapida: !idArticuloEditar,
+        idArticuloEditar,
+        descripcionSugerida:
+          linea.DescripcionOriginal || linea.Producto,
+        unidadCompraSugerida: linea.UnidadMedidaOriginal,
+        factorConversionSugerido: this.factorSugeridoLinea(linea)
+      }
+    });
+
+    reference.afterClosed().subscribe((articulo?: Articulo) => {
+      if (!articulo) {
+        return;
+      }
+      this.recargarCatalogosArticulo(linea, articulo.IdProducto);
+    });
+  }
+
+  private recargarCatalogosArticulo(
+    linea: LineaCompraEdicion,
+    idProducto: number
+  ): void {
+    this.entradaCompraService.catalogos().subscribe({
+      next: response => {
+        if (!response.Success || !response.Data) {
+          Swal.fire(
+            'Artículo guardado',
+            'No se pudo actualizar el catálogo del ingreso. Vuelva a abrir el documento.',
+            'info'
+          );
+          return;
+        }
+        this.catalogos = response.Data;
+        linea.IdProducto = idProducto;
+        this.actualizarArticuloLinea(linea);
+        this.lineas = [...this.lineas];
+      },
+      error: error => this.mostrarError(
+        error,
+        'El artículo se guardó, pero no se pudo actualizar el catálogo del ingreso.'
+      )
+    });
   }
 
   guardar(): void {
@@ -885,6 +987,29 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     );
   }
 
+  private presentacionParaUnidad(
+    articulo: EntradaCompraArticulo,
+    unidadOriginal?: string
+  ): EntradaCompraPresentacion | undefined {
+    const unidad = this.normalizarUnidad(unidadOriginal || '');
+    if (!unidad) {
+      return undefined;
+    }
+    const candidatas = this.presentacionesDisponibles(articulo).filter(
+      presentacion => !presentacion.EsUnidadBase &&
+        this.mismaFamiliaPresentacion(
+          unidad,
+          this.normalizarUnidad(presentacion.UnidadCompra)
+        )
+    );
+    if (candidatas.length === 1) {
+      return candidatas[0];
+    }
+    return candidatas.find(presentacion =>
+      this.normalizarUnidad(presentacion.UnidadCompra) === unidad
+    );
+  }
+
   articuloLinea(
     linea: LineaCompraEdicion
   ): EntradaCompraArticulo | undefined {
@@ -927,6 +1052,78 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     linea.UnidadMedida = presentacion.UnidadCompra;
     linea.UnidadStock = articulo.UnidadMedida;
     linea.FactorConversionStock = presentacion.FactorConversionStock;
+    if (linea.OrigenIa && linea.CantidadOriginal &&
+        !presentacion.EsUnidadBase) {
+      linea.Cantidad = linea.CantidadOriginal;
+    }
+    linea.RequierePresentacion = !!linea.OrigenIa &&
+      !!linea.UnidadMedidaOriginal &&
+      presentacion.EsUnidadBase &&
+      this.esUnidadPresentacion(linea.UnidadMedidaOriginal) &&
+      this.normalizarUnidad(linea.UnidadMedidaOriginal) !==
+        this.normalizarUnidad(articulo.UnidadMedida);
+    this.actualizarMotivoSeleccionArticulo(linea, articulo);
+    this.actualizarRevisionLinea(linea);
+  }
+
+  private factorSugeridoLinea(linea: LineaCompraEdicion): number {
+    if ((linea.FactorConversionUnidad || 0) > 1) {
+      return Number(linea.FactorConversionUnidad);
+    }
+    const texto = `${linea.DescripcionOriginal || ''}`;
+    const coincidencia = texto.match(/\bx\s*(\d+(?:[.,]\d+)?)/i);
+    if (!coincidencia) {
+      return 1;
+    }
+    const factor = Number(coincidencia[1].replace(',', '.'));
+    return Number.isFinite(factor) && factor > 0 ? factor : 1;
+  }
+
+  private esUnidadPresentacion(unidad: string): boolean {
+    return ['CAJA', 'SACO', 'PAQUETE', 'BOTELLA', 'BIDON']
+      .includes(this.normalizarUnidad(unidad));
+  }
+
+  private mismaFamiliaPresentacion(
+    izquierda: string,
+    derecha: string
+  ): boolean {
+    return izquierda === derecha ||
+      (izquierda === 'CAJA' && derecha.startsWith('CAJA ')) ||
+      (derecha === 'CAJA' && izquierda.startsWith('CAJA ')) ||
+      (izquierda === 'PAQUETE' && derecha.startsWith('PAQUETE ')) ||
+      (derecha === 'PAQUETE' && izquierda.startsWith('PAQUETE '));
+  }
+
+  private normalizarUnidad(valor: string): string {
+    const unidad = valor
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, ' ');
+    if (['BX', 'CJ', 'CAJAS'].includes(unidad)) {
+      return 'CAJA';
+    }
+    if (['SA', 'SAC', 'SACOS'].includes(unidad)) {
+      return 'SACO';
+    }
+    if (['BD', 'BIDONES'].includes(unidad)) {
+      return 'BIDON';
+    }
+    if (unidad.startsWith('CAJA ')) {
+      return 'CAJA';
+    }
+    if (unidad.startsWith('SACO ')) {
+      return 'SACO';
+    }
+    if (unidad.startsWith('PAQUETE ')) {
+      return 'PAQUETE';
+    }
+    if (unidad.startsWith('BIDON ')) {
+      return 'BIDON';
+    }
+    return unidad;
   }
 
   cantidadStockLinea(linea: LineaCompraEdicion): number {
@@ -1221,6 +1418,8 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     }
     const lineaPendiente = this.lineas.find(linea =>
       !linea.IdProducto ||
+      !!linea.RequierePresentacion ||
+      !!linea.ConflictoTributario ||
       linea.Cantidad <= 0 ||
       linea.Importe < 0 ||
       (linea.Inventariable && !linea.IdSubAreaAlmacen)
@@ -1228,7 +1427,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     if (lineaPendiente) {
       Swal.fire(
         'Revise los artículos leídos',
-        'Seleccione el artículo, la cantidad y la subárea de las líneas señaladas antes de guardar.',
+        'Seleccione el artículo, su presentación, la cantidad y la subárea de las líneas señaladas antes de guardar.',
         'info'
       );
       return false;
@@ -1320,14 +1519,10 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     this.formulario.PreciosIncluyenImpuestos =
       datos.PreciosIncluyenImpuestos;
     this.lineas = datos.Lineas.map(linea => ({
+      ...this.datosPresentacionPrevisualizada(linea),
       IdProducto: linea.IdProducto,
       IdPresentacionCompra: linea.IdPresentacionCompra,
       Producto: linea.Producto,
-      UnidadMedida: linea.UnidadMedida,
-      UnidadStock: this.catalogos?.Articulos.find(
-        articulo => articulo.IdProducto === linea.IdProducto
-      )?.UnidadMedida || linea.UnidadMedida,
-      FactorConversionStock: 1,
       Inventariable: linea.Inventariable,
       Cantidad: linea.Cantidad,
       Importe: linea.Importe,
@@ -1341,8 +1536,70 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       FactorConversionUnidad: linea.FactorConversionUnidad,
       ConfianzaIa: linea.Confianza,
       RequiereRevision: linea.RequiereRevision,
+      RequierePresentacion: linea.RequierePresentacion,
+      ImpuestosDocumento: [...linea.Impuestos],
+      ConflictoTributario: !!linea.IdProducto &&
+        !this.mismosImpuestos(
+          this.catalogos?.Articulos.find(
+            articulo => articulo.IdProducto === linea.IdProducto
+          )?.Impuestos || [],
+          linea.Impuestos
+        ),
       MotivoRevision: linea.MotivoRevision
     }));
+  }
+
+  private actualizarMotivoSeleccionArticulo(
+    linea: LineaCompraEdicion,
+    articulo: EntradaCompraArticulo
+  ): void {
+    const motivos: string[] = [];
+    if (linea.RequierePresentacion) {
+      motivos.push(
+        `La unidad ${linea.UnidadMedidaOriginal} no está configurada como presentación de compra de ${articulo.Descripcion}.`
+      );
+    }
+    if (linea.ConflictoTributario) {
+      motivos.push(
+        'Los impuestos leídos en la factura no coinciden con la configuración tributaria del artículo. Seleccione el artículo correcto o actualice su configuración.'
+      );
+    }
+    linea.MotivoRevision = motivos.join(' ');
+  }
+
+  private mismosImpuestos(
+    izquierda: string[],
+    derecha: string[]
+  ): boolean {
+    if (izquierda.length !== derecha.length) {
+      return false;
+    }
+    const normalizados = new Set(
+      izquierda.map(item => item.trim().toUpperCase())
+    );
+    return derecha.every(item =>
+      normalizados.has(item.trim().toUpperCase())
+    );
+  }
+
+  private datosPresentacionPrevisualizada(
+    linea: FacturaCompraIaPrevisualizacion['Lineas'][number]
+  ): Pick<LineaCompraEdicion,
+    'UnidadMedida' | 'UnidadStock' | 'FactorConversionStock'> {
+    const articulo = this.catalogos?.Articulos.find(
+      item => item.IdProducto === linea.IdProducto
+    );
+    const presentacion = articulo?.Presentaciones.find(
+      item => item.IdPresentacionCompra === linea.IdPresentacionCompra
+    );
+    return {
+      UnidadMedida: presentacion?.UnidadCompra || linea.UnidadMedida,
+      UnidadStock: articulo?.UnidadMedida || linea.UnidadMedida,
+      FactorConversionStock: presentacion?.FactorConversionStock ||
+        (linea.RequierePresentacion
+          ? linea.FactorConversionUnidad
+          : 1) || 1
+    };
   }
 
   private fechaLocal(valor: Date | string): Date | null {

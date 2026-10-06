@@ -263,5 +263,6 @@ export interface FacturaCompraIaLinea {
   Impuestos: string[];
   Confianza: number;
   RequiereRevision: boolean;
+  RequierePresentacion: boolean;
   MotivoRevision: string;
 }
