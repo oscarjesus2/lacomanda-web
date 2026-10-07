@@ -5,6 +5,16 @@
 /* Ancho específico del panel de búsqueda */
 .ps-panel {
   width: min(900px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ps-panel > h2,
+.ps-search-field,
+.ps-actions {
+  flex: 0 0 auto;
 }
 
 /* ── Campo de búsqueda ──────────────────────────────────── */
@@ -29,6 +39,8 @@
 /* ── Tabla ──────────────────────────────────────────────── */
 .ps-table-wrap {
   height: clamp(150px, 30dvh, 260px);
+  min-height: 100px;
+  flex: 0 1 auto;
   overflow-y: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
@@ -95,6 +107,13 @@
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
+}
+
+/* Al abrir el teclado, la tabla cede altura para que el buscador y sus
+   acciones queden juntos justo encima del teclado. */
+:host-context(body.teclado-en-pantalla) .ps-table-wrap {
+  height: clamp(72px, calc(100dvh - var(--teclado-alto, 45dvh) - 250px), 180px);
+  min-height: 72px;
 }
 
 .ps-btn {

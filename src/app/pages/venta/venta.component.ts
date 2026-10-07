@@ -2534,7 +2534,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   openProductSearch(): void {
     const dialogRef = this.dialog.open(DialogProductSearchComponent, {
       width: '970px',
-      height: '850px',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100dvh - 32px)',
+      panelClass: 'dialog-window--product-search',
       data: { listProducts: this.listProductoVenta }
     });
 
