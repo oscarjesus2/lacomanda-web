@@ -3939,6 +3939,19 @@ mat-row:hover mat-cell {
   letter-spacing: 0.08em;
 }
 
+/* La búsqueda de productos se ajusta al espacio disponible para que su
+   formulario no quede desplazado cuando aparece el teclado táctil. */
+.cdk-overlay-pane.dialog-window--product-search {
+  height: auto !important;
+  max-height: calc(100dvh - 32px) !important;
+}
+
+.cdk-overlay-pane.dialog-window--product-search .mat-mdc-dialog-surface {
+  height: auto !important;
+  max-height: calc(100dvh - 32px) !important;
+  overflow-y: auto !important;
+}
+
 /* Mientras el teclado en pantalla está abierto ocupa el borde inferior. Lo que
    hay encima se apoya justo sobre él —como en un móvil— en vez de irse al otro
    extremo de la pantalla. `--teclado-alto` lo publica el propio teclado. */
@@ -3952,6 +3965,14 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper {
 
 body.teclado-en-pantalla .cdk-overlay-pane {
   max-height: calc(100dvh - var(--teclado-alto, 45dvh) - 16px);
+}
+
+body.teclado-en-pantalla .cdk-overlay-pane.dialog-window--product-search {
+  max-height: calc(100dvh - var(--teclado-alto, 45dvh) - 16px) !important;
+}
+
+body.teclado-en-pantalla .cdk-overlay-pane.dialog-window--product-search .mat-mdc-dialog-surface {
+  max-height: calc(100dvh - var(--teclado-alto, 45dvh) - 16px) !important;
 }
 
 body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
