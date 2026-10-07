@@ -31,7 +31,7 @@ data:
     # Chrome no admite comodines para web_app_identity.
     map $host $web_app_origin_association {
       default                        '{"web_apps":[]}';
-      auth.lacomanda.store           '{"web_apps":[{"web_app_identity":"https://app.lacomanda.store/"}],"https://app.lacomanda.store/":{"scope":"/"}}';
+      auth.lacomanda.store           '{"web_apps":[{"web_app_identity":"https://app.lacomanda.store/"},{"web_app_identity":"https://soho-399.lacomanda.store/"}],"https://app.lacomanda.store/":{"scope":"/"},"https://soho-399.lacomanda.store/":{"scope":"/"}}';
       auth.staging.lacomanda.store   '{"web_apps":[{"web_app_identity":"https://app.staging.lacomanda.store/"}],"https://app.staging.lacomanda.store/":{"scope":"/"}}';
     }
 
