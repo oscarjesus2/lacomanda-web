@@ -28,3 +28,11 @@ export class Espacios {
         Object.assign(this, init);
     }
 }
+
+export interface EspacioResumenInicio {
+    IdEspacio: number;
+    Descripcion: string;
+    Activo: boolean;
+    Visible: boolean;
+    Ocupado: number;
+}

@@ -6,6 +6,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './auth/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { ResumenNegocioComponent } from './pages/resumen-negocio/resumen-negocio.component';
 import { HttpClientModule } from '@angular/common/http';
 import { JobBackendProvider } from './interceptor/angular.http.interceptor';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -178,6 +179,7 @@ export const MY_DATE_FORMATS = {
     AppComponent,
     LoginComponent,
     DashboardComponent,
+    ResumenNegocioComponent,
 
     DialogMozoComponent,
     PedidosListComponent,

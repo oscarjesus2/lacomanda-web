@@ -1,0 +1,136 @@
+<main class="business-home">
+  <div class="business-home__inner">
+    <header class="business-home__header">
+      <div>
+        <span class="business-home__eyebrow">{{ 'businessOverview' | tenantText }}</span>
+        <h1>{{ 'businessHomeTitle' | tenantText }}</h1>
+        <p>{{ 'businessHomeSubtitle' | tenantText }}</p>
+      </div>
+      <div class="business-home__date">
+        <mat-icon>today</mat-icon>
+        <span>{{ fechaLabel }}</span>
+      </div>
+    </header>
+
+    <section class="business-home__welcome">
+      <div class="business-home__welcome-copy">
+        <span>{{ 'hello' | tenantText }}<ng-container *ngIf="nombreUsuario">, {{ nombreUsuario }}</ng-container></span>
+        <h2>{{ nombreSucursal }}</h2>
+        <p>{{ 'businessWelcomeHint' | tenantText }}</p>
+      </div>
+      <nav class="business-home__links" [attr.aria-label]="'businessAccess' | tenantText">
+        <a *ngIf="mostrarReportes" routerLink="/reportes" class="business-home__link">
+          <mat-icon>query_stats</mat-icon>{{ 'reports' | tenantText }}
+        </a>
+        <a routerLink="/administracion" class="business-home__link business-home__link--primary">
+          <mat-icon>settings</mat-icon>{{ 'administration' | tenantText }}
+        </a>
+      </nav>
+    </section>
+
+    <section class="business-home__metrics" [attr.aria-label]="'businessMetrics' | tenantText">
+      <article class="executive-kpi business-home__metric business-home__metric--sales" *ngIf="mostrarVentas">
+        <span>{{ 'salesToday' | tenantText }}</span>
+        <strong *ngIf="ventasTotal !== null; else salesUnavailable">
+          {{ simboloMoneda }} {{ ventasTotal | number:'1.2-2' }}
+        </strong>
+        <ng-template #salesUnavailable><strong>—</strong></ng-template>
+        <small class="is-neutral" *ngIf="documentosTotal !== null">
+          {{ documentosTotal }} {{ 'documents' | tenantText }}
+        </small>
+      </article>
+
+      <article class="executive-kpi business-home__metric" *ngIf="mostrarPedidos">
+        <span>{{ 'ordersInProgress' | tenantText }}</span>
+        <strong>{{ pedidosActivos.length }}</strong>
+        <small class="is-neutral">{{ turnosAbiertos.length }} {{ 'openShifts' | tenantText }}</small>
+      </article>
+
+      <article class="executive-kpi business-home__metric" *ngIf="mostrarEspacios">
+        <span>{{ 'spacesInUse' | tenantText }}</span>
+        <strong *ngIf="espaciosDisponiblesParaConsulta; else spacesUnavailable">
+          {{ espaciosOcupados }} <small>{{ 'of' | tenantText }} {{ espaciosDisponibles }}</small>
+        </strong>
+        <ng-template #spacesUnavailable><strong>—</strong></ng-template>
+        <small class="is-neutral">{{ 'activeSpaces' | tenantText }}</small>
+      </article>
+
+      <article class="executive-kpi business-home__metric" *ngIf="mostrarVentas && ticketMedio !== null">
+        <span>{{ 'averageTicket' | tenantText }}</span>
+        <strong>{{ simboloMoneda }} {{ ticketMedio | number:'1.2-2' }}</strong>
+        <small class="is-neutral">{{ 'perDocument' | tenantText }}</small>
+      </article>
+    </section>
+
+    <section class="business-home__content">
+      <article class="executive-widget business-home__activity" *ngIf="mostrarPedidos">
+        <header class="executive-widget__header">
+          <div>
+            <span class="executive-widget__eyebrow">{{ 'currentActivity' | tenantText }}</span>
+            <h2 class="executive-widget__title">{{ 'openOrders' | tenantText }}</h2>
+          </div>
+          <span class="business-home__count">{{ pedidosActivos.length }}</span>
+        </header>
+
+        <div class="business-home__empty" *ngIf="!cargando && !actividadDisponible">
+          <mat-icon>cloud_off</mat-icon>
+          <strong>{{ 'activityUnavailable' | tenantText }}</strong>
+          <span>{{ 'summaryPartialUnavailable' | tenantText }}</span>
+        </div>
+
+        <div class="business-home__empty" *ngIf="!cargando && actividadDisponible && pedidosActivos.length === 0">
+          <mat-icon>task_alt</mat-icon>
+          <strong>{{ turnosAbiertos.length ? ('noOpenOrders' | tenantText) : ('noOpenShifts' | tenantText) }}</strong>
+          <span>{{ turnosAbiertos.length ? ('ordersWillAppearHere' | tenantText) : ('openShiftToStart' | tenantText) }}</span>
+        </div>
+
+        <div class="business-home__order-list" *ngIf="pedidosActivos.length > 0">
+          <article class="business-home__order" *ngFor="let pedido of pedidosActivos">
+            <span class="business-home__order-icon"><mat-icon>receipt_long</mat-icon></span>
+            <div class="business-home__order-copy">
+              <strong>{{ 'order' | tenantText }} {{ pedido.NroPedido || ('numberSign' | tenantText) + pedido.IdPedido }}</strong>
+              <span>{{ pedido.Cliente || ('walkInCustomer' | tenantText) }}</span>
+            </div>
+            <span class="business-home__order-place" *ngIf="ubicacionPedido(pedido)">{{ 'space' | tenantText }} {{ ubicacionPedido(pedido) }}</span>
+            <strong class="business-home__order-total">{{ simboloMoneda }} {{ pedido.Total | number:'1.2-2' }}</strong>
+            <span class="business-home__status" [class.business-home__status--pending]="estadoPedido(pedido) === 'awaitingPayment'">
+              {{ estadoPedido(pedido) | tenantText }}
+            </span>
+          </article>
+        </div>
+      </article>
+
+      <aside class="business-home__side">
+        <article class="executive-widget business-home__ai" *ngIf="mostrarAsistenteIa">
+          <div class="business-home__ai-heading">
+            <span class="business-home__ai-icon"><mat-icon>auto_awesome</mat-icon></span>
+            <div>
+              <span class="executive-widget__eyebrow">{{ 'artificialIntelligence' | tenantText }}</span>
+              <h2>{{ 'aiCatalogTitle' | tenantText }}</h2>
+            </div>
+          </div>
+          <p>{{ 'aiCatalogHint' | tenantText }}</p>
+          <a routerLink="/administracion" class="business-home__ai-link">
+            {{ 'openAdministration' | tenantText }}<mat-icon>arrow_forward</mat-icon>
+          </a>
+        </article>
+
+        <article class="executive-widget business-home__reports" *ngIf="mostrarReportes">
+          <span class="executive-widget__eyebrow">{{ 'businessInsights' | tenantText }}</span>
+          <h2>{{ 'reportsDashboard' | tenantText }}</h2>
+          <p>{{ 'reportsHomeHint' | tenantText }}</p>
+          <a routerLink="/reportes" class="business-home__text-link">
+            {{ 'viewReports' | tenantText }}<mat-icon>arrow_forward</mat-icon>
+          </a>
+        </article>
+      </aside>
+    </section>
+
+    <p class="business-home__loading" *ngIf="cargando">
+      <mat-icon>hourglass_top</mat-icon>{{ 'loadingBusinessSummary' | tenantText }}
+    </p>
+    <p class="business-home__error" *ngIf="errorCarga && !cargando">
+      <mat-icon>info</mat-icon>{{ 'summaryPartialUnavailable' | tenantText }}
+    </p>
+  </div>
+</main>

@@ -7,7 +7,7 @@ import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { PedidoEspacioDTO as PedidoEspacioDTO } from '../interfaces/pedidoespacioDTO.interface';
 import { ImpresionDTO } from '../interfaces/impresionDTO.interface';
 import { AnularPedidoEspacioRequest, AnularProductoYComplementoDTO } from '../interfaces/anularProductoYComplementoDTO.interface';
-import { PedidoDeliveryDTO } from '../interfaces/pedidoDTO.interface';
+import { PedidoDeliveryDTO, PedidoResumenTurnoDTO } from '../interfaces/pedidoDTO.interface';
 import { DividirCuentaDTO } from '../interfaces/dividircuentaDTO.interface';
 import { PedidoDescuentoDTO } from '../interfaces/pedidoDescuentoDTO.interface';
 import { TrasladarProductoDTO } from '../interfaces/trasladarProductoDTO.interface';
@@ -41,6 +41,12 @@ export class PedidoService {
 
     ObtenerPedidosByIdTurno(idTurno: number): Observable<ApiResponse<PedidoDeliveryDTO[]>> {
         return this.http.get<ApiResponse<PedidoDeliveryDTO[]>>(this.basePath + '/turno/' + idTurno);
+    }
+
+    ObtenerResumenPedidosByIdTurno(idTurno: number): Observable<ApiResponse<PedidoResumenTurnoDTO[]>> {
+        return this.http.get<ApiResponse<PedidoResumenTurnoDTO[]>>(
+            `${this.basePath}/turno/${idTurno}/resumen`
+        );
     }
 
     ActualizarEnviosDeImpresion(idPedido: number, nroCuenta: number): Observable<ApiResponse<boolean>> {

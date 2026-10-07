@@ -322,7 +322,9 @@ export class AppComponent implements OnInit, OnDestroy {
     // Aquí puedes establecer lógicas para determinar el título basado en la URL
     switch (url) {
       case '/dashboard':
-        return this.storageService.getCurrentNombreSucursal();
+        return this.textCatalog.get('home');
+      case '/reportes':
+        return this.textCatalog.get('reportsDashboard');
       case '/caja':
         return this.textCatalog.get('register');
       case '/mozo':

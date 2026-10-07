@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs';
-import { Espacios } from '../models/espacios.models';
+import { EspacioResumenInicio, Espacios } from '../models/espacios.models';
 import { environment } from 'src/environments/environment';  // Importa el entorno correspondiente
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { PedidoEspacioDTO } from '../interfaces/pedidoespacioDTO.interface';
@@ -29,6 +29,12 @@ export class EspaciosService {
 
   GetAllEspaciosConPedidos(): Observable<ApiResponse<Espacios[]>> {
     return this.http.get<ApiResponse<Espacios[]>>(this.basePathMesas + '/listar');
+  }
+
+  GetResumenInicio(): Observable<ApiResponse<EspacioResumenInicio[]>> {
+    return this.http.get<ApiResponse<EspacioResumenInicio[]>>(
+      `${this.basePathMesas}/resumen-inicio`,
+    );
   }
 
   GetAllEspacios(): Observable<ApiResponse<Espacios[]>> {

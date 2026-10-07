@@ -70,7 +70,7 @@ export class LicenseGuard {
     const roles = token ? this.keycloakAuth.getRoles(token) : [];
 
     return roles.includes('admin') || roles.includes('gerente')
-      ? this.router.createUrlTree(['/administracion'])
+      ? this.router.createUrlTree(['/dashboard'])
       : this.router.createUrlTree(['/iniciar-sesion']);
   }
 }
