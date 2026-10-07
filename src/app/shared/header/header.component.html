@@ -10,7 +10,7 @@
     <div class="app-header__brand">
       <div class="app-header__brand-title">{{ nombreSucursal }}</div>
       <div class="app-header__brand-subtitle">
-        LaComanda · {{ 'restaurant' | tenantText }}
+        {{ config?.NombreComercial || 'La Comanda' }}
       </div>
     </div>
   </div>
