@@ -57,7 +57,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   config: Configuracion | null = null;
 
   // ── Visibilidad del menú ───────────────────────────────────
-  showDashboard     = false;
+  showReportes      = false;
+  showInicio        = false;
   showAdministracion = false;
   showCaja          = false;
   showMozo          = false;
@@ -68,7 +69,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private calcMenuVisibility(): void {
     const user = this.storageService.getCurrentUser();
     if (!user) {
-      this.showDashboard = false;
+      this.showReportes = false;
+      this.showInicio = false;
       this.showAdministracion = false;
       this.showCaja = false;
       this.showMozo = false;
@@ -84,23 +86,24 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const isMozo   = nivel   === NivelUsuarioEnum.Mozo;
     const esCaja   = estacion === EstacionTipoEnum.CAJA;
     const esMozo   = estacion === EstacionTipoEnum.MOZO;
+    this.showInicio = isAdmin || isGerente;
     if (isGerente) {
-      this.showDashboard      = this.reportesAnaliticosHabilitados;
+      this.showReportes       = this.reportesAnaliticosHabilitados;
       this.showAdministracion = true;
       this.showCaja           = false;
       this.showMozo           = false;
     } else if (isAdmin) {
-      this.showDashboard      = this.reportesAnaliticosHabilitados;
+      this.showReportes       = this.reportesAnaliticosHabilitados;
       this.showAdministracion = true;
       this.showCaja           = esCaja && this.operacionCajaHabilitada;
       this.showMozo           = esMozo && this.operacionCajaHabilitada;
     } else if (isCajero) {
-      this.showDashboard      = false;
+      this.showReportes       = false;
       this.showAdministracion = false;
       this.showCaja           = esCaja && this.operacionCajaHabilitada;
       this.showMozo           = false;
     } else if (isMozo) {
-      this.showDashboard      = false;
+      this.showReportes       = false;
       this.showAdministracion = false;
       this.showCaja           = false;
       this.showMozo           = esMozo && this.operacionCajaHabilitada;
@@ -263,16 +266,26 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl('/administracion');
   }
 
-  public Dashboard(): void {
+  public Reportes(): void {
+    this.title = this.storageService.getCurrentNombreSucursal();
+    this.router.navigateByUrl('/reportes');
+  }
+
+  public Inicio(): void {
     this.title = this.storageService.getCurrentNombreSucursal();
     this.router.navigateByUrl('/dashboard');
   }
 
   public reiniciar(): void {
     this.title = this.storageService.getCurrentNombreSucursal();
-    this.router.navigateByUrl(
-      this.showDashboard ? '/dashboard' : '/administracion',
-    );
+    const destino = this.showInicio
+      ? '/dashboard'
+      : this.showCaja
+        ? '/caja'
+        : this.showMozo
+          ? '/mozo'
+          : '/administracion';
+    this.router.navigateByUrl(destino);
   }
 
   exitFullScreen() {

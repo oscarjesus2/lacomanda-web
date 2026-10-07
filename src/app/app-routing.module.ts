@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './auth/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { ResumenNegocioComponent } from './pages/resumen-negocio/resumen-negocio.component';
 import { VentaComponent } from './pages/venta/venta.component';
 import { AdminGuard } from './guards/admin.guard';
 import { RoleGuard } from './guards/role.guard';
@@ -33,6 +34,12 @@ const routes: Routes = [
 },
 {
   path: 'dashboard',
+  component: ResumenNegocioComponent,
+  canActivate: [RoleGuard],
+  data: { roles: ['admin', 'gerente'] }
+},
+{
+  path: 'reportes',
   component: DashboardComponent,
   canActivate: [RoleGuard, LicenseGuard],
   data: {

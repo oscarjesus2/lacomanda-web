@@ -11,3 +11,15 @@ export interface PedidoDeliveryDTO {
   Posicion: number;
   Visible: boolean;
 }
+
+export interface PedidoResumenTurnoDTO {
+  IdPedido: number;
+  NroCuenta: number;
+  NroPedido: string;
+  Cliente: string;
+  Total: number;
+  IdEspacio: number | null;
+  IdCanalVenta: number;
+  Estado: number;
+  FechaPedido: Date | string;
+}

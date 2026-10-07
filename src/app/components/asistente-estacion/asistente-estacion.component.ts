@@ -173,9 +173,8 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
 
   private handleRoute(url: string): void {
     const path = url.split('?')[0].split('#')[0];
-    // Los planes básicos no tienen dashboard analítico y aterrizan directamente
-    // en Administración. El asistente debe seguir permitiendo vincular este
-    // equipo a una estación disponible desde esa pantalla.
+    // El resumen de negocio está disponible en todos los planes, y el asistente
+    // también debe permitir vincular este equipo desde Administración.
     this.onEligibleRoute = path === '/dashboard' || path === '/administracion';
     if (!this.onEligibleRoute) {
       if (!this.storage.getCurrentSession()?.Token) {

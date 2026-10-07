@@ -113,8 +113,11 @@
 
 <!-- MENÚ PRINCIPAL -->
 <mat-menu #afterMenu="matMenu" xPosition="after">
-  <button mat-menu-item *ngIf="showDashboard" (click)="Dashboard()">
-    <mat-icon>dashboard</mat-icon><span>{{ 'dashboard' | tenantText }}</span>
+  <button mat-menu-item *ngIf="showInicio" (click)="Inicio()">
+    <mat-icon>home</mat-icon><span>{{ 'home' | tenantText }}</span>
+  </button>
+  <button mat-menu-item *ngIf="showReportes" (click)="Reportes()">
+    <mat-icon>query_stats</mat-icon><span>{{ 'reports' | tenantText }}</span>
   </button>
   <button mat-menu-item *ngIf="showAdministracion" (click)="Administracion()">
     <mat-icon>settings</mat-icon><span>{{ 'administration' | tenantText }}</span>
