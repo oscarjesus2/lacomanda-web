@@ -336,13 +336,18 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     return !this.isBloquearDisabled && this.hayContextoPedidoActivo;
   }
 
+  /** Bloquear la sesión o rehacer el contexto; la acción está disponible en ambos casos. */
+  get mostrarAccionSesionMozo(): boolean {
+    return !this.isBloquearDisabled;
+  }
+
   /** Controla si el desplegable compacto tiene alguna acción real que mostrar. */
   get hayAccionesSecundariasMozo(): boolean {
     return this.mostrarMenuMozo
       || this.mostrarComplementosMozo
       || this.mostrarPrecuentaMozo
       || this.mostrarAnularPedidoMozo
-      || this.mostrarRehacerMozo;
+      || this.mostrarAccionSesionMozo;
   }
 
   /**

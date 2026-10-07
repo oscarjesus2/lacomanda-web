@@ -523,9 +523,9 @@
         <fa-icon [icon]="faTimes"></fa-icon>
         {{ (solicitudCuentaPendiente('AnularPedido') ? 'withdrawRequest' : 'cancelOrder') | tenantText }}
       </button>
-      <button *ngIf="!isBloquearDisabled && hayContextoPedidoActivo" (click)="toggleBloquear()">
-        <fa-icon [icon]="faSync"></fa-icon>
-        {{ 'reset' | tenantText }}
+      <button *ngIf="!isBloquearDisabled" (click)="toggleBloquear()">
+        <fa-icon [icon]="hayContextoPedidoActivo ? faSync : faLock"></fa-icon>
+        {{ (hayContextoPedidoActivo ? 'reset' : 'lock') | tenantText }}
       </button>
     </div>
 
@@ -572,7 +572,7 @@
     </div>
 
     <div class="button-row"
-         *ngIf="mostrarPrecuentaMozo || mostrarAnularPedidoMozo || mostrarRehacerMozo">
+         *ngIf="mostrarPrecuentaMozo || mostrarAnularPedidoMozo || mostrarAccionSesionMozo">
       <button *ngIf="mostrarPrecuentaMozo"
               class="compact-order-actions__secondary"
               (click)="ImprimirPrecuenta()">
@@ -584,11 +584,11 @@
         <fa-icon [icon]="faTimes"></fa-icon>
         {{ (solicitudCuentaPendiente('AnularPedido') ? 'withdrawRequest' : 'cancelOrder') | tenantText }}
       </button>
-      <button *ngIf="mostrarRehacerMozo"
+      <button *ngIf="mostrarAccionSesionMozo"
               class="compact-order-actions__secondary"
               (click)="toggleBloquear()">
-        <fa-icon [icon]="faSync"></fa-icon>
-        {{ 'reset' | tenantText }}
+        <fa-icon [icon]="hayContextoPedidoActivo ? faSync : faLock"></fa-icon>
+        {{ (hayContextoPedidoActivo ? 'reset' : 'lock') | tenantText }}
       </button>
     </div>
 
