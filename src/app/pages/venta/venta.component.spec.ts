@@ -497,13 +497,14 @@ describe('VentaComponent - visibilidad contextual de acciones del mozo', () => {
     return component;
   }
 
-  it('no muestra acciones sin un pedido, una mesa o una fila en contexto', () => {
+  it('mantiene disponible Bloquear sin contexto y reserva Rehacer para un pedido activo', () => {
     const component = crearComponente();
 
     expect(component.mostrarEnviarPedidoMozo).toBeFalse();
     expect(component.mostrarAnularPedidoMozo).toBeFalse();
     expect(component.mostrarRehacerMozo).toBeFalse();
-    expect(component.hayAccionesSecundariasMozo).toBeFalse();
+    expect(component.mostrarAccionSesionMozo).toBeTrue();
+    expect(component.hayAccionesSecundariasMozo).toBeTrue();
   });
 
   it('muestra solo la acción propia del tipo de fila seleccionada', () => {
