@@ -25,7 +25,8 @@ export class DashboardReportesGuard {
     }
 
     const usuario = this.storageService.getCurrentUser();
-    if (usuario?.IdNivel === NivelUsuarioEnum.Gerente) {
+    if (usuario?.IdNivel === NivelUsuarioEnum.Gerente ||
+        usuario?.EsUsuarioSoporteLaComanda === true) {
       return true;
     }
 
@@ -34,11 +35,19 @@ export class DashboardReportesGuard {
     }
 
     return this.usuarioService.getUsuarioActual().pipe(
-      map(respuesta =>
-        respuesta?.Data?.Activo && respuesta.Data.PuedeVerDashboardReportes
+      map(respuesta => {
+        const perfil = respuesta?.Data;
+        if (!perfil?.Activo) {
+          return this.rutaDeRepliegue();
+        }
+
+        return perfil.EsUsuarioSoporteLaComanda === true ||
+          perfil.IdNivel === NivelUsuarioEnum.Gerente ||
+          (perfil.IdNivel === NivelUsuarioEnum.Administrador &&
+            perfil.PuedeVerDashboardReportes)
           ? true
-          : this.rutaDeRepliegue(),
-      ),
+          : this.rutaDeRepliegue();
+      }),
       catchError(() => of(this.rutaDeRepliegue())),
     );
   }
