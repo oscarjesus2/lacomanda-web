@@ -90,8 +90,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (isGerente) {
       this.showReportes       = this.reportesAnaliticosHabilitados;
       this.showAdministracion = true;
-      this.showCaja           = esCaja && this.operacionCajaHabilitada;
-      this.showMozo           = esMozo && this.operacionCajaHabilitada;
+      this.showCaja           = this.operacionCajaHabilitada;
+      this.showMozo           = this.operacionCajaHabilitada;
     } else if (isAdmin) {
       this.showReportes       = this.reportesAnaliticosHabilitados;
       this.showAdministracion = true;
