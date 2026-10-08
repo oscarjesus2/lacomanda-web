@@ -34,19 +34,13 @@ export class UsuariosMantenimientoComponent implements OnInit {
   displayedColumns: string[] = ['username', 'niveldescripcion','activo', 'actions'];
   empleadosFiltrados: Empleado[];
   limiteUsuarios: number | null = null;
+  puedeConfigurarDashboardReportes = false;
   private usuarioEditadoEstabaActivo = false;
 
   get usuariosActivos(): number {
     return this.usuarios.filter(usuario => usuario.Activo).length;
   }
 
-  get puedeConfigurarDashboardReportes(): boolean {
-    return this.usuarios.some(
-      usuario => usuario.EsUsuarioActual &&
-        !!usuario.PuedeConfigurarDashboardReportes,
-    );
-  }
- 
   constructor(
     private dialogRef: MatDialogRef<UsuariosMantenimientoComponent >,
     private usuarioService: UsuarioService,
@@ -107,6 +101,19 @@ export class UsuariosMantenimientoComponent implements OnInit {
     this.cargarusuarios();
     this.cargarEmpleados();
     this.cargarNivelUsuario();
+    this.cargarPermisoDashboardReportes();
+  }
+
+  private cargarPermisoDashboardReportes(): void {
+    this.usuarioService.getUsuarioActual().subscribe({
+      next: response => {
+        const usuarioActual = response.Data;
+        this.puedeConfigurarDashboardReportes =
+          usuarioActual?.EsUsuarioSoporteLaComanda === true ||
+          usuarioActual?.IdNivel === NivelUsuarioEnum.Gerente;
+      },
+      error: () => (this.puedeConfigurarDashboardReportes = false),
+    });
   }
 
   cargarusuarios(): void {
