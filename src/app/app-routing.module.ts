@@ -7,6 +7,7 @@ import { VentaComponent } from './pages/venta/venta.component';
 import { AdminGuard } from './guards/admin.guard';
 import { RoleGuard } from './guards/role.guard';
 import { LicenseGuard } from './guards/license.guard';
+import { DashboardReportesGuard } from './guards/dashboard-reportes.guard';
 import { CARACTERISTICAS_LICENCIA } from './constants/caracteristicas-licencia';
 import { AdministracionComponent } from './pages/administracion/administracion.component';
  
@@ -41,7 +42,7 @@ const routes: Routes = [
 {
   path: 'reportes',
   component: DashboardComponent,
-  canActivate: [RoleGuard, LicenseGuard],
+  canActivate: [RoleGuard, DashboardReportesGuard, LicenseGuard],
   data: {
     roles: ['admin', 'gerente'],
     feature: CARACTERISTICAS_LICENCIA.ReportesAnaliticos

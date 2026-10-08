@@ -48,6 +48,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   currentDate   = '';
   nombreUsuario = '';
   nombreSucursal = '';
+  nombreComercial = 'La Comanda';
   turnoNumero   = 0;
   turnoActivo   = false;
   esEstacionOperativa = false;
@@ -93,7 +94,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.showCaja           = esCaja && this.operacionCajaHabilitada;
       this.showMozo           = esMozo && this.operacionCajaHabilitada;
     } else if (isAdmin) {
-      this.showReportes       = this.reportesAnaliticosHabilitados;
+      this.showReportes       = this.reportesAnaliticosHabilitados &&
+        !!user.PuedeVerDashboardReportes;
       this.showAdministracion = true;
       this.showCaja           = esCaja && this.operacionCajaHabilitada;
       this.showMozo           = esMozo && this.operacionCajaHabilitada;
@@ -153,7 +155,39 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.userLoginOn   = true;
     }
     this.nombreSucursal = this.storageService.getCurrentNombreSucursal() || 'LaComanda';
+    this.actualizarNombreComercial();
     this.calcMenuVisibility();
+  }
+
+  private actualizarNombreComercial(): void {
+    const nombreComercial = this.config?.NombreComercial?.trim() || 'La Comanda';
+    const sufijoSucursal = ` - ${this.nombreSucursal}`;
+    this.nombreComercial = nombreComercial.toLocaleLowerCase()
+      .endsWith(sufijoSucursal.toLocaleLowerCase())
+      ? nombreComercial.slice(0, -sufijoSucursal.length).trim()
+      : nombreComercial;
+  }
+
+  private actualizarPermisoDashboardReportes(): void {
+    const sesion = this.storageService.getCurrentSession();
+    if (!sesion?.User) {
+      return;
+    }
+
+    this.usuarioService.getUsuarioActual().subscribe({
+      next: respuesta => {
+        const perfil = respuesta?.Data;
+        const sesionActual = this.storageService.getCurrentSession();
+        if (!perfil || !sesionActual || sesionActual.Token !== sesion.Token) {
+          return;
+        }
+
+        sesionActual.User.PuedeVerDashboardReportes =
+          !!perfil.PuedeVerDashboardReportes;
+        this.storageService.setCurrentSession(sesionActual);
+        this.calcMenuVisibility();
+      },
+    });
   }
 
   // ── Turno ──────────────────────────────────────────────────
@@ -373,10 +407,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (esLogin || !sesionActiva) return;
 
     // Configuración (símbolo de moneda)
-    this.configuracionService.get().subscribe(cfg => this.config = cfg);
+    this.configuracionService.get().subscribe(cfg => {
+      this.config = cfg;
+      this.actualizarNombreComercial();
+    });
 
     // Usuario y sucursal
     this.loadUserInfo();
+    this.actualizarPermisoDashboardReportes();
 
     this.licenciaTenantService
       .tieneCaracteristica(CARACTERISTICAS_LICENCIA.PersonalControlHorario)

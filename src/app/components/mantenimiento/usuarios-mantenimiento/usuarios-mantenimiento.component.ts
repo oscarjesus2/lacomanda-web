@@ -12,6 +12,7 @@ import { EmpleadoService } from 'src/app/services/empleado.service';
 import { Empleado } from 'src/app/models/empleado.models';
 import { Nivel_UsuarioService } from 'src/app/services/nivel_usuario.service';
 import { Nivel_Usuario } from 'src/app/models/nivel_usuario.models';
+import { NivelUsuarioEnum } from 'src/app/enums/enum';
 import { Notificar } from 'src/app/shared/notificaciones';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
@@ -37,6 +38,13 @@ export class UsuariosMantenimientoComponent implements OnInit {
 
   get usuariosActivos(): number {
     return this.usuarios.filter(usuario => usuario.Activo).length;
+  }
+
+  get puedeConfigurarDashboardReportes(): boolean {
+    return this.usuarios.some(
+      usuario => usuario.EsUsuarioActual &&
+        !!usuario.PuedeConfigurarDashboardReportes,
+    );
   }
  
   constructor(
@@ -140,13 +148,19 @@ cargarEmpleados(): void {
     }
   });
 }
-onInputChange(valor: string) {
+  onInputChange(valor: string) {
   this.filtrarEmpleados(valor);
 
   if (!valor?.trim()) {
     this.usuario.IdEmpleado = null;
   }
 }
+
+  onNivelUsuarioChange(): void {
+    if (this.usuario.IdNivel !== NivelUsuarioEnum.Administrador) {
+      this.usuario.PuedeVerDashboardReportes = false;
+    }
+  }
 
   filtrarEmpleados(valor: string) {
     const filtro = valor.toLowerCase();
@@ -258,6 +272,9 @@ onInputChange(valor: string) {
 
 
 onEdit(usuario: Usuario): void {
+   if (!usuario.PuedeEditar) {
+     return;
+   }
    this.usuarioEditadoEstabaActivo = !!usuario.Activo;
    this.usuario = { ...usuario, IdEmpleado: usuario.IdEmpleado != null ? Number(usuario.IdEmpleado) : null };
   this.showForm = true; // Mostrar formulario al editar
