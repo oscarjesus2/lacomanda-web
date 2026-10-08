@@ -47,6 +47,7 @@ export class UsuarioService {
       PuedeCerrarTurno: !!usuario.PuedeCerrarTurno,
       PuedeAplicarDescuento: !!usuario.PuedeAplicarDescuento,
       PuedeAprobarSolicitudes: !!usuario.PuedeAprobarSolicitudes,
+      PuedeVerDashboardReportes: !!usuario.PuedeVerDashboardReportes,
     };
     return this.http.put<ApiResponse<Usuario>>(`${this.basePath}/${usuario.IdUsuario}`, dto);
   }

@@ -15,6 +15,7 @@ export class Usuario {
   public NombreEmpleado: string;
   public EsUsuarioActual: boolean;
   public EsUsuarioSoporteLaComanda: boolean;
+  public PuedeEditar: boolean;
   public PuedeEditarEmpleado: boolean;
   public PuedeCambiarNivel: boolean;
   public PuedeDesactivar: boolean;
@@ -23,6 +24,8 @@ export class Usuario {
   public PuedeCerrarTurno: boolean;
   public PuedeAplicarDescuento: boolean;
   public PuedeAprobarSolicitudes: boolean;
+  public PuedeVerDashboardReportes: boolean;
+  public PuedeConfigurarDashboardReportes: boolean;
   /** Preferencia opcional; null significa usar la cultura del tenant. */
   public Cultura?: string | null;
 }
@@ -37,5 +40,6 @@ export interface UsuarioUpdateDto {
   PuedeCerrarTurno: boolean;
   PuedeAplicarDescuento: boolean;
   PuedeAprobarSolicitudes: boolean;
+  PuedeVerDashboardReportes: boolean;
 }
 

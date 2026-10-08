@@ -40,9 +40,12 @@
         <ng-container matColumnDef="actions">
           <mat-header-cell *matHeaderCellDef> {{ 'actions' | tenantText }} </mat-header-cell>
           <mat-cell *matCellDef="let usuario">
-            <button mat-icon-button color="primary" (click)="onEdit(usuario)">
-              <mat-icon>edit</mat-icon>
-            </button>
+            <span [attr.title]="!usuario.PuedeEditar ? ('managerUserCannotBeManaged' | tenantText) : null">
+              <button mat-icon-button color="primary" (click)="onEdit(usuario)"
+                      [disabled]="!usuario.PuedeEditar">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </span>
             <span [attr.title]="!usuario.PuedeEliminar ? ('userCannotBeDeleted' | tenantText) : null">
               <button mat-icon-button color="warn" (click)="onDelete(usuario.IdUsuario)"
                       [disabled]="!usuario.PuedeEliminar">
@@ -132,6 +135,7 @@
           <!-- Sin compareWith: tanto el modelo como el valor de cada opción son
                el IdNivel, y para primitivos basta la comparación por defecto. -->
           <mat-select [(ngModel)]="usuario.IdNivel" name="nivelusuario" required #nivelusuario="ngModel"
+            (selectionChange)="onNivelUsuarioChange()"
             [disabled]="!!usuario.IdUsuario && !usuario.PuedeCambiarNivel">
             <mat-option *ngFor="let tipo of listNivelUsuario" [value]="tipo.IdNivel">
               {{tipo.Descripcion}}
@@ -161,6 +165,12 @@
         </mat-checkbox>
       </div>
 
+      <div class="form-row" *ngIf="usuario.IdNivel === 1 && puedeConfigurarDashboardReportes">
+        <mat-checkbox [(ngModel)]="usuario.PuedeVerDashboardReportes" name="puedeVerDashboardReportes">
+          {{ 'allowReportsDashboard' | tenantText }}
+        </mat-checkbox>
+      </div>
+
       <div class="form-actions">
         <button mat-raised-button color="primary">
           {{ (usuario.IdUsuario ? 'updateAction' : 'save') | tenantText }}
@@ -170,7 +180,7 @@
         <!-- El administrador nunca escribe ni conoce la contraseña. -->
         <button *ngIf="usuario.IdUsuario" mat-stroked-button type="button"
                 class="usr-pwd-toggle-btn"
-                [disabled]="!usuario.Activo"
+                [disabled]="!usuario.Activo || !usuario.PuedeEditar"
                 (click)="enviarRestablecimientoPassword()">
           <mat-icon>forward_to_inbox</mat-icon>
           {{ 'sendPasswordLink' | tenantText }}
