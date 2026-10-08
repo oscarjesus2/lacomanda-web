@@ -21,6 +21,7 @@ import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { MonedaService } from 'src/app/services/moneda.service';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { NivelUsuarioEnum } from 'src/app/enums/enum';
 
 @Component({
   selector: 'app-dialog-pagar-taxista',
