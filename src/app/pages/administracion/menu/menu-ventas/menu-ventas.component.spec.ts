@@ -3,12 +3,10 @@ import {
   expandirExigencia,
 } from 'src/app/constants/caracteristicas-licencia';
 import { MenuVentasComponent } from './menu-ventas.component';
-import { NivelUsuarioEnum } from 'src/app/enums/enum';
 
 describe('MenuVentasComponent por licencia', () => {
   function crear(
     habilitadas: string[],
-    nivel = NivelUsuarioEnum.Administrador,
     planCodigo = 'INTEGRAL',
   ): MenuVentasComponent {
     const licencia = {
@@ -23,7 +21,6 @@ describe('MenuVentasComponent por licencia', () => {
       null as any,
       null as any,
       null as any,
-      { getCurrentUser: () => ({ IdNivel: nivel }) } as any,
       null as any,
       null as any,
       licencia as any,
@@ -71,17 +68,23 @@ describe('MenuVentasComponent por licencia', () => {
     expect(etiquetas).toContain('Calidad docs.');
   });
 
-  it('para Gerente muestra únicamente el mantenimiento de usuarios', () => {
-    const component = crear(
-      [C.OperacionReportes, C.ReportesAnaliticos],
-      NivelUsuarioEnum.Gerente,
-    );
+  it('muestra al Gerente todas las opciones de administración habilitadas por licencia', () => {
+    const component = crear([
+      C.OperacionReportes,
+      C.ReportesAnaliticos,
+      C.OperacionCaja,
+      C.VentasDirecta,
+    ]);
 
     const visibles = component.seccionesVisibles
       .flatMap(section => component.itemsVisibles(section))
       .map(item => item.label);
 
-    expect(visibles).toEqual(['Usuarios']);
+    expect(visibles).toContain('Usuarios');
+    expect(visibles).toContain('Productos');
+    expect(visibles).toContain('Clientes');
+    expect(visibles).toContain('Contable');
+    expect(visibles.length).toBeGreaterThan(1);
   });
 
   it('reserva las tres herramientas internas al usuario de soporte', () => {
@@ -131,7 +134,6 @@ describe('MenuVentasComponent por licencia', () => {
   it('en Comercio muestra caja y turnos sin opciones propias de restaurante', () => {
     const component = crear(
       [C.OperacionCaja, C.VentasDirecta],
-      NivelUsuarioEnum.Administrador,
       'COMERCIO',
     );
 

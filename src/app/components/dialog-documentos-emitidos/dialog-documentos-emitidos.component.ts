@@ -231,8 +231,9 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
       return;
     }
 
-    if (this.storageService.getCurrentUser().IdNivel
-        !== NivelUsuarioEnum.Administrador) {
+    const nivel = this.storageService.getCurrentUser().IdNivel;
+    if (nivel !== NivelUsuarioEnum.Administrador
+      && nivel !== NivelUsuarioEnum.Gerente) {
       Swal.fire({
         title: this.texts.get('attention'),
         text: this.texts.get('noPermissionEnterAdminKey'),
@@ -264,7 +265,9 @@ export class DialogDocumentosEmitidosComponent implements OnInit {
     }
 
     // El backend solo permite anular documentos a un administrador.
-    if (this.storageService.getCurrentUser().IdNivel !== NivelUsuarioEnum.Administrador) {
+    const nivel = this.storageService.getCurrentUser().IdNivel;
+    if (nivel !== NivelUsuarioEnum.Administrador
+      && nivel !== NivelUsuarioEnum.Gerente) {
       void Notificar.advertencia(this.texts.get('void'), this.texts.get('onlyAdminCanVoidDocuments'));
       return;
     }

@@ -6,7 +6,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { Router } from '@angular/router';
 import { LoginService } from 'src/app/services/auth/login.service';
-import { StorageService } from 'src/app/services/storage.service';
 import { DataService } from 'src/app/services/data.service';
 import { TurnoService } from 'src/app/services/turno.service';
 import { DialogReportecontableComponent } from 'src/app/components/dialog-reportecontable/dialog-reportecontable.component';
@@ -57,7 +56,6 @@ import { AeatEnvioMonitorComponent } from 'src/app/components/mantenimiento/aeat
 import { PagoCuentaOnlineConfigurationComponent } from 'src/app/components/mantenimiento/pago-cuenta-online-configuration/pago-cuenta-online-configuration.component';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { UsuarioService } from 'src/app/services/usuario.service';
-import { NivelUsuarioEnum } from 'src/app/enums/enum';
 
 @Component({
   selector: 'app-menu-ventas',
@@ -91,11 +89,6 @@ export class MenuVentasComponent implements OnInit {
   private paisISO2 = '';
   private anfitrionasHabilitadas = false;
   private esUsuarioSoporteLaComanda = false;
-
-  private get esGerente(): boolean {
-    return this.storageService?.getCurrentUser()?.IdNivel ===
-      NivelUsuarioEnum.Gerente;
-  }
 
   private get esComercio(): boolean {
     return this.estadoLicencia.licencia?.PlanCodigo === 'COMERCIO';
@@ -132,7 +125,7 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Configuración de menús',      route: '/ventas/configuracion-combos',     icon: 'tune',             label: 'Menús',        titleKey: 'combosConfig',       labelKey: 'combos',             feature: C.ProductosMenus  },
         { title: 'Observaciones',               route: '/ventas/observaciones',            icon: 'sticky_note_2',    label: 'Observac.',    titleKey: 'observations',       labelKey: 'observations',       feature: C.OperacionCaja, ocultarEnComercio: true },
         { title: 'Empleados',                   route: '/ventas/empleados',                icon: 'badge',            label: 'Empleados',    titleKey: 'employees',          labelKey: 'employees'          },
-        { title: 'Usuarios',                    route: '/ventas/usuarios',                 icon: 'manage_accounts',  label: 'Usuarios',     titleKey: 'users',              labelKey: 'users', permitidoGerente: true },
+        { title: 'Usuarios',                    route: '/ventas/usuarios',                 icon: 'manage_accounts',  label: 'Usuarios',     titleKey: 'users',              labelKey: 'users' },
         { title: 'Caja',                        route: '/ventas/caja',                     icon: 'point_of_sale',    label: 'Caja',         titleKey: 'register',           labelKey: 'register',           feature: C.OperacionCaja   },
         { title: 'Estacion',                    route: '/ventas/estacion',                 icon: 'computer',         label: 'Estación',     titleKey: 'station',            labelKey: 'station',            feature: C.OperacionCaja, ocultarEnComercio: true },
         { title: 'Descuentos',                  route: '/ventas/descuentos',               icon: 'local_offer',      label: 'Descuentos',   titleKey: 'discounts',          labelKey: 'discounts',          feature: C.VentasDescuentos },
@@ -191,7 +184,6 @@ export class MenuVentasComponent implements OnInit {
     private spinnerService: NgxSpinnerService,
     private router: Router,
     private loginService: LoginService,
-    private storageService: StorageService,
     private TurnoService: TurnoService,
     private dataService: DataService,
     private licenciaTenantService: LicenciaTenantService,
@@ -201,7 +193,6 @@ export class MenuVentasComponent implements OnInit {
 
   itemsVisibles(section: any): any[] {
     return section.children.filter((item: any) =>
-      (!this.esGerente || item.permitidoGerente) &&
       this.cubiertoPorLicencia(item.feature) &&
       (!item.anyFeature || item.anyFeature.some((feature: ExigenciaLicencia) =>
         this.cubiertoPorLicencia(feature))) &&

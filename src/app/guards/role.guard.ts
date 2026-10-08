@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { StorageService } from '../services/storage.service';
 import { KeycloakAuthService } from '../services/auth/keycloak-auth.service';
+import { EstacionTipoEnum } from '../enums/enum';
 
 /**
  * Guard de roles para LaComanda.
@@ -13,7 +14,8 @@ import { KeycloakAuthService } from '../services/auth/keycloak-auth.service';
  * Reglas:
  *  - Sin sesión / token expirado → /iniciar-sesion
  *  - Con sesión pero sin rol permitido → redirige a la ruta propia del rol
- *  - 'admin' siempre puede acceder a cualquier ruta protegida
+ *  - 'gerente' conserva acceso general y usa Caja o Mozo según su estación
+ *  - 'admin' conserva su acceso general previo
  */
 @Injectable({ providedIn: 'root' })
 export class RoleGuard {
@@ -33,11 +35,30 @@ export class RoleGuard {
 
     const userRoles = this.keycloakAuth.getRoles(token);
     const isAdmin   = userRoles.includes('admin');
-
-    // Admin siempre pasa
-    if (isAdmin) return true;
-
+    const isGerente = userRoles.includes('gerente');
     const allowedRoles: string[] = route.data?.['roles'] ?? [];
+    const esRutaDeCajaOMozo = allowedRoles.some(
+      role => role === 'caja' || role === 'mozo',
+    );
+
+    if (isGerente && esRutaDeCajaOMozo) {
+      const tipoEstacion = this.storageService.getCurrentUser()?.TipoCompu;
+      const coincideConCaja =
+        allowedRoles.includes('caja') &&
+        tipoEstacion === EstacionTipoEnum.CAJA;
+      const coincideConMozo =
+        allowedRoles.includes('mozo') &&
+        tipoEstacion === EstacionTipoEnum.MOZO;
+
+      if (coincideConCaja || coincideConMozo) return true;
+
+      return this.router.createUrlTree([this.homeRouteFor(userRoles)]);
+    }
+
+    // Ambos conservan su acceso general fuera de las rutas operativas de Caja
+    // y Mozo. El gerente accede a ellas solo desde la estación correspondiente.
+    if (isAdmin || isGerente) return true;
+
     const hasAccess = allowedRoles.some(r => userRoles.includes(r));
 
     if (hasAccess) return true;

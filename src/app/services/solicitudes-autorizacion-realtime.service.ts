@@ -223,7 +223,8 @@ export class SolicitudesAutorizacionRealtimeService {
           )),
         ]);
       const usuario = response?.Data;
-      const esAdministrador = usuario?.IdNivel === NivelUsuarioEnum.Administrador;
+      const esAdministrador = usuario?.IdNivel === NivelUsuarioEnum.Administrador
+        || usuario?.IdNivel === NivelUsuarioEnum.Gerente;
       this.esAdministradorSubject.next(!!usuario?.Activo && esAdministrador);
       this.esSoporteLaComandaSubject.next(
         !!usuario?.Activo && usuario?.EsUsuarioSoporteLaComanda === true,

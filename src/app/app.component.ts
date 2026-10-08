@@ -302,7 +302,8 @@ export class AppComponent implements OnInit, OnDestroy {
   get canRevealOperationalHeader(): boolean {
     return this.isOperationalRoute
       && !this.headerVisible
-      && this.storageService.getCurrentUser()?.IdNivel === NivelUsuarioEnum.Administrador;
+      && (this.storageService.getCurrentUser()?.IdNivel === NivelUsuarioEnum.Administrador
+        || this.storageService.getCurrentUser()?.IdNivel === NivelUsuarioEnum.Gerente);
   }
 
   toggleOperationalHeader(): void {

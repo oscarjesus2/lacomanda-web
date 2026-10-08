@@ -15,7 +15,9 @@ export class AgendaReservasDialogComponent {
     private readonly dialogRef: MatDialogRef<AgendaReservasDialogComponent>
   ) {
     const nivel = storage.getCurrentUser()?.IdNivel;
-    this.puedeGestionar = nivel === NivelUsuarioEnum.Administrador || nivel === NivelUsuarioEnum.Cajero;
+    this.puedeGestionar = nivel === NivelUsuarioEnum.Administrador
+      || nivel === NivelUsuarioEnum.Gerente
+      || nivel === NivelUsuarioEnum.Cajero;
   }
 
   cerrar(): void {

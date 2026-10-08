@@ -936,6 +936,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   employeeCannotBeChanged: 'Este empleado ya tiene actividad y debe conservarse para la auditoría.',
   stateCannotBeChanged: 'No puedes desactivar tu propia cuenta ni dejar el restaurante sin un administrador activo.',
   levelCannotBeChanged: 'Este nivel se conserva para proteger el acceso administrativo.',
+  managerLevelCannotBeChanged: 'El nivel Gerente se conserva para proteger el acceso completo al restaurante.',
   userCannotBeDeleted: 'Este usuario debe conservarse porque es tu cuenta, el último administrador o tiene actividad registrada.',
   selectRole: 'Seleccione un cargo.',
   changePassword: 'Cambiar contraseña',

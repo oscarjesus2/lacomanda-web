@@ -21,6 +21,7 @@ import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { MonedaService } from 'src/app/services/moneda.service';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { NivelUsuarioEnum } from 'src/app/enums/enum';
 
 @Component({
   selector: 'app-dialog-pagar-taxista',
@@ -105,7 +106,9 @@ export class DialogPagarTaxistaComponent {
             text: 'El componente se cerrará.',
             confirmButtonText: 'Aceptar'
           }).then(() => {
-            if (this.storageService.getCurrentUser().IdNivel == 1) {
+            const nivel = this.storageService.getCurrentUser().IdNivel;
+            if (nivel === NivelUsuarioEnum.Administrador
+              || nivel === NivelUsuarioEnum.Gerente) {
               this.router.navigate(['/dashboard']);
             } else {
               this.storageService.logout();

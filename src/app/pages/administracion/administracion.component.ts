@@ -3,8 +3,6 @@ import { take } from 'rxjs';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 import { HeaderService } from 'src/app/services/header.service';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
-import { NivelUsuarioEnum } from 'src/app/enums/enum';
-import { StorageService } from 'src/app/services/storage.service';
 @Component({
   selector: 'app-dashboard',
   templateUrl: './administracion.component.html',
@@ -16,7 +14,6 @@ export class AdministracionComponent implements OnInit {
   constructor(
     private readonly licenciaTenantService: LicenciaTenantService,
     private readonly headerService: HeaderService,
-    private readonly storageService: StorageService,
   ) {}
 
   ngOnInit(): void {
@@ -28,9 +25,7 @@ export class AdministracionComponent implements OnInit {
       .tieneCaracteristica(CARACTERISTICAS_LICENCIA.AlmacenGestion)
       .pipe(take(1))
       .subscribe(habilitado => {
-        const esGerente = this.storageService.getCurrentUser()?.IdNivel ===
-          NivelUsuarioEnum.Gerente;
-        this.mostrarAlmacen = habilitado && !esGerente;
+        this.mostrarAlmacen = habilitado;
       });
   }
 }
