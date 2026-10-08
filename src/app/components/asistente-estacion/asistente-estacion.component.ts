@@ -213,7 +213,9 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
 
   private isEligible(): boolean {
     const session = this.storage.getCurrentSession();
-    if (!session?.Token || session.User?.IdNivel !== NivelUsuarioEnum.Administrador) {
+    if (!session?.Token
+      || (session.User?.IdNivel !== NivelUsuarioEnum.Administrador
+        && session.User?.IdNivel !== NivelUsuarioEnum.Gerente)) {
       return false;
     }
 

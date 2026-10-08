@@ -499,8 +499,9 @@ export class DialogVentasgeneralesComponent implements OnInit {
   }
 
   private esAdministrador(): boolean {
-    return this.storageService.getCurrentUser().IdNivel
-      === NivelUsuarioEnum.Administrador;
+    const nivel = this.storageService.getCurrentUser().IdNivel;
+    return nivel === NivelUsuarioEnum.Administrador
+      || nivel === NivelUsuarioEnum.Gerente;
   }
 
   private normalizar(value: unknown): string {

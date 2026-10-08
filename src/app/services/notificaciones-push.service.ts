@@ -83,7 +83,8 @@ export class NotificacionesPushService {
 
   private esCandidatoLocal(): boolean {
     const usuario = this.storage.getCurrentUser();
-    return usuario?.IdNivel === NivelUsuarioEnum.Administrador
+    return (usuario?.IdNivel === NivelUsuarioEnum.Administrador
+      || usuario?.IdNivel === NivelUsuarioEnum.Gerente)
       && usuario.TipoCompu === EstacionTipoEnum.ADMINISTRADOR
       && !!this.deviceIdentifier.getIdentifier();
   }

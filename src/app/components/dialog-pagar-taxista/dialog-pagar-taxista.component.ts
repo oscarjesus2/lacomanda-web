@@ -105,7 +105,9 @@ export class DialogPagarTaxistaComponent {
             text: 'El componente se cerrará.',
             confirmButtonText: 'Aceptar'
           }).then(() => {
-            if (this.storageService.getCurrentUser().IdNivel == 1) {
+            const nivel = this.storageService.getCurrentUser().IdNivel;
+            if (nivel === NivelUsuarioEnum.Administrador
+              || nivel === NivelUsuarioEnum.Gerente) {
               this.router.navigate(['/dashboard']);
             } else {
               this.storageService.logout();

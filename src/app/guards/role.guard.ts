@@ -13,7 +13,7 @@ import { KeycloakAuthService } from '../services/auth/keycloak-auth.service';
  * Reglas:
  *  - Sin sesión / token expirado → /iniciar-sesion
  *  - Con sesión pero sin rol permitido → redirige a la ruta propia del rol
- *  - 'admin' siempre puede acceder a cualquier ruta protegida
+ *  - 'gerente' tiene acceso total al restaurante y 'admin' conserva sus accesos actuales
  */
 @Injectable({ providedIn: 'root' })
 export class RoleGuard {
@@ -33,9 +33,11 @@ export class RoleGuard {
 
     const userRoles = this.keycloakAuth.getRoles(token);
     const isAdmin   = userRoles.includes('admin');
+    const isGerente = userRoles.includes('gerente');
 
-    // Admin siempre pasa
-    if (isAdmin) return true;
+    // El gerente administra toda la operación del restaurante. El administrador
+    // conserva su acceso general previo.
+    if (isAdmin || isGerente) return true;
 
     const allowedRoles: string[] = route.data?.['roles'] ?? [];
     const hasAccess = allowedRoles.some(r => userRoles.includes(r));

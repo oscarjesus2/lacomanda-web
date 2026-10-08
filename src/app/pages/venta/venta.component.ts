@@ -451,7 +451,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.RehacerPantallaRefresh = 'Refresh';
 
     const user = this.storageService.getCurrentUser?.();
-    this.isAdmin = !!user && user.IdNivel === 1;
+    this.isAdmin = !!user && (user.IdNivel === NivelUsuarioEnum.Administrador
+      || user.IdNivel === NivelUsuarioEnum.Gerente);
     this.isModoMozo = this.router.url.startsWith('/mozo');
     console.log(user)
   }
@@ -785,12 +786,16 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.usuarioService.getUsuarioActual().subscribe({
       next: response => {
         this.puedeAbrirTurno = response?.Data?.IdNivel === NivelUsuarioEnum.Administrador
+          || response?.Data?.IdNivel === NivelUsuarioEnum.Gerente
           || !!response?.Data?.PuedeAbrirTurno;
         this.puedeCerrarTurno = response?.Data?.IdNivel === NivelUsuarioEnum.Administrador
+          || response?.Data?.IdNivel === NivelUsuarioEnum.Gerente
           || !!response?.Data?.PuedeCerrarTurno;
         this.puedeAplicarDescuento = response?.Data?.IdNivel === NivelUsuarioEnum.Administrador
+          || response?.Data?.IdNivel === NivelUsuarioEnum.Gerente
           || !!response?.Data?.PuedeAplicarDescuento;
         this.puedeAprobarSolicitudes = response?.Data?.IdNivel === NivelUsuarioEnum.Administrador
+          || response?.Data?.IdNivel === NivelUsuarioEnum.Gerente
           || (response?.Data?.IdNivel === NivelUsuarioEnum.Cajero && !!response?.Data?.PuedeAprobarSolicitudes);
         this.cargandoPermisos = false;
       },

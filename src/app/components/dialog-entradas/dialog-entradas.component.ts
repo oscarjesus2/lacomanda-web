@@ -245,6 +245,7 @@ export class DialogEntradasComponent implements OnDestroy {
     this.usuarioService.getUsuarioActual().subscribe({
       next: (response) => {
         this.puedeAplicarDescuento = response?.Data?.IdNivel === NivelUsuarioEnum.Administrador
+          || response?.Data?.IdNivel === NivelUsuarioEnum.Gerente
           || !!response?.Data?.PuedeAplicarDescuento;
       },
       error: () => { this.puedeAplicarDescuento = false; }
@@ -275,7 +276,9 @@ export class DialogEntradasComponent implements OnDestroy {
             text: 'El componente se cerrará.',
             confirmButtonText: 'Aceptar'
           }).then(() => {
-            if (this.storageService.getCurrentUser().IdNivel == 1) {
+            const nivel = this.storageService.getCurrentUser().IdNivel;
+            if (nivel === NivelUsuarioEnum.Administrador
+              || nivel === NivelUsuarioEnum.Gerente) {
               this.router.navigate(['/dashboard']);
             } else {
               this.storageService.logout();
