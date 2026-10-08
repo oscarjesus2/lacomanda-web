@@ -141,7 +141,7 @@
             {{ 'selectRole' | tenantText }}
           </mat-error>
           <mat-hint *ngIf="usuario.IdUsuario && !usuario.PuedeCambiarNivel">
-            {{ 'levelCannotBeChanged' | tenantText }}
+            {{ (usuario.IdNivel === 4 ? 'managerLevelCannotBeChanged' : 'levelCannotBeChanged') | tenantText }}
           </mat-hint>
         </mat-form-field>
       </div>

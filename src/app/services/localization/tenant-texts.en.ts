@@ -932,6 +932,7 @@ export const EN_TEXTS = {
   employeeCannotBeChanged: 'This employee already has activity and must be preserved for auditing.',
   stateCannotBeChanged: 'You cannot deactivate your own account or leave the restaurant without an active administrator.',
   levelCannotBeChanged: 'This level is preserved to protect administrative access.',
+  managerLevelCannotBeChanged: 'The Manager level is preserved to protect full access to the restaurant.',
   userCannotBeDeleted: 'This user must be kept because it is your account, the last administrator, or has recorded activity.',
   selectRole: 'Select a role.',
   changePassword: 'Change password',
