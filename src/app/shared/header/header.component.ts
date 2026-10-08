@@ -83,12 +83,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     const isAdmin  = nivel   === NivelUsuarioEnum.Administrador;
     const isGerente = nivel  === NivelUsuarioEnum.Gerente;
+    const esUsuarioSoporteLaComanda = user.EsUsuarioSoporteLaComanda === true;
     const isCajero = nivel   === NivelUsuarioEnum.Cajero;
     const isMozo   = nivel   === NivelUsuarioEnum.Mozo;
     const esCaja   = estacion === EstacionTipoEnum.CAJA;
     const esMozo   = estacion === EstacionTipoEnum.MOZO;
-    this.showInicio = isAdmin || isGerente;
-    if (isGerente) {
+    this.showInicio = isAdmin || isGerente || esUsuarioSoporteLaComanda;
+    if (isGerente || esUsuarioSoporteLaComanda) {
       this.showReportes       = this.reportesAnaliticosHabilitados;
       this.showAdministracion = true;
       this.showCaja           = esCaja && this.operacionCajaHabilitada;
@@ -184,6 +185,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
         sesionActual.User.PuedeVerDashboardReportes =
           !!perfil.PuedeVerDashboardReportes;
+        sesionActual.User.EsUsuarioSoporteLaComanda =
+          perfil.EsUsuarioSoporteLaComanda === true;
         this.storageService.setCurrentSession(sesionActual);
         this.calcMenuVisibility();
       },

@@ -16,8 +16,10 @@ import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service'
 import { PedidoService } from 'src/app/services/pedido.service';
 import { StorageService } from 'src/app/services/storage.service';
 import { TenantService } from 'src/app/services/tenant.service';
+import { UsuarioService } from 'src/app/services/usuario.service';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 import { ComparativoVentasDashboard } from 'src/app/models/dashboard-ejecutivo.models';
+import { NivelUsuarioEnum } from 'src/app/enums/enum';
 
 @Component({
   selector: 'app-resumen-negocio',
@@ -60,6 +62,7 @@ export class ResumenNegocioComponent implements OnInit {
     private readonly configuracionService: ConfiguracionService,
     private readonly tenantService: TenantService,
     private readonly headerService: HeaderService,
+    private readonly usuarioService: UsuarioService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -73,7 +76,10 @@ export class ResumenNegocioComponent implements OnInit {
     this.nombreSucursal = this.storage.getCurrentNombreSucursal() || 'LaComanda';
 
     try {
-      const estadoLicencia = await firstValueFrom(this.licencia.obtenerEstado());
+      const [estadoLicencia, respuestaUsuario] = await Promise.all([
+        firstValueFrom(this.licencia.obtenerEstado()),
+        firstValueFrom(this.usuarioService.getUsuarioActual()).catch(() => null),
+      ]);
       if (estadoLicencia.error) {
         this.errorCarga = true;
         return;
@@ -84,8 +90,13 @@ export class ResumenNegocioComponent implements OnInit {
       const tieneReportes = tiene(CARACTERISTICAS_LICENCIA.ReportesAnaliticos);
       const tieneCaja = tiene(CARACTERISTICAS_LICENCIA.OperacionCaja);
 
-      this.mostrarReportes = tieneReportes;
-      this.mostrarVentas = tieneReportes;
+      const usuario = respuestaUsuario?.Data;
+      const puedeVerDashboardReportes = usuario?.EsUsuarioSoporteLaComanda === true
+        || usuario?.IdNivel === NivelUsuarioEnum.Gerente
+        || (usuario?.IdNivel === NivelUsuarioEnum.Administrador &&
+          usuario.PuedeVerDashboardReportes === true);
+      this.mostrarReportes = tieneReportes && puedeVerDashboardReportes;
+      this.mostrarVentas = this.mostrarReportes;
       this.mostrarPedidos = tieneCaja;
       this.mostrarEspacios = tiene(CARACTERISTICAS_LICENCIA.VentasMesa);
       this.mostrarAsistenteIa = tiene(
