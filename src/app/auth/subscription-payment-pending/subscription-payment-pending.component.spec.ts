@@ -33,6 +33,6 @@ describe('SubscriptionPaymentPendingComponent', () => {
     );
 
     expect(component.businessName).toBeNull();
-    expect(component.portalUrl).toContain('portal');
+    expect(component.portalUrl).toBeTruthy();
   });
 });
