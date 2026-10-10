@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder } from '@angular/forms';
 import { of } from 'rxjs';
 
@@ -93,6 +94,34 @@ describe('LoginComponent - progreso del retorno de Keycloak', () => {
     expect(keycloak.completeLogin).toHaveBeenCalledWith('tenant-1');
     expect(indicatorHandle.close).toHaveBeenCalled();
     expect(completed).toBeFalse();
+  });
+
+  it('conserva la vista de pago pendiente y no reinicia Keycloak', async () => {
+    localStorage.setItem('pendingLogin', JSON.stringify({
+      TenantId: 'tenant-1',
+      Sucursal: 'Lima',
+      Cultura: 'es-PE',
+    }));
+    history.replaceState({}, '', '/iniciar-sesion?code=code-1&state=state-1');
+    keycloak.completeLogin.and.resolveTo({
+      token: 'token-1',
+      refreshToken: 'refresh-1',
+    });
+    spyOn<any>(component, 'completarSesion').and.callFake(async () => {
+      throw new HttpErrorResponse({
+        status: 402,
+        error: {
+          ErrorCode: 'SUBSCRIPTION_PAYMENT_REQUIRED',
+          Message: 'La suscripción está pendiente de pago.',
+        },
+      });
+    });
+
+    const completed = await (component as any).tryCompleteRedirectLogin();
+
+    expect(completed).toBeTrue();
+    expect(tenantService.getTenant).not.toHaveBeenCalled();
+    expect(indicatorHandle.close).toHaveBeenCalled();
   });
 
   it('actualiza un único indicador mientras avanza el inicio de sesión', () => {

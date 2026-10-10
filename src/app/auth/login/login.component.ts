@@ -1,4 +1,5 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { KeycloakAuthService } from 'src/app/services/auth/keycloak-auth.service';
@@ -299,14 +300,38 @@ export class LoginComponent implements OnInit, OnDestroy {
       );
       await this.completarSesion(tokens, pending);
       return true;
-    } catch {
+    } catch (error) {
       localStorage.removeItem(LoginComponent.PENDING_LOGIN_KEY);
       this.finalizarIndicadorLogin();
+
+      // El interceptor ya eliminó la sesión operativa y está navegando a la
+      // vista específica de suscripción. No reiniciar la carga de tenants:
+      // hacerlo volvería a lanzar Keycloak y ocultaría el aviso al cliente.
+      if (this.isSubscriptionAccessError(error)) {
+        return true;
+      }
+
       this.loginValid = false;
       this.notificationService.showError('No se pudo completar el inicio de sesión. Inténtalo de nuevo.');
       this.loadTenants();
       return false;
     }
+  }
+
+  private isSubscriptionAccessError(error: unknown): boolean {
+    if (!(error instanceof HttpErrorResponse) || error.status !== 402) {
+      return false;
+    }
+
+    const body = error.error as { ErrorCode?: string; errorCode?: string } | null;
+    const errorCode = body?.ErrorCode || body?.errorCode || '';
+
+    return [
+      'SUBSCRIPTION_PAYMENT_REQUIRED',
+      'SUBSCRIPTION_EXPIRED',
+      'SUBSCRIPTION_CANCELLED',
+      'SUBSCRIPTION_NOT_ACTIVE',
+    ].includes(errorCode);
   }
 
   /**
