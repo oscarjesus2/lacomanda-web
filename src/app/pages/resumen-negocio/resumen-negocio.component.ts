@@ -1,11 +1,16 @@
 import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
+import { DialogEmitirVentaComponent } from 'src/app/components/dialog-emitir-venta/dialog-emitir-venta.component';
+import { StockAlmacenConsultaComponent } from 'src/app/components/mantenimiento/stock-almacen-consulta/stock-almacen-consulta.component';
 import { CodigoCaracteristica } from 'src/app/constants/caracteristicas-licencia';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import { PedidoResumenTurnoDTO } from 'src/app/interfaces/pedidoDTO.interface';
+import { VentasInterface } from 'src/app/interfaces/ventas.interface';
 import { CajaDto } from 'src/app/models/caja.models';
 import { Configuracion } from 'src/app/models/configuracion.models';
 import { EspacioResumenInicio } from 'src/app/models/espacios.models';
+import { ConsultaStockAlmacen, StockAlmacenItem } from 'src/app/models/stock-almacen.models';
 import { Turno } from 'src/app/models/turno.models';
 import { CajaService } from 'src/app/services/caja.service';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
@@ -15,8 +20,10 @@ import { HeaderService } from 'src/app/services/header.service';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
 import { PedidoService } from 'src/app/services/pedido.service';
 import { StorageService } from 'src/app/services/storage.service';
+import { StockAlmacenService } from 'src/app/services/stock-almacen.service';
 import { TenantService } from 'src/app/services/tenant.service';
 import { UsuarioService } from 'src/app/services/usuario.service';
+import { VentaService } from 'src/app/services/venta.service';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 import { ComparativoVentasDashboard } from 'src/app/models/dashboard-ejecutivo.models';
 import { NivelUsuarioEnum } from 'src/app/enums/enum';
@@ -41,9 +48,18 @@ export class ResumenNegocioComponent implements OnInit {
   mostrarEspacios = false;
   mostrarAsistenteIa = false;
   mostrarReportes = false;
+  esComercio = false;
+  puedeEmitirVentaDirecta = false;
+  mostrarInventarioComercio = false;
+  cuotaComprobantesAgotada = false;
   ventasTotal: number | null = null;
   documentosTotal: number | null = null;
   ticketMedio: number | null = null;
+  ultimasVentas: VentasInterface[] = [];
+  cantidadStockBajo: number | null = null;
+  productosStockBajo: StockAlmacenItem[] = [];
+  ventasComercioDisponibles = true;
+  inventarioComercioDisponible = true;
   pedidosActivos: PedidoResumenTurnoDTO[] = [];
   turnosAbiertos: Turno[] = [];
   espaciosOcupados = 0;
@@ -63,6 +79,9 @@ export class ResumenNegocioComponent implements OnInit {
     private readonly tenantService: TenantService,
     private readonly headerService: HeaderService,
     private readonly usuarioService: UsuarioService,
+    private readonly ventaService: VentaService,
+    private readonly stockAlmacenService: StockAlmacenService,
+    private readonly dialog: MatDialog,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -89,6 +108,11 @@ export class ResumenNegocioComponent implements OnInit {
 
       const tieneReportes = tiene(CARACTERISTICAS_LICENCIA.ReportesAnaliticos);
       const tieneCaja = tiene(CARACTERISTICAS_LICENCIA.OperacionCaja);
+      this.esComercio = estadoLicencia.licencia?.PlanCodigo?.toUpperCase() === 'COMERCIO';
+      this.puedeEmitirVentaDirecta = this.esComercio
+        && tiene(CARACTERISTICAS_LICENCIA.VentasDirecta);
+      this.mostrarInventarioComercio = this.esComercio
+        && tiene(CARACTERISTICAS_LICENCIA.AlmacenKardex);
 
       const usuario = respuestaUsuario?.Data;
       const puedeVerDashboardReportes = usuario?.EsUsuarioSoporteLaComanda === true
@@ -96,9 +120,10 @@ export class ResumenNegocioComponent implements OnInit {
         || (usuario?.IdNivel === NivelUsuarioEnum.Administrador &&
           usuario.PuedeVerDashboardReportes === true);
       this.mostrarReportes = tieneReportes && puedeVerDashboardReportes;
-      this.mostrarVentas = this.mostrarReportes;
-      this.mostrarPedidos = tieneCaja;
-      this.mostrarEspacios = tiene(CARACTERISTICAS_LICENCIA.VentasMesa);
+      this.mostrarVentas = this.esComercio || this.mostrarReportes;
+      this.mostrarPedidos = !this.esComercio && tieneCaja;
+      this.mostrarEspacios = !this.esComercio
+        && tiene(CARACTERISTICAS_LICENCIA.VentasMesa);
       this.mostrarAsistenteIa = tiene(
         CARACTERISTICAS_LICENCIA.ProductosImportacionCartaIa,
       );
@@ -109,7 +134,7 @@ export class ResumenNegocioComponent implements OnInit {
 
       const solicitudes = await Promise.all([
         this.obtenerConfiguracion(),
-        this.mostrarVentas
+        this.mostrarVentas && !this.esComercio
           ? firstValueFrom(this.reportes.obtenerComparativoVentas(
               this.fechaApi,
               this.fechaApi,
@@ -154,6 +179,13 @@ export class ResumenNegocioComponent implements OnInit {
           .length;
       } else if (this.mostrarEspacios) {
         this.espaciosDisponiblesParaConsulta = false;
+      }
+
+      if (this.esComercio) {
+        await this.cargarResumenComercio();
+        if (tiene(CARACTERISTICAS_LICENCIA.OperacionComprobantes)) {
+          await this.cargarCuotaComprobantes();
+        }
       }
 
       await this.cargarPedidos();
@@ -243,6 +275,125 @@ export class ResumenNegocioComponent implements OnInit {
     } else if (this.mostrarPedidos) {
       this.pedidosActivos = [];
     }
+  }
+
+  private async cargarResumenComercio(): Promise<void> {
+    const [ventas, stock] = await Promise.all([
+      firstValueFrom(this.ventaService.getListadoVentas(
+        this.fechaApi,
+        this.fechaApi,
+        false,
+      )).catch(() => null),
+      this.mostrarInventarioComercio
+        ? firstValueFrom(this.stockAlmacenService.consultar()).catch(() => null)
+        : Promise.resolve(null),
+    ]);
+
+    this.aplicarVentasComercio(ventas);
+    this.aplicarStockComercio(stock);
+  }
+
+  private aplicarVentasComercio(ventas: VentasInterface[] | null): void {
+    this.ventasComercioDisponibles = ventas !== null;
+    if (!ventas) {
+      this.ventasTotal = null;
+      this.documentosTotal = null;
+      this.ticketMedio = null;
+      this.ultimasVentas = [];
+      return;
+    }
+
+    const vigentes = ventas.filter(venta => venta.Estado === 1);
+    this.ventasTotal = vigentes.reduce(
+      (total, venta) => total + (Number(venta.Total) || 0),
+      0,
+    );
+    this.documentosTotal = vigentes.length;
+    this.ticketMedio = vigentes.length > 0
+      ? this.ventasTotal / vigentes.length
+      : 0;
+    this.ultimasVentas = [...ventas]
+      .sort((a, b) => {
+        const diferenciaFecha = Date.parse(String(b.FechaVenta))
+          - Date.parse(String(a.FechaVenta));
+        return (Number.isNaN(diferenciaFecha) ? 0 : diferenciaFecha)
+          || b.IdVenta - a.IdVenta;
+      })
+      .slice(0, 5);
+  }
+
+  private aplicarStockComercio(
+    respuesta: ApiResponse<ConsultaStockAlmacen> | null,
+  ): void {
+    if (!this.mostrarInventarioComercio) {
+      this.cantidadStockBajo = null;
+      this.productosStockBajo = [];
+      return;
+    }
+
+    this.inventarioComercioDisponible = respuesta?.Success === true;
+    if (!respuesta?.Success) {
+      this.cantidadStockBajo = null;
+      this.productosStockBajo = [];
+      return;
+    }
+
+    const consulta = respuesta.Data;
+    const productosBajoMinimo = (consulta?.Items ?? [])
+      .filter(producto => producto.BajoMinimo)
+      .sort((a, b) => a.StockActual - b.StockActual);
+    this.cantidadStockBajo = consulta?.CantidadBajoMinimo
+      ?? productosBajoMinimo.length;
+    this.productosStockBajo = productosBajoMinimo.slice(0, 4);
+  }
+
+  private async cargarCuotaComprobantes(): Promise<void> {
+    this.cuotaComprobantesAgotada = await firstValueFrom(
+      this.licencia.obtenerCuotaComprobantes(),
+    )
+      .then(cuota => cuota.Agotada)
+      .catch(() => false);
+  }
+
+  abrirNuevaVenta(): void {
+    if (!this.puedeEmitirVentaDirecta || this.cuotaComprobantesAgotada) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(DialogEmitirVentaComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: '1100px',
+      maxWidth: '96vw',
+    });
+    dialogRef.afterClosed().subscribe(() => {
+      void this.cargarResumenComercio();
+      void this.cargarCuotaComprobantes();
+    });
+  }
+
+  abrirInventario(): void {
+    if (!this.mostrarInventarioComercio) {
+      return;
+    }
+
+    const elementoActivo = document.activeElement;
+    if (elementoActivo instanceof HTMLElement) {
+      elementoActivo.blur();
+    }
+    this.dialog.open(StockAlmacenConsultaComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'calc(100vw - 32px)',
+      height: 'calc(100vh - 32px)',
+      maxWidth: '1240px',
+      maxHeight: '880px',
+      panelClass: 'dialog-window--workspace',
+    });
+  }
+
+  ventaEstaVigente(venta: VentasInterface): boolean {
+    return venta.Estado === 1;
   }
 
   estadoPedido(pedido: PedidoResumenTurnoDTO): 'inProgress' | 'awaitingPayment' {
