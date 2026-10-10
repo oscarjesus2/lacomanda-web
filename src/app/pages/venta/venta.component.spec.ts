@@ -828,3 +828,17 @@ describe('VentaComponent - solicitudes sobre la cuenta', () => {
     expect(configuracion.data.maxLength).toBe(120);
   });
 });
+
+describe('VentaComponent - desplazamiento de la grilla', () => {
+  beforeEach(() => jasmine.clock().install());
+  afterEach(() => jasmine.clock().uninstall());
+
+  it('no falla mientras la vista de Caja todavía no ha renderizado la grilla', () => {
+    const component = Object.create(VentaComponent.prototype) as VentaComponent;
+
+    expect(() => {
+      component.scrollToBottom();
+      jasmine.clock().tick(100);
+    }).not.toThrow();
+  });
+});

@@ -746,7 +746,14 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   scrollToBottom(): void {
     try {
       setTimeout(() => {
-        const container = this.scrollContainer.nativeElement;
+        // El panel central de Caja no siempre renderiza la grilla. Por ejemplo,
+        // al seleccionar una mesa libre primero se solicita el número de
+        // comensales y `#scrollContainer` todavía no existe. Evitamos que ese
+        // estado transitorio interrumpa la apertura del pedido.
+        const container = this.scrollContainer?.nativeElement;
+        if (!container) {
+          return;
+        }
 
         // Verificamos si el scrollHeight es mayor que el clientHeight para permitir el scroll
         if (container.scrollHeight > container.clientHeight) {
