@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import {
   HttpErrorResponse,
   HttpEvent,
@@ -85,6 +86,7 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     private spinnerService: NgxSpinnerService,
     private backendStatus: BackendStatusService,
     private deviceIdentifier: DeviceIdentifierService,
+    private router: Router,
   ) {}
 
   intercept(
@@ -587,19 +589,41 @@ export class ApiRequestInterceptor implements HttpInterceptor {
   }
 
   private handleSubscriptionAccessError(error: HttpErrorResponse): void {
-    if (this.subscriptionBlockDialogOpen) {
+    if (
+      this.subscriptionBlockDialogOpen
+      || this.router.url.startsWith('/acceso-pendiente')
+    ) {
       return;
     }
 
     this.subscriptionBlockDialogOpen = true;
     const body = error.error as ApiErrorResponse & { errorCode?: string };
     const errorCode = body?.ErrorCode || body?.errorCode || '';
-    const title = errorCode === 'SUBSCRIPTION_PAYMENT_REQUIRED'
-      ? 'Suscripción pendiente de pago'
-      : errorCode === 'SUBSCRIPTION_EXPIRED'
-        ? 'Suscripción vencida'
-        : errorCode === 'SUBSCRIPTION_CANCELLED'
-          ? 'Suscripción cancelada'
+
+    if (errorCode === 'SUBSCRIPTION_PAYMENT_REQUIRED') {
+      const businessName = this.storageService
+        .getCurrentNombreSucursal()
+        ?.trim() || null;
+
+      this.dialog.closeAll();
+
+      // La autenticación fue válida, pero no se mantiene una sesión operativa
+      // mientras la licencia siga pendiente de pago. Se conserva la sucursal
+      // recordada para que el cliente pueda volver a probar después de pagar.
+      this.storageService.logout(false);
+
+      void this.router.navigate(['/acceso-pendiente'], {
+        state: { businessName },
+      }).finally(() => {
+        this.subscriptionBlockDialogOpen = false;
+      });
+      return;
+    }
+
+    const title = errorCode === 'SUBSCRIPTION_EXPIRED'
+      ? 'Suscripción vencida'
+      : errorCode === 'SUBSCRIPTION_CANCELLED'
+        ? 'Suscripción cancelada'
           : 'Suscripción no activa';
 
     this.dialog.closeAll();
@@ -613,8 +637,10 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       confirmButtonText: 'Ir al Portal de Clientes',
       allowEscapeKey: false,
       allowOutsideClick: false
-    }).then(() => {
-      window.location.assign(environment.customerPortalUrl);
+    }).then(result => {
+      if (result.isConfirmed) {
+        window.location.assign(environment.customerPortalUrl);
+      }
     }).finally(() => {
       this.subscriptionBlockDialogOpen = false;
     });

@@ -20,6 +20,7 @@ import { QzTrayRequiredComponent } from './qz-tray-required/qz-tray-required.com
 import { MesaClienteComponent } from './pages/mesa-cliente/mesa-cliente.component';
 import { ReservasOnlineComponent } from './pages/reservas-online/reservas-online.component';
 import { ComprobantesPublicosComponent } from './pages/comprobantes-publicos/comprobantes-publicos.component';
+import { SubscriptionPaymentPendingComponent } from './auth/subscription-payment-pending/subscription-payment-pending.component';
 // DigitacionMozoComponent reemplazado por VentaComponent con isModoMozo=true
 
 // Importa más componentes según sea necesario...
@@ -29,6 +30,7 @@ const routes: Routes = [
   { path: 'mesa/:codigoQr', component: MesaClienteComponent },
   { path: 'reservas', component: ReservasOnlineComponent },
   { path: 'comprobantes', component: ComprobantesPublicosComponent },
+  { path: 'acceso-pendiente', component: SubscriptionPaymentPendingComponent },
   { path: 'qz-tray-required', component: QzTrayRequiredComponent },
 {
   path:'', redirectTo:'/dashboard', pathMatch:'full'

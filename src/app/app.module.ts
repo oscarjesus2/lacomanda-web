@@ -161,6 +161,7 @@ import { AeatConfigurationComponent } from './components/mantenimiento/aeat-conf
 import { CpeEnvioMonitorComponent } from './components/mantenimiento/cpe-envio-monitor/cpe-envio-monitor.component';
 import { AeatEnvioMonitorComponent } from './components/mantenimiento/aeat-envio-monitor/aeat-envio-monitor.component';
 import { PagoCuentaOnlineConfigurationComponent } from './components/mantenimiento/pago-cuenta-online-configuration/pago-cuenta-online-configuration.component';
+import { SubscriptionPaymentPendingComponent } from './auth/subscription-payment-pending/subscription-payment-pending.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -292,6 +293,7 @@ export const MY_DATE_FORMATS = {
     CpeEnvioMonitorComponent,
     AeatEnvioMonitorComponent,
     PagoCuentaOnlineConfigurationComponent,
+    SubscriptionPaymentPendingComponent,
   ],
   imports: [
     CommonModule,

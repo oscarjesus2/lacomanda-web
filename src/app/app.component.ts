@@ -294,6 +294,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private esRutaPublica(url: string): boolean {
     return url.startsWith('/iniciar-sesion')
       || url.startsWith('/inicio')
+      || url.startsWith('/acceso-pendiente')
       || url.startsWith('/mesa/')
       || url.startsWith('/reservas')
       || url.startsWith('/comprobantes');
@@ -334,6 +335,8 @@ export class AppComponent implements OnInit, OnDestroy {
         return this.textCatalog.get('administration');
       case '/iniciar-sesion':
         return this.textCatalog.get('signIn');
+      case '/acceso-pendiente':
+        return 'Acceso pendiente de activación';
       default:
         return this.textCatalog.get('signIn');
     }

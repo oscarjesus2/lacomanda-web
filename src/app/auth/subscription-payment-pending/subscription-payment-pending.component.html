@@ -1,0 +1,64 @@
+<main class="payment-pending-page">
+  <div class="payment-pending-page__glow payment-pending-page__glow--top"></div>
+  <div class="payment-pending-page__glow payment-pending-page__glow--bottom"></div>
+
+  <section class="access-card" aria-labelledby="access-title">
+    <header class="brand" aria-label="La Comanda">
+      <img src="/assets/logo.svg" alt="" class="brand__logo" />
+      <span class="brand__name">LaComanda</span>
+    </header>
+
+    <div class="ready-badge">
+      <mat-icon aria-hidden="true">check_circle</mat-icon>
+      <span>Tu cuenta está configurada</span>
+    </div>
+
+    <h1 id="access-title">Tu acceso ya está preparado</h1>
+    <p class="access-card__lead">
+      <ng-container *ngIf="businessName; else genericBusiness">
+        La sucursal <strong>{{ businessName }}</strong> y su licencia se crearon correctamente.
+      </ng-container>
+      <ng-template #genericBusiness>
+        Tu negocio y su licencia se crearon correctamente.
+      </ng-template>
+      Todo está listo para empezar.
+    </p>
+
+    <article class="status-panel" aria-label="Pago pendiente">
+      <span class="status-panel__icon" aria-hidden="true">
+        <mat-icon>credit_card</mat-icon>
+      </span>
+      <div>
+        <span class="status-panel__eyebrow">Pago pendiente</span>
+        <h2>Solo falta activar tu licencia</h2>
+        <p>
+          Aún no hemos recibido la confirmación del pago. En cuanto se registre,
+          podrás ingresar a La Comanda y trabajar con normalidad.
+        </p>
+      </div>
+    </article>
+
+    <div class="support-message">
+      <mat-icon aria-hidden="true">support_agent</mat-icon>
+      <div>
+        <h2>¿Necesitas más días de prueba?</h2>
+        <p>
+          Abre un ticket desde el Portal La Comanda. Nuestro equipo revisará tu
+          caso y te ayudará a evaluar una ampliación.
+        </p>
+      </div>
+    </div>
+
+    <a class="portal-button" [href]="portalUrl">
+      <span>Ir al Portal La Comanda</span>
+      <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+    </a>
+    <p class="portal-hint">
+      Allí podrás realizar el pago o crear un ticket de soporte.
+    </p>
+
+    <a class="retry-link" routerLink="/iniciar-sesion">
+      Volver a intentar el acceso
+    </a>
+  </section>
+</main>
