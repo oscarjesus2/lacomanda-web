@@ -8,32 +8,50 @@
 
 .cesia {
   position: fixed;
-  right: max(18px, env(safe-area-inset-right));
-  bottom: max(18px, env(safe-area-inset-bottom));
+  top: 54%;
+  right: 0;
+  bottom: auto;
   z-index: 1100;
   font-family: inherit;
+  transform: translateY(-50%);
+}
+
+.cesia--open {
+  top: auto;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  transform: none;
 }
 
 .cesia__launcher {
+  position: relative;
   display: flex;
-  min-width: 184px;
-  padding: 8px 14px 8px 8px;
+  width: 50px;
+  height: 58px;
+  min-width: 0;
+  padding: 0;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   border: 1px solid rgba(214, 59, 15, 0.24);
-  border-radius: 999px;
+  border-right: 0;
+  border-radius: 18px 0 0 18px;
   background: rgba(255, 253, 251, 0.97);
   color: var(--cesia-ink);
-  box-shadow: 0 10px 30px rgba(69, 30, 10, 0.18);
+  box-shadow: -6px 10px 26px rgba(69, 30, 10, 0.18);
   cursor: pointer;
   backdrop-filter: blur(10px);
-  transition: transform 160ms ease, box-shadow 160ms ease;
+  opacity: .82;
+  transition: width 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
 }
 
 .cesia__launcher:hover,
 .cesia__launcher:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 34px rgba(69, 30, 10, 0.25);
+  width: 56px;
+  opacity: 1;
+  box-shadow: -8px 12px 32px rgba(69, 30, 10, 0.25);
+  outline: 3px solid rgba(214, 59, 15, .18);
+  outline-offset: 2px;
 }
 
 .cesia__launcher-icon,
@@ -48,12 +66,11 @@
 }
 
 .cesia__launcher-icon {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   box-shadow: 0 5px 14px rgba(200, 45, 8, 0.3);
 }
 
-.cesia__launcher-copy,
 .cesia__identity {
   display: flex;
   min-width: 0;
@@ -61,8 +78,34 @@
   align-items: flex-start;
 }
 
-.cesia__launcher-copy strong { font-size: 13px; }
-.cesia__launcher-copy small { color: var(--cesia-muted); font-size: 10px; }
+.cesia__launcher-copy {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 10px);
+  display: flex;
+  min-width: 145px;
+  padding: 9px 11px;
+  flex-direction: column;
+  align-items: flex-start;
+  border: 1px solid var(--cesia-line);
+  border-radius: 12px;
+  background: rgba(255, 253, 251, .98);
+  box-shadow: 0 10px 28px rgba(69, 30, 10, .18);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(6px, -50%);
+  transition: opacity 140ms ease, transform 140ms ease;
+  white-space: nowrap;
+}
+
+.cesia__launcher:hover .cesia__launcher-copy,
+.cesia__launcher:focus-visible .cesia__launcher-copy {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+.cesia__launcher-copy strong { font-size: 12px; }
+.cesia__launcher-copy small { margin-top: 2px; color: var(--cesia-muted); font-size: 9px; }
 
 .cesia__panel {
   display: grid;
@@ -383,6 +426,13 @@
 
 @media (max-width: 560px) {
   .cesia {
+    top: 52%;
+    right: 0;
+    bottom: auto;
+  }
+
+  .cesia--open {
+    top: auto;
     right: 12px;
     bottom: max(12px, env(safe-area-inset-bottom));
   }
@@ -393,8 +443,10 @@
     border-radius: 18px;
   }
 
-  .cesia__launcher { min-width: 0; padding-right: 10px; }
-  .cesia__launcher-copy small { display: none; }
+  .cesia__launcher { width: 46px; height: 54px; }
+  .cesia__launcher:hover,
+  .cesia__launcher:focus-visible { width: 50px; }
+  .cesia__launcher-copy { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

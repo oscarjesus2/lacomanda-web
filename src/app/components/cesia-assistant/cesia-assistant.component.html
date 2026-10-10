@@ -1,6 +1,7 @@
 <aside *ngIf="visible" class="cesia" [class.cesia--open]="abierto">
   <section
     *ngIf="abierto"
+    id="cesia-panel"
     class="cesia__panel"
     role="dialog"
     aria-modal="false"
@@ -110,9 +111,11 @@
     type="button"
     class="cesia__launcher"
     aria-label="Abrir Cesia, asistente IA de LaComanda"
+    aria-controls="cesia-panel"
+    aria-haspopup="dialog"
     (click)="abrir()">
     <span class="cesia__launcher-icon"><mat-icon>auto_awesome</mat-icon></span>
-    <span class="cesia__launcher-copy">
+    <span class="cesia__launcher-copy" aria-hidden="true">
       <strong>Pregunta a Cesia</strong>
       <small>Soporte IA · 24/7</small>
     </span>
