@@ -7,9 +7,8 @@ import { CajaDto } from 'src/app/models/caja.models';
 import { CajaService } from '../../services/caja.service';
 import { StorageService } from 'src/app/services/storage.service';
 import { MatDialogRef } from '@angular/material/dialog';
-import { AbrirTurno } from 'src/app/models/turno.models';
+import { ActualizarTipoCambioTurno, AbrirTurno } from 'src/app/models/turno.models';
 import { TurnoService } from '../../services/turno.service';
-import Swal from 'sweetalert2';
 import { firstValueFrom } from 'rxjs';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { Notificar } from 'src/app/shared/notificaciones';
@@ -22,9 +21,11 @@ import { MonedaService } from 'src/app/services/moneda.service';
 })
 export class DialogTurnoComponent implements OnInit {
   turnoAbierto = false;
+  idTurnoAbierto = 0;
   nroTurnoAbierto = 0;
   procesando = false;
   tieneMultiplesMonedas = false;
+  tipoCambioOriginal: number | null = null;
   myForm: FormGroup;
   listCaja: CajaDto[] = [];
  
@@ -97,21 +98,30 @@ export class DialogTurnoComponent implements OnInit {
   }
 
   private validarTurnoAbierto(caja: CajaDto): void {
+    const tipoCambio = this.myForm.get('tipocambio')!;
+
     if (caja.TurnoAbierto != null) {
       this.turnoAbierto = true;
-      this.nroTurnoAbierto = caja.TurnoAbierto.IdTurno;
+      this.idTurnoAbierto = caja.TurnoAbierto.IdTurno;
+      this.nroTurnoAbierto = caja.TurnoAbierto.NroTurno;
+      this.tipoCambioOriginal = Number(caja.TurnoAbierto.TipoCambioVenta);
 
-      this.myForm.get('tipocambio')!.setValue(
-        caja.TurnoAbierto.TipoCambioVenta
-      );
+      tipoCambio.setValue(this.tipoCambioOriginal);
       this.myForm.get('fecha')!.setValue(
         new Date(caja.TurnoAbierto.FechaInicio)
       );
-      this.myForm.get('tipocambio')!.disable({ emitEvent: false });
+
+      if (this.tieneMultiplesMonedas) {
+        tipoCambio.enable({ emitEvent: false });
+      } else {
+        tipoCambio.setValue(1);
+        tipoCambio.disable({ emitEvent: false });
+      }
     } else {
       this.turnoAbierto = false;
+      this.idTurnoAbierto = 0;
       this.nroTurnoAbierto = 0;
-      const tipoCambio = this.myForm.get('tipocambio')!;
+      this.tipoCambioOriginal = null;
       if (this.tieneMultiplesMonedas) {
         tipoCambio.enable({ emitEvent: false });
         tipoCambio.setValue(null);
@@ -146,6 +156,7 @@ export class DialogTurnoComponent implements OnInit {
       const oTurno: AbrirTurno = {
         IdCaja,
         FechaTrabajo,
+        TipoCambioCompra: TipoCambioVenta,
         TipoCambioVenta,
         UsuReg
       };
@@ -159,6 +170,47 @@ export class DialogTurnoComponent implements OnInit {
         Notificar.exito(this.texts.get('shiftOpenedTitle'),
           this.texts.get('registerAvailableForOperations'));
       }
+    } finally {
+      this.procesando = false;
+      this.spinnerService.hide();
+    }
+  }
+
+  get puedeActualizarTipoCambio(): boolean {
+    if (!this.turnoAbierto || !this.tieneMultiplesMonedas || this.procesando) {
+      return false;
+    }
+
+    const control = this.myForm.get('tipocambio');
+    const valor = Number(control?.value);
+    return !!control?.valid
+      && Number.isFinite(valor)
+      && valor > 0
+      && valor !== this.tipoCambioOriginal;
+  }
+
+  async actualizarTipoCambio(): Promise<void> {
+    if (!this.puedeActualizarTipoCambio) {
+      this.myForm.get('tipocambio')?.markAsTouched();
+      return;
+    }
+
+    const request: ActualizarTipoCambioTurno = {
+      TipoCambioVenta: Number(this.myForm.get('tipocambio')?.value)
+    };
+
+    this.procesando = true;
+    this.spinnerService.show();
+
+    try {
+      const turno = await firstValueFrom(
+        this.turnoService.ActualizarTipoCambio(this.idTurnoAbierto, request)
+      );
+      await this.listarCajas(turno.IdCaja);
+      Notificar.exito(
+        this.texts.get('exchangeRateUpdatedTitle'),
+        this.texts.get('exchangeRateUpdatedMessage')
+      );
     } finally {
       this.procesando = false;
       this.spinnerService.hide();

@@ -55,6 +55,7 @@
           inputmode="decimal"
           min="0.0001"
           step="0.0001"
+          [readonly]="procesando"
           [formControl]="myForm.get('tipocambio')" />
         <mat-error *ngIf="myForm.get('tipocambio')?.hasError('required')">
           {{ 'enterExchangeRate' | tenantText }}
@@ -64,6 +65,12 @@
             || myForm.get('tipocambio')?.hasError('pattern')">
           {{ 'enterPositiveValue' | tenantText }}
         </mat-error>
+        <mat-hint *ngIf="turnoAbierto && tieneMultiplesMonedas">
+          {{ 'exchangeRateEditableWhileOpen' | tenantText }}
+        </mat-hint>
+        <mat-hint *ngIf="!tieneMultiplesMonedas">
+          {{ 'exchangeRateFixedForCountry' | tenantText }}
+        </mat-hint>
       </mat-form-field>
     </div>
 
@@ -87,6 +94,17 @@
         [disabled]="myForm.invalid || procesando">
         <mat-icon>lock_open</mat-icon>
         <span>{{ 'openAction' | tenantText }}</span>
+      </button>
+
+      <button
+        *ngIf="turnoAbierto && tieneMultiplesMonedas"
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="actualizarTipoCambio()"
+        [disabled]="!puedeActualizarTipoCambio">
+        <mat-icon>currency_exchange</mat-icon>
+        <span>{{ 'updateExchangeRate' | tenantText }}</span>
       </button>
 
       <button

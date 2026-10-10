@@ -92,7 +92,7 @@ export class StorageService {
 
   // ── Logout ────────────────────────────────────────────────────────────────
 
-  logout(): void {
+  logout(navigateToLogin = true): void {
     const refreshToken = this.getRefreshToken();
     const realm        = this.currentSession?.TenantID ?? '';
     this.removeCurrentSession();
@@ -104,6 +104,8 @@ export class StorageService {
       });
     }
 
-    this.router.navigate(['/iniciar-sesion']);
+    if (navigateToLogin) {
+      this.router.navigate(['/iniciar-sesion']);
+    }
   }
 }

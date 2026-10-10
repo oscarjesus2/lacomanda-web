@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import {
   HttpErrorResponse,
   HttpEvent,
@@ -85,6 +86,7 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     private spinnerService: NgxSpinnerService,
     private backendStatus: BackendStatusService,
     private deviceIdentifier: DeviceIdentifierService,
+    private router: Router,
   ) {}
 
   intercept(
@@ -587,34 +589,29 @@ export class ApiRequestInterceptor implements HttpInterceptor {
   }
 
   private handleSubscriptionAccessError(error: HttpErrorResponse): void {
-    if (this.subscriptionBlockDialogOpen) {
+    if (
+      this.subscriptionBlockDialogOpen
+      || this.router.url.startsWith('/estado-suscripcion')
+    ) {
       return;
     }
 
     this.subscriptionBlockDialogOpen = true;
     const body = error.error as ApiErrorResponse & { errorCode?: string };
     const errorCode = body?.ErrorCode || body?.errorCode || '';
-    const title = errorCode === 'SUBSCRIPTION_PAYMENT_REQUIRED'
-      ? 'Suscripción pendiente de pago'
-      : errorCode === 'SUBSCRIPTION_EXPIRED'
-        ? 'Suscripción vencida'
-        : errorCode === 'SUBSCRIPTION_CANCELLED'
-          ? 'Suscripción cancelada'
-          : 'Suscripción no activa';
+    const businessName = this.storageService
+      .getCurrentNombreSucursal()
+      ?.trim() || null;
 
     this.dialog.closeAll();
-    this.clearRememberedTenant();
-    this.storageService.logout();
 
-    void Swal.fire({
-      icon: 'warning',
-      title,
-      text: this.getErrorMessage(error),
-      confirmButtonText: 'Ir al Portal de Clientes',
-      allowEscapeKey: false,
-      allowOutsideClick: false
-    }).then(() => {
-      window.location.assign(environment.customerPortalUrl);
+    // La autenticación fue válida, pero no se mantiene una sesión operativa
+    // mientras la suscripción bloquee el acceso. La sucursal se conserva para
+    // que el cliente pueda volver a intentarlo después de regularizarla.
+    this.storageService.logout(false);
+
+    void this.router.navigate(['/estado-suscripcion'], {
+      state: { businessName, errorCode },
     }).finally(() => {
       this.subscriptionBlockDialogOpen = false;
     });
@@ -664,12 +661,6 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     }).finally(() => {
       this.subscriptionGraceDialogOpen = false;
     });
-  }
-
-  private clearRememberedTenant(): void {
-    const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-    document.cookie = `lc_sucursal=; Max-Age=0; Path=/; SameSite=Lax${secure}`;
-    document.cookie = `lc_sucursal=; Max-Age=0; Path=/; Domain=.lacomanda.store; SameSite=Lax${secure}`;
   }
 
   private forceLogout(): void {

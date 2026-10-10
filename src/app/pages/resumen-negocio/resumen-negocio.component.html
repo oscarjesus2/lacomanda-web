@@ -2,9 +2,11 @@
   <div class="business-home__inner">
     <header class="business-home__header">
       <div>
-        <span class="business-home__eyebrow">{{ 'businessOverview' | tenantText }}</span>
-        <h1>{{ 'businessHomeTitle' | tenantText }}</h1>
-        <p>{{ 'businessHomeSubtitle' | tenantText }}</p>
+        <span class="business-home__eyebrow">
+          {{ (esComercio ? 'commerceOverview' : 'businessOverview') | tenantText }}
+        </span>
+        <h1>{{ (esComercio ? 'commerceHomeTitle' : 'businessHomeTitle') | tenantText }}</h1>
+        <p>{{ (esComercio ? 'commerceHomeSubtitle' : 'businessHomeSubtitle') | tenantText }}</p>
       </div>
       <div class="business-home__date">
         <mat-icon>today</mat-icon>
@@ -16,13 +18,24 @@
       <div class="business-home__welcome-copy">
         <span>{{ 'hello' | tenantText }}<ng-container *ngIf="nombreUsuario">, {{ nombreUsuario }}</ng-container></span>
         <h2>{{ nombreSucursal }}</h2>
-        <p>{{ 'businessWelcomeHint' | tenantText }}</p>
+        <p>{{ (esComercio ? 'commerceWelcomeHint' : 'businessWelcomeHint') | tenantText }}</p>
       </div>
       <nav class="business-home__links" [attr.aria-label]="'businessAccess' | tenantText">
         <a *ngIf="mostrarReportes" routerLink="/reportes" class="business-home__link">
           <mat-icon>query_stats</mat-icon>{{ 'reports' | tenantText }}
         </a>
-        <a routerLink="/administracion" class="business-home__link business-home__link--primary">
+        <button
+          *ngIf="esComercio && puedeEmitirVentaDirecta"
+          type="button"
+          class="business-home__link business-home__link--primary"
+          [disabled]="cuotaComprobantesAgotada"
+          (click)="abrirNuevaVenta()">
+          <mat-icon>point_of_sale</mat-icon>{{ 'newSale' | tenantText }}
+        </button>
+        <a
+          routerLink="/administracion"
+          class="business-home__link"
+          [class.business-home__link--primary]="!esComercio">
           <mat-icon>settings</mat-icon>{{ 'administration' | tenantText }}
         </a>
       </nav>
@@ -35,9 +48,36 @@
           {{ simboloMoneda }} {{ ventasTotal | number:'1.2-2' }}
         </strong>
         <ng-template #salesUnavailable><strong>—</strong></ng-template>
-        <small class="is-neutral" *ngIf="documentosTotal !== null">
+        <small class="is-neutral" *ngIf="!esComercio && documentosTotal !== null">
           {{ documentosTotal }} {{ 'documents' | tenantText }}
         </small>
+      </article>
+
+      <article class="executive-kpi business-home__metric" *ngIf="esComercio">
+        <span>{{ 'documentsIssuedToday' | tenantText }}</span>
+        <strong *ngIf="documentosTotal !== null; else documentsUnavailable">
+          {{ documentosTotal }}
+        </strong>
+        <ng-template #documentsUnavailable><strong>—</strong></ng-template>
+        <small class="is-neutral">{{ 'validSales' | tenantText }}</small>
+      </article>
+
+      <article class="executive-kpi business-home__metric" *ngIf="esComercio">
+        <span>{{ 'averageTicket' | tenantText }}</span>
+        <strong *ngIf="ticketMedio !== null; else ticketUnavailable">
+          {{ simboloMoneda }} {{ ticketMedio | number:'1.2-2' }}
+        </strong>
+        <ng-template #ticketUnavailable><strong>—</strong></ng-template>
+        <small class="is-neutral">{{ 'perDocument' | tenantText }}</small>
+      </article>
+
+      <article class="executive-kpi business-home__metric business-home__metric--stock" *ngIf="esComercio && mostrarInventarioComercio">
+        <span>{{ 'stockAlerts' | tenantText }}</span>
+        <strong *ngIf="cantidadStockBajo !== null; else stockUnavailable">
+          {{ cantidadStockBajo }}
+        </strong>
+        <ng-template #stockUnavailable><strong>—</strong></ng-template>
+        <small class="is-neutral">{{ 'itemsBelowMinimum' | tenantText }}</small>
       </article>
 
       <article class="executive-kpi business-home__metric" *ngIf="mostrarPedidos">
@@ -55,7 +95,7 @@
         <small class="is-neutral">{{ 'activeSpaces' | tenantText }}</small>
       </article>
 
-      <article class="executive-kpi business-home__metric" *ngIf="mostrarVentas && ticketMedio !== null">
+      <article class="executive-kpi business-home__metric" *ngIf="!esComercio && mostrarVentas && ticketMedio !== null">
         <span>{{ 'averageTicket' | tenantText }}</span>
         <strong>{{ simboloMoneda }} {{ ticketMedio | number:'1.2-2' }}</strong>
         <small class="is-neutral">{{ 'perDocument' | tenantText }}</small>
@@ -63,6 +103,53 @@
     </section>
 
     <section class="business-home__content">
+      <article class="executive-widget business-home__activity" *ngIf="esComercio">
+        <header class="executive-widget__header">
+          <div>
+            <span class="executive-widget__eyebrow">{{ 'todayActivity' | tenantText }}</span>
+            <h2 class="executive-widget__title">{{ 'latestSales' | tenantText }}</h2>
+          </div>
+          <span class="business-home__count">{{ ultimasVentas.length }}</span>
+        </header>
+
+        <div class="business-home__empty" *ngIf="!cargando && !ventasComercioDisponibles">
+          <mat-icon>cloud_off</mat-icon>
+          <strong>{{ 'salesUnavailable' | tenantText }}</strong>
+          <span>{{ 'summaryPartialUnavailable' | tenantText }}</span>
+        </div>
+
+        <div class="business-home__empty" *ngIf="!cargando && ventasComercioDisponibles && ultimasVentas.length === 0">
+          <mat-icon>receipt_long</mat-icon>
+          <strong>{{ 'noSalesToday' | tenantText }}</strong>
+          <span>{{ 'noSalesTodayHint' | tenantText }}</span>
+          <button
+            *ngIf="puedeEmitirVentaDirecta"
+            type="button"
+            class="business-home__empty-action"
+            [disabled]="cuotaComprobantesAgotada"
+            (click)="abrirNuevaVenta()">
+            {{ 'newSale' | tenantText }}
+          </button>
+        </div>
+
+        <div class="business-home__order-list" *ngIf="ultimasVentas.length > 0">
+          <article class="business-home__order business-home__sale" *ngFor="let venta of ultimasVentas">
+            <span class="business-home__order-icon"><mat-icon>receipt_long</mat-icon></span>
+            <div class="business-home__order-copy">
+              <strong>{{ venta.Documento || ('sale' | tenantText) + ' #' + venta.IdVenta }}</strong>
+              <span>{{ venta.Cliente || ('walkInCustomer' | tenantText) }}</span>
+            </div>
+            <span class="business-home__order-place">{{ venta.FechaVenta | date:'shortTime':undefined:cultura }}</span>
+            <strong class="business-home__order-total">{{ simboloMoneda }} {{ venta.Total | number:'1.2-2' }}</strong>
+            <span
+              class="business-home__status"
+              [class.business-home__status--cancelled]="!ventaEstaVigente(venta)">
+              {{ venta.EstadoDescripcion }}
+            </span>
+          </article>
+        </div>
+      </article>
+
       <article class="executive-widget business-home__activity" *ngIf="mostrarPedidos">
         <header class="executive-widget__header">
           <div>
@@ -101,7 +188,77 @@
       </article>
 
       <aside class="business-home__side">
-        <article class="executive-widget business-home__ai" *ngIf="mostrarAsistenteIa">
+        <article class="executive-widget business-home__stock" *ngIf="esComercio && mostrarInventarioComercio">
+          <div class="business-home__stock-heading">
+            <div>
+              <span class="executive-widget__eyebrow">{{ 'inventoryControl' | tenantText }}</span>
+              <h2>{{ 'lowStockTitle' | tenantText }}</h2>
+            </div>
+            <span class="business-home__count" *ngIf="cantidadStockBajo !== null">{{ cantidadStockBajo }}</span>
+          </div>
+
+          <div class="business-home__compact-empty" *ngIf="!inventarioComercioDisponible">
+            <mat-icon>cloud_off</mat-icon>
+            <span>{{ 'inventoryUnavailable' | tenantText }}</span>
+          </div>
+
+          <div class="business-home__compact-empty business-home__compact-empty--success" *ngIf="inventarioComercioDisponible && cantidadStockBajo === 0">
+            <mat-icon>inventory_2</mat-icon>
+            <strong>{{ 'stockHealthy' | tenantText }}</strong>
+            <span>{{ 'stockHealthyHint' | tenantText }}</span>
+          </div>
+
+          <div class="business-home__stock-list" *ngIf="productosStockBajo.length > 0">
+            <div class="business-home__stock-item" *ngFor="let producto of productosStockBajo">
+              <div>
+                <strong>{{ producto.Producto }}</strong>
+                <span>{{ producto.Area }}</span>
+              </div>
+              <span>
+                {{ producto.StockActual | number:'1.0-2' }} / {{ producto.StockMinimo | number:'1.0-2' }}
+                {{ producto.UnidadStock }}
+              </span>
+            </div>
+          </div>
+
+          <button type="button" class="business-home__text-link" (click)="abrirInventario()">
+            {{ 'reviewInventory' | tenantText }}<mat-icon>arrow_forward</mat-icon>
+          </button>
+        </article>
+
+        <article class="executive-widget business-home__quick-actions" *ngIf="esComercio">
+          <span class="executive-widget__eyebrow">{{ 'quickActions' | tenantText }}</span>
+          <h2>{{ 'manageCommerce' | tenantText }}</h2>
+          <div class="business-home__quick-actions-list">
+            <button
+              *ngIf="puedeEmitirVentaDirecta"
+              type="button"
+              [disabled]="cuotaComprobantesAgotada"
+              (click)="abrirNuevaVenta()">
+              <mat-icon>point_of_sale</mat-icon>
+              <span>
+                <strong>{{ 'newSale' | tenantText }}</strong>
+                <small>{{ (cuotaComprobantesAgotada ? 'monthlyDocumentLimitReached' : 'newSaleHint') | tenantText }}</small>
+              </span>
+            </button>
+            <button *ngIf="mostrarInventarioComercio" type="button" (click)="abrirInventario()">
+              <mat-icon>inventory_2</mat-icon>
+              <span>
+                <strong>{{ 'reviewInventory' | tenantText }}</strong>
+                <small>{{ 'reviewInventoryHint' | tenantText }}</small>
+              </span>
+            </button>
+            <a routerLink="/administracion">
+              <mat-icon>settings</mat-icon>
+              <span>
+                <strong>{{ 'administration' | tenantText }}</strong>
+                <small>{{ 'commerceAdministrationHint' | tenantText }}</small>
+              </span>
+            </a>
+          </div>
+        </article>
+
+        <article class="executive-widget business-home__ai" *ngIf="!esComercio && mostrarAsistenteIa">
           <div class="business-home__ai-heading">
             <span class="business-home__ai-icon"><mat-icon>auto_awesome</mat-icon></span>
             <div>
@@ -115,7 +272,7 @@
           </a>
         </article>
 
-        <article class="executive-widget business-home__reports" *ngIf="mostrarReportes">
+        <article class="executive-widget business-home__reports" *ngIf="!esComercio && mostrarReportes">
           <span class="executive-widget__eyebrow">{{ 'businessInsights' | tenantText }}</span>
           <h2>{{ 'reportsDashboard' | tenantText }}</h2>
           <p>{{ 'reportsHomeHint' | tenantText }}</p>
