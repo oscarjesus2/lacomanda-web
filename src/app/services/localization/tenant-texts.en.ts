@@ -430,6 +430,14 @@ export const EN_TEXTS = {
   selectRegister: 'Select a register.',
   enterExchangeRate: 'Enter the exchange rate.',
   enterPositiveValue: 'Enter a value greater than zero.',
+  exchangeRateEditableWhileOpen:
+    'You can update it while the shift remains open.',
+  exchangeRateFixedForCountry:
+    'This tenant operates with one currency, so the exchange rate remains at 1.',
+  updateExchangeRate: 'Update exchange rate',
+  exchangeRateUpdatedTitle: 'Exchange rate updated',
+  exchangeRateUpdatedMessage:
+    'The new value will be applied to subsequent shift operations.',
   workDate: 'Work date',
   openAction: 'Open',
   noOpenShiftForRegister: 'There is no open shift for this register.',

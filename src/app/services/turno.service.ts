@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from "@angular/common/http";
 import { Observable } from 'rxjs';
-import { AbrirTurno, Turno } from '../models/turno.models';
+import { ActualizarTipoCambioTurno, AbrirTurno, Turno } from '../models/turno.models';
 import { environment } from 'src/environments/environment';  // Importa el entorno correspondiente
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { ResumenCobrosDTO } from '../interfaces/resumenCobrosDTO.interface';
@@ -18,6 +18,16 @@ export class TurnoService {
 
     AbrirTurno(Turno: AbrirTurno): Observable<Turno> {
         return this.http.post<Turno>(this.basePath + '/abrir', Turno);
+    }
+
+    ActualizarTipoCambio(
+        idTurno: number,
+        request: ActualizarTipoCambioTurno
+    ): Observable<Turno> {
+        return this.http.put<Turno>(
+            `${this.basePath}/${idTurno}/tipo-cambio`,
+            request
+        );
     }
     
     ObtenerTurno(sIdCaja: string): Observable<Turno> {

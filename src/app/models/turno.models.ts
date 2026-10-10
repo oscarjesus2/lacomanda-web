@@ -21,9 +21,14 @@ export class Turno {
 export class AbrirTurno {
     public IdCaja: number;
     public FechaTrabajo: string;
+    public TipoCambioCompra: number;
     public TipoCambioVenta: number;
     public UsuReg: number;
     constructor(init?: Partial<Turno>) {
       Object.assign(this, init);
   }
+}
+
+export interface ActualizarTipoCambioTurno {
+    TipoCambioVenta: number;
 }

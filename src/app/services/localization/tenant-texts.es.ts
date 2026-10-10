@@ -435,6 +435,14 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   selectRegister: 'Seleccione una caja.',
   enterExchangeRate: 'Ingrese el tipo de cambio.',
   enterPositiveValue: 'Ingrese un valor mayor que cero.',
+  exchangeRateEditableWhileOpen:
+    'Puedes actualizarlo mientras el turno permanezca abierto.',
+  exchangeRateFixedForCountry:
+    'Este tenant opera con una sola moneda, por lo que el tipo de cambio se mantiene en 1.',
+  updateExchangeRate: 'Actualizar tipo de cambio',
+  exchangeRateUpdatedTitle: 'Tipo de cambio actualizado',
+  exchangeRateUpdatedMessage:
+    'El nuevo valor se aplicará a las siguientes operaciones del turno.',
   workDate: 'Fecha de trabajo',
   openAction: 'Aperturar',
   noOpenShiftForRegister: 'No hay un turno abierto para esta caja.',
