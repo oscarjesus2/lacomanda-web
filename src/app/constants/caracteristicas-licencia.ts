@@ -33,6 +33,7 @@ export const CARACTERISTICAS_LICENCIA = {
   ProductosMenus: 'productos.menus',
   ProductosImportacionCartaIa: 'productos.importacion_carta_ia',
   ProductosAsistenteCartaIa: 'productos.asistente_carta_ia',
+  SoporteCesiaIa: 'soporte.cesia_ia',
   ReportesSeguimientoComandas: 'reportes.seguimiento_comandas',
   ReportesComisionAnfitrionas: 'reportes.comision_anfitrionas',
   LimiteUsuarios: 'limites.usuarios',

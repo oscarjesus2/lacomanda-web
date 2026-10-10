@@ -1,0 +1,120 @@
+<aside *ngIf="visible" class="cesia" [class.cesia--open]="abierto">
+  <section
+    *ngIf="abierto"
+    class="cesia__panel"
+    role="dialog"
+    aria-modal="false"
+    aria-labelledby="cesia-title">
+    <header class="cesia__header">
+      <span class="cesia__avatar" aria-hidden="true">
+        <mat-icon>auto_awesome</mat-icon>
+      </span>
+      <span class="cesia__identity">
+        <strong id="cesia-title">Cesia</strong>
+        <small>Asistente IA de LaComanda · 24/7</small>
+      </span>
+      <span *ngIf="plan" class="cesia__plan" [title]="plan">{{ plan }}</span>
+      <button
+        type="button"
+        class="cesia__close"
+        aria-label="Cerrar Cesia"
+        (click)="cerrar()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+
+    <div class="cesia__privacy">
+      <mat-icon aria-hidden="true">verified_user</mat-icon>
+      <span>Orientación de solo lectura, adaptada a tu licencia.</span>
+    </div>
+
+    <div class="cesia__messages" aria-live="polite">
+      <article
+        *ngFor="let mensaje of mensajes"
+        class="cesia__message"
+        [class.cesia__message--user]="mensaje.rol === 'user'">
+        <span class="cesia__message-label">
+          {{ mensaje.rol === 'user' ? 'Tú' : 'Cesia' }}
+        </span>
+        <p>{{ mensaje.texto }}</p>
+        <img
+          *ngIf="mensaje.imagenUrl"
+          class="cesia__message-image"
+          [src]="mensaje.imagenUrl"
+          alt="Captura enviada a Cesia">
+        <div *ngIf="mensaje.fuentes?.length" class="cesia__sources">
+          <span>Manual consultado:</span>
+          <span *ngFor="let fuente of mensaje.fuentes" class="cesia__source">{{ fuente }}</span>
+        </div>
+        <a
+          *ngIf="mensaje.recomiendaTicket"
+          class="cesia__ticket"
+          [href]="portalUrl"
+          target="_blank"
+          rel="noopener">
+          Abrir un ticket en el Portal
+          <mat-icon>open_in_new</mat-icon>
+        </a>
+      </article>
+
+      <div *ngIf="cargando" class="cesia__typing" aria-label="Cesia está escribiendo">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div *ngIf="sugerencias.length && !cargando" class="cesia__suggestions">
+      <button
+        *ngFor="let sugerencia of sugerencias"
+        type="button"
+        (click)="enviar(sugerencia)">
+        {{ sugerencia }}
+      </button>
+    </div>
+
+    <div *ngIf="imagenDataUrl || errorImagen" class="cesia__attachment-zone">
+      <div *ngIf="imagenDataUrl" class="cesia__attachment">
+        <img [src]="imagenDataUrl" alt="Vista previa de la captura">
+        <span>
+          <strong>Captura lista</strong>
+          <small>Se enviará solo para analizar esta pregunta.</small>
+        </span>
+        <button type="button" aria-label="Quitar captura" (click)="quitarImagen()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <p *ngIf="errorImagen" class="cesia__attachment-error" role="alert">{{ errorImagen }}</p>
+    </div>
+
+    <footer class="cesia__composer">
+      <textarea
+        [(ngModel)]="pregunta"
+        rows="1"
+        maxlength="1200"
+        [disabled]="cargando"
+        aria-label="Pregunta para Cesia"
+        placeholder="Pregúntame cómo usar LaComanda…"
+        (keydown)="onInputKeydown($event)"></textarea>
+      <button
+        type="button"
+        [disabled]="cargando || !pregunta.trim()"
+        aria-label="Enviar pregunta"
+        (click)="enviar()">
+        <mat-icon>arrow_upward</mat-icon>
+      </button>
+    </footer>
+    <p class="cesia__disclaimer">Puedes pegar una captura con Ctrl+V. Cesia puede equivocarse; confirma antes de una acción fiscal.</p>
+  </section>
+
+  <button
+    *ngIf="!abierto"
+    type="button"
+    class="cesia__launcher"
+    aria-label="Abrir Cesia, asistente IA de LaComanda"
+    (click)="abrir()">
+    <span class="cesia__launcher-icon"><mat-icon>auto_awesome</mat-icon></span>
+    <span class="cesia__launcher-copy">
+      <strong>Pregunta a Cesia</strong>
+      <small>Soporte IA · 24/7</small>
+    </span>
+  </button>
+</aside>
