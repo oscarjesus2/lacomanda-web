@@ -7,65 +7,53 @@
   position: relative;
   display: grid;
   min-height: 100dvh;
-  padding: 32px 20px;
+  padding: 24px;
   place-items: center;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 15% 15%, rgba(255, 179, 0, 0.32), transparent 34%),
-    radial-gradient(circle at 85% 80%, rgba(135, 0, 0, 0.38), transparent 38%),
-    linear-gradient(145deg, #e96c22 0%, #bf360c 48%, #8f2107 100%);
-  box-sizing: border-box;
-}
-
-.subscription-status-page::before {
-  position: absolute;
-  inset: 0;
+  background-color: #c8550a;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 28px 28px;
+    radial-gradient(ellipse at 20% 20%, #e8722a 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 10%, #f0a040 0%, transparent 45%),
+    radial-gradient(ellipse at 75% 75%, #a03010 0%, transparent 50%),
+    radial-gradient(ellipse at 10% 80%, #d05020 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 50%, #c86020 0%, transparent 60%);
+  box-sizing: border-box;
+  animation: mesh-shift 12s ease-in-out infinite alternate;
+}
+
+.subscription-status-page::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  background-repeat: repeat;
   content: '';
+  opacity: 0.055;
   pointer-events: none;
 }
 
-.subscription-status-page__glow {
-  position: absolute;
-  width: 360px;
-  height: 360px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.subscription-status-page__glow::after {
-  position: absolute;
-  inset: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: inherit;
-  content: '';
-}
-
-.subscription-status-page__glow--top {
-  top: -190px;
-  right: -110px;
-}
-
-.subscription-status-page__glow--bottom {
-  bottom: -235px;
-  left: -145px;
+.subscription-status-shell {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: min(100%, 660px);
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
 }
 
 .access-card {
-  position: relative;
-  z-index: 1;
-  width: min(100%, 660px);
-  padding: 34px 38px 30px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 24px;
-  background: rgba(255, 252, 249, 0.97);
+  width: 100%;
+  padding: 32px 28px 28px;
+  border: 0;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
   box-shadow:
-    0 28px 80px rgba(79, 14, 0, 0.34),
-    0 2px 8px rgba(79, 14, 0, 0.16);
+    0 2px 6px rgba(100, 25, 0, 0.18),
+    0 10px 30px rgba(90, 18, 0, 0.28),
+    0 32px 70px rgba(70, 12, 0, 0.32),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
   color: var(--color-text);
   text-align: center;
   box-sizing: border-box;
@@ -73,22 +61,34 @@
 }
 
 .brand {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 24px;
+  gap: 8px;
+  color: var(--color-text-light);
+  animation: brand-enter 420ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 .brand__logo {
-  width: 46px;
-  height: 46px;
+  width: 76px;
+  height: 76px;
+  filter:
+    drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 24px rgba(255, 120, 40, 0.3));
 }
 
 .brand__name {
-  color: var(--color-text);
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+.brand__tagline {
+  margin: 0;
+  color: rgba(255, 248, 240, 0.82);
+  font-size: 13px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
 }
 
 .state-badge {
@@ -105,6 +105,7 @@
   font-weight: 800;
   letter-spacing: 0.035em;
   text-transform: uppercase;
+  margin-bottom: 14px;
 }
 
 .state-badge--danger {
@@ -114,13 +115,14 @@
 }
 
 .state-badge mat-icon {
+  display: block;
   width: 17px;
   height: 17px;
   font-size: 17px;
 }
 
 h1 {
-  margin: 14px 0 8px;
+  margin: 0 0 8px;
   color: var(--color-text);
   font-size: clamp(28px, 4vw, 38px);
   font-weight: 850;
@@ -284,18 +286,41 @@ h1 {
   }
 }
 
+@keyframes brand-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mesh-shift {
+  0% {
+    filter: brightness(1) saturate(1);
+  }
+  50% {
+    filter: brightness(1.05) saturate(1.08);
+  }
+  100% {
+    filter: brightness(0.97) saturate(0.95);
+  }
+}
+
 @media (max-width: 640px) {
   .subscription-status-page {
     padding: 18px 12px;
   }
 
   .access-card {
-    padding: 26px 20px 24px;
-    border-radius: 20px;
+    padding: 24px 18px 22px;
   }
 
-  .brand {
-    margin-bottom: 19px;
+  .brand__logo {
+    width: 62px;
+    height: 62px;
   }
 
   .status-panel {
@@ -310,7 +335,9 @@ h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .access-card {
+  .subscription-status-page,
+  .access-card,
+  .brand {
     animation: none;
   }
 
