@@ -3,7 +3,7 @@
   min-height: 100dvh;
 }
 
-.payment-pending-page {
+.subscription-status-page {
   position: relative;
   display: grid;
   min-height: 100dvh;
@@ -17,7 +17,7 @@
   box-sizing: border-box;
 }
 
-.payment-pending-page::before {
+.subscription-status-page::before {
   position: absolute;
   inset: 0;
   background-image:
@@ -28,7 +28,7 @@
   pointer-events: none;
 }
 
-.payment-pending-page__glow {
+.subscription-status-page__glow {
   position: absolute;
   width: 360px;
   height: 360px;
@@ -37,7 +37,7 @@
   pointer-events: none;
 }
 
-.payment-pending-page__glow::after {
+.subscription-status-page__glow::after {
   position: absolute;
   inset: 30px;
   border: 1px solid rgba(255, 255, 255, 0.09);
@@ -45,12 +45,12 @@
   content: '';
 }
 
-.payment-pending-page__glow--top {
+.subscription-status-page__glow--top {
   top: -190px;
   right: -110px;
 }
 
-.payment-pending-page__glow--bottom {
+.subscription-status-page__glow--bottom {
   bottom: -235px;
   left: -145px;
 }
@@ -91,23 +91,29 @@
   letter-spacing: -0.03em;
 }
 
-.ready-badge {
+.state-badge {
   display: inline-flex;
   min-height: 30px;
   padding: 0 12px;
   align-items: center;
   gap: 7px;
-  border: 1px solid var(--color-success-border);
+  border: 1px solid var(--color-warning-border);
   border-radius: var(--radius-pill);
-  background: var(--color-success-soft);
-  color: var(--color-success);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.035em;
   text-transform: uppercase;
 }
 
-.ready-badge mat-icon {
+.state-badge--danger {
+  border-color: var(--color-warn-border);
+  background: var(--color-warn-soft);
+  color: var(--color-warn);
+}
+
+.state-badge mat-icon {
   width: 17px;
   height: 17px;
   font-size: 17px;
@@ -123,15 +129,11 @@ h1 {
 }
 
 .access-card__lead {
-  max-width: 54ch;
+  max-width: 56ch;
   margin: 0 auto 24px;
   color: var(--color-text-muted);
   font-size: 15px;
   line-height: 1.65;
-}
-
-.access-card__lead strong {
-  color: var(--color-text);
 }
 
 .status-panel,
@@ -149,6 +151,11 @@ h1 {
   background: linear-gradient(135deg, var(--color-warning-soft), #fffaf5);
 }
 
+.status-panel--danger {
+  border-color: var(--color-warn-border);
+  background: linear-gradient(135deg, var(--color-warn-soft), #fffafa);
+}
+
 .status-panel__icon {
   display: grid;
   flex: 0 0 44px;
@@ -159,6 +166,11 @@ h1 {
   background: #ffffff;
   color: var(--color-warning);
   box-shadow: var(--shadow-xs);
+}
+
+.status-panel--danger .status-panel__icon,
+.status-panel--danger .status-panel__eyebrow {
+  color: var(--color-warn);
 }
 
 .status-panel__icon mat-icon {
@@ -273,7 +285,7 @@ h1 {
 }
 
 @media (max-width: 640px) {
-  .payment-pending-page {
+  .subscription-status-page {
     padding: 18px 12px;
   }
 

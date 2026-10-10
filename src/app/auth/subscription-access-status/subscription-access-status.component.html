@@ -1,0 +1,53 @@
+<main class="subscription-status-page">
+  <div class="subscription-status-page__glow subscription-status-page__glow--top"></div>
+  <div class="subscription-status-page__glow subscription-status-page__glow--bottom"></div>
+
+  <section class="access-card" aria-labelledby="access-title">
+    <header class="brand" aria-label="La Comanda">
+      <img src="/assets/logo.svg" alt="" class="brand__logo" />
+      <span class="brand__name">LaComanda</span>
+    </header>
+
+    <div
+      class="state-badge"
+      [class.state-badge--danger]="content.tone === 'danger'">
+      <mat-icon aria-hidden="true">{{ content.badgeIcon }}</mat-icon>
+      <span>{{ content.badge }}</span>
+    </div>
+
+    <h1 id="access-title">{{ content.title }}</h1>
+    <p class="access-card__lead">{{ summary }}</p>
+
+    <article
+      class="status-panel"
+      [class.status-panel--danger]="content.tone === 'danger'"
+      [attr.aria-label]="content.badge">
+      <span class="status-panel__icon" aria-hidden="true">
+        <mat-icon>{{ content.badgeIcon }}</mat-icon>
+      </span>
+      <div>
+        <span class="status-panel__eyebrow">{{ content.badge }}</span>
+        <h2>{{ content.statusTitle }}</h2>
+        <p>{{ content.statusMessage }}</p>
+      </div>
+    </article>
+
+    <div class="support-message">
+      <mat-icon aria-hidden="true">support_agent</mat-icon>
+      <div>
+        <h2>{{ content.supportTitle }}</h2>
+        <p>{{ content.supportMessage }}</p>
+      </div>
+    </div>
+
+    <a class="portal-button" [href]="portalUrl">
+      <span>{{ content.portalAction }}</span>
+      <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+    </a>
+    <p class="portal-hint">{{ content.portalHint }}</p>
+
+    <a class="retry-link" routerLink="/iniciar-sesion">
+      Volver a intentar el acceso
+    </a>
+  </section>
+</main>
