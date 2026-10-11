@@ -123,9 +123,32 @@ jobs:
     - name: Deploy to production
       run: |
         kustomize build k8s-manifests/frontend/overlays/production | kubectl apply -f -
-        # La configuración de Nginx está montada con subPath. Kubernetes no
-        # actualiza ese fichero dentro de un pod existente: si cambias un
-        # *-proxy-config, reinicia ese proxy a mano con kubectl rollout restart.
+
+        # Los ficheros Nginx están montados con subPath y solo se leen al
+        # arrancar. El hash en el PodTemplate provoca un rollout únicamente
+        # cuando cambia el manifiesto correspondiente a cada proxy.
+        refresh_proxy() {
+          local deployment="$1"
+          local manifest="$2"
+          local config_hash
+          config_hash=$(sha256sum "$manifest" | awk '{print $1}')
+
+          kubectl patch deployment "$deployment" \
+            --namespace frontend-appweb-production \
+            --type merge \
+            --patch "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"lacomanda.store/config-hash\":\"${config_hash}\"}}}}}"
+        }
+
+        refresh_proxy \
+          staging-proxy \
+          k8s-manifests/frontend/overlays/production/staging-proxy.yaml
+        refresh_proxy \
+          taxflow-staging-proxy \
+          k8s-manifests/frontend/overlays/production/taxflow-staging-proxy.yaml
+        refresh_proxy \
+          taxflow-production-proxy \
+          k8s-manifests/frontend/overlays/production/taxflow-production-proxy.yaml
+
         kubectl rollout status \
           --namespace frontend-appweb-production \
           deployment/frontend \
