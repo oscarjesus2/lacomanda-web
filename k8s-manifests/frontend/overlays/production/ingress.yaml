@@ -155,3 +155,15 @@ spec:
                 name: staging-proxy
                 port:
                   number: 80
+    # Matomo reutiliza el mismo Load Balancer; el proxy resuelve el Service
+    # que vive en el namespace dedicado de producción.
+    - host: matomo.lacomanda.store
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: staging-proxy
+                port:
+                  number: 80
