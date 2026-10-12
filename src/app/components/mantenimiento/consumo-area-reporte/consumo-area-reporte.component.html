@@ -58,9 +58,9 @@
     <div class="dialog-summary-card dialog-summary-card--accent">
       <span class="dialog-summary-card__label">Período consultado</span>
       <strong>
-        {{ resultado?.FechaDesde | date:'dd/MM/yyyy':'UTC' }}
+        {{ formatearFechaConsulta(resultado?.FechaDesde) }}
         —
-        {{ resultado?.FechaHasta | date:'dd/MM/yyyy':'UTC' }}
+        {{ formatearFechaConsulta(resultado?.FechaHasta) }}
       </strong>
     </div>
   </div>

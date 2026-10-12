@@ -18,7 +18,7 @@
   </div>
   <div class="dialog-workspace-content"><div class="dialog-table-card"><div class="dialog-table-wrapper--fill">
     <mat-table [dataSource]="dataSource" class="dialog-table--xwide">
-      <ng-container matColumnDef="inventario"><mat-header-cell *matHeaderCellDef>Inventario</mat-header-cell><mat-cell *matCellDef="let row"><div class="table-cell-stack"><strong>#{{ row.IdInventario }}</strong><span class="table-cell-subtext">{{ row.FechaInventario | date:'dd/MM/yyyy':'UTC' }}</span></div></mat-cell></ng-container>
+      <ng-container matColumnDef="inventario"><mat-header-cell *matHeaderCellDef>Inventario</mat-header-cell><mat-cell *matCellDef="let row"><div class="table-cell-stack"><strong>#{{ row.IdInventario }}</strong><span class="table-cell-subtext">{{ formatearFechaConsulta(row.FechaInventario) }}</span></div></mat-cell></ng-container>
       <ng-container matColumnDef="subArea"><mat-header-cell *matHeaderCellDef>Subárea</mat-header-cell><mat-cell *matCellDef="let row">{{ row.SubAreaAlmacen }}</mat-cell></ng-container>
       <ng-container matColumnDef="articulo"><mat-header-cell *matHeaderCellDef>Artículo</mat-header-cell><mat-cell *matCellDef="let row"><div class="table-cell-stack"><strong>{{ row.Articulo }}</strong><span class="table-cell-subtext">{{ row.UnidadMedida }}</span></div></mat-cell></ng-container>
       <ng-container matColumnDef="teorico"><mat-header-cell *matHeaderCellDef>Consumo teórico</mat-header-cell><mat-cell *matCellDef="let row"><strong>{{ row.ConsumoTeorico | number:'1.0-3' }}</strong></mat-cell></ng-container>

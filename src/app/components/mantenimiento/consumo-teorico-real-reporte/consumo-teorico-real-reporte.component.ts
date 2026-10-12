@@ -130,6 +130,13 @@ export class ConsumoTeoricoRealReporteComponent implements OnInit {
     this.dialogRef.close();
   }
 
+  formatearFechaConsulta(fecha: string | null | undefined): string {
+    const coincidencia = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha ?? '');
+    return coincidencia
+      ? `${coincidencia[3]}/${coincidencia[2]}/${coincidencia[1]}`
+      : '—';
+  }
+
   private cargarSubAreas(): void {
     this.cargando = true;
     this.subAreaService.listar().subscribe({
