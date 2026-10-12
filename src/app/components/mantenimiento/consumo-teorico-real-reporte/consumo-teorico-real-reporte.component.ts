@@ -11,7 +11,6 @@ import {
 } from 'src/app/models/reportes-almacen.models';
 import { ReportesAlmacenService } from 'src/app/services/reportes-almacen.service';
 import { SubAreaAlmacenService } from 'src/app/services/sub-area-almacen.service';
-import { TenantService } from 'src/app/services/tenant.service';
 
 @Component({
   selector: 'app-consumo-teorico-real-reporte',
@@ -36,16 +35,17 @@ export class ConsumoTeoricoRealReporteComponent implements OnInit {
   subAreas: SubAreaAlmacen[] = [];
   resultado: ConsumoTeoricoRealReporte | null = null;
   idSubAreaAlmacen: number | null = null;
-  fechaDesde = '';
-  fechaHasta = '';
+  fechaDesde = this.formatearFecha(
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  );
+  fechaHasta = this.formatearFecha(new Date());
   filtro = '';
   cargando = false;
 
   constructor(
     private readonly dialogRef: MatDialogRef<ConsumoTeoricoRealReporteComponent>,
     private readonly subAreaService: SubAreaAlmacenService,
-    private readonly reportesService: ReportesAlmacenService,
-    private readonly tenantService: TenantService
+    private readonly reportesService: ReportesAlmacenService
   ) {
     this.dataSource.filterPredicate = (item, filter) =>
       this.normalizar(
@@ -55,44 +55,7 @@ export class ConsumoTeoricoRealReporteComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.tenantService.getTenant().subscribe({
-      next: response => {
-        this.establecerRangoPredeterminado(
-          response.Data?.[0]?.ZonaHorariaId || 'UTC'
-        );
-        this.cargarSubAreas();
-      },
-      error: () => {
-        this.establecerRangoPredeterminado('UTC');
-        this.cargarSubAreas();
-      }
-    });
-  }
-
-  establecerRangoPredeterminado(
-    zonaHoraria: string,
-    ahora = new Date()
-  ): void {
-    let zonaValida = zonaHoraria;
-    try {
-      new Intl.DateTimeFormat('en-CA', { timeZone: zonaValida })
-        .format(ahora);
-    } catch {
-      zonaValida = 'UTC';
-    }
-
-    const partes = new Intl.DateTimeFormat('en-CA', {
-      timeZone: zonaValida,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).formatToParts(ahora);
-    const valores = Object.fromEntries(
-      partes.map(parte => [parte.type, parte.value])
-    );
-    this.fechaDesde = `${valores['year']}-${valores['month']}-01`;
-    this.fechaHasta =
-      `${valores['year']}-${valores['month']}-${valores['day']}`;
+    this.cargarSubAreas();
   }
 
   consultar(): void {
@@ -167,13 +130,6 @@ export class ConsumoTeoricoRealReporteComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  formatearFechaConsulta(fecha: string | null | undefined): string {
-    const coincidencia = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha ?? '');
-    return coincidencia
-      ? `${coincidencia[3]}/${coincidencia[2]}/${coincidencia[1]}`
-      : '—';
-  }
-
   private cargarSubAreas(): void {
     this.cargando = true;
     this.subAreaService.listar().subscribe({
@@ -205,6 +161,13 @@ export class ConsumoTeoricoRealReporteComponent implements OnInit {
       .replace(/[\u0300-\u036f]/g, '')
       .trim()
       .toLowerCase();
+  }
+
+  private formatearFecha(fecha: Date): string {
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
 }

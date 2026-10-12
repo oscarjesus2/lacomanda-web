@@ -55,7 +55,12 @@ export class ReportesAlmacenService {
   ): Observable<ApiResponse<ConsumoTeoricoRealReporte>> {
     let params = new HttpParams()
       .set('FechaDesde', fechaDesde)
-      .set('FechaHasta', fechaHasta);
+      .set('FechaHasta', fechaHasta)
+      .set('InstanteDesdeUtc', this.inicioDiaLocalUtc(fechaDesde))
+      .set(
+        'InstanteHastaUtcExclusivo',
+        this.finDiaLocalUtcExclusivo(fechaHasta)
+      );
     if (idSubAreaAlmacen) {
       params = params.set('IdSubAreaAlmacen', idSubAreaAlmacen);
     }
@@ -95,5 +100,15 @@ export class ReportesAlmacenService {
       `${this.basePath}/cobertura-stock`,
       { params }
     );
+  }
+
+  private inicioDiaLocalUtc(fecha: string): string {
+    const [year, month, day] = fecha.split('-').map(Number);
+    return new Date(year, month - 1, day).toISOString();
+  }
+
+  private finDiaLocalUtcExclusivo(fecha: string): string {
+    const [year, month, day] = fecha.split('-').map(Number);
+    return new Date(year, month - 1, day + 1).toISOString();
   }
 }

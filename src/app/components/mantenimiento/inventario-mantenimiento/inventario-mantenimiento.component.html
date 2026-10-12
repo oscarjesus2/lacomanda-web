@@ -60,7 +60,7 @@
                 Fecha de inventario
               </mat-header-cell>
               <mat-cell *matCellDef="let row">
-                {{ formatearFechaTenant(row.FechaInventario) }}
+                {{ row.FechaInventario | date:'dd/MM/yyyy HH:mm' }}
               </mat-cell>
             </ng-container>
 
@@ -302,7 +302,7 @@
       <div class="dialog-summary-card">
         <span class="dialog-summary-card__label">Fecha</span>
         <strong>
-          {{ formatearFechaTenant(inventario.FechaInventario) }}
+          {{ inventario.FechaInventario | date:'dd/MM/yyyy HH:mm' }}
         </strong>
       </div>
       <div class="dialog-summary-card">
