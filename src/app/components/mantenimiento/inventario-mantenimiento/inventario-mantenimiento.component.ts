@@ -15,6 +15,7 @@ import {
 } from 'src/app/models/inventario.models';
 import { ArticuloService } from 'src/app/services/articulo.service';
 import { InventarioService } from 'src/app/services/inventario.service';
+import { TenantService } from 'src/app/services/tenant.service';
 import { ArticuloMantenimientoComponent } from '../articulo-mantenimiento/articulo-mantenimiento.component';
 import { Notificar } from 'src/app/shared/notificaciones';
 
@@ -50,17 +51,51 @@ export class InventarioMantenimientoComponent implements OnInit {
   idSubAreaSeleccionada: number | null = null;
   idArticuloAgregar: number | null = null;
   nuevoInventario: InventarioCrear = this.crearFormularioInicial();
+  zonaHoraria = 'UTC';
 
   constructor(
     private readonly dialogRef:
       MatDialogRef<InventarioMantenimientoComponent>,
     private readonly inventarioService: InventarioService,
     private readonly articuloService: ArticuloService,
-    private readonly dialog: MatDialog
+    private readonly dialog: MatDialog,
+    private readonly tenantService: TenantService
   ) {}
 
   ngOnInit(): void {
+    this.cargarZonaHoraria();
     this.cargarInicial();
+  }
+
+  formatearFechaTenant(value: Date | string | null | undefined): string {
+    if (!value) {
+      return '—';
+    }
+
+    const texto = value instanceof Date
+      ? value.toISOString()
+      : String(value).trim();
+    const fecha = new Date(
+      /(?:Z|[+-]\d{2}:\d{2})$/i.test(texto) ? texto : `${texto}Z`
+    );
+    if (Number.isNaN(fecha.getTime())) {
+      return '—';
+    }
+
+    const partes = new Intl.DateTimeFormat('en-GB', {
+      timeZone: this.zonaHoraria,
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23'
+    }).formatToParts(fecha);
+    const valores = Object.fromEntries(
+      partes.map(parte => [parte.type, parte.value])
+    );
+    return `${valores['day']}/${valores['month']}/${valores['year']} ` +
+      `${valores['hour']}:${valores['minute']}`;
   }
 
   cargarInicial(): void {
@@ -519,6 +554,25 @@ export class InventarioMantenimientoComponent implements OnInit {
       FechaInventario: new Date(),
       IdSubAreaAlmacen: null
     };
+  }
+
+  private cargarZonaHoraria(): void {
+    this.tenantService.getTenant().subscribe({
+      next: response => {
+        const zonaHoraria = response.Data?.[0]?.ZonaHorariaId;
+        if (!zonaHoraria) {
+          return;
+        }
+
+        try {
+          new Intl.DateTimeFormat('es-PE', { timeZone: zonaHoraria })
+            .format(new Date());
+          this.zonaHoraria = zonaHoraria;
+        } catch {
+          this.zonaHoraria = 'UTC';
+        }
+      }
+    });
   }
 
   private normalizar(value: unknown): string {

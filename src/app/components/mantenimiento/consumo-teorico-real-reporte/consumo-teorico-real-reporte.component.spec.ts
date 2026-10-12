@@ -6,6 +6,7 @@ describe('ConsumoTeoricoRealReporteComponent', () => {
       { close: jasmine.createSpy('close') } as any,
       {} as any,
       {} as any,
+      {} as any,
     );
   }
 
@@ -21,5 +22,17 @@ describe('ConsumoTeoricoRealReporteComponent', () => {
     const component = crearComponente();
 
     expect(component.formatearFechaConsulta(null)).toBe('—');
+  });
+
+  it('calcula el rango predeterminado con la fecha local del tenant', () => {
+    const component = crearComponente();
+
+    component.establecerRangoPredeterminado(
+      'America/Lima',
+      new Date('2026-10-12T03:30:00Z')
+    );
+
+    expect(component.fechaDesde).toBe('2026-10-01');
+    expect(component.fechaHasta).toBe('2026-10-11');
   });
 });
