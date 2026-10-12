@@ -50,7 +50,6 @@ export class InventarioMantenimientoComponent implements OnInit {
   idSubAreaSeleccionada: number | null = null;
   idArticuloAgregar: number | null = null;
   nuevoInventario: InventarioCrear = this.crearFormularioInicial();
-
   constructor(
     private readonly dialogRef:
       MatDialogRef<InventarioMantenimientoComponent>,
