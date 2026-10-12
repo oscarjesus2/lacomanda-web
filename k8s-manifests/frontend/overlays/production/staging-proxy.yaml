@@ -14,6 +14,28 @@ data:
       ""      close;
     }
 
+    # Google Cloud añade al final de X-Forwarded-For la IP real del cliente y
+    # la IP pública del balanceador. Se toma la penúltima entrada, ignorando
+    # cualquier prefijo enviado por el cliente, para no aceptar una IP falsa.
+    map $http_x_forwarded_for $google_load_balancer_client_ip {
+      ~^(?:.*,\s*)?([^,\s]+),\s*[^,\s]+$ $1;
+      default                              $remote_addr;
+    }
+
+    # El proxy es compartido. Solo Matomo recibe la cadena saneada; los demás
+    # servicios conservan exactamente el comportamiento anterior.
+    map $host $upstream_real_ip {
+      matomo.staging.lacomanda.store $google_load_balancer_client_ip;
+      matomo.lacomanda.store         $google_load_balancer_client_ip;
+      default                        $remote_addr;
+    }
+
+    map $host $upstream_forwarded_for {
+      matomo.staging.lacomanda.store $google_load_balancer_client_ip;
+      matomo.lacomanda.store         $google_load_balancer_client_ip;
+      default                        $proxy_add_x_forwarded_for;
+    }
+
     map $host $staging_upstream {
       portal.staging.lacomanda.store portal-lacomanda.frontend-appweb-staging.svc.cluster.local:80;
       auth.staging.lacomanda.store   keycloak.keycloak-staging.svc.cluster.local:8080;
@@ -62,8 +84,8 @@ data:
         proxy_pass http://$staging_upstream;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP $upstream_real_ip;
+        proxy_set_header X-Forwarded-For $upstream_forwarded_for;
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Proto $forwarded_proto;
         proxy_set_header Upgrade $http_upgrade;
