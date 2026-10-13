@@ -16,11 +16,7 @@ export class Configuracion {
   Direccion: string;
   Telefono: string;
   PiePagina: string;
-  BancoNombre?: string | null;
-  NumeroCuentaBancaria?: string | null;
-  Cci?: string | null;
-  Iban?: string | null;
-  BicSwift?: string | null;
+  IdBanco?: number | null;
   TieneLogo: boolean;
   Traslado: boolean;
   Precuentas: boolean;
@@ -48,9 +44,5 @@ export interface ConfiguracionInicial {
   NombreComercial: string;
   Direccion: string;
   Telefono: string;
-  BancoNombre?: string | null;
-  NumeroCuentaBancaria?: string | null;
-  Cci?: string | null;
-  Iban?: string | null;
-  BicSwift?: string | null;
+  IdBanco?: number | null;
 }

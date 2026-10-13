@@ -59,6 +59,7 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
       Activo: true,
       CajaPorDefecto: porDefecto,
       TurnoAbierto: turno,
+      IdCanalesVenta: [1],
     };
   }
 
@@ -91,6 +92,20 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
 
     expect(component.listCaja.map(item => item.IdCaja)).toEqual([2]);
     expect(component.cajaSeleccionada).toBe(2);
+  });
+
+  it('no ofrece cajas que no tengan Venta directa habilitada', async () => {
+    const { component, cajaService } = crear();
+    const sinVentaDirecta = caja(
+      1,
+      { IdTurno: 10, TipoCambio: 1, TipoCambioVenta: 1 },
+      true,
+    );
+    sinVentaDirecta.IdCanalesVenta = [2];
+    cajaService.getAllCaja.and.returnValue(of({ Data: [sinVentaDirecta] }));
+
+    await expectAsync((component as any).initializeCaja())
+      .toBeRejectedWithError('noDirectSalesRegister');
   });
 
   it('muestra los documentos fiscales configurados para la caja seleccionada', async () => {
@@ -150,7 +165,7 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
     }));
 
     await expectAsync((component as any).initializeCaja())
-      .toBeRejectedWithError('No existe una caja activa con turno abierto.');
+      .toBeRejectedWithError('noDirectSalesRegister');
   });
 
   it('muestra el motivo real cuando la apertura no encuentra una caja con turno', async () => {
@@ -165,7 +180,7 @@ describe('DialogEmitirVentaComponent - caja y turno', () => {
 
     expect(alert).toHaveBeenCalledWith(
       'unexpectedError',
-      'No existe una caja activa con turno abierto.',
+      'noDirectSalesRegister',
       'error',
     );
   });

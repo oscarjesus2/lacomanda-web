@@ -2309,6 +2309,120 @@ body {
   text-align: right;
 }
 
+/* Editor compartido de pagos: evita tablas horizontales para que todos los
+   datos de una forma de pago —incluido el banco de una transferencia— queden
+   visibles y se adapten al ancho disponible. */
+.payment-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.payment-editor__item {
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+}
+
+.payment-editor__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+  margin-bottom: 4px;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.payment-editor__header button {
+  min-width: 0;
+}
+
+.payment-editor__fields,
+.payment-editor__details {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 0 12px;
+}
+
+.payment-editor__details {
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  padding-top: 2px;
+}
+
+.payment-editor .mat-mdc-form-field,
+.payment-editor app-selector-banco-destino {
+  width: 100%;
+  min-width: 0;
+}
+
+.payment-editor app-selector-banco-destino {
+  display: block;
+}
+
+/* Selector reutilizable del maestro de bancos para configuración y cobros. */
+.bank-destination-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 170px;
+}
+
+.bank-destination-selector .mat-mdc-form-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.config-panel app-selector-banco-destino.form-field {
+  display: block;
+}
+
+.config-panel app-selector-banco-destino .bank-destination-selector {
+  display: flex;
+  width: 100%;
+}
+
+.payment-editor app-selector-banco-destino .bank-destination-selector {
+  display: flex;
+  width: 100%;
+}
+
+.payment-editor__footer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.payment-editor__summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 12px 16px;
+}
+
+@media (max-width: 900px) {
+  .payment-editor__fields {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .payment-editor__fields,
+  .payment-editor__details,
+  .payment-editor__footer,
+  .payment-editor__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-editor__footer > button {
+    width: 100%;
+  }
+}
+
 .dialog-data-table button {
   min-width: 0;
 }

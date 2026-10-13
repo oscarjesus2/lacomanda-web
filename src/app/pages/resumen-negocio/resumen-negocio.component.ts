@@ -27,6 +27,7 @@ import { VentaService } from 'src/app/services/venta.service';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 import { ComparativoVentasDashboard } from 'src/app/models/dashboard-ejecutivo.models';
 import { NivelUsuarioEnum } from 'src/app/enums/enum';
+import { esCajaDisponibleParaVentaDirecta } from 'src/app/utils/caja-venta-directa.utils';
 
 @Component({
   selector: 'app-resumen-negocio',
@@ -49,8 +50,10 @@ export class ResumenNegocioComponent implements OnInit {
   mostrarAsistenteIa = false;
   mostrarReportes = false;
   esComercio = false;
+  mostrarResumenVentas = false;
   puedeEmitirVentaDirecta = false;
   mostrarInventarioComercio = false;
+  mostrarAccionesComercio = false;
   cuotaComprobantesAgotada = false;
   ventasTotal: number | null = null;
   documentosTotal: number | null = null;
@@ -67,6 +70,7 @@ export class ResumenNegocioComponent implements OnInit {
   actividadDisponible = true;
   espaciosDisponiblesParaConsulta = true;
   private readonly espaciosPorId = new Map<number, string>();
+  private ventasDirectasHabilitadas = false;
 
   constructor(
     private readonly storage: StorageService,
@@ -109,10 +113,14 @@ export class ResumenNegocioComponent implements OnInit {
       const tieneReportes = tiene(CARACTERISTICAS_LICENCIA.ReportesAnaliticos);
       const tieneCaja = tiene(CARACTERISTICAS_LICENCIA.OperacionCaja);
       this.esComercio = estadoLicencia.licencia?.PlanCodigo?.toUpperCase() === 'COMERCIO';
-      this.puedeEmitirVentaDirecta = this.esComercio
-        && tiene(CARACTERISTICAS_LICENCIA.VentasDirecta);
-      this.mostrarInventarioComercio = this.esComercio
-        && tiene(CARACTERISTICAS_LICENCIA.AlmacenKardex);
+      this.ventasDirectasHabilitadas = tiene(CARACTERISTICAS_LICENCIA.VentasDirecta);
+      // El resumen reutiliza el listado de ventas, cuyo acceso está protegido
+      // por la característica de reportes operativos en la API.
+      this.mostrarResumenVentas = tiene(CARACTERISTICAS_LICENCIA.OperacionReportes);
+      this.mostrarInventarioComercio = tiene(CARACTERISTICAS_LICENCIA.AlmacenKardex);
+      this.mostrarAccionesComercio = this.mostrarResumenVentas
+        || this.ventasDirectasHabilitadas
+        || this.mostrarInventarioComercio;
 
       const usuario = respuestaUsuario?.Data;
       const puedeVerDashboardReportes = usuario?.EsUsuarioSoporteLaComanda === true
@@ -120,7 +128,7 @@ export class ResumenNegocioComponent implements OnInit {
         || (usuario?.IdNivel === NivelUsuarioEnum.Administrador &&
           usuario.PuedeVerDashboardReportes === true);
       this.mostrarReportes = tieneReportes && puedeVerDashboardReportes;
-      this.mostrarVentas = this.esComercio || this.mostrarReportes;
+      this.mostrarVentas = this.mostrarResumenVentas || this.mostrarReportes;
       this.mostrarPedidos = !this.esComercio && tieneCaja;
       this.mostrarEspacios = !this.esComercio
         && tiene(CARACTERISTICAS_LICENCIA.VentasMesa);
@@ -134,14 +142,14 @@ export class ResumenNegocioComponent implements OnInit {
 
       const solicitudes = await Promise.all([
         this.obtenerConfiguracion(),
-        this.mostrarVentas && !this.esComercio
+        this.mostrarVentas && !this.mostrarResumenVentas
           ? firstValueFrom(this.reportes.obtenerComparativoVentas(
               this.fechaApi,
               this.fechaApi,
               'FechaVenta',
             )).catch(() => null)
           : Promise.resolve(null),
-        this.mostrarPedidos
+        this.mostrarPedidos || this.ventasDirectasHabilitadas
           ? firstValueFrom(this.cajaService.getAllCaja(true)).catch(() => null)
           : Promise.resolve(null),
         this.mostrarEspacios
@@ -161,6 +169,7 @@ export class ResumenNegocioComponent implements OnInit {
       }
 
       this.actividadDisponible = !this.mostrarPedidos || respuestaCajas?.Success === true;
+      this.actualizarDisponibilidadVentaDirecta(respuestaCajas);
       this.turnosAbiertos = (respuestaCajas?.Success ? respuestaCajas.Data ?? [] : [])
         .map(caja => caja.TurnoAbierto)
         .filter((turno): turno is Turno => !!turno?.IdTurno);
@@ -181,9 +190,9 @@ export class ResumenNegocioComponent implements OnInit {
         this.espaciosDisponiblesParaConsulta = false;
       }
 
-      if (this.esComercio) {
+      if (this.mostrarResumenVentas || this.mostrarInventarioComercio) {
         await this.cargarResumenComercio();
-        if (tiene(CARACTERISTICAS_LICENCIA.OperacionComprobantes)) {
+        if (this.ventasDirectasHabilitadas) {
           await this.cargarCuotaComprobantes();
         }
       }
@@ -279,11 +288,13 @@ export class ResumenNegocioComponent implements OnInit {
 
   private async cargarResumenComercio(): Promise<void> {
     const [ventas, stock] = await Promise.all([
-      firstValueFrom(this.ventaService.getListadoVentas(
-        this.fechaApi,
-        this.fechaApi,
-        false,
-      )).catch(() => null),
+      this.mostrarResumenVentas
+        ? firstValueFrom(this.ventaService.getListadoVentas(
+            this.fechaApi,
+            this.fechaApi,
+            false,
+          )).catch(() => null)
+        : Promise.resolve(null),
       this.mostrarInventarioComercio
         ? firstValueFrom(this.stockAlmacenService.consultar()).catch(() => null)
         : Promise.resolve(null),
@@ -355,6 +366,25 @@ export class ResumenNegocioComponent implements OnInit {
       .catch(() => false);
   }
 
+  private actualizarDisponibilidadVentaDirecta(
+    respuestaCajas: ApiResponse<CajaDto[]> | null,
+  ): void {
+    const cajas = respuestaCajas?.Success ? respuestaCajas.Data ?? [] : [];
+    this.puedeEmitirVentaDirecta = this.ventasDirectasHabilitadas
+      && cajas.some(esCajaDisponibleParaVentaDirecta);
+  }
+
+  private async refrescarDisponibilidadVentaDirecta(): Promise<void> {
+    if (!this.ventasDirectasHabilitadas) {
+      this.puedeEmitirVentaDirecta = false;
+      return;
+    }
+
+    const respuestaCajas = await firstValueFrom(this.cajaService.getAllCaja(true))
+      .catch(() => null);
+    this.actualizarDisponibilidadVentaDirecta(respuestaCajas);
+  }
+
   abrirNuevaVenta(): void {
     if (!this.puedeEmitirVentaDirecta || this.cuotaComprobantesAgotada) {
       return;
@@ -369,6 +399,7 @@ export class ResumenNegocioComponent implements OnInit {
     dialogRef.afterClosed().subscribe(() => {
       void this.cargarResumenComercio();
       void this.cargarCuotaComprobantes();
+      void this.refrescarDisponibilidadVentaDirecta();
     });
   }
 

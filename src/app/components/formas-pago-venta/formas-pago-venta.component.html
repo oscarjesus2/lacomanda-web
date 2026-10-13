@@ -1,0 +1,124 @@
+<section class="payment-editor">
+  <article class="payment-editor__item" *ngFor="let pago of pagos; let i = index">
+    <div class="payment-editor__header">
+      <span>{{ 'paymentMethodShort' | tenantText }} {{ i + 1 }}</span>
+      <button
+        mat-icon-button
+        color="warn"
+        type="button"
+        [attr.aria-label]="'remove' | tenantText"
+        (click)="eliminarPago(i)">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+
+    <div class="payment-editor__fields">
+      <mat-form-field>
+        <mat-label>{{ 'paymentMethodShort' | tenantText }}</mat-label>
+        <mat-select [(ngModel)]="pago.IdTipoPago" (selectionChange)="cambiarFormaPago(pago)">
+          <mat-option *ngFor="let forma of formasPago" [value]="forma.id">
+            {{ forma.key | tenantText }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>{{ 'currency' | tenantText }}</mat-label>
+        <mat-select [(ngModel)]="pago.IdMoneda" (selectionChange)="cambiarMoneda(pago)">
+          <mat-option *ngFor="let moneda of monedas" [value]="moneda.IdMoneda">
+            {{ moneda.Descripcion }} ({{ moneda.IdMoneda }})
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>{{ 'amountReceived' | tenantText }}</mat-label>
+        <input
+          matInput
+          type="number"
+          min="0"
+          step="0.01"
+          [ngModel]="pago.MontoRecibido"
+          (ngModelChange)="actualizarMontoRecibido(pago, $event)">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>{{ 'exchangeRate' | tenantText }}</mat-label>
+        <input
+          matInput
+          type="number"
+          min="0"
+          step="0.000001"
+          [readonly]="esMonedaDocumento(pago)"
+          [ngModel]="pago.TipoCambio"
+          (ngModelChange)="actualizarTipoCambio(pago, $event)">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>{{ 'equivalentAmount' | tenantText }}</mat-label>
+        <input matInput readonly [ngModel]="pago.MontoPagado">
+        <span matSuffix>{{ monedaDocumento }}</span>
+      </mat-form-field>
+
+      <mat-form-field *ngIf="pago.IdTipoPago === 1">
+        <mat-label>{{ 'changeDue' | tenantText }}</mat-label>
+        <input matInput readonly [ngModel]="pago.Vuelto">
+      </mat-form-field>
+    </div>
+
+    <div class="payment-editor__details" *ngIf="pago.IdTipoPago === 3 || pago.IdTipoPago === 6">
+      <ng-container *ngIf="pago.IdTipoPago === 3">
+        <mat-form-field>
+          <mat-label>{{ 'card' | tenantText }}</mat-label>
+          <mat-select [(ngModel)]="pago.IdTarjeta">
+            <mat-option *ngFor="let tarjeta of tarjetas" [value]="tarjeta.IdTarjeta">
+              {{ tarjeta.Descripcion }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ 'authorization' | tenantText }}</mat-label>
+          <input matInput [(ngModel)]="pago.Autorizacion">
+        </mat-form-field>
+      </ng-container>
+
+      <ng-container *ngIf="pago.IdTipoPago === 6">
+        <mat-form-field>
+          <mat-label>{{ 'operationNumber' | tenantText }}</mat-label>
+          <input matInput maxlength="100" required [(ngModel)]="pago.Observacion">
+        </mat-form-field>
+        <app-selector-banco-destino
+          [idBanco]="pago.IdBanco"
+          [idMoneda]="pago.IdMoneda"
+          (idBancoChange)="asignarBanco(pago, $event)">
+        </app-selector-banco-destino>
+        <button mat-stroked-button type="button" (click)="abrirMantenimientoBancos()">
+          <mat-icon>account_balance</mat-icon>
+          {{ 'manageBanks' | tenantText }}
+        </button>
+      </ng-container>
+    </div>
+  </article>
+</section>
+<div class="dialog-notice dialog-notice--warning" *ngIf="mostrarValidaciones && claveErrorValidacion as claveError">
+  <mat-icon>info</mat-icon>
+  <div class="dialog-notice__content">
+    <span class="dialog-notice__text">{{ claveError | tenantText }}</span>
+  </div>
+</div>
+<div class="payment-editor__footer">
+  <button mat-stroked-button color="primary" type="button" (click)="agregarPago()">
+    <mat-icon>add</mat-icon>
+    {{ 'addPaymentMethod' | tenantText }}
+  </button>
+  <div class="dialog-summary payment-editor__summary">
+    <div class="dialog-summary__item">
+      <span class="dialog-summary__label">{{ 'paymentNetTotal' | tenantText }}</span>
+      <span class="dialog-summary__value">{{ monedaDocumento }} {{ totalPagos | number:'1.2-2' }}</span>
+    </div>
+    <div class="dialog-summary__item">
+      <span class="dialog-summary__label">{{ (diferenciaPagos < -0.01 ? 'paymentExcess' : 'remaining') | tenantText }}</span>
+      <span class="dialog-summary__value">{{ monedaDocumento }} {{ saldoPagos | number:'1.2-2' }}</span>
+    </div>
+  </div>
+</div>

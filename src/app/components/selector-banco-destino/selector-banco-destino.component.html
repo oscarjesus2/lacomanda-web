@@ -1,0 +1,14 @@
+<div class="bank-destination-selector" [class.bank-destination-selector--compact]="compacto">
+  <mat-form-field [appearance]="appearance" class="form-field">
+    <mat-label>{{ 'destinationBank' | tenantText }}</mat-label>
+    <mat-select
+      [disabled]="deshabilitado"
+      [value]="valor"
+      (selectionChange)="seleccionar($event.value)">
+      <mat-option [value]="null">—</mat-option>
+      <mat-option *ngFor="let banco of bancosDisponibles" [value]="banco.IdBanco">
+        {{ banco.Descripcion }} · {{ banco.Iban || banco.NumeroCuenta }} · {{ banco.IdMoneda }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>

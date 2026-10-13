@@ -1,0 +1,128 @@
+<div class="mant-panel">
+  <button
+    mat-icon-button
+    class="close-button"
+    type="button"
+    [attr.aria-label]="'closeDialog' | tenantText"
+    (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>{{ 'bankMaintenance' | tenantText }}</h2>
+
+  <section *ngIf="!mostrarFormulario">
+    <button mat-raised-button color="primary" type="button" (click)="nuevo()">
+      <mat-icon>add</mat-icon>
+      {{ 'newBank' | tenantText }}
+    </button>
+
+    <div class="mant-table-card">
+      <mat-table [dataSource]="bancos">
+        <ng-container matColumnDef="Descripcion">
+          <mat-header-cell *matHeaderCellDef>{{ 'destinationBank' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let banco">{{ banco.Descripcion }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="NumeroCuenta">
+          <mat-header-cell *matHeaderCellDef>
+            {{ esEspana ? 'IBAN' : ('bankAccountNumber' | tenantText) }}
+          </mat-header-cell>
+          <mat-cell *matCellDef="let banco">{{ banco.Iban || banco.NumeroCuenta || '—' }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="Interbancaria">
+          <mat-header-cell *matHeaderCellDef>
+            {{ esEspana ? ('bicSwift' | tenantText) : ('interbankAccountCode' | tenantText) }}
+          </mat-header-cell>
+          <mat-cell *matCellDef="let banco">{{ banco.BicSwift || banco.Cci || '—' }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="IdMoneda">
+          <mat-header-cell *matHeaderCellDef>{{ 'currency' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let banco">{{ banco.IdMoneda }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="Activo">
+          <mat-header-cell *matHeaderCellDef>{{ 'status' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let banco">
+            {{ (banco.Activo ? 'active' : 'inactive') | tenantText }}
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="Acciones">
+          <mat-header-cell *matHeaderCellDef>{{ 'actions' | tenantText }}</mat-header-cell>
+          <mat-cell *matCellDef="let banco">
+            <button
+              mat-icon-button
+              color="primary"
+              type="button"
+              [attr.aria-label]="'updateAction' | tenantText"
+              (click)="editar(banco)">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="columnas"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: columnas"></mat-row>
+      </mat-table>
+    </div>
+  </section>
+
+  <form *ngIf="mostrarFormulario" [formGroup]="formulario" (ngSubmit)="guardar()">
+    <div class="form-row">
+      <mat-form-field appearance="fill" class="form-field">
+        <mat-label>{{ 'destinationBank' | tenantText }}</mat-label>
+        <input matInput formControlName="Descripcion" maxlength="120" required>
+      </mat-form-field>
+
+      <mat-form-field *ngIf="!esEspana" appearance="fill" class="form-field">
+        <mat-label>{{ 'bankAccountNumber' | tenantText }}</mat-label>
+        <input matInput formControlName="NumeroCuenta" maxlength="50" required>
+      </mat-form-field>
+
+      <mat-form-field *ngIf="esEspana" appearance="fill" class="form-field">
+        <mat-label>IBAN</mat-label>
+        <input matInput formControlName="Iban" maxlength="34" required>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field *ngIf="!esEspana" appearance="fill" class="form-field">
+        <mat-label>{{ 'interbankAccountCode' | tenantText }}</mat-label>
+        <input matInput formControlName="Cci" maxlength="30">
+      </mat-form-field>
+
+      <mat-form-field *ngIf="esEspana" appearance="fill" class="form-field">
+        <mat-label>{{ 'bicSwift' | tenantText }}</mat-label>
+        <input matInput formControlName="BicSwift" maxlength="20">
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="form-field">
+        <mat-label>{{ 'currency' | tenantText }}</mat-label>
+        <mat-select formControlName="IdMoneda" required>
+          <mat-option *ngFor="let moneda of monedas" [value]="moneda.IdMoneda">
+            {{ moneda.Descripcion }} ({{ moneda.IdMoneda }})
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="form-field">
+        <mat-label>{{ 'status' | tenantText }}</mat-label>
+        <mat-select formControlName="Activo">
+          <mat-option [value]="true">{{ 'active' | tenantText }}</mat-option>
+          <mat-option [value]="false">{{ 'inactive' | tenantText }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="dialog-actions">
+      <button mat-stroked-button type="button" (click)="cancelar()">
+        {{ 'cancel' | tenantText }}
+      </button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="guardando">
+        {{ (formulario.value.IdBanco ? 'updateAction' : 'save') | tenantText }}
+      </button>
+    </div>
+  </form>
+</div>

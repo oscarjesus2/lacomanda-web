@@ -7,9 +7,8 @@ import { firstValueFrom } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
-import { NivelUsuarioEnum } from 'src/app/enums/enum';
+import { EstadoPagoVentaEnum, NivelUsuarioEnum } from 'src/app/enums/enum';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
-import { TipoCorreccionVenta } from 'src/app/interfaces/correccion-venta.interface';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 import { VentasInterface } from 'src/app/interfaces/ventas.interface';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
@@ -28,8 +27,7 @@ import { DialogEmitirVentaComponent } from '../dialog-emitir-venta/dialog-emitir
   styleUrls: ['./dialog-ventasgenerales.component.css'],
 })
 export class DialogVentasgeneralesComponent implements OnInit {
-  readonly tipoCorreccionPagos = TipoCorreccionVenta.Pagos;
-  readonly tipoCorreccionCliente = TipoCorreccionVenta.Cliente;
+  readonly estadoPagoVenta = EstadoPagoVentaEnum;
 
   @ViewChild(MatPaginator)
   set matPaginator(paginator: MatPaginator | undefined) {
@@ -47,6 +45,7 @@ export class DialogVentasgeneralesComponent implements OnInit {
     'Cliente',
     'TipoDocumento',
     'Total',
+    'EstadoPago',
     'EstadoDescripcion',
     'EstadoFiscalDescripcion',
     'acciones',
@@ -58,6 +57,7 @@ export class DialogVentasgeneralesComponent implements OnInit {
   incluirVentasExpress = false;
   textoFiltro = '';
   estadoSeleccionado = 0;
+  estadoPagoSeleccionado = 0;
   tipoDocumentoSeleccionado = '';
   cajaSeleccionada = '';
   procesando = true;
@@ -141,6 +141,7 @@ export class DialogVentasgeneralesComponent implements OnInit {
       this.fechaHasta,
       this.incluirVentasExpress,
       this.estadoSeleccionado || undefined,
+      this.estadoPagoSeleccionado || undefined,
     ).pipe(finalize(() => (this.procesando = false)))
       .subscribe({
         next: data => {
@@ -165,13 +166,16 @@ export class DialogVentasgeneralesComponent implements OnInit {
         venta.Caja,
         venta.TipoDocumento,
         venta.EstadoDescripcion,
+        venta.EstadoPago,
         venta.EstadoFiscalDescripcion,
       ].some(valor => this.normalizar(valor).includes(texto));
       const coincideTipo = !this.tipoDocumentoSeleccionado
         || venta.TipoDocumento === this.tipoDocumentoSeleccionado;
       const coincideCaja = !this.cajaSeleccionada
         || venta.Caja === this.cajaSeleccionada;
-      return coincideTexto && coincideTipo && coincideCaja;
+      const coincideEstadoPago = !this.estadoPagoSeleccionado
+        || venta.IdEstadoPago === this.estadoPagoSeleccionado;
+      return coincideTexto && coincideTipo && coincideCaja && coincideEstadoPago;
     });
 
     this.dataSource.paginator = this.paginator ?? null;
@@ -188,6 +192,7 @@ export class DialogVentasgeneralesComponent implements OnInit {
     this.fechaDesde = hoy;
     this.fechaHasta = hoy;
     this.estadoSeleccionado = 0;
+    this.estadoPagoSeleccionado = 0;
     this.tipoDocumentoSeleccionado = '';
     this.cajaSeleccionada = '';
     this.incluirVentasExpress = false;
@@ -211,10 +216,6 @@ export class DialogVentasgeneralesComponent implements OnInit {
     return venta?.Estado === 1;
   }
 
-  esPagoPendiente(venta: VentasInterface | null): boolean {
-    return venta?.EstadoPago === 'Pendiente de pago';
-  }
-
   tieneCorreoValido(venta: VentasInterface | null): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(venta?.ClienteCorreo?.trim() ?? '');
   }
@@ -228,6 +229,12 @@ export class DialogVentasgeneralesComponent implements OnInit {
     if (venta.EstadoFiscal === 2 || venta.EstadoFiscal === 7) return 'danger';
     if (venta.EstadoFiscal === 1 || venta.EstadoFiscal === 5) return 'info';
     return 'neutral';
+  }
+
+  claseEstadoPago(venta: VentasInterface): string {
+    return venta.IdEstadoPago === EstadoPagoVentaEnum.Pagada
+      ? 'success'
+      : 'warning';
   }
 
   OpenDialogEmitirVenta(): void {
@@ -254,7 +261,7 @@ export class DialogVentasgeneralesComponent implements OnInit {
     });
   }
 
-  corregirVenta(tipoCorreccion: TipoCorreccionVenta): void {
+  corregirVenta(): void {
     const venta = this.ventaSeleccionada;
     if (!venta || !this.esDocumentoActivo(venta)) return;
     if (!this.esAdministrador()) {
@@ -271,7 +278,6 @@ export class DialogVentasgeneralesComponent implements OnInit {
       maxWidth: '1120px',
       data: {
         idVenta: venta.IdVenta,
-        tipoCorreccionInicial: tipoCorreccion,
       },
     });
     dialogRef.afterClosed().subscribe(result => {

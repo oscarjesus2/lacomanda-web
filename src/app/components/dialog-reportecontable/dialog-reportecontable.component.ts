@@ -3,7 +3,10 @@ import { Component } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom, forkJoin, Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import { InformeContableInterface as InformeContableVentaInterface } from 'src/app/interfaces/ventas.interface';
+import {
+  InformeContableInterface as InformeContableVentaInterface,
+  InformeContablePago,
+} from 'src/app/interfaces/ventas.interface';
 import { InformeContableCompra } from 'src/app/interfaces/compras.interface';
 import { ReporteContableImpuesto } from 'src/app/interfaces/reporte-contable-impuesto.interface';
 import { CajaTipoDocumento } from 'src/app/models/caja-tipo-documento.model';
@@ -189,12 +192,25 @@ export class DialogReportecontableComponent {
 
   private filasVentas(datos: InformeContableVentaInterface[]): object[] {
     const tasas = this.tasasDelInforme(datos);
+    const gruposPago = this.gruposPago(datos);
     if (this.paisISO2 !== 'ES') return datos.map(v => {
-      const { DesgloseImpuestos, ...fila } = v;
+      const {
+        DesgloseImpuestos,
+        Pagos,
+        TotalCobrado,
+        Propinas,
+        DiferenciaCobro,
+        ...fila
+      } = v;
       return {
         ...fila,
         ...this.columnasPorTasa(DesgloseImpuestos, tasas, 'IGV'),
-        Cuadre: this.estadoCuadre(v.DiferenciaDesglose),
+        ...this.columnasPagos(Pagos, gruposPago),
+        'Total cobrado (equivalente)': TotalCobrado,
+        Propinas,
+        'Diferencia de cobro': DiferenciaCobro,
+        'Cuadre tributario': this.estadoCuadre(v.DiferenciaDesglose),
+        'Cuadre de cobro': this.estadoCuadre(v.DiferenciaCobro),
       };
     });
     return datos.map(v => ({
@@ -214,7 +230,12 @@ export class DialogReportecontableComponent {
       'Total contable': v.Total,
       'Total del documento': v.TotalDocumento,
       'Diferencia con documento': v.DiferenciaDesglose,
-      Cuadre: this.estadoCuadre(v.DiferenciaDesglose),
+      'Total cobrado (equivalente)': v.TotalCobrado,
+      Propinas: v.Propinas,
+      'Diferencia de cobro': v.DiferenciaCobro,
+      ...this.columnasPagos(v.Pagos, gruposPago),
+      'Cuadre tributario': this.estadoCuadre(v.DiferenciaDesglose),
+      'Cuadre de cobro': this.estadoCuadre(v.DiferenciaCobro),
       'Estado del documento': v.EstadoDescripcion,
       'Documento de referencia': v.DocRef,
       'Fecha de referencia': v.FechaRef,
@@ -277,6 +298,58 @@ export class DialogReportecontableComponent {
       columnas[`Cuota ${nombreImpuesto} ${etiqueta}`] = detalle?.Cuota ?? 0;
     }
     return columnas;
+  }
+
+  private gruposPago(datos: InformeContableVentaInterface[]): string[] {
+    return Array.from(new Set(datos.flatMap(venta =>
+      (venta.Pagos ?? []).map(pago => this.grupoPago(pago)))))
+      .sort((a, b) => a.localeCompare(b));
+  }
+
+  private columnasPagos(
+    pagos: InformeContablePago[] | null | undefined,
+    grupos: string[],
+  ): Record<string, number | string> {
+    const columnas: Record<string, number | string> = {};
+    for (const grupo of grupos) {
+      const pagosGrupo = (pagos ?? []).filter(pago => this.grupoPago(pago) === grupo);
+      columnas[`${grupo} - recibido`] = this.sumar(pagosGrupo, pago => pago.MontoRecibido);
+      columnas[`${grupo} - tipo de cambio`] = this.tiposCambio(pagosGrupo);
+      columnas[`${grupo} - equivalente documento`] = this.sumar(
+        pagosGrupo,
+        pago => pago.MontoEquivalente,
+      );
+      columnas[`${grupo} - propina`] = this.sumar(pagosGrupo, pago => pago.Propina);
+      columnas[`${grupo} - operaciones`] = this.unirUnicos(
+        pagosGrupo.map(pago => pago.NumeroOperacion),
+      );
+      columnas[`${grupo} - banco destino`] = this.unirUnicos(
+        pagosGrupo.map(pago => pago.BancoDestino),
+      );
+    }
+    return columnas;
+  }
+
+  private grupoPago(pago: InformeContablePago): string {
+    return `${pago.FormaPago || `Forma ${pago.IdTipoPago}`} (${pago.IdMoneda || 'sin moneda'})`;
+  }
+
+  private sumar(
+    pagos: InformeContablePago[],
+    selector: (pago: InformeContablePago) => number,
+  ): number {
+    return Number(pagos.reduce((total, pago) => total + Number(selector(pago) || 0), 0).toFixed(2));
+  }
+
+  private tiposCambio(pagos: InformeContablePago[]): number | string {
+    const tipos = Array.from(new Set(pagos.map(pago => Number(pago.TipoCambio || 1))));
+    return tipos.length <= 1 ? (tipos[0] ?? 0) : tipos.join(' | ');
+  }
+
+  private unirUnicos(valores: Array<string | null | undefined>): string {
+    return Array.from(new Set(valores.map(valor => valor?.trim()).filter(
+      (valor): valor is string => !!valor,
+    ))).join(' | ');
   }
 
   private estadoCuadre(diferencia: number): string {

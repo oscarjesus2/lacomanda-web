@@ -52,44 +52,10 @@
       <div class="hint">{{ 'creditSaleBankDetailsHint' | tenantText }}</div>
 
       <div class="form-row">
-        <mat-form-field appearance="fill" class="form-field">
-          <mat-label>{{ 'bankName' | tenantText }}</mat-label>
-          <input matInput formControlName="BancoNombre" />
-        </mat-form-field>
-
-        <mat-form-field
-          *ngIf="paisDatosBancarios === 'PE'"
-          appearance="fill"
-          class="form-field">
-          <mat-label>{{ 'bankAccountNumber' | tenantText }}</mat-label>
-          <input matInput formControlName="NumeroCuentaBancaria" />
-        </mat-form-field>
-
-        <mat-form-field
-          *ngIf="paisDatosBancarios === 'ES'"
-          appearance="fill"
-          class="form-field">
-          <mat-label>IBAN</mat-label>
-          <input matInput formControlName="Iban" />
-        </mat-form-field>
-      </div>
-
-      <div class="form-row">
-        <mat-form-field
-          *ngIf="paisDatosBancarios === 'PE'"
-          appearance="fill"
-          class="form-field">
-          <mat-label>{{ 'interbankAccountCode' | tenantText }}</mat-label>
-          <input matInput formControlName="Cci" />
-        </mat-form-field>
-
-        <mat-form-field
-          *ngIf="paisDatosBancarios === 'ES'"
-          appearance="fill"
-          class="form-field">
-          <mat-label>{{ 'bicSwift' | tenantText }}</mat-label>
-          <input matInput formControlName="BicSwift" />
-        </mat-form-field>
+        <app-selector-banco-destino
+          class="form-field"
+          formControlName="IdBanco">
+        </app-selector-banco-destino>
       </div>
     </section>
 
@@ -226,44 +192,10 @@
       <div class="hint">{{ 'creditSaleBankDetailsHint' | tenantText }}</div>
 
       <div class="form-row">
-        <mat-form-field appearance="fill" class="form-field">
-          <mat-label>{{ 'bankName' | tenantText }}</mat-label>
-          <input matInput formControlName="BancoNombre" />
-        </mat-form-field>
-
-        <mat-form-field
-          *ngIf="paisDatosBancarios === 'PE'"
-          appearance="fill"
-          class="form-field">
-          <mat-label>{{ 'bankAccountNumber' | tenantText }}</mat-label>
-          <input matInput formControlName="NumeroCuentaBancaria" />
-        </mat-form-field>
-
-        <mat-form-field
-          *ngIf="paisDatosBancarios === 'ES'"
-          appearance="fill"
-          class="form-field">
-          <mat-label>IBAN</mat-label>
-          <input matInput formControlName="Iban" />
-        </mat-form-field>
-      </div>
-
-      <div class="form-row">
-        <mat-form-field
-          *ngIf="paisDatosBancarios === 'PE'"
-          appearance="fill"
-          class="form-field">
-          <mat-label>{{ 'interbankAccountCode' | tenantText }}</mat-label>
-          <input matInput formControlName="Cci" />
-        </mat-form-field>
-
-        <mat-form-field
-          *ngIf="paisDatosBancarios === 'ES'"
-          appearance="fill"
-          class="form-field">
-          <mat-label>{{ 'bicSwift' | tenantText }}</mat-label>
-          <input matInput formControlName="BicSwift" />
-        </mat-form-field>
+        <app-selector-banco-destino
+          class="form-field"
+          formControlName="IdBanco">
+        </app-selector-banco-destino>
       </div>
     </section>
 

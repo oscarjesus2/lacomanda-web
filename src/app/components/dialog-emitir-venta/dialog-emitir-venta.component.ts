@@ -25,6 +25,7 @@ import {
   VentaDirectaProducto,
   VentaDirectaProductoImpuesto,
 } from 'src/app/models/venta-directa.models';
+import { esCajaDisponibleParaVentaDirecta } from 'src/app/utils/caja-venta-directa.utils';
 
 export interface ProductElement {
   IdProducto: number;
@@ -97,13 +98,12 @@ export class DialogEmitirVentaComponent implements OnInit {
 
   private async initializeCaja(): Promise<void> {
     const response = await firstValueFrom(this.cajaService.getAllCaja(true));
-    this.listCaja = (response.Data ?? []).filter(item =>
-      item.Activo && !!item.TurnoAbierto?.IdTurno);
+    this.listCaja = (response.Data ?? []).filter(esCajaDisponibleParaVentaDirecta);
     const caja = this.listCaja.find(item =>
       item.CajaPorDefecto)
       ?? this.listCaja[0];
     if (!caja) {
-      throw new Error('No existe una caja activa con turno abierto.');
+      throw new Error(this.texts.get('noDirectSalesRegister'));
     }
 
     this.aplicarCajaSeleccionada(caja.IdCaja);

@@ -19,6 +19,7 @@ export interface VentasInterface {
     EstadoFiscal: number;
     EstadoFiscalDescripcion: string;
     NombreArchivo: string;
+    IdEstadoPago: number;
     EstadoPago: string;
     IdCanalVenta: number;
 }
@@ -66,6 +67,10 @@ export interface InformeContableInterface {
     Total: number;
     TotalDocumento: number;
     DiferenciaDesglose: number;
+    TotalCobrado: number;
+    Propinas: number;
+    DiferenciaCobro: number;
+    Pagos: InformeContablePago[];
     DesgloseImpuestos: ReporteContableImpuesto[];
     EstadoDescripcion: string;
     EstadoSunat: string;
@@ -74,6 +79,20 @@ export interface InformeContableInterface {
     Empresa: string;
     RucEmpresa: string;
     DirecEmpresa: string;
+}
+
+export interface InformeContablePago {
+    IdTipoPago: number;
+    FormaPago: string;
+    IdMoneda: string;
+    MontoRecibido: number;
+    MontoEquivalente: number;
+    TipoCambio: number;
+    Vuelto: number;
+    Propina: number;
+    NumeroOperacion?: string | null;
+    IdBanco?: number | null;
+    BancoDestino?: string | null;
 }
 
 export interface ResultadoEnvioComprobanteCorreo {

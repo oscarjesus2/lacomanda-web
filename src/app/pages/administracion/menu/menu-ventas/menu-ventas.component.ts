@@ -12,6 +12,7 @@ import { DialogReportecontableComponent } from 'src/app/components/dialog-report
 import { ClienteMantenimientoComponent } from 'src/app/components/mantenimiento/cliente-mantenimiento/cliente-mantenimiento.component';
 import { EmpleadoMantenimientoComponent } from 'src/app/components/mantenimiento/empleado-mantenimiento/empleado-mantenimiento.component';
 import { UsuariosMantenimientoComponent } from 'src/app/components/mantenimiento/usuarios-mantenimiento/usuarios-mantenimiento.component';
+import { BancoMantenimientoComponent } from 'src/app/components/mantenimiento/banco-mantenimiento/banco-mantenimiento.component';
 import { EspaciosMantenimientoComponent } from 'src/app/components/mantenimiento/espacios-mantenimiento/espacios-mantenimiento.component';
 import { AmbienteMantenimientoComponent } from 'src/app/components/mantenimiento/ambiente-mantenimiento/ambiente-mantenimiento.component';
 import { ProductoMantenimientoComponent } from 'src/app/components/mantenimiento/producto-mantenimiento/producto-mantenimiento.component';
@@ -126,6 +127,7 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Observaciones',               route: '/ventas/observaciones',            icon: 'sticky_note_2',    label: 'Observac.',    titleKey: 'observations',       labelKey: 'observations',       feature: C.OperacionCaja, ocultarEnComercio: true },
         { title: 'Empleados',                   route: '/ventas/empleados',                icon: 'badge',            label: 'Empleados',    titleKey: 'employees',          labelKey: 'employees'          },
         { title: 'Usuarios',                    route: '/ventas/usuarios',                 icon: 'manage_accounts',  label: 'Usuarios',     titleKey: 'users',              labelKey: 'users' },
+        { title: 'Bancos',                      route: '/ventas/bancos',                  icon: 'account_balance',  label: 'Bancos',       titleKey: 'banks',              labelKey: 'banks',              feature: [C.OperacionComprobantes, C.VentasCorreccionDocumentos] },
         { title: 'Caja',                        route: '/ventas/caja',                     icon: 'point_of_sale',    label: 'Caja',         titleKey: 'register',           labelKey: 'register',           feature: C.OperacionCaja   },
         { title: 'Estacion',                    route: '/ventas/estacion',                 icon: 'computer',         label: 'Estación',     titleKey: 'station',            labelKey: 'station',            feature: C.OperacionCaja, ocultarEnComercio: true },
         { title: 'Descuentos',                  route: '/ventas/descuentos',               icon: 'local_offer',      label: 'Descuentos',   titleKey: 'discounts',          labelKey: 'discounts',          feature: C.VentasDescuentos },
@@ -270,6 +272,10 @@ export class MenuVentasComponent implements OnInit {
     if (item.title === 'Usuarios') 
       {
         this.OpenUsuarioMantenimientoComponent();
+      }
+    if (item.title === 'Bancos')
+      {
+        this.OpenBancoMantenimientoComponent();
       }
     if (item.route === '/ventas/area-impresion')
       {
@@ -593,6 +599,15 @@ export class MenuVentasComponent implements OnInit {
       hasBackdrop: true,
       width: '900px',
       maxWidth: 'calc(100vw - 32px)',
+      panelClass: 'dialog-window--maintenance-table',
+    });
+  }
+
+  OpenBancoMantenimientoComponent(): void {
+    this.dialog.open(BancoMantenimientoComponent, {
+      ...this.configuracionMaestroCompacto,
+      width: '860px',
+      height: '600px',
       panelClass: 'dialog-window--maintenance-table',
     });
   }
