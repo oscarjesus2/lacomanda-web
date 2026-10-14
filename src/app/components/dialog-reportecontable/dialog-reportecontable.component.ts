@@ -195,24 +195,37 @@ export class DialogReportecontableComponent {
   private filasVentas(datos: InformeContableVentaInterface[]): object[] {
     const tasas = this.tasasDelInforme(datos);
     const gruposPago = this.gruposPago(datos);
+    const impuestosAdicionales = this.paisISO2 === 'PE'
+      ? this.impuestosConImporte(datos, [{
+        nombre: 'ICBPER',
+        obtenerImporte: venta => venta.ICBPER,
+      }])
+      : [];
     if (this.paisISO2 !== 'ES') return datos.map(v => {
       const {
         DesgloseImpuestos,
         Pagos,
         IGV,
+        ICBPER,
         TotalCobrado,
         Propinas,
         DiferenciaCobro,
         ...fila
       } = v;
       return this.formatearFilaContable({
-        ...fila,
-        ...this.columnasImpuestosPorTasa(DesgloseImpuestos, tasas, 'IGV'),
+        ...this.insertarImpuestosDespuesDeBase(
+          fila,
+          'ValorVenta',
+          {
+            ...this.columnasImpuestosPorTasa(DesgloseImpuestos, tasas, 'IGV'),
+            ...this.columnasImpuestosOpcionales(v, impuestosAdicionales),
+          },
+        ),
+        'Cuadre tributario': this.estadoCuadre(v.DiferenciaDesglose),
         ...this.columnasPagos(Pagos, gruposPago),
         'Total cobrado (equivalente)': TotalCobrado,
         Propinas,
         'Diferencia de cobro': DiferenciaCobro,
-        'Cuadre tributario': this.estadoCuadre(v.DiferenciaDesglose),
         'Cuadre de cobro': this.estadoCuadre(v.DiferenciaCobro),
       });
     });
@@ -228,31 +241,53 @@ export class DialogReportecontableComponent {
       ...this.columnasImpuestosPorTasa(v.DesgloseImpuestos, tasas, 'IVA'),
       'Base sin IVA': v.OpInafecto,
       Servicio: v.Servicio,
-      'Otros impuestos fijos': v.ICBPER,
       'Total contable': v.Total,
       'Total del documento': v.TotalDocumento,
       'Diferencia con documento': v.DiferenciaDesglose,
-      'Total cobrado (equivalente)': v.TotalCobrado,
-      Propinas: v.Propinas,
-      'Diferencia de cobro': v.DiferenciaCobro,
-      ...this.columnasPagos(v.Pagos, gruposPago),
       'Cuadre tributario': this.estadoCuadre(v.DiferenciaDesglose),
-      'Cuadre de cobro': this.estadoCuadre(v.DiferenciaCobro),
       'Estado del documento': v.EstadoDescripcion,
       'Documento de referencia': v.DocRef,
       'Fecha de referencia': v.FechaRef,
       Empresa: v.Empresa,
       'NIF de la empresa': v.RucEmpresa,
+      ...this.columnasPagos(v.Pagos, gruposPago),
+      'Total cobrado (equivalente)': v.TotalCobrado,
+      Propinas: v.Propinas,
+      'Diferencia de cobro': v.DiferenciaCobro,
+      'Cuadre de cobro': this.estadoCuadre(v.DiferenciaCobro),
     }));
   }
 
   private filasCompras(datos: InformeContableCompra[]): object[] {
     const tasas = this.tasasDelInforme(datos);
+    const impuestosAdicionales = this.impuestosConImporte(datos, [
+      {
+        nombre: 'Otros impuestos',
+        obtenerImporte: compra => compra.Otros,
+      },
+      {
+        nombre: 'ISC',
+        obtenerImporte: compra => compra.ISC,
+      },
+    ]);
     if (this.paisISO2 !== 'ES') return datos.map(c => {
-      const { DesgloseImpuestos, IGV, PorcentajeIGV, ...fila } = c;
+      const {
+        DesgloseImpuestos,
+        IGV,
+        PorcentajeIGV,
+        Otros,
+        ISC,
+        ...fila
+      } = c;
       return this.formatearFilaContable({
-        ...fila,
-        ...this.columnasImpuestosPorTasa(DesgloseImpuestos, tasas, 'IGV'),
+        ...this.insertarImpuestosDespuesDeBase(
+          fila,
+          'Afecto',
+          {
+            ...this.columnasImpuestosPorTasa(DesgloseImpuestos, tasas, 'IGV'),
+            ...this.columnasImpuestosOpcionales(c, impuestosAdicionales),
+          },
+        ),
         Cuadre: this.estadoCuadre(c.DiferenciaDesglose),
       });
     });
@@ -267,8 +302,8 @@ export class DialogReportecontableComponent {
       Proveedor: c.RazonSocial,
       'Base imponible': c.Afecto,
       ...this.columnasImpuestosPorTasa(c.DesgloseImpuestos, tasas, 'IVA'),
+      ...this.columnasImpuestosOpcionales(c, impuestosAdicionales),
       'Base sin IVA': c.Inafecto,
-      'Otros impuestos': c.Otros + c.ISC,
       Total: c.Total,
       'Estado del documento': c.EstadoDocumento,
       'Diferencia con documento': c.DiferenciaDesglose,
@@ -282,7 +317,9 @@ export class DialogReportecontableComponent {
 
   private tasasDelInforme(datos: Array<{ DesgloseImpuestos: ReporteContableImpuesto[] }>): Array<number | null> {
     return Array.from(new Set(datos.flatMap(d =>
-      (d.DesgloseImpuestos ?? []).map(i => i.Tasa))))
+      (d.DesgloseImpuestos ?? [])
+        .filter(i => this.tieneImporte(i.Cuota))
+        .map(i => i.Tasa))))
       .sort((a, b) => (a ?? Number.MAX_VALUE) - (b ?? Number.MAX_VALUE));
   }
 
@@ -304,6 +341,52 @@ export class DialogReportecontableComponent {
       columnas[`${nombreImpuesto} ${etiqueta}`] = detalle?.Cuota ?? 0;
     }
     return columnas;
+  }
+
+  private insertarImpuestosDespuesDeBase(
+    fila: Record<string, unknown>,
+    campoBase: string,
+    impuestos: Record<string, number>,
+  ): Record<string, unknown> {
+    const resultado: Record<string, unknown> = {};
+    for (const [columna, valor] of Object.entries(fila)) {
+      resultado[columna] = valor;
+      if (columna === campoBase) {
+        Object.assign(
+          resultado,
+          impuestos,
+        );
+      }
+    }
+    return resultado;
+  }
+
+  private impuestosConImporte<T>(
+    datos: T[],
+    definiciones: Array<{
+      nombre: string;
+      obtenerImporte: (dato: T) => number | null | undefined;
+    }>,
+  ) {
+    return definiciones.filter(definicion => datos.some(dato =>
+      this.tieneImporte(definicion.obtenerImporte(dato))));
+  }
+
+  private columnasImpuestosOpcionales<T>(
+    dato: T,
+    definiciones: Array<{
+      nombre: string;
+      obtenerImporte: (dato: T) => number | null | undefined;
+    }>,
+  ): Record<string, number> {
+    return Object.fromEntries(definiciones.map(definicion => [
+      definicion.nombre,
+      definicion.obtenerImporte(dato) ?? 0,
+    ]));
+  }
+
+  private tieneImporte(valor: number | null | undefined): boolean {
+    return Math.abs(valor ?? 0) > 0.0001;
   }
 
   private gruposPago(datos: InformeContableVentaInterface[]): string[] {
