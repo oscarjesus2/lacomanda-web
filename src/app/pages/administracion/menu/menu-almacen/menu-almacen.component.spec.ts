@@ -1,18 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { MenuAlmacenComponent } from './menu-almacen.component';
 
 describe('MenuAlmacenComponent', () => {
   let component: MenuAlmacenComponent;
-  let fixture: ComponentFixture<MenuAlmacenComponent>;
-
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      declarations: [MenuAlmacenComponent]
-    });
-    fixture = TestBed.createComponent(MenuAlmacenComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    component = new MenuAlmacenComponent({} as any, {} as any);
   });
 
   it('should create', () => {

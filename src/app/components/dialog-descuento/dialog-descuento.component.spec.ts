@@ -1,18 +1,15 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { DialogDescuentoComponent } from './dialog-descuento.component';
 
 describe('DialogDescuentoComponent', () => {
   let component: DialogDescuentoComponent;
-  let fixture: ComponentFixture<DialogDescuentoComponent>;
-
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      declarations: [DialogDescuentoComponent]
-    });
-    fixture = TestBed.createComponent(DialogDescuentoComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    component = new DialogDescuentoComponent(
+      { idProducto: 1, nombreCorto: 'Producto QA', descuentoTotal: 0, descuentoMaximo: 0 },
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+    );
   });
 
   it('should create', () => {

@@ -1,5 +1,6 @@
 import { of } from 'rxjs';
 import { DialogReportecontableComponent } from './dialog-reportecontable.component';
+import { TenantRegionalNumberFormatterService } from 'src/app/services/localization/tenant-regional-number-formatter.service';
 
 describe('DialogReportecontableComponent', () => {
   const dialog = { close: jasmine.createSpy('close') } as any;
@@ -30,6 +31,7 @@ describe('DialogReportecontableComponent', () => {
       tiposPais,
       {} as any,
       {} as any,
+      new TenantRegionalNumberFormatterService(),
     );
   }
 
@@ -108,12 +110,11 @@ describe('DialogReportecontableComponent', () => {
       Empresa: 'Empresa', RucEmpresa: 'A12345678',
     }]);
 
-    expect(filas[0]['Cuota IVA']).toBe(31);
-    expect(filas[0]['Base IVA 10%']).toBe(100);
-    expect(filas[0]['Cuota IVA 21%']).toBe(21);
-    expect(filas[0].Cuadre).toBe('OK');
+    expect(filas[0]['IVA 10%']).toBe('10,00');
+    expect(filas[0]['IVA 21%']).toBe('21,00');
+    expect(filas[0]['Cuadre tributario']).toBe('OK');
     expect(filas[0]['NIF del cliente']).toBe('B12345678');
-    expect(filas[0].IGV).toBeUndefined();
+    expect(filas[0]['Cuota IVA']).toBeUndefined();
     expect(filas[0].EstadoSunat).toBeUndefined();
   });
 
@@ -130,9 +131,9 @@ describe('DialogReportecontableComponent', () => {
       DocRef: '', FechaRef: '', Empresa: 'Empresa', RucEmpresa: 'A12345678',
     }]);
 
-    expect(filas[0]['Total del documento']).toBe(130);
-    expect(filas[0]['Diferencia con documento']).toBe(9);
-    expect(filas[0].Cuadre).toBe('REVISAR');
+    expect(filas[0]['Total del documento']).toBe('130,00');
+    expect(filas[0]['Diferencia con documento']).toBe('9,00');
+    expect(filas[0]['Cuadre tributario']).toBe('REVISAR');
   });
 
   it('incluye fecha de recepción y estado en compras españolas', () => {
@@ -152,6 +153,72 @@ describe('DialogReportecontableComponent', () => {
 
     expect(filas[0]['Fecha de recepción']).toBe('2026-09-22');
     expect(filas[0]['Estado del documento']).toBe('Anulado');
-    expect(filas[0]['Cuota IVA 21%']).toBe(21);
+    expect(filas[0]['IVA 21%']).toBe('21,00');
+  });
+
+  it('reemplaza el IGV genérico por una columna dinámica por tasa en Perú', () => {
+    const componente = crear({} as any);
+    componente.paisISO2 = 'PE';
+    const filas = (componente as any).filasVentas([{
+      Fecha: '2026-09-22', Serie: 'F001', TipoDocumento: '01',
+      Documento: 'F001-3', Ruc: '20123456789', Cliente: 'Cliente',
+      Moneda: 'PEN', ValorVenta: 100, IGV: 18, OpInafecto: 0,
+      Servicio: 0, ICBPER: 0, Total: 118, TotalDocumento: 118,
+      DiferenciaDesglose: 0,
+      DesgloseImpuestos: [{ Tasa: 18, Base: 100, Cuota: 18 }],
+      EstadoDescripcion: 'Generado', EstadoSunat: 'Aceptado',
+      DocRef: '', FechaRef: '', Empresa: 'Empresa', RucEmpresa: '20123456789',
+    }]);
+
+    expect(filas[0].ValorVenta).toBe('100.00');
+    expect(filas[0].IGV).toBeUndefined();
+    expect(filas[0]['IGV 18%']).toBe('18.00');
+    expect(filas[0]['Base IGV 18%']).toBeUndefined();
+    expect(filas[0]['Cuota IGV 18%']).toBeUndefined();
+  });
+
+  it('aplica el mismo desglose dinámico en compras peruanas', () => {
+    const componente = crear({} as any);
+    componente.paisISO2 = 'PE';
+    const filas = (componente as any).filasCompras([{
+      IdTipoDocumento: '01', FechaEmision: '2026-09-22',
+      FechaRecepcion: '2026-09-22', EstadoDocumento: 'Generado',
+      TipoDoc: 'Factura', SerieDocm: 'F001', NoDocm: '3',
+      RucCodigoCliente: '20123456789', RazonSocial: 'Proveedor',
+      Afecto: 100, IGV: 18, PorcentajeIGV: 18,
+      DesgloseImpuestos: [{ Tasa: 18, Base: 100, Cuota: 18 }],
+      Inafecto: 0, Otros: 0, ISC: 0, Total: 118,
+      DiferenciaDesglose: 0, Moneda: 'PEN', Cambio: 1,
+      FechaPago: '', Referencia: '',
+    }]);
+
+    expect(filas[0].Afecto).toBe('100.00');
+    expect(filas[0].IGV).toBeUndefined();
+    expect(filas[0].PorcentajeIGV).toBeUndefined();
+    expect(filas[0]['IGV 18%']).toBe('18.00');
+  });
+
+  it('deja el tipo de cambio como columna independiente y no crea propina para depósito', () => {
+    const componente = crear({} as any);
+    componente.paisISO2 = 'PE';
+
+    const columnas = (componente as any).columnasPagos(
+      [{
+        IdTipoPago: 6,
+        FormaPago: 'Transferencia / depósito',
+        IdMoneda: 'PEN',
+        MontoRecibido: 30,
+        MontoEquivalente: 30,
+        TipoCambio: 3.7,
+        Propina: 0,
+        NumeroOperacion: 'OP-123',
+        BancoDestino: 'Banco de prueba',
+      }],
+      ['Transferencia / depósito (PEN)'],
+    );
+
+    expect(columnas['Transferencia / depósito (PEN) - propina']).toBeUndefined();
+    expect(columnas['Transferencia / depósito (PEN) - tipo de cambio']).toBeUndefined();
+    expect(columnas['Tipo de cambio']).toBe('3.7');
   });
 });

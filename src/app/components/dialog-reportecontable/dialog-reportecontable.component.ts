@@ -16,6 +16,7 @@ import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { EntradaCompraService } from 'src/app/services/entrada-compra.service';
 import { TipoDocumentoPaisService } from 'src/app/services/tipo-documento-pais.service';
 import { VentaService } from 'src/app/services/venta.service';
+import { TenantRegionalNumberFormatterService } from 'src/app/services/localization/tenant-regional-number-formatter.service';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 
@@ -48,6 +49,7 @@ export class DialogReportecontableComponent {
     private tipoDocumentoPaisService: TipoDocumentoPaisService,
     private ventaService: VentaService,
     private compraService: CompraService,
+    private regionalNumberFormatter: TenantRegionalNumberFormatterService,
   ) { }
 
   ngOnInit(): void {
@@ -197,23 +199,24 @@ export class DialogReportecontableComponent {
       const {
         DesgloseImpuestos,
         Pagos,
+        IGV,
         TotalCobrado,
         Propinas,
         DiferenciaCobro,
         ...fila
       } = v;
-      return {
+      return this.formatearFilaContable({
         ...fila,
-        ...this.columnasPorTasa(DesgloseImpuestos, tasas, 'IGV'),
+        ...this.columnasImpuestosPorTasa(DesgloseImpuestos, tasas, 'IGV'),
         ...this.columnasPagos(Pagos, gruposPago),
         'Total cobrado (equivalente)': TotalCobrado,
         Propinas,
         'Diferencia de cobro': DiferenciaCobro,
         'Cuadre tributario': this.estadoCuadre(v.DiferenciaDesglose),
         'Cuadre de cobro': this.estadoCuadre(v.DiferenciaCobro),
-      };
+      });
     });
-    return datos.map(v => ({
+    return datos.map(v => this.formatearFilaContable({
       Fecha: v.Fecha,
       Serie: v.Serie,
       'Tipo de documento': v.TipoDocumento,
@@ -222,8 +225,7 @@ export class DialogReportecontableComponent {
       Cliente: v.Cliente,
       Moneda: v.Moneda,
       'Base imponible': v.ValorVenta,
-      'Cuota IVA': v.IGV,
-      ...this.columnasPorTasa(v.DesgloseImpuestos, tasas, 'IVA'),
+      ...this.columnasImpuestosPorTasa(v.DesgloseImpuestos, tasas, 'IVA'),
       'Base sin IVA': v.OpInafecto,
       Servicio: v.Servicio,
       'Otros impuestos fijos': v.ICBPER,
@@ -247,14 +249,14 @@ export class DialogReportecontableComponent {
   private filasCompras(datos: InformeContableCompra[]): object[] {
     const tasas = this.tasasDelInforme(datos);
     if (this.paisISO2 !== 'ES') return datos.map(c => {
-      const { DesgloseImpuestos, ...fila } = c;
-      return {
+      const { DesgloseImpuestos, IGV, PorcentajeIGV, ...fila } = c;
+      return this.formatearFilaContable({
         ...fila,
-        ...this.columnasPorTasa(DesgloseImpuestos, tasas, 'IGV'),
+        ...this.columnasImpuestosPorTasa(DesgloseImpuestos, tasas, 'IGV'),
         Cuadre: this.estadoCuadre(c.DiferenciaDesglose),
-      };
+      });
     });
-    return datos.map(c => ({
+    return datos.map(c => this.formatearFilaContable({
       'Fecha de emisión': c.FechaEmision,
       'Fecha de recepción': c.FechaRecepcion,
       'Tipo de documento': this.tiposDocumento.find(tipo =>
@@ -264,8 +266,7 @@ export class DialogReportecontableComponent {
       'NIF del proveedor': c.RucCodigoCliente,
       Proveedor: c.RazonSocial,
       'Base imponible': c.Afecto,
-      'Cuota IVA': c.IGV,
-      ...this.columnasPorTasa(c.DesgloseImpuestos, tasas, 'IVA'),
+      ...this.columnasImpuestosPorTasa(c.DesgloseImpuestos, tasas, 'IVA'),
       'Base sin IVA': c.Inafecto,
       'Otros impuestos': c.Otros + c.ISC,
       Total: c.Total,
@@ -285,17 +286,22 @@ export class DialogReportecontableComponent {
       .sort((a, b) => (a ?? Number.MAX_VALUE) - (b ?? Number.MAX_VALUE));
   }
 
-  private columnasPorTasa(
+  /**
+   * La base ya está representada por ValorVenta/Base imponible. Se expone
+   * únicamente el importe de cada impuesto, una vez por tasa real.
+   */
+  private columnasImpuestosPorTasa(
     desglose: ReporteContableImpuesto[],
     tasas: Array<number | null>,
     nombreImpuesto: string,
   ): Record<string, number> {
     const columnas: Record<string, number> = {};
     for (const tasa of tasas) {
-      const etiqueta = tasa === null ? 'sin tasa registrada' : `${tasa}%`;
+      const etiqueta = tasa === null
+        ? 'sin tasa registrada'
+        : `${this.regionalNumberFormatter.formatNumber(tasa, this.paisISO2)}%`;
       const detalle = (desglose ?? []).find(item => item.Tasa === tasa);
-      columnas[`Base ${nombreImpuesto} ${etiqueta}`] = detalle?.Base ?? 0;
-      columnas[`Cuota ${nombreImpuesto} ${etiqueta}`] = detalle?.Cuota ?? 0;
+      columnas[`${nombreImpuesto} ${etiqueta}`] = detalle?.Cuota ?? 0;
     }
     return columnas;
   }
@@ -311,15 +317,17 @@ export class DialogReportecontableComponent {
     grupos: string[],
   ): Record<string, number | string> {
     const columnas: Record<string, number | string> = {};
+    const pagosRegistrados = pagos ?? [];
     for (const grupo of grupos) {
-      const pagosGrupo = (pagos ?? []).filter(pago => this.grupoPago(pago) === grupo);
+      const pagosGrupo = pagosRegistrados.filter(pago => this.grupoPago(pago) === grupo);
       columnas[`${grupo} - recibido`] = this.sumar(pagosGrupo, pago => pago.MontoRecibido);
-      columnas[`${grupo} - tipo de cambio`] = this.tiposCambio(pagosGrupo);
       columnas[`${grupo} - equivalente documento`] = this.sumar(
         pagosGrupo,
         pago => pago.MontoEquivalente,
       );
-      columnas[`${grupo} - propina`] = this.sumar(pagosGrupo, pago => pago.Propina);
+      if (pagosGrupo.some(pago => pago.IdTipoPago === 3)) {
+        columnas[`${grupo} - propina`] = this.sumar(pagosGrupo, pago => pago.Propina);
+      }
       columnas[`${grupo} - operaciones`] = this.unirUnicos(
         pagosGrupo.map(pago => pago.NumeroOperacion),
       );
@@ -327,6 +335,7 @@ export class DialogReportecontableComponent {
         pagosGrupo.map(pago => pago.BancoDestino),
       );
     }
+    columnas['Tipo de cambio'] = this.tiposCambio(pagosRegistrados);
     return columnas;
   }
 
@@ -343,7 +352,20 @@ export class DialogReportecontableComponent {
 
   private tiposCambio(pagos: InformeContablePago[]): number | string {
     const tipos = Array.from(new Set(pagos.map(pago => Number(pago.TipoCambio || 1))));
-    return tipos.length <= 1 ? (tipos[0] ?? 0) : tipos.join(' | ');
+    return tipos
+      .map(tipo => this.regionalNumberFormatter.formatNumber(tipo, this.paisISO2))
+      .join(' | ');
+  }
+
+  private formatearFilaContable<T extends object>(fila: T): Record<string, unknown> {
+    return Object.fromEntries(Object.entries(fila).map(([columna, valor]) => {
+      if (typeof valor !== 'number') return [columna, valor];
+      if (columna === 'IdVenta') return [columna, valor];
+      const valorFormateado = columna === 'Tipo de cambio' || columna === 'PorcentajeIGV'
+        ? this.regionalNumberFormatter.formatNumber(valor, this.paisISO2)
+        : this.regionalNumberFormatter.formatAmount(valor, this.paisISO2);
+      return [columna, valorFormateado];
+    }));
   }
 
   private unirUnicos(valores: Array<string | null | undefined>): string {
