@@ -54,13 +54,11 @@ export class CajaMantenimientoComponent implements OnInit {
   ngOnInit(): void {
     this.licenciaTenantService.obtenerEstado().subscribe(estado => {
       this.modoComercio = estado.licencia?.PlanCodigo?.toUpperCase() === 'COMERCIO';
-      this.displayedColumns = this.modoComercio
-        ? ['descripcion', 'activo', 'cajaDefault', 'nroPedido', 'actions']
-        : ['descripcion', 'activo', 'cajaDefault', 'canal', 'nroPedido', 'actions'];
+      this.displayedColumns = [
+        'descripcion', 'activo', 'cajaDefault', 'canal', 'nroPedido', 'actions',
+      ];
       this.cargar();
-      if (!this.modoComercio) {
-        this.canalSrv.listarDisponibles().subscribe(x => this.canales = x);
-      }
+      this.canalSrv.listarDisponibles().subscribe(x => this.canales = x);
     });
   }
 
@@ -126,19 +124,21 @@ export class CajaMantenimientoComponent implements OnInit {
 
   nuevo(): void {
     this.m = this.blank();
+    if (this.modoComercio) {
+      this.m.IdCanalVentaDefecto = CanalVentaEnum.VENTA_DIRECTA;
+      this.m.IdCanalesVenta = [CanalVentaEnum.VENTA_DIRECTA];
+      this.canalesSeleccionados = [CanalVentaEnum.VENTA_DIRECTA];
+    } else {
+      this.canalesSeleccionados = [];
+    }
     this.normalizarCamposComercio();
-    this.canalesSeleccionados = [];
     this.showForm = true;
   }
 
   onEdit(row: CajaDto): void {
     this.m = { ...row };
     this.normalizarCamposComercio();
-    this.canalesSeleccionados = [];
-    if (this.modoComercio) {
-      this.showForm = true;
-      return;
-    }
+    this.canalesSeleccionados = [...(row.IdCanalesVenta ?? [])];
     // Cargar canales existentes de la caja
     this.service.getCanalesVentaByCaja(row.IdCaja).subscribe(canales => {
       this.canalesSeleccionados = canales.map(c => c.IdCanalVenta);
@@ -168,9 +168,7 @@ export class CajaMantenimientoComponent implements OnInit {
     if (this.form.invalid) { this.touchForm(); return; }
     this.normalizarCamposComercio();
     // Incluir los canales en el mismo DTO que va al Create/Update
-    if (!this.modoComercio) {
-      this.m.IdCanalesVenta = [...this.canalesSeleccionados];
-    }
+    this.m.IdCanalesVenta = [...this.canalesSeleccionados];
     const obs = this.m.IdCaja ? this.service.actualizar(this.m) : this.service.crear(this.m);
     obs.subscribe(r => {
       if (r.Success) {

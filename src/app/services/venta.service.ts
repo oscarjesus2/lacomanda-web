@@ -54,7 +54,8 @@ export class VentaService {
         fechaDesde: string,
         fechaHasta: string,
         incluirExpress: boolean,
-        estado?: number
+        estado?: number,
+        estadoPago?: number,
     ): Observable<VentasInterface[]> {
         let params = new HttpParams()
             .set('fechaDesde', fechaDesde)
@@ -62,6 +63,9 @@ export class VentaService {
             .set('incluirExpress', incluirExpress);
         if (estado) {
             params = params.set('estado', estado);
+        }
+        if (estadoPago) {
+            params = params.set('estadoPago', estadoPago);
         }
         return this.http.get<VentasInterface[]>(this.basePath + 'Listado', { params });
     }

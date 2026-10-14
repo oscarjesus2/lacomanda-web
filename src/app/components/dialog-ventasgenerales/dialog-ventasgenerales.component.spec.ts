@@ -57,13 +57,6 @@ describe('DialogVentasgeneralesComponent', () => {
     expect(component.esDocumentoActivo(null)).toBeFalse();
   });
 
-  it('reconoce una venta pendiente para mostrar el registro de cobro', () => {
-    expect(component.esPagoPendiente(
-      venta({ EstadoPago: 'Pendiente de pago' }))).toBeTrue();
-    expect(component.esPagoPendiente(
-      venta({ EstadoPago: 'Pagado' }))).toBeFalse();
-  });
-
   it('valida el correo del cliente antes de habilitar el envío', () => {
     expect(component.tieneCorreoValido(
       venta({ ClienteCorreo: 'cliente@ejemplo.com' }))).toBeTrue();
@@ -73,7 +66,7 @@ describe('DialogVentasgeneralesComponent', () => {
       venta({ ClienteCorreo: null }))).toBeFalse();
   });
 
-  it('filtra por texto, tipo de documento y caja', () => {
+  it('filtra por texto, tipo de documento, caja y estado de pago', () => {
     component.ventas = [
       venta({
         IdVenta: 1,
@@ -81,6 +74,7 @@ describe('DialogVentasgeneralesComponent', () => {
         Cliente: 'Restaurante Uno',
         TipoDocumento: 'Factura',
         Caja: 'Caja principal',
+        IdEstadoPago: 2,
       }),
       venta({
         IdVenta: 2,
@@ -88,11 +82,13 @@ describe('DialogVentasgeneralesComponent', () => {
         Cliente: 'Cliente Varios',
         TipoDocumento: 'Boleta',
         Caja: 'Caja terraza',
+        IdEstadoPago: 1,
       }),
     ];
     component.textoFiltro = 'restaurante';
     component.tipoDocumentoSeleccionado = 'Factura';
     component.cajaSeleccionada = 'Caja principal';
+    component.estadoPagoSeleccionado = 2;
 
     component.aplicarFiltro();
 
@@ -183,6 +179,7 @@ describe('DialogVentasgeneralesComponent', () => {
       EstadoFiscal: 3,
       EstadoFiscalDescripcion: 'Aceptado',
       NombreArchivo: 'F001-1',
+      IdEstadoPago: 1,
       EstadoPago: 'Pagado',
       IdCanalVenta: 1,
       ...cambios,

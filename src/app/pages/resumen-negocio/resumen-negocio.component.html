@@ -25,7 +25,7 @@
           <mat-icon>query_stats</mat-icon>{{ 'reports' | tenantText }}
         </a>
         <button
-          *ngIf="esComercio && puedeEmitirVentaDirecta"
+          *ngIf="puedeEmitirVentaDirecta"
           type="button"
           class="business-home__link business-home__link--primary"
           [disabled]="cuotaComprobantesAgotada"
@@ -35,7 +35,7 @@
         <a
           routerLink="/administracion"
           class="business-home__link"
-          [class.business-home__link--primary]="!esComercio">
+          [class.business-home__link--primary]="!puedeEmitirVentaDirecta">
           <mat-icon>settings</mat-icon>{{ 'administration' | tenantText }}
         </a>
       </nav>
@@ -48,12 +48,12 @@
           {{ simboloMoneda }} {{ ventasTotal | number:'1.2-2' }}
         </strong>
         <ng-template #salesUnavailable><strong>—</strong></ng-template>
-        <small class="is-neutral" *ngIf="!esComercio && documentosTotal !== null">
+        <small class="is-neutral" *ngIf="!mostrarResumenVentas && documentosTotal !== null">
           {{ documentosTotal }} {{ 'documents' | tenantText }}
         </small>
       </article>
 
-      <article class="executive-kpi business-home__metric" *ngIf="esComercio">
+      <article class="executive-kpi business-home__metric" *ngIf="mostrarResumenVentas">
         <span>{{ 'documentsIssuedToday' | tenantText }}</span>
         <strong *ngIf="documentosTotal !== null; else documentsUnavailable">
           {{ documentosTotal }}
@@ -62,7 +62,7 @@
         <small class="is-neutral">{{ 'validSales' | tenantText }}</small>
       </article>
 
-      <article class="executive-kpi business-home__metric" *ngIf="esComercio">
+      <article class="executive-kpi business-home__metric" *ngIf="mostrarResumenVentas">
         <span>{{ 'averageTicket' | tenantText }}</span>
         <strong *ngIf="ticketMedio !== null; else ticketUnavailable">
           {{ simboloMoneda }} {{ ticketMedio | number:'1.2-2' }}
@@ -71,7 +71,7 @@
         <small class="is-neutral">{{ 'perDocument' | tenantText }}</small>
       </article>
 
-      <article class="executive-kpi business-home__metric business-home__metric--stock" *ngIf="esComercio && mostrarInventarioComercio">
+      <article class="executive-kpi business-home__metric business-home__metric--stock" *ngIf="mostrarInventarioComercio">
         <span>{{ 'stockAlerts' | tenantText }}</span>
         <strong *ngIf="cantidadStockBajo !== null; else stockUnavailable">
           {{ cantidadStockBajo }}
@@ -95,7 +95,7 @@
         <small class="is-neutral">{{ 'activeSpaces' | tenantText }}</small>
       </article>
 
-      <article class="executive-kpi business-home__metric" *ngIf="!esComercio && mostrarVentas && ticketMedio !== null">
+      <article class="executive-kpi business-home__metric" *ngIf="!mostrarResumenVentas && mostrarVentas && ticketMedio !== null">
         <span>{{ 'averageTicket' | tenantText }}</span>
         <strong>{{ simboloMoneda }} {{ ticketMedio | number:'1.2-2' }}</strong>
         <small class="is-neutral">{{ 'perDocument' | tenantText }}</small>
@@ -103,7 +103,7 @@
     </section>
 
     <section class="business-home__content">
-      <article class="executive-widget business-home__activity" *ngIf="esComercio">
+      <article class="executive-widget business-home__activity" *ngIf="mostrarResumenVentas">
         <header class="executive-widget__header">
           <div>
             <span class="executive-widget__eyebrow">{{ 'todayActivity' | tenantText }}</span>
@@ -188,7 +188,7 @@
       </article>
 
       <aside class="business-home__side">
-        <article class="executive-widget business-home__stock" *ngIf="esComercio && mostrarInventarioComercio">
+        <article class="executive-widget business-home__stock" *ngIf="mostrarInventarioComercio">
           <div class="business-home__stock-heading">
             <div>
               <span class="executive-widget__eyebrow">{{ 'inventoryControl' | tenantText }}</span>
@@ -226,7 +226,7 @@
           </button>
         </article>
 
-        <article class="executive-widget business-home__quick-actions" *ngIf="esComercio">
+        <article class="executive-widget business-home__quick-actions" *ngIf="mostrarAccionesComercio">
           <span class="executive-widget__eyebrow">{{ 'quickActions' | tenantText }}</span>
           <h2>{{ 'manageCommerce' | tenantText }}</h2>
           <div class="business-home__quick-actions-list">

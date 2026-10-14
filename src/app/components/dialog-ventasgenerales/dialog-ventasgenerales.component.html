@@ -69,6 +69,17 @@
       </mat-form-field>
 
       <mat-form-field appearance="fill">
+        <mat-label>{{ 'paymentState' | tenantText }}</mat-label>
+        <mat-select
+          [(ngModel)]="estadoPagoSeleccionado"
+          (selectionChange)="aplicarFiltro()">
+          <mat-option [value]="0">{{ 'allPaymentStates' | tenantText }}</mat-option>
+          <mat-option [value]="estadoPagoVenta.Pagada">{{ 'paid' | tenantText }}</mat-option>
+          <mat-option [value]="estadoPagoVenta.Pendiente">{{ 'pending' | tenantText }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
         <mat-label>{{ 'documentType' | tenantText }}</mat-label>
         <mat-select
           [(ngModel)]="tipoDocumentoSeleccionado"
@@ -186,6 +197,15 @@
               </td>
             </ng-container>
 
+            <ng-container matColumnDef="EstadoPago">
+              <th mat-header-cell *matHeaderCellDef>{{ 'paymentState' | tenantText }}</th>
+              <td mat-cell *matCellDef="let row">
+                <span class="status-badge" [ngClass]="'status-badge--' + claseEstadoPago(row)">
+                  {{ row.EstadoPago }}
+                </span>
+              </td>
+            </ng-container>
+
             <ng-container matColumnDef="EstadoDescripcion">
               <th mat-header-cell *matHeaderCellDef>{{ 'state' | tenantText }}</th>
               <td mat-cell *matCellDef="let row">
@@ -255,25 +275,10 @@
       *ngIf="correccionHabilitada"
       mat-menu-item
       [disabled]="!esDocumentoActivo(ventaSeleccionada)"
-      (click)="corregirVenta(tipoCorreccionCliente)">
+      (click)="corregirVenta()">
       <mat-icon>edit_document</mat-icon>
       <span>{{ 'modifyDocument' | tenantText }}</span>
     </button>
-    <button
-      *ngIf="correccionHabilitada"
-      mat-menu-item
-      [disabled]="!esDocumentoActivo(ventaSeleccionada)"
-      (click)="corregirVenta(tipoCorreccionPagos)">
-      <mat-icon>payments</mat-icon>
-      <span>
-        {{
-          (esPagoPendiente(ventaSeleccionada)
-            ? 'registerPayment'
-            : 'modifyPayments') | tenantText
-        }}
-      </span>
-    </button>
-
     <mat-divider></mat-divider>
 
     <button mat-menu-item (click)="descargarArchivo('pdf')">

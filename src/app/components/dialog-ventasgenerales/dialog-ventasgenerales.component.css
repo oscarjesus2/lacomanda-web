@@ -38,7 +38,7 @@
 
 .sales-filter-grid {
   display: grid;
-  grid-template-columns: 150px 150px minmax(240px, 1.5fr) minmax(145px, 0.75fr) minmax(155px, 0.8fr) minmax(155px, 0.8fr);
+  grid-template-columns: 150px 150px minmax(240px, 1.5fr) repeat(4, minmax(145px, 0.75fr));
   gap: 10px;
   align-items: start;
 }
@@ -102,7 +102,7 @@
 
 .ventas-table {
   width: 100%;
-  min-width: 1220px;
+  min-width: 1350px;
   table-layout: fixed;
 }
 
@@ -120,6 +120,7 @@
 .ventas-table .mat-column-Cliente { width: 225px; }
 .ventas-table .mat-column-TipoDocumento { width: 130px; }
 .ventas-table .mat-column-Total { width: 115px; }
+.ventas-table .mat-column-EstadoPago { width: 145px; }
 .ventas-table .mat-column-EstadoDescripcion { width: 130px; }
 .ventas-table .mat-column-EstadoFiscalDescripcion { width: 150px; }
 .ventas-table .mat-column-acciones { width: 78px; text-align: center; }

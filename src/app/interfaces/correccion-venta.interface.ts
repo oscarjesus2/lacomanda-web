@@ -31,6 +31,7 @@ export interface PagoCorreccionVenta {
   IdTarjeta?: number;
   IdMoneda: string;
   Observacion?: string;
+  IdBanco?: number;
 }
 
 export interface PreparacionCorreccionVenta {
@@ -43,6 +44,7 @@ export interface PreparacionCorreccionVenta {
   NumDocumento: number;
   FechaEmision: string;
   Total: number;
+  IdMoneda: string;
   Estado: number;
   EstadoPago: number;
   EstadoFiscal: number;

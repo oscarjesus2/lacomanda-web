@@ -11,11 +11,7 @@
 
   <h2>
     {{
-      (origenRechazoFiscal
-        ? 'correctAndReissueDocument'
-        : esCobroPendiente && tipoCorreccion === tipoPagos
-          ? 'registerPayment'
-          : 'correctIssuedSale')
+      (origenRechazoFiscal ? 'correctAndReissueDocument' : 'correctIssuedSale')
         | tenantText
     }}
   </h2>
@@ -82,17 +78,10 @@
           [value]="tipoPagos">
           <span class="dialog-option__content">
             <span class="dialog-option__title">
-              {{
-                (esCobroPendiente ? 'registerPayment' : 'correctionPayments')
-                  | tenantText
-              }}
+              {{ 'correctionPayments' | tenantText }}
             </span>
             <span class="dialog-option__hint">
-              {{
-                (esCobroPendiente
-                  ? 'registerPaymentHint'
-                  : 'correctionPaymentsHint') | tenantText
-              }}
+              {{ 'correctionPaymentsHint' | tenantText }}
             </span>
           </span>
         </mat-radio-button>
@@ -131,129 +120,13 @@
         </mat-radio-button>
       </mat-radio-group>
 
-      <ng-container *ngIf="tipoCorreccion === tipoPagos">
-        <div class="dialog-table-wrapper">
-          <table class="dialog-data-table">
-            <thead>
-              <tr>
-                <th>{{ 'paymentMethodShort' | tenantText }}</th>
-                <th class="is-numeric">{{ 'paidAmount' | tenantText }}</th>
-                <th class="is-numeric">{{ 'changeDue' | tenantText }}</th>
-                <th>{{ 'card' | tenantText }}</th>
-                <th>{{ 'authorization' | tenantText }}</th>
-                <th>{{ 'operationNumber' | tenantText }}</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let pago of pagos; let i = index">
-                <td>
-                  <mat-form-field>
-                    <mat-select
-                      [(ngModel)]="pago.IdTipoPago"
-                      (selectionChange)="cambiarFormaPago(pago)">
-                      <mat-option
-                        *ngFor="let forma of formasPago"
-                        [value]="forma.id">
-                        {{ forma.key | tenantText }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                </td>
-                <td class="is-numeric">
-                  <mat-form-field>
-                    <input
-                      matInput
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      [ngModel]="pago.MontoPagado"
-                      (ngModelChange)="actualizarMontoPago(pago, $event)">
-                  </mat-form-field>
-                </td>
-                <td class="is-numeric">
-                  <mat-form-field>
-                    <input
-                      matInput
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      readonly
-                      [ngModel]="pago.Vuelto">
-                  </mat-form-field>
-                  <span *ngIf="pago.IdTipoPago !== 1">—</span>
-                </td>
-                <td>
-                  <mat-form-field *ngIf="pago.IdTipoPago === 3">
-                    <mat-select [(ngModel)]="pago.IdTarjeta">
-                      <mat-option
-                        *ngFor="let tarjeta of tarjetas"
-                        [value]="tarjeta.IdTarjeta">
-                        {{ tarjeta.Descripcion }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <span *ngIf="pago.IdTipoPago !== 3">—</span>
-                </td>
-                <td>
-                  <mat-form-field *ngIf="pago.IdTipoPago === 3">
-                    <input matInput [(ngModel)]="pago.Autorizacion">
-                  </mat-form-field>
-                  <span *ngIf="pago.IdTipoPago !== 3">—</span>
-                </td>
-                <td>
-                  <mat-form-field *ngIf="pago.IdTipoPago === 6">
-                    <input
-                      matInput
-                      maxlength="100"
-                      required
-                      [(ngModel)]="pago.Observacion"
-                      [placeholder]="'operationNumberPlaceholder' | tenantText">
-                  </mat-form-field>
-                  <span *ngIf="pago.IdTipoPago !== 6">—</span>
-                </td>
-                <td>
-                  <button
-                    mat-icon-button
-                    color="warn"
-                    [attr.aria-label]="'remove' | tenantText"
-                    (click)="eliminarPago(i)">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="form-row">
-          <button mat-stroked-button color="primary" (click)="agregarPago()">
-            <mat-icon>add</mat-icon>
-            {{ 'addPaymentMethod' | tenantText }}
-          </button>
-          <div class="dialog-summary form-field">
-            <div class="dialog-summary__item">
-              <span class="dialog-summary__label">
-                {{ 'paymentNetTotal' | tenantText }}
-              </span>
-              <span class="dialog-summary__value">
-                {{ totalPagos | number:'1.2-2' }}
-              </span>
-            </div>
-            <div class="dialog-summary__item">
-              <span class="dialog-summary__label">
-                {{
-                  (diferenciaPagos < -0.01 ? 'paymentExcess' : 'remaining')
-                    | tenantText
-                }}
-              </span>
-              <span class="dialog-summary__value">
-                {{ saldoPagos | number:'1.2-2' }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </ng-container>
+      <app-formas-pago-venta
+        *ngIf="tipoCorreccion === tipoPagos"
+        [preparacion]="preparacion"
+        [pagos]="pagos"
+        [agregarFormaInicial]="true"
+        [mostrarValidaciones]="intentoRevisar">
+      </app-formas-pago-venta>
 
       <ng-container
         *ngIf="tipoCorreccion === tipoCliente || tipoCorreccion === tipoDocumento">

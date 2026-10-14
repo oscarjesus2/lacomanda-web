@@ -46,6 +46,12 @@ export enum PedidoEstadoEnum {
   PendienteCobro = 6,
 }
 
+/** Estado financiero de una venta emitida. Debe mantenerse alineado con el dominio. */
+export enum EstadoPagoVentaEnum {
+  Pagada = 1,
+  Pendiente = 2,
+}
+
 export enum NivelUsuarioEnum {
   Administrador = 1,
   Cajero = 2,

@@ -88,6 +88,9 @@ import { DialogEntradasComponent } from './components/dialog-entradas/dialog-ent
 import { DialogPagarTaxistaComponent } from './components/dialog-pagar-taxista/dialog-pagar-taxista.component';
 import { DialogDocumentosEmitidosComponent } from './components/dialog-documentos-emitidos/dialog-documentos-emitidos.component';
 import { DialogCorregirVentaComponent } from './components/dialog-corregir-venta/dialog-corregir-venta.component';
+import { FormasPagoVentaComponent } from './components/formas-pago-venta/formas-pago-venta.component';
+import { SelectorBancoDestinoComponent } from './components/selector-banco-destino/selector-banco-destino.component';
+import { BancoMantenimientoComponent } from './components/mantenimiento/banco-mantenimiento/banco-mantenimiento.component';
 import { DialogComprobantesFiscalesPendientesComponent } from './components/dialog-comprobantes-fiscales-pendientes/dialog-comprobantes-fiscales-pendientes.component';
 import { UsuariosMantenimientoComponent } from './components/mantenimiento/usuarios-mantenimiento/usuarios-mantenimiento.component';
 import { AnulacionesComponent } from './pages/dashboard/anulaciones/anulaciones.component';
@@ -221,6 +224,9 @@ export const MY_DATE_FORMATS = {
     DialogPagarTaxistaComponent,
     DialogDocumentosEmitidosComponent,
     DialogCorregirVentaComponent,
+    FormasPagoVentaComponent,
+    SelectorBancoDestinoComponent,
+    BancoMantenimientoComponent,
     DialogComprobantesFiscalesPendientesComponent,
     UsuariosMantenimientoComponent,
     AnulacionesComponent,

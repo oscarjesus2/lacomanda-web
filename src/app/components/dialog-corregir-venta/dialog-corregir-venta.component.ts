@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ViewChild } from '@angular/core';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
@@ -10,9 +10,7 @@ import {
   SolicitudCorreccionVenta,
   TipoCorreccionVenta,
 } from 'src/app/interfaces/correccion-venta.interface';
-import { Tarjeta } from 'src/app/models/tarjeta.models';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
-import { TarjetaService } from 'src/app/services/tarjeta.service';
 import {
   TipoIdentidadPaisService,
   TipoIdentidadPaisVM,
@@ -20,6 +18,7 @@ import {
 import { VentaService } from 'src/app/services/venta.service';
 import Swal from 'sweetalert2';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { FormasPagoVentaComponent } from '../formas-pago-venta/formas-pago-venta.component';
 
 @Component({
   selector: 'app-dialog-corregir-venta',
@@ -33,11 +32,10 @@ export class DialogCorregirVentaComponent implements OnInit {
   readonly origenRechazoFiscal: boolean;
 
   preparacion: PreparacionCorreccionVenta | null = null;
-  tipoCorreccion = TipoCorreccionVenta.Pagos;
+  tipoCorreccion = TipoCorreccionVenta.Cliente;
   pagos: PagoCorreccionVenta[] = [];
   cliente: ClienteCorreccionVenta = this.clienteVacio();
   tiposIdentidad: TipoIdentidadPaisVM[] = [];
-  tarjetas: Tarjeta[] = [];
   idTipoDocumentoDestino?: number;
   documentoOtorgado = true;
   motivo = '';
@@ -45,26 +43,17 @@ export class DialogCorregirVentaComponent implements OnInit {
   guardando = false;
   intentoRevisar = false;
 
-  readonly formasPago = [
-    { id: 1, key: 'cash' as const },
-    { id: 2, key: 'voucher' as const },
-    { id: 3, key: 'card' as const },
-    { id: 4, key: 'courtesy' as const },
-    { id: 5, key: 'cheque' as const },
-    { id: 6, key: 'deposit' as const },
-    { id: 7, key: 'commission' as const },
-  ];
+  @ViewChild(FormasPagoVentaComponent)
+  editorPagos?: FormasPagoVentaComponent;
 
   constructor(
     private readonly ventaService: VentaService,
-    private readonly tarjetaService: TarjetaService,
     private readonly tipoIdentidadService: TipoIdentidadPaisService,
     private readonly texts: TenantTextCatalogService,
     private readonly dialogRef: MatDialogRef<DialogCorregirVentaComponent>,
     @Inject(MAT_DIALOG_DATA) private readonly data: {
       idVenta: number;
       origenRechazoFiscal?: boolean;
-      tipoCorreccionInicial?: TipoCorreccionVenta;
     },
   ) {
     this.origenRechazoFiscal = !!data.origenRechazoFiscal;
@@ -73,8 +62,6 @@ export class DialogCorregirVentaComponent implements OnInit {
   ngOnInit(): void {
     if (this.origenRechazoFiscal) {
       this.tipoCorreccion = TipoCorreccionVenta.Reemision;
-    } else if (this.data.tipoCorreccionInicial) {
-      this.tipoCorreccion = this.data.tipoCorreccionInicial;
     }
     this.cargar();
   }
@@ -146,26 +133,6 @@ export class DialogCorregirVentaComponent implements OnInit {
       && this.preparacion.EnvioElectronicoOnline;
   }
 
-  get esCobroPendiente(): boolean {
-    return this.preparacion?.EstadoPago === 2;
-  }
-
-  get totalPagos(): number {
-    return this.pagos.reduce(
-      (total, pago) => total + Number(pago.MontoPagado || 0)
-        - (pago.IdTipoPago === 1 ? Number(pago.Vuelto || 0) : 0),
-      0,
-    );
-  }
-
-  get diferenciaPagos(): number {
-    return Number(((this.preparacion?.Total ?? 0) - this.totalPagos).toFixed(2));
-  }
-
-  get saldoPagos(): number {
-    return Math.abs(this.diferenciaPagos);
-  }
-
   get puedeRevisar(): boolean {
     if (!this.preparacion || this.cargando || this.guardando
         || this.motivo.trim().length < 3) {
@@ -173,17 +140,7 @@ export class DialogCorregirVentaComponent implements OnInit {
     }
 
     if (this.tipoCorreccion === TipoCorreccionVenta.Pagos) {
-      return this.pagos.length > 0
-        && Math.abs(this.diferenciaPagos) <= 0.01
-        && this.pagos.every(pago =>
-          pago.IdTipoPago > 0
-          && Number(pago.MontoPagado) > 0
-          && (pago.IdTipoPago !== 1
-            || Number(pago.Vuelto || 0) < Number(pago.MontoPagado))
-          && (pago.IdTipoPago !== 3
-            || (!!pago.IdTarjeta && !!pago.Autorizacion?.trim()))
-          && (pago.IdTipoPago !== 6
-            || !!pago.Observacion?.trim()));
+      return !!this.editorPagos?.puedeGuardar;
     }
 
     if (this.tipoCorreccion === TipoCorreccionVenta.Reemision) {
@@ -216,110 +173,6 @@ export class DialogCorregirVentaComponent implements OnInit {
     this.ajustarTipoIdentidadAlDocumento();
   }
 
-  agregarPago(): void {
-    const restante = Math.max(this.diferenciaPagos, 0);
-    this.pagos.push({
-      Estado: 1,
-      IdTurno: this.preparacion?.IdTurno ?? 0,
-      Vuelto: 0,
-      Propina: 0,
-      MontoVenta: this.preparacion?.Total ?? 0,
-      MontoPagado: restante,
-      MontoRecibido: restante,
-      TipoCambio: 1,
-      IdTipoPago: 1,
-      IdVenta: 0,
-      IdPago: 0,
-      IdMoneda: this.pagos[0]?.IdMoneda
-        ?? this.preparacion?.Pagos[0]?.IdMoneda
-        ?? '',
-    });
-    this.recalcularVueltos();
-  }
-
-  eliminarPago(index: number): void {
-    this.pagos.splice(index, 1);
-    this.recalcularVueltos();
-  }
-
-  actualizarMontoPago(
-    pago: PagoCorreccionVenta,
-    monto: number | string | null,
-  ): void {
-    pago.MontoPagado = Number(monto || 0);
-    pago.MontoRecibido = pago.TipoCambio && pago.TipoCambio > 0
-      ? Number((pago.MontoPagado / pago.TipoCambio).toFixed(2))
-      : pago.MontoPagado;
-    pago.TipoCambio = pago.TipoCambio && pago.TipoCambio > 0
-      ? pago.TipoCambio
-      : 1;
-    this.recalcularVueltos();
-  }
-
-  cambiarFormaPago(pago: PagoCorreccionVenta): void {
-    if (pago.IdTipoPago !== 1) {
-      pago.Vuelto = 0;
-    }
-
-    if (pago.IdTipoPago !== 3) {
-      pago.IdTarjeta = undefined;
-      pago.Autorizacion = undefined;
-    }
-
-    if (pago.IdTipoPago !== 6) {
-      pago.Observacion = undefined;
-    }
-
-    this.recalcularVueltos();
-  }
-
-  recalcularVueltos(): void {
-    if (!this.preparacion) {
-      return;
-    }
-
-    this.pagos.forEach(pago => {
-      pago.Vuelto = 0;
-    });
-
-    const totalVenta = Number(this.preparacion.Total || 0);
-    const totalNoEfectivo = this.pagos
-      .filter(pago => pago.IdTipoPago !== 1)
-      .reduce(
-        (total, pago) => total + Number(pago.MontoPagado || 0),
-        0,
-      );
-
-    if (totalNoEfectivo > totalVenta) {
-      return;
-    }
-
-    const totalEfectivo = this.pagos
-      .filter(pago => pago.IdTipoPago === 1)
-      .reduce(
-        (total, pago) => total + Number(pago.MontoPagado || 0),
-        0,
-      );
-    let vueltoPendiente = Math.max(
-      totalEfectivo - Math.max(totalVenta - totalNoEfectivo, 0),
-      0,
-    );
-
-    for (let index = this.pagos.length - 1;
-         index >= 0 && vueltoPendiente > 0;
-         index -= 1) {
-      const pago = this.pagos[index];
-      if (pago.IdTipoPago !== 1) {
-        continue;
-      }
-
-      const monto = Number(pago.MontoPagado || 0);
-      const vuelto = Math.min(vueltoPendiente, monto);
-      pago.Vuelto = Number(vuelto.toFixed(2));
-      vueltoPendiente = Number((vueltoPendiente - vuelto).toFixed(2));
-    }
-  }
-
   revisarYAplicar(): void {
     this.intentoRevisar = true;
 
@@ -343,11 +196,12 @@ export class DialogCorregirVentaComponent implements OnInit {
     }
 
     if (!this.puedeRevisar || !this.preparacion) {
+      const claveError = this.tipoCorreccion === TipoCorreccionVenta.Pagos
+        ? this.editorPagos?.claveErrorValidacion ?? 'correctionCompleteRequiredFields'
+        : 'correctionCustomerRequiredFields';
       Swal.fire(
         this.texts.get('validation'),
-        this.tipoCorreccion === TipoCorreccionVenta.Pagos
-          ? this.texts.get('correctionCompleteRequiredFields')
-          : this.texts.get('correctionCustomerRequiredFields'),
+        this.texts.get(claveError),
         'warning',
       );
       return;
@@ -410,11 +264,7 @@ export class DialogCorregirVentaComponent implements OnInit {
         this.cliente = { ...response.Data.Cliente };
         this.idTipoDocumentoDestino =
           this.documentosDestino[0]?.IdTipoDocumento;
-        if (this.esCobroPendiente && !this.motivo) {
-          this.motivo = this.texts.get('creditSalePaymentReason');
-        }
         this.cargando = false;
-        this.recalcularVueltos();
         this.cargarAuxiliares(response.Data.PaisISO2);
       },
       error: () => {
@@ -424,15 +274,6 @@ export class DialogCorregirVentaComponent implements OnInit {
   }
 
   private cargarAuxiliares(paisISO2: string): void {
-    this.tarjetaService.getTarjeta().subscribe({
-      next: tarjetas => {
-        this.tarjetas = tarjetas ?? [];
-      },
-      error: () => {
-        this.tarjetas = [];
-      },
-    });
-
     this.tipoIdentidadService.byPais(paisISO2).subscribe({
       next: tipos => {
         this.tiposIdentidad = (tipos ?? []).filter(tipo => tipo.Activo);
@@ -452,12 +293,7 @@ export class DialogCorregirVentaComponent implements OnInit {
     };
 
     if (this.tipoCorreccion === TipoCorreccionVenta.Pagos) {
-      this.recalcularVueltos();
-      solicitud.Pagos = this.pagos.map(pago => ({
-        ...pago,
-        Vuelto: pago.IdTipoPago === 1 ? Number(pago.Vuelto || 0) : 0,
-        Observacion: pago.Observacion?.trim() || undefined,
-      }));
+      solicitud.Pagos = this.editorPagos?.normalizarParaSolicitud() ?? [];
     } else if (
       this.tipoCorreccion === TipoCorreccionVenta.Cliente
       || this.tipoCorreccion === TipoCorreccionVenta.TipoDocumento
@@ -479,13 +315,6 @@ export class DialogCorregirVentaComponent implements OnInit {
   } {
     switch (tipo) {
       case TipoCorreccionVenta.Pagos:
-        if (this.esCobroPendiente) {
-          return {
-            titulo: this.texts.get('confirmPaymentRegistration'),
-            mensaje: this.texts.get('confirmPaymentRegistrationHint'),
-            boton: this.texts.get('applyPaymentRegistration'),
-          };
-        }
         return {
           titulo: this.texts.get('confirmPaymentChange'),
           mensaje: this.texts.get('confirmPaymentChangeHint'),

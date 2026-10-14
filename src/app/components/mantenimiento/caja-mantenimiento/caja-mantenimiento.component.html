@@ -72,7 +72,7 @@
     </div>
 
     <!-- Canales de venta habilitados para esta caja -->
-    <div *ngIf="!modoComercio" class="caja-canales-section">
+    <div class="caja-canales-section">
       <p class="caja-canales-label">{{ 'enabledSalesChannels' | tenantText }}</p>
       <div class="caja-canales-chips">
         <mat-checkbox
@@ -86,7 +86,7 @@
     </div>
 
     <!-- Canal por Defecto — solo muestra los canales seleccionados arriba -->
-    <div *ngIf="!modoComercio" class="form-row">
+    <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>{{ 'defaultSalesChannel' | tenantText }}</mat-label>
         <mat-select [(ngModel)]="m.IdCanalVentaDefecto" name="canal" required
