@@ -175,6 +175,45 @@ describe('DialogReportecontableComponent', () => {
     expect(filas[0]['IGV 18%']).toBe('18.00');
     expect(filas[0]['Base IGV 18%']).toBeUndefined();
     expect(filas[0]['Cuota IGV 18%']).toBeUndefined();
+    expect(filas[0].ICBPER).toBeUndefined();
+    expect(Object.keys(filas[0]).indexOf('IGV 18%')).toBe(
+      Object.keys(filas[0]).indexOf('ValorVenta') + 1,
+    );
+  });
+
+  it('incluye un impuesto fijo únicamente si alguna venta del período lo tiene', () => {
+    const componente = crear({} as any);
+    componente.paisISO2 = 'PE';
+    const filas = (componente as any).filasVentas([
+      {
+        IdVenta: 1, ValorVenta: 100, IGV: 18, ICBPER: 0,
+        DesgloseImpuestos: [{ Tasa: 18, Base: 100, Cuota: 18 }],
+        Pagos: [], TotalCobrado: 0, Propinas: 0,
+        DiferenciaCobro: 0, DiferenciaDesglose: 0,
+      },
+      {
+        IdVenta: 2, ValorVenta: 100, IGV: 18, ICBPER: 0.3,
+        DesgloseImpuestos: [{ Tasa: 18, Base: 100, Cuota: 18 }],
+        Pagos: [], TotalCobrado: 0, Propinas: 0,
+        DiferenciaCobro: 0, DiferenciaDesglose: 0,
+      },
+    ]);
+
+    expect(filas[0].ICBPER).toBe('0.00');
+    expect(filas[1].ICBPER).toBe('0.30');
+  });
+
+  it('omite una tasa tributaria cuando no tiene importe en el período', () => {
+    const componente = crear({} as any);
+    componente.paisISO2 = 'PE';
+    const filas = (componente as any).filasVentas([{
+      IdVenta: 1, ValorVenta: 100, IGV: 0, ICBPER: 0,
+      DesgloseImpuestos: [{ Tasa: 18, Base: 100, Cuota: 0 }],
+      Pagos: [], TotalCobrado: 0, Propinas: 0,
+      DiferenciaCobro: 0, DiferenciaDesglose: 0,
+    }]);
+
+    expect(filas[0]['IGV 18%']).toBeUndefined();
   });
 
   it('aplica el mismo desglose dinámico en compras peruanas', () => {
@@ -196,6 +235,35 @@ describe('DialogReportecontableComponent', () => {
     expect(filas[0].IGV).toBeUndefined();
     expect(filas[0].PorcentajeIGV).toBeUndefined();
     expect(filas[0]['IGV 18%']).toBe('18.00');
+    expect(filas[0]['Otros impuestos']).toBeUndefined();
+    expect(filas[0].ISC).toBeUndefined();
+    expect(Object.keys(filas[0]).indexOf('IGV 18%')).toBe(
+      Object.keys(filas[0]).indexOf('Afecto') + 1,
+    );
+  });
+
+  it('incluye solo los impuestos adicionales presentes en compras', () => {
+    const componente = crear({} as any);
+    componente.paisISO2 = 'PE';
+    const filas = (componente as any).filasCompras([
+      {
+        Afecto: 100, IGV: 18, PorcentajeIGV: 18,
+        DesgloseImpuestos: [{ Tasa: 18, Base: 100, Cuota: 18 }],
+        Inafecto: 0, Otros: 0, ISC: 0, Total: 118,
+        DiferenciaDesglose: 0,
+      },
+      {
+        Afecto: 100, IGV: 18, PorcentajeIGV: 18,
+        DesgloseImpuestos: [{ Tasa: 18, Base: 100, Cuota: 18 }],
+        Inafecto: 0, Otros: 0.3, ISC: 2, Total: 120.3,
+        DiferenciaDesglose: 0,
+      },
+    ]);
+
+    expect(filas[0]['Otros impuestos']).toBe('0.00');
+    expect(filas[0].ISC).toBe('0.00');
+    expect(filas[1]['Otros impuestos']).toBe('0.30');
+    expect(filas[1].ISC).toBe('2.00');
   });
 
   it('deja el tipo de cambio como columna independiente y no crea propina para depósito', () => {
