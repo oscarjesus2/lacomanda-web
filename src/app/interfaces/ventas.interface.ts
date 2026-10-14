@@ -85,6 +85,7 @@ export interface InformeContablePago {
     IdTipoPago: number;
     FormaPago: string;
     IdMoneda: string;
+    MonedaDescripcion?: string | null;
     MontoRecibido: number;
     MontoEquivalente: number;
     TipoCambio: number;
@@ -93,6 +94,8 @@ export interface InformeContablePago {
     NumeroOperacion?: string | null;
     IdBanco?: number | null;
     BancoDestino?: string | null;
+    BancoMoneda?: string | null;
+    BancoMonedaDescripcion?: string | null;
 }
 
 export interface ResultadoEnvioComprobanteCorreo {

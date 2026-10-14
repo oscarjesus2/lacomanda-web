@@ -403,6 +403,11 @@ export class DialogReportecontableComponent {
     const pagosRegistrados = pagos ?? [];
     for (const grupo of grupos) {
       const pagosGrupo = pagosRegistrados.filter(pago => this.grupoPago(pago) === grupo);
+      if (pagosGrupo.some(pago => !!pago.BancoDestino)) {
+        columnas[`${grupo} - banco destino`] = this.unirUnicos(
+          pagosGrupo.map(pago => this.descripcionBanco(pago)),
+        );
+      }
       columnas[`${grupo} - recibido`] = this.sumar(pagosGrupo, pago => pago.MontoRecibido);
       columnas[`${grupo} - equivalente documento`] = this.sumar(
         pagosGrupo,
@@ -411,11 +416,8 @@ export class DialogReportecontableComponent {
       if (pagosGrupo.some(pago => pago.IdTipoPago === 3)) {
         columnas[`${grupo} - propina`] = this.sumar(pagosGrupo, pago => pago.Propina);
       }
-      columnas[`${grupo} - operaciones`] = this.unirUnicos(
+      columnas[`${grupo} - N.º de operación`] = this.unirUnicos(
         pagosGrupo.map(pago => pago.NumeroOperacion),
-      );
-      columnas[`${grupo} - banco destino`] = this.unirUnicos(
-        pagosGrupo.map(pago => pago.BancoDestino),
       );
     }
     columnas['Tipo de cambio'] = this.tiposCambio(pagosRegistrados);
@@ -423,7 +425,19 @@ export class DialogReportecontableComponent {
   }
 
   private grupoPago(pago: InformeContablePago): string {
-    return `${pago.FormaPago || `Forma ${pago.IdTipoPago}`} (${pago.IdMoneda || 'sin moneda'})`;
+    const formaPago = pago.FormaPago || `Forma ${pago.IdTipoPago}`;
+    return `${formaPago} (${this.descripcionMoneda(pago)})`;
+  }
+
+  private descripcionBanco(pago: InformeContablePago): string | null {
+    if (!pago.BancoDestino) return null;
+    return `${pago.BancoDestino} - ${this.descripcionMoneda(pago)}`;
+  }
+
+  private descripcionMoneda(pago: InformeContablePago): string {
+    return pago.BancoMonedaDescripcion?.trim()
+      || pago.MonedaDescripcion?.trim()
+      || 'Sin moneda configurada';
   }
 
   private sumar(

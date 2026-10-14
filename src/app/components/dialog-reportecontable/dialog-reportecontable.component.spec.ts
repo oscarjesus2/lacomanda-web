@@ -275,18 +275,27 @@ describe('DialogReportecontableComponent', () => {
         IdTipoPago: 6,
         FormaPago: 'Transferencia / depósito',
         IdMoneda: 'PEN',
+        MonedaDescripcion: 'Soles',
         MontoRecibido: 30,
         MontoEquivalente: 30,
         TipoCambio: 3.7,
         Propina: 0,
         NumeroOperacion: 'OP-123',
         BancoDestino: 'Banco de prueba',
+        BancoMoneda: 'PEN',
+        BancoMonedaDescripcion: 'Soles',
       }],
-      ['Transferencia / depósito (PEN)'],
+      ['Transferencia / depósito (Soles)'],
     );
 
-    expect(columnas['Transferencia / depósito (PEN) - propina']).toBeUndefined();
-    expect(columnas['Transferencia / depósito (PEN) - tipo de cambio']).toBeUndefined();
+    expect(columnas['Transferencia / depósito (Soles) - propina']).toBeUndefined();
+    expect(columnas['Transferencia / depósito (Soles) - tipo de cambio']).toBeUndefined();
+    expect(columnas['Transferencia / depósito (Soles) - banco destino'])
+      .toBe('Banco de prueba - Soles');
+    expect(columnas['Transferencia / depósito (Soles) - N.º de operación'])
+      .toBe('OP-123');
+    expect(Object.keys(columnas).indexOf('Transferencia / depósito (Soles) - banco destino'))
+      .toBeLessThan(Object.keys(columnas).indexOf('Transferencia / depósito (Soles) - recibido'));
     expect(columnas['Tipo de cambio']).toBe('3.7');
   });
 });
