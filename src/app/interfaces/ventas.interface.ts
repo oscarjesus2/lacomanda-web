@@ -86,6 +86,7 @@ export interface InformeContablePago {
     IdTipoPago: number;
     IdTarjeta?: number | null;
     Tarjeta?: string | null;
+    Autorizacion?: string | null;
     FormaPago: string;
     IdMoneda: string;
     MonedaDescripcion?: string | null;
