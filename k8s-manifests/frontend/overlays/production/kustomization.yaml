@@ -16,7 +16,7 @@ resources:
 images:
 - name: oscar020/frontend
   newName: oscar020/frontend
-  newTag: 202610141449-1c80d00-production
+  newTag: 202610141614-3efd1be-production
 
 # Solo en producción el balanceador de Google apunta directamente a este pod
 # (NEG). Tarda ~75 s en retirar un endpoint: sin la espera, el rollout deja
