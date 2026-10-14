@@ -10,17 +10,22 @@ import {
 import { InformeContableCompra } from 'src/app/interfaces/compras.interface';
 import { ReporteContableImpuesto } from 'src/app/interfaces/reporte-contable-impuesto.interface';
 import { CajaTipoDocumento } from 'src/app/models/caja-tipo-documento.model';
+import { Moneda } from 'src/app/models/moneda.models';
+import { Tarjeta } from 'src/app/models/tarjeta.models';
 import { CajaService } from 'src/app/services/caja.service';
 import { CompraService } from 'src/app/services/compra.service';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { EntradaCompraService } from 'src/app/services/entrada-compra.service';
 import { TipoDocumentoPaisService } from 'src/app/services/tipo-documento-pais.service';
+import { MonedaService } from 'src/app/services/moneda.service';
+import { TarjetaService } from 'src/app/services/tarjeta.service';
 import { VentaService } from 'src/app/services/venta.service';
 import { TenantRegionalNumberFormatterService } from 'src/app/services/localization/tenant-regional-number-formatter.service';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 
 interface OpcionDocumento { id: string; descripcion: string; }
+type MonedaCobro = Pick<Moneda, 'IdMoneda' | 'Descripcion'>;
 
 @Component({
   selector: 'app-dialog-reportecontable',
@@ -31,6 +36,8 @@ export class DialogReportecontableComponent {
   tipoInformeSeleccionado = 'Ventas';
   tiposDocumento: OpcionDocumento[] = [];
   series: string[] = [];
+  tarjetas: Tarjeta[] = [];
+  monedasCobro: MonedaCobro[] = [];
   private documentosCajas: CajaTipoDocumento[] = [];
   serieSeleccionada = '0';
   tipoDocumentoSeleccionado = '0';
@@ -47,6 +54,8 @@ export class DialogReportecontableComponent {
     private configuracionService: ConfiguracionService,
     private entradaCompraService: EntradaCompraService,
     private tipoDocumentoPaisService: TipoDocumentoPaisService,
+    private tarjetaService: TarjetaService,
+    private monedaService: MonedaService,
     private ventaService: VentaService,
     private compraService: CompraService,
     private regionalNumberFormatter: TenantRegionalNumberFormatterService,
@@ -91,6 +100,8 @@ export class DialogReportecontableComponent {
     this.errorFiltros = '';
     this.tiposDocumento = [];
     this.series = [];
+    this.tarjetas = [];
+    this.monedasCobro = [];
     try {
       const config = this.configuracionService.snapshot
         ?? await firstValueFrom(this.configuracionService.get());
@@ -108,9 +119,11 @@ export class DialogReportecontableComponent {
         return;
       }
 
-      const [cajasResponse, tiposPais] = await firstValueFrom(forkJoin([
+      const [cajasResponse, tiposPais, tarjetas, monedasResponse] = await firstValueFrom(forkJoin([
         this.cajaService.getAllCaja(true),
         this.tipoDocumentoPaisService.GetTiposDocumentos(),
+        this.tarjetaService.getTarjeta(),
+        this.monedaService.getMoneda(),
       ]));
       const cajas = cajasResponse.Data ?? [];
       const documentosPorCaja = cajas.length
@@ -118,6 +131,15 @@ export class DialogReportecontableComponent {
           this.cajaService.getTipoDocumentoByCaja(caja.IdCaja))))
         : [];
       if (tipoInforme !== this.tipoInformeSeleccionado) return;
+      if (!monedasResponse.Success) {
+        throw new Error('No se pudieron cargar las monedas para el reporte.');
+      }
+      this.tarjetas = (tarjetas ?? []).slice().sort((a, b) =>
+        (a.Orden ?? Number.MAX_VALUE) - (b.Orden ?? Number.MAX_VALUE)
+        || a.Descripcion.localeCompare(b.Descripcion));
+      this.monedasCobro = (monedasResponse.Data ?? []).slice().sort((a, b) =>
+        (a.IdMoneda === config?.IdMoneda ? -1 : b.IdMoneda === config?.IdMoneda ? 1 : 0)
+        || a.Descripcion.localeCompare(b.Descripcion));
       const idsPermitidos = new Set(tiposPais
         .filter(tipo => tipo.EsFiscal ?? (tipo.IdTipoDocumento !== 9))
         .map(tipo => tipo.IdTipoDocumento));
@@ -194,7 +216,6 @@ export class DialogReportecontableComponent {
 
   private filasVentas(datos: InformeContableVentaInterface[]): object[] {
     const tasas = this.tasasDelInforme(datos);
-    const gruposPago = this.gruposPago(datos);
     const impuestosAdicionales = this.paisISO2 === 'PE'
       ? this.impuestosConImporte(datos, [{
         nombre: 'ICBPER',
@@ -205,14 +226,13 @@ export class DialogReportecontableComponent {
       const {
         DesgloseImpuestos,
         Pagos,
+        IdMoneda,
         IGV,
         ICBPER,
-        TotalCobrado,
-        Propinas,
-        DiferenciaCobro,
+        DirecEmpresa,
         ...fila
       } = v;
-      return this.formatearFilaContable({
+      const filaContable = {
         ...this.insertarImpuestosDespuesDeBase(
           fila,
           'ValorVenta',
@@ -222,11 +242,11 @@ export class DialogReportecontableComponent {
           },
         ),
         'Cuadre tributario': this.estadoCuadre(v.DiferenciaDesglose),
-        ...this.columnasPagos(Pagos, gruposPago),
-        'Total cobrado (equivalente)': TotalCobrado,
-        Propinas,
-        'Diferencia de cobro': DiferenciaCobro,
-        'Cuadre de cobro': this.estadoCuadre(v.DiferenciaCobro),
+        DirecEmpresa,
+      };
+      return this.formatearFilaContable({
+        ...filaContable,
+        ...this.columnasPagos(Pagos, IdMoneda ?? ''),
       });
     });
     return datos.map(v => this.formatearFilaContable({
@@ -250,11 +270,8 @@ export class DialogReportecontableComponent {
       'Fecha de referencia': v.FechaRef,
       Empresa: v.Empresa,
       'NIF de la empresa': v.RucEmpresa,
-      ...this.columnasPagos(v.Pagos, gruposPago),
-      'Total cobrado (equivalente)': v.TotalCobrado,
-      Propinas: v.Propinas,
-      'Diferencia de cobro': v.DiferenciaCobro,
-      'Cuadre de cobro': this.estadoCuadre(v.DiferenciaCobro),
+      DirecEmpresa: v.DirecEmpresa,
+      ...this.columnasPagos(v.Pagos, v.IdMoneda ?? ''),
     }));
   }
 
@@ -389,44 +406,69 @@ export class DialogReportecontableComponent {
     return Math.abs(valor ?? 0) > 0.0001;
   }
 
-  private gruposPago(datos: InformeContableVentaInterface[]): string[] {
-    return Array.from(new Set(datos.flatMap(venta =>
-      (venta.Pagos ?? []).map(pago => this.grupoPago(pago)))))
-      .sort((a, b) => a.localeCompare(b));
-  }
-
   private columnasPagos(
     pagos: InformeContablePago[] | null | undefined,
-    grupos: string[],
+    monedaDocumento: string,
   ): Record<string, number | string> {
-    const columnas: Record<string, number | string> = {};
     const pagosRegistrados = pagos ?? [];
-    for (const grupo of grupos) {
-      const pagosGrupo = pagosRegistrados.filter(pago => this.grupoPago(pago) === grupo);
-      if (pagosGrupo.some(pago => !!pago.BancoDestino)) {
-        columnas[`${grupo} - banco destino`] = this.unirUnicos(
-          pagosGrupo.map(pago => this.descripcionBanco(pago)),
+    const columnas: Record<string, number | string> = {
+      FormaPago: this.valorOGuion(this.unirUnicos(
+        pagosRegistrados.map(pago => pago.FormaPago),
+      )),
+      Banco: this.valorOGuion(this.unirUnicos(
+        pagosRegistrados
+          .filter(pago => this.esPagoBancario(pago))
+          .map(pago => this.descripcionBanco(pago)),
+      )),
+      'N.º de operación': this.valorOGuion(this.unirUnicos(
+        pagosRegistrados
+          .filter(pago => this.esPagoBancario(pago))
+          .map(pago => pago.NumeroOperacion),
+      )),
+    };
+
+    if (this.paisISO2 === 'PE') {
+      for (const moneda of this.monedasDePago(pagosRegistrados)) {
+        columnas[`Monto bancario ${moneda.Descripcion}`] = this.sumar(
+          pagosRegistrados.filter(pago =>
+            this.esPagoBancario(pago) && pago.IdMoneda === moneda.IdMoneda),
+          pago => pago.MontoRecibido,
         );
       }
-      columnas[`${grupo} - recibido`] = this.sumar(pagosGrupo, pago => pago.MontoRecibido);
-      columnas[`${grupo} - equivalente documento`] = this.sumar(
-        pagosGrupo,
+      for (const moneda of this.monedasDePago(pagosRegistrados)) {
+        columnas[`${moneda.Descripcion} Efectivo`] = this.sumar(
+          pagosRegistrados.filter(pago =>
+            this.esEfectivo(pago) && pago.IdMoneda === moneda.IdMoneda),
+          pago => pago.MontoEquivalente,
+        );
+      }
+      columnas['Tipo de cambio'] = this.valorOGuion(
+        this.tiposCambioDeConversion(pagosRegistrados, monedaDocumento),
+      );
+      columnas.Equivalente = this.sumar(
+        pagosRegistrados.filter(pago =>
+          this.esPagoEquivalente(pago, monedaDocumento)),
         pago => pago.MontoEquivalente,
       );
-      if (pagosGrupo.some(pago => pago.IdTipoPago === 3)) {
-        columnas[`${grupo} - propina`] = this.sumar(pagosGrupo, pago => pago.Propina);
-      }
-      columnas[`${grupo} - N.º de operación`] = this.unirUnicos(
-        pagosGrupo.map(pago => pago.NumeroOperacion),
+    } else {
+      columnas['Monto bancario'] = this.sumar(
+        pagosRegistrados.filter(pago => this.esPagoBancario(pago)),
+        pago => pago.MontoRecibido,
+      );
+      columnas.Efectivo = this.sumar(
+        pagosRegistrados.filter(pago => this.esEfectivo(pago)),
+        pago => pago.MontoEquivalente,
       );
     }
-    columnas['Tipo de cambio'] = this.tiposCambio(pagosRegistrados);
-    return columnas;
-  }
 
-  private grupoPago(pago: InformeContablePago): string {
-    const formaPago = pago.FormaPago || `Forma ${pago.IdTipoPago}`;
-    return `${formaPago} (${this.descripcionMoneda(pago)})`;
+    for (const tarjeta of this.tarjetas) {
+      columnas[tarjeta.Descripcion] = this.sumar(
+        pagosRegistrados.filter(pago => pago.IdTarjeta === tarjeta.IdTarjeta),
+        pago => pago.MontoEquivalente,
+      );
+    }
+    columnas.Propina = this.sumar(pagosRegistrados, pago => pago.Propina);
+    return columnas;
   }
 
   private descripcionBanco(pago: InformeContablePago): string | null {
@@ -438,6 +480,47 @@ export class DialogReportecontableComponent {
     return pago.BancoMonedaDescripcion?.trim()
       || pago.MonedaDescripcion?.trim()
       || 'Sin moneda configurada';
+  }
+
+  private monedasDePago(pagos: InformeContablePago[]): MonedaCobro[] {
+    if (this.monedasCobro.length > 0) return this.monedasCobro;
+    return Array.from(new Map(pagos.map(pago => [pago.IdMoneda, {
+      IdMoneda: pago.IdMoneda,
+      Descripcion: pago.MonedaDescripcion || pago.IdMoneda,
+    }])).values());
+  }
+
+  private esPagoBancario(pago: InformeContablePago): boolean {
+    return !!pago.IdBanco || !!pago.BancoDestino;
+  }
+
+  private esEfectivo(pago: InformeContablePago): boolean {
+    return pago.IdTipoPago === 1;
+  }
+
+  private esPagoTarjeta(pago: InformeContablePago): boolean {
+    return !!pago.IdTarjeta;
+  }
+
+  private esPagoEquivalente(
+    pago: InformeContablePago,
+    monedaDocumento: string,
+  ): boolean {
+    if (this.esPagoTarjeta(pago)) return false;
+    if (monedaDocumento && pago.IdMoneda && pago.IdMoneda !== monedaDocumento) return true;
+    return !this.esPagoBancario(pago) && !this.esEfectivo(pago);
+  }
+
+  private tiposCambioDeConversion(
+    pagos: InformeContablePago[],
+    monedaDocumento: string,
+  ): string {
+    return String(this.tiposCambio(pagos.filter(pago =>
+      !!monedaDocumento && pago.IdMoneda !== monedaDocumento)));
+  }
+
+  private valorOGuion(valor: string): string {
+    return valor || '-';
   }
 
   private sumar(

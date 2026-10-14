@@ -21,6 +21,22 @@ describe('DialogReportecontableComponent', () => {
         { IdTipoDocumento: 9, Descripcion: 'Express', EsFiscal: false },
       ])),
   } as any;
+  const tarjetas = {
+    getTarjeta: jasmine.createSpy('getTarjeta').and.returnValue(of([
+      { IdTarjeta: 1, Descripcion: 'Visa', Orden: 1 },
+      { IdTarjeta: 2, Descripcion: 'Mastercard', Orden: 2 },
+      { IdTarjeta: 3, Descripcion: 'American Express', Orden: 3 },
+    ])),
+  } as any;
+  const monedas = {
+    getMoneda: jasmine.createSpy('getMoneda').and.returnValue(of({
+      Success: true,
+      Data: [
+        { IdMoneda: 'PEN', Descripcion: 'Soles' },
+        { IdMoneda: 'USD', Descripcion: 'Dólares' },
+      ],
+    })),
+  } as any;
 
   function crear(cajas: any): DialogReportecontableComponent {
     return new DialogReportecontableComponent(
@@ -29,6 +45,8 @@ describe('DialogReportecontableComponent', () => {
       config,
       entradaCompra,
       tiposPais,
+      tarjetas,
+      monedas,
       {} as any,
       {} as any,
       new TenantRegionalNumberFormatterService(),
@@ -266,36 +284,152 @@ describe('DialogReportecontableComponent', () => {
     expect(filas[1].ISC).toBe('2.00');
   });
 
-  it('deja el tipo de cambio como columna independiente y no crea propina para depósito', () => {
+  it('distribuye cobros peruanos por banco, moneda, efectivo y tarjeta', () => {
     const componente = crear({} as any);
     componente.paisISO2 = 'PE';
+    componente.monedasCobro = [
+      { IdMoneda: 'PEN', Descripcion: 'Soles' },
+      { IdMoneda: 'USD', Descripcion: 'Dólares' },
+    ] as any;
+    componente.tarjetas = [
+      { IdTarjeta: 1, Descripcion: 'Visa', Orden: 1 },
+      { IdTarjeta: 2, Descripcion: 'Mastercard', Orden: 2 },
+      { IdTarjeta: 3, Descripcion: 'American Express', Orden: 3 },
+    ] as any;
 
     const columnas = (componente as any).columnasPagos(
       [{
         IdTipoPago: 6,
-        FormaPago: 'Transferencia / depósito',
+        FormaPago: 'Depósito',
         IdMoneda: 'PEN',
         MonedaDescripcion: 'Soles',
         MontoRecibido: 30,
         MontoEquivalente: 30,
-        TipoCambio: 3.7,
+        TipoCambio: 1,
         Propina: 0,
         NumeroOperacion: 'OP-123',
         BancoDestino: 'Banco de prueba',
         BancoMoneda: 'PEN',
         BancoMonedaDescripcion: 'Soles',
+      }, {
+        IdTipoPago: 1,
+        FormaPago: 'Efectivo',
+        IdMoneda: 'USD',
+        MonedaDescripcion: 'Dólares',
+        MontoRecibido: 10,
+        MontoEquivalente: 37,
+        TipoCambio: 3.7,
+        Propina: 0,
+      }, {
+        IdTipoPago: 3,
+        IdTarjeta: 1,
+        Tarjeta: 'Visa',
+        FormaPago: 'Tarjeta',
+        IdMoneda: 'PEN',
+        MonedaDescripcion: 'Soles',
+        MontoRecibido: 20,
+        MontoEquivalente: 20,
+        TipoCambio: 1,
+        Propina: 2,
       }],
-      ['Transferencia / depósito (Soles)'],
+      'PEN',
     );
 
-    expect(columnas['Transferencia / depósito (Soles) - propina']).toBeUndefined();
-    expect(columnas['Transferencia / depósito (Soles) - tipo de cambio']).toBeUndefined();
-    expect(columnas['Transferencia / depósito (Soles) - banco destino'])
+    expect(columnas.FormaPago).toBe('Depósito | Efectivo | Tarjeta');
+    expect(columnas.Banco)
       .toBe('Banco de prueba - Soles');
-    expect(columnas['Transferencia / depósito (Soles) - N.º de operación'])
+    expect(columnas['N.º de operación'])
       .toBe('OP-123');
-    expect(Object.keys(columnas).indexOf('Transferencia / depósito (Soles) - banco destino'))
-      .toBeLessThan(Object.keys(columnas).indexOf('Transferencia / depósito (Soles) - recibido'));
+    expect(columnas['Monto bancario Soles']).toBe(30);
+    expect(columnas['Monto bancario Dólares']).toBe(0);
+    expect(columnas['Soles Efectivo']).toBe(0);
+    expect(columnas['Dólares Efectivo']).toBe(10);
     expect(columnas['Tipo de cambio']).toBe('3.7');
+    expect(columnas.Equivalente).toBe(37);
+    expect(columnas.Visa).toBe(20);
+    expect(columnas.Mastercard).toBe(0);
+    expect(columnas['American Express']).toBe(0);
+    expect(columnas.Propina).toBe(2);
+  });
+
+  it('usa el bloque de pagos español sin columnas por moneda ni tipo de cambio', () => {
+    const componente = crear({} as any);
+    componente.paisISO2 = 'ES';
+    componente.tarjetas = [{ IdTarjeta: 1, Descripcion: 'Visa', Orden: 1 }] as any;
+
+    const columnas = (componente as any).columnasPagos([{
+      IdTipoPago: 6,
+      FormaPago: 'Transferencia',
+      IdMoneda: 'EUR',
+      MonedaDescripcion: 'Euro',
+      MontoRecibido: 100,
+      MontoEquivalente: 100,
+      TipoCambio: 1,
+      Propina: 0,
+      NumeroOperacion: 'ES-1',
+      BancoDestino: 'Banco de prueba',
+      BancoMonedaDescripcion: 'Euro',
+    }], 'EUR');
+
+    expect(Object.keys(columnas)).toEqual([
+      'FormaPago', 'Banco', 'N.º de operación', 'Monto bancario', 'Efectivo', 'Visa', 'Propina',
+    ]);
+    expect(columnas['Monto bancario']).toBe(100);
+    expect(columnas['Tipo de cambio']).toBeUndefined();
+    expect(columnas.Equivalente).toBeUndefined();
+  });
+
+  it('ubica todo el bloque de pagos inmediatamente después de DirecEmpresa', () => {
+    const componente = crear({} as any);
+    componente.paisISO2 = 'PE';
+    componente.monedasCobro = [
+      { IdMoneda: 'PEN', Descripcion: 'Soles' },
+      { IdMoneda: 'USD', Descripcion: 'Dólares' },
+    ] as any;
+    componente.tarjetas = [{ IdTarjeta: 1, Descripcion: 'Visa', Orden: 1 }] as any;
+
+    const fila = (componente as any).filasVentas([{
+      IdVenta: 1,
+      Fecha: '2026-10-14',
+      Serie: 'F001',
+      TipoDocumento: '01',
+      Documento: 'F001-1',
+      Ruc: '20123456789',
+      Cliente: 'Cliente',
+      Moneda: 'Soles',
+      IdMoneda: 'PEN',
+      OpInafecto: 0,
+      ValorVenta: 100,
+      IGV: 18,
+      Servicio: 0,
+      ICBPER: 0,
+      Total: 118,
+      TotalDocumento: 118,
+      DiferenciaDesglose: 0,
+      Pagos: [],
+      DesgloseImpuestos: [{ Tasa: 18, Base: 100, Cuota: 18 }],
+      EstadoDescripcion: 'Generado',
+      EstadoSunat: 'Aceptado',
+      DocRef: '',
+      FechaRef: '',
+      Empresa: 'Empresa',
+      RucEmpresa: '20123456789',
+      DirecEmpresa: 'Dirección',
+    }])[0];
+
+    const columnas = Object.keys(fila);
+    expect(columnas.slice(columnas.indexOf('DirecEmpresa') + 1)).toEqual([
+      'FormaPago',
+      'Banco',
+      'N.º de operación',
+      'Monto bancario Soles',
+      'Monto bancario Dólares',
+      'Soles Efectivo',
+      'Dólares Efectivo',
+      'Tipo de cambio',
+      'Equivalente',
+      'Visa',
+      'Propina',
+    ]);
   });
 });
