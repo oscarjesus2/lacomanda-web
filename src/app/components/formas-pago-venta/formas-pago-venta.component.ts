@@ -49,7 +49,7 @@ export class FormasPagoVentaComponent implements OnChanges {
     return this.pagos.reduce(
       (total, pago) => total + Number(pago.MontoPagado || 0)
         - (pago.IdTipoPago === 1 ? Number(pago.Vuelto || 0) : 0)
-        + Number(pago.Propina || 0),
+        + (pago.IdTipoPago === 3 ? Number(pago.Propina || 0) : 0),
       0,
     );
   }
@@ -145,6 +145,7 @@ export class FormasPagoVentaComponent implements OnChanges {
 
   cambiarFormaPago(pago: PagoCorreccionVenta): void {
     if (pago.IdTipoPago !== 1) pago.Vuelto = 0;
+    if (pago.IdTipoPago !== 3) pago.Propina = 0;
     if (pago.IdTipoPago !== 3) {
       pago.IdTarjeta = undefined;
       pago.Autorizacion = undefined;
@@ -183,6 +184,7 @@ export class FormasPagoVentaComponent implements OnChanges {
     return this.pagos.map(pago => ({
       ...pago,
       Vuelto: pago.IdTipoPago === 1 ? Number(pago.Vuelto || 0) : 0,
+      Propina: pago.IdTipoPago === 3 ? Number(pago.Propina || 0) : 0,
       Observacion: pago.Observacion?.trim() || undefined,
       IdBanco: pago.IdBanco || undefined,
     }));
@@ -209,6 +211,7 @@ export class FormasPagoVentaComponent implements OnChanges {
       pago.TipoCambio = pago.TipoCambio && pago.TipoCambio > 0 ? pago.TipoCambio : 1;
       pago.MontoRecibido = pago.MontoRecibido && pago.MontoRecibido > 0
         ? pago.MontoRecibido : pago.MontoPagado;
+      if (pago.IdTipoPago !== 3) pago.Propina = 0;
     });
     if (this.pagos.length === 0 && this.agregarFormaInicial) this.agregarPago();
     this.recalcularVueltos();

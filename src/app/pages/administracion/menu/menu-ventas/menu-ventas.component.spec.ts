@@ -89,6 +89,7 @@ describe('MenuVentasComponent por licencia', () => {
 
   it('reserva las tres herramientas internas al usuario de soporte', () => {
     const component = crear([
+      C.FiscalIntegracion,
       C.OperacionComprobantes,
       C.VentasMesa,
       C.VentasPagoCuentaOnline,
@@ -113,7 +114,7 @@ describe('MenuVentasComponent por licencia', () => {
   });
 
   it('muestra el monitor AEAT únicamente para soporte en España', () => {
-    const component = crear([C.OperacionComprobantes]);
+    const component = crear([C.FiscalIntegracion, C.OperacionComprobantes]);
     (component as any).paisISO2 = 'ES';
     const configuracion = component.ventasMenu.find(
       section => section.title === 'Configuracion',
