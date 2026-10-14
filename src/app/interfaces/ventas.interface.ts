@@ -58,6 +58,7 @@ export interface InformeContableInterface {
     Ruc: string;
     Cliente: string;
     Moneda: string;
+    IdMoneda?: string;
     Dscto: number;
     OpInafecto: number;
     ValorVenta: number;
@@ -83,6 +84,8 @@ export interface InformeContableInterface {
 
 export interface InformeContablePago {
     IdTipoPago: number;
+    IdTarjeta?: number | null;
+    Tarjeta?: string | null;
     FormaPago: string;
     IdMoneda: string;
     MonedaDescripcion?: string | null;
