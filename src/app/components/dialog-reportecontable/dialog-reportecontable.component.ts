@@ -467,6 +467,11 @@ export class DialogReportecontableComponent {
         pago => pago.MontoEquivalente,
       );
     }
+    columnas['Autorización'] = this.valorOGuion(this.unirUnicos(
+      pagosRegistrados
+        .filter(pago => this.esPagoTarjeta(pago))
+        .map(pago => pago.Autorizacion),
+    ));
     columnas.Propina = this.sumar(pagosRegistrados, pago => pago.Propina);
     return columnas;
   }

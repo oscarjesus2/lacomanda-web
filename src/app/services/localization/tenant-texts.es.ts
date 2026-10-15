@@ -175,6 +175,7 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   openShiftToStart: 'Abre un turno para consultar pedidos y ventas en curso.',
   numberSign: 'N.º',
   walkInCustomer: 'Cliente de venta directa',
+  unidentifiedCustomer: 'Cliente no identificado',
   inProgress: 'En curso',
   awaitingPayment: 'Pendiente de cobro',
   artificialIntelligence: 'IA · LA COMANDA',

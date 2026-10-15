@@ -331,6 +331,7 @@ describe('DialogReportecontableComponent', () => {
         MontoEquivalente: 20,
         TipoCambio: 1,
         Propina: 2,
+        Autorizacion: 'AUT-123',
       }],
       'PEN',
     );
@@ -349,6 +350,7 @@ describe('DialogReportecontableComponent', () => {
     expect(columnas.Visa).toBe(20);
     expect(columnas.Mastercard).toBe(0);
     expect(columnas['American Express']).toBe(0);
+    expect(columnas['Autorización']).toBe('AUT-123');
     expect(columnas.Propina).toBe(2);
   });
 
@@ -372,7 +374,7 @@ describe('DialogReportecontableComponent', () => {
     }], 'EUR');
 
     expect(Object.keys(columnas)).toEqual([
-      'FormaPago', 'Banco', 'N.º de operación', 'Monto bancario', 'Efectivo', 'Visa', 'Propina',
+      'FormaPago', 'Banco', 'N.º de operación', 'Monto bancario', 'Efectivo', 'Visa', 'Autorización', 'Propina',
     ]);
     expect(columnas['Monto bancario']).toBe(100);
     expect(columnas['Tipo de cambio']).toBeUndefined();
@@ -429,6 +431,7 @@ describe('DialogReportecontableComponent', () => {
       'Tipo de cambio',
       'Equivalente',
       'Visa',
+      'Autorización',
       'Propina',
     ]);
   });

@@ -174,6 +174,7 @@ export const EN_TEXTS = {
   openShiftToStart: 'Open a shift to see current orders and sales.',
   numberSign: '#',
   walkInCustomer: 'Walk-in customer',
+  unidentifiedCustomer: 'Customer not identified',
   inProgress: 'In progress',
   awaitingPayment: 'Awaiting payment',
   artificialIntelligence: 'AI · LA COMANDA',

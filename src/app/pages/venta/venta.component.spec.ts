@@ -131,7 +131,7 @@ describe('VentaComponent - pedidos pendientes de cobro', () => {
       IdPedido: id,
       NroCuenta: 1,
       IdEspacio: 8,
-      NroPedido: `L${id}`,
+      NroPedido: `${id}`,
       Cliente: 'Cliente',
       IdCanalVenta: CanalVentaEnum.ESPACIO,
       Estado: estado,
