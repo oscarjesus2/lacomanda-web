@@ -4,6 +4,7 @@ import { SolicitudesAutorizacionRealtimeService } from 'src/app/services/solicit
 import { DialogSolicitudesAutorizacionComponent } from '../dialog-solicitudes-autorizacion/dialog-solicitudes-autorizacion.component';
 import { combineLatest, map } from 'rxjs';
 import { CesiaStockService } from 'src/app/services/cesia-stock.service';
+import { BandejaNotificacionesService } from 'src/app/services/bandeja-notificaciones.service';
 
 /**
  * Globo de solicitudes de autorización. Solo se muestra a aprobadores
@@ -21,23 +22,20 @@ export class SolicitudesAutorizacionBotonComponent {
   readonly puedeVerCentro$ = combineLatest([
     this.realtime.puedeVerCentroNotificaciones$, this.cesia.habilitado$,
   ]).pipe(map(([centro, cesia]) => centro || cesia));
-  readonly pendientes$ = combineLatest([
-    this.realtime.pendientes$,
-    this.realtime.comprobantesFiscalesPendientes$,
-    this.cesia.alertas$,
-  ]).pipe(map(([solicitudes, comprobantes, alertas]) =>
-    solicitudes.length + comprobantes.length + alertas.length));
+  readonly pendientes$ = this.bandeja.pendientes$;
 
   constructor(
     private readonly realtime: SolicitudesAutorizacionRealtimeService,
     private readonly dialog: MatDialog,
     private readonly cesia: CesiaStockService,
+    private readonly bandeja: BandejaNotificacionesService,
   ) {}
 
   abrir(): void {
     this.dialog.open(DialogSolicitudesAutorizacionComponent, {
       width: 'min(760px, 96vw)',
       maxWidth: '96vw',
+      panelClass: 'dialog-window--compact',
     });
   }
 }

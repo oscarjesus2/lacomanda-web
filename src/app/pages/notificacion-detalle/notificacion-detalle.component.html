@@ -1,0 +1,50 @@
+<main class="notification-detail">
+  <button mat-stroked-button (click)="abrirBandeja()"><mat-icon>notifications</mat-icon> {{ 'notificationBackToInbox' | tenantText }}</button>
+  <p *ngIf="cargando" role="status">{{ 'notificationLoading' | tenantText }}</p>
+  <div *ngIf="error" role="alert">
+    <p>{{ 'notificationDetailUnavailable' | tenantText }}</p>
+    <button mat-button (click)="cargar()">{{ 'pushSettingsRetry' | tenantText }}</button>
+  </div>
+  <p *ngIf="errorLectura" role="alert">{{ 'notificationReadError' | tenantText }}</p>
+  <ng-container *ngIf="detalle as detalle">
+    <header><h1>{{ detalle.Notificacion.Titulo }}</h1><p>{{ detalle.Notificacion.Resumen }}</p>
+      <small>{{ detalle.Notificacion.FechaUtc | date:'medium' }}</small>
+    </header>
+    <section *ngIf="detalle.Stock as stock">
+      <p class="estimate-notice">{{ 'notificationStockSnapshot' | tenantText }} {{ stock.GeneradoUtc | date:'medium' }}</p>
+      <p>{{ 'cesiaStockScope' | tenantText:{ hours: stock.HorasProyeccion } }}</p>
+      <p *ngIf="stock.ConsumosSinConfiguracion > 0">{{ 'cesiaStockIncomplete' | tenantText }}</p>
+      <article *ngFor="let alerta of stock.Alertas" class="stock-detail">
+        <span>{{ (alerta.Tipo === 'SIN_STOCK' ? 'cesiaStockEmpty' : alerta.Tipo === 'RIESGO_AGOTAMIENTO' ? 'cesiaStockRisk' : 'cesiaStockLow') | tenantText }}</span>
+        <h2>{{ alerta.Articulo }}</h2>
+        <p>{{ 'cesiaStockAvailable' | tenantText }} <strong>{{ alerta.StockEstimado | number:'1.0-3' }} {{ alerta.Unidad }}</strong></p>
+        <p>{{ 'cesiaStockMinimum' | tenantText }} {{ alerta.StockMinimo | number:'1.0-3' }} {{ alerta.Unidad }}</p>
+        <p *ngIf="alerta.HorasHastaAgotamiento !== null && alerta.StockEstimado > 0">{{ 'cesiaStockRunsOut' | tenantText:{ hours: (alerta.HorasHastaAgotamiento | number:'1.1-1') } }}</p>
+        <details><summary>{{ 'cesiaStockEvidence' | tenantText }}</summary>
+          <p>{{ 'cesiaStockRecorded' | tenantText }} {{ alerta.StockRegistrado | number:'1.0-3' }} {{ alerta.Unidad }}</p>
+          <p>{{ 'cesiaStockCommitted' | tenantText }} {{ alerta.ConsumoPendiente | number:'1.0-3' }} {{ alerta.Unidad }}</p>
+          <p *ngIf="alerta.ConsumoPorHora !== null">{{ 'cesiaStockRate' | tenantText:{ hours: stock.HorasObservacion } }} {{ alerta.ConsumoPorHora | number:'1.0-3' }} {{ alerta.Unidad }}/h</p>
+          <p *ngIf="alerta.ConsumoPorHora === null">{{ 'cesiaStockNoForecast' | tenantText }}</p>
+        </details>
+      </article>
+      <button mat-raised-button color="primary" (click)="revisarStock()">{{ 'notificationFilteredStock' | tenantText }} <mat-icon>arrow_forward</mat-icon></button>
+      <p class="estimate-notice">{{ 'cesiaStockEstimateHint' | tenantText }}</p>
+    </section>
+    <section *ngIf="detalle.Solicitud as solicitud" class="operation-detail">
+      <h2>{{ solicitud.Descripcion }}</h2><p>{{ solicitud.Ubicacion }} · {{ solicitud.UsuarioSolicita }}</p>
+      <p *ngIf="solicitud.Motivo">{{ solicitud.Motivo }}</p>
+      <p *ngIf="solicitud.Importe > 0">{{ solicitud.Importe | number:'1.2-2' }}</p>
+      <p>{{ solicitud.Estado }} <span *ngIf="solicitud.UsuarioResuelve">· {{ solicitud.UsuarioResuelve }}</span></p>
+      <p *ngIf="solicitud.Observacion">{{ solicitud.Observacion }}</p>
+      <div *ngIf="detalle.PuedeResolverSolicitud" class="actions">
+        <button mat-stroked-button color="warn" [disabled]="procesando" (click)="resolver(false)">{{ 'deny' | tenantText }}</button>
+        <button mat-raised-button color="primary" [disabled]="procesando" (click)="resolver(true)">{{ 'approve' | tenantText }}</button>
+      </div>
+    </section>
+    <section *ngIf="detalle.Comprobante as comprobante" class="operation-detail">
+      <h2>{{ comprobante.NumeroDocumento }}</h2><p>{{ comprobante.SistemaFiscal }} · {{ comprobante.Cliente }}</p>
+      <p>{{ comprobante.MensajeRespuesta }}</p>
+      <button mat-raised-button color="primary" (click)="revisarComprobante()">{{ 'notificationReviewDocument' | tenantText }}</button>
+    </section>
+  </ng-container>
+</main>

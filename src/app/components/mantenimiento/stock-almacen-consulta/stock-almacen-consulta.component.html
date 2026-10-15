@@ -9,6 +9,7 @@
   </button>
 
   <h2>CONSULTA DE STOCK POR ÁREA</h2>
+  <p *ngIf="seleccion?.idsArticulos?.length" role="status">{{ 'notificationStockSelection' | tenantText }}</p>
 
   <div class="dialog-toolbar">
     <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">

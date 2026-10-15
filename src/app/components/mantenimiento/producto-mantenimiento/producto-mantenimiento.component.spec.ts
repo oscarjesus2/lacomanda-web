@@ -1,4 +1,5 @@
-import { of, Subject } from 'rxjs';
+import { EMPTY, of, Subject } from 'rxjs';
+import Swal from 'sweetalert2';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 import { ProductoMantenimientoComponent } from './producto-mantenimiento.component';
 
@@ -9,6 +10,8 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
   ) {
     const respuestaVacia = of({ Success: true, Data: [] });
     const productoService = {
+      crear: jasmine.createSpy().and.returnValue(EMPTY),
+      actualizar: jasmine.createSpy().and.returnValue(EMPTY),
       getAllProductos: jasmine.createSpy().and.returnValue(respuestaVacia),
       obtenerImagen: jasmine.createSpy().and.returnValue(of(new Blob())),
       guardarImagen: jasmine.createSpy().and.returnValue(of({
@@ -286,5 +289,91 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
     componente.cambiarTipoProducto();
     expect(componente.p.IdClaseCombo).toBe(0);
     expect(componente.p.VentaIndividual).toBeTrue();
+  });
+
+  describe('precio de venta', () => {
+    beforeEach(() => { spyOn(Swal, 'fire'); });
+
+    function crearProducto(tipo = 3, idProducto = 0) {
+      const contexto = crearComponente([]);
+      Object.assign(contexto.componente.p, {
+        IdProducto: idProducto, NombreCorto: 'Ginger ale para combinado',
+        NombreCompleto: 'Ginger ale para combinado', Tipo: tipo,
+        Precio: 0, SinPrecio: false, PrecioMinimo: 0,
+        Posicion: 1, PosicionComplemento: 1, FactorComplemento: 20,
+        Qty: 1, IdClaseCombo: 0, VentaIndividual: true,
+      });
+      contexto.componente.productoForm = { invalid: false, controls: {} } as any;
+      (contexto.componente as any).configuracionAvanzadaHabilitada = true;
+      return contexto;
+    }
+
+    for (const tipo of [0, 1, 2, 3]) {
+      for (const id of [0, 42]) {
+        it(`impide ${id ? 'editar' : 'crear'} tipo ${tipo} con cero y Sin precio en No`, () => {
+          const { componente, productoService } = crearProducto(tipo, id);
+          expect(componente.requierePrecioPositivo()).toBeTrue();
+          componente.onSubmit();
+          expect(Swal.fire).toHaveBeenCalledWith('Validación',
+            'El precio debe ser mayor que cero cuando «Sin precio» está en «No».', 'info');
+          expect(productoService.crear).not.toHaveBeenCalled();
+          expect(productoService.actualizar).not.toHaveBeenCalled();
+        });
+      }
+    }
+
+    for (const precio of [null, undefined, -1, NaN, Infinity]) {
+      it(`rechaza el precio inválido ${precio} antes de enviar al servidor`, () => {
+        const { componente, productoService } = crearProducto();
+        componente.p.Precio = precio as number;
+        componente.onSubmit();
+        expect(productoService.crear).not.toHaveBeenCalled();
+        expect(Swal.fire).toHaveBeenCalled();
+      });
+    }
+
+    for (const id of [0, 42]) {
+      it(`permite ${id ? 'editar' : 'crear'} complemento con precio positivo`, () => {
+        const { componente, productoService } = crearProducto(3, id);
+        componente.p.Precio = 0.01;
+        componente.onSubmit();
+        expect(id ? productoService.actualizar : productoService.crear)
+          .toHaveBeenCalledWith(jasmine.objectContaining({ Precio: 0.01, SinPrecio: false }));
+        expect(Swal.fire).not.toHaveBeenCalled();
+      });
+    }
+
+    it('permite precio abierto con mínimo y revalida al volver Sin precio a No', () => {
+      const { componente, productoService } = crearProducto();
+      componente.p.SinPrecio = true;
+      componente.p.PrecioMinimo = 1;
+      expect(componente.requierePrecioPositivo()).toBeFalse();
+      componente.onSubmit();
+      expect(productoService.crear).toHaveBeenCalledTimes(1);
+
+      componente.p.SinPrecio = false;
+      expect(componente.requierePrecioPositivo()).toBeTrue();
+      componente.onSubmit();
+      expect(productoService.crear).toHaveBeenCalledTimes(1);
+      expect(Swal.fire).toHaveBeenCalled();
+    });
+
+    it('conserva el precio incluido para opciones exclusivas de menú', () => {
+      const { componente, productoService } = crearProducto(1);
+      componente.p.IdClaseCombo = 2;
+      componente.p.VentaIndividual = false;
+      expect(componente.requierePrecioPositivo()).toBeFalse();
+      componente.onSubmit();
+      expect(productoService.crear).toHaveBeenCalledWith(jasmine.objectContaining({ Precio: 0, VentaIndividual: false }));
+      expect(Swal.fire).not.toHaveBeenCalled();
+    });
+
+    it('sigue exigiendo precio para opciones de menú vendidas individualmente', () => {
+      const { componente, productoService } = crearProducto(1);
+      componente.p.IdClaseCombo = 2;
+      expect(componente.requierePrecioPositivo()).toBeTrue();
+      componente.onSubmit();
+      expect(productoService.crear).not.toHaveBeenCalled();
+    });
   });
 });

@@ -1,61 +1,61 @@
 import { of } from 'rxjs';
 import { DialogSolicitudesAutorizacionComponent } from './dialog-solicitudes-autorizacion.component';
 
-describe('Notificaciones · preferencia Cesia Push', () => {
+describe('Notificaciones · preferencia general Push', () => {
   function crear() {
     const push = {
-      obtenerEstadoCesia: jasmine.createSpy().and.resolveTo({ Habilitado: false, Disponible: true }),
-      cambiarPreferenciaCesia: jasmine.createSpy().and.resolveTo({ Habilitado: true, Disponible: true }),
+      obtenerEstadoGeneral: jasmine.createSpy().and.resolveTo({ Habilitado: false, Disponible: true, PuedeElegir: true, Vinculado: true }),
+      cambiarPreferenciaPush: jasmine.createSpy().and.resolveTo({ RecibirPorPush: true, RecibirPorCorreo: true }),
     };
     const componente = new DialogSolicitudesAutorizacionComponent(
       {} as any, {} as any, {} as any, {} as any, {} as any,
-      { alertas$: of([]), habilitado$: of(true) } as any, push as any,
+      { alertas$: of([]), habilitado$: of(true) } as any, push as any, { error$: of(false) } as any,
     );
     return { componente, push };
   }
 
   it('lee la preferencia guardada sin activarla automáticamente', async () => {
     const { componente, push } = crear();
-    await componente.cargarPushCesia();
-    expect(componente.cargandoPushCesia).toBeFalse();
-    expect(componente.recibirCesiaPush).toBeFalse();
-    expect(componente.pushCesiaDisponible).toBeTrue();
-    expect(push.cambiarPreferenciaCesia).not.toHaveBeenCalled();
+    await componente.cargarPush();
+    expect(componente.cargandoPush).toBeFalse();
+    expect(componente.recibirPush).toBeFalse();
+    expect(componente.pushDisponible).toBeTrue();
+    expect(push.cambiarPreferenciaPush).not.toHaveBeenCalled();
   });
 
   it('guarda confirmación y no cambia el correo', async () => {
     const { componente } = crear();
     componente.recibirPorCorreo = true;
-    await componente.cambiarPushCesia(true);
-    expect(componente.recibirCesiaPush).toBeTrue();
+    await componente.cambiarPush(true);
+    expect(componente.recibirPush).toBeTrue();
     expect(componente.recibirPorCorreo).toBeTrue();
   });
 
   it('restaura el interruptor si falla el permiso o el servidor', async () => {
     const { componente, push } = crear();
-    push.cambiarPreferenciaCesia.and.rejectWith(new Error('denegado'));
-    await componente.cambiarPushCesia(true);
-    expect(componente.recibirCesiaPush).toBeFalse();
-    expect(componente.errorPushCesia).toBeTrue();
-    expect(componente.guardandoPushCesia).toBeFalse();
+    push.cambiarPreferenciaPush.and.rejectWith(new Error('denegado'));
+    await componente.cambiarPush(true);
+    expect(componente.recibirPush).toBeFalse();
+    expect(componente.errorPush).toBeTrue();
+    expect(componente.guardandoPush).toBeFalse();
   });
 
   it('un fallo de consulta ofrece reintentar sin mostrar activado', async () => {
     const { componente, push } = crear();
-    push.obtenerEstadoCesia.and.rejectWith(new Error('sin red'));
-    await componente.cargarPushCesia();
-    expect(componente.errorPushCesia).toBeTrue();
-    expect(componente.recibirCesiaPush).toBeFalse();
-    push.obtenerEstadoCesia.and.resolveTo({ Habilitado: true, Disponible: true });
-    await componente.cargarPushCesia();
-    expect(componente.errorPushCesia).toBeFalse();
-    expect(componente.recibirCesiaPush).toBeTrue();
+    push.obtenerEstadoGeneral.and.rejectWith(new Error('sin red'));
+    await componente.cargarPush();
+    expect(componente.errorPush).toBeTrue();
+    expect(componente.recibirPush).toBeFalse();
+    push.obtenerEstadoGeneral.and.resolveTo({ Habilitado: true, Disponible: true });
+    await componente.cargarPush();
+    expect(componente.errorPush).toBeFalse();
+    expect(componente.recibirPush).toBeTrue();
   });
 
   it('evita dobles guardados', async () => {
     const { componente, push } = crear();
-    componente.guardandoPushCesia = true;
-    await componente.cambiarPushCesia(true);
-    expect(push.cambiarPreferenciaCesia).not.toHaveBeenCalled();
+    componente.guardandoPush = true;
+    await componente.cambiarPush(true);
+    expect(push.cambiarPreferenciaPush).not.toHaveBeenCalled();
   });
 });

@@ -1,43 +1,122 @@
-<div class="mant-panel approval-dialog">
-  <button mat-icon-button class="close-button" [attr.aria-label]="'close' | tenantText" (click)="cerrar()">
-    <mat-icon>close</mat-icon>
-  </button>
-  <h2>{{ 'notificationCenter' | tenantText }}</h2>
-  <p class="subtitle">{{ 'notificationCenterHint' | tenantText }}</p>
-  <app-cesia-stock-panel [limite]="10"></app-cesia-stock-panel>
-
-  <button
-    *ngIf="comprobantesFiscales.length > 0"
-    type="button"
-    class="request-card fiscal-notification"
-    (click)="abrirComprobantesFiscales()">
-    <div class="request-info">
-      <span class="request-type">{{ 'electronicBilling' | tenantText }}</span>
-      <h3>
-        {{
-          'fiscalDocumentsPendingCount'
-            | tenantText:{ count: comprobantesFiscales.length }
-        }}
-      </h3>
-      <p>{{ 'fiscalDocumentsNotificationHint' | tenantText }}</p>
+<div class="mant-panel approval-dialog mant-panel--scrollable">
+  <header class="mant-panel__header">
+    <h2>{{ (vista === 'preferencias' ? 'notificationSettings' : 'notificationCenter') | tenantText }}</h2>
+    <div class="mant-panel__header-actions">
+      <button mat-icon-button type="button" class="mant-panel__header-action settings-button"
+        [attr.aria-label]="'notificationSettings' | tenantText" [attr.title]="'notificationSettings' | tenantText"
+        [attr.aria-pressed]="vista === 'preferencias'" (click)="configurar()">
+        <mat-icon aria-hidden="true">settings</mat-icon>
+      </button>
+      <button mat-icon-button type="button" class="close-button" [attr.aria-label]="'close' | tenantText" (click)="cerrar()">
+        <mat-icon aria-hidden="true">close</mat-icon>
+      </button>
     </div>
-    <div class="request-actions">
-      <mat-icon>chevron_right</mat-icon>
+  </header>
+  <ng-container *ngIf="vista === 'bandeja'">
+    <p class="subtitle">{{ 'notificationInboxHint' | tenantText }}</p>
+    <p *ngIf="cargandoBandeja" role="status">{{ 'notificationLoading' | tenantText }}</p>
+    <div *ngIf="errorBandeja$ | async" class="notification-error" role="alert">
+      {{ 'notificationLoadError' | tenantText }}
+      <button mat-button (click)="actualizarBandeja()">{{ 'pushSettingsRetry' | tenantText }}</button>
     </div>
-  </button>
+    <h3 class="section-title">{{ 'notificationsUnread' | tenantText }} <span>{{ pendientes.length }}</span></h3>
+    <div *ngIf="pendientes.length === 0 && !cargandoBandeja" class="empty-state">
+      <mat-icon>notifications_none</mat-icon>
+      <strong>{{ 'notificationsNoUnread' | tenantText }}</strong>
+    </div>
+    <ng-container *ngFor="let aviso of pendientes">
+      <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: aviso }"></ng-container>
+    </ng-container>
+    <section *ngIf="leidas.length > 0" class="read-notifications">
+      <h3 class="section-title">{{ 'notificationsRead' | tenantText }}</h3>
+      <small>{{ 'notificationsReadLimit' | tenantText }}</small>
+      <ng-container *ngFor="let aviso of leidas">
+        <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: aviso }"></ng-container>
+      </ng-container>
+    </section>
+    <button *ngIf="solicitudes.length > 0" mat-stroked-button class="operations-link" (click)="vista = 'operaciones'">
+      {{ 'notificationOperationalRequests' | tenantText }} ({{ solicitudes.length }})
+    </button>
+    <button *ngIf="comprobantesFiscales.length > 0" mat-button class="operations-link" (click)="abrirComprobantesFiscales()">
+      {{ 'electronicBilling' | tenantText }} ({{ comprobantesFiscales.length }})
+    </button>
+  </ng-container>
 
-  <h3 *ngIf="solicitudes.length > 0" class="section-title">
-    {{ 'approvalRequests' | tenantText }}
-  </h3>
+  <ng-template #tarjeta let-aviso>
+    <article class="notification-card" [class.notification-card--read]="aviso.LeidaUtc">
+      <a [routerLink]="['/notificaciones', aviso.Id]" (click)="cerrar()" class="notification-summary">
+        <mat-icon aria-hidden="true">{{ icono(aviso) }}</mat-icon>
+        <div>
+          <span class="request-type" *ngIf="aviso.CodigoTipo === 'CESIA_STOCK'">Cesia · {{ 'cesiaStockLabel' | tenantText }}</span>
+          <h3>{{ aviso.Titulo }}</h3>
+          <p>{{ aviso.Resumen }}</p>
+          <time>{{ aviso.FechaUtc | date:'short' }}</time>
+        </div>
+        <mat-icon aria-hidden="true">chevron_right</mat-icon>
+      </a>
+      <button *ngIf="!aviso.LeidaUtc" mat-button class="mark-read" [disabled]="leyendo.has(aviso.Id)" (click)="marcarLeida(aviso)">
+        <mat-icon>done</mat-icon> {{ 'notificationMarkRead' | tenantText }}
+      </button>
+    </article>
+  </ng-template>
 
-  <div
-    *ngIf="solicitudes.length === 0 && comprobantesFiscales.length === 0 && (alertasStock$ | async)?.length === 0"
-    class="empty-state">
-    <mat-icon>notifications_none</mat-icon>
-    <strong>{{ 'noPendingApprovalRequests' | tenantText }}</strong>
-    <span>{{ 'windowUpdatesAutomatically' | tenantText }}</span>
+  <ng-container *ngIf="vista === 'preferencias'">
+    <p class="subtitle">{{ 'notificationSettingsHint' | tenantText }}</p>
+    <h3 class="section-title">{{ 'notificationTypes' | tenantText }}</h3>
+    <p *ngIf="cargandoTipos" role="status">{{ 'notificationLoading' | tenantText }}</p>
+    <div *ngIf="errorTipos" class="notification-error" role="alert">
+      {{ 'notificationSettingsError' | tenantText }}
+      <button mat-button (click)="cargarTipos()">{{ 'pushSettingsRetry' | tenantText }}</button>
+    </div>
+    <div *ngFor="let tipo of tipos" class="type-preference">
+      <mat-slide-toggle color="primary" [checked]="tipo.Recibir"
+        [disabled]="guardandoTipos.has(tipo.Codigo)" (change)="cambiarTipo(tipo, $event.checked)">
+        {{ tipo.Nombre }}
+      </mat-slide-toggle>
+      <small>{{ tipo.Descripcion }}</small>
+      <small *ngIf="!tipo.PermiteCorreo && !tipo.PermitePush">{{ 'notificationInAppOnly' | tenantText }}</small>
+    </div>
+    <h3 class="section-title">{{ 'notificationChannels' | tenantText }}</h3>
+    <p>{{ 'notificationChannelsHint' | tenantText }}</p>
+  <div class="email-preference" *ngIf="puedeElegirPush || cargandoPush || errorPush">
+    <mat-slide-toggle
+      color="primary"
+      [checked]="recibirPush"
+      [disabled]="cargandoPush || guardandoPush || !puedeElegirPush"
+      (change)="cambiarPush($event.checked, $event.source)">
+      {{ 'notifyByPush' | tenantText }}
+    </mat-slide-toggle>
+    <small>{{ 'notifyByPushHint' | tenantText }}</small>
+    <button *ngIf="recibirPush && pushDisponible && !dispositivoPushVinculado" mat-button type="button"
+      [disabled]="guardandoPush" (click)="vincularDispositivoPush()">
+      {{ 'enablePushOnDevice' | tenantText }}
+    </button>
+    <small *ngIf="cargandoPush" role="status">{{ 'pushSettingsLoading' | tenantText }}</small>
+    <small *ngIf="errorPush" role="alert">{{ 'pushSettingsError' | tenantText }}</small>
+    <button *ngIf="errorPush" mat-button type="button"
+      [disabled]="cargandoPush || guardandoPush" (click)="cargarPush()">
+      {{ 'pushSettingsRetry' | tenantText }}
+    </button>
   </div>
 
+  <div class="email-preference" *ngIf="puedeElegirCorreo">
+    <mat-slide-toggle
+      color="primary"
+      [checked]="recibirPorCorreo"
+      [disabled]="guardandoPreferencia"
+      (change)="cambiarPreferenciaCorreo($event.checked)">
+      {{ 'alsoNotifyByEmail' | tenantText }}
+    </mat-slide-toggle>
+    <small>{{ 'alsoNotifyByEmailHint' | tenantText }}</small>
+  </div>
+
+    <button mat-stroked-button class="operations-link" (click)="vista = 'bandeja'">{{ 'notificationBackToInbox' | tenantText }}</button>
+  </ng-container>
+
+  <ng-container *ngIf="vista === 'operaciones'">
+    <button mat-button (click)="vista = 'bandeja'">{{ 'notificationBackToInbox' | tenantText }}</button>
+    <h3 class="section-title">{{ 'notificationOperationalRequests' | tenantText }}</h3>
+    <p>{{ 'notificationOperationsHint' | tenantText }}</p>
   <article *ngFor="let solicitud of solicitudes" class="request-card">
     <div class="request-info">
       <span class="request-type">{{ etiquetaTipo(solicitud) }} · {{ solicitud.Ubicacion }}</span>
@@ -63,32 +142,6 @@
     </div>
   </article>
 
-  <div class="email-preference" *ngIf="cesiaHabilitada$ | async">
-    <mat-slide-toggle
-      color="primary"
-      [checked]="recibirCesiaPush"
-      [disabled]="cargandoPushCesia || guardandoPushCesia || (!pushCesiaDisponible && !recibirCesiaPush)"
-      (change)="cambiarPushCesia($event.checked)">
-      {{ 'cesiaPushLabel' | tenantText }}
-    </mat-slide-toggle>
-    <small>{{ 'cesiaPushHint' | tenantText }}</small>
-    <small *ngIf="cargandoPushCesia" role="status">{{ 'cesiaPushLoading' | tenantText }}</small>
-    <small *ngIf="!cargandoPushCesia && !pushCesiaDisponible && !errorPushCesia">{{ 'cesiaPushUnavailable' | tenantText }}</small>
-    <small *ngIf="errorPushCesia" role="alert">{{ 'cesiaPushError' | tenantText }}</small>
-    <button *ngIf="errorPushCesia" mat-button type="button"
-      [disabled]="cargandoPushCesia || guardandoPushCesia" (click)="cargarPushCesia()">
-      {{ 'cesiaPushRetry' | tenantText }}
-    </button>
-  </div>
 
-  <div class="email-preference" *ngIf="puedeElegirCorreo">
-    <mat-slide-toggle
-      color="primary"
-      [checked]="recibirPorCorreo"
-      [disabled]="guardandoPreferencia"
-      (change)="cambiarPreferenciaCorreo($event.checked)">
-      {{ 'alsoNotifyByEmail' | tenantText }}
-    </mat-slide-toggle>
-    <small>{{ 'alsoNotifyByEmailHint' | tenantText }}</small>
-  </div>
+  </ng-container>
 </div>

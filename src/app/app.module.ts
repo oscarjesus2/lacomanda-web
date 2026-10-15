@@ -1,4 +1,4 @@
-import { NgModule, CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA, LOCALE_ID, isDevMode } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA, LOCALE_ID } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { CommonModule, DatePipe } from '@angular/common';
@@ -80,6 +80,7 @@ import { DialogComplementosComponent } from './components/dialog-complementos/di
 import { DialogMTextComponent } from './components/dialog-mtext/dialog-mtext.component';
 import { TecladoTactilComponent } from './components/teclado-tactil/teclado-tactil.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
+import { opcionesServiceWorker } from './service-worker.config';
 import { DialogProductSearchComponent } from './components/dialog-product-search/dialog-product-search.component';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { DialogDividirCuentaComponent } from './components/dialog-dividir-cuenta/dialog-dividir-cuenta.component';
@@ -167,6 +168,7 @@ import { PagoCuentaOnlineConfigurationComponent } from './components/mantenimien
 import { SubscriptionAccessStatusComponent } from './auth/subscription-access-status/subscription-access-status.component';
 import { CesiaAssistantComponent } from './components/cesia-assistant/cesia-assistant.component';
 import { CesiaStockPanelComponent } from './components/cesia-stock-panel/cesia-stock-panel.component';
+import { NotificacionDetalleComponent } from './pages/notificacion-detalle/notificacion-detalle.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -304,6 +306,7 @@ export const MY_DATE_FORMATS = {
     SubscriptionAccessStatusComponent,
     CesiaAssistantComponent,
     CesiaStockPanelComponent,
+    NotificacionDetalleComponent,
   ],
   imports: [
     CommonModule,
@@ -347,12 +350,7 @@ export const MY_DATE_FORMATS = {
     MatAutocompleteModule, 
     FontAwesomeModule, 
     MatSnackBarModule,
-    ServiceWorkerModule.register('ngsw-worker.js', {
-  enabled: !isDevMode(),
-  // Register the ServiceWorker as soon as the application is stable
-  // or after 30 seconds (whichever comes first).
-  registrationStrategy: 'registerWhenStable:30000'
-})
+    ServiceWorkerModule.register('ngsw-worker.js', opcionesServiceWorker())
 
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA,

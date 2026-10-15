@@ -1,5 +1,5 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { Component, Inject, OnInit, Optional, ViewChild } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import * as XLSX from 'xlsx';
@@ -42,7 +42,8 @@ export class StockAlmacenConsultaComponent implements OnInit {
 
   constructor(
     private readonly dialogRef: MatDialogRef<StockAlmacenConsultaComponent>,
-    private readonly stockAlmacenService: StockAlmacenService
+    private readonly stockAlmacenService: StockAlmacenService,
+    @Optional() @Inject(MAT_DIALOG_DATA) readonly seleccion: { idsArticulos?: number[] } | null = null,
   ) {
     this.dataSource.filterPredicate = (item, filter) => {
       const texto = [
@@ -91,7 +92,14 @@ export class StockAlmacenConsultaComponent implements OnInit {
         }
 
         this.consulta = response.Data;
-        this.dataSource.data = response.Data?.Items || [];
+        const ids = this.seleccion?.idsArticulos;
+        this.dataSource.data = (response.Data?.Items || []).filter(item => !ids?.length || ids.includes(item.IdProducto));
+        if (ids?.length && this.consulta) this.consulta = {
+          ...this.consulta, Items: this.dataSource.data,
+          CantidadRegistros: this.dataSource.data.length,
+          CantidadBajoMinimo: this.dataSource.data.filter(item => item.BajoMinimo).length,
+          StockTotalSeleccionado: this.dataSource.data.reduce((total, item) => total + item.StockActual, 0),
+        };
         this.aplicarFiltro();
       },
       error: error => {

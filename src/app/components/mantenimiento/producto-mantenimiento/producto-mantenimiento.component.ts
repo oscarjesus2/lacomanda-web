@@ -330,9 +330,9 @@ onFamiliaChange(): void {
     return this.p.Tipo === 1 && Number(this.p.IdClaseCombo ?? 0) > 0;
   }
 
-  requierePrecioVentaIndividual(): boolean {
-    return this.esOpcionDeMenu()
-      && this.p.VentaIndividual
+  requierePrecioPositivo(): boolean {
+    // Solo las opciones exclusivas de menú tienen el importe incluido en el principal.
+    return (!this.esOpcionDeMenu() || this.p.VentaIndividual)
       && !this.p.SinPrecio;
   }
 
@@ -931,11 +931,11 @@ onFamiliaChange(): void {
     this.normalizarVentaIndividual();
     if (!this.modoComercio && !this.p.Posicion) { Swal.fire('Validación', 'Debe elegir la Posición (8×9).', 'info'); return; }
 
-    if (this.requierePrecioVentaIndividual()
-        && (!this.p.Precio || this.p.Precio <= 0)) {
+    if (this.requierePrecioPositivo()
+        && (!Number.isFinite(this.p.Precio) || this.p.Precio <= 0)) {
       Swal.fire(
         'Validación',
-        'Si esta opción del menú se vende por separado, debe indicar un precio mayor que cero o activar “Sin precio”.',
+        'El precio debe ser mayor que cero cuando «Sin precio» está en «No».',
         'info'
       );
       return;
