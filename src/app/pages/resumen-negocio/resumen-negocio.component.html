@@ -176,7 +176,7 @@
             <span class="business-home__order-icon"><mat-icon>receipt_long</mat-icon></span>
             <div class="business-home__order-copy">
               <strong>{{ 'order' | tenantText }} {{ pedido.NroPedido || ('numberSign' | tenantText) + pedido.IdPedido }}</strong>
-              <span>{{ pedido.Cliente || ('walkInCustomer' | tenantText) }}</span>
+              <span>{{ pedido.Cliente || ('unidentifiedCustomer' | tenantText) }}</span>
             </div>
             <span class="business-home__order-place" *ngIf="ubicacionPedido(pedido)">{{ 'space' | tenantText }} {{ ubicacionPedido(pedido) }}</span>
             <strong class="business-home__order-total">{{ simboloMoneda }} {{ pedido.Total | number:'1.2-2' }}</strong>
