@@ -4,6 +4,7 @@
   </button>
   <h2>{{ 'notificationCenter' | tenantText }}</h2>
   <p class="subtitle">{{ 'notificationCenterHint' | tenantText }}</p>
+  <app-cesia-stock-panel [limite]="10"></app-cesia-stock-panel>
 
   <button
     *ngIf="comprobantesFiscales.length > 0"
@@ -30,7 +31,7 @@
   </h3>
 
   <div
-    *ngIf="solicitudes.length === 0 && comprobantesFiscales.length === 0"
+    *ngIf="solicitudes.length === 0 && comprobantesFiscales.length === 0 && (alertasStock$ | async)?.length === 0"
     class="empty-state">
     <mat-icon>notifications_none</mat-icon>
     <strong>{{ 'noPendingApprovalRequests' | tenantText }}</strong>
@@ -61,6 +62,24 @@
       </button>
     </div>
   </article>
+
+  <div class="email-preference" *ngIf="cesiaHabilitada$ | async">
+    <mat-slide-toggle
+      color="primary"
+      [checked]="recibirCesiaPush"
+      [disabled]="cargandoPushCesia || guardandoPushCesia || (!pushCesiaDisponible && !recibirCesiaPush)"
+      (change)="cambiarPushCesia($event.checked)">
+      {{ 'cesiaPushLabel' | tenantText }}
+    </mat-slide-toggle>
+    <small>{{ 'cesiaPushHint' | tenantText }}</small>
+    <small *ngIf="cargandoPushCesia" role="status">{{ 'cesiaPushLoading' | tenantText }}</small>
+    <small *ngIf="!cargandoPushCesia && !pushCesiaDisponible && !errorPushCesia">{{ 'cesiaPushUnavailable' | tenantText }}</small>
+    <small *ngIf="errorPushCesia" role="alert">{{ 'cesiaPushError' | tenantText }}</small>
+    <button *ngIf="errorPushCesia" mat-button type="button"
+      [disabled]="cargandoPushCesia || guardandoPushCesia" (click)="cargarPushCesia()">
+      {{ 'cesiaPushRetry' | tenantText }}
+    </button>
+  </div>
 
   <div class="email-preference" *ngIf="puedeElegirCorreo">
     <mat-slide-toggle

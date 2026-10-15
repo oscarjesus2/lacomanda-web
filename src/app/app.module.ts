@@ -166,6 +166,7 @@ import { AeatEnvioMonitorComponent } from './components/mantenimiento/aeat-envio
 import { PagoCuentaOnlineConfigurationComponent } from './components/mantenimiento/pago-cuenta-online-configuration/pago-cuenta-online-configuration.component';
 import { SubscriptionAccessStatusComponent } from './auth/subscription-access-status/subscription-access-status.component';
 import { CesiaAssistantComponent } from './components/cesia-assistant/cesia-assistant.component';
+import { CesiaStockPanelComponent } from './components/cesia-stock-panel/cesia-stock-panel.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -302,6 +303,7 @@ export const MY_DATE_FORMATS = {
     PagoCuentaOnlineConfigurationComponent,
     SubscriptionAccessStatusComponent,
     CesiaAssistantComponent,
+    CesiaStockPanelComponent,
   ],
   imports: [
     CommonModule,

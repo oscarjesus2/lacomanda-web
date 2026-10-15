@@ -18,6 +18,7 @@ import { SolicitudAutorizacion } from './models/solicitud-autorizacion.models';
 import { Notificar } from './shared/notificaciones';
 import { NotificacionesSistemaService } from './services/notificaciones-sistema.service';
 import { NotificacionesPushService } from './services/notificaciones-push.service';
+import { CesiaStockService } from './services/cesia-stock.service';
 
 @Component({
   selector: 'app-root',
@@ -77,8 +78,16 @@ export class AppComponent implements OnInit, OnDestroy {
     private sesionUsuario: SesionUsuarioService,
     private notificacionesSistema: NotificacionesSistemaService,
     private notificacionesPush: NotificacionesPushService,
+    private cesiaStock: CesiaStockService,
   ) {
     this.backendDown$ = this.backendStatusService.isDown$;
+    this.cesiaStock.nuevas$.subscribe(alertas => {
+      Notificar.informacion(
+        this.textCatalog.get('cesiaStockNotification'),
+        this.textCatalog.get('cesiaStockNotificationDetail', { count: alertas.length }),
+        'warning',
+      );
+    });
     this.headerService.headerVisible$.subscribe(visible => {
       this.headerVisible = visible;
       if (visible) {
@@ -256,6 +265,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.estacionSessionRealtime.stop();
     void this.solicitudesAutorizacion.detener();
     this.sesionUsuario.liberar();
+    this.cesiaStock.detener();
     this.storageService.logout();
   }
 
@@ -283,11 +293,13 @@ export class AppComponent implements OnInit, OnDestroy {
       this.estacionSessionRealtime.stop();
       void this.solicitudesAutorizacion.detener();
       void this.sesionUsuario.detener();
+      this.cesiaStock.detener();
       return;
     }
 
     this.estacionSessionRealtime.start();
     this.solicitudesAutorizacion.iniciar();
+    this.cesiaStock.iniciar();
     this.sesionUsuario.iniciar();
   }
 

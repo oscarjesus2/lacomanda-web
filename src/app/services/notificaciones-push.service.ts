@@ -20,6 +20,11 @@ export interface EstadoNotificacionesPush {
   suscritas: boolean;
 }
 
+export interface EstadoPushCesia {
+  Habilitado: boolean;
+  Disponible: boolean;
+}
+
 /**
  * Gestiona el canal que sigue funcionando con la aplicación cerrada. El
  * backend vuelve a validar que el identificador pertenece a una estación de
@@ -79,6 +84,45 @@ export class NotificacionesPushService {
 
     await this.registrar(suscripcion);
     return true;
+  }
+
+  async obtenerEstadoCesia(): Promise<EstadoPushCesia> {
+    if (!this.esCandidatoLocal() || !this.swPush.isEnabled) {
+      return { Habilitado: false, Disponible: false };
+    }
+    const suscripcion = await firstValueFrom(this.swPush.subscription);
+    const response = await firstValueFrom(this.http.post<ApiResponse<EstadoPushCesia>>(
+      `${this.basePath}/cesia/estado`, this.dispositivo(suscripcion),
+    ));
+    return {
+      Habilitado: !!suscripcion && response.Data.Habilitado,
+      Disponible: response.Data.Disponible,
+    };
+  }
+
+  async cambiarPreferenciaCesia(habilitado: boolean): Promise<EstadoPushCesia> {
+    if (!this.esCandidatoLocal() || !this.swPush.isEnabled) {
+      throw new Error('Web Push no está disponible en este dispositivo.');
+    }
+    if (habilitado && !await this.activar()) {
+      throw new Error('No se pudieron activar las notificaciones push.');
+    }
+    const suscripcion = await firstValueFrom(this.swPush.subscription);
+    if (!suscripcion) throw new Error('No existe una suscripción push.');
+    const response = await firstValueFrom(this.http.put<ApiResponse<EstadoPushCesia>>(
+      `${this.basePath}/cesia/preferencia`, {
+        ...this.dispositivo(suscripcion), Habilitado: habilitado,
+      },
+    ));
+    // Desactivar Cesia no cancela las notificaciones de autorizaciones ni el correo.
+    return response.Data;
+  }
+
+  private dispositivo(suscripcion: PushSubscription | null): object {
+    return {
+      IdentificadorEstacion: this.deviceIdentifier.getIdentifier(),
+      Endpoint: suscripcion?.endpoint ?? '',
+    };
   }
 
   private esCandidatoLocal(): boolean {

@@ -10,6 +10,8 @@ import { Notificar } from 'src/app/shared/notificaciones';
 import { DialogMTextComponent } from '../dialog-mtext/dialog-mtext.component';
 import { ComprobanteFiscalPendiente } from 'src/app/models/comprobante-fiscal-pendiente.models';
 import { DialogComprobantesFiscalesPendientesComponent } from '../dialog-comprobantes-fiscales-pendientes/dialog-comprobantes-fiscales-pendientes.component';
+import { CesiaStockService } from 'src/app/services/cesia-stock.service';
+import { NotificacionesPushService } from 'src/app/services/notificaciones-push.service';
 
 /** Bandeja del aprobador: aprobar ejecuta la acción; denegar pide un motivo opcional. */
 @Component({
@@ -19,6 +21,13 @@ import { DialogComprobantesFiscalesPendientesComponent } from '../dialog-comprob
 })
 export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy {
   solicitudes: SolicitudAutorizacion[] = [];
+  readonly alertasStock$ = this.cesia.alertas$;
+  readonly cesiaHabilitada$ = this.cesia.habilitado$;
+  recibirCesiaPush = false;
+  pushCesiaDisponible = false;
+  cargandoPushCesia = true;
+  guardandoPushCesia = false;
+  errorPushCesia = false;
   comprobantesFiscales: ComprobanteFiscalPendiente[] = [];
   readonly procesando = new Set<number>();
   /** Preferencia propia: recibir también las solicitudes por correo. */
@@ -33,6 +42,8 @@ export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy
     private readonly api: SolicitudAutorizacionService,
     private readonly realtime: SolicitudesAutorizacionRealtimeService,
     private readonly textCatalog: TenantTextCatalogService,
+    private readonly cesia: CesiaStockService,
+    private readonly push: NotificacionesPushService,
   ) {}
 
   ngOnInit(): void {
@@ -45,6 +56,7 @@ export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy
       }),
     );
     void this.inicializar();
+    void this.cargarPushCesia();
   }
 
   private async inicializar(): Promise<void> {
@@ -91,6 +103,38 @@ export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy
       this.puedeElegirCorreo = preferencias.EsAprobador && !!preferencias.Email;
     } catch {
       this.puedeElegirCorreo = false;
+    }
+  }
+
+  async cargarPushCesia(): Promise<void> {
+    this.cargandoPushCesia = true;
+    this.errorPushCesia = false;
+    try {
+      const estado = await this.push.obtenerEstadoCesia();
+      this.recibirCesiaPush = estado.Habilitado;
+      this.pushCesiaDisponible = estado.Disponible;
+    } catch {
+      this.errorPushCesia = true;
+    } finally {
+      this.cargandoPushCesia = false;
+    }
+  }
+
+  async cambiarPushCesia(habilitado: boolean): Promise<void> {
+    if (this.guardandoPushCesia) return;
+    const anterior = this.recibirCesiaPush;
+    this.recibirCesiaPush = habilitado;
+    this.guardandoPushCesia = true;
+    this.errorPushCesia = false;
+    try {
+      const estado = await this.push.cambiarPreferenciaCesia(habilitado);
+      this.recibirCesiaPush = estado.Habilitado;
+      this.pushCesiaDisponible = estado.Disponible;
+    } catch {
+      this.recibirCesiaPush = anterior;
+      this.errorPushCesia = true;
+    } finally {
+      this.guardandoPushCesia = false;
     }
   }
 

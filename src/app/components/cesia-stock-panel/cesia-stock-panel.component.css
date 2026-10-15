@@ -1,0 +1,18 @@
+:host { display: block; }
+.cesia-stock { padding: 22px; margin-bottom: 16px; border-radius: 18px; background: #29201d; color: #fff7ef; box-shadow: 0 4px 14px #40201012; }
+.cesia-stock__heading { display: flex; gap: 8px; align-items: center; color: #ffc58c; font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+.cesia-stock h2 { font-size: 20px; line-height: 1.3; margin: 12px 0; }
+.cesia-stock h3 { font-size: 16px; margin: 5px 0 8px; overflow-wrap: anywhere; }
+.cesia-stock p { font-size: 13px; line-height: 1.55; margin: 6px 0; }
+.cesia-stock__scope, .cesia-stock small { color: #d5c6bd; font-size: 12px; line-height: 1.5; }
+.cesia-stock__item { padding: 14px 0; border-top: 1px solid #ffffff26; }
+.cesia-stock__kind { color: #ffc58c; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.cesia-stock__item--critical .cesia-stock__kind { color: #ffb0a7; }
+.cesia-stock .cesia-stock__warning { color: #ffcd9e; padding: 10px; border: 1px solid #ffc58c55; border-radius: 8px; }
+.cesia-stock details { margin-top: 10px; color: #e2d3ca; font-size: 12px; }
+.cesia-stock summary { cursor: pointer; }
+.cesia-stock__action, .cesia-stock__more { cursor: pointer; display: flex; align-items: center; gap: 6px; border: 0; background: transparent; color: #ffc58c; font-weight: 700; padding: 12px 0; text-align: left; }
+.cesia-stock__action { width: 100%; margin-top: 8px; }
+.cesia-stock button:focus-visible, .cesia-stock summary:focus-visible { outline: 2px solid #ffc58c; outline-offset: 4px; }
+.cesia-stock__footnote { display: block; }
+@media (max-width: 480px) { .cesia-stock { padding: 16px; } }
