@@ -1,0 +1,48 @@
+<ng-container *ngIf="estado$ | async as estado">
+  <section *ngIf="estado.habilitado" class="cesia-stock" [attr.aria-label]="'cesiaStockLabel' | tenantText">
+    <div class="cesia-stock__heading">
+      <mat-icon aria-hidden="true">auto_awesome</mat-icon>
+      <span>Cesia · {{ 'cesiaStockLabel' | tenantText }}</span>
+    </div>
+    <h2>{{ (estado.consulta?.Alertas?.length ? 'cesiaStockAttention' : 'cesiaStockTitle') | tenantText }}</h2>
+    <p *ngIf="estado.error" class="cesia-stock__warning" role="status">{{ 'cesiaStockUnavailable' | tenantText }}</p>
+    <p *ngIf="!estado.consulta && !estado.error">{{ 'cesiaStockLoading' | tenantText }}</p>
+    <ng-container *ngIf="estado.consulta as consulta">
+      <p class="cesia-stock__scope">{{ 'cesiaStockScope' | tenantText:{ hours: consulta.HorasProyeccion } }}</p>
+      <p *ngIf="consulta.ConsumosSinConfiguracion > 0" class="cesia-stock__warning">
+        {{ 'cesiaStockIncomplete' | tenantText }}
+      </p>
+      <p *ngIf="!estado.error && consulta.ArticulosEvaluados === 0">{{ 'cesiaStockNoData' | tenantText }}</p>
+      <p *ngIf="!estado.error && consulta.ArticulosEvaluados > 0 && consulta.Alertas.length === 0">
+        {{ 'cesiaStockNoAlerts' | tenantText }}
+      </p>
+      <article *ngFor="let alerta of consulta.Alertas | slice:0:(mostrarTodas ? consulta.Alertas.length : limite)"
+               class="cesia-stock__item" [class.cesia-stock__item--critical]="alerta.Tipo === 'SIN_STOCK'">
+        <span class="cesia-stock__kind">{{ etiqueta(alerta) | tenantText }}</span>
+        <h3>{{ alerta.Articulo }}</h3>
+        <p>{{ 'cesiaStockAvailable' | tenantText }} <strong>{{ alerta.StockEstimado | number:'1.0-3' }} {{ alerta.Unidad }}</strong></p>
+        <p *ngIf="alerta.Tipo === 'STOCK_BAJO'">{{ 'cesiaStockMinimum' | tenantText }} {{ alerta.StockMinimo | number:'1.0-3' }} {{ alerta.Unidad }}</p>
+        <p *ngIf="alerta.HorasHastaAgotamiento !== null && alerta.StockEstimado > 0">
+          {{ 'cesiaStockRunsOut' | tenantText:{ hours: (alerta.HorasHastaAgotamiento | number:'1.1-1') } }}
+        </p>
+        <details>
+          <summary>{{ 'cesiaStockEvidence' | tenantText }}</summary>
+          <p>{{ 'cesiaStockRecorded' | tenantText }} {{ alerta.StockRegistrado | number:'1.0-3' }} {{ alerta.Unidad }}</p>
+          <p>{{ 'cesiaStockCommitted' | tenantText }} {{ alerta.ConsumoPendiente | number:'1.0-3' }} {{ alerta.Unidad }}</p>
+          <p *ngIf="alerta.ConsumoPorHora !== null">
+            {{ 'cesiaStockRate' | tenantText:{ hours: consulta.HorasObservacion } }} {{ alerta.ConsumoPorHora | number:'1.0-3' }} {{ alerta.Unidad }}/h
+          </p>
+          <p *ngIf="alerta.ConsumoPorHora === null">{{ 'cesiaStockNoForecast' | tenantText }}</p>
+        </details>
+      </article>
+      <button *ngIf="consulta.Alertas.length > limite" type="button" class="cesia-stock__more" (click)="mostrarTodas = !mostrarTodas">
+        {{ (mostrarTodas ? 'cesiaStockShowLess' : 'cesiaStockShowAll') | tenantText:{ count: consulta.Alertas.length } }}
+      </button>
+      <small>{{ 'cesiaStockUpdated' | tenantText }} {{ consulta.GeneradoUtc | date:'shortTime' }}</small>
+    </ng-container>
+    <button type="button" class="cesia-stock__action" (click)="revisarAlmacen()">
+      {{ 'cesiaStockReview' | tenantText }} <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+    </button>
+    <small class="cesia-stock__footnote">{{ 'cesiaStockEstimateHint' | tenantText }}</small>
+  </section>
+</ng-container>

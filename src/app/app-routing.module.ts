@@ -21,11 +21,14 @@ import { MesaClienteComponent } from './pages/mesa-cliente/mesa-cliente.componen
 import { ReservasOnlineComponent } from './pages/reservas-online/reservas-online.component';
 import { ComprobantesPublicosComponent } from './pages/comprobantes-publicos/comprobantes-publicos.component';
 import { SubscriptionAccessStatusComponent } from './auth/subscription-access-status/subscription-access-status.component';
+import { NotificacionDetalleComponent } from './pages/notificacion-detalle/notificacion-detalle.component';
+import { NotificacionGuard } from './guards/notificacion.guard';
 // DigitacionMozoComponent reemplazado por VentaComponent con isModoMozo=true
 
 // Importa más componentes según sea necesario...
 
 const routes: Routes = [ 
+  { path: 'notificaciones/:id', component: NotificacionDetalleComponent, canActivate: [NotificacionGuard] },
 
   { path: 'mesa/:codigoQr', component: MesaClienteComponent },
   { path: 'reservas', component: ReservasOnlineComponent },

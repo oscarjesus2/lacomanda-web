@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { Component, Inject, OnDestroy, OnInit, Optional } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { ComprobanteFiscalPendiente } from 'src/app/models/comprobante-fiscal-pendiente.models';
 import { SolicitudesAutorizacionRealtimeService } from 'src/app/services/solicitudes-autorizacion-realtime.service';
@@ -12,9 +12,6 @@ import { CpeEnvioMonitorService } from 'src/app/services/cpe-envio-monitor.servi
 @Component({
   selector: 'app-dialog-comprobantes-fiscales-pendientes',
   templateUrl: './dialog-comprobantes-fiscales-pendientes.component.html',
-  styleUrls: [
-    '../dialog-solicitudes-autorizacion/dialog-solicitudes-autorizacion.component.css',
-  ],
 })
 export class DialogComprobantesFiscalesPendientesComponent
 implements OnInit, OnDestroy {
@@ -30,13 +27,15 @@ implements OnInit, OnDestroy {
     private readonly notificaciones: SolicitudesAutorizacionRealtimeService,
     private readonly aeat: AeatEnvioMonitorService,
     private readonly cpe: CpeEnvioMonitorService,
+    @Optional() @Inject(MAT_DIALOG_DATA) private readonly seleccion: { idVenta: number; idRegistroFiscal?: number | null } | null = null,
   ) {}
 
   ngOnInit(): void {
     this.subscription = this.notificaciones
       .comprobantesFiscalesPendientes$
       .subscribe(comprobantes => {
-        this.comprobantes = comprobantes;
+        this.comprobantes = comprobantes.filter(c => !this.seleccion || c.IdVenta === this.seleccion.idVenta
+          && (!this.seleccion.idRegistroFiscal || c.IdRegistroFiscal === this.seleccion.idRegistroFiscal));
         this.cargando = false;
       });
     void this.notificaciones.sincronizarComprobantesFiscales();

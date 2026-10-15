@@ -7,6 +7,7 @@ import { EstacionTipoEnum, NivelUsuarioEnum } from '../enums/enum';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { DeviceIdentifierService } from './device-identifier.service';
 import { StorageService } from './storage.service';
+import { TipoNotificacion } from '../models/notificacion.models';
 
 interface ConfiguracionNotificacionesPush {
   Disponible: boolean;
@@ -18,6 +19,20 @@ interface ConfiguracionNotificacionesPush {
 export interface EstadoNotificacionesPush {
   persistentesPermitidas: boolean;
   suscritas: boolean;
+}
+
+export interface PreferenciasNotificaciones {
+  RecibirPorCorreo: boolean;
+  RecibirPorPush: boolean;
+  PuedeElegirCorreo: boolean;
+  PuedeElegirPush: boolean;
+}
+
+export interface EstadoPushGeneral {
+  Habilitado: boolean;
+  Disponible: boolean;
+  Vinculado: boolean;
+  PuedeElegir: boolean;
 }
 
 /**
@@ -62,7 +77,16 @@ export class NotificacionesPushService {
   }
 
   async activar(): Promise<boolean> {
-    if (!this.esCandidatoLocal() || !this.swPush.isEnabled) return false;
+    if (!this.esCandidatoLocal()) return false;
+
+    // Cada activación pide permiso dentro del gesto del usuario y antes del HTTP.
+    // El navegador puede devolver una decisión guardada sin volver a mostrar el diálogo.
+    if (typeof Notification === 'undefined' || typeof Notification.requestPermission !== 'function'
+        || await Notification.requestPermission() !== 'granted') return false;
+
+    // No bloquear la solicitud de permiso por el estado previo del canal.
+    // Después del consentimiento sí hace falta soporte para completar el registro.
+    if (!this.swPush.isEnabled) return false;
 
     const configuracion = await this.obtenerConfiguracion();
     if (!configuracion.SuscripcionPersistentePermitida
@@ -79,6 +103,51 @@ export class NotificacionesPushService {
 
     await this.registrar(suscripcion);
     return true;
+  }
+
+  async obtenerPreferencias(): Promise<PreferenciasNotificaciones> {
+    const response = await firstValueFrom(this.http.get<ApiResponse<PreferenciasNotificaciones>>(
+      `${this.basePath}/preferencias`,
+    ));
+    return response.Data;
+  }
+
+  async recibeTipo(codigo: string): Promise<boolean> {
+    const response = await firstValueFrom(this.http.get<ApiResponse<TipoNotificacion[]>>(`${environment.apiUrl}/notificaciones/tipos`));
+    return response.Data?.some(t => t.Codigo === codigo && t.Recibir) === true;
+  }
+
+  async guardarPreferencias(cambios: { RecibirPorCorreo?: boolean; RecibirPorPush?: boolean }): Promise<PreferenciasNotificaciones> {
+    const response = await firstValueFrom(this.http.put<ApiResponse<PreferenciasNotificaciones>>(
+      `${this.basePath}/preferencias`, cambios,
+    ));
+    return response.Data;
+  }
+
+  async obtenerEstadoGeneral(): Promise<EstadoPushGeneral> {
+    const preferencias = await this.obtenerPreferencias();
+    const estado: EstadoPushGeneral = {
+      Habilitado: preferencias.RecibirPorPush, Disponible: false,
+      Vinculado: false, PuedeElegir: preferencias.PuedeElegirPush,
+    };
+    if (!preferencias.PuedeElegirPush || !this.esCandidatoLocal() || !this.swPush.isEnabled) return estado;
+    try {
+      const configuracion = await this.obtenerConfiguracion();
+      const suscripcion = await firstValueFrom(this.swPush.subscription);
+      estado.Disponible = configuracion.SuscripcionPersistentePermitida && !!configuracion.ClavePublica;
+      estado.Vinculado = !!suscripcion;
+    } catch {
+      // Conservar la preferencia leída: siempre debe ser posible desactivarla.
+    }
+    return estado;
+  }
+
+  async cambiarPreferenciaPush(habilitado: boolean): Promise<PreferenciasNotificaciones> {
+    // Revocar el canal no necesita PWA, permiso del navegador, proveedor ni licencia de Cesia.
+    if (habilitado && !await this.activar()) {
+      throw new Error('No se pudieron activar las notificaciones push.');
+    }
+    return this.guardarPreferencias({ RecibirPorPush: habilitado });
   }
 
   private esCandidatoLocal(): boolean {

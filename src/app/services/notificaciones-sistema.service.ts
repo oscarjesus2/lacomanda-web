@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { NotificacionesPushService } from './notificaciones-push.service';
 
 /**
  * Puente con las notificaciones nativas del navegador/sistema operativo.
@@ -7,6 +8,8 @@ import { Injectable } from '@angular/core';
  */
 @Injectable({ providedIn: 'root' })
 export class NotificacionesSistemaService {
+  constructor(private readonly preferencias: NotificacionesPushService) {}
+
   get disponible(): boolean {
     return typeof window !== 'undefined' && 'Notification' in window;
   }
@@ -27,8 +30,16 @@ export class NotificacionesSistemaService {
     idSolicitud: number,
     titulo: string,
     detalle: string,
+    codigoTipo?: string,
   ): Promise<boolean> {
     if (!this.disponible || Notification.permission !== 'granted') return false;
+
+    // Tener permiso del sistema no equivale a tener activado el canal en La Comanda.
+    try {
+      const preferencias = await this.preferencias.obtenerPreferencias();
+      if (!preferencias.RecibirPorPush || !preferencias.PuedeElegirPush) return false;
+      if (!codigoTipo || !await this.preferencias.recibeTipo(codigoTipo)) return false;
+    } catch { return false; } // Ante un fallo de consulta, no emitir avisos externos.
 
     // Cuando el usuario ya está mirando LaComanda, el aviso interno existente
     // es suficiente y evita mostrar el mismo mensaje dos veces.

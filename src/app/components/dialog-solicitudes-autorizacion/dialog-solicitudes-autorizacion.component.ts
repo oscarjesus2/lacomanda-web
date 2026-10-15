@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { SolicitudAutorizacion } from 'src/app/models/solicitud-autorizacion.models';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
@@ -10,18 +11,39 @@ import { Notificar } from 'src/app/shared/notificaciones';
 import { DialogMTextComponent } from '../dialog-mtext/dialog-mtext.component';
 import { ComprobanteFiscalPendiente } from 'src/app/models/comprobante-fiscal-pendiente.models';
 import { DialogComprobantesFiscalesPendientesComponent } from '../dialog-comprobantes-fiscales-pendientes/dialog-comprobantes-fiscales-pendientes.component';
+import { CesiaStockService } from 'src/app/services/cesia-stock.service';
+import { NotificacionesPushService } from 'src/app/services/notificaciones-push.service';
+import { BandejaNotificacionesService } from 'src/app/services/bandeja-notificaciones.service';
+import { NotificacionResumen, TipoNotificacion } from 'src/app/models/notificacion.models';
 
 /** Bandeja del aprobador: aprobar ejecuta la acción; denegar pide un motivo opcional. */
 @Component({
   selector: 'app-dialog-solicitudes-autorizacion',
   templateUrl: './dialog-solicitudes-autorizacion.component.html',
-  styleUrls: ['./dialog-solicitudes-autorizacion.component.css'],
 })
 export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy {
+  vista: 'bandeja' | 'preferencias' | 'operaciones' = 'bandeja';
+  pendientes: NotificacionResumen[] = [];
+  leidas: NotificacionResumen[] = [];
+  tipos: TipoNotificacion[] = [];
+  cargandoTipos = false;
+  errorTipos = false;
+  readonly guardandoTipos = new Set<string>();
+  readonly leyendo = new Set<string>();
+  readonly errorBandeja$ = this.bandeja.error$;
+  cargandoBandeja = true;
   solicitudes: SolicitudAutorizacion[] = [];
+  readonly alertasStock$ = this.cesia.alertas$;
+  puedeElegirPush = false;
+  dispositivoPushVinculado = false;
+  recibirPush = false;
+  pushDisponible = false;
+  cargandoPush = true;
+  guardandoPush = false;
+  errorPush = false;
   comprobantesFiscales: ComprobanteFiscalPendiente[] = [];
   readonly procesando = new Set<number>();
-  /** Preferencia propia: recibir también las solicitudes por correo. */
+  /** Canales generales del usuario; los avisos internos siempre se mantienen. */
   recibirPorCorreo = false;
   puedeElegirCorreo = false;
   guardandoPreferencia = false;
@@ -33,6 +55,9 @@ export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy
     private readonly api: SolicitudAutorizacionService,
     private readonly realtime: SolicitudesAutorizacionRealtimeService,
     private readonly textCatalog: TenantTextCatalogService,
+    private readonly cesia: CesiaStockService,
+    private readonly push: NotificacionesPushService,
+    private readonly bandeja: BandejaNotificacionesService,
   ) {}
 
   ngOnInit(): void {
@@ -44,14 +69,60 @@ export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy
         this.comprobantesFiscales = comprobantes;
       }),
     );
+    this.subscriptions.add(this.bandeja.notificaciones$.subscribe(items => {
+      this.pendientes = items.filter(n => !n.LeidaUtc);
+      this.leidas = items.filter(n => !!n.LeidaUtc).slice(0, 3);
+    }));
     void this.inicializar();
   }
 
   private async inicializar(): Promise<void> {
     await this.realtime.sincronizar();
-    if (this.realtime.esAprobador) {
-      await this.cargarPreferencias();
-    }
+    await this.actualizarBandeja();
+  }
+
+  async actualizarBandeja(): Promise<void> {
+    this.cargandoBandeja = true;
+    try { await this.bandeja.actualizar(); }
+    catch { /* La bandeja conserva la última consulta y muestra la opción de reintentar. */ }
+    finally { this.cargandoBandeja = false; }
+  }
+
+  async configurar(): Promise<void> {
+    this.vista = this.vista === 'preferencias' ? 'bandeja' : 'preferencias';
+    if (this.vista === 'preferencias') await Promise.all([this.cargarPreferencias(), this.cargarPush(), this.cargarTipos()]);
+  }
+
+  async cargarTipos(): Promise<void> {
+    this.cargandoTipos = true;
+    this.errorTipos = false;
+    try { this.tipos = await this.bandeja.tipos(); }
+    catch { this.errorTipos = true; }
+    finally { this.cargandoTipos = false; }
+  }
+
+  async cambiarTipo(tipo: TipoNotificacion, recibir: boolean): Promise<void> {
+    if (this.guardandoTipos.has(tipo.Codigo)) return;
+    const anterior = tipo.Recibir;
+    tipo.Recibir = recibir;
+    this.guardandoTipos.add(tipo.Codigo);
+    this.errorTipos = false;
+    try { await this.bandeja.suscribir(tipo.Codigo, recibir); }
+    catch { tipo.Recibir = anterior; this.errorTipos = true; }
+    finally { this.guardandoTipos.delete(tipo.Codigo); }
+  }
+
+  async marcarLeida(aviso: NotificacionResumen): Promise<void> {
+    if (this.leyendo.has(aviso.Id)) return;
+    this.leyendo.add(aviso.Id);
+    try { await this.bandeja.marcarLeida(aviso.Id); }
+    catch { /* El interceptor muestra el error; la notificación sigue pendiente. */ }
+    finally { this.leyendo.delete(aviso.Id); }
+  }
+
+  icono(aviso: NotificacionResumen): string {
+    return aviso.CodigoTipo === 'CESIA_STOCK' ? 'auto_awesome'
+      : aviso.CodigoTipo === 'FISCAL_PENDIENTE' ? 'receipt_long' : 'approval';
   }
 
   /** Etiqueta del tipo de solicitud, para no mostrar el nombre técnico. */
@@ -71,7 +142,7 @@ export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy
   async cambiarPreferenciaCorreo(recibir: boolean): Promise<void> {
     this.guardandoPreferencia = true;
     try {
-      const preferencias = await firstValueFrom(this.api.guardarPreferencias(recibir));
+      const preferencias = await this.push.guardarPreferencias({ RecibirPorCorreo: recibir });
       this.recibirPorCorreo = preferencias.RecibirPorCorreo;
       Notificar.exito(this.textCatalog.get(
         preferencias.RecibirPorCorreo ? 'emailAlertsOn' : 'emailAlertsOff',
@@ -86,16 +157,70 @@ export class DialogSolicitudesAutorizacionComponent implements OnInit, OnDestroy
 
   private async cargarPreferencias(): Promise<void> {
     try {
-      const preferencias = await firstValueFrom(this.api.obtenerPreferencias());
+      const preferencias = await this.push.obtenerPreferencias();
       this.recibirPorCorreo = preferencias.RecibirPorCorreo;
-      this.puedeElegirCorreo = preferencias.EsAprobador && !!preferencias.Email;
+      this.puedeElegirCorreo = preferencias.PuedeElegirCorreo || preferencias.RecibirPorCorreo;
     } catch {
       this.puedeElegirCorreo = false;
     }
   }
 
+  async cargarPush(): Promise<void> {
+    this.cargandoPush = true;
+    this.errorPush = false;
+    try {
+      const estado = await this.push.obtenerEstadoGeneral();
+      this.recibirPush = estado.Habilitado;
+      this.pushDisponible = estado.Disponible;
+      this.puedeElegirPush = estado.PuedeElegir || estado.Habilitado;
+      this.dispositivoPushVinculado = estado.Vinculado;
+    } catch {
+      this.errorPush = true;
+    } finally {
+      this.cargandoPush = false;
+    }
+  }
+
+  async cambiarPush(habilitado: boolean, interruptor?: MatSlideToggle): Promise<void> {
+    if (this.guardandoPush) {
+      if (interruptor) interruptor.checked = this.recibirPush;
+      return;
+    }
+    const anterior = this.recibirPush;
+    this.recibirPush = habilitado;
+    this.guardandoPush = true;
+    this.errorPush = false;
+    try {
+      const estado = await this.push.cambiarPreferenciaPush(habilitado);
+      this.recibirPush = estado.RecibirPorPush;
+      if (habilitado) this.dispositivoPushVinculado = true;
+    } catch {
+      this.recibirPush = anterior;
+      this.errorPush = true;
+    } finally {
+      this.guardandoPush = false;
+      // Material cambia su estado antes del evento. Un rechazo inmediato puede
+      // volver al mismo valor del binding sin que Angular actualice el control.
+      if (interruptor) interruptor.checked = this.recibirPush;
+    }
+  }
+
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+  }
+
+  async vincularDispositivoPush(): Promise<void> {
+    if (this.guardandoPush) return;
+    this.guardandoPush = true;
+    this.errorPush = false;
+    try {
+      if (!await this.push.activar()) throw new Error('Push unavailable');
+      await this.cargarPush();
+    } catch {
+      this.errorPush = true;
+    } finally {
+      this.guardandoPush = false;
+    }
   }
 
   abrirComprobantesFiscales(): void {

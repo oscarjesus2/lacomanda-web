@@ -18,6 +18,11 @@ import { SolicitudAutorizacion } from './models/solicitud-autorizacion.models';
 import { Notificar } from './shared/notificaciones';
 import { NotificacionesSistemaService } from './services/notificaciones-sistema.service';
 import { NotificacionesPushService } from './services/notificaciones-push.service';
+import { BandejaNotificacionesService } from './services/bandeja-notificaciones.service';
+import { tipoNotificacionSolicitud } from './models/notificacion.models';
+import { CesiaStockService } from './services/cesia-stock.service';
+import { MatDialog } from '@angular/material/dialog';
+import { DialogSolicitudesAutorizacionComponent } from './components/dialog-solicitudes-autorizacion/dialog-solicitudes-autorizacion.component';
 
 @Component({
   selector: 'app-root',
@@ -77,8 +82,20 @@ export class AppComponent implements OnInit, OnDestroy {
     private sesionUsuario: SesionUsuarioService,
     private notificacionesSistema: NotificacionesSistemaService,
     private notificacionesPush: NotificacionesPushService,
+    private cesiaStock: CesiaStockService,
+    private dialog: MatDialog,
+    private bandeja: BandejaNotificacionesService,
   ) {
     this.backendDown$ = this.backendStatusService.isDown$;
+    this.bandeja.nuevas$.subscribe(avisos => {
+      const alertas = avisos.filter(n => n.CodigoTipo === 'CESIA_STOCK');
+      if (!alertas.length) return;
+      Notificar.informacion(
+        this.textCatalog.get('cesiaStockNotification'),
+        this.textCatalog.get('cesiaStockNotificationDetail', { count: alertas.length }),
+        'warning',
+      );
+    });
     this.headerService.headerVisible$.subscribe(visible => {
       this.headerVisible = visible;
       if (visible) {
@@ -140,18 +157,24 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   /** Aviso al aprobador de una solicitud nueva hecha por otra persona. */
-  private avisarSolicitudCreada(solicitud: SolicitudAutorizacion): void {
+  private async avisarSolicitudCreada(solicitud: SolicitudAutorizacion): Promise<void> {
+    void this.bandeja.actualizar().catch(() => undefined);
     if (!this.solicitudesAutorizacion.esAprobador
         || solicitud.IdUsuarioSolicita === this.storageService.getCurrentUser()?.IdUsuario) {
       return;
     }
+
+    // Suscribirse a un tipo regula el aviso, nunca la recepción del evento operativo.
+    try {
+      if (!(await this.bandeja.tipos()).some(t => t.Codigo === tipoNotificacionSolicitud(solicitud.Tipo) && t.Recibir)) return;
+    } catch { return; }
 
     const titulo = this.textCatalog.get('newApprovalRequest');
     const detalle = `${solicitud.UsuarioSolicita}: ${this.etiquetaSolicitud(solicitud)} `
       + `${solicitud.Descripcion} · ${solicitud.Ubicacion}`;
 
     void this.notificacionesSistema
-      .mostrarAprobacion(solicitud.IdSolicitud, titulo, detalle)
+      .mostrarAprobacion(solicitud.IdSolicitud, titulo, detalle, tipoNotificacionSolicitud(solicitud.Tipo))
       .then(mostradaEnSistema => {
         if (!mostradaEnSistema) Notificar.informacion(titulo, detalle);
       })
@@ -205,16 +228,10 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   async activarNotificaciones(): Promise<void> {
-    const permiso = await this.notificacionesSistema.solicitarPermiso();
-    if (permiso) {
-      try {
-        await this.notificacionesPush.activar();
-      } catch (error) {
-        console.warn('No se pudieron activar las notificaciones persistentes.', error);
-      }
-    }
-
-    await this.actualizarActivacionNotificaciones(this.esAprobadorActual);
+    // Toda activación del canal pasa por el mismo interruptor visible al usuario.
+    this.dialog.open(DialogSolicitudesAutorizacionComponent, {
+      width: 'min(760px, 96vw)', maxWidth: '96vw', panelClass: 'dialog-window--compact',
+    });
   }
 
   omitirActivacionNotificaciones(): void {
@@ -230,20 +247,10 @@ export class AppComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.notificacionesSistema.permiso === 'default') {
-      this.mostrarActivacionNotificaciones = true;
-      return;
-    }
-
-    if (this.notificacionesSistema.permiso !== 'granted') {
-      this.mostrarActivacionNotificaciones = false;
-      return;
-    }
-
     try {
-      const estado = await this.notificacionesPush.sincronizarExistente();
-      this.mostrarActivacionNotificaciones = estado.persistentesPermitidas
-        && !estado.suscritas;
+      await this.notificacionesPush.sincronizarExistente();
+      const estado = await this.notificacionesPush.obtenerEstadoGeneral();
+      this.mostrarActivacionNotificaciones = estado.Habilitado && estado.Disponible && !estado.Vinculado;
     } catch (error) {
       console.warn('No se pudo sincronizar la suscripción Web Push.', error);
       this.mostrarActivacionNotificaciones = false;
@@ -256,6 +263,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.estacionSessionRealtime.stop();
     void this.solicitudesAutorizacion.detener();
     this.sesionUsuario.liberar();
+    this.cesiaStock.detener();
+    this.bandeja.detener();
     this.storageService.logout();
   }
 
@@ -283,11 +292,15 @@ export class AppComponent implements OnInit, OnDestroy {
       this.estacionSessionRealtime.stop();
       void this.solicitudesAutorizacion.detener();
       void this.sesionUsuario.detener();
+      this.cesiaStock.detener();
+      this.bandeja.detener();
       return;
     }
 
     this.estacionSessionRealtime.start();
     this.solicitudesAutorizacion.iniciar();
+    this.cesiaStock.iniciar();
+    this.bandeja.iniciar();
     this.sesionUsuario.iniciar();
   }
 

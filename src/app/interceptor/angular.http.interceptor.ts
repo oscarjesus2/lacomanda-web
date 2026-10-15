@@ -30,6 +30,7 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { BackendStatusService } from '../services/backend-status.service';
 import { environment } from 'src/environments/environment';
 import { DeviceIdentifierService } from '../services/device-identifier.service';
+import { CONSULTA_CESIA_EN_SEGUNDO_PLANO } from './background-request.context';
 
 interface ApiErrorResponse {
   Success?: boolean;
@@ -220,6 +221,10 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     // además un modal global para esa concurrencia esperable.
     if (this.isStationAvailabilityRace(error, request)) {
       this.spinnerService.hide();
+      return throwError(() => error);
+    }
+
+    if (request.context.get(CONSULTA_CESIA_EN_SEGUNDO_PLANO)) {
       return throwError(() => error);
     }
 
