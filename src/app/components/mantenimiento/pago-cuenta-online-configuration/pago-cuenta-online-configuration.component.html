@@ -106,6 +106,13 @@
         <p class="dialog-form-section__hint">
           Culqi revisa que el consumidor pueda identificar y contactar al comercio, y que vea estas políticas desde la experiencia de pago. Las URLs deben ser públicas y usar HTTPS.
         </p>
+        <div class="dialog-option">
+          <div class="dialog-option__content">
+            <strong class="dialog-option__title">Páginas integradas de LaComanda</strong>
+            <span class="dialog-option__hint">Crea automáticamente las tres URLs del dominio actual para este negocio.</span>
+          </div>
+          <button mat-stroked-button type="button" (click)="usarPaginasIntegradas()">Usar páginas integradas</button>
+        </div>
         <div class="dialog-form-grid">
           <mat-form-field appearance="fill">
             <mat-label>Correo de contacto público</mat-label>

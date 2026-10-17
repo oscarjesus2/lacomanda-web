@@ -169,6 +169,8 @@ import { SubscriptionAccessStatusComponent } from './auth/subscription-access-st
 import { CesiaAssistantComponent } from './components/cesia-assistant/cesia-assistant.component';
 import { CesiaStockPanelComponent } from './components/cesia-stock-panel/cesia-stock-panel.component';
 import { NotificacionDetalleComponent } from './pages/notificacion-detalle/notificacion-detalle.component';
+import { PagoCuentaLegalComponent } from './pages/pago-cuenta-legal/pago-cuenta-legal.component';
+import { LibroReclamacionesMantenimientoComponent } from './components/mantenimiento/libro-reclamaciones-mantenimiento/libro-reclamaciones-mantenimiento.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -272,6 +274,8 @@ export const MY_DATE_FORMATS = {
     SocioNegocioMantenimientoComponent,
     TenantTextPipe,
     MesaClienteComponent,
+    PagoCuentaLegalComponent,
+    LibroReclamacionesMantenimientoComponent,
     DialogSolicitudesMesaComponent,
     DialogSolicitudesAutorizacionComponent,
     SolicitudesAutorizacionBotonComponent,

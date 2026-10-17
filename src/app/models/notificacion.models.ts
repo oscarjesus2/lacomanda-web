@@ -25,7 +25,24 @@ export interface NotificacionDetalle {
   Solicitud: SolicitudAutorizacion | null;
   Stock: ConsultaAlertasStockCesia | null;
   Comprobante: ComprobanteFiscalPendiente | null;
+  LibroReclamacion: LibroReclamacionNotificacion | null;
   PuedeResolverSolicitud: boolean;
+}
+
+export interface LibroReclamacionNotificacion {
+  Codigo: string;
+  Tipo: string;
+  NombreConsumidor: string;
+  TipoDocumento: string;
+  NumeroDocumento: string;
+  Correo: string;
+  Telefono?: string | null;
+  Direccion: string;
+  BienContratado: string;
+  MontoReclamado?: number | null;
+  Detalle: string;
+  PedidoConsumidor: string;
+  RegistradaUtc: string;
 }
 
 export function tipoNotificacionSolicitud(tipo: string): string {

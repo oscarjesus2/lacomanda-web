@@ -9,7 +9,7 @@ describe('Notificación · apertura y stock filtrado', () => {
     const bandeja = { detalle: jasmine.createSpy().and.resolveTo(detalle), marcarLeida: jasmine.createSpy().and.resolveTo() };
     const dialog = { open: jasmine.createSpy() };
     const component = new NotificacionDetalleComponent({ paramMap: of(convertToParamMap({ id: 'n-1' })) } as any,
-      bandeja as any, dialog as any, {} as any, {} as any, {} as any);
+      bandeja as any, dialog as any, {} as any, {} as any, {} as any, { navigate: jasmine.createSpy() } as any);
     return { component, bandeja, dialog };
   }
 

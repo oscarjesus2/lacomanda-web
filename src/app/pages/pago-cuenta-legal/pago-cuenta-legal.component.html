@@ -1,0 +1,103 @@
+<main class="legal-public-page">
+  <section class="legal-public-shell" *ngIf="informacion; else estado">
+    <header class="legal-public-header">
+      <img src="/assets/logo.svg" alt="LaComanda">
+      <div>
+        <span>INFORMACIÓN DEL COMERCIO</span>
+        <h1>{{ informacion.NombreComercial }}</h1>
+      </div>
+    </header>
+
+    <nav class="legal-public-nav" aria-label="Información legal">
+      <a routerLink="/legal/terminos" [class.is-active]="pagina === 'terminos'">Términos</a>
+      <a routerLink="/legal/cambios-devoluciones" [class.is-active]="pagina === 'cambios-devoluciones'">Cambios y devoluciones</a>
+      <a routerLink="/legal/libro-reclamaciones" [class.is-active]="pagina === 'libro-reclamaciones'">Libro de Reclamaciones</a>
+    </nav>
+
+    <article class="legal-public-card" *ngIf="pagina === 'terminos'">
+      <h2>Términos y condiciones de compra</h2>
+      <p>Estas condiciones regulan los pedidos y pagos realizados desde la carta digital de <strong>{{ informacion.NombreComercial }}</strong>.</p>
+      <h3>Identificación del comercio</h3>
+      <dl class="legal-public-data">
+        <div><dt>Razón social</dt><dd>{{ informacion.RazonSocial }}</dd></div>
+        <div><dt>Documento</dt><dd>{{ informacion.NumeroIdentificacion }}</dd></div>
+        <div><dt>Dirección</dt><dd>{{ informacion.Direccion }}</dd></div>
+        <div><dt>Teléfono</dt><dd>{{ informacion.Telefono }}</dd></div>
+        <div *ngIf="informacion.CorreoContacto"><dt>Correo de contacto</dt><dd><a [href]="'mailto:' + informacion.CorreoContacto">{{ informacion.CorreoContacto }}</a></dd></div>
+      </dl>
+      <h3>Pedido y pago</h3>
+      <p>Los productos, sus características y sus precios se muestran antes de confirmar el pedido. Cuando el cliente realiza un pago en línea, este corresponde a un pago a cuenta del consumo y el comprobante fiscal se emite al cerrar la cuenta.</p>
+      <p>El comercio es responsable de los productos y servicios ofrecidos. La plataforma de pago procesa el cobro de forma segura, pero no sustituye al comercio en sus obligaciones frente al consumidor.</p>
+      <h3>Atención al cliente</h3>
+      <p>Para consultas sobre un pedido, pago o comprobante, contacta directamente con el negocio usando los datos indicados en esta página.</p>
+    </article>
+
+    <article class="legal-public-card" *ngIf="pagina === 'cambios-devoluciones'">
+      <h2>Cambios, cancelaciones y devoluciones</h2>
+      <p>Si necesitas modificar o cancelar un pedido, comunícate cuanto antes con <strong>{{ informacion.NombreComercial }}</strong>. La posibilidad de cambio dependerá del estado de preparación y de la naturaleza de los productos solicitados.</p>
+      <h3>Pagos a cuenta</h3>
+      <p>Un pago realizado desde la carta QR se registra como pago a cuenta. Al finalizar el consumo, el comercio emitirá el comprobante correspondiente y aplicará los pagos confirmados a la cuenta.</p>
+      <h3>Solicitudes de devolución</h3>
+      <p>Las solicitudes se revisan de forma individual por el comercio, considerando el pedido, el pago confirmado y la normativa aplicable. Puedes solicitarlas a través de los datos de contacto de esta página o mediante el Libro de Reclamaciones.</p>
+      <dl class="legal-public-data">
+        <div><dt>Dirección</dt><dd>{{ informacion.Direccion }}</dd></div>
+        <div><dt>Teléfono</dt><dd>{{ informacion.Telefono }}</dd></div>
+        <div *ngIf="informacion.CorreoContacto"><dt>Correo de contacto</dt><dd><a [href]="'mailto:' + informacion.CorreoContacto">{{ informacion.CorreoContacto }}</a></dd></div>
+      </dl>
+    </article>
+
+    <article class="legal-public-card" *ngIf="pagina === 'libro-reclamaciones'">
+      <ng-container *ngIf="!resultadoCodigo; else registrada">
+        <h2>Libro de Reclamaciones</h2>
+        <p>Registra tu queja o reclamo sobre los productos o servicios de <strong>{{ informacion.NombreComercial }}</strong>. Conserva el código de registro que se mostrará al enviar el formulario.</p>
+        <form class="legal-public-form" (ngSubmit)="registrar()">
+          <fieldset>
+            <legend>Datos del consumidor</legend>
+            <div class="legal-public-form__grid">
+              <label><span>Tipo de solicitud *</span><select name="tipo" [(ngModel)]="reclamacion.Tipo"><option value="reclamo">Reclamo</option><option value="queja">Queja</option></select></label>
+              <label><span>Nombre completo *</span><input name="nombre" maxlength="160" autocomplete="name" [(ngModel)]="reclamacion.NombreConsumidor" required></label>
+              <label><span>Tipo de documento *</span><input name="tipoDocumento" maxlength="30" [(ngModel)]="reclamacion.TipoDocumento" required></label>
+              <label><span>Número de documento *</span><input name="numeroDocumento" maxlength="30" [(ngModel)]="reclamacion.NumeroDocumento" required></label>
+              <label><span>Correo electrónico *</span><input type="email" name="correo" maxlength="254" autocomplete="email" [(ngModel)]="reclamacion.Correo" required></label>
+              <label><span>Teléfono</span><input type="tel" name="telefono" maxlength="30" autocomplete="tel" [(ngModel)]="reclamacion.Telefono"></label>
+              <label class="legal-public-form__wide"><span>Dirección *</span><input name="direccion" maxlength="300" autocomplete="street-address" [(ngModel)]="reclamacion.Direccion" required></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Detalle de la solicitud</legend>
+            <div class="legal-public-form__grid">
+              <label class="legal-public-form__wide"><span>Producto o servicio contratado *</span><textarea name="bien" rows="2" maxlength="500" [(ngModel)]="reclamacion.BienContratado" required></textarea></label>
+              <label><span>Monto reclamado (opcional)</span><input type="number" name="monto" min="0" step="0.01" [(ngModel)]="reclamacion.MontoReclamado"></label>
+              <label class="legal-public-form__wide"><span>Detalle del reclamo o queja *</span><textarea name="detalle" rows="4" maxlength="4000" [(ngModel)]="reclamacion.Detalle" required></textarea></label>
+              <label class="legal-public-form__wide"><span>Pedido del consumidor *</span><textarea name="pedido" rows="3" maxlength="4000" [(ngModel)]="reclamacion.PedidoConsumidor" required></textarea></label>
+            </div>
+          </fieldset>
+          <p class="legal-public-form__notice">Al enviar confirmas que los datos indicados son veraces. El comercio utilizará estos datos para atender tu solicitud.</p>
+          <button class="legal-public-button" type="submit" [disabled]="enviando || !formularioValido">{{ enviando ? 'Registrando…' : 'Registrar solicitud' }}<mat-icon>arrow_forward</mat-icon></button>
+        </form>
+      </ng-container>
+      <ng-template #registrada>
+        <div class="legal-public-result">
+          <mat-icon>task_alt</mat-icon>
+          <h2>Solicitud registrada</h2>
+          <p>Hemos registrado tu solicitud. Conserva este código para identificarla:</p>
+          <strong>{{ resultadoCodigo }}</strong>
+          <p>El comercio utilizará los datos de contacto indicados para atenderla.</p>
+        </div>
+      </ng-template>
+    </article>
+
+    <p class="legal-public-error" *ngIf="error"><mat-icon>error_outline</mat-icon>{{ error }}</p>
+    <footer class="legal-public-footer">Estas páginas corresponden a {{ informacion.NombreComercial }}.</footer>
+  </section>
+
+  <ng-template #estado>
+    <section class="legal-public-state">
+      <img src="/assets/logo.svg" alt="LaComanda">
+      <div class="legal-public-loader" *ngIf="cargando"></div>
+      <mat-icon *ngIf="!cargando">error_outline</mat-icon>
+      <h1>{{ cargando ? 'Cargando información del comercio…' : 'Página no disponible' }}</h1>
+      <p *ngIf="error">{{ error }}</p>
+    </section>
+  </ng-template>
+</main>

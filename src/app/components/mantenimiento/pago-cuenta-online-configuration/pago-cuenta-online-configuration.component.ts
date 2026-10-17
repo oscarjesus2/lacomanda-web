@@ -71,6 +71,13 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
       && this.requisitosCulqiConfirmados;
   }
 
+  usarPaginasIntegradas(): void {
+    const baseUrl = window.location.origin.replace(/\/$/, '');
+    this.urlTerminosCondiciones = `${baseUrl}/legal/terminos`;
+    this.urlCambiosDevoluciones = `${baseUrl}/legal/cambios-devoluciones`;
+    this.urlLibroReclamaciones = `${baseUrl}/legal/libro-reclamaciones`;
+  }
+
   save(): void {
     if (!this.readyToSave) {
       Swal.fire(

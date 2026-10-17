@@ -7015,3 +7015,121 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 @media (prefers-reduced-motion: reduce) {
   .cesia__launcher--unread { animation: none; opacity: 1; }
 }
+
+/* Páginas públicas por tenant para la información exigida en el cobro online. */
+.legal-public-page {
+  min-height: 100dvh;
+  padding: 32px 16px;
+  background: radial-gradient(circle at 5% 0, #ffd8be 0, transparent 30%), #fff7f2;
+  color: #442c20;
+  box-sizing: border-box;
+}
+.legal-public-shell,
+.legal-public-state {
+  width: min(880px, 100%);
+  margin: 0 auto;
+}
+.legal-public-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 18px;
+}
+.legal-public-header img,
+.legal-public-state img { width: 44px; height: 44px; object-fit: contain; }
+.legal-public-header span { display: block; color: #9d3b16; font-size: 11px; font-weight: 800; letter-spacing: .08em; }
+.legal-public-header h1 { margin: 2px 0 0; font-size: clamp(23px, 4vw, 32px); line-height: 1.1; }
+.legal-public-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.legal-public-nav a {
+  padding: 8px 12px;
+  border: 1px solid #e4c9ba;
+  border-radius: 999px;
+  color: #713319;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.legal-public-nav a.is-active { border-color: #b84012; background: #b84012; color: #fff; }
+.legal-public-card {
+  padding: clamp(22px, 4vw, 42px);
+  border: 1px solid #ead9cf;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(99, 48, 24, .09);
+}
+.legal-public-card h2 { margin: 0 0 12px; color: #8e260d; font-size: clamp(24px, 4vw, 32px); }
+.legal-public-card h3 { margin: 27px 0 8px; color: #592613; font-size: 18px; }
+.legal-public-card p { line-height: 1.6; }
+.legal-public-card a { color: #a83c14; overflow-wrap: anywhere; }
+.legal-public-data { display: grid; gap: 9px; margin: 14px 0; }
+.legal-public-data div { display: grid; grid-template-columns: minmax(130px, 30%) 1fr; gap: 10px; padding-bottom: 9px; border-bottom: 1px solid #f0e5de; }
+.legal-public-data dt { color: #81685b; font-size: 13px; font-weight: 700; }
+.legal-public-data dd { margin: 0; overflow-wrap: anywhere; }
+.legal-public-form fieldset { min-width: 0; margin: 22px 0; padding: 0; border: 0; }
+.legal-public-form legend { margin-bottom: 12px; color: #5b2a18; font-size: 17px; font-weight: 800; }
+.legal-public-form__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.legal-public-form label { display: grid; gap: 6px; color: #6e5447; font-size: 13px; font-weight: 700; }
+.legal-public-form input,
+.legal-public-form select,
+.legal-public-form textarea {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #dbc4b6;
+  border-radius: 9px;
+  background: #fffcfa;
+  color: #412719;
+  font: inherit;
+  font-weight: 400;
+  box-sizing: border-box;
+}
+.legal-public-form textarea { resize: vertical; }
+.legal-public-form__wide { grid-column: 1 / -1; }
+.legal-public-form__notice { color: #765f53; font-size: 12px; }
+.legal-public-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 9px;
+  background: #b84012;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.legal-public-button:disabled { opacity: .55; cursor: default; }
+.legal-public-result { padding: 22px 0; text-align: center; }
+.legal-public-result mat-icon { width: 52px; height: 52px; color: #348449; font-size: 52px; }
+.legal-public-result strong { display: inline-block; max-width: 100%; padding: 12px; border-radius: 9px; background: #fff2e9; color: #7a2c10; overflow-wrap: anywhere; }
+.legal-public-error { display: flex; align-items: center; gap: 7px; margin: 14px 0; color: #a12a13; }
+.legal-public-footer { padding: 18px 0 4px; color: #846b5f; font-size: 12px; text-align: center; }
+.legal-public-state { display: grid; min-height: 55dvh; place-content: center; justify-items: center; gap: 12px; text-align: center; }
+.legal-public-state mat-icon { width: 48px; height: 48px; color: #b84012; font-size: 48px; }
+.legal-public-loader { width: 32px; height: 32px; border: 4px solid #f3c7ae; border-top-color: #b84012; border-radius: 50%; animation: legal-public-spin .8s linear infinite; }
+@keyframes legal-public-spin { to { transform: rotate(360deg); } }
+@media (max-width: 560px) {
+  .legal-public-page { padding: 22px 12px; }
+  .legal-public-card { border-radius: 14px; }
+  .legal-public-form__grid { grid-template-columns: 1fr; }
+  .legal-public-data div { grid-template-columns: 1fr; gap: 2px; }
+}
+
+.libro-reclamaciones { display: flex; min-height: 0; flex-direction: column; }
+.libro-reclamaciones__content { display: grid; min-height: 0; flex: 1; grid-template-columns: minmax(280px, 38%) 1fr; border-top: 1px solid #ead9cf; }
+.libro-reclamaciones__list { min-height: 0; overflow: auto; border-right: 1px solid #ead9cf; }
+.libro-reclamaciones__list button { display: grid; width: 100%; padding: 14px 16px; border: 0; border-bottom: 1px solid #f1e6df; background: #fff; color: #563426; text-align: left; cursor: pointer; }
+.libro-reclamaciones__list button.is-selected { background: #fff2eb; box-shadow: inset 3px 0 #b84012; }
+.libro-reclamaciones__list span { margin-top: 4px; color: #826c61; font-size: 12px; }
+.libro-reclamaciones__list small { margin-top: 4px; color: #9b4930; font-size: 10px; overflow-wrap: anywhere; }
+.libro-reclamaciones__detail { min-height: 0; overflow: auto; padding: 22px; }
+.libro-reclamaciones__detail h3 { margin: 0 0 16px; color: #8e260d; }
+.libro-reclamaciones__detail h3 small { display: block; margin-top: 4px; color: #7a655a; font-size: 11px; font-weight: 400; overflow-wrap: anywhere; }
+.libro-reclamaciones__detail dl { display: grid; gap: 12px; margin: 0; }
+.libro-reclamaciones__detail dl div { padding-bottom: 10px; border-bottom: 1px solid #f0e5de; }
+.libro-reclamaciones__detail dt { color: #80685b; font-size: 12px; font-weight: 800; }
+.libro-reclamaciones__detail dd { margin: 3px 0 0; color: #452a1e; line-height: 1.45; overflow-wrap: anywhere; white-space: pre-wrap; }
+@media (max-width: 700px) {
+  .libro-reclamaciones__content { grid-template-columns: 1fr; overflow: auto; }
+  .libro-reclamaciones__list { max-height: 230px; border-right: 0; border-bottom: 1px solid #ead9cf; }
+}

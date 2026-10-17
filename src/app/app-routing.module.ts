@@ -23,6 +23,7 @@ import { ComprobantesPublicosComponent } from './pages/comprobantes-publicos/com
 import { SubscriptionAccessStatusComponent } from './auth/subscription-access-status/subscription-access-status.component';
 import { NotificacionDetalleComponent } from './pages/notificacion-detalle/notificacion-detalle.component';
 import { NotificacionGuard } from './guards/notificacion.guard';
+import { PagoCuentaLegalComponent } from './pages/pago-cuenta-legal/pago-cuenta-legal.component';
 // DigitacionMozoComponent reemplazado por VentaComponent con isModoMozo=true
 
 // Importa más componentes según sea necesario...
@@ -31,6 +32,7 @@ const routes: Routes = [
   { path: 'notificaciones/:id', component: NotificacionDetalleComponent, canActivate: [NotificacionGuard] },
 
   { path: 'mesa/:codigoQr', component: MesaClienteComponent },
+  { path: 'legal/:pagina', component: PagoCuentaLegalComponent },
   { path: 'reservas', component: ReservasOnlineComponent },
   { path: 'comprobantes', component: ComprobantesPublicosComponent },
   { path: 'estado-suscripcion', component: SubscriptionAccessStatusComponent },
