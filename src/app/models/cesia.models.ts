@@ -1,9 +1,16 @@
+import { ConsultaAlertasStockCesia } from './cesia-stock.models';
+
 export interface MensajeCesia {
   rol: 'user' | 'assistant';
   texto: string;
   imagenUrl?: string;
   fuentes?: string[];
   recomiendaTicket?: boolean;
+  stock?: {
+    consulta: ConsultaAlertasStockCesia | null;
+    error: boolean;
+    expandido: boolean;
+  };
 }
 
 export interface ConsultarCesiaRequest {

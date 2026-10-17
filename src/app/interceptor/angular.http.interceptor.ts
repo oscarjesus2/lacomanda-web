@@ -228,6 +228,13 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       return throwError(() => error);
     }
 
+    // La emisión diferida de SUNAT requiere una elección explícita en el
+    // diálogo de cobro. Evitamos duplicar allí el aviso global de validación.
+    if (this.isSunatEmissionConfirmationRequired(error)) {
+      this.spinnerService.hide();
+      return throwError(() => error);
+    }
+
     this.presentError(error);
     this.spinnerService.hide();
 
@@ -540,6 +547,14 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     const body = error.error as ApiErrorResponse & { errorCode?: string };
     const errorCode = body?.ErrorCode || body?.errorCode || '';
     return errorCode.startsWith('LICENSE_');
+  }
+
+  private isSunatEmissionConfirmationRequired(
+    error: HttpErrorResponse,
+  ): boolean {
+    const body = error.error as ApiErrorResponse & { errorCode?: string };
+    const errorCode = body?.ErrorCode || body?.errorCode || '';
+    return errorCode === 'SUNAT_EMISSION_CONFIRMATION_REQUIRED';
   }
 
   private isStationAvailabilityRace(

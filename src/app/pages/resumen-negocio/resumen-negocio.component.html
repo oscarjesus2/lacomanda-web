@@ -226,40 +226,6 @@
           </button>
         </article>
 
-        <article class="executive-widget business-home__quick-actions" *ngIf="mostrarAccionesComercio">
-          <span class="executive-widget__eyebrow">{{ 'quickActions' | tenantText }}</span>
-          <h2>{{ 'manageCommerce' | tenantText }}</h2>
-          <div class="business-home__quick-actions-list">
-            <button
-              *ngIf="puedeEmitirVentaDirecta"
-              type="button"
-              [disabled]="cuotaComprobantesAgotada"
-              (click)="abrirNuevaVenta()">
-              <mat-icon>point_of_sale</mat-icon>
-              <span>
-                <strong>{{ 'newSale' | tenantText }}</strong>
-                <small>{{ (cuotaComprobantesAgotada ? 'monthlyDocumentLimitReached' : 'newSaleHint') | tenantText }}</small>
-              </span>
-            </button>
-            <button *ngIf="mostrarInventarioComercio" type="button" (click)="abrirInventario()">
-              <mat-icon>inventory_2</mat-icon>
-              <span>
-                <strong>{{ 'reviewInventory' | tenantText }}</strong>
-                <small>{{ 'reviewInventoryHint' | tenantText }}</small>
-              </span>
-            </button>
-            <a routerLink="/administracion">
-              <mat-icon>settings</mat-icon>
-              <span>
-                <strong>{{ 'administration' | tenantText }}</strong>
-                <small>{{ 'commerceAdministrationHint' | tenantText }}</small>
-              </span>
-            </a>
-          </div>
-        </article>
-
-        <app-cesia-stock-panel></app-cesia-stock-panel>
-
         <article class="executive-widget business-home__ai" *ngIf="!esComercio && mostrarAsistenteIa">
           <div class="business-home__ai-heading">
             <span class="business-home__ai-icon"><mat-icon>auto_awesome</mat-icon></span>

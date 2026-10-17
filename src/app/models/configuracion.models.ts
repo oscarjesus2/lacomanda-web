@@ -15,6 +15,7 @@ export class Configuracion {
   NombreComercial: string;
   Direccion: string;
   Telefono: string;
+  ClientePideOnlineYPagaInmediatamente: boolean;
   PiePagina: string;
   IdBanco?: number | null;
   TieneLogo: boolean;

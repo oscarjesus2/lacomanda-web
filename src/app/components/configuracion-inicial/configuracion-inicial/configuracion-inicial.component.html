@@ -4,8 +4,19 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2 *ngIf="esModoInicial">{{ 'initialSetup' | tenantText }}</h2>
-  <h2 *ngIf="!esModoInicial">{{ 'configurationMaintenance' | tenantText }}</h2>
+  <div class="config-panel__header">
+    <h2 *ngIf="esModoInicial">{{ 'initialSetup' | tenantText }}</h2>
+    <h2 *ngIf="!esModoInicial">{{ 'configurationMaintenance' | tenantText }}</h2>
+
+    <div
+      *ngIf="!esModoInicial && licenciaCargada && nombrePlanLicencia"
+      class="config-panel__license"
+      [attr.title]="codigoPlanLicencia">
+      <mat-icon>workspace_premium</mat-icon>
+      <span class="config-panel__license-label">{{ 'licensePlan' | tenantText }}</span>
+      <strong>{{ nombrePlanLicencia }}</strong>
+    </div>
+  </div>
 
   <form
     *ngIf="esModoInicial"
@@ -260,6 +271,11 @@
 
         <mat-slide-toggle *ngIf="puedeCambioEspacio" formControlName="CambioEspacio">
           {{ 'allowSpaceChange' | tenantText }}
+        </mat-slide-toggle>
+
+        <mat-slide-toggle *ngIf="puedeCambioEspacio"
+                          formControlName="ClientePideOnlineYPagaInmediatamente">
+          Cliente pide online y paga inmediatamente
         </mat-slide-toggle>
 
         <!-- N° pre-cuentas, ligado al toggle -->

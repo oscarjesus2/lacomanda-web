@@ -12,6 +12,7 @@ import {
   EstadoAccesoMesa,
   EstadoPagoCuentaMesa,
   PedidoMesaClienteResultado,
+  ResumenPagosCuentaOnline,
   RegistrarPedidoMesaCliente,
   RespuestaAsistenteCartaMesaCliente,
   SolicitudAccesoMesa,
@@ -85,11 +86,12 @@ export class MesaClienteService {
 
   crearCheckout(
     token: string,
-    returnUrl: string
+    returnUrl: string,
+    importe?: number,
   ): Observable<ApiResponse<CheckoutCuentaMesa>> {
     return this.http.post<ApiResponse<CheckoutCuentaMesa>>(
       `${this.basePath}/pagos/checkout`,
-      { ReturnUrl: returnUrl },
+      { ReturnUrl: returnUrl, Importe: importe },
       { headers: this.tenantHeaders().set('X-Mesa-Token', token) }
     );
   }
@@ -101,6 +103,15 @@ export class MesaClienteService {
     return this.http.get<ApiResponse<EstadoPagoCuentaMesa>>(
       `${this.basePath}/pagos/${encodeURIComponent(idIntento)}`,
       { headers: this.tenantHeaders().set('X-Mesa-Token', token) }
+    );
+  }
+
+  consultarPagosCuenta(
+    idPedido: number,
+    nroCuenta: number,
+  ): Observable<ApiResponse<ResumenPagosCuentaOnline>> {
+    return this.http.get<ApiResponse<ResumenPagosCuentaOnline>>(
+      `${this.basePath}/pedidos/${idPedido}/cuentas/${nroCuenta}/pagos`,
     );
   }
 

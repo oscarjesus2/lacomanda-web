@@ -29,7 +29,7 @@
       <span>Orientación de solo lectura, adaptada a tu licencia.</span>
     </div>
 
-    <div class="cesia__messages" aria-live="polite">
+    <div #mensajesScroll class="cesia__messages" aria-live="polite">
       <article
         *ngFor="let mensaje of mensajes"
         class="cesia__message"
@@ -38,6 +38,35 @@
           {{ mensaje.rol === 'user' ? 'Tú' : 'Cesia' }}
         </span>
         <p>{{ mensaje.texto }}</p>
+        <ng-container *ngIf="mensaje.stock as stock">
+          <ng-container *ngIf="stock.consulta as consulta">
+            <small class="cesia__stock-time">{{ 'cesiaStockUpdated' | tenantText }} {{ consulta.GeneradoUtc | date:'short' }}</small>
+            <p *ngIf="consulta.ConsumosSinConfiguracion > 0" class="cesia__stock-warning">{{ 'cesiaStockIncomplete' | tenantText }}</p>
+            <button *ngIf="consulta.Alertas.length" type="button" class="cesia__stock-action"
+              [attr.aria-expanded]="stock.expandido" (click)="stock.expandido = !stock.expandido">
+              {{ (stock.expandido ? 'cesiaStockShowLess' : 'cesiaStockChatDetail') | tenantText }}
+            </button>
+            <div *ngIf="stock.expandido" class="cesia__stock-details">
+              <article *ngFor="let alerta of consulta.Alertas">
+                <span>{{ etiquetaStock(alerta) | tenantText }}</span>
+                <strong>{{ alerta.Articulo }}</strong>
+                <p>{{ 'cesiaStockAvailable' | tenantText }} {{ alerta.StockEstimado | number:'1.0-3' }} {{ alerta.Unidad }}</p>
+                <p>{{ 'cesiaStockMinimum' | tenantText }} {{ alerta.StockMinimo | number:'1.0-3' }} {{ alerta.Unidad }}</p>
+                <p *ngIf="alerta.HorasHastaAgotamiento !== null && alerta.StockEstimado > 0">{{ 'cesiaStockRunsOut' | tenantText:{ hours: (alerta.HorasHastaAgotamiento | number:'1.1-1') } }}</p>
+                <details><summary>{{ 'cesiaStockEvidence' | tenantText }}</summary>
+                  <p>{{ 'cesiaStockRecorded' | tenantText }} {{ alerta.StockRegistrado | number:'1.0-3' }} {{ alerta.Unidad }}</p>
+                  <p>{{ 'cesiaStockCommitted' | tenantText }} {{ alerta.ConsumoPendiente | number:'1.0-3' }} {{ alerta.Unidad }}</p>
+                  <p *ngIf="alerta.ConsumoPorHora !== null">{{ 'cesiaStockRate' | tenantText:{ hours: consulta.HorasObservacion } }} {{ alerta.ConsumoPorHora | number:'1.0-3' }} {{ alerta.Unidad }}/h</p>
+                  <p *ngIf="alerta.ConsumoPorHora === null">{{ 'cesiaStockNoForecast' | tenantText }}</p>
+                </details>
+              </article>
+              <button type="button" class="cesia__stock-action" (click)="revisarStock(mensaje)">
+                {{ 'notificationFilteredStock' | tenantText }} <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+              </button>
+              <small>{{ 'cesiaStockEstimateHint' | tenantText }}</small>
+            </div>
+          </ng-container>
+        </ng-container>
         <img
           *ngIf="mensaje.imagenUrl"
           class="cesia__message-image"
@@ -110,10 +139,12 @@
     *ngIf="!abierto"
     type="button"
     class="cesia__launcher"
-    aria-label="Abrir Cesia, asistente IA de LaComanda"
+    [class.cesia__launcher--unread]="pendientesLectura > 0"
+    [attr.aria-label]="'Abrir Cesia, asistente IA de LaComanda' + (pendientesLectura ? '. ' + ((pendientesLectura === 1 ? 'cesiaChatUnreadOne' : 'cesiaChatUnread') | tenantText:{ count: pendientesLectura }) : '')"
     aria-controls="cesia-panel"
     aria-haspopup="dialog"
     (click)="abrir()">
+    <span *ngIf="pendientesLectura" class="cesia__unread-badge" aria-hidden="true">{{ pendientesLectura }}</span>
     <span class="cesia__launcher-icon"><mat-icon>auto_awesome</mat-icon></span>
     <span class="cesia__launcher-copy" aria-hidden="true">
       <strong>Pregunta a Cesia</strong>

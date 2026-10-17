@@ -1,4 +1,5 @@
 import { Component, Inject, OnInit, ViewEncapsulation } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { AbstractControl, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
@@ -43,6 +44,8 @@ import { VentaDirectaService } from 'src/app/services/venta-directa.service';
 import { EmitirVentaDirectaRequest } from 'src/app/models/venta-directa.models';
 import { validarSolicitudVentaDirecta } from '../dialog-emitir-venta/venta-directa.validator';
 import { ReprintFormat, ReprintFormatService } from 'src/app/services/reprint-format.service';
+import { PagoCuentaOnlinePendiente } from 'src/app/models/mesa-cliente.models';
+import { MesaClienteService } from 'src/app/services/mesa-cliente.service';
 
 
 @Component({
@@ -117,6 +120,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   idTurno: number;
   modoVentaDirecta = false;
   listaDescuentoCodigo: DescuentoCodigo[] = [];
+  pagosOnlineCuenta: PagoCuentaOnlinePendiente[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<DialogEmitirComprobanteComponent>,
@@ -139,6 +143,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     private estadoImpresion: EstadoImpresionService,
     private ventaDirectaService: VentaDirectaService,
     private reprintFormat: ReprintFormatService,
+    private mesaClienteService: MesaClienteService,
   ) {
     this.dataSourcePago = new MatTableDataSource([]);
     this.nuevoRegistro.Tarjeta = new Tarjeta();
@@ -205,6 +210,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     });
 
     this.ValidaTotalAPagar();
+    this.cargarPagosOnlineCuenta();
 
     await this.initializeTipoDocumento();   // primero: detecta isFactSimplificadaES
     await this.initializeTipoDocCliente(); // segundo: usa isFactSimplificadaES para saber si omitir cliente
@@ -999,7 +1005,13 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       : null;
     if (this.modoVentaDirecta && formatoVentaDirecta === null) return;
 
-    const listaImpresionDTO: ImpresionDTO[] = await this.grabarDocumento();
+    let listaImpresionDTO: ImpresionDTO[] | null;
+    try {
+      listaImpresionDTO = await this.grabarDocumentoConConfirmacionSunat();
+    } catch {
+      // El interceptor ya presenta los errores distintos a la confirmación.
+      return;
+    }
     if (listaImpresionDTO) {
       if (this.modoVentaDirecta) {
         await this.presentarVentaDirecta(listaImpresionDTO, formatoVentaDirecta!);
@@ -1032,6 +1044,52 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
       this.dialogRef.close({ estado: 'Cobrado', listaImpresionDTO: listaImpresionDTO });
     }
+  }
+
+  /**
+   * El servidor es quien detecta la falta de configuración y evita crear la
+   * venta en la primera petición. Sólo una confirmación explícita reintenta la
+   * misma operación con la autorización del operador.
+   */
+  private async grabarDocumentoConConfirmacionSunat(): Promise<ImpresionDTO[] | null> {
+    try {
+      return await this.grabarDocumento(false);
+    } catch (error) {
+      this.spinnerService.hide();
+      if (!this.esConfirmacionSunatPendiente(error)) {
+        throw error;
+      }
+
+      const respuesta = await Swal.fire({
+        title: 'SUNAT aún no está configurada',
+        text: this.mensajeError(error),
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Emitir de todos modos',
+        cancelButtonText: 'No emitir',
+        focusCancel: true,
+      });
+      if (!respuesta.isConfirmed) {
+        return null;
+      }
+
+      return await this.grabarDocumento(true);
+    }
+  }
+
+  private esConfirmacionSunatPendiente(error: unknown): boolean {
+    if (!(error instanceof HttpErrorResponse)) {
+      return false;
+    }
+    const body = error.error as { ErrorCode?: string; errorCode?: string } | null;
+    return (body?.ErrorCode ?? body?.errorCode) ===
+      'SUNAT_EMISSION_CONFIRMATION_REQUIRED';
+  }
+
+  private mensajeError(error: HttpErrorResponse): string {
+    const body = error.error as { Message?: string; message?: string } | null;
+    return body?.Message ?? body?.message
+      ?? 'No se pudo validar la configuración SUNAT.';
   }
 
   private async presentarVentaDirecta(
@@ -1099,7 +1157,9 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     URL.revokeObjectURL(objectUrl);
   }
 
-  async grabarDocumento(): Promise<ImpresionDTO[]> {
+  async grabarDocumento(
+    confirmarEmisionSinConfiguracionSunat = false,
+  ): Promise<ImpresionDTO[]> {
     this.spinnerService.show();
     const listPago: Pago[] = [];
 
@@ -1220,6 +1280,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         FechaDocumento: this.fechaLocalIso(fecha),
         Observacion: this.pedidoCab.Observacion,
         UsarClienteGenerico: usarClienteGenerico,
+        ConfirmarEmisionSinConfiguracionSunat:
+          confirmarEmisionSinConfiguracionSunat,
         VentaAlCredito: this.ChkVentaAlCredito,
         Cliente: usarClienteGenerico ? null : this.cliente,
         Detalles: (this.pedidoCab.ListaPedidoDet ?? []).map(detalle => ({
@@ -1252,7 +1314,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       resultGenerateComprobante = await this.ventaService.guardarDocumentoVenta(
         this.idTipoPedido, venta, this.cliente, this.pedidoCab,
         this.listaDescuentoCodigo, listPago, this.bTurnoIndenpendiente,
-        usarClienteGenerico
+        usarClienteGenerico,
+        confirmarEmisionSinConfiguracionSunat,
       ).toPromise();
     }
     if (resultGenerateComprobante.Success) {
@@ -1366,7 +1429,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       this.tarjetaValue = monto;
       this.lblmontotarjeta = monto.toFixed(2);
       this.lblpropinas = propina.toFixed(2);
-      this.lbltotal = (this.solesValue + parseFloat(this.lblcal) + monto).toFixed(2);
+      this.lbltotal = (this.totalPagadoOnline + this.solesValue + parseFloat(this.lblcal) + monto).toFixed(2);
 
       const total = parseFloat(this.lbltotal);
       const montoLbl = parseFloat(this.lblmonto);
@@ -1394,7 +1457,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     const dolaresCambiadoaSoles = parseFloat(this.lblcal);
     const tarjeta = isNaN(Number(this.tarjetaValue)) ? 0 : Number(this.tarjetaValue);
 
-    const total = soles + dolaresCambiadoaSoles + tarjeta;
+    const total = this.totalPagadoOnline + soles + dolaresCambiadoaSoles + tarjeta;
     this.lbltotal = total.toFixed(2);
 
     const difference = total - parseFloat(this.lblmonto);
@@ -1419,6 +1482,31 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       return this.permiteVentaCredito && monto > 0;
     }
     return monto > 0 && parseFloat(this.lbltotal) >= monto;
+  }
+
+  get totalPagadoOnline(): number {
+    return this.pagosOnlineCuenta.reduce((total, pago) => total + pago.Importe, 0);
+  }
+
+  private cargarPagosOnlineCuenta(): void {
+    if (this.modoVentaDirecta || this.idPedidoCobrar <= 0 || this.nroCuentaCobrar <= 0) {
+      return;
+    }
+
+    this.mesaClienteService.consultarPagosCuenta(
+      this.idPedidoCobrar,
+      this.nroCuentaCobrar,
+    ).subscribe({
+      next: response => {
+        this.pagosOnlineCuenta = response.Data?.Pagos ?? [];
+        this.calcularMonto();
+      },
+      error: () => {
+        // La emisión sigue disponible sin anticipos; el backend incorpora los
+        // pagos confirmados de forma autoritativa al grabar el comprobante.
+        this.pagosOnlineCuenta = [];
+      },
+    });
   }
 
   /** Porcentaje del monto total cubierto (0–100, sin exceder 100). */

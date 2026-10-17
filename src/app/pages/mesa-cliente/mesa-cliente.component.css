@@ -34,7 +34,7 @@ button { font: inherit; }
 .menu-hero__assistant > span { display: flex; flex-direction: column; gap: 2px; }
 .menu-hero__assistant small { margin: 0; color: #806d62; }
 .menu-hero__assistant mat-icon { color: #c9360d; }
-.mobile-payment { width: min(calc(100% - 36px),1064px); margin: 18px auto 0; display: grid; grid-template-columns: 50px 1fr auto; gap: 14px; align-items: center; padding: 15px 17px; border: 1px solid #e0c6b6; border-radius: 18px; background: #fff9f4; box-shadow: 0 8px 24px rgba(79,42,24,.07); }
+.mobile-payment { width: min(calc(100% - 36px),1064px); margin: 18px auto 0; display: grid; grid-template-columns: 50px 1fr minmax(112px, 140px) auto; gap: 14px; align-items: center; padding: 15px 17px; border: 1px solid #e0c6b6; border-radius: 18px; background: #fff9f4; box-shadow: 0 8px 24px rgba(79,42,24,.07); }
 .mobile-payment--success { border-color: #b8ddc0; background: #f1faf3; }
 .mobile-payment__icon { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 15px; color: #b72e0a; background: #ffeadc; }
 .mobile-payment--success .mobile-payment__icon { color: #267a3b; background: #dff3e3; }
@@ -43,6 +43,8 @@ button { font: inherit; }
 .mobile-payment__content { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .mobile-payment__content strong { color: #3a251b; font-size: 16px; }
 .mobile-payment__content span { color: #75665d; font-size: 13px; line-height: 1.4; }
+.mobile-payment__amount { display: flex; flex-direction: column; gap: 4px; color: #75665d; font-size: 11px; font-weight: 700; }
+.mobile-payment__amount input { min-width: 0; width: 100%; padding: 9px 10px; border: 1px solid #d9bcae; border-radius: 10px; color: #3a251b; background: #fff; font: inherit; font-size: 14px; }
 .mobile-payment > button { min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 0 16px; border: 0; border-radius: 13px; color: #fff; background: #c9360d; font-weight: 800; box-shadow: 0 8px 18px rgba(201,54,13,.2); }
 .mobile-payment > button:disabled { opacity: .65; }
 .mobile-payment > button mat-icon { width: 19px; height: 19px; font-size: 19px; }
@@ -97,6 +99,9 @@ button { font: inherit; }
 .cart-line span { display: flex; flex-direction: column; gap: 3px; }
 .cart-line small { color: #7a6b62; }
 .cart-total { display: flex; justify-content: space-between; padding: 18px 0 2px; font-size: 18px; }
+.checkout-legal { width: min(1064px,calc(100% - 36px)); display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 10px auto 0; padding: 14px 0; color: #75665d; font-size: 12px; }
+.checkout-legal strong { color: #4a352a; }
+.checkout-legal a { color: #9a1d08; font-weight: 700; }
 .toast-success,.toast-error { position: fixed; z-index: 900; left: 50%; bottom: 86px; width: min(calc(100% - 30px),500px); transform: translateX(-50%); padding: 13px 17px; border-radius: 12px; color: #fff; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,.2); }
 .toast-success { background: #267a3b; }
 .toast-error { background: #b92626; }
@@ -138,5 +143,6 @@ button { font: inherit; }
   .order-start-button mat-icon { display: none; }
   .producto-card__open { grid-template-columns: 96px minmax(0,1fr); }
   .mobile-payment { grid-template-columns: 44px 1fr; }
+  .mobile-payment__amount { grid-column: 1 / -1; }
   .mobile-payment > button { grid-column: 1 / -1; width: 100%; }
 }

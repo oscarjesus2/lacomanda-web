@@ -102,6 +102,35 @@
             </mat-hint>
           </mat-form-field>
         </div>
+        <h4 class="dialog-form-section__subtitle">Información pública del checkout</h4>
+        <p class="dialog-form-section__hint">
+          Culqi revisa que el consumidor pueda identificar y contactar al comercio, y que vea estas políticas desde la experiencia de pago. Las URLs deben ser públicas y usar HTTPS.
+        </p>
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Correo de contacto público</mat-label>
+            <input matInput name="correoContactoPublico" [(ngModel)]="correoContactoPublico" type="email" maxlength="254" autocomplete="email" [required]="active">
+            <mat-hint>Se mostrará junto a la dirección y teléfono del negocio en el QR.</mat-hint>
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>URL de términos y condiciones</mat-label>
+            <input matInput name="urlTerminosCondiciones" [(ngModel)]="urlTerminosCondiciones" type="url" maxlength="500" placeholder="https://..." [required]="active">
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>URL de cambios y devoluciones</mat-label>
+            <input matInput name="urlCambiosDevoluciones" [(ngModel)]="urlCambiosDevoluciones" type="url" maxlength="500" placeholder="https://..." [required]="active">
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>URL del libro de reclamaciones</mat-label>
+            <input matInput name="urlLibroReclamaciones" [(ngModel)]="urlLibroReclamaciones" type="url" maxlength="500" placeholder="https://..." [required]="active">
+            <mat-hint>Debe abrir el libro integrado del negocio, no un formulario o archivo externo.</mat-hint>
+          </mat-form-field>
+        </div>
+        <div class="dialog-option">
+          <mat-checkbox name="requisitosCulqiConfirmados" [(ngModel)]="requisitosCulqiConfirmados">
+            Confirmo que este comercio publica al menos 5 productos con foto, descripción y precio; muestra datos de contacto y mantiene condiciones, cambios/devoluciones y Libro de Reclamaciones integrados y disponibles para el cliente.
+          </mat-checkbox>
+        </div>
       </section>
 
       <section class="dialog-form-section">

@@ -196,6 +196,25 @@
         </div>
       </div>
 
+      <div *ngIf="pagosOnlineCuenta.length" class="cobranza-panel__payment-card">
+        <div class="cobranza-panel__payment-card-header">
+          <span class="cobranza-panel__payment-card-title">
+            <mat-icon>phone_iphone</mat-icon>
+            Anticipos pagados por el cliente
+          </span>
+          <span class="cobranza-panel__payment-card-total cobranza-panel__payment-card-total--card">
+            {{ config?.SimboloMoneda }} {{ totalPagadoOnline | number:'1.2-2' }}
+          </span>
+        </div>
+        <div class="cobranza-panel__cash-section">
+          <div class="cobranza-panel__cash-main-row" *ngFor="let pago of pagosOnlineCuenta">
+            <span>{{ pago.Proveedor }}</span>
+            <strong>{{ pago.Moneda }} {{ pago.Importe | number:'1.2-2' }}</strong>
+            <small>Ref. {{ pago.Referencia }}</small>
+          </div>
+        </div>
+      </div>
+
       <!-- CARD: PAGOS EN EFECTIVO -->
       <div class="cobranza-panel__payment-card">
         <div class="cobranza-panel__payment-card-header">

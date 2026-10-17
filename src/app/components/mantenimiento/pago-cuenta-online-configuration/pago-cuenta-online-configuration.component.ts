@@ -20,6 +20,11 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
   moneiApiKey = '';
   culqiPublicKey = '';
   culqiSecretKey = '';
+  correoContactoPublico = '';
+  urlTerminosCondiciones = '';
+  urlCambiosDevoluciones = '';
+  urlLibroReclamaciones = '';
+  requisitosCulqiConfirmados = false;
   loading = false;
   saving = false;
   copied = false;
@@ -58,7 +63,12 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
 
     return this.culqiPublicKey.trim().length > 0
       && (this.culqiSecretKey.length > 0
-        || !!this.configuration?.CredencialPrivadaConfigurada);
+        || !!this.configuration?.CredencialPrivadaConfigurada)
+      && this.correoContactoPublico.trim().length > 0
+      && this.esUrlHttps(this.urlTerminosCondiciones)
+      && this.esUrlHttps(this.urlCambiosDevoluciones)
+      && this.esUrlHttps(this.urlLibroReclamaciones)
+      && this.requisitosCulqiConfirmados;
   }
 
   save(): void {
@@ -67,7 +77,7 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
         'Revisa la configuración',
         this.isSpain
           ? 'Indica la cuenta y la API key de MONEI de este restaurante. Si cambias de cuenta, introduce también su clave.'
-          : 'Indica las claves pública y privada de Culqi del restaurante.',
+          : 'Completa las llaves, los enlaces públicos y la declaración de requisitos de Culqi.',
         'warning',
       );
       return;
@@ -84,6 +94,21 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
       CulqiSecretKey: this.isSpain || !this.culqiSecretKey
         ? undefined
         : this.culqiSecretKey,
+      CorreoContactoPublico: this.isSpain
+        ? undefined
+        : this.correoContactoPublico.trim(),
+      UrlTerminosCondiciones: this.isSpain
+        ? undefined
+        : this.urlTerminosCondiciones.trim(),
+      UrlCambiosDevoluciones: this.isSpain
+        ? undefined
+        : this.urlCambiosDevoluciones.trim(),
+      UrlLibroReclamaciones: this.isSpain
+        ? undefined
+        : this.urlLibroReclamaciones.trim(),
+      RequisitosCulqiConfirmados: this.isSpain
+        ? false
+        : this.requisitosCulqiConfirmados,
     };
 
     this.saving = true;
@@ -152,6 +177,19 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
     this.active = configuration.Activa;
     this.moneiAccountId = configuration.MoneiAccountId ?? '';
     this.culqiPublicKey = configuration.CulqiPublicKey ?? '';
+    this.correoContactoPublico = configuration.CorreoContactoPublico ?? '';
+    this.urlTerminosCondiciones = configuration.UrlTerminosCondiciones ?? '';
+    this.urlCambiosDevoluciones = configuration.UrlCambiosDevoluciones ?? '';
+    this.urlLibroReclamaciones = configuration.UrlLibroReclamaciones ?? '';
+    this.requisitosCulqiConfirmados = configuration.RequisitosCulqiConfirmados ?? false;
+  }
+
+  private esUrlHttps(value: string): boolean {
+    try {
+      return new URL(value.trim()).protocol === 'https:';
+    } catch {
+      return false;
+    }
   }
 
   private showError(error: any, fallback: string): void {

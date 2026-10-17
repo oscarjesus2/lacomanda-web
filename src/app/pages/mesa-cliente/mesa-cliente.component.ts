@@ -55,6 +55,8 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   iniciandoPago = false;
   verificandoPago = false;
   pagoCompletado = false;
+  anticipoConfirmado = false;
+  montoPago?: number;
   estadoPagoTexto = '';
   mostrarCarrito = false;
   mostrarAcceso = false;
@@ -315,6 +317,22 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
         this.enviandoPedido = false;
         this.carrito = [];
         this.mostrarCarrito = false;
+        if (this.estado) {
+          // El pedido acaba de crearse y la siguiente operación puede ser el
+          // checkout inmediato. Actualizamos el contexto local sin esperar el
+          // siguiente sondeo de estado de la mesa.
+          this.estado = {
+            ...this.estado,
+            IdPedido: response.Data.IdPedido,
+            NroCuenta: response.Data.NroCuenta,
+          };
+        }
+        if (response.Data.RequierePagoInmediato) {
+          this.aviso = 'Tu pedido requiere el pago para completarse. Abriendo pago seguro…';
+          this.pagarCuenta(response.Data.Total);
+          return;
+        }
+
         this.aviso = `Pedido ${response.Data.IdPedido} enviado a preparación.`;
       },
       error: error => {
@@ -326,13 +344,19 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     });
   }
 
-  pagarCuenta(): void {
+  pagarCuenta(importeSugerido?: number): void {
     const token = sessionStorage.getItem(this.storageKey);
     if (!token || !this.puedePagarCuenta || this.iniciandoPago) return;
 
+    const importe = importeSugerido ?? this.montoPago;
+    if (importe !== undefined && (!Number.isFinite(importe) || importe <= 0)) {
+      this.error = 'Indica un importe válido para el pago a cuenta.';
+      return;
+    }
+
     this.iniciandoPago = true;
     this.error = '';
-    this.mesaClienteService.crearCheckout(token, window.location.href).subscribe({
+    this.mesaClienteService.crearCheckout(token, window.location.href, importe).subscribe({
       next: response => {
         this.iniciandoPago = false;
         sessionStorage.setItem(this.paymentStorageKey, response.Data.IdIntento);
@@ -356,8 +380,7 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   get puedePagarCuenta(): boolean {
     return this.activa
       && this.estado?.PuedePagarCuentaOnline === true
-      && !!this.estado?.IdPedido
-      && !this.pagoCompletado;
+      && !!this.estado?.IdPedido;
   }
 
   get finalizada(): boolean {
@@ -521,6 +544,15 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (pago.Estado === 'Pagado') {
+      this.verificandoPago = false;
+      this.anticipoConfirmado = true;
+      this.estadoPagoTexto = 'Pago confirmado como anticipo. Solicita tu comprobante al salir o emítelo desde esta mesa cuando esté disponible.';
+      sessionStorage.removeItem(this.paymentStorageKey);
+      this.montoPago = undefined;
+      return;
+    }
+
     if (['Fallido', 'Expirado', 'Cancelado'].includes(pago.Estado)) {
       this.verificandoPago = false;
       sessionStorage.removeItem(this.paymentStorageKey);
@@ -531,9 +563,7 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     }
 
     this.verificandoPago = true;
-    this.estadoPagoTexto = pago.Estado === 'Pagado'
-      ? 'Pago recibido. Estamos cerrando tu cuenta…'
-      : 'Estamos confirmando el pago con el banco…';
+    this.estadoPagoTexto = 'Estamos confirmando el pago con el banco…';
     if (++this.pagoConsultas < 200) {
       this.pagoTimer = setTimeout(
         () => this.consultarEstadoPago(token, pago.IdIntento),

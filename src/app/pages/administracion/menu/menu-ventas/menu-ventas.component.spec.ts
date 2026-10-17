@@ -87,6 +87,17 @@ describe('MenuVentasComponent por licencia', () => {
     expect(visibles.length).toBeGreaterThan(1);
   });
 
+  it('muestra Bancos con comprobantes aunque no incluya corrección documental', () => {
+    const component = crear([C.OperacionComprobantes]);
+    const maestros = component.ventasMenu.find(
+      section => section.title === 'Maestros',
+    )!;
+
+    const visibles = component.itemsVisibles(maestros).map(item => item.label);
+
+    expect(visibles).toContain('Bancos');
+  });
+
   it('reserva las tres herramientas internas al usuario de soporte', () => {
     const component = crear([
       C.FiscalIntegracion,

@@ -38,6 +38,8 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
   logoPreviewUrl: string | null = null;
   logoProcesando = false;
   paisInicial = '';
+  nombrePlanLicencia = '';
+  codigoPlanLicencia = '';
 
   // paises = ['PE','ES','AR','CL','MX','CO','US','FR','DE','IT','PT'];
   paises = ['PE','ES'];
@@ -50,6 +52,7 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
     NombreComercial: ['', [Validators.required, Validators.maxLength(120)]],
     Direccion: ['', [Validators.required, Validators.maxLength(200)]],
     Telefono: ['', [Validators.required, Validators.maxLength(30)]],
+    ClientePideOnlineYPagaInmediatamente: [false],
     PiePagina: ['', [Validators.maxLength(200)]],
     IdBanco: [null as number | null],
 
@@ -106,6 +109,14 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
       this.configSrv.get(),
       this.licenciaSrv.obtenerEstado(),
     ]).subscribe(([cfg, estadoLicencia]) => {
+      this.nombrePlanLicencia = estadoLicencia.licencia?.PlanNombre?.trim()
+        || this.texts.get(
+          estadoLicencia.sinSuscripcion
+            ? 'licenseWithoutSubscription'
+            : 'licenseUnavailable',
+        );
+      this.codigoPlanLicencia = estadoLicencia.licencia?.PlanCodigo?.trim() || '';
+
       // El servidor devuelve una propuesta con IdConfig=0 si aún no existe la
       // configuración. La existencia real manda sobre el punto desde el que se
       // abrió el diálogo, evitando intentar actualizar una fila inexistente.
@@ -206,7 +217,10 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
       valores.Precuentas = false;
       valores.NroPrecuentas = 0;
     }
-    if (!this.puedeCambioEspacio) valores.CambioEspacio = false;
+    if (!this.puedeCambioEspacio) {
+      valores.CambioEspacio = false;
+      valores.ClientePideOnlineYPagaInmediatamente = false;
+    }
     if (!this.puedeReportesCierre) {
       valores.ResumenVenta = false;
       valores.VentaPorProducto = false;
