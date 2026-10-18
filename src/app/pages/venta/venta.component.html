@@ -266,6 +266,13 @@
               <span>{{ 'pendingPayment' | tenantText }}</span>
               <strong>{{ pedidosPendientesCobro.length }}</strong>
             </button>
+            <button *ngIf="pagosOnlineHabilitados"
+                    type="button"
+                    class="cash-center__action"
+                    (click)="abrirConciliacionCobrosOnline()">
+              <mat-icon>sync_alt</mat-icon>
+              <span>Conciliar cobros online</span>
+            </button>
             <button *ngIf="reservasHabilitadas"
                     type="button"
                     class="cash-center__action"

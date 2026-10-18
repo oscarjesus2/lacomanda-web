@@ -98,6 +98,7 @@ import { DialogTurnoComponent } from 'src/app/components/dialog-turno/dialog-tur
 import { DialogCerrarTurnoComponent } from 'src/app/components/dialog-cerrar-turno/dialog-cerrar-turno.component';
 import { PedidoPendienteCierre } from 'src/app/interfaces/cerrarTurno.interface';
 import { ReservasService } from 'src/app/services/reservas.service';
+import { DialogConciliarCobrosOnlineComponent } from 'src/app/components/dialog-conciliar-cobros-online/dialog-conciliar-cobros-online.component';
 
 @Component({
   selector: 'app-venta',
@@ -130,6 +131,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   public cargandoPermisos = true;
   public user: Usuario;
   public config: Configuracion | null = null;
+  public pagosOnlineHabilitados = false;
 
   /** Interruptor maestro: la cortesía solo aplica si está habilitada en la config global,
    *  aunque un producto haya quedado configurado con PermitirParaTragoCortesia = true. */
@@ -838,6 +840,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       );
       this.reportesHabilitados = permitido(
         CARACTERISTICAS_LICENCIA.OperacionReportes,
+      );
+      this.pagosOnlineHabilitados = permitido(
+        CARACTERISTICAS_LICENCIA.VentasPagoCuentaOnline,
       );
     });
 
@@ -3398,6 +3403,17 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
    })
 
 }
+
+  abrirConciliacionCobrosOnline(): void {
+    if (!this.pagosOnlineHabilitados) return;
+    this.dialog.open(DialogConciliarCobrosOnlineComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: 'min(1080px, 96vw)',
+      maxHeight: '92vh',
+      panelClass: 'dialog-window--workspace',
+    });
+  }
 
   OpenDialogEmitirComprobante(idTipoDoc: EnumTipoDocumento): void {
     if (!this.comprobantesHabilitados) {

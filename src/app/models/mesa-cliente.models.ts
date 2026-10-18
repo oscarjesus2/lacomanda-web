@@ -21,6 +21,7 @@ export interface EstadoAccesoMesa {
   PuedePagarCuentaOnline: boolean;
   IdPedido?: number;
   NroCuenta?: number;
+  RequierePagoOnlineAntesDeEnviarPedido: boolean;
 }
 
 export interface SolicitudMesaPendiente {
@@ -147,6 +148,11 @@ export interface PedidoMesaClienteResultado {
   RequierePagoInmediato: boolean;
 }
 
+export interface CrearCheckoutPedidoMesaCliente {
+  ReturnUrl: string;
+  Pedido: RegistrarPedidoMesaCliente;
+}
+
 export interface CheckoutCuentaMesa {
   IdIntento: string;
   Proveedor: string;
@@ -163,6 +169,9 @@ export interface EstadoPagoCuentaMesa {
   Moneda: string;
   IdVenta?: number;
   PagadoUtc?: Date;
+  Proveedor: string;
+  IdPedido?: number;
+  NroCuenta?: number;
 }
 
 export interface PagoCuentaOnlinePendiente {

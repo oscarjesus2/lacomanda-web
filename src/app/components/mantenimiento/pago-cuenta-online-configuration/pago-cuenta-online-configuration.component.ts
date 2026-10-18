@@ -20,6 +20,7 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
   moneiApiKey = '';
   culqiPublicKey = '';
   culqiSecretKey = '';
+  culqiWebhookSecret = '';
   correoContactoPublico = '';
   urlTerminosCondiciones = '';
   urlCambiosDevoluciones = '';
@@ -64,6 +65,8 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
     return this.culqiPublicKey.trim().length > 0
       && (this.culqiSecretKey.length > 0
         || !!this.configuration?.CredencialPrivadaConfigurada)
+      && (this.culqiWebhookSecret.length > 0
+        || !!this.configuration?.SecretoWebhookConfigurado)
       && this.correoContactoPublico.trim().length > 0
       && this.esUrlHttps(this.urlTerminosCondiciones)
       && this.esUrlHttps(this.urlCambiosDevoluciones)
@@ -101,6 +104,10 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
       CulqiSecretKey: this.isSpain || !this.culqiSecretKey
         ? undefined
         : this.culqiSecretKey,
+      // Vacía significa conservar la clave de webhook que ya está cifrada en el backend.
+      CulqiWebhookSecret: this.isSpain || !this.culqiWebhookSecret
+        ? undefined
+        : this.culqiWebhookSecret,
       CorreoContactoPublico: this.isSpain
         ? undefined
         : this.correoContactoPublico.trim(),
@@ -126,6 +133,7 @@ export class PagoCuentaOnlineConfigurationComponent implements OnInit {
           this.apply(response.Data);
           this.moneiApiKey = '';
           this.culqiSecretKey = '';
+          this.culqiWebhookSecret = '';
           Notificar.exito(
             'Cobro móvil configurado',
             this.active

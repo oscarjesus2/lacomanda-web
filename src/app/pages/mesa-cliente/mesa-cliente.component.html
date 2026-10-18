@@ -219,8 +219,15 @@
       </div>
       <p *ngIf="carrito.length === 0" class="empty-cart">Todavía no has añadido productos.</p>
       <div class="cart-total"><span>Total</span><strong>{{ carta?.Moneda }} {{ totalCarrito | number:'1.2-2' }}</strong></div>
-      <button class="primary-action" type="button" [disabled]="carrito.length === 0 || enviandoPedido" (click)="enviarPedido()">
-        {{ enviandoPedido ? 'Enviando…' : 'Enviar a preparación' }}
+      <p *ngIf="requierePagoAntesDeEnviarPedido" class="payment-required-note">
+        El pedido se enviará a preparación únicamente después de confirmarse el pago online.
+      </p>
+      <button class="primary-action" type="button" [disabled]="carrito.length === 0 || enviandoPedido || verificandoPago" (click)="enviarPedido()">
+        {{ enviandoPedido
+          ? 'Abriendo pago…'
+          : (verificandoPago
+            ? 'Esperando confirmación del pago…'
+            : (requierePagoAntesDeEnviarPedido ? 'Pagar y enviar pedido' : 'Enviar a preparación')) }}
       </button>
     </section>
   </div>
@@ -230,7 +237,7 @@
       <header>
         <div class="assistant-avatar"><mat-icon>auto_awesome</mat-icon></div>
         <div>
-          <span>{{ productoAsistente ? 'Pregunta sobre este plato' : 'Camarero virtual' }}</span>
+          <span>{{ productoAsistente ? 'Pregunta sobre este plato' : 'Cesia IA' }}</span>
           <strong>{{ productoAsistente?.Nombre || 'Te ayudo a elegir' }}</strong>
         </div>
         <button type="button" (click)="cerrarAsistente()"><mat-icon>close</mat-icon></button>

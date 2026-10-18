@@ -7,6 +7,7 @@ import {
   CartaPublicaMesaCliente,
   CartaMesaCliente,
   CheckoutCuentaMesa,
+  CrearCheckoutPedidoMesaCliente,
   ConsultarAsistenteCartaMesaCliente,
   ConfirmarSolicitudMesa,
   EstadoAccesoMesa,
@@ -84,6 +85,18 @@ export class MesaClienteService {
     );
   }
 
+  registrarPedidoPagado(
+    token: string,
+    idIntento: string,
+    request: RegistrarPedidoMesaCliente
+  ): Observable<ApiResponse<PedidoMesaClienteResultado>> {
+    return this.http.post<ApiResponse<PedidoMesaClienteResultado>>(
+      `${this.basePath}/pedidos/pagados/${encodeURIComponent(idIntento)}`,
+      request,
+      { headers: this.tenantHeaders().set('X-Mesa-Token', token) }
+    );
+  }
+
   crearCheckout(
     token: string,
     returnUrl: string,
@@ -96,6 +109,17 @@ export class MesaClienteService {
     );
   }
 
+  crearCheckoutPedido(
+    token: string,
+    request: CrearCheckoutPedidoMesaCliente,
+  ): Observable<ApiResponse<CheckoutCuentaMesa>> {
+    return this.http.post<ApiResponse<CheckoutCuentaMesa>>(
+      `${this.basePath}/pedidos/checkout`,
+      request,
+      { headers: this.tenantHeaders().set('X-Mesa-Token', token) }
+    );
+  }
+
   consultarPago(
     token: string,
     idIntento: string
@@ -104,6 +128,32 @@ export class MesaClienteService {
       `${this.basePath}/pagos/${encodeURIComponent(idIntento)}`,
       { headers: this.tenantHeaders().set('X-Mesa-Token', token) }
     );
+  }
+
+  cancelarPago(
+    token: string,
+    idIntento: string
+  ): Observable<ApiResponse<EstadoPagoCuentaMesa>> {
+    return this.http.delete<ApiResponse<EstadoPagoCuentaMesa>>(
+      `${this.basePath}/pagos/${encodeURIComponent(idIntento)}`,
+      { headers: this.tenantHeaders().set('X-Mesa-Token', token) }
+    );
+  }
+
+  cancelarPagoAlAbandonar(token: string, idIntento: string): void {
+    const url = `${this.basePath}/pagos/${encodeURIComponent(idIntento)}`
+      + `/abandonar?tenantHost=${encodeURIComponent(window.location.hostname)}`;
+    // text/plain evita un preflight CORS durante pagehide; el token nunca se
+    // coloca en la URL y el endpoint lo consume como cuerpo crudo.
+    const blob = new Blob([token], { type: 'text/plain;charset=UTF-8' });
+    if (navigator.sendBeacon?.(url, blob)) return;
+
+    void fetch(url, {
+      method: 'POST',
+      body: token,
+      keepalive: true,
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8' }
+    });
   }
 
   consultarPagosCuenta(
