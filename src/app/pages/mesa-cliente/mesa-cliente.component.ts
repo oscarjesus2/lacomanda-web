@@ -204,6 +204,7 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     this.consultandoAsistente = true;
     this.mesaClienteService.consultarAsistente(this.codigoQr, {
       IdProducto: this.productoAsistente?.IdProducto,
+      PedidoHabilitado: this.activa,
       Pregunta: pregunta,
       Historial: historial
     }).subscribe({

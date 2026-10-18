@@ -98,6 +98,7 @@ export interface MensajeAsistenteCartaMesaCliente {
 
 export interface ConsultarAsistenteCartaMesaCliente {
   IdProducto?: number | null;
+  PedidoHabilitado: boolean;
   Pregunta: string;
   Historial: MensajeAsistenteCartaMesaCliente[];
 }
