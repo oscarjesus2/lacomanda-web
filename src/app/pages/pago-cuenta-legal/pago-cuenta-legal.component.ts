@@ -31,10 +31,11 @@ export class PagoCuentaLegalComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.headerService.hideHeader();
-    const pagina = this.route.snapshot.paramMap.get('pagina');
-    if (pagina === 'terminos' || pagina === 'cambios-devoluciones' || pagina === 'libro-reclamaciones') {
-      this.pagina = pagina;
-    }
+    // Angular reutiliza este componente al navegar entre /legal/:pagina.
+    // Escuchar los parámetros evita que cambie la URL sin cambiar el contenido.
+    this.route.paramMap.subscribe(params => {
+      this.pagina = this.obtenerPagina(params.get('pagina'));
+    });
 
     this.service.obtenerInformacion()
       .pipe(finalize(() => (this.cargando = false)))
@@ -114,5 +115,11 @@ export class PagoCuentaLegalComponent implements OnInit, OnDestroy {
       Detalle: '',
       PedidoConsumidor: '',
     };
+  }
+
+  private obtenerPagina(pagina: string | null): PaginaLegal {
+    return pagina === 'cambios-devoluciones' || pagina === 'libro-reclamaciones'
+      ? pagina
+      : 'terminos';
   }
 }

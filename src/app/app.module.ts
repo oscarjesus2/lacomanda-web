@@ -135,6 +135,7 @@ import { SocioNegocioMantenimientoComponent } from './components/mantenimiento/s
 import { TenantTextPipe } from './pipes/tenant-text.pipe';
 import { MesaClienteComponent } from './pages/mesa-cliente/mesa-cliente.component';
 import { DialogSolicitudesMesaComponent } from './components/dialog-solicitudes-mesa/dialog-solicitudes-mesa.component';
+import { DialogConfirmarPresenciaMesaComponent } from './components/dialog-confirmar-presencia-mesa/dialog-confirmar-presencia-mesa.component';
 import { DialogSolicitudesAutorizacionComponent } from './components/dialog-solicitudes-autorizacion/dialog-solicitudes-autorizacion.component';
 import { SolicitudesAutorizacionBotonComponent } from './components/solicitudes-autorizacion-boton/solicitudes-autorizacion-boton.component';
 import { SalidaInternaMantenimientoComponent } from './components/mantenimiento/salida-interna-mantenimiento/salida-interna-mantenimiento.component';
@@ -279,6 +280,7 @@ export const MY_DATE_FORMATS = {
     LibroReclamacionesMantenimientoComponent,
     DialogConciliarCobrosOnlineComponent,
     DialogSolicitudesMesaComponent,
+    DialogConfirmarPresenciaMesaComponent,
     DialogSolicitudesAutorizacionComponent,
     SolicitudesAutorizacionBotonComponent,
     SalidaInternaMantenimientoComponent,

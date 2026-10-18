@@ -1,0 +1,31 @@
+<section class="mant-panel dialog-panel dialog-panel--compact">
+  <header class="mant-panel__header">
+    <h2>Confirmar {{ data.espacio }} {{ data.numero }}</h2>
+    <div class="mant-panel__header-actions">
+      <button mat-icon-button type="button" class="close-button" aria-label="Cerrar" (click)="cancelar()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </header>
+
+  <form class="dialog-form" (ngSubmit)="confirmar()" novalidate>
+    <p class="dialog-form-section__hint">
+      Comprueba visualmente que el cliente muestra el código
+      <strong class="dialog-verification-code">{{ data.codigoVisual }}</strong>.
+    </p>
+
+    <mat-form-field appearance="fill" class="full-width" subscriptSizing="dynamic">
+      <mat-label>Número de personas</mat-label>
+      <input matInput type="number" name="nroPax" min="1" step="1" inputmode="numeric"
+             [(ngModel)]="nroPax" required autofocus>
+      <mat-error *ngIf="intentoConfirmar && (!nroPax || nroPax < 1 || nroPax % 1 !== 0)">
+        Ingresa un número entero de personas válido.
+      </mat-error>
+    </mat-form-field>
+
+    <div class="dialog-actions">
+      <button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>
+      <button mat-raised-button color="primary" type="submit">Confirmar presencia</button>
+    </div>
+  </form>
+</section>
