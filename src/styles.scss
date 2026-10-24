@@ -2734,6 +2734,30 @@ body {
   overflow: auto;
 }
 
+.dialog-table-actions-cell {
+  min-width: 0;
+  padding-inline: 4px !important;
+}
+
+.dialog-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.dialog-table-actions--compact button[mat-icon-button] {
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  line-height: 36px;
+}
+
+.dialog-table-actions--compact button[mat-icon-button] .mat-icon {
+  margin: 0;
+}
+
 .dialog-table-state,
 .dialog-table-card > .dialog-empty-state,
 .dialog-table-wrapper--fill > .dialog-empty-state {
@@ -3121,6 +3145,22 @@ mat-table.dialog-table--xwide mat-header-cell {
 
 .dialog-form-section--full {
   grid-column: 1 / -1;
+}
+
+/* Secciones tabulares que ocupan la mesa de trabajo disponible. El contenido
+   auxiliar queda fijo y las filas excedentes se desplazan dentro de la tabla. */
+.dialog-form-section--fill {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  margin-bottom: 0;
+}
+
+.dialog-form-section--fill .dialog-table-card {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .dialog-form-section__title,

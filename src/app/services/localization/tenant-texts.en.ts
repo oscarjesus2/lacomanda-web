@@ -1563,6 +1563,8 @@ export const EN_TEXTS = {
   warehouseAreas: 'Warehouse areas',
   warehouseSubareas: 'Warehouse subareas',
   suppliers: 'Suppliers',
+  movementTypes: 'Movement types',
+  purchaseDocuments: 'Purchase documents',
   stockIn: 'Stock in',
   stockOut: 'Stock out',
   stockOutReasons: 'Stock-out reasons',

@@ -12,8 +12,8 @@ import {
   EntradaCompraImpuesto,
   EntradaCompraLineaGuardar,
   EntradaCompraPresentacion,
-  EntradaCompraPago,
-  EntradaCompraPagoGuardar,
+  PagoProveedor,
+  PagoProveedorGuardar,
   EntradaCompraResumen,
   EntradaCompraSubMovimiento,
   CuotaDocumentosCompraIa,
@@ -38,6 +38,7 @@ interface LineaCompraEdicion
   UnidadMedida: string;
   UnidadStock: string;
   FactorConversionStock: number;
+  EsServicio: boolean;
   Inventariable: boolean;
   OrigenIa?: boolean;
   CodigoOriginal?: string;
@@ -103,7 +104,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   importeAgregar = 0;
   idSubAreaAgregar: number | null = null;
   impuestosAgregar: string[] = [];
-  pago: EntradaCompraPagoGuardar = this.pagoInicial();
+  pago: PagoProveedorGuardar = this.pagoInicial();
   fechaPagoProgramada: Date | null = null;
   idsGuiasSeleccionadas = new Set<number>();
   notaOrigen: EntradaCompra | null = null;
@@ -296,6 +297,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       linea.UnidadStock = '';
       linea.FactorConversionStock = 1;
       linea.IdPresentacionCompra = null;
+      linea.EsServicio = false;
       linea.Inventariable = false;
       linea.IdSubAreaAlmacen = null;
       linea.Impuestos = linea.OrigenIa && linea.ImpuestosDocumento
@@ -309,6 +311,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     }
 
     linea.Producto = articulo.Descripcion;
+    linea.EsServicio = articulo.EsServicio;
     const presentacionSugerida = this.presentacionParaUnidad(
       articulo,
       linea.UnidadMedidaOriginal
@@ -320,16 +323,17 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     const impuestosDocumento = linea.ImpuestosDocumento;
     linea.Impuestos = linea.OrigenIa && impuestosDocumento !== undefined
       ? [...impuestosDocumento]
-      : [...articulo.Impuestos];
-    linea.ConflictoTributario = !!linea.OrigenIa &&
-      impuestosDocumento !== undefined &&
-      !this.mismosImpuestos(articulo.Impuestos, impuestosDocumento);
+      : this.impuestosPredeterminadosArticulo(articulo);
+    linea.ConflictoTributario = !this.impuestosCompatiblesConDocumento(
+      articulo,
+      linea.Impuestos
+    );
     linea.IdSubAreaAlmacen = articulo.Inventariable
       ? (this.catalogos?.SubAreas.length === 1
           ? this.catalogos.SubAreas[0].IdSubAreaAlmacen
           : linea.IdSubAreaAlmacen)
       : null;
-    linea.RequierePresentacion = !!linea.OrigenIa &&
+    linea.RequierePresentacion = !articulo.EsServicio && !!linea.OrigenIa &&
       !!linea.UnidadMedidaOriginal &&
       !presentacionSugerida &&
       this.esUnidadPresentacion(linea.UnidadMedidaOriginal) &&
@@ -340,6 +344,12 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   }
 
   actualizarRevisionLinea(linea: LineaCompraEdicion): void {
+    const articulo = this.articuloLinea(linea);
+    if (articulo) {
+      linea.ConflictoTributario =
+        !this.impuestosCompatiblesConDocumento(articulo, linea.Impuestos);
+      this.actualizarMotivoSeleccionArticulo(linea, articulo);
+    }
     linea.RequiereRevision = !linea.IdProducto ||
       !!linea.RequierePresentacion ||
       !!linea.ConflictoTributario ||
@@ -385,6 +395,34 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       this.subTiposMovimiento[0]?.IdSubTipoMovimiento ?? null;
   }
 
+  cambiarTipoDocumento(): void {
+    for (const linea of this.lineas) {
+      const articulo = this.articuloLinea(linea);
+      if (!articulo) {
+        continue;
+      }
+
+      linea.Impuestos = this.ajustarImpuestosAlDocumento(
+        articulo,
+        linea.Impuestos
+      );
+      linea.ConflictoTributario = !this.impuestosCompatiblesConDocumento(
+        articulo,
+        linea.Impuestos
+      );
+      this.actualizarMotivoSeleccionArticulo(linea, articulo);
+      this.actualizarRevisionLinea(linea);
+    }
+
+    if (this.articuloAgregar) {
+      this.impuestosAgregar = this.ajustarImpuestosAlDocumento(
+        this.articuloAgregar,
+        this.impuestosAgregar
+      );
+    }
+    this.lineas = [...this.lineas];
+  }
+
   seleccionarArticulo(): void {
     const articulo = this.articuloAgregar;
     if (!articulo) {
@@ -398,12 +436,17 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     const detalleOrigen = this.notaOrigen?.Detalles.find(
       detalle => detalle.IdProducto === articulo.IdProducto
     );
-    this.idPresentacionAgregar =
-      detalleOrigen?.IdPresentacionCompra ?? null;
+    this.idPresentacionAgregar = articulo.EsServicio
+      ? null
+      : detalleOrigen?.IdPresentacionCompra ?? null;
     this.actualizarImporteSugerido();
     this.impuestosAgregar = detalleOrigen
       ? [...detalleOrigen.Impuestos]
-      : [...articulo.Impuestos];
+      : this.impuestosPredeterminadosArticulo(articulo);
+    this.impuestosAgregar = this.ajustarImpuestosAlDocumento(
+      articulo,
+      this.impuestosAgregar
+    );
     if (detalleOrigen) {
       this.idSubAreaAgregar =
         detalleOrigen.IdSubAreaAlmacen;
@@ -416,7 +459,16 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   actualizarImporteSugerido(): void {
     const articulo = this.articuloAgregar;
     const presentacion = this.presentacionAgregar;
-    if (!articulo || !presentacion || this.cantidadAgregar <= 0) {
+    if (!articulo || this.cantidadAgregar <= 0) {
+      return;
+    }
+    if (articulo.EsServicio) {
+      this.importeAgregar = Number(
+        (articulo.PrecioCompra * this.cantidadAgregar).toFixed(2)
+      );
+      return;
+    }
+    if (!presentacion) {
       return;
     }
     this.importeAgregar = Number(
@@ -469,9 +521,10 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       IdPresentacionCompra: this.idPresentacionAgregar,
       UnidadMedida: this.presentacionAgregar?.UnidadCompra ||
         articulo.UnidadMedida,
-      UnidadStock: articulo.UnidadMedida,
+      UnidadStock: articulo.EsServicio ? '' : articulo.UnidadMedida,
       FactorConversionStock:
         this.presentacionAgregar?.FactorConversionStock || 1,
+      EsServicio: articulo.EsServicio,
       Inventariable: articulo.Inventariable,
       Cantidad: this.cantidadAgregar,
       Importe: this.importeAgregar,
@@ -724,7 +777,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     }
 
     this.guardando = true;
-    this.entradaCompraService.registrarPago(
+    this.entradaCompraService.registrarPagoProveedor(
       this.compra.IdEntrada,
       this.pago
     ).subscribe({
@@ -748,7 +801,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     });
   }
 
-  eliminarPago(pago: EntradaCompraPago): void {
+  eliminarPago(pago: PagoProveedor): void {
     if (!this.compra) {
       return;
     }
@@ -766,9 +819,9 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         return;
       }
       this.guardando = true;
-      this.entradaCompraService.eliminarPago(
+      this.entradaCompraService.eliminarPagoProveedor(
         this.compra.IdEntrada,
-        pago.IdPagoEntrada
+        pago.IdPagoProveedor
       ).subscribe({
         next: response => {
           this.guardando = false;
@@ -795,7 +848,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       return;
     }
     this.guardando = true;
-    this.entradaCompraService.reprogramarPago(
+    this.entradaCompraService.reprogramarPagoProveedor(
       this.compra.IdEntrada,
       this.fechaPagoProgramada
     ).subscribe({
@@ -860,12 +913,21 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       .join(', ');
   }
 
+  impuestosSeleccionablesLinea(
+    linea: LineaCompraEdicion
+  ): EntradaCompraImpuesto[] {
+    return this.impuestosDisponiblesParaArticulo(
+      this.articuloLinea(linea)
+    );
+  }
+
   baseLinea(linea: LineaCompraEdicion): number {
-    const totalTasa = linea.Impuestos.reduce(
+    const impuestosTrasladados = this.impuestosTrasladados(linea.Impuestos);
+    const totalTasa = impuestosTrasladados.reduce(
       (total, id) => total + this.tasaNormalizada(this.impuesto(id)),
       0
     );
-    const fijo = linea.Impuestos.reduce(
+    const fijo = impuestosTrasladados.reduce(
       (total, id) =>
         total +
         (this.impuesto(id)?.FijoPorUnidad || 0) * linea.Cantidad,
@@ -901,7 +963,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   impuestosLinea(linea: LineaCompraEdicion): number {
     const base = this.baseLinea(linea);
     return this.redondear(
-      linea.Impuestos.reduce((total, id) => {
+      this.impuestosTrasladados(linea.Impuestos).reduce((total, id) => {
         const impuesto = this.impuesto(id);
         return total +
           base * this.tasaNormalizada(impuesto) +
@@ -913,6 +975,16 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   totalLinea(linea: LineaCompraEdicion): number {
     return this.redondear(
       this.baseLinea(linea) + this.impuestosLinea(linea)
+    );
+  }
+
+  retencionesLinea(linea: LineaCompraEdicion): number {
+    const base = this.baseLinea(linea);
+    return this.redondear(
+      this.impuestosRetencion(linea.Impuestos).reduce(
+        (total, id) => total + base * this.tasaNormalizada(this.impuesto(id)),
+        0
+      )
     );
   }
 
@@ -940,9 +1012,24 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     );
   }
 
+  get retencionesDocumento(): number {
+    return this.redondear(
+      this.lineas.reduce(
+        (total, linea) => total + this.retencionesLinea(linea),
+        0
+      )
+    );
+  }
+
+  get totalNetoPagarDocumento(): number {
+    return this.redondear(
+      Math.max(0, this.totalDocumento - this.retencionesDocumento)
+    );
+  }
+
   get totalPagado(): number {
     return this.redondear(
-      (this.compra?.Pagos || []).reduce(
+      (this.compra?.PagosProveedor || []).reduce(
         (total, pago) => total + pago.MontoPagado,
         0
       )
@@ -951,7 +1038,11 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
 
   get saldoPendiente(): number {
     return this.redondear(
-      Math.max(0, (this.compra?.TotalCompra || 0) - this.totalPagado)
+      Math.max(
+        0,
+        (this.compra?.TotalNetoPagar ?? this.compra?.TotalCompra ?? 0) -
+          this.totalPagado
+      )
     );
   }
 
@@ -981,6 +1072,9 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   presentacionesDisponibles(
     articulo?: EntradaCompraArticulo
   ): EntradaCompraPresentacion[] {
+    if (articulo?.EsServicio) {
+      return [];
+    }
     const proveedor = Number(this.formulario.IdProveedor || 0);
     return (articulo?.Presentaciones || []).filter(p =>
       !p.IdProveedor || p.IdProveedor === proveedor
@@ -1038,6 +1132,16 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     const articulo = this.catalogos?.Articulos.find(
       item => item.IdProducto === linea.IdProducto
     );
+    if (articulo?.EsServicio) {
+      linea.IdPresentacionCompra = null;
+      linea.UnidadMedida = articulo.UnidadMedida;
+      linea.UnidadStock = '';
+      linea.FactorConversionStock = 1;
+      linea.RequierePresentacion = false;
+      this.actualizarMotivoSeleccionArticulo(linea, articulo);
+      this.actualizarRevisionLinea(linea);
+      return;
+    }
     const presentacion = this.presentacionesDisponibles(articulo).find(
       p => p.IdPresentacionCompra === linea.IdPresentacionCompra
     ) || this.presentacionesDisponibles(articulo)[0];
@@ -1150,7 +1254,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   get puedeCrearNota(): boolean {
     if (!this.compra ||
         this.compra.Estado !== 2 ||
-        this.compra.Pagos.length > 0) {
+        this.compra.PagosProveedor.length > 0) {
       return false;
     }
     return this.naturalezaDocumento(
@@ -1167,6 +1271,29 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   get monedaEsPredeterminada(): boolean {
     return this.formulario.IdMoneda ===
       this.catalogos?.IdMonedaPredeterminada;
+  }
+
+  get permiteRetenciones(): boolean {
+    return !!this.catalogos?.TiposDocumento.find(
+      tipo => tipo.Id === this.formulario.IdTipoDocumento
+    )?.PermiteRetenciones;
+  }
+
+  impuestosDisponiblesParaArticulo(
+    articulo?: EntradaCompraArticulo
+  ): EntradaCompraImpuesto[] {
+    if (!articulo) {
+      return [];
+    }
+
+    const impuestosArticulo = new Set(
+      (articulo.Impuestos || []).map(impuesto => impuesto.toUpperCase())
+    );
+    const tipoImpacto = this.permiteRetenciones ? 2 : 1;
+    return (this.catalogos?.Impuestos || []).filter(impuesto =>
+      impuestosArticulo.has(impuesto.IdImpuestoPais.toUpperCase()) &&
+      impuesto.TipoImpacto === tipoImpacto
+    );
   }
 
   private cargarFormulario(compra: EntradaCompra): void {
@@ -1200,6 +1327,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         IdPresentacionCompra: detalle.IdPresentacionCompra,
         UnidadStock: detalle.UnidadStock,
         FactorConversionStock: detalle.FactorConversionStock,
+        EsServicio: detalle.EsServicio || articulo?.EsServicio || false,
         Inventariable:
           articulo?.Inventariable ??
           detalle.IdSubAreaAlmacen !== null,
@@ -1215,7 +1343,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     this.pago.IdMoneda = compra.IdMoneda;
     this.pago.MontoPagado = this.saldoPendiente;
     this.pago.IdTipoPago =
-      this.catalogos?.FormasPago[0]?.Id ?? null;
+      this.catalogos?.TiposPago[0]?.Id ?? null;
     this.limpiarLinea();
   }
 
@@ -1337,7 +1465,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
 
   iniciarNota(tipo: 1 | 2): void {
     if (!this.compra || this.compra.Estado !== 2 ||
-        this.compra.Pagos.length > 0) {
+        this.compra.PagosProveedor.length > 0) {
       Swal.fire(
         'Acción no disponible',
         'La compra debe estar revisada y no tener pagos.',
@@ -1426,8 +1554,8 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     );
     if (lineaPendiente) {
       Swal.fire(
-        'Revise los artículos leídos',
-        'Seleccione el artículo, su presentación, la cantidad y la subárea de las líneas señaladas antes de guardar.',
+        'Revise las líneas señaladas',
+        this.mensajeLineasPendientes(),
         'info'
       );
       return false;
@@ -1446,6 +1574,34 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       return false;
     }
     return true;
+  }
+
+  private mensajeLineasPendientes(): string {
+    const requisitos: string[] = [];
+    if (this.lineas.some(linea => !linea.IdProducto)) {
+      requisitos.push('seleccionar el artículo');
+    }
+    if (this.lineas.some(linea => !!linea.RequierePresentacion)) {
+      requisitos.push('revisar la presentación');
+    }
+    if (this.lineas.some(linea => !!linea.ConflictoTributario)) {
+      requisitos.push('revisar los impuestos aplicados');
+    }
+    if (this.lineas.some(linea => linea.Cantidad <= 0)) {
+      requisitos.push('indicar una cantidad mayor que cero');
+    }
+    if (this.lineas.some(linea => linea.Importe < 0)) {
+      requisitos.push('corregir el importe');
+    }
+    if (this.lineas.some(
+      linea => linea.Inventariable && !linea.IdSubAreaAlmacen
+    )) {
+      requisitos.push('seleccionar la subárea de almacén');
+    }
+
+    return requisitos.length === 0
+      ? 'Revise los datos de las líneas antes de guardar.'
+      : `Antes de guardar debe: ${requisitos.join(', ')}.`;
   }
 
   get documentoLogisticoPlural(): string {
@@ -1518,35 +1674,41 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     }
     this.formulario.PreciosIncluyenImpuestos =
       datos.PreciosIncluyenImpuestos;
-    this.lineas = datos.Lineas.map(linea => ({
-      ...this.datosPresentacionPrevisualizada(linea),
-      IdProducto: linea.IdProducto,
-      IdPresentacionCompra: linea.IdPresentacionCompra,
-      Producto: linea.Producto,
-      Inventariable: linea.Inventariable,
-      Cantidad: linea.Cantidad,
-      Importe: linea.Importe,
-      IdSubAreaAlmacen: linea.IdSubAreaAlmacen,
-      Impuestos: [...linea.Impuestos],
-      OrigenIa: true,
-      CodigoOriginal: linea.CodigoOriginal,
-      DescripcionOriginal: linea.DescripcionOriginal,
-      UnidadMedidaOriginal: linea.UnidadMedidaOriginal,
-      CantidadOriginal: linea.CantidadOriginal,
-      FactorConversionUnidad: linea.FactorConversionUnidad,
-      ConfianzaIa: linea.Confianza,
-      RequiereRevision: linea.RequiereRevision,
-      RequierePresentacion: linea.RequierePresentacion,
-      ImpuestosDocumento: [...linea.Impuestos],
-      ConflictoTributario: !!linea.IdProducto &&
-        !this.mismosImpuestos(
-          this.catalogos?.Articulos.find(
-            articulo => articulo.IdProducto === linea.IdProducto
-          )?.Impuestos || [],
-          linea.Impuestos
-        ),
-      MotivoRevision: linea.MotivoRevision
-    }));
+    this.lineas = datos.Lineas.map(linea => {
+      const articulo = this.catalogos?.Articulos.find(
+        item => item.IdProducto === linea.IdProducto
+      );
+      const esServicio = articulo?.EsServicio || false;
+      return {
+        ...this.datosPresentacionPrevisualizada(linea),
+        IdProducto: linea.IdProducto,
+        IdPresentacionCompra: esServicio
+          ? null
+          : linea.IdPresentacionCompra,
+        Producto: linea.Producto,
+        EsServicio: esServicio,
+        Inventariable: esServicio ? false : linea.Inventariable,
+        Cantidad: linea.Cantidad,
+        Importe: linea.Importe,
+        IdSubAreaAlmacen: esServicio ? null : linea.IdSubAreaAlmacen,
+        Impuestos: [...linea.Impuestos],
+        OrigenIa: true,
+        CodigoOriginal: linea.CodigoOriginal,
+        DescripcionOriginal: linea.DescripcionOriginal,
+        UnidadMedidaOriginal: linea.UnidadMedidaOriginal,
+        CantidadOriginal: linea.CantidadOriginal,
+        FactorConversionUnidad: linea.FactorConversionUnidad,
+        ConfianzaIa: linea.Confianza,
+        RequiereRevision: linea.RequiereRevision,
+        RequierePresentacion: esServicio
+          ? false
+          : linea.RequierePresentacion,
+        ImpuestosDocumento: [...linea.Impuestos],
+        ConflictoTributario: !!articulo &&
+          !this.impuestosCompatiblesConDocumento(articulo, linea.Impuestos),
+        MotivoRevision: linea.MotivoRevision,
+      };
+    });
   }
 
   private actualizarMotivoSeleccionArticulo(
@@ -1561,25 +1723,63 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     }
     if (linea.ConflictoTributario) {
       motivos.push(
-        'Los impuestos leídos en la factura no coinciden con la configuración tributaria del artículo. Seleccione el artículo correcto o actualice su configuración.'
+        'Los impuestos seleccionados no coinciden con la configuración tributaria del artículo y el tipo de documento. Seleccione el artículo correcto o actualice su configuración.'
       );
     }
     linea.MotivoRevision = motivos.join(' ');
   }
 
-  private mismosImpuestos(
-    izquierda: string[],
-    derecha: string[]
+  private impuestosPredeterminadosArticulo(
+    articulo: EntradaCompraArticulo
+  ): string[] {
+    return this.impuestosDisponiblesParaArticulo(articulo)
+      .filter(impuesto => !impuesto.EsOpcional)
+      .map(impuesto => impuesto.IdImpuestoPais);
+  }
+
+  private ajustarImpuestosAlDocumento(
+    articulo: EntradaCompraArticulo,
+    seleccionados: string[]
+  ): string[] {
+    const disponibles = this.impuestosDisponiblesParaArticulo(articulo);
+    const permitidos = new Set(
+      disponibles.map(impuesto => impuesto.IdImpuestoPais.toUpperCase())
+    );
+    const seleccionadosNormalizados = seleccionados.filter(impuesto =>
+      permitidos.has(impuesto.toUpperCase())
+    );
+    const obligatorios = disponibles
+      .filter(impuesto => !impuesto.EsOpcional)
+      .map(impuesto => impuesto.IdImpuestoPais);
+    return [...new Set([...seleccionadosNormalizados, ...obligatorios])];
+  }
+
+  private impuestosCompatiblesConDocumento(
+    articulo: EntradaCompraArticulo,
+    seleccionados: string[]
   ): boolean {
-    if (izquierda.length !== derecha.length) {
-      return false;
-    }
-    const normalizados = new Set(
-      izquierda.map(item => item.trim().toUpperCase())
+    const disponibles = this.impuestosDisponiblesParaArticulo(articulo);
+    const permitidos = new Set(
+      disponibles.map(impuesto => impuesto.IdImpuestoPais.toUpperCase())
     );
-    return derecha.every(item =>
-      normalizados.has(item.trim().toUpperCase())
+    const seleccionadosNormalizados = new Set(
+      seleccionados.map(impuesto => impuesto.trim().toUpperCase())
     );
+    return [...seleccionadosNormalizados].every(impuesto =>
+      permitidos.has(impuesto)
+    ) && disponibles
+      .filter(impuesto => !impuesto.EsOpcional)
+      .every(impuesto => seleccionadosNormalizados.has(
+        impuesto.IdImpuestoPais.toUpperCase()
+      ));
+  }
+
+  private impuestosTrasladados(ids: string[]): string[] {
+    return ids.filter(id => this.impuesto(id)?.TipoImpacto === 1);
+  }
+
+  private impuestosRetencion(ids: string[]): string[] {
+    return ids.filter(id => this.impuesto(id)?.TipoImpacto === 2);
   }
 
   private datosPresentacionPrevisualizada(
@@ -1593,8 +1793,12 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       item => item.IdPresentacionCompra === linea.IdPresentacionCompra
     );
     return {
-      UnidadMedida: presentacion?.UnidadCompra || linea.UnidadMedida,
-      UnidadStock: articulo?.UnidadMedida || linea.UnidadMedida,
+      UnidadMedida: articulo?.EsServicio
+        ? articulo.UnidadMedida
+        : presentacion?.UnidadCompra || linea.UnidadMedida,
+      UnidadStock: articulo?.EsServicio
+        ? ''
+        : articulo?.UnidadMedida || linea.UnidadMedida,
       FactorConversionStock: presentacion?.FactorConversionStock ||
         (linea.RequierePresentacion
           ? linea.FactorConversionUnidad
@@ -1667,7 +1871,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     };
   }
 
-  private pagoInicial(): EntradaCompraPagoGuardar {
+  private pagoInicial(): PagoProveedorGuardar {
     return {
       FechaPago: new Date(),
       IdTipoPago: null,

@@ -14,6 +14,8 @@ import { PorcionamientoMantenimientoComponent } from 'src/app/components/manteni
 import { ProduccionMantenimientoComponent } from 'src/app/components/mantenimiento/produccion-mantenimiento/produccion-mantenimiento.component';
 import { MotivoSalidaMantenimientoComponent } from 'src/app/components/mantenimiento/motivo-salida-mantenimiento/motivo-salida-mantenimiento.component';
 import { GrupoAlmacenMantenimientoComponent } from 'src/app/components/mantenimiento/grupo-almacen-mantenimiento/grupo-almacen-mantenimiento.component';
+import { TipoMovimientoMantenimientoComponent } from 'src/app/components/mantenimiento/tipo-movimiento-mantenimiento/tipo-movimiento-mantenimiento.component';
+import { TipoDocumentoCompraMantenimientoComponent } from 'src/app/components/mantenimiento/tipo-documento-compra-mantenimiento/tipo-documento-compra-mantenimiento.component';
 import { StockAlmacenConsultaComponent } from 'src/app/components/mantenimiento/stock-almacen-consulta/stock-almacen-consulta.component';
 import { KardexAlmacenConsultaComponent } from 'src/app/components/mantenimiento/kardex-almacen-consulta/kardex-almacen-consulta.component';
 import { ConsumoAreaReporteComponent } from 'src/app/components/mantenimiento/consumo-area-reporte/consumo-area-reporte.component';
@@ -121,6 +123,26 @@ export class MenuAlmacenComponent implements OnInit {
           label: 'Grupos',
           titleKey: 'warehouseGroups',
           labelKey: 'groups',
+          disabled: false
+        },
+        {
+          title: 'Tipos de movimiento',
+          action: 'tiposMovimiento',
+          feature: C.AlmacenCompras,
+          icon: 'account_tree',
+          label: 'Tipos de movimiento',
+          titleKey: 'movementTypes',
+          labelKey: 'movementTypes',
+          disabled: false
+        },
+        {
+          title: 'Documentos de compra y gastos',
+          action: 'documentosCompra',
+          feature: C.AlmacenCompras,
+          icon: 'description',
+          label: 'Documentos',
+          titleKey: 'purchaseDocuments',
+          labelKey: 'purchaseDocuments',
           disabled: false
         }
       ]
@@ -335,7 +357,9 @@ export class MenuAlmacenComponent implements OnInit {
       porcionamientos: PorcionamientoMantenimientoComponent,
       producciones: ProduccionMantenimientoComponent,
       motivosSalida: MotivoSalidaMantenimientoComponent,
-      gruposAlmacen: GrupoAlmacenMantenimientoComponent
+      gruposAlmacen: GrupoAlmacenMantenimientoComponent,
+      tiposMovimiento: TipoMovimientoMantenimientoComponent,
+      documentosCompra: TipoDocumentoCompraMantenimientoComponent
     };
     const component = components[item.action];
     if (!component) {
@@ -347,7 +371,9 @@ export class MenuAlmacenComponent implements OnInit {
       'subareasAlmacen',
       'proveedores',
       'motivosSalida',
-      'gruposAlmacen'
+      'gruposAlmacen',
+      'tiposMovimiento',
+      'documentosCompra'
     ].includes(item.action);
     const configuracion = esMaestroCompacto
       ? {

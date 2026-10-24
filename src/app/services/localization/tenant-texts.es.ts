@@ -1568,6 +1568,8 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   warehouseAreas: 'Áreas de almacén',
   warehouseSubareas: 'Subáreas de almacén',
   suppliers: 'Proveedores',
+  movementTypes: 'Tipos de movimiento',
+  purchaseDocuments: 'Documentos de compra',
   stockIn: 'Ingresos',
   stockOut: 'Salidas',
   stockOutReasons: 'Motivos de salida',

@@ -145,6 +145,8 @@ import { ProduccionMantenimientoComponent } from './components/mantenimiento/pro
 import { PromocionMantenimientoComponent } from './components/mantenimiento/promocion-mantenimiento/promocion-mantenimiento.component';
 import { MotivoSalidaMantenimientoComponent } from './components/mantenimiento/motivo-salida-mantenimiento/motivo-salida-mantenimiento.component';
 import { GrupoAlmacenMantenimientoComponent } from './components/mantenimiento/grupo-almacen-mantenimiento/grupo-almacen-mantenimiento.component';
+import { TipoMovimientoMantenimientoComponent } from './components/mantenimiento/tipo-movimiento-mantenimiento/tipo-movimiento-mantenimiento.component';
+import { TipoDocumentoCompraMantenimientoComponent } from './components/mantenimiento/tipo-documento-compra-mantenimiento/tipo-documento-compra-mantenimiento.component';
 import { AsistenteEstacionComponent } from './components/asistente-estacion/asistente-estacion.component';
 import { ComparativoVentasComponent } from './pages/dashboard/comparativo-ventas/comparativo-ventas.component';
 import { EvolucionMargenComponent } from './pages/dashboard/evolucion-margen/evolucion-margen.component';
@@ -290,6 +292,8 @@ export const MY_DATE_FORMATS = {
     PromocionMantenimientoComponent,
     MotivoSalidaMantenimientoComponent,
     GrupoAlmacenMantenimientoComponent,
+    TipoMovimientoMantenimientoComponent,
+    TipoDocumentoCompraMantenimientoComponent,
     AsistenteEstacionComponent,
     ComparativoVentasComponent,
     EvolucionMargenComponent,

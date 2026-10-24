@@ -365,6 +365,7 @@
             <mat-select
               name="tipoDocumento"
               [(ngModel)]="formulario.IdTipoDocumento"
+              (selectionChange)="cambiarTipoDocumento()"
               required
               [disabled]="soloLectura"
             >
@@ -560,12 +561,13 @@
               (selectionChange)="seleccionarArticulo()"
             >
               <mat-option *ngFor="let articulo of articulosParaAgregar" [value]="articulo.IdProducto">
-                {{ articulo.Descripcion }} · stock en {{ articulo.UnidadMedida }}
+                {{ articulo.Descripcion }} ·
+                {{ articulo.EsServicio ? 'servicio' : 'stock en ' + articulo.UnidadMedida }}
               </mat-option>
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="fill" *ngIf="articuloAgregar">
+          <mat-form-field appearance="fill" *ngIf="articuloAgregar && !articuloAgregar.EsServicio">
             <mat-label>Presentación de compra</mat-label>
             <mat-select
               name="presentacionAgregar"
@@ -588,6 +590,11 @@
               {{ presentacionAgregar?.FactorConversionStock || 1 }}
               {{ articuloAgregar.UnidadMedida }} al stock.
             </mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" *ngIf="articuloAgregar?.EsServicio">
+            <mat-label>Unidad de medida</mat-label>
+            <input matInput [value]="articuloAgregar?.UnidadMedida" readonly>
           </mat-form-field>
 
           <mat-form-field appearance="fill">
@@ -640,9 +647,8 @@
             <mat-label>Impuestos</mat-label>
             <mat-select name="impuestosAgregar" [(ngModel)]="impuestosAgregar" multiple>
               <mat-option
-                *ngFor="let impuesto of catalogos?.Impuestos"
+                *ngFor="let impuesto of impuestosDisponiblesParaArticulo(articuloAgregar)"
                 [value]="impuesto.IdImpuestoPais"
-                [disabled]="articuloAgregar && !articuloAgregar.Impuestos.includes(impuesto.IdImpuestoPais)"
               >
                 {{ impuesto.Descripcion }}
               </mat-option>
@@ -741,7 +747,8 @@
                       </span>
                     </mat-select-trigger>
                     <mat-option *ngFor="let articulo of articulosParaAgregar" [value]="articulo.IdProducto">
-                      {{ articulo.Descripcion }} · stock en {{ articulo.UnidadMedida }}
+                      {{ articulo.Descripcion }} ·
+                      {{ articulo.EsServicio ? 'servicio' : 'stock en ' + articulo.UnidadMedida }}
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
@@ -754,7 +761,7 @@
 
                 <mat-form-field
                   appearance="fill"
-                  *ngIf="!soloLectura; else presentacionLectura"
+                  *ngIf="!soloLectura && !linea.EsServicio; else presentacionLectura"
                 >
                   <mat-label>Presentación</mat-label>
                   <mat-select
@@ -774,7 +781,7 @@
                 </mat-form-field>
                 <ng-template #presentacionLectura>
                   <div class="purchase-entry-line__display">
-                    <span>Presentación</span>
+                    <span>{{ linea.EsServicio ? 'Unidad de medida' : 'Presentación' }}</span>
                     <strong>{{ linea.UnidadMedida }}</strong>
                   </div>
                 </ng-template>
@@ -799,8 +806,9 @@
                 </ng-template>
 
                 <div class="purchase-entry-line__display">
-                  <span>Ingreso al stock</span>
-                  <strong>
+                  <span>{{ linea.EsServicio ? 'Inventario' : 'Ingreso al stock' }}</span>
+                  <strong *ngIf="linea.EsServicio">No aplica: servicio</strong>
+                  <strong *ngIf="!linea.EsServicio">
                     {{ cantidadStockLinea(linea) | number:'1.0-4' }}
                     {{ linea.UnidadStock || 'Por definir' }}
                   </strong>
@@ -864,12 +872,13 @@
                     [(ngModel)]="linea.Impuestos"
                     [ngModelOptions]="{standalone: true}"
                     multiple
+                    (selectionChange)="actualizarRevisionLinea(linea)"
                     [matTooltip]="descripcionImpuestos(linea.Impuestos)"
                   >
                     <mat-select-trigger>
                       {{ descripcionImpuestos(linea.Impuestos) || 'Sin impuestos' }}
                     </mat-select-trigger>
-                    <mat-option *ngFor="let impuesto of catalogos?.Impuestos" [value]="impuesto.IdImpuestoPais">
+                    <mat-option *ngFor="let impuesto of impuestosSeleccionablesLinea(linea)" [value]="impuesto.IdImpuestoPais">
                       {{ impuesto.Descripcion }}
                     </mat-option>
                   </mat-select>
@@ -888,6 +897,10 @@
                 <div class="purchase-entry-line__metric">
                   <span>Tributos</span>
                   <strong>{{ impuestosLinea(linea) | number:'1.2-2' }}</strong>
+                </div>
+                <div class="purchase-entry-line__metric" *ngIf="retencionesLinea(linea) > 0">
+                  <span>Retención</span>
+                  <strong>-{{ retencionesLinea(linea) | number:'1.2-2' }}</strong>
                 </div>
                 <div class="purchase-entry-line__metric purchase-entry-line__metric--total">
                   <span>Total de la línea</span>
@@ -955,6 +968,14 @@
             <span class="dialog-summary-card__label">Total documento</span>
             <strong>{{ formulario.IdMoneda }} {{ totalDocumento | number:'1.2-2' }}</strong>
           </div>
+          <div class="dialog-summary-card" *ngIf="retencionesDocumento > 0">
+            <span class="dialog-summary-card__label">Retenciones</span>
+            <strong>-{{ formulario.IdMoneda }} {{ retencionesDocumento | number:'1.2-2' }}</strong>
+          </div>
+          <div class="dialog-summary-card" *ngIf="retencionesDocumento > 0">
+            <span class="dialog-summary-card__label">Neto a pagar</span>
+            <strong>{{ formulario.IdMoneda }} {{ totalNetoPagarDocumento | number:'1.2-2' }}</strong>
+          </div>
           <div class="dialog-summary-card" *ngIf="compra">
             <span class="dialog-summary-card__label">Pago</span>
             <strong>{{ compra.EstadoPagoDescripcion }}</strong>
@@ -965,10 +986,10 @@
       <section class="dialog-form-section" *ngIf="compra">
         <h3 class="dialog-form-section__title">
           <mat-icon>payments</mat-icon>
-          Pagos del documento
+          Pagos al proveedor
         </h3>
         <p class="dialog-form-section__hint" *ngIf="compra.Estado === 1">
-          Revise primero el ingreso para habilitar el registro de pagos.
+          Revise primero el ingreso para habilitar los pagos al proveedor.
         </p>
         <div class="dialog-form-grid" *ngIf="compra.Estado !== 4 && compra.Estado !== 3">
           <mat-form-field appearance="fill">
@@ -999,8 +1020,16 @@
 
         <div class="dialog-summary-grid">
           <div class="dialog-summary-card">
-            <span class="dialog-summary-card__label">Total</span>
+            <span class="dialog-summary-card__label">Total documento</span>
             <strong>{{ compra.IdMoneda }} {{ compra.TotalCompra | number:'1.2-2' }}</strong>
+          </div>
+          <div class="dialog-summary-card" *ngIf="compra.TotalRetenciones > 0">
+            <span class="dialog-summary-card__label">Retenciones</span>
+            <strong>-{{ compra.IdMoneda }} {{ compra.TotalRetenciones | number:'1.2-2' }}</strong>
+          </div>
+          <div class="dialog-summary-card">
+            <span class="dialog-summary-card__label">Neto a pagar</span>
+            <strong>{{ compra.IdMoneda }} {{ compra.TotalNetoPagar | number:'1.2-2' }}</strong>
           </div>
           <div class="dialog-summary-card">
             <span class="dialog-summary-card__label">Pagado</span>
@@ -1017,10 +1046,10 @@
           *ngIf="saldoPendiente > 0 && compra.Estado === 2"
         >
           <mat-form-field appearance="fill">
-            <mat-label>Forma de pago</mat-label>
-            <mat-select name="formaPago" [(ngModel)]="pago.IdTipoPago">
-              <mat-option *ngFor="let forma of catalogos?.FormasPago" [value]="forma.Id">
-                {{ forma.Descripcion }}
+            <mat-label>Tipo de pago</mat-label>
+            <mat-select name="tipoPago" [(ngModel)]="pago.IdTipoPago">
+              <mat-option *ngFor="let tipoPago of catalogos?.TiposPago" [value]="tipoPago.Id">
+                {{ tipoPago.Descripcion }}
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -1079,12 +1108,12 @@
               [disabled]="guardando"
             >
               <mat-icon>add_card</mat-icon>
-              Registrar pago
+              Registrar pago al proveedor
             </button>
           </div>
         </div>
 
-        <div class="dialog-table-card" *ngIf="compra.Pagos.length > 0">
+        <div class="dialog-table-card" *ngIf="compra.PagosProveedor.length > 0">
           <div class="dialog-table-wrapper--fill">
             <table class="swal-data-table">
               <thead>
@@ -1098,9 +1127,9 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let pagoRegistrado of compra.Pagos">
+                <tr *ngFor="let pagoRegistrado of compra.PagosProveedor">
                   <td>{{ pagoRegistrado.FechaPago | date:'dd/MM/yyyy' }}</td>
-                  <td>{{ pagoRegistrado.FormaPago }}</td>
+                  <td>{{ pagoRegistrado.TipoPago }}</td>
                   <td>{{ pagoRegistrado.Referencia || '—' }}</td>
                   <td>{{ pagoRegistrado.Observacion || '—' }}</td>
                   <td class="is-numeric">
@@ -1182,7 +1211,7 @@
         *ngIf="
           compra &&
           (compra.Estado === 1 || compra.Estado === 2) &&
-          compra.Pagos.length === 0
+          compra.PagosProveedor.length === 0
         "
         [disabled]="guardando"
       >
