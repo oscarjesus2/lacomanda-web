@@ -1,6 +1,7 @@
 import { PedidoComplemento } from "./pedidocomplemento.models";
 import { PedidoMenu } from "./pedidomenu.models";
 import { Producto } from "./product.models";
+import { EstadoPreparacionPedidoEnum } from "../enums/enum";
 
 export class PedidoDet {
 
@@ -28,6 +29,7 @@ export class PedidoDet {
     public UsuReimpresion: number;
     public FecReimpresion?: Date;
     public Estado: number;
+    public EstadoPreparacion?: EstadoPreparacionPedidoEnum | null;
     public NombreCuenta: string;
     public Division: number;
     public Impuesto1: number;

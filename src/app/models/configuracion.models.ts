@@ -16,6 +16,7 @@ export class Configuracion {
   Direccion: string;
   Telefono: string;
   ClientePideOnlineYPagaInmediatamente: boolean;
+  ManejaEstadosCocina: boolean;
   PiePagina: string;
   IdBanco?: number | null;
   TieneLogo: boolean;
@@ -46,4 +47,5 @@ export interface ConfiguracionInicial {
   Direccion: string;
   Telefono: string;
   IdBanco?: number | null;
+  ManejaEstadosCocina: boolean;
 }

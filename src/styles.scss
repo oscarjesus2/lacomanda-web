@@ -64,6 +64,59 @@
   --transition-normal: all 0.25s ease;
 }
 
+/* Información de procedencia compartida por las tarjetas operativas. */
+.ticket-context {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+  font-size: .78rem;
+}
+
+.ticket-context > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+
+.ticket-context dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-text-muted);
+}
+
+.ticket-context dt mat-icon { width: 16px; height: 16px; font-size: 16px; }
+.ticket-context dd { margin: 0; color: var(--color-text); font-weight: 700; overflow-wrap: anywhere; }
+
+/* Etiquetas informativas para el contexto de una pantalla operativa. */
+.context-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+  font-size: .85rem;
+}
+
+.context-tags__label {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.context-tags__item {
+  max-width: 100%;
+  padding: 5px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-warm);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
 /* ============================================================
    Monitor de trazabilidad de comandas
    Patrón centralizado para monitores maestro → detalle.
@@ -2283,6 +2336,25 @@ body {
   overflow: auto;
 }
 
+/* Lista reutilizable de historial operativo dentro de los paneles de mantenimiento. */
+.operational-history {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  gap: 12px;
+
+  > p { margin: 0; color: var(--color-text-muted); }
+  .operational-history__filters { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .operational-history__filters mat-form-field { min-width: 170px; }
+  .operational-history__search { flex: 1; }
+  .operational-history__table { flex: 1; min-height: 180px; max-height: none; }
+  .operational-history__error { color: var(--color-warn); }
+  td small { display: block; margin-top: 4px; color: var(--color-text-muted); }
+  td { vertical-align: top; }
+  .mat-column-producto, .mat-column-origen { min-width: 180px; white-space: normal; }
+}
+
 .dialog-data-table {
   width: 100%;
   min-width: 760px;
@@ -4070,6 +4142,13 @@ mat-row:hover mat-cell {
   overflow: visible;
   width: fit-content;       /* el pane crece con el contenido del dialog */
   max-width: calc(100vw - 32px);
+}
+
+/* El selector compartido ocupa el ancho del diálogo; su grilla gestiona el
+   desplazamiento horizontal sin sobresalir de la tarjeta. */
+.cdk-global-overlay-wrapper .mant-panel.pos-panel {
+  width: 100%;
+  min-width: 0;
 }
 
 /* Título sticky: se queda fijo mientras el resto del dialog se scrollea */

@@ -1,0 +1,110 @@
+<main class="kitchen-board" aria-label="Tablero de preparación">
+  <header class="kitchen-board__header">
+    <div>
+      <span class="kitchen-board__eyebrow">Comandas</span>
+      <h1><mat-icon>restaurant</mat-icon> Preparación</h1>
+      <div *ngIf="estacion" class="context-tags" aria-label="Áreas de preparación de esta estación">
+        <span class="context-tags__label">Áreas de preparación:</span>
+        <span *ngFor="let area of estacion.AreasPreparacion" class="context-tags__item">{{ area }}</span>
+      </div>
+      <p>Los pedidos se muestran en el orden en que llegaron. Los pedidos cobrados y completamente entregados se retiran automáticamente.</p>
+    </div>
+    <div class="kitchen-board__tools">
+      <button mat-stroked-button type="button" (click)="verHistorial()">
+        <mat-icon>history</mat-icon> Ver historial
+      </button>
+      <button mat-stroked-button type="button" (click)="cargar()" [disabled]="cargando">
+        <mat-icon>refresh</mat-icon> Actualizar
+      </button>
+    </div>
+  </header>
+
+  <p *ngIf="error" class="kitchen-board__error" role="alert">
+    <mat-icon>error_outline</mat-icon>{{ error }}
+  </p>
+
+  <section *ngIf="cargando && !lineas.length" class="kitchen-board__loading">
+    <mat-icon>hourglass_top</mat-icon> Cargando comandas…
+  </section>
+
+  <section *ngIf="!cargando || lineas.length" class="kitchen-board__columns">
+    <section class="kitchen-column kitchen-column--sent">
+      <header><span>Enviado</span><strong>{{ enviadas.length }}</strong></header>
+      <ng-container *ngTemplateOutlet="cards; context: { $implicit: enviadas, accion: 'iniciar' }"></ng-container>
+    </section>
+
+    <section class="kitchen-column kitchen-column--progress">
+      <header><span>En preparación</span><strong>{{ enPreparacion.length }}</strong></header>
+      <ng-container *ngTemplateOutlet="cards; context: { $implicit: enPreparacion, accion: 'preparar' }"></ng-container>
+    </section>
+
+    <section class="kitchen-column kitchen-column--ready">
+      <header><span>Preparado</span><strong>{{ preparadas.length }}</strong></header>
+      <ng-container *ngTemplateOutlet="cards; context: { $implicit: preparadas, accion: 'ninguna' }"></ng-container>
+    </section>
+
+    <section class="kitchen-column kitchen-column--delivered">
+      <header><span>Entregado</span><strong>{{ entregadas.length }}</strong></header>
+      <ng-container *ngTemplateOutlet="cards; context: { $implicit: entregadas, accion: 'ninguna' }"></ng-container>
+    </section>
+  </section>
+</main>
+
+<ng-template #cards let-lineas let-accion="accion">
+  <div class="kitchen-column__empty" *ngIf="!lineas.length">Sin productos</div>
+  <article class="kitchen-ticket" *ngFor="let linea of lineas; trackBy: trackLinea"
+    [class.kitchen-ticket--cancelled]="linea.EsAnulado">
+    <header class="kitchen-ticket__header">
+      <strong>Pedido #{{ linea.NroPedido }}<ng-container *ngIf="nombreClienteEnTitulo(linea) as cliente"> - {{ cliente }}</ng-container></strong>
+      <time [attr.datetime]="linea.FechaEnvioUtc">
+        {{ linea.FechaEnvioUtc | date:'HH:mm' }}
+      </time>
+    </header>
+    <div *ngIf="linea.EsAnulado" class="kitchen-ticket__cancellation" role="status">
+      <strong><mat-icon aria-hidden="true">cancel</mat-icon>{{ 'cancelledPreparationItem' | tenantText }}</strong>
+      <span *ngIf="linea.MotivoAnulacion">{{ linea.MotivoAnulacion }}</span>
+      <time *ngIf="linea.FechaAnulacionUtc" [attr.datetime]="linea.FechaAnulacionUtc">
+        {{ linea.FechaAnulacionUtc | date:'HH:mm' }}
+      </time>
+    </div>
+    <div class="kitchen-ticket__meta">
+      <span><mat-icon>storefront</mat-icon>{{ pistaCanal(linea) }}</span>
+      <span>{{ tipoLinea(linea) }}<ng-container *ngIf="linea.EsFacturado"> · Facturado</ng-container></span>
+    </div>
+    <div class="kitchen-ticket__product">
+      <b>{{ linea.Cantidad }}×</b><strong>{{ linea.Producto }}</strong>
+    </div>
+    <dl class="ticket-context">
+      <div *ngIf="linea.EsAutopedidoQr">
+        <dt><mat-icon aria-hidden="true">qr_code</mat-icon>{{ 'orderSource' | tenantText }}</dt>
+        <dd>{{ 'customerQrOrder' | tenantText }}</dd>
+      </div>
+      <div>
+        <dt><mat-icon aria-hidden="true">person</mat-icon>{{ 'orderAttendant' | tenantText }}</dt>
+        <dd>{{ linea.Mozo || ('notRecorded' | tenantText) }}</dd>
+      </div>
+      <div>
+        <dt><mat-icon aria-hidden="true">desktop_windows</mat-icon>{{ 'sentFromStation' | tenantText }}</dt>
+        <dd>{{ linea.EstacionOrigen || ('notRecorded' | tenantText) }}</dd>
+      </div>
+    </dl>
+    <p *ngIf="linea.Observacion" class="kitchen-ticket__note">
+      <mat-icon>sticky_note_2</mat-icon>{{ linea.Observacion }}
+    </p>
+    <p *ngIf="linea.IdCanalVenta === 4 && linea.Direccion" class="kitchen-ticket__delivery">
+      <span>{{ linea.Direccion }}</span>
+    </p>
+    <button *ngIf="!linea.EsAnulado && accion === 'iniciar'" type="button" class="kitchen-ticket__action"
+      [disabled]="esActualizando(linea)" (click)="iniciar(linea)">
+      <mat-icon>local_fire_department</mat-icon> Empezar
+    </button>
+    <button *ngIf="!linea.EsAnulado && accion === 'preparar'" type="button" class="kitchen-ticket__action kitchen-ticket__action--ready"
+      [disabled]="esActualizando(linea)" (click)="marcarPreparado(linea)">
+      <mat-icon>task_alt</mat-icon> Marcar preparado
+    </button>
+    <button *ngIf="puedeOcultar(linea)" mat-stroked-button type="button" class="kitchen-ticket__hide"
+      [disabled]="esActualizando(linea)" (click)="ocultar(linea)">
+      <mat-icon>visibility_off</mat-icon> Ocultar del tablero
+    </button>
+  </article>
+</ng-template>

@@ -45,6 +45,8 @@ import { DialogObservacionComponent } from './components/dialog-observacion/dial
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { VentaComponent } from './pages/venta/venta.component';
+import { CocinaComponent } from './pages/cocina/cocina.component';
+import { HistorialPreparacionComponent } from './pages/cocina/historial-preparacion/historial-preparacion.component';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { DialogTurnoComponent } from './components/dialog-turno/dialog-turno.component';
 import { DialogCerrarTurnoComponent } from './components/dialog-cerrar-turno/dialog-cerrar-turno.component';
@@ -202,6 +204,8 @@ export const MY_DATE_FORMATS = {
     DialogObservacionComponent,
 
     VentaComponent,
+    CocinaComponent,
+    HistorialPreparacionComponent,
     DialogTurnoComponent,
     DialogCerrarTurnoComponent,
     HeaderComponent,

@@ -12,6 +12,7 @@ export const CARACTERISTICAS_LICENCIA = {
   VentasEntradas: 'ventas.entradas',
   VentasDirecta: 'ventas.directa',
   OperacionCaja: 'operacion.caja',
+  OperacionCocina: 'operacion.cocina',
   OperacionComprobantes: 'operacion.comprobantes',
   FiscalIntegracion: 'fiscal.integracion',
   OperacionReportes: 'operacion.reportes',

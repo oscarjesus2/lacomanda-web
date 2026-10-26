@@ -8,6 +8,7 @@ export class Estacion {
   TipoDispositivo: DispositivoTipoEnum;
   IdCaja: number;
   Tipo: EstacionTipoEnum;
+  IdsAreasPreparacion: number[] = [];
 }
 
 export interface EstacionDescargaStock {

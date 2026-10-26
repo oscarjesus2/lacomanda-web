@@ -4,6 +4,7 @@ import { LoginComponent } from './auth/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ResumenNegocioComponent } from './pages/resumen-negocio/resumen-negocio.component';
 import { VentaComponent } from './pages/venta/venta.component';
+import { CocinaComponent } from './pages/cocina/cocina.component';
 import { AdminGuard } from './guards/admin.guard';
 import { RoleGuard } from './guards/role.guard';
 import { LicenseGuard } from './guards/license.guard';
@@ -72,6 +73,20 @@ const routes: Routes = [
     roles: ['admin', 'mozo'],
     feature: CARACTERISTICAS_LICENCIA.OperacionCaja
   }
+},
+{
+  path: 'preparacion',
+  component: CocinaComponent,
+  canActivate: [RoleGuard, LicenseGuard],
+  data: {
+    roles: ['admin', 'caja', 'mozo', 'cocina'],
+    feature: CARACTERISTICAS_LICENCIA.OperacionCocina
+  }
+},
+{
+  path: 'cocina',
+  redirectTo: 'preparacion',
+  pathMatch: 'full'
 },
 {
   path: 'administracion',

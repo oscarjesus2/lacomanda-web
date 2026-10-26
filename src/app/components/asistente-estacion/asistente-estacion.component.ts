@@ -34,6 +34,7 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
   private availableStations: Estacion[] = [];
   private onEligibleRoute = false;
   private operationEnabled = false;
+  private kitchenEnabled = false;
   private licenseTenantId: string | null = null;
   private licenseLoading = false;
   private readonly subscriptions = new Subscription();
@@ -81,6 +82,12 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
     );
   }
 
+  get hasKitchenAvailable(): boolean {
+    return this.availableStations.some(
+      station => station.Tipo === EstacionTipoEnum.COCINA,
+    );
+  }
+
   get availableOptionsText(): string {
     const options: string[] = [];
     if (this.hasRegisterAvailable) {
@@ -90,6 +97,9 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
       options.push(this.t('stationAssistantAttendantOption', {
         attendant: this.t('orderAttendant'),
       }));
+    }
+    if (this.hasKitchenAvailable) {
+      options.push('Preparación');
     }
     return options.join(' / ');
   }
@@ -151,7 +161,11 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
           station: station.Descripcion,
         });
 
-        const target = station.Tipo === EstacionTipoEnum.CAJA ? '/caja' : '/mozo';
+        const target = station.Tipo === EstacionTipoEnum.CAJA
+          ? '/caja'
+          : station.Tipo === EstacionTipoEnum.COCINA
+            ? '/preparacion'
+            : '/mozo';
         this.navigationTimer = setTimeout(() => {
           this.visible = false;
           void this.router.navigateByUrl(target);
@@ -220,7 +234,8 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
     }
 
     if (session.User.TipoCompu === EstacionTipoEnum.CAJA
-      || session.User.TipoCompu === EstacionTipoEnum.MOZO) {
+      || session.User.TipoCompu === EstacionTipoEnum.MOZO
+      || session.User.TipoCompu === EstacionTipoEnum.COCINA) {
       return false;
     }
 
@@ -261,7 +276,8 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
         this.loading = false;
         this.availableStations = (response?.Data ?? []).filter(station =>
           station.Tipo === EstacionTipoEnum.CAJA
-          || station.Tipo === EstacionTipoEnum.MOZO,
+          || station.Tipo === EstacionTipoEnum.MOZO
+          || (station.Tipo === EstacionTipoEnum.COCINA && this.kitchenEnabled),
         );
         this.visible = this.onEligibleRoute
           && this.operationEnabled
@@ -285,21 +301,28 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
     this.licenseTenantId = tenantId;
     this.licenseLoading = true;
     this.operationEnabled = false;
+    this.kitchenEnabled = false;
 
     this.subscriptions.add(
       this.licenseService
-        .tieneCaracteristica(CARACTERISTICAS_LICENCIA.OperacionCaja)
+        .obtenerEstado()
         .subscribe({
-          next: enabled => {
+          next: estado => {
             if (this.licenseTenantId !== tenantId) return;
             this.licenseLoading = false;
-            this.operationEnabled = enabled;
+            this.operationEnabled = this.licenseService.evaluar(
+              estado, CARACTERISTICAS_LICENCIA.OperacionCaja,
+            );
+            this.kitchenEnabled = this.licenseService.evaluar(
+              estado, CARACTERISTICAS_LICENCIA.OperacionCocina,
+            );
             this.handleRoute(this.router.url);
           },
           error: () => {
             if (this.licenseTenantId !== tenantId) return;
             this.licenseLoading = false;
             this.operationEnabled = false;
+            this.kitchenEnabled = false;
           },
         }),
     );
@@ -309,6 +332,7 @@ export class AsistenteEstacionComponent implements OnInit, OnDestroy {
     this.licenseTenantId = null;
     this.licenseLoading = false;
     this.operationEnabled = false;
+    this.kitchenEnabled = false;
   }
 
   private preferenceKey(preference: 'later' | 'dismissed'): string {

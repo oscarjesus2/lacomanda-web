@@ -422,6 +422,8 @@ export class LoginComponent implements OnInit, OnDestroy {
             void this.navegarTrasLogin('/caja');
           } else if (estacion.Tipo === EstacionTipoEnum.MOZO) {
             void this.navegarTrasLogin('/mozo');
+          } else if (estacion.Tipo === EstacionTipoEnum.COCINA) {
+            void this.navegarTrasLogin('/preparacion');
           } else {
             this.ensureConfigThenNavigate(
               this.returnUrlSeguro(pending.ReturnUrl) ?? '/dashboard',

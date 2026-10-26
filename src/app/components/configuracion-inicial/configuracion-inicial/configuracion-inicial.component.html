@@ -70,8 +70,19 @@
       </div>
     </section>
 
+    <section class="card" *ngIf="puedeCocina">
+      <h3>Operación de preparación</h3>
+      <div class="hint">
+        Actívalo cuando el restaurante vaya a trabajar con el tablero de preparación.
+        Los productos nuevos empezarán en enviado; el cobro seguirá funcionando igual.
+      </div>
+      <mat-slide-toggle formControlName="ManejaEstadosCocina">
+        Manejar estados de preparación
+      </mat-slide-toggle>
+    </section>
+
     <div class="actions">
-      <button mat-raised-button color="primary" type="submit">
+      <button mat-raised-button color="primary" type="submit" [disabled]="guardando">
         {{ 'saveAndStart' | tenantText }}
       </button>
     </div>
@@ -294,6 +305,20 @@
       </div>
     </section>
 
+    <section class="card" *ngIf="puedeCocina">
+      <h3>Operación de preparación</h3>
+      <div class="toggles">
+        <mat-slide-toggle formControlName="ManejaEstadosCocina">
+          Manejar estados de preparación
+        </mat-slide-toggle>
+      </div>
+      <div class="hint">
+        Habilita el tablero táctil para que cada área marque sus productos como en
+        preparación o preparado. El mozo puede entregarlo en cualquier momento
+        y la facturación no se modifica.
+      </div>
+    </section>
+
     <!-- =========================
          3. REPORTES EN CIERRE
     ========================== -->
@@ -383,7 +408,7 @@
          ACCIONES
     ========================== -->
     <div class="actions">
-      <button mat-raised-button color="primary" type="submit">
+      <button mat-raised-button color="primary" type="submit" [disabled]="guardando">
         {{ 'save' | tenantText }}
       </button>
     </div>

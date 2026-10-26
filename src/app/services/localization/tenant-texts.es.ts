@@ -1,6 +1,12 @@
 import { TenantTextKey } from './tenant-texts.en';
 
 export const ES_TEXTS: Record<TenantTextKey, string> = {
+  preparation: 'Preparación',
+  cancelledPreparationItem: 'ANULADO',
+  orderSource: 'Origen',
+  customerQrOrder: 'Pedido del cliente por QR',
+  sentFromStation: 'Enviado desde',
+  notRecorded: 'No registrado',
   notificationSettings: 'Configurar notificaciones',
   notificationInboxHint: 'Tus avisos, sin perder de vista lo pendiente. Abre uno para ver el detalle.',
   notificationSettingsHint: 'Elige qué avisos quieres recibir y, por separado, cómo quieres que te lleguen. Los cambios se guardan al tocar cada opción.',

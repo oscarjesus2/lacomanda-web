@@ -50,7 +50,7 @@ import { DialogMenuComponent } from 'src/app/components/dialog-menu/dialog-menu.
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 // import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
-import { firstValueFrom, forkJoin, lastValueFrom, Subscription } from 'rxjs';
+import { finalize, firstValueFrom, forkJoin, lastValueFrom, Subscription } from 'rxjs';
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { DialogMTextComponent } from 'src/app/components/dialog-mtext/dialog-mtext.component';
 import { AnularProductoYComplementoDTO } from 'src/app/interfaces/anularProductoYComplementoDTO.interface';
@@ -61,7 +61,13 @@ import { SocioNegocio } from 'src/app/models/socionegocio.models';
 import { Cliente } from 'src/app/models/cliente.models';
 import { DialogDividirCuentaComponent } from 'src/app/components/dialog-dividir-cuenta/dialog-dividir-cuenta.component';
 import { DialogReportesComponent } from 'src/app/components/dialog-reportes/dialog-reportes.component';
-import { EnumTipoDocumento, NivelUsuarioEnum, PedidoEstadoEnum } from 'src/app/enums/enum';
+import {
+  EnumTipoDocumento,
+  EstadoPreparacionPedidoEnum,
+  NivelUsuarioEnum,
+  PedidoEstadoEnum,
+  TipoLineaPreparacionPedidoEnum,
+} from 'src/app/enums/enum';
 import { DialogDescuentoComponent } from 'src/app/components/dialog-descuento/dialog-descuento.component';
 import { PedidoDescuentoDTO } from 'src/app/interfaces/pedidoDescuentoDTO.interface';
 import { TrasladarProductoDTO } from 'src/app/interfaces/trasladarProductoDTO.interface';
@@ -99,6 +105,7 @@ import { DialogCerrarTurnoComponent } from 'src/app/components/dialog-cerrar-tur
 import { PedidoPendienteCierre } from 'src/app/interfaces/cerrarTurno.interface';
 import { ReservasService } from 'src/app/services/reservas.service';
 import { DialogConciliarCobrosOnlineComponent } from 'src/app/components/dialog-conciliar-cobros-online/dialog-conciliar-cobros-online.component';
+import { CocinaService } from 'src/app/services/cocina.service';
 
 @Component({
   selector: 'app-venta',
@@ -225,6 +232,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   public listProductGrid: PedidoDet[] = [];
   public gridListaPedidoDetProducto = new MatTableDataSource<PedidoDet>();
+  private readonly entregasEnCurso = new Set<PedidoDet>();
   // public ListaPedidoDetProducto: PedidoDet[] = [];
 
   public MostrarOcultarPanelProducto: Boolean;
@@ -373,12 +381,56 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
     return detalleEnviado && menuEnviado && complementosEnviados;
   }
+
+  puedeMarcarProductoEntregado(pedidoDet: PedidoDet): boolean {
+    return this.cocinaHabilitada
+      && this.config?.ManejaEstadosCocina === true
+      && pedidoDet.Item > 0
+      && pedidoDet.Estado !== 0
+      && pedidoDet.EstadoPreparacion !== EstadoPreparacionPedidoEnum.Entregado
+      && !this.entregasEnCurso.has(pedidoDet);
+  }
+
+  marcarProductoEntregado(pedidoDet: PedidoDet): void {
+    if (!this.puedeMarcarProductoEntregado(pedidoDet)) return;
+
+    this.entregasEnCurso.add(pedidoDet);
+    this.cocinaService.cambiarEstado({
+      IdPedido: pedidoDet.IdPedido,
+      NroCuenta: pedidoDet.NroCuenta,
+      Item: pedidoDet.Item,
+      TipoLinea: TipoLineaPreparacionPedidoEnum.Producto,
+      EstadoPreparacion: EstadoPreparacionPedidoEnum.Entregado,
+    }).pipe(finalize(() => this.entregasEnCurso.delete(pedidoDet))).subscribe({
+      next: respuesta => {
+        if (!respuesta?.Success) {
+          Notificar.informacion(
+            'No se pudo marcar el producto como entregado.',
+            respuesta?.Message || 'Inténtalo nuevamente.',
+            'warning',
+          );
+          return;
+        }
+        pedidoDet.EstadoPreparacion = EstadoPreparacionPedidoEnum.Entregado;
+        Notificar.exito(
+          'Producto entregado',
+          `${pedidoDet.Producto?.NombreCorto || 'El producto'} fue marcado como entregado.`,
+        );
+      },
+      error: error => Notificar.informacion(
+        'No se pudo marcar el producto como entregado.',
+        error?.error?.Message || 'Inténtalo nuevamente.',
+        'warning',
+      ),
+    });
+  }
   isAdmin = false;
   reservasHabilitadas = false;
   comprobantesHabilitados = false;
   precuentaHabilitada = false;
   descuentosHabilitados = false;
   reportesHabilitados = false;
+  cocinaHabilitada = false;
   cuotaComprobantes: CuotaComprobantesMensuales | null = null;
 
   get comprobantesAgotados(): boolean {
@@ -440,6 +492,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     private confirmacionImpresionPedidos: ConfirmacionImpresionPedidosService,
     private solicitudAutorizacionService: SolicitudAutorizacionService,
     private solicitudesAutorizacionRealtime: SolicitudesAutorizacionRealtimeService,
+    private cocinaService: CocinaService,
     private activatedRoute: ActivatedRoute) {
 
 
@@ -840,6 +893,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       );
       this.reportesHabilitados = permitido(
         CARACTERISTICAS_LICENCIA.OperacionReportes,
+      );
+      this.cocinaHabilitada = permitido(
+        CARACTERISTICAS_LICENCIA.OperacionCocina,
       );
       this.pagosOnlineHabilitados = permitido(
         CARACTERISTICAS_LICENCIA.VentasPagoCuentaOnline,
@@ -3254,6 +3310,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       oPedidoDet = new PedidoDet(
         {
           Item: data.Item,
+          EstadoPreparacion: data.EstadoPreparacion,
           NumEnvios: data.NumEnvios,
           NroCuenta: data.NroCuenta,
           NombreCuenta: data.NombreCuenta,

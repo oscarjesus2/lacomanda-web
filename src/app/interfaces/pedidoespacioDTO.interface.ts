@@ -1,5 +1,6 @@
 import { PedidoComplemento } from "../models/pedidocomplemento.models";
 import { PedidoMenu } from "../models/pedidomenu.models";
+import { EstadoPreparacionPedidoEnum } from "../enums/enum";
 
 export interface PedidoEspacioDTO {
   IdPedido: number;       // Identificador del pedido
@@ -21,6 +22,7 @@ export interface PedidoEspacioDTO {
   NombreMozo: string;     // Nombre del mozo
   IdAmbiente: string;     // Identificador del ambiente (si tu sistema tiene diferentes ambientes)
   Estado: number;
+  EstadoPreparacion?: EstadoPreparacionPedidoEnum | null;
   IdCanalVenta: number;
   Total: number;          // Total del pedido
   Descuento: number;      

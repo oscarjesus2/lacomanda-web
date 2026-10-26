@@ -1,4 +1,10 @@
 export const EN_TEXTS = {
+  preparation: 'Preparation',
+  cancelledPreparationItem: 'VOIDED',
+  orderSource: 'Source',
+  customerQrOrder: 'Customer order by QR',
+  sentFromStation: 'Sent from',
+  notRecorded: 'Not recorded',
   notificationSettings: 'Notification settings',
   notificationInboxHint: 'Your notifications at a glance. Open one to see the details.',
   notificationSettingsHint: 'Choose which notifications to receive and, separately, how to receive them. Each change is saved immediately.',

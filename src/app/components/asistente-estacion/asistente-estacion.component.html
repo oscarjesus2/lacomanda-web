@@ -61,6 +61,16 @@
             }) }}
           </span>
         </button>
+
+        <button
+          *ngIf="hasKitchenAvailable"
+          type="button"
+          class="station-assistant__option"
+          [disabled]="assigning"
+          (click)="assign(3)">
+          <mat-icon>restaurant</mat-icon>
+          <span>Preparación</span>
+        </button>
       </div>
     </ng-container>
 
