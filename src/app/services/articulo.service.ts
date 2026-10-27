@@ -25,4 +25,10 @@ export class ArticuloService {
       articulo
     );
   }
+
+  eliminar(idProducto: number): Observable<ApiResponse<boolean>> {
+    return this.http.delete<ApiResponse<boolean>>(
+      `${this.basePath}/${idProducto}`
+    );
+  }
 }

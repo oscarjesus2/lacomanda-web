@@ -63,8 +63,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   showAdministracion = false;
   showCaja          = false;
   showMozo          = false;
+  showPreparacion = false;
   controlHorarioHabilitado = false;
   private operacionCajaHabilitada = false;
+  private operacionPreparacionHabilitada = false;
   private reportesAnaliticosHabilitados = false;
 
   private calcMenuVisibility(): void {
@@ -75,6 +77,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.showAdministracion = false;
       this.showCaja = false;
       this.showMozo = false;
+      this.showPreparacion = false;
       return;
     }
 
@@ -88,6 +91,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const isMozo   = nivel   === NivelUsuarioEnum.Mozo;
     const esCaja   = estacion === EstacionTipoEnum.CAJA;
     const esMozo   = estacion === EstacionTipoEnum.MOZO;
+    this.showPreparacion = estacion === EstacionTipoEnum.COCINA
+      && this.operacionPreparacionHabilitada;
     this.showInicio = isAdmin || isGerente || esUsuarioSoporteLaComanda;
     if (isGerente || esUsuarioSoporteLaComanda) {
       this.showReportes       = this.reportesAnaliticosHabilitados;
@@ -303,6 +308,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl('/administracion');
   }
 
+  public Preparacion(): void {
+    this.title = this.textCatalog.get('preparation');
+    this.router.navigateByUrl('/preparacion');
+  }
+
   public Reportes(): void {
     this.title = this.storageService.getCurrentNombreSucursal();
     this.router.navigateByUrl('/reportes');
@@ -321,7 +331,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
         ? '/caja'
         : this.showMozo
           ? '/mozo'
-          : '/administracion';
+          : this.showPreparacion
+            ? '/preparacion'
+            : '/administracion';
     this.router.navigateByUrl(destino);
   }
 
@@ -427,6 +439,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .tieneCaracteristica(CARACTERISTICAS_LICENCIA.OperacionCaja)
       .subscribe(habilitado => {
         this.operacionCajaHabilitada = habilitado;
+        this.calcMenuVisibility();
+      });
+
+    this.licenciaTenantService
+      .tieneCaracteristica(CARACTERISTICAS_LICENCIA.OperacionCocina)
+      .subscribe(habilitado => {
+        this.operacionPreparacionHabilitada = habilitado;
         this.calcMenuVisibility();
       });
 

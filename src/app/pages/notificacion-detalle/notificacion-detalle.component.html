@@ -46,5 +46,15 @@
       <p>{{ comprobante.MensajeRespuesta }}</p>
       <button mat-raised-button color="primary" (click)="revisarComprobante()">{{ 'notificationReviewDocument' | tenantText }}</button>
     </section>
+    <section *ngIf="detalle.LibroReclamacion as reclamacion" class="operation-detail">
+      <h2>{{ reclamacion.Tipo }} · {{ reclamacion.Codigo }}</h2>
+      <p><strong>Consumidor:</strong> {{ reclamacion.NombreConsumidor }} · {{ reclamacion.TipoDocumento }} {{ reclamacion.NumeroDocumento }}</p>
+      <p><strong>Contacto:</strong> {{ reclamacion.Correo }}<span *ngIf="reclamacion.Telefono"> · {{ reclamacion.Telefono }}</span></p>
+      <p><strong>Dirección:</strong> {{ reclamacion.Direccion }}</p>
+      <p><strong>Producto o servicio:</strong> {{ reclamacion.BienContratado }}</p>
+      <p *ngIf="reclamacion.MontoReclamado !== null && reclamacion.MontoReclamado !== undefined"><strong>Monto reclamado:</strong> {{ reclamacion.MontoReclamado | number:'1.2-2' }}</p>
+      <p><strong>Detalle:</strong> {{ reclamacion.Detalle }}</p>
+      <p><strong>Pedido del consumidor:</strong> {{ reclamacion.PedidoConsumidor }}</p>
+    </section>
   </ng-container>
 </main>

@@ -4,6 +4,7 @@ import { LoginComponent } from './auth/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ResumenNegocioComponent } from './pages/resumen-negocio/resumen-negocio.component';
 import { VentaComponent } from './pages/venta/venta.component';
+import { CocinaComponent } from './pages/cocina/cocina.component';
 import { AdminGuard } from './guards/admin.guard';
 import { RoleGuard } from './guards/role.guard';
 import { LicenseGuard } from './guards/license.guard';
@@ -23,6 +24,7 @@ import { ComprobantesPublicosComponent } from './pages/comprobantes-publicos/com
 import { SubscriptionAccessStatusComponent } from './auth/subscription-access-status/subscription-access-status.component';
 import { NotificacionDetalleComponent } from './pages/notificacion-detalle/notificacion-detalle.component';
 import { NotificacionGuard } from './guards/notificacion.guard';
+import { PagoCuentaLegalComponent } from './pages/pago-cuenta-legal/pago-cuenta-legal.component';
 // DigitacionMozoComponent reemplazado por VentaComponent con isModoMozo=true
 
 // Importa más componentes según sea necesario...
@@ -31,6 +33,7 @@ const routes: Routes = [
   { path: 'notificaciones/:id', component: NotificacionDetalleComponent, canActivate: [NotificacionGuard] },
 
   { path: 'mesa/:codigoQr', component: MesaClienteComponent },
+  { path: 'legal/:pagina', component: PagoCuentaLegalComponent },
   { path: 'reservas', component: ReservasOnlineComponent },
   { path: 'comprobantes', component: ComprobantesPublicosComponent },
   { path: 'estado-suscripcion', component: SubscriptionAccessStatusComponent },
@@ -70,6 +73,20 @@ const routes: Routes = [
     roles: ['admin', 'mozo'],
     feature: CARACTERISTICAS_LICENCIA.OperacionCaja
   }
+},
+{
+  path: 'preparacion',
+  component: CocinaComponent,
+  canActivate: [RoleGuard, LicenseGuard],
+  data: {
+    roles: ['admin', 'caja', 'mozo', 'cocina'],
+    feature: CARACTERISTICAS_LICENCIA.OperacionCocina
+  }
+},
+{
+  path: 'cocina',
+  redirectTo: 'preparacion',
+  pathMatch: 'full'
 },
 {
   path: 'administracion',

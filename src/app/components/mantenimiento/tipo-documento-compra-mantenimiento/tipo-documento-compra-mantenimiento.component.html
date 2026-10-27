@@ -1,0 +1,87 @@
+<div class="mant-panel dialog-panel--workspace">
+  <button mat-icon-button class="close-button" aria-label="Cerrar" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>Documentos de compra y gastos</h2>
+
+  <div class="dialog-toolbar">
+    <div class="dialog-toolbar__filters dialog-toolbar__filters--single">
+      <mat-form-field appearance="fill">
+        <mat-label>Buscar documento</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [(ngModel)]="filtro" placeholder="Documento o código">
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="dialog-workspace-content">
+    <section class="dialog-form-section dialog-form-section--fill">
+      <h3 class="dialog-form-section__title">
+        <mat-icon>description</mat-icon>
+        Disponibilidad de documentos
+      </h3>
+      <p class="dialog-form-section__hint">
+        Los documentos están predefinidos para el país del establecimiento. Active solo los que utilizará en nuevos ingresos; desactivarlos no altera el historial.
+      </p>
+
+      <div class="dialog-table-card">
+        <div class="dialog-table-wrapper--fill">
+          <mat-table [dataSource]="documentosFiltrados">
+            <ng-container matColumnDef="descripcion">
+              <mat-header-cell *matHeaderCellDef>Documento</mat-header-cell>
+              <mat-cell *matCellDef="let documento">
+                <strong>{{ documento.Descripcion }}</strong>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="naturaleza">
+              <mat-header-cell *matHeaderCellDef>Uso</mat-header-cell>
+              <mat-cell *matCellDef="let documento">
+                {{ naturaleza(documento) }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="mascara">
+              <mat-header-cell *matHeaderCellDef>Formato</mat-header-cell>
+              <mat-cell *matCellDef="let documento">
+                {{ documento.Mascara || 'Sin formato fijo' }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="estado">
+              <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+              <mat-cell *matCellDef="let documento">
+                <span class="status-pill" [class.status-pill--inactive]="!documento.Activo">
+                  {{ documento.Activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+              <mat-header-cell *matHeaderCellDef>Disponible</mat-header-cell>
+              <mat-cell *matCellDef="let documento" class="dialog-table-actions-cell">
+                <mat-slide-toggle
+                  [checked]="documento.Activo"
+                  [disabled]="documento.Cambiando"
+                  [attr.aria-label]="'Cambiar disponibilidad de ' + documento.Descripcion"
+                  (change)="cambiarEstado(documento, $event.checked)"
+                >
+                  {{ documento.Activo ? 'Sí' : 'No' }}
+                </mat-slide-toggle>
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+          </mat-table>
+
+          <div class="dialog-empty-state" *ngIf="!cargando && documentosFiltrados.length === 0">
+            <mat-icon>description</mat-icon>
+            <span>No se encontraron documentos de compra.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

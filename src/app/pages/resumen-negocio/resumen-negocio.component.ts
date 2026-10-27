@@ -53,7 +53,6 @@ export class ResumenNegocioComponent implements OnInit {
   mostrarResumenVentas = false;
   puedeEmitirVentaDirecta = false;
   mostrarInventarioComercio = false;
-  mostrarAccionesComercio = false;
   cuotaComprobantesAgotada = false;
   ventasTotal: number | null = null;
   documentosTotal: number | null = null;
@@ -118,9 +117,6 @@ export class ResumenNegocioComponent implements OnInit {
       // por la característica de reportes operativos en la API.
       this.mostrarResumenVentas = tiene(CARACTERISTICAS_LICENCIA.OperacionReportes);
       this.mostrarInventarioComercio = tiene(CARACTERISTICAS_LICENCIA.AlmacenKardex);
-      this.mostrarAccionesComercio = this.mostrarResumenVentas
-        || this.ventasDirectasHabilitadas
-        || this.mostrarInventarioComercio;
 
       const usuario = respuestaUsuario?.Data;
       const puedeVerDashboardReportes = usuario?.EsUsuarioSoporteLaComanda === true

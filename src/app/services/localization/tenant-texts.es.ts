@@ -1,6 +1,12 @@
 import { TenantTextKey } from './tenant-texts.en';
 
 export const ES_TEXTS: Record<TenantTextKey, string> = {
+  preparation: 'Preparación',
+  cancelledPreparationItem: 'ANULADO',
+  orderSource: 'Origen',
+  customerQrOrder: 'Pedido del cliente por QR',
+  sentFromStation: 'Enviado desde',
+  notRecorded: 'No registrado',
   notificationSettings: 'Configurar notificaciones',
   notificationInboxHint: 'Tus avisos, sin perder de vista lo pendiente. Abre uno para ver el detalle.',
   notificationSettingsHint: 'Elige qué avisos quieres recibir y, por separado, cómo quieres que te lleguen. Los cambios se guardan al tocar cada opción.',
@@ -32,6 +38,11 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   pushSettingsError: 'No se pudo confirmar la configuración push. Revisa el permiso de notificaciones del navegador y la conexión, y vuelve a intentarlo.',
   pushSettingsRetry: 'Volver a consultar',
   cesiaStockLabel: 'Alertas de almacén',
+  cesiaStockChatSummary: 'He detectado {{count}} alertas en tus existencias. Esta es mi previsión para las próximas {{hours}} horas. Puedes ver el detalle aquí y consultar los artículos afectados.',
+  cesiaStockChatSummaryOne: 'He detectado una alerta en tus existencias. Esta es mi previsión para las próximas {{hours}} horas. Puedes ver el detalle aquí y consultar el artículo afectado.',
+  cesiaStockChatDetail: 'Ver qué requiere atención',
+  cesiaChatUnread: '{{count}} mensajes pendientes de leer',
+  cesiaChatUnreadOne: '1 mensaje pendiente de leer',
   cesiaStockTitle: 'Pendiente de tus existencias',
   cesiaStockAttention: 'Hay algo que merece tu atención',
   cesiaStockScope: 'Total de almacenes activos · previsión para las próximas {{hours}} horas.',
@@ -1396,6 +1407,9 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
     'Completa solo estos datos para empezar. El país, la moneda, la identidad fiscal y los valores operativos se aplican automáticamente.',
   settingsAvailableLater:
     'Después podrás desactivar o ajustar cualquier opción incluida en tu licencia desde Configuración.',
+  licensePlan: 'Plan de licencia',
+  licenseWithoutSubscription: 'Sin suscripción',
+  licenseUnavailable: 'No disponible',
   saveAndStart: 'Guardar y empezar',
   businessData: 'Datos de Negocio',
   businessLogo: 'Logo del negocio',
@@ -1560,6 +1574,8 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   warehouseAreas: 'Áreas de almacén',
   warehouseSubareas: 'Subáreas de almacén',
   suppliers: 'Proveedores',
+  movementTypes: 'Tipos de movimiento',
+  purchaseDocuments: 'Documentos de compra',
   stockIn: 'Ingresos',
   stockOut: 'Salidas',
   stockOutReasons: 'Motivos de salida',

@@ -184,6 +184,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
     this.stockActual = 0;
     this.articulo = new ArticuloGuardar({
       IdImpuestoPais: this.impuestoPredeterminado(),
+      Impuestos: this.impuestosPredeterminados(),
       IdAreaAlmacen: this.areas[0]?.IdArea ?? null
     });
     this.usarSubAreaFija = false;
@@ -216,6 +217,11 @@ export class ArticuloMantenimientoComponent implements OnInit {
       Inventario: row.Inventario,
       Activo: row.Activo,
       IdImpuestoPais: row.IdImpuestoPais,
+      Impuestos: row.Impuestos?.length
+        ? [...row.Impuestos]
+        : row.IdImpuestoPais
+        ? [row.IdImpuestoPais]
+        : [],
       PresentacionesCompra: (row.PresentacionesCompra || []).map(p => ({
         ...p
       }))
@@ -302,11 +308,23 @@ export class ArticuloMantenimientoComponent implements OnInit {
   }
 
   guardar(): void {
+    this.articulo.Impuestos = this.impuestosSeleccionados();
+    this.articulo.IdImpuestoPais = this.articulo.Impuestos[0] || '';
+
     if (this.articuloForm.invalid) {
       Object.values(this.articuloForm.controls).forEach(control => {
         control.markAsDirty();
         control.markAsTouched();
       });
+      return;
+    }
+
+    if (this.articulo.Impuestos.length === 0) {
+      Swal.fire(
+        'Validación',
+        'Seleccione al menos un impuesto aplicable.',
+        'info'
+      );
       return;
     }
 
@@ -372,6 +390,38 @@ export class ArticuloMantenimientoComponent implements OnInit {
       return;
     }
     this.showForm = false;
+  }
+
+  eliminar(row: Articulo): void {
+    Swal.fire({
+      title: '¿Eliminar artículo?',
+      text: 'Solo se eliminará si no es un producto de venta ni tiene registros asociados.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then(resultado => {
+      if (!resultado.isConfirmed) {
+        return;
+      }
+
+      this.articuloService.eliminar(row.IdProducto).subscribe({
+        next: response => {
+          if (!response.Success) {
+            Swal.fire(
+              'Error',
+              response.Message || 'No se pudo eliminar el artículo.',
+              'error'
+            );
+            return;
+          }
+
+          Notificar.exito('Artículo eliminado', response.Message);
+          this.cargarArticulos();
+        },
+        error: error => this.mostrarError(error, 'No se pudo eliminar el artículo.'),
+      });
+    });
   }
 
   cerrar(): void {
@@ -512,6 +562,20 @@ export class ArticuloMantenimientoComponent implements OnInit {
       this.impuestos[0]?.IdImpuestoPais ||
       ''
     );
+  }
+
+  private impuestosPredeterminados(): string[] {
+    const impuesto = this.impuestoPredeterminado();
+    return impuesto ? [impuesto] : [];
+  }
+
+  private impuestosSeleccionados(): string[] {
+    const impuestos = this.articulo.Impuestos?.length
+      ? this.articulo.Impuestos
+      : this.articulo.IdImpuestoPais
+      ? [this.articulo.IdImpuestoPais]
+      : [];
+    return [...new Set(impuestos.filter(Boolean))];
   }
 
   private normalizar(value: unknown): string {

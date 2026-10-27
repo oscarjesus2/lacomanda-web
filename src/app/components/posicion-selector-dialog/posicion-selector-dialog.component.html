@@ -1,45 +1,51 @@
 <div class="mant-panel pos-panel">
   <!-- CERRAR -->
-  <button mat-icon-button class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="cancel()">
+  <button mat-icon-button type="button" class="close-button" [attr.aria-label]="'closeDialog' | tenantText" (click)="cancel()">
     <mat-icon>close</mat-icon>
   </button>
 
   <h3 class="pos-panel__title">{{ 'selectPositionTitle' | tenantText }}</h3>
 
   <div class="pos-panel__legend">
-    <span class="pos-badge pos-badge--free"></span> {{ 'free' | tenantText }}
-    <span class="pos-badge pos-badge--taken"></span> {{ 'occupied' | tenantText }}
-    <span class="pos-badge pos-badge--selected"></span> {{ 'selected' | tenantText }}
+    <span><span class="pos-badge pos-badge--free" aria-hidden="true"></span> {{ 'free' | tenantText }}</span>
+    <span><span class="pos-badge pos-badge--taken" aria-hidden="true"></span> {{ 'occupied' | tenantText }}</span>
+    <span><span class="pos-badge pos-badge--selected" aria-hidden="true"></span> {{ 'selected' | tenantText }}</span>
   </div>
 
-  <div
-    class="pos-grid"
-    [style.gridTemplateColumns]="'repeat(' + data.cols + ', auto)'"
-  >
-    <button
-      *ngFor="let n of grid"
-      mat-button
-      class="pos-cell"
-      [class.pos-cell--taken]="isTaken(n)"
-      [class.pos-cell--selected]="selected === n"
-      (click)="pick(n)"
-      [disabled]="isTaken(n)"
-      [matTooltip]="('position' | tenantText) + ' ' + n"
+  <div class="pos-grid-viewport" tabindex="0" role="region"
+    [attr.aria-label]="'selectPositionTitle' | tenantText">
+    <div
+      class="pos-grid"
+      [style.gridTemplateColumns]="'repeat(' + data.cols + ', minmax(44px, 1fr))'"
     >
-      {{ n }}
-    </button>
+      <button
+        *ngFor="let n of grid"
+        mat-button
+        type="button"
+        class="pos-cell"
+        [class.pos-cell--taken]="isTaken(n)"
+        [class.pos-cell--selected]="selected === n"
+        [attr.aria-pressed]="selected === n"
+        (click)="pick(n)"
+        [disabled]="isTaken(n)"
+        [matTooltip]="('position' | tenantText) + ' ' + n"
+      >
+        {{ n }}
+      </button>
+    </div>
   </div>
 
   <div class="pos-panel__actions">
     <button
       mat-raised-button
+      type="button"
       color="primary"
       (click)="confirm()"
       [disabled]="!selected"
     >
       {{ 'accept' | tenantText }}
     </button>
-    <button mat-stroked-button (click)="cancel()">
+    <button mat-stroked-button type="button" (click)="cancel()">
       {{ 'cancel' | tenantText }}
     </button>
   </div>

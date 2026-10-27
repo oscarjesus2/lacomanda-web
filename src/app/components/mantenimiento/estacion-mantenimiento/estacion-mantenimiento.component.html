@@ -81,7 +81,7 @@
     <div class="form-row">
       <mat-form-field class="form-field" appearance="fill">
         <mat-label>{{ 'stationType' | tenantText }}</mat-label>
-        <mat-select [(ngModel)]="estacion.Tipo" name="tipo" required>
+        <mat-select [(ngModel)]="estacion.Tipo" name="tipo" required (selectionChange)="alCambiarTipo()">
           <mat-option *ngFor="let t of tipos" [value]="t.value">{{ t.label }}</mat-option>
         </mat-select>
       </mat-form-field>
@@ -93,6 +93,17 @@
         </mat-select>
       </mat-form-field>
     </div>
+
+    <mat-form-field *ngIf="esPreparacion" class="full-width" appearance="fill">
+      <mat-label>Áreas de impresión que atenderá esta estación</mat-label>
+      <mat-select [(ngModel)]="estacion.IdsAreasPreparacion" name="idsAreasPreparacion" multiple required>
+        <mat-option *ngFor="let area of areasImpresion" [value]="area.IdAreaImpresion">
+          {{ area.Descripcion }}
+        </mat-option>
+      </mat-select>
+      <mat-hint>Mostrará los productos asignados a cualquiera de las áreas seleccionadas.</mat-hint>
+      <mat-error>Selecciona al menos un área de impresión.</mat-error>
+    </mat-form-field>
 
     <mat-form-field class="full-width" appearance="fill">
       <mat-label>{{ 'description' | tenantText }}</mat-label>

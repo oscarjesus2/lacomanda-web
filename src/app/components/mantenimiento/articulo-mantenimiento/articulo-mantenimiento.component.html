@@ -96,6 +96,16 @@
                 >
                   <mat-icon>edit</mat-icon>
                 </button>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  type="button"
+                  aria-label="Eliminar artículo"
+                  matTooltip="Eliminar artículo"
+                  (click)="eliminar(row)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
               </mat-cell>
             </ng-container>
 
@@ -206,8 +216,8 @@
           </mat-form-field>
 
           <mat-form-field appearance="fill" *ngIf="!esProductoVentaEditado">
-            <mat-label>Impuesto del país</mat-label>
-            <mat-select name="impuesto" [(ngModel)]="articulo.IdImpuestoPais" required>
+            <mat-label>Impuestos aplicables</mat-label>
+            <mat-select name="impuestos" [(ngModel)]="articulo.Impuestos" multiple required>
               <mat-option
                 *ngFor="let impuesto of impuestos"
                 [value]="impuesto.IdImpuestoPais"
@@ -215,7 +225,7 @@
                 {{ impuesto.Descripcion }}
               </mat-option>
             </mat-select>
-            <mat-error>Seleccione el impuesto aplicable.</mat-error>
+            <mat-error>Seleccione al menos un impuesto aplicable.</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="fill" *ngIf="!esProductoVentaEditado">

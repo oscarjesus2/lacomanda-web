@@ -45,6 +45,8 @@ import { DialogObservacionComponent } from './components/dialog-observacion/dial
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { VentaComponent } from './pages/venta/venta.component';
+import { CocinaComponent } from './pages/cocina/cocina.component';
+import { HistorialPreparacionComponent } from './pages/cocina/historial-preparacion/historial-preparacion.component';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { DialogTurnoComponent } from './components/dialog-turno/dialog-turno.component';
 import { DialogCerrarTurnoComponent } from './components/dialog-cerrar-turno/dialog-cerrar-turno.component';
@@ -135,6 +137,7 @@ import { SocioNegocioMantenimientoComponent } from './components/mantenimiento/s
 import { TenantTextPipe } from './pipes/tenant-text.pipe';
 import { MesaClienteComponent } from './pages/mesa-cliente/mesa-cliente.component';
 import { DialogSolicitudesMesaComponent } from './components/dialog-solicitudes-mesa/dialog-solicitudes-mesa.component';
+import { DialogConfirmarPresenciaMesaComponent } from './components/dialog-confirmar-presencia-mesa/dialog-confirmar-presencia-mesa.component';
 import { DialogSolicitudesAutorizacionComponent } from './components/dialog-solicitudes-autorizacion/dialog-solicitudes-autorizacion.component';
 import { SolicitudesAutorizacionBotonComponent } from './components/solicitudes-autorizacion-boton/solicitudes-autorizacion-boton.component';
 import { SalidaInternaMantenimientoComponent } from './components/mantenimiento/salida-interna-mantenimiento/salida-interna-mantenimiento.component';
@@ -144,6 +147,8 @@ import { ProduccionMantenimientoComponent } from './components/mantenimiento/pro
 import { PromocionMantenimientoComponent } from './components/mantenimiento/promocion-mantenimiento/promocion-mantenimiento.component';
 import { MotivoSalidaMantenimientoComponent } from './components/mantenimiento/motivo-salida-mantenimiento/motivo-salida-mantenimiento.component';
 import { GrupoAlmacenMantenimientoComponent } from './components/mantenimiento/grupo-almacen-mantenimiento/grupo-almacen-mantenimiento.component';
+import { TipoMovimientoMantenimientoComponent } from './components/mantenimiento/tipo-movimiento-mantenimiento/tipo-movimiento-mantenimiento.component';
+import { TipoDocumentoCompraMantenimientoComponent } from './components/mantenimiento/tipo-documento-compra-mantenimiento/tipo-documento-compra-mantenimiento.component';
 import { AsistenteEstacionComponent } from './components/asistente-estacion/asistente-estacion.component';
 import { ComparativoVentasComponent } from './pages/dashboard/comparativo-ventas/comparativo-ventas.component';
 import { EvolucionMargenComponent } from './pages/dashboard/evolucion-margen/evolucion-margen.component';
@@ -169,6 +174,9 @@ import { SubscriptionAccessStatusComponent } from './auth/subscription-access-st
 import { CesiaAssistantComponent } from './components/cesia-assistant/cesia-assistant.component';
 import { CesiaStockPanelComponent } from './components/cesia-stock-panel/cesia-stock-panel.component';
 import { NotificacionDetalleComponent } from './pages/notificacion-detalle/notificacion-detalle.component';
+import { PagoCuentaLegalComponent } from './pages/pago-cuenta-legal/pago-cuenta-legal.component';
+import { LibroReclamacionesMantenimientoComponent } from './components/mantenimiento/libro-reclamaciones-mantenimiento/libro-reclamaciones-mantenimiento.component';
+import { DialogConciliarCobrosOnlineComponent } from './components/dialog-conciliar-cobros-online/dialog-conciliar-cobros-online.component';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -196,6 +204,8 @@ export const MY_DATE_FORMATS = {
     DialogObservacionComponent,
 
     VentaComponent,
+    CocinaComponent,
+    HistorialPreparacionComponent,
     DialogTurnoComponent,
     DialogCerrarTurnoComponent,
     HeaderComponent,
@@ -272,7 +282,11 @@ export const MY_DATE_FORMATS = {
     SocioNegocioMantenimientoComponent,
     TenantTextPipe,
     MesaClienteComponent,
+    PagoCuentaLegalComponent,
+    LibroReclamacionesMantenimientoComponent,
+    DialogConciliarCobrosOnlineComponent,
     DialogSolicitudesMesaComponent,
+    DialogConfirmarPresenciaMesaComponent,
     DialogSolicitudesAutorizacionComponent,
     SolicitudesAutorizacionBotonComponent,
     SalidaInternaMantenimientoComponent,
@@ -282,6 +296,8 @@ export const MY_DATE_FORMATS = {
     PromocionMantenimientoComponent,
     MotivoSalidaMantenimientoComponent,
     GrupoAlmacenMantenimientoComponent,
+    TipoMovimientoMantenimientoComponent,
+    TipoDocumentoCompraMantenimientoComponent,
     AsistenteEstacionComponent,
     ComparativoVentasComponent,
     EvolucionMargenComponent,

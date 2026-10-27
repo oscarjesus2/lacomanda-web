@@ -9,6 +9,7 @@ import {
   ItemPedidoMesaCliente,
   MensajeAsistenteCartaMesaCliente,
   ProductoCartaMesaCliente,
+  RegistrarPedidoMesaCliente,
   SeccionMenuCartaMesaCliente,
   SolicitudAccesoMesa
 } from 'src/app/models/mesa-cliente.models';
@@ -55,6 +56,8 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   iniciandoPago = false;
   verificandoPago = false;
   pagoCompletado = false;
+  anticipoConfirmado = false;
+  montoPago?: number;
   estadoPagoTexto = '';
   mostrarCarrito = false;
   mostrarAcceso = false;
@@ -80,8 +83,13 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   private readonly imagenesProducto = new Map<number, string>();
   private expiracionTimer?: ReturnType<typeof setTimeout>;
   private pagoTimer?: ReturnType<typeof setTimeout>;
+  private cierreVentanaPagoTimer?: ReturnType<typeof setInterval>;
   private pagoConsultas = 0;
   private idSesionContextoAsistente?: number;
+  private readonly paymentOrderStorageKey = 'mesa-cliente-pago-pedido';
+  private readonly paymentProviderStorageKey = 'mesa-cliente-pago-proveedor';
+  private redirigiendoAlCheckout = false;
+  private readonly alCerrarPagina = () => this.cancelarPagoAlCerrarNavegador();
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -92,6 +100,7 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.headerService.hideHeader();
+    window.addEventListener('pagehide', this.alCerrarPagina);
     this.codigoQr = this.route.snapshot.paramMap.get('codigoQr') || '';
     if (!this.codigoQr) {
       this.cargando = false;
@@ -108,8 +117,11 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    window.removeEventListener('pagehide', this.alCerrarPagina);
+    this.cancelarPagoAlCerrarNavegador();
     this.limpiarExpiracion();
     this.limpiarConsultaPago();
+    this.limpiarVigilanciaVentanaPago();
     void this.mesaClienteRealtime.detener();
     this.liberarImagenes();
     this.limpiarContextoAsistente();
@@ -121,6 +133,8 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     void this.mesaClienteRealtime.detener();
     sessionStorage.removeItem(this.storageKey);
     sessionStorage.removeItem(this.paymentStorageKey);
+    sessionStorage.removeItem(this.paymentOrderStorageKey);
+    sessionStorage.removeItem(this.paymentProviderStorageKey);
     this.estado = undefined;
     this.solicitud = undefined;
     this.limpiarContextoAsistente();
@@ -190,6 +204,7 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     this.consultandoAsistente = true;
     this.mesaClienteService.consultarAsistente(this.codigoQr, {
       IdProducto: this.productoAsistente?.IdProducto,
+      PedidoHabilitado: this.activa,
       Pregunta: pregunta,
       Historial: historial
     }).subscribe({
@@ -306,6 +321,11 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     const token = sessionStorage.getItem(this.storageKey);
     if (!token || this.carrito.length === 0 || this.enviandoPedido) return;
 
+    if (this.requierePagoAntesDeEnviarPedido) {
+      this.pagarPedidoAntesDeEnviar(token);
+      return;
+    }
+
     this.enviandoPedido = true;
     this.error = '';
     this.mesaClienteService.registrarPedido(token, {
@@ -315,6 +335,22 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
         this.enviandoPedido = false;
         this.carrito = [];
         this.mostrarCarrito = false;
+        if (this.estado) {
+          // El pedido acaba de crearse y la siguiente operación puede ser el
+          // checkout inmediato. Actualizamos el contexto local sin esperar el
+          // siguiente sondeo de estado de la mesa.
+          this.estado = {
+            ...this.estado,
+            IdPedido: response.Data.IdPedido,
+            NroCuenta: response.Data.NroCuenta,
+          };
+        }
+        if (response.Data.RequierePagoInmediato) {
+          this.aviso = 'Tu pedido requiere el pago para completarse. Abriendo pago seguro…';
+          this.pagarCuenta(response.Data.Total);
+          return;
+        }
+
         this.aviso = `Pedido ${response.Data.IdPedido} enviado a preparación.`;
       },
       error: error => {
@@ -326,23 +362,68 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     });
   }
 
-  pagarCuenta(): void {
+  pagarCuenta(importeSugerido?: number): void {
     const token = sessionStorage.getItem(this.storageKey);
     if (!token || !this.puedePagarCuenta || this.iniciandoPago) return;
 
+    const importe = importeSugerido ?? this.montoPago;
+    if (importe !== undefined && (!Number.isFinite(importe) || importe <= 0)) {
+      this.error = 'Indica un importe válido para el pago a cuenta.';
+      return;
+    }
+
     this.iniciandoPago = true;
     this.error = '';
-    this.mesaClienteService.crearCheckout(token, window.location.href).subscribe({
+    const ventanaPago = this.abrirVentanaPago();
+    this.mesaClienteService.crearCheckout(token, window.location.href, importe).subscribe({
       next: response => {
         this.iniciandoPago = false;
-        sessionStorage.setItem(this.paymentStorageKey, response.Data.IdIntento);
-        window.location.assign(response.Data.UrlPago);
+        this.abrirCheckoutYEsperarConfirmacion(
+          ventanaPago,
+          token,
+          response.Data.IdIntento,
+          response.Data.UrlPago,
+          response.Data.Proveedor,
+          false);
       },
       error: error => {
         this.iniciandoPago = false;
+        ventanaPago?.close();
         this.error = error?.error?.Message
           || error?.error?.Data
           || 'No pudimos abrir el pago seguro. Inténtalo nuevamente.';
+      }
+    });
+  }
+
+  private pagarPedidoAntesDeEnviar(token: string): void {
+    this.enviandoPedido = true;
+    this.error = '';
+    const ventanaPago = this.abrirVentanaPago();
+    const pedido: RegistrarPedidoMesaCliente = {
+      Items: this.carrito.map(x => x.request)
+    };
+    this.mesaClienteService.crearCheckoutPedido(token, {
+      ReturnUrl: window.location.href,
+      Pedido: pedido
+    }).subscribe({
+      next: response => {
+        this.enviandoPedido = false;
+        this.abrirCheckoutYEsperarConfirmacion(
+          ventanaPago,
+          token,
+          response.Data.IdIntento,
+          response.Data.UrlPago,
+          response.Data.Proveedor,
+          true,
+          pedido);
+      },
+      error: error => {
+        this.enviandoPedido = false;
+        ventanaPago?.close();
+        this.error = error?.error?.Message
+          || error?.error?.Data
+          || 'No pudimos abrir el pago seguro. Tu pedido no ha sido enviado.';
       }
     });
   }
@@ -355,9 +436,14 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
 
   get puedePagarCuenta(): boolean {
     return this.activa
+      && !this.requierePagoAntesDeEnviarPedido
       && this.estado?.PuedePagarCuentaOnline === true
-      && !!this.estado?.IdPedido
-      && !this.pagoCompletado;
+      && !!this.estado?.IdPedido;
+  }
+
+  get requierePagoAntesDeEnviarPedido(): boolean {
+    return this.activa
+      && this.estado?.RequierePagoOnlineAntesDeEnviarPedido === true;
   }
 
   get finalizada(): boolean {
@@ -478,6 +564,52 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     });
   }
 
+  private abrirVentanaPago(): Window | null {
+    const ventanaPago = window.open('', '_blank');
+    if (ventanaPago) {
+      // El checkout es de un dominio externo y no debe tener acceso a la
+      // pantalla de pedido que queda esperando su confirmación.
+      ventanaPago.opener = null;
+    }
+    return ventanaPago;
+  }
+
+  private abrirCheckoutYEsperarConfirmacion(
+    ventanaPago: Window | null,
+    token: string,
+    idIntento: string,
+    urlPago: string,
+    proveedor: string,
+    esPedidoObligatorio: boolean,
+    pedidoPendiente?: RegistrarPedidoMesaCliente,
+  ): void {
+    sessionStorage.setItem(this.paymentStorageKey, idIntento);
+    sessionStorage.setItem(this.paymentProviderStorageKey, proveedor);
+    if (esPedidoObligatorio && pedidoPendiente) {
+      sessionStorage.setItem(this.paymentOrderStorageKey, JSON.stringify(pedidoPendiente));
+    } else {
+      sessionStorage.removeItem(this.paymentOrderStorageKey);
+    }
+
+    this.verificandoPago = true;
+    this.estadoPagoTexto = esPedidoObligatorio
+      ? 'Completa el pago seguro. Enviaremos tu pedido solo cuando sea confirmado.'
+      : 'Completa el pago seguro. Estamos esperando la confirmación del banco…';
+    this.pagoConsultas = 0;
+    this.consultarEstadoPago(token, idIntento);
+
+    if (ventanaPago && !ventanaPago.closed) {
+      this.vigilarCierreVentanaPago(ventanaPago, token, idIntento);
+      ventanaPago.location.replace(urlPago);
+      return;
+    }
+
+    // En navegadores que bloquean la pestaña emergente conservamos el retorno
+    // actual; el carrito queda en sessionStorage hasta asociarlo al pago.
+    this.redirigiendoAlCheckout = true;
+    window.location.assign(urlPago);
+  }
+
   private recuperarPagoPendiente(token: string): void {
     const idIntento = sessionStorage.getItem(this.paymentStorageKey);
     if (!idIntento) return;
@@ -511,9 +643,12 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
   private procesarEstadoPago(token: string, pago: EstadoPagoCuentaMesa): void {
     if (pago.Estado === 'Aplicado') {
       this.verificandoPago = false;
+      this.limpiarVigilanciaVentanaPago();
       this.pagoCompletado = true;
       this.estadoPagoTexto = 'Pago confirmado. Tu cuenta ha quedado cerrada correctamente.';
       sessionStorage.removeItem(this.paymentStorageKey);
+      sessionStorage.removeItem(this.paymentOrderStorageKey);
+      sessionStorage.removeItem(this.paymentProviderStorageKey);
       sessionStorage.removeItem(this.storageKey);
       this.carrito = [];
       this.mostrarCarrito = false;
@@ -521,9 +656,38 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (pago.Estado === 'Pagado') {
+      this.limpiarVigilanciaVentanaPago();
+      this.anticipoConfirmado = true;
+      const pedidoPendiente = this.obtenerPedidoPendientePago();
+      if (pedidoPendiente) {
+        this.verificandoPago = true;
+        this.estadoPagoTexto = 'Pago confirmado. Estamos enviando tu pedido a preparación…';
+        this.asociarPedidoPagado(token, pago.IdIntento, pedidoPendiente);
+        return;
+      }
+
+      if (!pago.IdPedido) {
+        this.verificandoPago = false;
+        this.error = 'El pago fue confirmado, pero no encontramos el carrito para asociarlo. Se solicitará su devolución automáticamente en cinco minutos.';
+        this.estadoPagoTexto = 'Pago confirmado pendiente de devolución.';
+        return;
+      }
+
+      this.verificandoPago = false;
+      this.estadoPagoTexto = 'Pago confirmado como anticipo. Solicita tu comprobante al salir o emítelo desde esta mesa cuando esté disponible.';
+      sessionStorage.removeItem(this.paymentStorageKey);
+      sessionStorage.removeItem(this.paymentProviderStorageKey);
+      this.montoPago = undefined;
+      return;
+    }
+
     if (['Fallido', 'Expirado', 'Cancelado'].includes(pago.Estado)) {
       this.verificandoPago = false;
+      this.limpiarVigilanciaVentanaPago();
       sessionStorage.removeItem(this.paymentStorageKey);
+      sessionStorage.removeItem(this.paymentOrderStorageKey);
+      sessionStorage.removeItem(this.paymentProviderStorageKey);
       this.error = pago.Estado === 'Cancelado'
         ? 'El pago fue cancelado. Puedes volver a intentarlo cuando quieras.'
         : 'El pago no pudo completarse. No se realizó ningún cobro confirmado.';
@@ -531,9 +695,7 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
     }
 
     this.verificandoPago = true;
-    this.estadoPagoTexto = pago.Estado === 'Pagado'
-      ? 'Pago recibido. Estamos cerrando tu cuenta…'
-      : 'Estamos confirmando el pago con el banco…';
+    this.estadoPagoTexto = 'Estamos confirmando el pago con el banco…';
     if (++this.pagoConsultas < 200) {
       this.pagoTimer = setTimeout(
         () => this.consultarEstadoPago(token, pago.IdIntento),
@@ -542,8 +704,113 @@ export class MesaClienteComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (pago.Proveedor === 'Culqi') {
+      this.cancelarPagoPendiente(token, pago.IdIntento);
+      return;
+    }
+
     this.verificandoPago = false;
     this.error = 'La confirmación está tardando más de lo habitual. Si ya pagaste, solicita ayuda al personal.';
+  }
+
+  private cancelarPagoPendiente(token: string, idIntento: string): void {
+    this.limpiarConsultaPago();
+    this.verificandoPago = true;
+    this.estadoPagoTexto = 'No recibimos la confirmación a tiempo. Estamos cancelando el enlace de pago…';
+    this.mesaClienteService.cancelarPago(token, idIntento).subscribe({
+      next: response => this.procesarEstadoPago(token, response.Data),
+      error: error => {
+        this.verificandoPago = false;
+        this.error = error?.error?.Message
+          || 'No pudimos cancelar el enlace de pago. Si realizaste un pago, solicita ayuda al personal.';
+      }
+    });
+  }
+
+  private asociarPedidoPagado(
+    token: string,
+    idIntento: string,
+    pedido: RegistrarPedidoMesaCliente
+  ): void {
+    this.mesaClienteService.registrarPedidoPagado(token, idIntento, pedido).subscribe({
+      next: response => {
+        this.verificandoPago = false;
+        this.estadoPagoTexto = `Pago confirmado. Pedido ${response.Data.IdPedido} enviado a preparación.`;
+        sessionStorage.removeItem(this.paymentStorageKey);
+        sessionStorage.removeItem(this.paymentOrderStorageKey);
+        sessionStorage.removeItem(this.paymentProviderStorageKey);
+        this.carrito = [];
+        this.mostrarCarrito = false;
+        if (this.estado) {
+          this.estado = {
+            ...this.estado,
+            IdPedido: response.Data.IdPedido,
+            NroCuenta: response.Data.NroCuenta,
+          };
+        }
+        this.consultarEstado(token);
+      },
+      error: error => {
+        this.error = error?.error?.Message
+          || 'El pago está confirmado, pero no pudimos asociar el pedido. Reintentaremos automáticamente.';
+        this.verificandoPago = true;
+        this.estadoPagoTexto = 'Estamos reintentando enviar el pedido confirmado…';
+        this.pagoTimer = setTimeout(() => this.consultarEstadoPago(token, idIntento), 3000);
+      }
+    });
+  }
+
+  private obtenerPedidoPendientePago(): RegistrarPedidoMesaCliente | undefined {
+    const serializado = sessionStorage.getItem(this.paymentOrderStorageKey);
+    if (!serializado) return undefined;
+    try {
+      const pedido = JSON.parse(serializado) as RegistrarPedidoMesaCliente;
+      return Array.isArray(pedido?.Items) && pedido.Items.length > 0 ? pedido : undefined;
+    } catch {
+      sessionStorage.removeItem(this.paymentOrderStorageKey);
+      return undefined;
+    }
+  }
+
+  private vigilarCierreVentanaPago(
+    ventanaPago: Window,
+    token: string,
+    idIntento: string,
+  ): void {
+    this.limpiarVigilanciaVentanaPago();
+    this.cierreVentanaPagoTimer = setInterval(() => {
+      if (!ventanaPago.closed) return;
+
+      this.limpiarVigilanciaVentanaPago();
+      this.mesaClienteService.consultarPago(token, idIntento).subscribe({
+        next: response => {
+          if (response.Data.Estado === 'Pendiente' && response.Data.Proveedor === 'Culqi') {
+            this.cancelarPagoPendiente(token, idIntento);
+            return;
+          }
+
+          this.procesarEstadoPago(token, response.Data);
+        },
+        error: () => this.consultarEstadoPago(token, idIntento)
+      });
+    }, 750);
+  }
+
+  private cancelarPagoAlCerrarNavegador(): void {
+    if (this.redirigiendoAlCheckout || this.pagoCompletado) return;
+
+    const token = sessionStorage.getItem(this.storageKey);
+    const idIntento = sessionStorage.getItem(this.paymentStorageKey);
+    const proveedor = sessionStorage.getItem(this.paymentProviderStorageKey);
+    if (token && idIntento && proveedor === 'Culqi') {
+      this.mesaClienteService.cancelarPagoAlAbandonar(token, idIntento);
+    }
+  }
+
+  private limpiarVigilanciaVentanaPago(): void {
+    if (!this.cierreVentanaPagoTimer) return;
+    clearInterval(this.cierreVentanaPagoTimer);
+    this.cierreVentanaPagoTimer = undefined;
   }
 
   private limpiarContextoAsistente(): void {

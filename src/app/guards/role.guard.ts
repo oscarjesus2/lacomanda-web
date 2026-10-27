@@ -37,11 +37,11 @@ export class RoleGuard {
     const isAdmin   = userRoles.includes('admin');
     const isGerente = userRoles.includes('gerente');
     const allowedRoles: string[] = route.data?.['roles'] ?? [];
-    const esRutaDeCajaOMozo = allowedRoles.some(
-      role => role === 'caja' || role === 'mozo',
+    const esRutaOperativa = allowedRoles.some(
+      role => role === 'caja' || role === 'mozo' || role === 'cocina',
     );
 
-    if (isGerente && esRutaDeCajaOMozo) {
+    if (isGerente && esRutaOperativa) {
       const tipoEstacion = this.storageService.getCurrentUser()?.TipoCompu;
       const coincideConCaja =
         allowedRoles.includes('caja') &&
@@ -49,8 +49,11 @@ export class RoleGuard {
       const coincideConMozo =
         allowedRoles.includes('mozo') &&
         tipoEstacion === EstacionTipoEnum.MOZO;
+      const coincideConCocina =
+        allowedRoles.includes('cocina') &&
+        tipoEstacion === EstacionTipoEnum.COCINA;
 
-      if (coincideConCaja || coincideConMozo) return true;
+      if (coincideConCaja || coincideConMozo || coincideConCocina) return true;
 
       return this.router.createUrlTree([this.homeRouteFor(userRoles)]);
     }
@@ -72,6 +75,7 @@ export class RoleGuard {
     if (roles.includes('gerente')) return '/dashboard';
     if (roles.includes('caja')) return '/caja';
     if (roles.includes('mozo')) return '/mozo';
+    if (roles.includes('cocina')) return '/preparacion';
     return '/iniciar-sesion';
   }
 

@@ -11,7 +11,7 @@ import {
   EntradaCompraCrearNota,
   EntradaCompraGuardar,
   FacturaCompraIaPrevisualizacion,
-  EntradaCompraPagoGuardar,
+  PagoProveedorGuardar,
   EntradaCompraResumen
 } from '../models/entrada-compra.models';
 import { environment } from 'src/environments/environment';
@@ -128,9 +128,9 @@ export class EntradaCompraService {
     );
   }
 
-  registrarPago(
+  registrarPagoProveedor(
     idEntrada: number,
-    dto: EntradaCompraPagoGuardar
+    dto: PagoProveedorGuardar
   ): Observable<ApiResponse<EntradaCompra>> {
     return this.http.post<ApiResponse<EntradaCompra>>(
       `${this.basePath}/${idEntrada}/pagos`,
@@ -138,16 +138,16 @@ export class EntradaCompraService {
     );
   }
 
-  eliminarPago(
+  eliminarPagoProveedor(
     idEntrada: number,
-    idPagoEntrada: number
+    idPagoProveedor: number
   ): Observable<ApiResponse<EntradaCompra>> {
     return this.http.delete<ApiResponse<EntradaCompra>>(
-      `${this.basePath}/${idEntrada}/pagos/${idPagoEntrada}`
+      `${this.basePath}/${idEntrada}/pagos/${idPagoProveedor}`
     );
   }
 
-  reprogramarPago(
+  reprogramarPagoProveedor(
     idEntrada: number,
     fechaPagoProgramada: Date | string
   ): Observable<ApiResponse<EntradaCompra>> {

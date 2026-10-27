@@ -107,7 +107,8 @@ export class VentaService {
         listaDescuentoCodigo: DescuentoCodigo[],
         listaPago: Pago[],
         bTurnoIndependiente: boolean,
-        usarClienteGenerico: boolean
+        usarClienteGenerico: boolean,
+        confirmarEmisionSinConfiguracionSunat = false,
     ): Observable<ApiResponse<ImpresionDTO[]>> {
 
         const body = {
@@ -118,7 +119,9 @@ export class VentaService {
             listaDescuentoCodigo: listaDescuentoCodigo,
             listaPago: listaPago,
             bTurnoIndependiente: bTurnoIndependiente,
-            usarClienteGenerico: usarClienteGenerico
+            usarClienteGenerico: usarClienteGenerico,
+            confirmarEmisionSinConfiguracionSunat:
+                confirmarEmisionSinConfiguracionSunat,
         };
 
         return this.http.post<ApiResponse<ImpresionDTO[]>>(this.basePath + 'grabardocumentoventa', body);

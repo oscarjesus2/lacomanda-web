@@ -1,0 +1,75 @@
+/* La estructura, superficies y cabecera heredan las primitivas globales de
+   .mant-panel, .dialog-notice y .dialog-empty-state. */
+.conciliacion-cobros-online__list {
+  display: grid;
+  gap: 12px;
+}
+
+.conciliacion-cobros-online__card {
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+}
+
+.conciliacion-cobros-online__summary,
+.conciliacion-cobros-online__metadata,
+.conciliacion-cobros-online__actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.conciliacion-cobros-online__summary {
+  justify-content: space-between;
+}
+
+.conciliacion-cobros-online__summary strong,
+.conciliacion-cobros-online__summary span {
+  display: block;
+}
+
+.conciliacion-cobros-online__summary span,
+.conciliacion-cobros-online__metadata,
+.conciliacion-cobros-online__unavailable {
+  color: var(--color-text-muted);
+  font-size: .8rem;
+}
+
+.conciliacion-cobros-online__status {
+  padding: 5px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.conciliacion-cobros-online__status--attention {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.conciliacion-cobros-online__status--error,
+.conciliacion-cobros-online__error {
+  color: var(--color-danger);
+}
+
+.conciliacion-cobros-online__metadata {
+  margin: 12px 0;
+}
+
+.conciliacion-cobros-online__metadata div { min-width: 0; }
+.conciliacion-cobros-online__metadata dt { font-weight: 700; }
+.conciliacion-cobros-online__metadata dd { margin: 2px 0 0; overflow-wrap: anywhere; }
+.conciliacion-cobros-online__error { margin: 0 0 12px; font-size: .8rem; }
+
+.conciliacion-cobros-online__actions { flex-wrap: wrap; align-items: flex-start; }
+.conciliacion-cobros-online__actions mat-form-field { width: 150px; }
+.conciliacion-cobros-online__actions button { min-height: 44px; }
+
+@media (max-width: 680px) {
+  .conciliacion-cobros-online__summary,
+  .conciliacion-cobros-online__metadata { align-items: flex-start; flex-direction: column; }
+  .conciliacion-cobros-online__actions > * { width: 100% !important; }
+}

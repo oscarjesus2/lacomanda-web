@@ -16,6 +16,8 @@ export interface EntradaCompraResumen {
   ValorCompra: number;
   TotalImpuestos: number;
   TotalCompra: number;
+  TotalRetenciones: number;
+  TotalNetoPagar: number;
   Estado: number;
   EstadoDescripcion: string;
   EstadoPago: number;
@@ -30,7 +32,7 @@ export interface EntradaCompra extends EntradaCompraResumen {
   PreciosIncluyenImpuestos: boolean;
   FechaPagoProgramada: string | null;
   Detalles: EntradaCompraDetalle[];
-  Pagos: EntradaCompraPago[];
+  PagosProveedor: PagoProveedor[];
 }
 
 export interface EntradaCompraDetalle {
@@ -49,8 +51,10 @@ export interface EntradaCompraDetalle {
   ValorCompra: number;
   TotalImpuestos: number;
   Subtotal: number;
+  TotalRetenciones: number;
   IdSubAreaAlmacen: number | null;
   SubAreaAlmacen: string;
+  EsServicio: boolean;
   Impuestos: string[];
 }
 
@@ -88,7 +92,7 @@ export interface EntradaCompraCatalogos {
   Articulos: EntradaCompraArticulo[];
   SubAreas: EntradaCompraSubArea[];
   Impuestos: EntradaCompraImpuesto[];
-  FormasPago: EntradaCompraOpcionEntera[];
+  TiposPago: EntradaCompraOpcionEntera[];
 }
 
 export interface EntradaCompraOpcionEntera {
@@ -96,11 +100,11 @@ export interface EntradaCompraOpcionEntera {
   Descripcion: string;
 }
 
-export interface EntradaCompraPago {
-  IdPagoEntrada: number;
+export interface PagoProveedor {
+  IdPagoProveedor: number;
   FechaPago: string;
   IdTipoPago: number;
-  FormaPago: string;
+  TipoPago: string;
   IdMoneda: string;
   IdBancoOrigen: number | null;
   IdBancoDestino: number | null;
@@ -109,7 +113,7 @@ export interface EntradaCompraPago {
   Observacion: string;
 }
 
-export interface EntradaCompraPagoGuardar {
+export interface PagoProveedorGuardar {
   FechaPago: Date | string;
   IdTipoPago: number | null;
   IdMoneda: string;
@@ -147,6 +151,7 @@ export interface EntradaCompraTipoDocumento
   extends EntradaCompraOpcion {
   Naturaleza: number;
   Mascara: string | null;
+  PermiteRetenciones: boolean;
 }
 
 export interface EntradaCompraMovimiento {
@@ -173,6 +178,7 @@ export interface EntradaCompraArticulo {
   IdUnidadMedida: number;
   UnidadMedida: string;
   PrecioCompra: number;
+  EsServicio: boolean;
   Inventariable: boolean;
   Impuestos: string[];
   Presentaciones: EntradaCompraPresentacion[];
@@ -199,6 +205,8 @@ export interface EntradaCompraImpuesto {
   Descripcion: string;
   Tasa: number;
   FijoPorUnidad: number;
+  TipoImpacto: number;
+  EsOpcional: boolean;
 }
 
 export interface FacturaCompraIaPrevisualizacion {

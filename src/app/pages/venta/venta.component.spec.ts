@@ -1,7 +1,100 @@
 import { of, Subject, throwError } from 'rxjs';
-import { CanalVentaEnum, PedidoEstadoEnum } from 'src/app/enums/enum';
+import { CanalVentaEnum, EstadoPreparacionPedidoEnum, PedidoEstadoEnum } from 'src/app/enums/enum';
+import { PedidoDet } from 'src/app/models/pedidodet.models';
+import { Notificar } from 'src/app/shared/notificaciones';
 
 import { VentaComponent } from './venta.component';
+
+describe('VentaComponent - marcar productos entregados', () => {
+  let component: VentaComponent;
+  let cambiarEstado: jasmine.Spy;
+
+  function producto(estado = EstadoPreparacionPedidoEnum.Enviado): PedidoDet {
+    return new PedidoDet({
+      IdPedido: 1, NroCuenta: 1, Item: 1, Estado: 1, EstadoPreparacion: estado,
+    });
+  }
+
+  beforeEach(() => {
+    component = Object.create(VentaComponent.prototype) as VentaComponent;
+    component.cocinaHabilitada = true;
+    component.config = { ManejaEstadosCocina: true } as any;
+    (component as any).entregasEnCurso = new Set<PedidoDet>();
+    cambiarEstado = jasmine.createSpy('cambiarEstado').and.returnValue(of({ Success: true }));
+    (component as any).cocinaService = { cambiarEstado };
+    spyOn(Notificar, 'exito');
+    spyOn(Notificar, 'informacion');
+  });
+
+  it('oculta la acción para un producto que ya está entregado y no repite la solicitud', () => {
+    const entregado = producto(EstadoPreparacionPedidoEnum.Entregado);
+
+    expect(component.puedeMarcarProductoEntregado(entregado)).toBeFalse();
+    component.marcarProductoEntregado(entregado);
+
+    expect(cambiarEstado).not.toHaveBeenCalled();
+  });
+
+  it('permite entregar desde los demás estados y conserva los controles de anulación y licencia', () => {
+    for (const estado of [null, EstadoPreparacionPedidoEnum.Enviado,
+      EstadoPreparacionPedidoEnum.EnPreparacion, EstadoPreparacionPedidoEnum.Preparado]) {
+      expect(component.puedeMarcarProductoEntregado(new PedidoDet({
+        ...producto(), EstadoPreparacion: estado,
+      }))).toBeTrue();
+    }
+    expect(component.puedeMarcarProductoEntregado(new PedidoDet({ ...producto(), Estado: 0 }))).toBeFalse();
+    expect(component.puedeMarcarProductoEntregado(new PedidoDet({ ...producto(), Item: 0 }))).toBeFalse();
+    component.config.ManejaEstadosCocina = false;
+    expect(component.puedeMarcarProductoEntregado(producto())).toBeFalse();
+    component.config.ManejaEstadosCocina = true;
+    component.cocinaHabilitada = false;
+    expect(component.puedeMarcarProductoEntregado(producto())).toBeFalse();
+  });
+
+  it('actualiza la fila al confirmar la entrega y oculta la acción inmediatamente', () => {
+    const fila = producto();
+
+    component.marcarProductoEntregado(fila);
+    component.marcarProductoEntregado(fila);
+
+    expect(fila.EstadoPreparacion).toBe(EstadoPreparacionPedidoEnum.Entregado);
+    expect(component.puedeMarcarProductoEntregado(fila)).toBeFalse();
+    expect(cambiarEstado).toHaveBeenCalledTimes(1);
+  });
+
+  it('conserva el estado entregado al reconstruir la cuenta desde la respuesta del backend', () => {
+    const [fila] = (component as any).getPedidoDetByResponse([producto(EstadoPreparacionPedidoEnum.Entregado)]);
+
+    expect(fila.EstadoPreparacion).toBe(EstadoPreparacionPedidoEnum.Entregado);
+    expect(component.puedeMarcarProductoEntregado(fila)).toBeFalse();
+  });
+
+  it('impide clics repetidos mientras la entrega está en curso y permite reintentar si falla', () => {
+    const pendiente = new Subject<any>();
+    cambiarEstado.and.returnValue(pendiente);
+    const fila = producto();
+
+    component.marcarProductoEntregado(fila);
+    component.marcarProductoEntregado(fila);
+    expect(component.puedeMarcarProductoEntregado(fila)).toBeFalse();
+    expect(cambiarEstado).toHaveBeenCalledTimes(1);
+
+    pendiente.error({ error: { Message: 'Sin conexión' } });
+
+    expect(fila.EstadoPreparacion).toBe(EstadoPreparacionPedidoEnum.Enviado);
+    expect(component.puedeMarcarProductoEntregado(fila)).toBeTrue();
+  });
+
+  it('mantiene la acción disponible si el servidor rechaza la entrega', () => {
+    cambiarEstado.and.returnValue(of({ Success: false, Message: 'No se pudo guardar' }));
+    const fila = producto();
+
+    component.marcarProductoEntregado(fila);
+
+    expect(fila.EstadoPreparacion).toBe(EstadoPreparacionPedidoEnum.Enviado);
+    expect(component.puedeMarcarProductoEntregado(fila)).toBeTrue();
+  });
+});
 
 describe('VentaComponent - canales por estación', () => {
   function crearComponente(modoMozo: boolean): VentaComponent {

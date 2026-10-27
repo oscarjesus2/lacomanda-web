@@ -129,6 +129,9 @@
     <mat-icon>restaurant</mat-icon>
     <span>{{ 'orderAttendant' | tenantText }}</span>
   </button>
+  <button mat-menu-item *ngIf="showPreparacion" (click)="Preparacion()">
+    <mat-icon>restaurant_menu</mat-icon><span>{{ 'preparation' | tenantText }}</span>
+  </button>
   <button mat-menu-item *ngIf="controlHorarioHabilitado" (click)="OpenControlHorario()">
     <mat-icon>schedule</mat-icon><span>{{ 'timeTracking' | tenantText }}</span>
   </button>

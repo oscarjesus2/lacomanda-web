@@ -7,7 +7,7 @@ import { TipoIdentidadPaisService, TipoIdentidadPaisVM } from 'src/app/services/
 import { MonedaService } from 'src/app/services/moneda.service';
 import { Moneda } from 'src/app/models/moneda.models';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { distinctUntilChanged } from 'rxjs/operators';
+import { distinctUntilChanged, finalize } from 'rxjs/operators';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
 import { combineLatest } from 'rxjs';
 import { LicenciaTenantService } from 'src/app/services/licencia-tenant.service';
@@ -22,6 +22,7 @@ import { esConfiguracionPersistida } from '../configuracion-persistida';
 export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
   esModoInicial: boolean;
   licenciaCargada = false;
+  guardando = false;
   puedePrecuentas = false;
   puedeCambioEspacio = false;
   puedeReportesCierre = false;
@@ -31,6 +32,7 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
   puedeCargoDelivery = false;
   puedeTragoCortesia = false;
   puedeServicio = false;
+  puedeCocina = false;
   tiposIdentidadPais: TipoIdentidadPaisVM[] = [];
   tiposEnum = TipoIdentidadEnum;
   enumKeys = Object.keys(TipoIdentidadEnum).filter(k => isNaN(Number(k)));
@@ -38,6 +40,8 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
   logoPreviewUrl: string | null = null;
   logoProcesando = false;
   paisInicial = '';
+  nombrePlanLicencia = '';
+  codigoPlanLicencia = '';
 
   // paises = ['PE','ES','AR','CL','MX','CO','US','FR','DE','IT','PT'];
   paises = ['PE','ES'];
@@ -50,6 +54,8 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
     NombreComercial: ['', [Validators.required, Validators.maxLength(120)]],
     Direccion: ['', [Validators.required, Validators.maxLength(200)]],
     Telefono: ['', [Validators.required, Validators.maxLength(30)]],
+    ClientePideOnlineYPagaInmediatamente: [false],
+    ManejaEstadosCocina: [false],
     PiePagina: ['', [Validators.maxLength(200)]],
     IdBanco: [null as number | null],
 
@@ -81,6 +87,7 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
     Direccion: ['', [Validators.required, Validators.maxLength(120)]],
     Telefono: ['', [Validators.required, Validators.maxLength(50)]],
     IdBanco: [null as number | null],
+    ManejaEstadosCocina: [false],
   });
 
   mascaraHint?: string;
@@ -102,10 +109,19 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.licenciaSrv.invalidar();
     combineLatest([
       this.configSrv.get(),
       this.licenciaSrv.obtenerEstado(),
     ]).subscribe(([cfg, estadoLicencia]) => {
+      this.nombrePlanLicencia = estadoLicencia.licencia?.PlanNombre?.trim()
+        || this.texts.get(
+          estadoLicencia.sinSuscripcion
+            ? 'licenseWithoutSubscription'
+            : 'licenseUnavailable',
+        );
+      this.codigoPlanLicencia = estadoLicencia.licencia?.PlanCodigo?.trim() || '';
+
       // El servidor devuelve una propuesta con IdConfig=0 si aún no existe la
       // configuración. La existencia real manda sobre el punto desde el que se
       // abrió el diálogo, evitando intentar actualizar una fila inexistente.
@@ -120,6 +136,7 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
           Direccion: cfg.Direccion,
           Telefono: cfg.Telefono,
           IdBanco: cfg.IdBanco || null,
+          ManejaEstadosCocina: cfg.ManejaEstadosCocina,
         });
         if (cfg.TieneLogo) this.cargarLogo();
       }
@@ -164,6 +181,10 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
         CARACTERISTICAS_LICENCIA.VentasEntradas,
       );
       this.puedeServicio = this.puedePropinas;
+      this.puedeCocina = this.licenciaSrv.evaluar(
+        estadoLicencia,
+        CARACTERISTICAS_LICENCIA.OperacionCocina,
+      );
 
       this.normalizarSegunLicencia();
       this.licenciaCargada = true;
@@ -206,7 +227,10 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
       valores.Precuentas = false;
       valores.NroPrecuentas = 0;
     }
-    if (!this.puedeCambioEspacio) valores.CambioEspacio = false;
+    if (!this.puedeCambioEspacio) {
+      valores.CambioEspacio = false;
+      valores.ClientePideOnlineYPagaInmediatamente = false;
+    }
     if (!this.puedeReportesCierre) {
       valores.ResumenVenta = false;
       valores.VentaPorProducto = false;
@@ -219,6 +243,10 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
     if (!this.puedeCargoDelivery) valores.TieneProductoPrecioDelivery = false;
     if (!this.puedeTragoCortesia) valores.TieneDescuentoTragoCortesia = false;
     if (!this.puedeServicio) valores.Servicio = 0;
+    if (!this.puedeCocina) {
+      valores.ManejaEstadosCocina = false;
+      this.formInicial.controls.ManejaEstadosCocina.setValue(false, { emitEvent: false });
+    }
 
     this.form.patchValue(valores, { emitEvent: false });
     this.applyBusinessRules();
@@ -390,17 +418,20 @@ export class ConfiguracionInicialComponent implements OnInit, OnDestroy {
   }
 
   guardar(): void {
+    if (this.guardando) return;
+
     const formulario = this.esModoInicial ? this.formInicial : this.form;
     if (formulario.invalid) {
       formulario.markAllAsTouched();
       this.snack.open(this.texts.get('checkRequiredFields'), this.texts.get('ok'), { duration: 3000 });
       return;
     }
+    this.guardando = true;
     const operacion = this.esModoInicial
       ? this.configSrv.saveInitial(this.formInicial.getRawValue() as ConfiguracionInicial)
       : this.configSrv.save(this.form.getRawValue() as Configuracion);
 
-    operacion.subscribe({
+    operacion.pipe(finalize(() => this.guardando = false)).subscribe({
       next: () => {
         this.snack.open(this.texts.get('configSaved'), this.texts.get('ok'), { duration: 2500 });
       // ← importante: cerrar con 'true' para que el login sepa que ya está configurado

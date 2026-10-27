@@ -37,6 +37,8 @@
     <h1>{{ cartaPublica?.Restaurante }}</h1>
     <p>Explora la carta con calma. Solo te pediremos autorización cuando decidas enviar un pedido.</p>
     <small *ngIf="cartaPublica?.Direccion"><mat-icon>location_on</mat-icon>{{ cartaPublica?.Direccion }}</small>
+    <small *ngIf="cartaPublica?.Telefono"><mat-icon>phone</mat-icon>{{ cartaPublica?.Telefono }}</small>
+    <small *ngIf="cartaPublica?.CorreoContactoPublico"><mat-icon>mail</mat-icon>{{ cartaPublica?.CorreoContactoPublico }}</small>
     <button *ngIf="cartaPublica?.AsistenteIaDisponible" class="menu-hero__assistant" type="button" (click)="abrirAsistenteGeneral()">
       <mat-icon>auto_awesome</mat-icon>
       <span><strong>¿No sabes qué elegir?</strong><small>Cuéntame qué te apetece y te ayudo.</small></span>
@@ -52,19 +54,23 @@
       <mat-icon [class.state-icon--spin]="verificandoPago">{{ pagoCompletado ? 'check_circle' : (verificandoPago ? 'sync' : 'account_balance_wallet') }}</mat-icon>
     </div>
     <div class="mobile-payment__content">
-      <strong>{{ pagoCompletado ? 'Cuenta pagada' : (verificandoPago ? 'Confirmando tu pago' : '¿Quieres pagar desde tu móvil?') }}</strong>
-      <span *ngIf="pagoCompletado || verificandoPago">{{ estadoPagoTexto }}</span>
+      <strong>{{ pagoCompletado ? 'Cuenta pagada' : (verificandoPago ? 'Confirmando tu pago' : (anticipoConfirmado ? 'Anticipo registrado' : '¿Quieres pagar desde tu móvil?')) }}</strong>
+      <span *ngIf="pagoCompletado || verificandoPago || anticipoConfirmado">{{ estadoPagoTexto }}</span>
       <span *ngIf="puedePagarCuenta && !verificandoPago">
-        Paga de forma segura. El restaurante recibirá la confirmación automáticamente.
+        Puedes abonar todo o parte del saldo. El comprobante fiscal se emitirá al cerrar la cuenta.
       </span>
     </div>
+    <label *ngIf="puedePagarCuenta && !verificandoPago" class="mobile-payment__amount">
+      <span>Importe a pagar</span>
+      <input type="number" min="0.01" step="0.01" [(ngModel)]="montoPago" placeholder="Saldo completo">
+    </label>
     <button
       *ngIf="puedePagarCuenta && !verificandoPago"
       type="button"
       [disabled]="iniciandoPago"
       (click)="pagarCuenta()">
       <mat-icon>{{ iniciandoPago ? 'progress_activity' : 'lock' }}</mat-icon>
-      {{ iniciandoPago ? 'Abriendo pago…' : 'Pagar mi cuenta' }}
+      {{ iniciandoPago ? 'Abriendo pago…' : 'Pagar a cuenta' }}
     </button>
   </section>
 
@@ -111,6 +117,13 @@
       <p *ngIf="productosVisibles.length === 0" class="empty-products">No hay productos disponibles en esta categoría.</p>
     </div>
   </section>
+
+  <footer *ngIf="cartaPublica?.UrlTerminosCondiciones || cartaPublica?.UrlCambiosDevoluciones || cartaPublica?.UrlLibroReclamaciones" class="checkout-legal">
+    <strong>Información del comercio</strong>
+    <a *ngIf="cartaPublica?.UrlTerminosCondiciones" [href]="cartaPublica?.UrlTerminosCondiciones" target="_blank" rel="noopener noreferrer">Términos y condiciones</a>
+    <a *ngIf="cartaPublica?.UrlCambiosDevoluciones" [href]="cartaPublica?.UrlCambiosDevoluciones" target="_blank" rel="noopener noreferrer">Cambios y devoluciones</a>
+    <a *ngIf="cartaPublica?.UrlLibroReclamaciones" [href]="cartaPublica?.UrlLibroReclamaciones" target="_blank" rel="noopener noreferrer">Libro de reclamaciones</a>
+  </footer>
 
   <div *ngIf="aviso" class="toast-success">{{ aviso }}</div>
   <div *ngIf="cartaDisponible && error" class="toast-error" (click)="error = ''">{{ error }}</div>
@@ -206,8 +219,15 @@
       </div>
       <p *ngIf="carrito.length === 0" class="empty-cart">Todavía no has añadido productos.</p>
       <div class="cart-total"><span>Total</span><strong>{{ carta?.Moneda }} {{ totalCarrito | number:'1.2-2' }}</strong></div>
-      <button class="primary-action" type="button" [disabled]="carrito.length === 0 || enviandoPedido" (click)="enviarPedido()">
-        {{ enviandoPedido ? 'Enviando…' : 'Enviar a preparación' }}
+      <p *ngIf="requierePagoAntesDeEnviarPedido" class="payment-required-note">
+        El pedido se enviará a preparación únicamente después de confirmarse el pago online.
+      </p>
+      <button class="primary-action" type="button" [disabled]="carrito.length === 0 || enviandoPedido || verificandoPago" (click)="enviarPedido()">
+        {{ enviandoPedido
+          ? 'Abriendo pago…'
+          : (verificandoPago
+            ? 'Esperando confirmación del pago…'
+            : (requierePagoAntesDeEnviarPedido ? 'Pagar y enviar pedido' : 'Enviar a preparación')) }}
       </button>
     </section>
   </div>
@@ -217,7 +237,7 @@
       <header>
         <div class="assistant-avatar"><mat-icon>auto_awesome</mat-icon></div>
         <div>
-          <span>{{ productoAsistente ? 'Pregunta sobre este plato' : 'Camarero virtual' }}</span>
+          <span>{{ productoAsistente ? 'Pregunta sobre este plato' : 'Cesia IA' }}</span>
           <strong>{{ productoAsistente?.Nombre || 'Te ayudo a elegir' }}</strong>
         </div>
         <button type="button" (click)="cerrarAsistente()"><mat-icon>close</mat-icon></button>

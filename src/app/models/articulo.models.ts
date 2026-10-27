@@ -30,6 +30,7 @@ export interface Articulo {
   IdImpuestoPais: string;
   Impuesto: string;
   TasaImpuesto: number;
+  Impuestos: string[];
   PresentacionesCompra: ProductoPresentacionCompra[];
 }
 
@@ -65,6 +66,7 @@ export class ArticuloGuardar {
   Inventario = false;
   Activo = true;
   IdImpuestoPais = '';
+  Impuestos: string[] = [];
   PresentacionesCompra: ProductoPresentacionCompra[] = [];
 
   constructor(init?: Partial<ArticuloGuardar>) {

@@ -1,0 +1,73 @@
+<section class="mant-panel dialog-panel--workspace conciliacion-cobros-online">
+  <header class="mant-panel__header">
+    <h2>Conciliación de cobros online</h2>
+    <div class="mant-panel__header-actions">
+      <button mat-icon-button type="button" class="mant-panel__header-action"
+              aria-label="Actualizar cobros" [disabled]="cargando" (click)="cargar()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <button mat-icon-button type="button" class="close-button" aria-label="Cerrar" (click)="cerrar()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </header>
+
+  <p class="dialog-form-section__hint">
+    Estos cobros fueron confirmados por el proveedor, pero el pedido QR no llegó a registrarse.
+    Crea o localiza la cuenta correcta y aplícalos como pago a cuenta; si no corresponde, solicita la devolución.
+  </p>
+  <div class="dialog-notice">
+    <mat-icon>info</mat-icon>
+    <span>La devolución nunca se ejecuta automáticamente. Un cobro marcado como devolución solicitada ya no puede aplicarse a una cuenta.</span>
+  </div>
+
+  <div class="dialog-empty-state" *ngIf="cargando">
+    <mat-icon>hourglass_top</mat-icon><span>Cargando cobros confirmados…</span>
+  </div>
+  <div class="dialog-empty-state" *ngIf="!cargando && cobros.length === 0">
+    <mat-icon>task_alt</mat-icon><span>No hay cobros online pendientes de conciliación.</span>
+  </div>
+
+  <div class="conciliacion-cobros-online__list" *ngIf="!cargando && cobros.length">
+    <article class="conciliacion-cobros-online__card" *ngFor="let cobro of cobros">
+      <div class="conciliacion-cobros-online__summary">
+        <div>
+          <strong>{{ cobro.Moneda }} {{ cobro.Importe | number:'1.2-2' }}</strong>
+          <span>{{ cobro.Proveedor }} · sesión {{ cobro.IdSesionMesaCliente }}</span>
+        </div>
+        <span class="conciliacion-cobros-online__status"
+              [class.conciliacion-cobros-online__status--attention]="cobro.Estado === 'Pagado'"
+              [class.conciliacion-cobros-online__status--error]="cobro.Estado === 'DevolucionFallida'">
+          {{ etiquetaEstado(cobro.Estado) }}
+        </span>
+      </div>
+      <dl class="conciliacion-cobros-online__metadata">
+        <div><dt>Confirmado</dt><dd>{{ (cobro.PagadoUtc || cobro.CreadoUtc) | date:'medium' }}</dd></div>
+        <div><dt>Referencia</dt><dd>{{ cobro.Referencia || 'No disponible' }}</dd></div>
+      </dl>
+      <p class="conciliacion-cobros-online__error" *ngIf="cobro.ErrorDevolucion">
+        {{ cobro.ErrorDevolucion }}
+      </p>
+
+      <div class="conciliacion-cobros-online__actions" *ngIf="puedeConciliar(cobro); else noDisponible">
+        <mat-form-field appearance="outline">
+          <mat-label>ID del pedido</mat-label>
+          <input matInput type="number" min="1" [(ngModel)]="destino(cobro).idPedido" [disabled]="estaProcesando(cobro)">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Número de cuenta</mat-label>
+          <input matInput type="number" min="1" [(ngModel)]="destino(cobro).nroCuenta" [disabled]="estaProcesando(cobro)">
+        </mat-form-field>
+        <button mat-stroked-button type="button" (click)="vincularComoPagoCuenta(cobro)" [disabled]="estaProcesando(cobro)">
+          <mat-icon>account_balance_wallet</mat-icon> Aplicar como pago a cuenta
+        </button>
+        <button mat-flat-button color="warn" type="button" (click)="solicitarDevolucion(cobro)" [disabled]="estaProcesando(cobro)">
+          <mat-icon>currency_exchange</mat-icon> Solicitar devolución
+        </button>
+      </div>
+      <ng-template #noDisponible>
+        <p class="conciliacion-cobros-online__unavailable">Esta operación ya no está disponible para aplicar a una cuenta.</p>
+      </ng-template>
+    </article>
+  </div>
+</section>

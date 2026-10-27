@@ -1,0 +1,186 @@
+<div class="mant-panel dialog-panel--workspace">
+  <button mat-icon-button class="close-button" aria-label="Cerrar" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2>
+    {{ tipoFormulario
+      ? (tipoFormulario === 'tipo'
+        ? (idTipoEditando ? 'Editar tipo de movimiento' : 'Nuevo tipo de movimiento')
+        : (idSubTipoEditando ? 'Editar subtipo de movimiento' : 'Nuevo subtipo de movimiento'))
+      : 'Tipos y subtipos de movimiento' }}
+  </h2>
+
+  <ng-container *ngIf="!tipoFormulario">
+    <div class="dialog-toolbar">
+      <div class="dialog-toolbar__filters dialog-toolbar__filters--single">
+        <mat-form-field appearance="fill">
+          <mat-label>Buscar clasificación</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            matInput
+            [(ngModel)]="filtro"
+            placeholder="Tipo o subtipo"
+          >
+        </mat-form-field>
+      </div>
+
+      <div class="dialog-toolbar__actions">
+        <button mat-raised-button color="primary" type="button" (click)="nuevoTipo()">
+          <mat-icon>add</mat-icon>
+          Nuevo tipo
+        </button>
+      </div>
+    </div>
+
+    <div class="dialog-workspace-content">
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>category</mat-icon>
+          Tipos de movimiento
+        </h3>
+        <p class="dialog-form-section__hint">
+          Organice las categorías que aparecerán al registrar compras y gastos.
+        </p>
+
+        <div class="dialog-table-card">
+          <div class="dialog-table-wrapper--fill">
+            <mat-table [dataSource]="tiposFiltrados">
+              <ng-container matColumnDef="descripcion">
+                <mat-header-cell *matHeaderCellDef>Tipo</mat-header-cell>
+                <mat-cell *matCellDef="let tipo">{{ tipo.Descripcion }}</mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="subtipos">
+                <mat-header-cell *matHeaderCellDef>Subtipos</mat-header-cell>
+                <mat-cell *matCellDef="let tipo">{{ tipo.SubTipos.length }}</mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="acciones">
+                <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+                <mat-cell *matCellDef="let tipo" class="dialog-table-actions-cell">
+                  <div class="dialog-table-actions dialog-table-actions--compact">
+                    <button mat-icon-button color="primary" type="button" aria-label="Ver subtipos" title="Ver subtipos" (click)="seleccionarTipo(tipo)">
+                      <mat-icon>account_tree</mat-icon>
+                    </button>
+                    <button mat-icon-button color="primary" type="button" aria-label="Editar tipo" title="Editar tipo" (click)="editarTipo(tipo)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" type="button" aria-label="Eliminar tipo" title="Eliminar tipo" (click)="eliminarTipo(tipo)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </mat-cell>
+              </ng-container>
+
+              <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+              <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+            </mat-table>
+
+            <div class="dialog-empty-state" *ngIf="!cargando && tiposFiltrados.length === 0">
+              <mat-icon>category</mat-icon>
+              <span>No se encontraron tipos de movimiento.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="dialog-form-section" *ngIf="tipoSeleccionado">
+        <div class="dialog-section-heading">
+          <div>
+            <h3 class="dialog-form-section__title">
+              <mat-icon>account_tree</mat-icon>
+              Subtipos de {{ tipoSeleccionado.Descripcion }}
+            </h3>
+            <p class="dialog-form-section__hint">
+              Los subtipos inactivos se conservan en el historial, pero no se ofrecen en nuevos registros.
+            </p>
+          </div>
+          <button mat-raised-button color="primary" type="button" (click)="nuevoSubTipo()">
+            <mat-icon>add</mat-icon>
+            Nuevo subtipo
+          </button>
+        </div>
+
+        <div class="dialog-table-card">
+          <div class="dialog-table-wrapper--fill">
+            <mat-table [dataSource]="tipoSeleccionado.SubTipos">
+              <ng-container matColumnDef="descripcion">
+                <mat-header-cell *matHeaderCellDef>Subtipo</mat-header-cell>
+                <mat-cell *matCellDef="let subtipo">{{ subtipo.Descripcion }}</mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="estado">
+                <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+                <mat-cell *matCellDef="let subtipo">
+                  <span class="status-pill" [class.status-pill--inactive]="!subtipo.Activo">
+                    {{ subtipo.Activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="acciones">
+                <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+                <mat-cell *matCellDef="let subtipo" class="dialog-table-actions-cell">
+                  <div class="dialog-table-actions dialog-table-actions--compact">
+                    <button mat-icon-button color="primary" type="button" aria-label="Editar subtipo" title="Editar subtipo" (click)="editarSubTipo(subtipo)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" type="button" aria-label="Eliminar subtipo" title="Eliminar subtipo" (click)="eliminarSubTipo(subtipo)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </mat-cell>
+              </ng-container>
+
+              <mat-header-row *matHeaderRowDef="displayedColumnsSubTipos"></mat-header-row>
+              <mat-row *matRowDef="let row; columns: displayedColumnsSubTipos"></mat-row>
+            </mat-table>
+
+            <div class="dialog-empty-state" *ngIf="tipoSeleccionado.SubTipos.length === 0">
+              <mat-icon>account_tree</mat-icon>
+              <span>Este tipo todavía no tiene subtipos.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+
+  <form *ngIf="tipoFormulario" class="dialog-form dialog-form--workspace" (ngSubmit)="guardar()">
+    <div class="dialog-form-scroll">
+      <section class="dialog-form-section">
+        <h3 class="dialog-form-section__title">
+          <mat-icon>{{ tipoFormulario === 'tipo' ? 'category' : 'account_tree' }}</mat-icon>
+          {{ tipoFormulario === 'tipo' ? 'Datos del tipo' : 'Datos del subtipo' }}
+        </h3>
+
+        <div class="dialog-form-grid">
+          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
+            <mat-label>Descripción</mat-label>
+            <input matInput name="descripcion" [(ngModel)]="descripcion" maxlength="50" required>
+            <mat-error>La descripción es obligatoria.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" *ngIf="tipoFormulario === 'subtipo'">
+            <mat-label>Estado</mat-label>
+            <mat-select name="activo" [(ngModel)]="activo" required>
+              <mat-option [value]="true">Activo</mat-option>
+              <mat-option [value]="false">Inactivo</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </section>
+    </div>
+
+    <div class="dialog-actions">
+      <button mat-stroked-button type="button" (click)="cancelar()" [disabled]="guardando">
+        Cancelar
+      </button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="guardando">
+        <mat-icon>save</mat-icon>
+        Guardar
+      </button>
+    </div>
+  </form>
+</div>

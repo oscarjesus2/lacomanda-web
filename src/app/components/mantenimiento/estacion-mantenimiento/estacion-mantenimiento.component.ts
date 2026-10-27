@@ -12,6 +12,8 @@ import { CajaDto } from 'src/app/models/caja.models';
 import { ApiResponse } from 'src/app/interfaces/apirResponse.interface';
 import { EstacionTipoEnum } from 'src/app/enums/enum';
 import { EstacionService } from 'src/app/services/estacion.service';
+import { AreaImpresionService } from 'src/app/services/area-impresion.service';
+import { AreaImpresion } from 'src/app/models/area-impresion.models';
 import { CajaService } from 'src/app/services/caja.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
@@ -63,6 +65,7 @@ export class EstacionMantenimientoComponent implements OnInit {
   descargasStockPorArea: Record<number, number | null> = {};
 
   listCajas: CajaDto[] = [];
+  areasImpresion: AreaImpresion[] = [];
   tipos: ReadonlyArray<{ value: EstacionTipoEnum; label: string }> = [];
   displayedColumns: string[] = ['descripcion', 'identificadorUnico', 'caja', 'tipo', 'actions'];
   cajaMap: Record<number, string> = {};
@@ -82,10 +85,22 @@ export class EstacionMantenimientoComponent implements OnInit {
     private readonly deviceCapabilities: DeviceCapabilitiesService,
     private readonly estadoImpresion: EstadoImpresionService,
     private readonly router: Router,
+    private readonly areaImpresionService: AreaImpresionService,
   ) {}
 
   ngOnInit(): void {
     this.inicializarTipos();
+    this.licenciaTenantService.tieneCaracteristica(
+      CARACTERISTICAS_LICENCIA.OperacionCocina,
+    ).subscribe(habilitada => {
+      if (habilitada) {
+        this.tipos = [...this.tipos, { value: EstacionTipoEnum.COCINA, label: 'Preparación' }];
+        this.areaImpresionService.listar().subscribe({
+          next: areas => this.areasImpresion = areas,
+          error: () => Notificar.informacion('Áreas de impresión', 'No se pudieron cargar las áreas de preparación.', 'warning'),
+        });
+      }
+    });
     this.cargarEstaciones();
     this.cargarCajas();
     this.cargarLicenciaAlmacen();
@@ -97,6 +112,14 @@ export class EstacionMantenimientoComponent implements OnInit {
   get esEsteDispositivo(): boolean {
     const actual = this.deviceIdentifier.getIdentifier();
     return !!actual && this.sonIguales(actual, this.estacion.IdentificadorUnico);
+  }
+
+  get esPreparacion(): boolean {
+    return this.estacion.Tipo === EstacionTipoEnum.COCINA;
+  }
+
+  alCambiarTipo(): void {
+    if (!this.esPreparacion) this.estacion.IdsAreasPreparacion = [];
   }
 
   get seVincularaEsteDispositivo(): boolean {
@@ -118,14 +141,16 @@ export class EstacionMantenimientoComponent implements OnInit {
   }
 
   get recomiendaAgenteVinculacion(): boolean {
-    return (this.esEsteDispositivo || this.seVincularaEsteDispositivo)
+    return !this.esPreparacion
+      && (this.esEsteDispositivo || this.seVincularaEsteDispositivo)
       && this.deviceCapabilities.requiresRemotePrintAgent(
         this.tipoDispositivoVinculacion,
       );
   }
 
   get muestraRequisitoQzParaVincular(): boolean {
-    return !this.esEsteDispositivo
+    return !this.esPreparacion
+      && !this.esEsteDispositivo
       && !this.seVincularaEsteDispositivo
       && this.deviceCapabilities.getDeviceType() === DispositivoTipoEnum.PC_WINDOWS;
   }
@@ -254,7 +279,7 @@ export class EstacionMantenimientoComponent implements OnInit {
 
     const tipoDispositivo = this.deviceCapabilities.getDeviceType();
     if (
-      tipoDispositivo === DispositivoTipoEnum.PC_WINDOWS &&
+      !this.esPreparacion && tipoDispositivo === DispositivoTipoEnum.PC_WINDOWS &&
       !await this.cumpleRequisitoQzParaWindows()
     ) {
       return;
@@ -401,6 +426,7 @@ export class EstacionMantenimientoComponent implements OnInit {
       IdEstacion: Number(estacionNormalizada.IdEstacion),
       IdCaja: Number(estacionNormalizada.IdCaja),
       Tipo: Number(estacionNormalizada.Tipo) as EstacionTipoEnum,
+      IdsAreasPreparacion: (estacionNormalizada.IdsAreasPreparacion ?? []).map(Number),
       IdentificadorUnico: estacionNormalizada.IdentificadorUnico,
     });
     this.identificadorPendiente = '';
@@ -676,6 +702,7 @@ export class EstacionMantenimientoComponent implements OnInit {
       [EstacionTipoEnum.ADMINISTRADOR]: 'Administrador',
       [EstacionTipoEnum.MOZO]: mozo,
       [EstacionTipoEnum.CAJA]: 'Caja',
+      [EstacionTipoEnum.COCINA]: 'Preparación',
     };
   }
 }

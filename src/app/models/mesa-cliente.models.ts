@@ -21,6 +21,7 @@ export interface EstadoAccesoMesa {
   PuedePagarCuentaOnline: boolean;
   IdPedido?: number;
   NroCuenta?: number;
+  RequierePagoOnlineAntesDeEnviarPedido: boolean;
 }
 
 export interface SolicitudMesaPendiente {
@@ -78,6 +79,11 @@ export interface ProductoCartaMesaCliente {
 export interface CartaPublicaMesaCliente {
   Restaurante: string;
   Direccion: string;
+  Telefono: string;
+  CorreoContactoPublico?: string;
+  UrlTerminosCondiciones?: string;
+  UrlCambiosDevoluciones?: string;
+  UrlLibroReclamaciones?: string;
   Ambiente: string;
   Espacio: string;
   Numero: number;
@@ -92,6 +98,7 @@ export interface MensajeAsistenteCartaMesaCliente {
 
 export interface ConsultarAsistenteCartaMesaCliente {
   IdProducto?: number | null;
+  PedidoHabilitado: boolean;
   Pregunta: string;
   Historial: MensajeAsistenteCartaMesaCliente[];
 }
@@ -139,6 +146,12 @@ export interface PedidoMesaClienteResultado {
   IdPedido: number;
   NroCuenta: number;
   Total: number;
+  RequierePagoInmediato: boolean;
+}
+
+export interface CrearCheckoutPedidoMesaCliente {
+  ReturnUrl: string;
+  Pedido: RegistrarPedidoMesaCliente;
 }
 
 export interface CheckoutCuentaMesa {
@@ -157,4 +170,21 @@ export interface EstadoPagoCuentaMesa {
   Moneda: string;
   IdVenta?: number;
   PagadoUtc?: Date;
+  Proveedor: string;
+  IdPedido?: number;
+  NroCuenta?: number;
+}
+
+export interface PagoCuentaOnlinePendiente {
+  IdIntento: string;
+  Proveedor: string;
+  Importe: number;
+  Moneda: string;
+  Referencia: string;
+  PagadoUtc: Date;
+}
+
+export interface ResumenPagosCuentaOnline {
+  TotalPagado: number;
+  Pagos: PagoCuentaOnlinePendiente[];
 }

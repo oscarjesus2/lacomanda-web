@@ -280,7 +280,9 @@ export class AppComponent implements OnInit, OnDestroy {
      ).subscribe((event: NavigationEnd) => {
        this.actualizarRealtimePorRuta(event.urlAfterRedirects);
        this.isOperationalRoute = event.urlAfterRedirects.startsWith('/caja')
-         || event.urlAfterRedirects.startsWith('/mozo');
+         || event.urlAfterRedirects.startsWith('/mozo')
+         || event.urlAfterRedirects.startsWith('/cocina')
+         || event.urlAfterRedirects.startsWith('/preparacion');
        this.operationalHeaderOpen = false;
        const newTitle = this.getTitle(event.urlAfterRedirects);
        this.dataService.updateVariable_TituloHeader(newTitle);
@@ -344,6 +346,9 @@ export class AppComponent implements OnInit, OnDestroy {
         return this.textCatalog.get('register');
       case '/mozo':
         return this.textCatalog.get('orderAttendant');
+      case '/cocina':
+      case '/preparacion':
+        return 'Preparación';
       case '/administracion':
         return this.textCatalog.get('administration');
       case '/iniciar-sesion':

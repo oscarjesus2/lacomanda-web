@@ -23,7 +23,22 @@ export enum EnumTipoIdentidad {
 export enum EstacionTipoEnum {
   ADMINISTRADOR = 0,
   MOZO = 1,
-  CAJA = 2
+  CAJA = 2,
+  COCINA = 3,
+}
+
+/** Estado operativo independiente del cobro o de la anulación financiera. */
+export enum EstadoPreparacionPedidoEnum {
+  Enviado = 1,
+  EnPreparacion = 2,
+  Preparado = 3,
+  Entregado = 4,
+}
+
+export enum TipoLineaPreparacionPedidoEnum {
+  Producto = 1,
+  Menu = 2,
+  Complemento = 3,
 }
 
 export enum CanalVentaEnum {

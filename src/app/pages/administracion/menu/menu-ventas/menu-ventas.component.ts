@@ -55,6 +55,7 @@ import { AeatConfigurationComponent } from 'src/app/components/mantenimiento/aea
 import { CpeEnvioMonitorComponent } from 'src/app/components/mantenimiento/cpe-envio-monitor/cpe-envio-monitor.component';
 import { AeatEnvioMonitorComponent } from 'src/app/components/mantenimiento/aeat-envio-monitor/aeat-envio-monitor.component';
 import { PagoCuentaOnlineConfigurationComponent } from 'src/app/components/mantenimiento/pago-cuenta-online-configuration/pago-cuenta-online-configuration.component';
+import { LibroReclamacionesMantenimientoComponent } from 'src/app/components/mantenimiento/libro-reclamaciones-mantenimiento/libro-reclamaciones-mantenimiento.component';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { UsuarioService } from 'src/app/services/usuario.service';
 
@@ -127,7 +128,7 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Observaciones',               route: '/ventas/observaciones',            icon: 'sticky_note_2',    label: 'Observac.',    titleKey: 'observations',       labelKey: 'observations',       feature: C.OperacionCaja, ocultarEnComercio: true },
         { title: 'Empleados',                   route: '/ventas/empleados',                icon: 'badge',            label: 'Empleados',    titleKey: 'employees',          labelKey: 'employees'          },
         { title: 'Usuarios',                    route: '/ventas/usuarios',                 icon: 'manage_accounts',  label: 'Usuarios',     titleKey: 'users',              labelKey: 'users' },
-        { title: 'Bancos',                      route: '/ventas/bancos',                  icon: 'account_balance',  label: 'Bancos',       titleKey: 'banks',              labelKey: 'banks',              feature: [C.OperacionComprobantes, C.VentasCorreccionDocumentos] },
+        { title: 'Bancos',                      route: '/ventas/bancos',                  icon: 'account_balance',  label: 'Bancos',       titleKey: 'banks',              labelKey: 'banks',              feature: C.OperacionComprobantes },
         { title: 'Caja',                        route: '/ventas/caja',                     icon: 'point_of_sale',    label: 'Caja',         titleKey: 'register',           labelKey: 'register',           feature: C.OperacionCaja   },
         { title: 'Estacion',                    route: '/ventas/estacion',                 icon: 'computer',         label: 'Estación',     titleKey: 'station',            labelKey: 'station',            feature: C.OperacionCaja, ocultarEnComercio: true },
         { title: 'Descuentos',                  route: '/ventas/descuentos',               icon: 'local_offer',      label: 'Descuentos',   titleKey: 'discounts',          labelKey: 'discounts',          feature: C.VentasDescuentos },
@@ -142,7 +143,8 @@ export class MenuVentasComponent implements OnInit {
         { title: 'Abrir Turno',      route: '/ventas/abrir-turno',        icon: 'lock_open',    label: 'Abrir turno',  titleKey: 'openShift',  labelKey: 'openShift',  feature: C.OperacionCaja },
         { title: 'Cerrar Turno',     route: '/ventas/cerrar-turno',       icon: 'lock',         label: 'Cerrar turno', titleKey: 'closeShift', labelKey: 'closeShift', feature: C.OperacionCaja },
         { title: 'Listado de Ventas',route: '/ventas/cerrar-turno',       icon: 'receipt_long', label: 'Ventas',       titleKey: 'salesList',  labelKey: 'sales',      feature: C.OperacionReportes },
-        { title: 'Reservas online', route: '/ventas/reservas', icon: 'event_available', label: 'Reservas', feature: C.VentasReservasOnline }
+        { title: 'Reservas online', route: '/ventas/reservas', icon: 'event_available', label: 'Reservas', feature: C.VentasReservasOnline },
+        { title: 'Libro de Reclamaciones', route: '/ventas/libro-reclamaciones', icon: 'fact_check', label: 'Libro reclam.', feature: C.VentasPagoCuentaOnline }
       ]
     },
     {
@@ -336,6 +338,10 @@ export class MenuVentasComponent implements OnInit {
     if (item.title === 'Reservas online')
     {
       this.OpenReservasMantenimientoComponent();
+    }
+    if (item.title === 'Libro de Reclamaciones')
+    {
+      this.OpenLibroReclamacionesMantenimientoComponent();
     }
     if (item.title === 'Contable') 
     {
@@ -609,6 +615,16 @@ export class MenuVentasComponent implements OnInit {
       width: '860px',
       height: '600px',
       panelClass: 'dialog-window--maintenance-table',
+    });
+  }
+
+  OpenLibroReclamacionesMantenimientoComponent(codigo?: string): void {
+    this.dialog.open(LibroReclamacionesMantenimientoComponent, {
+      ...this.configuracionMaestroCompacto,
+      width: '1120px',
+      height: '720px',
+      panelClass: 'dialog-window--maintenance-table',
+      data: codigo ? { codigo } : undefined,
     });
   }
 

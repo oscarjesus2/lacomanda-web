@@ -4,8 +4,19 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2 *ngIf="esModoInicial">{{ 'initialSetup' | tenantText }}</h2>
-  <h2 *ngIf="!esModoInicial">{{ 'configurationMaintenance' | tenantText }}</h2>
+  <div class="config-panel__header">
+    <h2 *ngIf="esModoInicial">{{ 'initialSetup' | tenantText }}</h2>
+    <h2 *ngIf="!esModoInicial">{{ 'configurationMaintenance' | tenantText }}</h2>
+
+    <div
+      *ngIf="!esModoInicial && licenciaCargada && nombrePlanLicencia"
+      class="config-panel__license"
+      [attr.title]="codigoPlanLicencia">
+      <mat-icon>workspace_premium</mat-icon>
+      <span class="config-panel__license-label">{{ 'licensePlan' | tenantText }}</span>
+      <strong>{{ nombrePlanLicencia }}</strong>
+    </div>
+  </div>
 
   <form
     *ngIf="esModoInicial"
@@ -59,8 +70,19 @@
       </div>
     </section>
 
+    <section class="card" *ngIf="puedeCocina">
+      <h3>Operación de preparación</h3>
+      <div class="hint">
+        Actívalo cuando el restaurante vaya a trabajar con el tablero de preparación.
+        Los productos nuevos empezarán en enviado; el cobro seguirá funcionando igual.
+      </div>
+      <mat-slide-toggle formControlName="ManejaEstadosCocina">
+        Manejar estados de preparación
+      </mat-slide-toggle>
+    </section>
+
     <div class="actions">
-      <button mat-raised-button color="primary" type="submit">
+      <button mat-raised-button color="primary" type="submit" [disabled]="guardando">
         {{ 'saveAndStart' | tenantText }}
       </button>
     </div>
@@ -262,6 +284,11 @@
           {{ 'allowSpaceChange' | tenantText }}
         </mat-slide-toggle>
 
+        <mat-slide-toggle *ngIf="puedeCambioEspacio"
+                          formControlName="ClientePideOnlineYPagaInmediatamente">
+          Cliente pide online y paga inmediatamente
+        </mat-slide-toggle>
+
         <!-- N° pre-cuentas, ligado al toggle -->
         <mat-form-field
           *ngIf="puedePrecuentas"
@@ -275,6 +302,20 @@
             formControlName="NroPrecuentas"
             min="1" />
         </mat-form-field>
+      </div>
+    </section>
+
+    <section class="card" *ngIf="puedeCocina">
+      <h3>Operación de preparación</h3>
+      <div class="toggles">
+        <mat-slide-toggle formControlName="ManejaEstadosCocina">
+          Manejar estados de preparación
+        </mat-slide-toggle>
+      </div>
+      <div class="hint">
+        Habilita el tablero táctil para que cada área marque sus productos como en
+        preparación o preparado. El mozo puede entregarlo en cualquier momento
+        y la facturación no se modifica.
       </div>
     </section>
 
@@ -367,7 +408,7 @@
          ACCIONES
     ========================== -->
     <div class="actions">
-      <button mat-raised-button color="primary" type="submit">
+      <button mat-raised-button color="primary" type="submit" [disabled]="guardando">
         {{ 'save' | tenantText }}
       </button>
     </div>

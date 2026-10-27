@@ -1,0 +1,29 @@
+<section class="mant-panel dialog-panel--workspace libro-reclamaciones">
+  <button mat-icon-button class="close-button" type="button" aria-label="Cerrar" (click)="cerrar()"><mat-icon>close</mat-icon></button>
+  <h2>Libro de Reclamaciones</h2>
+  <p class="dialog-form-section__hint">Solicitudes registradas por los consumidores. Todas las fechas se muestran en la zona horaria de este equipo.</p>
+
+  <div class="dialog-empty-state" *ngIf="cargando"><mat-icon>hourglass_top</mat-icon><span>Cargando solicitudes…</span></div>
+  <div class="libro-reclamaciones__content" *ngIf="!cargando">
+    <aside class="libro-reclamaciones__list" *ngIf="reclamaciones.length; else empty">
+      <button type="button" *ngFor="let reclamacion of reclamaciones" (click)="seleccionar(reclamacion)" [class.is-selected]="seleccionada?.Codigo === reclamacion.Codigo">
+        <strong>{{ reclamacion.Tipo }} · {{ reclamacion.NombreConsumidor }}</strong>
+        <span>{{ reclamacion.RegistradaUtc | date:'medium' }}</span>
+        <small>{{ reclamacion.Codigo }}</small>
+      </button>
+    </aside>
+    <article class="libro-reclamaciones__detail" *ngIf="seleccionada as reclamacion">
+      <h3>{{ reclamacion.Tipo }} <small>{{ reclamacion.Codigo }}</small></h3>
+      <dl>
+        <div><dt>Consumidor</dt><dd>{{ reclamacion.NombreConsumidor }} · {{ reclamacion.TipoDocumento }} {{ reclamacion.NumeroDocumento }}</dd></div>
+        <div><dt>Contacto</dt><dd>{{ reclamacion.Correo }}<span *ngIf="reclamacion.Telefono"> · {{ reclamacion.Telefono }}</span></dd></div>
+        <div><dt>Dirección</dt><dd>{{ reclamacion.Direccion }}</dd></div>
+        <div><dt>Producto o servicio</dt><dd>{{ reclamacion.BienContratado }}</dd></div>
+        <div *ngIf="reclamacion.MontoReclamado !== null && reclamacion.MontoReclamado !== undefined"><dt>Monto reclamado</dt><dd>{{ reclamacion.MontoReclamado | number:'1.2-2' }}</dd></div>
+        <div><dt>Detalle</dt><dd>{{ reclamacion.Detalle }}</dd></div>
+        <div><dt>Pedido del consumidor</dt><dd>{{ reclamacion.PedidoConsumidor }}</dd></div>
+      </dl>
+    </article>
+  </div>
+  <ng-template #empty><div class="dialog-empty-state"><mat-icon>inbox</mat-icon><span>No hay solicitudes registradas.</span></div></ng-template>
+</section>

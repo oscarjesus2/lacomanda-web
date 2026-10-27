@@ -5,7 +5,13 @@ export interface ConfiguracionPagoCuentaOnline {
   MoneiAccountId?: string;
   CulqiPublicKey?: string;
   CredencialPrivadaConfigurada: boolean;
+  CorreoContactoPublico?: string;
+  UrlTerminosCondiciones?: string;
+  UrlCambiosDevoluciones?: string;
+  UrlLibroReclamaciones?: string;
+  RequisitosCulqiConfirmados: boolean;
   UrlWebhook: string;
+  SecretoWebhookConfigurado: boolean;
 }
 
 export interface ActualizarConfiguracionPagoCuentaOnline {
@@ -14,4 +20,10 @@ export interface ActualizarConfiguracionPagoCuentaOnline {
   MoneiApiKey?: string;
   CulqiPublicKey?: string;
   CulqiSecretKey?: string;
+  CulqiWebhookSecret?: string;
+  CorreoContactoPublico?: string;
+  UrlTerminosCondiciones?: string;
+  UrlCambiosDevoluciones?: string;
+  UrlLibroReclamaciones?: string;
+  RequisitosCulqiConfirmados: boolean;
 }

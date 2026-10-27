@@ -43,6 +43,7 @@ export interface EmitirVentaDirectaRequest {
   FechaDocumento?: string;
   Observacion?: string;
   UsarClienteGenerico: boolean;
+  ConfirmarEmisionSinConfiguracionSunat?: boolean;
   VentaAlCredito?: boolean;
   Cliente: Cliente | null;
   Detalles: VentaDirectaDetalle[];

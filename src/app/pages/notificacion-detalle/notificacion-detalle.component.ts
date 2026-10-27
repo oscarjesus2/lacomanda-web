@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { NotificacionDetalle } from 'src/app/models/notificacion.models';
@@ -28,7 +28,8 @@ export class NotificacionDetalleComponent implements OnInit, OnDestroy {
 
   constructor(private readonly route: ActivatedRoute, private readonly bandeja: BandejaNotificacionesService,
     private readonly dialog: MatDialog, private readonly api: SolicitudAutorizacionService,
-    private readonly realtime: SolicitudesAutorizacionRealtimeService, private readonly texts: TenantTextCatalogService) {}
+    private readonly realtime: SolicitudesAutorizacionRealtimeService, private readonly texts: TenantTextCatalogService,
+    private readonly router: Router) {}
 
   ngOnInit(): void {
     this.subscription = this.route.paramMap.subscribe(params => {
@@ -51,6 +52,11 @@ export class NotificacionDetalleComponent implements OnInit, OnDestroy {
       this.errorLectura = false;
       try { await this.bandeja.marcarLeida(id); }
       catch { this.errorLectura = true; }
+      if (detalle.LibroReclamacion) {
+        await this.router.navigate(['/administracion'], {
+          queryParams: { 'libro-reclamacion': detalle.LibroReclamacion.Codigo },
+        });
+      }
     } catch { if (this.id === id) this.error = true; }
     finally { if (this.id === id) this.cargando = false; }
   }
