@@ -1,5 +1,6 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { fechaReporte, imprimirReporte } from 'src/app/shared/impresion/imprimir-reporte';
+import { Component, Inject, OnInit, Optional, ViewChild } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import * as XLSX from 'xlsx';
@@ -34,6 +35,7 @@ export class RentabilidadProductoCanalReporteComponent implements OnInit {
   );
   fechaHasta = this.formatearFecha(new Date());
   filtro = '';
+  private periodoConsultado = '';
   monedaSimbolo = '';
   cargando = false;
 
@@ -41,8 +43,11 @@ export class RentabilidadProductoCanalReporteComponent implements OnInit {
     private readonly dialogRef: MatDialogRef<RentabilidadProductoCanalReporteComponent>,
     private readonly canalVentaService: CanalVentaService,
     private readonly configuracionService: ConfiguracionService,
-    private readonly reportesService: ReportesAlmacenService
+    private readonly reportesService: ReportesAlmacenService,
+    @Optional() @Inject(MAT_DIALOG_DATA) data?: { desde?: string; hasta?: string; subarea?: number }
   ) {
+    if (data?.desde) this.fechaDesde = data.desde;
+    if (data?.hasta) this.fechaHasta = data.hasta;
     this.dataSource.filterPredicate = (item, filter) =>
       this.normalizar(`${item.IdProducto} ${item.Producto} ${item.CanalVenta}`)
         .includes(filter);
@@ -59,6 +64,7 @@ export class RentabilidadProductoCanalReporteComponent implements OnInit {
       return;
     }
 
+    const periodo = `Período consultado: ${fechaReporte(this.fechaDesde)} — ${fechaReporte(this.fechaHasta)}`;
     this.cargando = true;
     this.reportesService.consultarRentabilidadProductoCanal(
       this.fechaDesde,
@@ -72,6 +78,7 @@ export class RentabilidadProductoCanalReporteComponent implements OnInit {
           return;
         }
 
+        this.periodoConsultado = periodo;
         this.resultado = response.Data;
         this.dataSource.data = response.Data?.Items ?? [];
         this.aplicarFiltro();
@@ -99,7 +106,17 @@ export class RentabilidadProductoCanalReporteComponent implements OnInit {
       return;
     }
 
-    const hoja = XLSX.utils.json_to_sheet(items.map(item => ({
+    const hoja = XLSX.utils.json_to_sheet(this.filasParaReporte());
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Rentabilidad');
+    XLSX.writeFile(
+      libro,
+      `rentabilidad-producto-canal_${this.fechaDesde}_${this.fechaHasta}.xlsx`
+    );
+  }
+
+  private filasParaReporte(paraImprimir = false) {
+    return this.dataSource.filteredData.map(item => ({
       Código: item.IdProducto,
       Producto: item.Producto,
       Canal: item.CanalVenta,
@@ -113,13 +130,16 @@ export class RentabilidadProductoCanalReporteComponent implements OnInit {
       Margen: item.Margen,
       'Margen %': item.MargenPorcentaje,
       'Documentos sin costo': item.VentasSinCosto
-    })));
-    const libro = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(libro, hoja, 'Rentabilidad');
-    XLSX.writeFile(
-      libro,
-      `rentabilidad-producto-canal_${this.fechaDesde}_${this.fechaHasta}.xlsx`
-    );
+    }));
+  }
+
+  imprimir(): void {
+    const filas = this.filasParaReporte(true);
+    const detalles = [
+      this.periodoConsultado,
+      this.filtro.trim() ? `Búsqueda: ${this.filtro.trim()}` : ''
+    ];
+    imprimirReporte({ titulo: 'Rentabilidad por producto y canal', filas, detalles });
   }
 
   cerrar(): void {

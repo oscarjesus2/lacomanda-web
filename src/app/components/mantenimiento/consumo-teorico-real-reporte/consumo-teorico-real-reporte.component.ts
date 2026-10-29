@@ -1,5 +1,6 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { fechaReporte, imprimirReporte } from 'src/app/shared/impresion/imprimir-reporte';
+import { Component, Inject, OnInit, Optional, ViewChild } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import * as XLSX from 'xlsx';
@@ -40,13 +41,18 @@ export class ConsumoTeoricoRealReporteComponent implements OnInit {
   );
   fechaHasta = this.formatearFecha(new Date());
   filtro = '';
+  private periodoConsultado = '';
   cargando = false;
 
   constructor(
     private readonly dialogRef: MatDialogRef<ConsumoTeoricoRealReporteComponent>,
     private readonly subAreaService: SubAreaAlmacenService,
-    private readonly reportesService: ReportesAlmacenService
+    private readonly reportesService: ReportesAlmacenService,
+    @Optional() @Inject(MAT_DIALOG_DATA) data?: { desde?: string; hasta?: string; subarea?: number }
   ) {
+    if (data?.desde) this.fechaDesde = data.desde;
+    if (data?.hasta) this.fechaHasta = data.hasta;
+    if (data?.subarea) this.idSubAreaAlmacen = data.subarea;
     this.dataSource.filterPredicate = (item, filter) =>
       this.normalizar(
         `${item.IdInventario} ${item.SubAreaAlmacen} ${item.IdArticulo} ` +
@@ -64,6 +70,7 @@ export class ConsumoTeoricoRealReporteComponent implements OnInit {
       return;
     }
 
+    const periodo = `Período consultado: ${fechaReporte(this.fechaDesde)} — ${fechaReporte(this.fechaHasta)}`;
     this.cargando = true;
     this.reportesService.consultarConsumoTeoricoReal(
       this.fechaDesde,
@@ -77,6 +84,7 @@ export class ConsumoTeoricoRealReporteComponent implements OnInit {
           return;
         }
 
+        this.periodoConsultado = periodo;
         this.resultado = response.Data;
         this.dataSource.data = response.Data?.Items ?? [];
         this.aplicarFiltro();
@@ -104,9 +112,19 @@ export class ConsumoTeoricoRealReporteComponent implements OnInit {
       return;
     }
 
-    const hoja = XLSX.utils.json_to_sheet(items.map(item => ({
+    const hoja = XLSX.utils.json_to_sheet(this.filasParaReporte());
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Teórico vs real');
+    XLSX.writeFile(
+      libro,
+      `consumo-teorico-real_${this.fechaDesde}_${this.fechaHasta}.xlsx`
+    );
+  }
+
+  private filasParaReporte(paraImprimir = false) {
+    return this.dataSource.filteredData.map(item => ({
       Inventario: item.IdInventario,
-      Fecha: item.FechaInventario,
+      Fecha: paraImprimir ? fechaReporte(item.FechaInventario) : item.FechaInventario,
       Subárea: item.SubAreaAlmacen,
       Artículo: item.Articulo,
       Unidad: item.UnidadMedida,
@@ -117,13 +135,16 @@ export class ConsumoTeoricoRealReporteComponent implements OnInit {
       'Consumo real': item.ConsumoReal,
       Diferencia: item.Diferencia,
       'Diferencia %': item.DiferenciaPorcentaje
-    })));
-    const libro = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(libro, hoja, 'Teórico vs real');
-    XLSX.writeFile(
-      libro,
-      `consumo-teorico-real_${this.fechaDesde}_${this.fechaHasta}.xlsx`
-    );
+    }));
+  }
+
+  imprimir(): void {
+    const filas = this.filasParaReporte(true);
+    const detalles = [
+      this.periodoConsultado,
+      this.filtro.trim() ? `Búsqueda: ${this.filtro.trim()}` : ''
+    ];
+    imprimirReporte({ titulo: 'Consumo teórico versus real', filas, detalles });
   }
 
   cerrar(): void {

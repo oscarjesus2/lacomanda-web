@@ -2864,6 +2864,11 @@ body {
   margin-bottom: 14px;
 }
 
+.dialog-summary-scroll {
+  max-height: 180px;
+  overflow: auto;
+}
+
 .dialog-summary-card {
   display: flex;
   min-height: 58px;
@@ -7263,3 +7268,17 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
   .libro-reclamaciones__content { grid-template-columns: 1fr; overflow: auto; }
   .libro-reclamaciones__list { max-height: 230px; border-right: 0; border-bottom: 1px solid #ead9cf; }
 }
+
+/* Paneles de análisis gerencial reutilizables en diálogos de administración. */
+.warehouse-executive__scroll { overflow: auto; flex: 1; min-height: 0; padding: 2px 2px 16px; }
+.warehouse-executive__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.warehouse-executive__panel { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.warehouse-executive__state { color: var(--color-text-muted); font-size: .85rem; padding: 12px 0; }
+.warehouse-chart { display: grid; gap: 12px; padding: 10px 0; }
+.warehouse-chart__row { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(60px, 1.4fr) auto; gap: 10px; align-items: center; font-size: .76rem; }
+.warehouse-chart__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.warehouse-chart__track { background: var(--color-surface-warm); height: 11px; border-radius: 10px; overflow: hidden; }
+.warehouse-chart__bar { display: block; height: 100%; border-radius: inherit; background: var(--color-primary); }
+.warehouse-chart__row strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+@media (max-width: 800px) { .warehouse-executive__grid { grid-template-columns: 1fr; } }
+.warehouse-chart__bar--negative { background: #b42318; }

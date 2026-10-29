@@ -1,3 +1,6 @@
+import { DashboardAlmacenComponent } from 'src/app/components/mantenimiento/dashboard-almacen/dashboard-almacen.component';
+import { puedeVerDashboardAlmacen } from 'src/app/components/mantenimiento/dashboard-almacen/dashboard-almacen.utils';
+import { UsuarioService } from 'src/app/services/usuario.service';
 import { Component, OnInit } from '@angular/core';
 import { ComponentType } from '@angular/cdk/portal';
 import { MatDialog } from '@angular/material/dialog';
@@ -23,6 +26,7 @@ import { VentaCostoReporteComponent } from 'src/app/components/mantenimiento/ven
 import { ConsumoTeoricoRealReporteComponent } from 'src/app/components/mantenimiento/consumo-teorico-real-reporte/consumo-teorico-real-reporte.component';
 import { RentabilidadProductoCanalReporteComponent } from 'src/app/components/mantenimiento/rentabilidad-producto-canal-reporte/rentabilidad-producto-canal-reporte.component';
 import { CoberturaStockReporteComponent } from 'src/app/components/mantenimiento/cobertura-stock-reporte/cobertura-stock-reporte.component';
+import { AnalisisAlmacenComponent } from 'src/app/components/mantenimiento/analisis-almacen/analisis-almacen.component';
 import {
   EstadoLicenciaTenant,
   LicenciaTenantService,
@@ -48,7 +52,13 @@ export class MenuAlmacenComponent implements OnInit {
     habilitadas: new Set<string>(),
   };
 
+  private puedeVerDashboard = false;
+
   almacenMenu: any[] = [
+    {
+      title: 'Análisis gerencial', titleKey: 'warehouseExecutiveAnalysis', feature: [C.AlmacenGestion, C.OperacionReportes],
+      children: [{ action: 'dashboardAlmacen', feature: [C.AlmacenGestion, C.OperacionReportes], gerencial: true, icon: 'query_stats', titleKey: 'warehouseExecutiveDashboard', labelKey: 'warehouseExecutiveDashboard', disabled: false }]
+    },
     {
       title: 'Maestros',
       titleKey: 'menuMasters',
@@ -203,8 +213,8 @@ export class MenuAlmacenComponent implements OnInit {
           feature: C.AlmacenKardex,
           icon: 'query_stats',
           label: 'Stock por área',
-          titleKey: 'stockByArea',
-          labelKey: 'stockByArea',
+          titleKey: 'warehouseStockQuery',
+          labelKey: 'warehouseStockQuery',
           disabled: false
         },
         {
@@ -213,9 +223,24 @@ export class MenuAlmacenComponent implements OnInit {
           feature: C.AlmacenKardex,
           icon: 'receipt_long',
           label: 'Kardex',
-          titleKey: 'warehouseKardex',
-          labelKey: 'warehouseKardex',
+          titleKey: 'warehouseStockMovements',
+          labelKey: 'warehouseStockMovements',
           disabled: false
+        },
+        {
+          action: 'sinMovimientoAlmacen', feature: C.AlmacenKardex,
+          icon: 'inventory_2', titleKey: 'warehouseNoMovement',
+          labelKey: 'warehouseNoMovement', disabled: false
+        }
+      ]
+    },
+    {
+      title: 'Consultas de compras', titleKey: 'warehousePurchaseQueries',
+      children: [
+        {
+          action: 'cuentaProveedorAlmacen', feature: C.AlmacenCompras,
+          icon: 'account_balance_wallet', titleKey: 'warehousePayables',
+          labelKey: 'warehousePayables', disabled: false
         }
       ]
     },
@@ -246,8 +271,8 @@ export class MenuAlmacenComponent implements OnInit {
       ]
     },
     {
-      title: 'Reportes',
-      titleKey: 'menuReports',
+      title: 'Reportes de inventario',
+      titleKey: 'warehouseInventoryReports',
       feature: C.OperacionReportes,
       children: [
         {
@@ -261,16 +286,6 @@ export class MenuAlmacenComponent implements OnInit {
           disabled: false
         },
         {
-          title: 'Venta versus costo histórico',
-          action: 'ventaCosto',
-          feature: [C.AlmacenGestion, C.OperacionReportes],
-          icon: 'analytics',
-          label: 'Venta vs. costo',
-          titleKey: 'salesVersusCost',
-          labelKey: 'salesVersusCost',
-          disabled: false
-        },
-        {
           title: 'Consumo teórico versus real',
           action: 'consumoTeoricoReal',
           feature: [C.AlmacenGestion, C.OperacionReportes],
@@ -281,32 +296,73 @@ export class MenuAlmacenComponent implements OnInit {
           disabled: false
         },
         {
-          title: 'Rentabilidad por producto y canal',
-          action: 'rentabilidadProductoCanal',
-          feature: [C.AlmacenGestion, C.OperacionReportes],
-          icon: 'trending_up',
-          label: 'Rentabilidad',
-          titleKey: 'profitabilityByProductChannel',
-          labelKey: 'profitabilityByProductChannel',
-          disabled: false
-        },
-        {
           title: 'Cobertura de stock',
           action: 'coberturaStock',
           feature: [C.AlmacenGestion, C.OperacionReportes],
           icon: 'hourglass_bottom',
           label: 'Cobertura de stock',
-          titleKey: 'stockCoverage',
-          labelKey: 'stockCoverage',
+          titleKey: 'warehouseStockDuration',
+          labelKey: 'warehouseStockDuration',
           disabled: false
+        },
+        {
+          action: 'salidaMotivoAlmacen', feature: [C.AlmacenGestion, C.OperacionReportes],
+          icon: 'assignment_late', titleKey: 'warehouseOutputsByReason',
+          labelKey: 'warehouseOutputsByReason', disabled: false
+        },
+        { action: 'transferenciasAnalisisAlmacen', feature: [C.AlmacenGestion, C.OperacionReportes], icon: 'swap_horiz', titleKey: 'warehouseTransfersReport', labelKey: 'warehouseTransfersReport', disabled: false },
+        { action: 'anulacionesAlmacen', feature: [C.AlmacenGestion, C.AlmacenCompras, C.OperacionReportes], icon: 'history', titleKey: 'warehouseCancellationsReport', labelKey: 'warehouseCancellationsReport', disabled: false }
+      ]
+    },
+    {
+      title: 'Reportes de costos y rentabilidad',
+      titleKey: 'warehouseCostReports',
+      feature: C.OperacionReportes,
+      children: [
+        {
+          action: 'ventaCosto', feature: [C.AlmacenGestion, C.OperacionReportes],
+          icon: 'analytics', titleKey: 'warehouseHistoricalCosts', labelKey: 'warehouseHistoricalCosts',
+          disabled: false
+        },
+        {
+          action: 'rentabilidadProductoCanal', feature: [C.AlmacenGestion, C.OperacionReportes],
+          icon: 'trending_up', titleKey: 'profitabilityByProductChannel',
+          labelKey: 'profitabilityByProductChannel', disabled: false
+        },
+        {
+          action: 'valorStockAlmacen', feature: [C.AlmacenGestion, C.OperacionReportes],
+          icon: 'price_check', titleKey: 'warehouseStockValue',
+          labelKey: 'warehouseStockValue', disabled: false
         }
       ]
+    },
+    {
+      title: 'Reportes de compras', titleKey: 'warehousePurchaseReports',
+      feature: C.OperacionReportes,
+      children: [{
+        action: 'compraPrecioAlmacen', feature: [C.AlmacenCompras, C.OperacionReportes],
+        icon: 'local_shipping', titleKey: 'warehousePurchasePrices',
+        labelKey: 'warehousePurchasePrices', disabled: false
+      },
+      { action: 'concentracionComprasAlmacen', feature: [C.AlmacenCompras, C.OperacionReportes], icon: 'pie_chart', titleKey: 'warehousePurchaseConcentration', labelKey: 'warehousePurchaseConcentration', disabled: false },
+      { action: 'notasCompraAlmacen', feature: [C.AlmacenCompras, C.OperacionReportes], icon: 'receipt_long', titleKey: 'warehousePurchaseNotes', labelKey: 'warehousePurchaseNotes', disabled: false }]
+    },
+    {
+      title: 'Reportes de transformación', titleKey: 'warehouseTransformationReports',
+      feature: C.OperacionReportes,
+      children: [{
+        action: 'mermaAlmacen', feature: [C.AlmacenGestion, C.OperacionReportes],
+        icon: 'content_cut', titleKey: 'warehousePortionWaste',
+        labelKey: 'warehousePortionWaste', disabled: false
+      },
+      { action: 'produccionAnalisisAlmacen', feature: [C.AlmacenGestion, C.OperacionReportes], icon: 'precision_manufacturing', titleKey: 'warehouseProductionReport', labelKey: 'warehouseProductionReport', disabled: false }]
     }
   ];
 
   constructor(
     private readonly dialog: MatDialog,
-    private readonly licenciaTenantService: LicenciaTenantService
+    private readonly licenciaTenantService: LicenciaTenantService,
+    private readonly usuarioService: UsuarioService
   ) {}
 
   /**
@@ -324,7 +380,7 @@ export class MenuAlmacenComponent implements OnInit {
 
   itemsVisibles(section: any): any[] {
     return (section.children ?? []).filter((item: any) =>
-      this.cubiertoPorLicencia(item.feature),
+      this.cubiertoPorLicencia(item.feature) && (!item.gerencial || this.puedeVerDashboard),
     );
   }
 
@@ -338,6 +394,7 @@ export class MenuAlmacenComponent implements OnInit {
 
   openDialog(item: any): void {
     const components: Record<string, ComponentType<unknown>> = {
+      dashboardAlmacen: DashboardAlmacenComponent,
       articulos: ArticuloMantenimientoComponent,
       recetas: RecetaMantenimientoComponent,
       inventarios: InventarioMantenimientoComponent,
@@ -348,6 +405,17 @@ export class MenuAlmacenComponent implements OnInit {
       consumoTeoricoReal: ConsumoTeoricoRealReporteComponent,
       rentabilidadProductoCanal: RentabilidadProductoCanalReporteComponent,
       coberturaStock: CoberturaStockReporteComponent,
+      produccionAnalisisAlmacen: AnalisisAlmacenComponent,
+      transferenciasAnalisisAlmacen: AnalisisAlmacenComponent,
+      concentracionComprasAlmacen: AnalisisAlmacenComponent,
+      notasCompraAlmacen: AnalisisAlmacenComponent,
+      anulacionesAlmacen: AnalisisAlmacenComponent,
+      compraPrecioAlmacen: AnalisisAlmacenComponent,
+      mermaAlmacen: AnalisisAlmacenComponent,
+      salidaMotivoAlmacen: AnalisisAlmacenComponent,
+      valorStockAlmacen: AnalisisAlmacenComponent,
+      cuentaProveedorAlmacen: AnalisisAlmacenComponent,
+      sinMovimientoAlmacen: AnalisisAlmacenComponent,
       areasAlmacen: AreaAlmacenMantenimientoComponent,
       subareasAlmacen: SubAreaAlmacenMantenimientoComponent,
       proveedores: ProveedorMantenimientoComponent,
@@ -400,10 +468,16 @@ export class MenuAlmacenComponent implements OnInit {
       elementoActivo.blur();
     }
 
-    this.dialog.open(component, configuracion);
+    this.dialog.open(component, component === AnalisisAlmacenComponent
+      ? { ...configuracion, data: { tipo: item.action } }
+      : configuracion);
   }
 
   ngOnInit(): void {
+    this.usuarioService.getUsuarioActual().subscribe({
+      next: respuesta => this.puedeVerDashboard = puedeVerDashboardAlmacen(respuesta?.Data),
+      error: () => this.puedeVerDashboard = false,
+    });
     this.licenciaTenantService
       .obtenerEstado()
       .subscribe(estado => (this.estadoLicencia = estado));

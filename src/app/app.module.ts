@@ -1,3 +1,4 @@
+import { DashboardAlmacenComponent } from './components/mantenimiento/dashboard-almacen/dashboard-almacen.component';
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA, LOCALE_ID } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
@@ -114,6 +115,8 @@ import { CoberturaStockReporteComponent } from './components/mantenimiento/cober
 import { AreaAlmacenMantenimientoComponent } from './components/mantenimiento/area-almacen-mantenimiento/area-almacen-mantenimiento.component';
 import { SubAreaAlmacenMantenimientoComponent } from './components/mantenimiento/subarea-almacen-mantenimiento/subarea-almacen-mantenimiento.component';
 import { EntradaCompraMantenimientoComponent } from './components/mantenimiento/entrada-compra-mantenimiento/entrada-compra-mantenimiento.component';
+import { AnalisisAlmacenComponent } from './components/mantenimiento/analisis-almacen/analisis-almacen.component';
+import { PagosProveedorComponent } from './components/mantenimiento/pagos-proveedor/pagos-proveedor.component';
 import { ProveedorMantenimientoComponent } from './components/mantenimiento/proveedor-mantenimiento/proveedor-mantenimiento.component';
 import { ProductoComboMantenimientoComponent } from './components/mantenimiento/producto-combo-mantenimiento/producto-combo-mantenimiento.component';
 import { FamiliaMantenimientoComponent } from './components/mantenimiento/familia-mantenimiento/familia-mantenimiento.component';
@@ -260,6 +263,9 @@ export const MY_DATE_FORMATS = {
     AreaAlmacenMantenimientoComponent,
     SubAreaAlmacenMantenimientoComponent,
     EntradaCompraMantenimientoComponent,
+    AnalisisAlmacenComponent,
+    DashboardAlmacenComponent,
+    PagosProveedorComponent,
     ProveedorMantenimientoComponent,
     ProductoComboMantenimientoComponent,
     FamiliaMantenimientoComponent,

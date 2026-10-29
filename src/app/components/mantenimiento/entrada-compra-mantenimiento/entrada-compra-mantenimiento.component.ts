@@ -12,8 +12,6 @@ import {
   EntradaCompraImpuesto,
   EntradaCompraLineaGuardar,
   EntradaCompraPresentacion,
-  PagoProveedor,
-  PagoProveedorGuardar,
   EntradaCompraResumen,
   EntradaCompraSubMovimiento,
   CuotaDocumentosCompraIa,
@@ -30,6 +28,7 @@ import { ProveedorService } from 'src/app/services/proveedor.service';
 import { Notificar } from 'src/app/shared/notificaciones';
 import { Articulo } from 'src/app/models/articulo.models';
 import { ArticuloMantenimientoComponent } from '../articulo-mantenimiento/articulo-mantenimiento.component';
+import { PagosProveedorComponent } from '../pagos-proveedor/pagos-proveedor.component';
 
 interface LineaCompraEdicion
   extends Omit<EntradaCompraLineaGuardar, 'IdProducto'> {
@@ -104,8 +103,6 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   importeAgregar = 0;
   idSubAreaAgregar: number | null = null;
   impuestosAgregar: string[] = [];
-  pago: PagoProveedorGuardar = this.pagoInicial();
-  fechaPagoProgramada: Date | null = null;
   idsGuiasSeleccionadas = new Set<number>();
   notaOrigen: EntradaCompra | null = null;
   tipoNotaCreacion: 1 | 2 = 1;
@@ -193,6 +190,23 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         this.cargando = false;
         this.mostrarError(error, 'No se pudo realizar la búsqueda.');
       }
+    });
+  }
+
+  puedeRegistrarPago(compra: EntradaCompraResumen): boolean {
+    return compra.Estado === 2 && compra.EstadoPago !== 2 && compra.TotalNetoPagar > 0;
+  }
+
+  abrirPagosProveedor(compra: EntradaCompraResumen): void {
+    const referencia = this.dialog.open(PagosProveedorComponent, {
+      data: { idEntrada: compra.IdEntrada },
+      disableClose: true,
+      width: 'min(1000px, calc(100vw - 32px))',
+      maxWidth: '100vw',
+      maxHeight: '95vh',
+    });
+    referencia.afterClosed().subscribe(cambios => {
+      if (cambios) this.buscar();
     });
   }
 
@@ -765,113 +779,6 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     });
   }
 
-  registrarPago(): void {
-    if (!this.compra || !this.pago.IdTipoPago ||
-        this.pago.MontoPagado <= 0) {
-      Swal.fire(
-        'Faltan datos',
-        'Seleccione la forma de pago e indique un importe.',
-        'info'
-      );
-      return;
-    }
-
-    this.guardando = true;
-    this.entradaCompraService.registrarPagoProveedor(
-      this.compra.IdEntrada,
-      this.pago
-    ).subscribe({
-      next: response => {
-        this.guardando = false;
-        if (!response.Success || !response.Data) {
-          Swal.fire(
-            'No se pudo registrar el pago',
-            response.Message || 'Revise los datos indicados.',
-            'error'
-          );
-          return;
-        }
-        this.cargarFormulario(response.Data);
-        Notificar.exito('Pago registrado', '');
-      },
-      error: error => {
-        this.guardando = false;
-        this.mostrarError(error, 'No se pudo registrar el pago.');
-      }
-    });
-  }
-
-  eliminarPago(pago: PagoProveedor): void {
-    if (!this.compra) {
-      return;
-    }
-
-    Swal.fire({
-      title: 'Eliminar pago',
-      text: 'El saldo y el estado de pago se recalcularán automáticamente.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Eliminar',
-      cancelButtonText: 'Cancelar',
-      customClass: { confirmButton: 'swal-button--danger' }
-    }).then(result => {
-      if (!result.isConfirmed || !this.compra) {
-        return;
-      }
-      this.guardando = true;
-      this.entradaCompraService.eliminarPagoProveedor(
-        this.compra.IdEntrada,
-        pago.IdPagoProveedor
-      ).subscribe({
-        next: response => {
-          this.guardando = false;
-          if (!response.Success || !response.Data) {
-            Swal.fire(
-              'No se pudo eliminar',
-              response.Message || 'No se pudo eliminar el pago.',
-              'error'
-            );
-            return;
-          }
-          this.cargarFormulario(response.Data);
-        },
-        error: error => {
-          this.guardando = false;
-          this.mostrarError(error, 'No se pudo eliminar el pago.');
-        }
-      });
-    });
-  }
-
-  reprogramarPago(): void {
-    if (!this.compra || !this.fechaPagoProgramada) {
-      return;
-    }
-    this.guardando = true;
-    this.entradaCompraService.reprogramarPagoProveedor(
-      this.compra.IdEntrada,
-      this.fechaPagoProgramada
-    ).subscribe({
-      next: response => {
-        this.guardando = false;
-        if (!response.Success || !response.Data) {
-          Swal.fire(
-            'No se pudo actualizar',
-            response.Message || 'Revise la fecha indicada.',
-            'error'
-          );
-          return;
-        }
-        this.cargarFormulario(response.Data);
-        Notificar.exito('Fecha de pago actualizada', '');
-      },
-      error: error => {
-        this.guardando = false;
-        this.mostrarError(error, 'No se pudo actualizar la fecha.');
-      }
-    });
-  }
-
   volver(): void {
     this.showForm = false;
     this.compra = null;
@@ -1024,25 +931,6 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   get totalNetoPagarDocumento(): number {
     return this.redondear(
       Math.max(0, this.totalDocumento - this.retencionesDocumento)
-    );
-  }
-
-  get totalPagado(): number {
-    return this.redondear(
-      (this.compra?.PagosProveedor || []).reduce(
-        (total, pago) => total + pago.MontoPagado,
-        0
-      )
-    );
-  }
-
-  get saldoPendiente(): number {
-    return this.redondear(
-      Math.max(
-        0,
-        (this.compra?.TotalNetoPagar ?? this.compra?.TotalCompra ?? 0) -
-          this.totalPagado
-      )
     );
   }
 
@@ -1299,9 +1187,6 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   private cargarFormulario(compra: EntradaCompra): void {
     this.previsualizacionFactura = null;
     this.compra = compra;
-    this.fechaPagoProgramada = compra.FechaPagoProgramada
-      ? new Date(compra.FechaPagoProgramada)
-      : null;
     this.formulario = {
       IdTipoDocumento: compra.IdTipoDocumento,
       NumDocumento: compra.NumDocumento,
@@ -1339,11 +1224,6 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
         Impuestos: [...detalle.Impuestos]
       };
     });
-    this.pago = this.pagoInicial();
-    this.pago.IdMoneda = compra.IdMoneda;
-    this.pago.MontoPagado = this.saldoPendiente;
-    this.pago.IdTipoPago =
-      this.catalogos?.TiposPago[0]?.Id ?? null;
     this.limpiarLinea();
   }
 
@@ -1868,19 +1748,6 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       Observacion: '',
       PreciosIncluyenImpuestos: false,
       Detalles: []
-    };
-  }
-
-  private pagoInicial(): PagoProveedorGuardar {
-    return {
-      FechaPago: new Date(),
-      IdTipoPago: null,
-      IdMoneda: this.compra?.IdMoneda || '',
-      IdBancoOrigen: null,
-      IdBancoDestino: null,
-      MontoPagado: 0,
-      Referencia: '',
-      Observacion: ''
     };
   }
 

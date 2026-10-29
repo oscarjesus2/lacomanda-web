@@ -9,7 +9,8 @@
       <mat-form-field appearance="fill"><mat-label>Hasta</mat-label><input matInput type="date" [(ngModel)]="fechaHasta"></mat-form-field>
       <mat-form-field appearance="fill"><mat-label>Buscar producto</mat-label><mat-icon matPrefix>search</mat-icon><input matInput [(ngModel)]="filtro" (ngModelChange)="aplicarFiltro()" placeholder="Producto, código o canal"></mat-form-field>
     </div>
-    <div class="dialog-toolbar__actions"><button mat-stroked-button type="button" (click)="consultar()" [disabled]="cargando"><mat-icon>search</mat-icon> Consultar</button><button mat-raised-button color="primary" type="button" (click)="exportarExcel()" [disabled]="cargando"><mat-icon>download</mat-icon> Exportar a Excel</button></div>
+    <div class="dialog-toolbar__actions"><button mat-stroked-button type="button" (click)="consultar()" [disabled]="cargando"><mat-icon>search</mat-icon> Consultar</button><button mat-stroked-button type="button" (click)="imprimir()" [disabled]="cargando || !dataSource.filteredData.length"><mat-icon>print</mat-icon> Imprimir</button>
+      <button mat-raised-button color="primary" type="button" (click)="exportarExcel()" [disabled]="cargando"><mat-icon>download</mat-icon> Exportar a Excel</button></div>
   </div>
   <div class="dialog-summary-grid">
     <div class="dialog-summary-card"><span class="dialog-summary-card__label">Venta total</span><strong>{{ monedaSimbolo }} {{ (resultado?.VentaTotal || 0) | number:'1.2-2' }}</strong><span class="table-cell-subtext">{{ resultado?.CantidadProductos || 0 }} productos</span></div>

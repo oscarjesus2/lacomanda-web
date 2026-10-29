@@ -219,6 +219,28 @@
                 >
                   <mat-icon>{{ row.Estado === 1 ? 'edit' : 'visibility' }}</mat-icon>
                 </button>
+                <button
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  aria-label="Registrar pago al proveedor"
+                  matTooltip="Registrar pago al proveedor"
+                  [disabled]="!puedeRegistrarPago(row)"
+                  (click)="abrirPagosProveedor(row)"
+                >
+                  <mat-icon>payments</mat-icon>
+                </button>
+                <button
+                  *ngIf="row.EstadoPago === 2"
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  aria-label="Ver historial de pagos"
+                  matTooltip="Ver historial de pagos"
+                  (click)="abrirPagosProveedor(row)"
+                >
+                  <mat-icon>receipt_long</mat-icon>
+                </button>
               </mat-cell>
             </ng-container>
 
@@ -979,178 +1001,6 @@
           <div class="dialog-summary-card" *ngIf="compra">
             <span class="dialog-summary-card__label">Pago</span>
             <strong>{{ compra.EstadoPagoDescripcion }}</strong>
-          </div>
-        </div>
-      </section>
-
-      <section class="dialog-form-section" *ngIf="compra">
-        <h3 class="dialog-form-section__title">
-          <mat-icon>payments</mat-icon>
-          Pagos al proveedor
-        </h3>
-        <p class="dialog-form-section__hint" *ngIf="compra.Estado === 1">
-          Revise primero el ingreso para habilitar los pagos al proveedor.
-        </p>
-        <div class="dialog-form-grid" *ngIf="compra.Estado !== 4 && compra.Estado !== 3">
-          <mat-form-field appearance="fill">
-            <mat-label>Pago previsto</mat-label>
-            <input
-              matInput
-              name="fechaPagoProgramada"
-              [matDatepicker]="pagoProgramado"
-              [(ngModel)]="fechaPagoProgramada"
-            >
-            <mat-datepicker-toggle matSuffix [for]="pagoProgramado"></mat-datepicker-toggle>
-            <mat-datepicker #pagoProgramado></mat-datepicker>
-          </mat-form-field>
-
-          <div class="dialog-toolbar__actions">
-            <button
-              mat-stroked-button
-              color="primary"
-              type="button"
-              (click)="reprogramarPago()"
-              [disabled]="guardando || !fechaPagoProgramada"
-            >
-              <mat-icon>event</mat-icon>
-              Actualizar fecha
-            </button>
-          </div>
-        </div>
-
-        <div class="dialog-summary-grid">
-          <div class="dialog-summary-card">
-            <span class="dialog-summary-card__label">Total documento</span>
-            <strong>{{ compra.IdMoneda }} {{ compra.TotalCompra | number:'1.2-2' }}</strong>
-          </div>
-          <div class="dialog-summary-card" *ngIf="compra.TotalRetenciones > 0">
-            <span class="dialog-summary-card__label">Retenciones</span>
-            <strong>-{{ compra.IdMoneda }} {{ compra.TotalRetenciones | number:'1.2-2' }}</strong>
-          </div>
-          <div class="dialog-summary-card">
-            <span class="dialog-summary-card__label">Neto a pagar</span>
-            <strong>{{ compra.IdMoneda }} {{ compra.TotalNetoPagar | number:'1.2-2' }}</strong>
-          </div>
-          <div class="dialog-summary-card">
-            <span class="dialog-summary-card__label">Pagado</span>
-            <strong>{{ compra.IdMoneda }} {{ totalPagado | number:'1.2-2' }}</strong>
-          </div>
-          <div class="dialog-summary-card">
-            <span class="dialog-summary-card__label">Pendiente</span>
-            <strong>{{ compra.IdMoneda }} {{ saldoPendiente | number:'1.2-2' }}</strong>
-          </div>
-        </div>
-
-        <div
-          class="dialog-form-grid"
-          *ngIf="saldoPendiente > 0 && compra.Estado === 2"
-        >
-          <mat-form-field appearance="fill">
-            <mat-label>Tipo de pago</mat-label>
-            <mat-select name="tipoPago" [(ngModel)]="pago.IdTipoPago">
-              <mat-option *ngFor="let tipoPago of catalogos?.TiposPago" [value]="tipoPago.Id">
-                {{ tipoPago.Descripcion }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="fill">
-            <mat-label>Fecha del pago</mat-label>
-            <input
-              matInput
-              name="fechaPagoReal"
-              [matDatepicker]="fechaPagoReal"
-              [(ngModel)]="pago.FechaPago"
-            >
-            <mat-datepicker-toggle matSuffix [for]="fechaPagoReal"></mat-datepicker-toggle>
-            <mat-datepicker #fechaPagoReal></mat-datepicker>
-          </mat-form-field>
-
-          <mat-form-field appearance="fill">
-            <mat-label>Importe</mat-label>
-            <input
-              matInput
-              name="montoPago"
-              type="number"
-              min="0.01"
-              step="0.01"
-              [max]="saldoPendiente"
-              [(ngModel)]="pago.MontoPagado"
-            >
-          </mat-form-field>
-
-          <mat-form-field appearance="fill">
-            <mat-label>Referencia</mat-label>
-            <input
-              matInput
-              name="referenciaPago"
-              maxlength="200"
-              [(ngModel)]="pago.Referencia"
-            >
-          </mat-form-field>
-
-          <mat-form-field appearance="fill" class="dialog-form-grid__wide">
-            <mat-label>Observación del pago</mat-label>
-            <input
-              matInput
-              name="observacionPago"
-              maxlength="150"
-              [(ngModel)]="pago.Observacion"
-            >
-          </mat-form-field>
-
-          <div class="dialog-toolbar__actions">
-            <button
-              mat-stroked-button
-              color="primary"
-              type="button"
-              (click)="registrarPago()"
-              [disabled]="guardando"
-            >
-              <mat-icon>add_card</mat-icon>
-              Registrar pago al proveedor
-            </button>
-          </div>
-        </div>
-
-        <div class="dialog-table-card" *ngIf="compra.PagosProveedor.length > 0">
-          <div class="dialog-table-wrapper--fill">
-            <table class="swal-data-table">
-              <thead>
-                <tr>
-                  <th>Fecha</th>
-                  <th>Forma</th>
-                  <th>Referencia</th>
-                  <th>Observación</th>
-                  <th class="is-numeric">Importe</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let pagoRegistrado of compra.PagosProveedor">
-                  <td>{{ pagoRegistrado.FechaPago | date:'dd/MM/yyyy' }}</td>
-                  <td>{{ pagoRegistrado.TipoPago }}</td>
-                  <td>{{ pagoRegistrado.Referencia || '—' }}</td>
-                  <td>{{ pagoRegistrado.Observacion || '—' }}</td>
-                  <td class="is-numeric">
-                    {{ pagoRegistrado.IdMoneda }}
-                    {{ pagoRegistrado.MontoPagado | number:'1.2-2' }}
-                  </td>
-                  <td>
-                    <button
-                      mat-icon-button
-                      color="warn"
-                      type="button"
-                      aria-label="Eliminar pago"
-                      (click)="eliminarPago(pagoRegistrado)"
-                      *ngIf="compra.Estado === 2"
-                    >
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
           </div>
         </div>
       </section>

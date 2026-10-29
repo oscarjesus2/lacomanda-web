@@ -1,3 +1,4 @@
+import { fechaReporte, imprimirReporte } from 'src/app/shared/impresion/imprimir-reporte';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
@@ -41,6 +42,7 @@ export class ConsumoAreaReporteComponent implements OnInit {
   );
   fechaHasta = this.formatearFecha(new Date());
   filtro = '';
+  private periodoConsultado = '';
   cargando = false;
 
   constructor(
@@ -69,6 +71,7 @@ export class ConsumoAreaReporteComponent implements OnInit {
       return;
     }
 
+    const periodo = `Período consultado: ${fechaReporte(this.fechaDesde)} — ${fechaReporte(this.fechaHasta)}`;
     this.cargando = true;
     this.reportesService.consultarConsumoArea(
       this.fechaDesde,
@@ -82,6 +85,7 @@ export class ConsumoAreaReporteComponent implements OnInit {
           return;
         }
 
+        this.periodoConsultado = periodo;
         this.resultado = response.Data;
         this.dataSource.data = response.Data?.Items ?? [];
         this.aplicarFiltro();
@@ -110,7 +114,18 @@ export class ConsumoAreaReporteComponent implements OnInit {
       return;
     }
 
-    const filas = items.map(item => ({
+    const filas = this.filasParaReporte();
+    const hoja = XLSX.utils.json_to_sheet(filas);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Consumo subárea');
+    XLSX.writeFile(
+      libro,
+      `consumo-articulos_${this.fechaDesde}_${this.fechaHasta}.xlsx`
+    );
+  }
+
+  private filasParaReporte(paraImprimir = false) {
+    return this.dataSource.filteredData.map(item => ({
       'Subárea de descarga': item.SubAreaAlmacen,
       Código: item.IdArticulo,
       Artículo: item.Articulo,
@@ -120,13 +135,15 @@ export class ConsumoAreaReporteComponent implements OnInit {
       'Consumo en unidad de stock': item.Consumo,
       'Unidad de stock': item.UnidadArticulo
     }));
-    const hoja = XLSX.utils.json_to_sheet(filas);
-    const libro = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(libro, hoja, 'Consumo subárea');
-    XLSX.writeFile(
-      libro,
-      `consumo-articulos_${this.fechaDesde}_${this.fechaHasta}.xlsx`
-    );
+  }
+
+  imprimir(): void {
+    const filas = this.filasParaReporte(true);
+    const detalles = [
+      this.periodoConsultado,
+      this.filtro.trim() ? `Búsqueda: ${this.filtro.trim()}` : ''
+    ];
+    imprimirReporte({ titulo: 'Consumo de artículos por subárea', filas, detalles });
   }
 
   cerrar(): void {
