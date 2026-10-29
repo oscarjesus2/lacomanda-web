@@ -1,3 +1,4 @@
+import { fechaReporte, imprimirReporte } from 'src/app/shared/impresion/imprimir-reporte';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
@@ -39,6 +40,7 @@ export class VentaCostoReporteComponent implements OnInit {
   );
   fechaHasta = this.formatearFecha(new Date());
   filtro = '';
+  private periodoConsultado = '';
   monedaSimbolo = '';
   cargando = false;
 
@@ -68,6 +70,7 @@ export class VentaCostoReporteComponent implements OnInit {
       return;
     }
 
+    const periodo = `Período consultado: ${fechaReporte(this.fechaDesde)} — ${fechaReporte(this.fechaHasta)}`;
     this.cargando = true;
     this.reportesService.consultarVentaCosto(
       this.fechaDesde,
@@ -80,6 +83,7 @@ export class VentaCostoReporteComponent implements OnInit {
           return;
         }
 
+        this.periodoConsultado = periodo;
         this.resultado = response.Data;
         this.dataSource.data = response.Data?.Items ?? [];
         this.aplicarFiltro();
@@ -107,8 +111,19 @@ export class VentaCostoReporteComponent implements OnInit {
       return;
     }
 
-    const filas = items.map(item => ({
-      Fecha: item.Fecha,
+    const filas = this.filasParaReporte();
+    const hoja = XLSX.utils.json_to_sheet(filas);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Venta vs costo histórico');
+    XLSX.writeFile(
+      libro,
+      `venta-vs-costo-historico_${this.fechaDesde}_${this.fechaHasta}.xlsx`
+    );
+  }
+
+  private filasParaReporte(paraImprimir = false) {
+    return this.dataSource.filteredData.map(item => ({
+      Fecha: paraImprimir ? fechaReporte(item.Fecha) : item.Fecha,
       'Id. venta': item.IdVenta,
       Documento: item.Documento,
       Turno: item.NroTurno,
@@ -120,13 +135,15 @@ export class VentaCostoReporteComponent implements OnInit {
       Diferencia: item.Diferencia,
       'Margen %': item.MargenPorcentaje
     }));
-    const hoja = XLSX.utils.json_to_sheet(filas);
-    const libro = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(libro, hoja, 'Venta vs costo histórico');
-    XLSX.writeFile(
-      libro,
-      `venta-vs-costo-historico_${this.fechaDesde}_${this.fechaHasta}.xlsx`
-    );
+  }
+
+  imprimir(): void {
+    const filas = this.filasParaReporte(true);
+    const detalles = [
+      this.periodoConsultado,
+      this.filtro.trim() ? `Búsqueda: ${this.filtro.trim()}` : ''
+    ];
+    imprimirReporte({ titulo: 'Venta versus costo histórico', filas, detalles });
   }
 
   cerrar(): void {

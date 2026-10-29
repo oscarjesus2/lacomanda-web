@@ -1,5 +1,6 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { fechaReporte, imprimirReporte } from 'src/app/shared/impresion/imprimir-reporte';
+import { Component, Inject, OnInit, Optional, ViewChild } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import * as XLSX from 'xlsx';
@@ -37,12 +38,16 @@ export class CoberturaStockReporteComponent implements OnInit {
   );
   fechaHasta = this.formatearFecha(new Date());
   filtro = '';
+  private periodoConsultado = '';
   cargando = false;
 
   constructor(
     private readonly dialogRef: MatDialogRef<CoberturaStockReporteComponent>,
-    private readonly reportesService: ReportesAlmacenService
+    private readonly reportesService: ReportesAlmacenService,
+    @Optional() @Inject(MAT_DIALOG_DATA) data?: { desde?: string; hasta?: string; subarea?: number }
   ) {
+    if (data?.desde) this.fechaDesde = data.desde;
+    if (data?.hasta) this.fechaHasta = data.hasta;
     this.dataSource.filterPredicate = (item, filter) =>
       this.normalizar(`${item.IdArticulo} ${item.Articulo} ${item.UnidadMedida} ${item.Estado}`)
         .includes(filter);
@@ -58,6 +63,7 @@ export class CoberturaStockReporteComponent implements OnInit {
       return;
     }
 
+    const periodo = `Período consultado: ${fechaReporte(this.fechaDesde)} — ${fechaReporte(this.fechaHasta)}`;
     this.cargando = true;
     this.reportesService.consultarCoberturaStock(this.fechaDesde, this.fechaHasta)
       .subscribe({
@@ -68,7 +74,8 @@ export class CoberturaStockReporteComponent implements OnInit {
             return;
           }
 
-          this.resultado = response.Data;
+          this.periodoConsultado = periodo;
+        this.resultado = response.Data;
           this.dataSource.data = response.Data?.Items ?? [];
           this.aplicarFiltro();
         },
@@ -93,7 +100,17 @@ export class CoberturaStockReporteComponent implements OnInit {
       return;
     }
 
-    const hoja = XLSX.utils.json_to_sheet(items.map(item => ({
+    const hoja = XLSX.utils.json_to_sheet(this.filasParaReporte());
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Cobertura de stock');
+    XLSX.writeFile(
+      libro,
+      `cobertura-stock_${this.fechaDesde}_${this.fechaHasta}.xlsx`
+    );
+  }
+
+  private filasParaReporte(paraImprimir = false) {
+    return this.dataSource.filteredData.map(item => ({
       Código: item.IdArticulo,
       Artículo: item.Articulo,
       Unidad: item.UnidadMedida,
@@ -104,15 +121,18 @@ export class CoberturaStockReporteComponent implements OnInit {
       'Consumo del período': item.ConsumoPeriodo,
       'Consumo promedio diario': item.ConsumoPromedioDiario,
       'Días de cobertura': item.DiasCobertura,
-      'Agotamiento estimado': item.FechaAgotamientoEstimada,
+      'Agotamiento estimado': paraImprimir ? fechaReporte(item.FechaAgotamientoEstimada) : item.FechaAgotamientoEstimada,
       Estado: this.descripcionEstado(item.Estado)
-    })));
-    const libro = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(libro, hoja, 'Cobertura de stock');
-    XLSX.writeFile(
-      libro,
-      `cobertura-stock_${this.fechaDesde}_${this.fechaHasta}.xlsx`
-    );
+    }));
+  }
+
+  imprimir(): void {
+    const filas = this.filasParaReporte(true);
+    const detalles = [
+      this.periodoConsultado,
+      this.filtro.trim() ? `Búsqueda: ${this.filtro.trim()}` : ''
+    ];
+    imprimirReporte({ titulo: 'Cobertura de stock', filas, detalles });
   }
 
   descripcionEstado(estado: CoberturaStockEstado): string {

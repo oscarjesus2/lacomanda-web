@@ -1,0 +1,60 @@
+<div class="mant-panel dialog-panel--workspace">
+  <button mat-icon-button class="close-button" type="button" aria-label="Cerrar" (click)="cerrar()"><mat-icon>close</mat-icon></button>
+  <h2>{{ config.titulo }}</h2>
+  <div class="dialog-notice"><mat-icon>info</mat-icon><span>{{ config.aviso }}</span></div>
+  <div class="dialog-toolbar">
+    <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+      <mat-form-field *ngIf="config.periodo" appearance="fill">
+        <mat-label>{{ config.corte ? 'Sin movimientos desde' : 'Desde' }}</mat-label>
+        <input matInput type="date" [(ngModel)]="fechaDesde">
+      </mat-form-field>
+      <mat-form-field *ngIf="config.periodo && !config.corte" appearance="fill">
+        <mat-label>Hasta</mat-label><input matInput type="date" [(ngModel)]="fechaHasta">
+      </mat-form-field>
+      <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide">
+        <mat-label>Buscar en los resultados</mat-label><mat-icon matPrefix>search</mat-icon>
+        <input matInput [(ngModel)]="filtro" (ngModelChange)="aplicarFiltro()">
+      </mat-form-field>
+    </div>
+    <div class="dialog-toolbar__actions">
+      <button mat-stroked-button type="button" (click)="consultar()" [disabled]="cargando"><mat-icon>search</mat-icon> Consultar</button>
+      <button mat-stroked-button type="button" (click)="imprimir()" [disabled]="cargando || !dataSource.filteredData.length"><mat-icon>print</mat-icon> Imprimir</button>
+      <button mat-raised-button color="primary" type="button" (click)="exportarExcel()" [disabled]="cargando"><mat-icon>download</mat-icon> Exportar a Excel</button>
+    </div>
+  </div>
+  <div class="dialog-summary-grid">
+    <div class="dialog-summary-card"><span class="dialog-summary-card__label">Resultados</span><strong>{{ dataSource.filteredData.length }}</strong></div>
+  </div>
+  <details *ngIf="resumenProveedores.length" class="dialog-form-section">
+    <summary>Resumen por proveedor y moneda</summary>
+    <div class="dialog-summary-grid dialog-summary-scroll">
+      <div class="dialog-summary-card" *ngFor="let resumen of resumenProveedores">
+        <span class="dialog-summary-card__label">{{ resumen.proveedor }}</span>
+        <strong>{{ resumen.moneda }} {{ resumen.total | number:'1.2-2' }}</strong>
+      </div>
+    </div>
+  </details>
+  <div class="dialog-workspace-content"><div class="dialog-table-card"><div class="dialog-table-wrapper--fill">
+    <mat-table [dataSource]="dataSource" class="dialog-table--xwide">
+      <ng-container *ngFor="let columna of config.columnas" [matColumnDef]="columna.campo">
+        <mat-header-cell *matHeaderCellDef>{{ columna.titulo }}</mat-header-cell>
+        <mat-cell *matCellDef="let fila">
+          <ng-container *ngIf="fila[columna.campo] !== null && fila[columna.campo] !== undefined; else sinDato">
+            <ng-container [ngSwitch]="columna.tipo">
+              <span *ngSwitchCase="'fechaHora'">{{ fila[columna.campo] | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span *ngSwitchCase="'fecha'">{{ fila[columna.campo] | date:'dd/MM/yyyy' }}</span>
+              <span *ngSwitchCase="'numero'">{{ fila[columna.campo] | number:'1.0-3' }}</span>
+              <span *ngSwitchCase="'porcentaje'">{{ fila[columna.campo] | number:'1.0-2' }} %</span>
+              <span *ngSwitchDefault>{{ fila[columna.campo] }}</span>
+            </ng-container>
+          </ng-container>
+          <ng-template #sinDato>—</ng-template>
+        </mat-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="columnas; sticky: true"></mat-header-row>
+      <mat-row *matRowDef="let fila; columns: columnas"></mat-row>
+    </mat-table>
+    <div class="dialog-table-state" *ngIf="cargando"><mat-spinner diameter="38"></mat-spinner><span>Consultando…</span></div>
+    <div class="dialog-table-state" *ngIf="!cargando && !dataSource.filteredData.length"><mat-icon>inventory_2</mat-icon><span>No hay resultados para los filtros seleccionados.</span></div>
+  </div><mat-paginator [pageSize]="25" [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons></mat-paginator></div></div>
+</div>

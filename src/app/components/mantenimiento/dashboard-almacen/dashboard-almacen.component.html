@@ -1,0 +1,73 @@
+<div class="mant-panel dialog-panel--workspace warehouse-executive">
+  <button mat-icon-button class="close-button" type="button" aria-label="Cerrar" (click)="cerrar()"><mat-icon>close</mat-icon></button>
+  <h2>DASHBOARD GERENCIAL DE ALMACÉN</h2>
+  <div class="dialog-table-state" *ngIf="comprobando"><mat-spinner diameter="32"></mat-spinner><span>Comprobando acceso…</span></div>
+  <div class="dialog-notice" *ngIf="!comprobando && !autorizado"><mat-icon>lock</mat-icon><span>No tienes acceso al dashboard de reportes o la licencia no incluye esta función.</span></div>
+  <ng-container *ngIf="autorizado">
+    <div class="dialog-toolbar">
+      <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
+        <mat-form-field appearance="fill"><mat-label>Desde</mat-label><input matInput type="date" [(ngModel)]="fechaDesde"></mat-form-field>
+        <mat-form-field appearance="fill"><mat-label>Hasta</mat-label><input matInput type="date" [(ngModel)]="fechaHasta"></mat-form-field>
+        <mat-form-field appearance="fill"><mat-label>Moneda de compras y margen</mat-label><mat-select [(ngModel)]="moneda" (selectionChange)="filtrosCambiados()"><mat-option *ngFor="let item of monedas" [value]="item">{{ item }}</mat-option></mat-select></mat-form-field>
+        <mat-form-field *ngIf="tieneCompras" appearance="fill"><mat-label>Proveedor para compras</mat-label><mat-select [(ngModel)]="proveedor"><mat-option [value]="0">Todos</mat-option><mat-option *ngFor="let item of proveedores" [value]="item.id">{{ item.nombre }}</mat-option></mat-select></mat-form-field>
+        <mat-form-field appearance="fill"><mat-label>Subárea para merma e inventario</mat-label><mat-select [(ngModel)]="subarea" (selectionChange)="filtrosCambiados()"><mat-option [value]="0">Todas</mat-option><mat-option *ngFor="let item of subareas" [value]="item.id">{{ item.nombre }}</mat-option></mat-select></mat-form-field>
+      </div>
+      <div class="dialog-toolbar__actions">
+        <button mat-stroked-button type="button" (click)="consultar()" [disabled]="cargando"><mat-icon>search</mat-icon> Consultar</button>
+        <button mat-stroked-button type="button" (click)="imprimir()" [disabled]="cargando || !periodo"><mat-icon>print</mat-icon> Imprimir</button>
+        <button mat-raised-button color="primary" type="button" (click)="exportar()" [disabled]="cargando || !periodo"><mat-icon>download</mat-icon> Exportar</button>
+      </div>
+    </div>
+    <div class="warehouse-executive__scroll">
+      <div class="dialog-notice"><mat-icon>info</mat-icon><span>Período consultado: {{ periodo || '—' }}. El stock es actual; la cobertura usa el consumo del período. Las barras muestran hasta seis resultados y el detalle completo está en cada reporte.</span></div>
+      <div class="dialog-table-state" *ngIf="cargando"><mat-spinner diameter="32"></mat-spinner><span>Preparando indicadores…</span></div>
+      <ng-container *ngIf="!cargando && periodo">
+        <div class="dialog-notice" *ngIf="hayErroresMensuales"><mat-icon>warning</mat-icon><span>No se pudieron consultar todos los meses. Las series afectadas no se muestran para evitar resultados incompletos.</span></div>
+        <div class="executive-kpis" *ngIf="cobertura">
+          <article class="executive-kpi"><span>Artículos inventariables</span><strong>{{ cobertura.CantidadArticulos }}</strong></article>
+          <article class="executive-kpi"><span>Sin stock</span><strong>{{ cobertura.ArticulosSinStock }}</strong></article>
+          <article class="executive-kpi"><span>Bajo mínimo</span><strong>{{ cobertura.ArticulosBajoMinimo }}</strong></article>
+          <article class="executive-kpi"><span>Sin consumo en el período</span><strong>{{ cobertura.ArticulosSinConsumo }}</strong></article>
+        </div>
+        <div class="warehouse-executive__grid">
+          <section class="executive-widget warehouse-executive__panel">
+            <header class="executive-widget__header"><div><span class="executive-widget__eyebrow">Inventario actual</span><h3 class="executive-widget__title">Menor cobertura</h3><p class="executive-widget__subtitle">Días estimados según el consumo del período; stock de todas las subáreas.</p></div><button mat-button (click)="detalle('cobertura')">Ver detalle</button></header>
+            <p class="warehouse-executive__state" *ngIf="errorCobertura">No se pudo cargar la cobertura.</p>
+            <ng-container *ngTemplateOutlet="grafico; context: { $implicit: stockGrafico, vacio: 'No hay cobertura calculable para este período.' }"></ng-container>
+          </section>
+          <section class="executive-widget warehouse-executive__panel" *ngIf="tieneCompras">
+            <header class="executive-widget__header"><div><span class="executive-widget__eyebrow">Compras · {{ moneda || 'sin moneda' }}</span><h3 class="executive-widget__title">Evolución mensual</h3><p class="executive-widget__subtitle">Valor de compra sin impuestos ni notas; los meses parciales respetan el período.</p></div><button mat-button (click)="detalle('compras')">Ver detalle</button></header>
+            <p class="warehouse-executive__state" *ngIf="errorCompras">No se pudieron cargar las compras.</p>
+            <ng-container *ngTemplateOutlet="grafico; context: { $implicit: serieCompras, vacio: 'Sin datos de compras para mostrar.' }"></ng-container>
+          </section>
+          <section class="executive-widget warehouse-executive__panel" *ngIf="tieneCompras">
+            <header class="executive-widget__header"><div><span class="executive-widget__eyebrow">Compras · {{ moneda || 'sin moneda' }}</span><h3 class="executive-widget__title">Proveedores principales</h3><p class="executive-widget__subtitle">Valor de compra del período seleccionado.</p></div><button mat-button (click)="detalle('compras')">Ver detalle</button></header>
+            <ng-container *ngTemplateOutlet="grafico; context: { $implicit: proveedoresGrafico, vacio: 'Sin compras para los filtros seleccionados.' }"></ng-container>
+          </section>
+          <section class="executive-widget warehouse-executive__panel">
+            <header class="executive-widget__header"><div><span class="executive-widget__eyebrow">Transformación</span><h3 class="executive-widget__title">Evolución de merma</h3><p class="executive-widget__subtitle">Merma sobre cantidad bruta de un artículo y unidad. Los meses sin producción se omiten.</p></div><button mat-button (click)="detalle('mermas')">Ver detalle</button></header>
+            <mat-form-field appearance="fill" *ngIf="articulosMerma.length"><mat-label>Artículo</mat-label><mat-select [(ngModel)]="articuloMerma"><mat-option *ngFor="let item of articulosMerma" [value]="item.id">{{ item.nombre }}</mat-option></mat-select></mat-form-field>
+            <p class="warehouse-executive__state" *ngIf="errorMermas">No se pudieron cargar las mermas.</p>
+            <ng-container *ngTemplateOutlet="grafico; context: { $implicit: serieMermas, vacio: 'Sin merma calculable para la selección.' }"></ng-container>
+          </section>
+          <section class="executive-widget warehouse-executive__panel">
+            <header class="executive-widget__header"><div><span class="executive-widget__eyebrow">Inventarios cerrados</span><h3 class="executive-widget__title">Diferencias a revisar</h3><p class="executive-widget__subtitle">Diferencia porcentual entre stock contado y stock del sistema. Los casos con stock del sistema igual a cero no se muestran.</p></div><button mat-button (click)="detalle('inventarios')">Ver detalle</button></header>
+            <p class="warehouse-executive__state" *ngIf="errorInventarios">No se pudieron cargar los inventarios.</p>
+            <ng-container *ngTemplateOutlet="grafico; context: { $implicit: inventarioGrafico, vacio: 'No hay diferencias porcentuales calculables.' }"></ng-container>
+          </section>
+          <section class="executive-widget warehouse-executive__panel">
+            <header class="executive-widget__header"><div><span class="executive-widget__eyebrow">Rentabilidad · {{ moneda || 'sin moneda' }}</span><h3 class="executive-widget__title">Margen por producto y canal</h3><p class="executive-widget__subtitle">Margen histórico analizado. Productos y canales con ventas sin costo: {{ sinCosto }}.</p></div><button mat-button (click)="detalle('rentabilidad')">Ver detalle</button></header>
+            <p class="warehouse-executive__state" *ngIf="errorRentabilidad">No se pudo cargar la rentabilidad.</p>
+            <ng-container *ngTemplateOutlet="grafico; context: { $implicit: margenGrafico, vacio: 'No hay ventas con costo histórico para la moneda seleccionada.' }"></ng-container>
+          </section>
+        </div>
+      </ng-container>
+    </div>
+  </ng-container>
+</div>
+<ng-template #grafico let-barras let-vacio="vacio">
+  <div class="warehouse-chart" *ngIf="barras.length; else sinDatos" role="img" aria-label="Gráfico de barras; los valores aparecen junto a cada barra">
+    <div class="warehouse-chart__row" *ngFor="let barra of barras"><span class="warehouse-chart__label" [title]="barra.etiqueta">{{ barra.etiqueta }}</span><div class="warehouse-chart__track"><span class="warehouse-chart__bar" [class.warehouse-chart__bar--negative]="barra.valor < 0" [style.width.%]="barra.ancho"></span></div><strong>{{ barra.texto }}</strong></div>
+  </div>
+  <ng-template #sinDatos><p class="warehouse-executive__state">{{ vacio }}</p></ng-template>
+</ng-template>

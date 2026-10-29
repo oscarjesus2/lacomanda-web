@@ -8,7 +8,8 @@
       <mat-form-field appearance="fill"><mat-label>Hasta</mat-label><input matInput type="date" [(ngModel)]="fechaHasta"></mat-form-field>
       <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide"><mat-label>Buscar artículo</mat-label><mat-icon matPrefix>search</mat-icon><input matInput [(ngModel)]="filtro" (ngModelChange)="aplicarFiltro()" placeholder="Artículo, código, unidad o estado"></mat-form-field>
     </div>
-    <div class="dialog-toolbar__actions"><button mat-stroked-button type="button" (click)="consultar()" [disabled]="cargando"><mat-icon>search</mat-icon> Consultar</button><button mat-raised-button color="primary" type="button" (click)="exportarExcel()" [disabled]="cargando"><mat-icon>download</mat-icon> Exportar a Excel</button></div>
+    <div class="dialog-toolbar__actions"><button mat-stroked-button type="button" (click)="consultar()" [disabled]="cargando"><mat-icon>search</mat-icon> Consultar</button><button mat-stroked-button type="button" (click)="imprimir()" [disabled]="cargando || !dataSource.filteredData.length"><mat-icon>print</mat-icon> Imprimir</button>
+      <button mat-raised-button color="primary" type="button" (click)="exportarExcel()" [disabled]="cargando"><mat-icon>download</mat-icon> Exportar a Excel</button></div>
   </div>
   <div class="dialog-summary-grid">
     <div class="dialog-summary-card"><span class="dialog-summary-card__label">Artículos</span><strong>{{ resultado?.CantidadArticulos || 0 }}</strong><span class="table-cell-subtext">{{ resultado?.DiasPeriodo || 0 }} días analizados</span></div>

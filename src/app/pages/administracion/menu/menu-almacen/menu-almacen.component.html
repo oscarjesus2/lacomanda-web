@@ -7,7 +7,7 @@
       <div
         class="tiles-grid"
         [class.tiles-grid--accent]="section.titleKey === 'menuWarehouseMovements'"
-        [class.tiles-grid--report]="section.titleKey === 'menuInventoryControl' || section.titleKey === 'menuReports'"
+        [class.tiles-grid--report]="section.titleKey === 'menuInventoryControl' || section.titleKey === 'warehousePurchaseQueries' || section.titleKey === 'warehouseInventoryReports' || section.titleKey === 'warehouseCostReports' || section.titleKey === 'warehousePurchaseReports' || section.titleKey === 'warehouseTransformationReports'"
         [class.tiles-grid--process]="section.titleKey === 'menuWarehouseTransformation'"
       >
         <button
