@@ -12,6 +12,8 @@ resources:
 - staging-proxy.yaml
 - taxflow-staging-proxy.yaml
 - taxflow-production-proxy.yaml
+- ccap-code-staging-proxy.yaml
+- ccap-code-production-proxy.yaml
 
 images:
   - name: oscar020/frontend
