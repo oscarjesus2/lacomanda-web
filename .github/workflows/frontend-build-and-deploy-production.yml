@@ -148,6 +148,12 @@ jobs:
         refresh_proxy \
           taxflow-production-proxy \
           k8s-manifests/frontend/overlays/production/taxflow-production-proxy.yaml
+        refresh_proxy \
+          ccap-code-production-proxy \
+          k8s-manifests/frontend/overlays/production/ccap-code-production-proxy.yaml
+        refresh_proxy \
+          ccap-code-staging-proxy \
+          k8s-manifests/frontend/overlays/production/ccap-code-staging-proxy.yaml
 
         kubectl rollout status \
           --namespace frontend-appweb-production \
@@ -164,6 +170,14 @@ jobs:
         kubectl rollout status \
           --namespace frontend-appweb-production \
           deployment/taxflow-production-proxy \
+          --timeout=5m
+        kubectl rollout status \
+          --namespace frontend-appweb-production \
+          deployment/ccap-code-production-proxy \
+          --timeout=5m
+        kubectl rollout status \
+          --namespace frontend-appweb-production \
+          deployment/ccap-code-staging-proxy \
           --timeout=5m
         kubectl get certificate wildcard-lacomanda \
           --namespace frontend-appweb-production

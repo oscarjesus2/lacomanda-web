@@ -21,6 +21,9 @@ spec:
         - "auth-staging.tax-flow.store"
         - "app.tax-flow.store"
         - "app-staging.tax-flow.store"
+        - "ccap-code.com"
+        - "www.ccap-code.com"
+        - "staging.ccap-code.com"
       secretName: wildcard-lacomanda-tls
   rules:
     # El portal mantiene su Deployment/Service en este mismo namespace para
@@ -54,6 +57,38 @@ spec:
             backend:
               service:
                 name: portal-lacomanda
+                port:
+                  number: 80
+    # CCAP Code vive en su namespace dedicado. El proxy mantiene este Ingress
+    # compartido como único punto público de entrada.
+    - host: ccap-code.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ccap-code-production-proxy
+                port:
+                  number: 80
+    - host: www.ccap-code.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ccap-code-production-proxy
+                port:
+                  number: 80
+    - host: staging.ccap-code.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ccap-code-staging-proxy
                 port:
                   number: 80
     - host: app.lacomanda.store
