@@ -8,6 +8,7 @@ resources:
 - namespace.yaml
 - ingress.yaml
 - certificate.yaml
+- ccap-code-managed-certificate.yaml
 - frontendconfig.yaml
 - staging-proxy.yaml
 - taxflow-staging-proxy.yaml

@@ -181,6 +181,8 @@ jobs:
           --timeout=5m
         kubectl get certificate wildcard-lacomanda \
           --namespace frontend-appweb-production
+        kubectl get managedcertificate ccap-code-managed-tls \
+          --namespace frontend-appweb-production
 
         ASSOCIATION_URL="https://auth.lacomanda.store/.well-known/web-app-origin-association"
         ASSOCIATION_JSON=$(curl --fail --silent --show-error \

@@ -1,7 +1,6 @@
 # Certificado comodín (cert-manager + Let's Encrypt DNS-01 vía IONOS) para los
-# subdominios de tenant en producción. cert-manager crea el Secret
-# wildcard-lacomanda-tls que usa el ingress. Requiere el ClusterIssuer
-# "letsencrypt-ionos" ya instalado (ver k8s-manifests/cert-manager/README.md en infra).
+# dominios que administra IONOS. CCAP Code usa un certificado administrado por
+# GKE porque su zona DNS se gestiona en Squarespace.
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -19,6 +18,3 @@ spec:
     - "auth-staging.tax-flow.store"
     - "app.tax-flow.store"
     - "app-staging.tax-flow.store"
-    - "ccap-code.com"
-    - "www.ccap-code.com"
-    - "staging.ccap-code.com"
