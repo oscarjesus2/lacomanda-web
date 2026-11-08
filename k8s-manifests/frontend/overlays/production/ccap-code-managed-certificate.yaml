@@ -1,0 +1,9 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: ccap-code-managed-tls
+spec:
+  domains:
+    - ccap-code.com
+    - www.ccap-code.com
+    - staging.ccap-code.com
