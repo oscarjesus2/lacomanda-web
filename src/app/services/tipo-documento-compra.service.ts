@@ -5,6 +5,7 @@ import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import {
   TipoDocumentoCompraEstado,
+  TipoDocumentoCompraCrear,
   TipoDocumentoCompraMantenimiento,
 } from '../models/tipo-documento-compra.models';
 
@@ -18,6 +19,14 @@ export class TipoDocumentoCompraService {
     return this.http.get<ApiResponse<TipoDocumentoCompraMantenimiento[]>>(
       this.basePath,
     );
+  }
+
+  crear(dto: TipoDocumentoCompraCrear): Observable<ApiResponse<TipoDocumentoCompraMantenimiento>> {
+    return this.http.post<ApiResponse<TipoDocumentoCompraMantenimiento>>(this.basePath, dto);
+  }
+
+  eliminar(codigo: string): Observable<ApiResponse<boolean>> {
+    return this.http.delete<ApiResponse<boolean>>(`${this.basePath}/${encodeURIComponent(codigo)}`);
   }
 
   cambiarEstado(

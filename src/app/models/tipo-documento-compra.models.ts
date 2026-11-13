@@ -5,7 +5,13 @@ export interface TipoDocumentoCompraMantenimiento {
   Naturaleza: number;
   Activo: boolean;
   PermiteRetenciones: boolean;
+  EsPredefinido: boolean;
   Cambiando?: boolean;
+}
+
+export interface TipoDocumentoCompraCrear {
+  Codigo: string;
+  Descripcion: string;
 }
 
 export interface TipoDocumentoCompraEstado {

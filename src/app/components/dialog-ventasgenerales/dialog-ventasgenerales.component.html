@@ -168,7 +168,7 @@
 
             <ng-container matColumnDef="FechaVenta">
               <th mat-header-cell *matHeaderCellDef>{{ 'date' | tenantText }}</th>
-              <td mat-cell *matCellDef="let row">{{ row.FechaVenta | date:'dd/MM/yyyy':'UTC' }}</td>
+              <td mat-cell *matCellDef="let row">{{ row.FechaVenta | date:'dd/MM/yyyy' }}</td>
             </ng-container>
 
             <ng-container matColumnDef="Caja">

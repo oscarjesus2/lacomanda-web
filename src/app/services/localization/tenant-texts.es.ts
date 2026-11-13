@@ -1597,9 +1597,9 @@ export const ES_TEXTS: Record<TenantTextKey, string> = {
   warehouseSubareas: 'Subáreas de almacén',
   suppliers: 'Proveedores',
   movementTypes: 'Tipos de movimiento',
-  purchaseDocuments: 'Documentos de compra',
-  stockIn: 'Ingresos',
-  stockOut: 'Salidas',
+  purchaseDocuments: 'Tipos de documento',
+  stockIn: 'Compras y gastos',
+  stockOut: 'Salidas internas',
   stockOutReasons: 'Motivos de salida',
 
   // Grupos de almacén

@@ -7,8 +7,8 @@
     {{ showForm
       ? (notaOrigen
           ? (tipoNotaCreacion === 1 ? 'Nueva nota de crédito' : 'Nueva nota de débito')
-          : (compra ? 'Ingreso de compra N.º ' + compra.IdEntrada : 'Nuevo ingreso de compra'))
-      : 'Ingreso de compras' }}
+          : (compra ? 'Documento de compra o gasto N.º ' + compra.IdEntrada : 'Nuevo documento de compra o gasto'))
+      : 'Compras y gastos' }}
   </h2>
 
   <input
@@ -31,7 +31,7 @@
     <div class="dialog-toolbar">
       <div class="dialog-toolbar__filters dialog-toolbar__filters--fluid">
         <mat-form-field appearance="fill" class="dialog-toolbar__filter--wide">
-          <mat-label>Buscar compra</mat-label>
+          <mat-label>Buscar documento</mat-label>
           <mat-icon matPrefix>search</mat-icon>
           <input
             matInput
@@ -133,7 +133,7 @@
           </button>
           <button mat-raised-button color="primary" type="button" (click)="nuevo()" [disabled]="!catalogos">
             <mat-icon>add</mat-icon>
-            Nueva compra
+            Nuevo documento
           </button>
         </div>
       </div>
@@ -250,7 +250,7 @@
 
           <div class="dialog-empty-state" *ngIf="!cargando && dataSource.data.length === 0">
             <mat-icon>inventory_2</mat-icon>
-            <span>No existen compras para los filtros indicados.</span>
+            <span>No existen documentos para los filtros indicados.</span>
           </div>
         </div>
 
@@ -689,7 +689,7 @@
       <section class="dialog-form-section">
         <h3 class="dialog-form-section__title">
           <mat-icon>format_list_bulleted</mat-icon>
-          Detalle del ingreso
+          Detalle del documento
         </h3>
         <div class="dialog-table-card purchase-entry-detail">
           <div class="purchase-entry-lines" *ngIf="lineas.length > 0; else detalleIngresoVacio">
@@ -1087,7 +1087,7 @@
         [disabled]="guardando"
       >
         <mat-icon>task_alt</mat-icon>
-        Revisar ingreso
+        Revisar documento
       </button>
     </div>
   </form>
