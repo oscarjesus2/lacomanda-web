@@ -11,6 +11,7 @@ import {
   PorcionamientoResumen
 } from '../models/porcionamiento.models';
 import { environment } from 'src/environments/environment';
+import { FechaFiltro, fechaFiltroParaApi } from '../shared/fechas/fecha-filtro';
 
 @Injectable({ providedIn: 'root' })
 export class PorcionamientoService {
@@ -19,18 +20,18 @@ export class PorcionamientoService {
   constructor(private readonly http: HttpClient) {}
 
   listar(filtro: {
-    FechaInicio?: Date | string | null;
-    FechaFin?: Date | string | null;
+    FechaInicio?: FechaFiltro | null;
+    FechaFin?: FechaFiltro | null;
     IdSubAreaAlmacen?: number | null;
     Estado?: number | null;
     Buscar?: string;
   }): Observable<ApiResponse<PorcionamientoResumen[]>> {
     let params = new HttpParams();
     if (filtro.FechaInicio) {
-      params = params.set('FechaInicio', this.fechaParaApi(filtro.FechaInicio));
+      params = params.set('FechaInicio', fechaFiltroParaApi(filtro.FechaInicio));
     }
     if (filtro.FechaFin) {
-      params = params.set('FechaFin', this.fechaParaApi(filtro.FechaFin));
+      params = params.set('FechaFin', fechaFiltroParaApi(filtro.FechaFin));
     }
     if (filtro.IdSubAreaAlmacen) {
       params = params.set('IdSubAreaAlmacen', filtro.IdSubAreaAlmacen);
@@ -74,13 +75,4 @@ export class PorcionamientoService {
     );
   }
 
-  private fechaParaApi(value: Date | string): string {
-    if (value instanceof Date) {
-      const year = value.getFullYear();
-      const month = `${value.getMonth() + 1}`.padStart(2, '0');
-      const day = `${value.getDate()}`.padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-    return value;
-  }
 }
