@@ -165,7 +165,7 @@
 
             <ng-container matColumnDef="recepcion">
               <mat-header-cell *matHeaderCellDef>Recepción</mat-header-cell>
-              <mat-cell *matCellDef="let row">{{ row.FechaRecepcion | date:'dd/MM/yyyy' }}</mat-cell>
+              <mat-cell *matCellDef="let row">{{ row.FechaRecepcion | date:'dd/MM/yyyy HH:mm:ss' }}</mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="proveedor">
@@ -446,6 +446,11 @@
             >
             <mat-datepicker-toggle matSuffix [for]="recepcion"></mat-datepicker-toggle>
             <mat-datepicker #recepcion></mat-datepicker>
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Hora de recepción</mat-label>
+            <input matInput type="time" step="1" name="horaRecepcion"
+              [(ngModel)]="horaRecepcion" required [disabled]="soloLectura">
           </mat-form-field>
         </div>
 

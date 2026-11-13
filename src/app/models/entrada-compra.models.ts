@@ -63,6 +63,7 @@ export interface EntradaCompraGuardar {
   NumDocumento: string;
   FechaEmision: Date | string;
   FechaRecepcion: Date | string;
+  FechaRecepcionLocal?: string;
   IdProveedor: number | null;
   IdTipoMovimiento: number | null;
   IdSubTipoMovimiento: number | null;
@@ -130,6 +131,7 @@ export interface EntradaCompraCanjearGuias {
   NumDocumento: string;
   FechaEmision: Date | string;
   FechaRecepcion: Date | string;
+  FechaRecepcionLocal?: string;
   IdMoneda: string;
   TasaCambio: number;
   Observacion: string;
