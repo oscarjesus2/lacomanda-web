@@ -1592,9 +1592,9 @@ export const EN_TEXTS = {
   warehouseSubareas: 'Warehouse subareas',
   suppliers: 'Suppliers',
   movementTypes: 'Movement types',
-  purchaseDocuments: 'Purchase documents',
-  stockIn: 'Stock in',
-  stockOut: 'Stock out',
+  purchaseDocuments: 'Document types',
+  stockIn: 'Purchases and expenses',
+  stockOut: 'Internal stock out',
   stockOutReasons: 'Stock-out reasons',
 
   // Grupos de almacén

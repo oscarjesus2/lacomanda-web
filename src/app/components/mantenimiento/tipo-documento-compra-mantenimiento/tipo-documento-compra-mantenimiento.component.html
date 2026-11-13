@@ -3,7 +3,27 @@
     <mat-icon>close</mat-icon>
   </button>
 
-  <h2>Documentos de compra y gastos</h2>
+  <h2>Tipos de documento de compra y gastos</h2>
+
+  <button mat-stroked-button type="button" (click)="creando = !creando" [disabled]="guardando">
+    <mat-icon>add</mat-icon> {{ creando ? 'Cancelar' : 'Nuevo documento' }}
+  </button>
+  <section class="dialog-form-section" *ngIf="creando">
+    <h3 class="dialog-form-section__title">Nuevo documento</h3>
+    <p class="dialog-form-section__hint">Crea un documento personalizado para tu establecimiento.</p>
+    <div class="dialog-form-grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Código</mat-label>
+        <input matInput maxlength="10" [(ngModel)]="nuevoCodigo" placeholder="Ej.: NPS">
+        <mat-hint>Entre 1 y 10 letras o números</mat-hint>
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Nombre</mat-label>
+        <input matInput maxlength="100" [(ngModel)]="nuevoNombre" placeholder="Ej.: Pago SUNAT NPS">
+      </mat-form-field>
+      <button mat-raised-button color="primary" type="button" [disabled]="guardando" (click)="crearDocumento()">Guardar documento</button>
+    </div>
+  </section>
 
   <div class="dialog-toolbar">
     <div class="dialog-toolbar__filters dialog-toolbar__filters--single">
@@ -22,7 +42,7 @@
         Disponibilidad de documentos
       </h3>
       <p class="dialog-form-section__hint">
-        Los documentos están predefinidos para el país del establecimiento. Active solo los que utilizará en nuevos ingresos; desactivarlos no altera el historial.
+        Los documentos predefinidos solo pueden activarse o desactivarse. También puedes crear y eliminar tus propios documentos; el historial se conserva.
       </p>
 
       <div class="dialog-table-card">
@@ -69,6 +89,17 @@
                 >
                   {{ documento.Activo ? 'Sí' : 'No' }}
                 </mat-slide-toggle>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="eliminar">
+              <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+              <mat-cell *matCellDef="let documento">
+                <button *ngIf="!documento.EsPredefinido" mat-icon-button type="button" color="warn"
+                  [disabled]="documento.Cambiando" (click)="eliminarDocumento(documento)"
+                  [attr.aria-label]="'Eliminar ' + documento.Descripcion" matTooltip="Eliminar documento personalizado">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
               </mat-cell>
             </ng-container>
 

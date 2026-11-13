@@ -1128,7 +1128,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     const tipos = this.catalogos?.TiposDocumento || [];
     if (!this.notaOrigen) {
       return tipos.filter(tipo =>
-        [1, 2, 3].includes(tipo.Naturaleza)
+        [1, 2, 3, 7].includes(tipo.Naturaleza)
       );
     }
 

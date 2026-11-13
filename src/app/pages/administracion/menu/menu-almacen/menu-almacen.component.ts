@@ -146,11 +146,11 @@ export class MenuAlmacenComponent implements OnInit {
           disabled: false
         },
         {
-          title: 'Documentos de compra y gastos',
+          title: 'Tipos de documento',
           action: 'documentosCompra',
           feature: C.AlmacenCompras,
           icon: 'description',
-          label: 'Documentos',
+          label: 'Tipos de documento',
           titleKey: 'purchaseDocuments',
           labelKey: 'purchaseDocuments',
           disabled: false
@@ -162,21 +162,21 @@ export class MenuAlmacenComponent implements OnInit {
       titleKey: 'menuWarehouseMovements',
       children: [
         {
-          title: 'Ingresos',
+          title: 'Compras y gastos',
           action: 'ingresosCompra',
           feature: C.AlmacenCompras,
           icon: 'move_to_inbox',
-          label: 'Ingresos',
+          label: 'Compras y gastos',
           titleKey: 'stockIn',
           labelKey: 'stockIn',
           disabled: false
         },
         {
-          title: 'Salidas',
+          title: 'Salidas internas',
           action: 'salidasInternas',
           feature: C.AlmacenGestion,
           icon: 'outbox',
-          label: 'Salidas',
+          label: 'Salidas internas',
           titleKey: 'stockOut',
           labelKey: 'stockOut',
           disabled: false

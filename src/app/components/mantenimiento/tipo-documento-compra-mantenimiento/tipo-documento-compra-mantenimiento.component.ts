@@ -16,10 +16,15 @@ export class TipoDocumentoCompraMantenimientoComponent implements OnInit {
     'mascara',
     'estado',
     'acciones',
+    'eliminar',
   ];
   documentos: TipoDocumentoCompraMantenimiento[] = [];
   filtro = '';
   cargando = false;
+  creando = false;
+  guardando = false;
+  nuevoCodigo = '';
+  nuevoNombre = '';
 
   constructor(
     private readonly dialogRef:
@@ -72,6 +77,48 @@ export class TipoDocumentoCompraMantenimientoComponent implements OnInit {
     });
   }
 
+  crearDocumento(): void {
+    const codigo = this.nuevoCodigo.trim().toUpperCase();
+    const descripcion = this.nuevoNombre.trim();
+    if (!/^[A-Z0-9]{1,10}$/.test(codigo) || !descripcion || descripcion.length > 100) {
+      this.mostrarError('Indica un código de 1 a 10 letras o números y un nombre de hasta 100 caracteres.');
+      return;
+    }
+    this.guardando = true;
+    this.tipoDocumentoCompraService.crear({ Codigo: codigo, Descripcion: descripcion }).subscribe({
+      next: response => {
+        this.guardando = false;
+        if (!response.Success || !response.Data) { this.mostrarError(response.Message); return; }
+        this.documentos = [...this.documentos, response.Data].sort((a, b) => a.Descripcion.localeCompare(b.Descripcion));
+        this.nuevoCodigo = '';
+        this.nuevoNombre = '';
+        this.creando = false;
+        Notificar.exito('Documento creado', response.Message || 'El documento ya está disponible.');
+      },
+      error: error => { this.guardando = false; this.mostrarError(error?.error?.Message); },
+    });
+  }
+
+  async eliminarDocumento(documento: TipoDocumentoCompraMantenimiento): Promise<void> {
+    if (documento.EsPredefinido || documento.Cambiando) return;
+    const confirmacion = await Swal.fire({
+      title: '¿Eliminar documento?',
+      text: `Se eliminará ${documento.Descripcion} de las opciones para nuevos registros. Los registros anteriores se conservarán.`,
+      icon: 'warning', showCancelButton: true, confirmButtonText: 'Eliminar', cancelButtonText: 'Cancelar',
+    });
+    if (!confirmacion.isConfirmed) return;
+    documento.Cambiando = true;
+    this.tipoDocumentoCompraService.eliminar(documento.IdTipoDocumentoCompra).subscribe({
+      next: response => {
+        documento.Cambiando = false;
+        if (!response.Success) { this.mostrarError(response.Message); return; }
+        this.documentos = this.documentos.filter(item => item !== documento);
+        Notificar.exito('Documento eliminado', response.Message || 'Se conservó el historial.');
+      },
+      error: error => { documento.Cambiando = false; this.mostrarError(error?.error?.Message); },
+    });
+  }
+
   cerrar(): void {
     this.dialogRef.close();
   }
@@ -90,6 +137,8 @@ export class TipoDocumentoCompraMantenimientoComponent implements OnInit {
         return 'Nota de débito';
       case 6:
         return 'Rectificativa';
+      case 7:
+        return 'Personalizado';
       default:
         return 'Documento de compra';
     }
