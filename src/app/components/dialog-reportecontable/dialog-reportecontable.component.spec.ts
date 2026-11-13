@@ -178,13 +178,16 @@ describe('DialogReportecontableComponent', () => {
     const componente = crear({} as any);
     componente.paisISO2 = 'PE';
     const recepcion = new Date(2026, 9, 23, 16, 35, 12);
+    const pago = new Date(2026, 9, 23, 0, 30, 15);
     const filas = (componente as any).filasCompras([{
       FechaEmision: '2026-10-23', FechaRecepcion: recepcion.toISOString(),
+      FechaPago: pago.toISOString(),
       DesgloseImpuestos: [], DiferenciaDesglose: 0, Otros: 0, ISC: 0,
     }]);
 
     expect(filas[0].FechaEmision).toBe('2026-10-23');
     expect(filas[0].FechaRecepcion).toBe('2026-10-23 16:35:12');
+    expect(filas[0].FechaPago).toBe('2026-10-23 00:30:15');
   });
 
   it('reemplaza el IGV genérico por una columna dinámica por tasa en Perú', () => {
