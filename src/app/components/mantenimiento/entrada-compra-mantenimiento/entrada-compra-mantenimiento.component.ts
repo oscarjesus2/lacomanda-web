@@ -29,6 +29,8 @@ import { Notificar } from 'src/app/shared/notificaciones';
 import { Articulo } from 'src/app/models/articulo.models';
 import { ArticuloMantenimientoComponent } from '../articulo-mantenimiento/articulo-mantenimiento.component';
 import { PagosProveedorComponent } from '../pagos-proveedor/pagos-proveedor.component';
+import { horaLocal, instanteLocal } from 'src/app/shared/fechas/fecha-hora-local';
+import { fechaFiltroParaApi } from 'src/app/shared/fechas/fecha-filtro';
 
 interface LineaCompraEdicion
   extends Omit<EntradaCompraLineaGuardar, 'IdProducto'> {
@@ -88,6 +90,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   catalogos: EntradaCompraCatalogos | null = null;
   compra: EntradaCompra | null = null;
   formulario: EntradaCompraGuardar = this.formularioInicial();
+  horaRecepcion = horaLocal(new Date());
   lineas: LineaCompraEdicion[] = [];
   filtro = {
     FechaInicio: this.inicioMes(),
@@ -218,6 +221,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     this.compra = null;
     this.notaOrigen = null;
     this.formulario = this.formularioInicial();
+    this.horaRecepcion = horaLocal(new Date());
     this.formulario.IdMoneda =
       this.catalogos.IdMonedaPredeterminada ||
       this.catalogos.Monedas[0]?.Id ||
@@ -630,6 +634,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
 
     const dto: EntradaCompraGuardar = {
       ...this.formulario,
+      FechaRecepcion: this.fechaRecepcionParaGuardar()!,
       IdProveedor: Number(this.formulario.IdProveedor),
       IdTipoMovimiento: Number(this.formulario.IdTipoMovimiento),
       IdSubTipoMovimiento: Number(
@@ -1187,10 +1192,11 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
   private cargarFormulario(compra: EntradaCompra): void {
     this.previsualizacionFactura = null;
     this.compra = compra;
+    this.horaRecepcion = horaLocal(new Date(compra.FechaRecepcion));
     this.formulario = {
       IdTipoDocumento: compra.IdTipoDocumento,
       NumDocumento: compra.NumDocumento,
-      FechaEmision: new Date(compra.FechaEmision),
+      FechaEmision: this.fechaEmisionLocal(compra.FechaEmision),
       FechaRecepcion: new Date(compra.FechaRecepcion),
       IdProveedor: compra.IdProveedor,
       IdTipoMovimiento: compra.IdTipoMovimiento,
@@ -1282,6 +1288,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
           <input id="canje-numero" class="swal2-input" placeholder="Número de factura">
           <input id="canje-emision" class="swal2-input" type="date" value="${hoy}">
           <input id="canje-recepcion" class="swal2-input" type="date" value="${hoy}">
+          <input id="canje-hora-recepcion" class="swal2-input" type="time" step="1" value="${horaLocal(new Date())}" aria-label="Hora de recepción">
           <select id="canje-moneda" class="swal2-input">${monedas}</select>
           <input id="canje-cambio" class="swal2-input" type="number" min="0.0001" step="0.0001" value="1" placeholder="Tipo de cambio">
           <input id="canje-observacion" class="swal2-input" placeholder="Observación">
@@ -1299,11 +1306,16 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
           );
           return false;
         }
+        const recepcion = instanteLocal(value('canje-recepcion'), value('canje-hora-recepcion'));
+        if (!recepcion) {
+          Swal.showValidationMessage('Indique una fecha y hora de recepción válidas.');
+          return false;
+        }
         return {
           IdTipoDocumento: value('canje-tipo'),
           NumDocumento: value('canje-numero'),
           FechaEmision: value('canje-emision'),
-          FechaRecepcion: value('canje-recepcion'),
+          FechaRecepcion: recepcion,
           IdMoneda: value('canje-moneda'),
           TasaCambio: Number(value('canje-cambio')),
           Observacion: value('canje-observacion')
@@ -1360,6 +1372,7 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
     this.tipoNotaCreacion = tipo;
     this.tipoAjusteNota = 1;
     this.formulario = this.formularioInicial();
+    this.horaRecepcion = horaLocal(new Date());
     this.formulario.IdProveedor = origen.IdProveedor;
     this.formulario.IdMoneda = origen.IdMoneda;
     this.formulario.TasaCambio = origen.TasaCambio;
@@ -1403,6 +1416,14 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
       Swal.fire(
         'Faltan fechas',
         'Indique las fechas de emisión y recepción.',
+        'info'
+      );
+      return false;
+    }
+    if (!instanteLocal(this.formulario.FechaRecepcion, this.horaRecepcion)) {
+      Swal.fire(
+        'Fecha u hora inválida',
+        'Indique una fecha y hora de recepción válidas.',
         'info'
       );
       return false;
@@ -1684,6 +1705,25 @@ export class EntradaCompraMantenimientoComponent implements OnInit {
           ? linea.FactorConversionUnidad
           : 1) || 1
     };
+  }
+
+  private fechaEmisionLocal(valor: Date | string): Date {
+    if (valor instanceof Date) {
+      return new Date(valor.getFullYear(), valor.getMonth(), valor.getDate());
+    }
+    const [year, month, day] = valor.substring(0, 10).split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  private fechaRecepcionParaGuardar(): Date | null {
+    if (this.compra) {
+      const guardada = new Date(this.compra.FechaRecepcion);
+      if (fechaFiltroParaApi(guardada) === fechaFiltroParaApi(this.formulario.FechaRecepcion) &&
+          horaLocal(guardada) === this.horaRecepcion) {
+        return guardada;
+      }
+    }
+    return instanteLocal(this.formulario.FechaRecepcion, this.horaRecepcion);
   }
 
   private fechaLocal(valor: Date | string): Date | null {

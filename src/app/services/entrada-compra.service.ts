@@ -30,20 +30,27 @@ export class EntradaCompraService {
     Estado?: number | null;
     Buscar?: string;
   }): Observable<ApiResponse<EntradaCompraResumen[]>> {
+    const campoFecha = (filtro.CampoFecha || 'recepcion').trim().toLowerCase();
     let params = new HttpParams()
-      .set('CampoFecha', filtro.CampoFecha || 'recepcion');
+      .set('CampoFecha', campoFecha);
 
     if (filtro.FechaInicio) {
       params = params.set(
         'FechaInicio',
         fechaFiltroParaApi(filtro.FechaInicio)
       );
+      if (campoFecha !== 'emision') {
+        params = params.set('InstanteDesdeUtc', this.inicioDiaLocalUtc(filtro.FechaInicio));
+      }
     }
     if (filtro.FechaFin) {
       params = params.set(
         'FechaFin',
         fechaFiltroParaApi(filtro.FechaFin)
       );
+      if (campoFecha !== 'emision') {
+        params = params.set('InstanteHastaUtcExclusivo', this.inicioDiaLocalUtc(filtro.FechaFin, 1));
+      }
     }
     if (filtro.Estado) {
       params = params.set('Estado', filtro.Estado);
@@ -92,7 +99,7 @@ export class EntradaCompraService {
   ): Observable<ApiResponse<EntradaCompra>> {
     return this.http.post<ApiResponse<EntradaCompra>>(
       `${this.basePath}/documentos-ia/confirmar`,
-      dto
+      { ...dto, Entrada: this.normalizarFechaDocumento(dto.Entrada) }
     );
   }
 
@@ -101,7 +108,7 @@ export class EntradaCompraService {
   ): Observable<ApiResponse<EntradaCompra>> {
     return this.http.post<ApiResponse<EntradaCompra>>(
       this.basePath,
-      dto
+      this.normalizarFechaDocumento(dto)
     );
   }
 
@@ -111,7 +118,7 @@ export class EntradaCompraService {
   ): Observable<ApiResponse<EntradaCompra>> {
     return this.http.put<ApiResponse<EntradaCompra>>(
       `${this.basePath}/${idEntrada}`,
-      dto
+      this.normalizarFechaDocumento(dto)
     );
   }
 
@@ -163,7 +170,11 @@ export class EntradaCompraService {
   ): Observable<ApiResponse<EntradaCompra>> {
     return this.http.post<ApiResponse<EntradaCompra>>(
       `${this.basePath}/canjes`,
-      dto
+      {
+        ...dto,
+        FechaEmision: fechaFiltroParaApi(dto.FechaEmision),
+        FechaRecepcionLocal: fechaFiltroParaApi(dto.FechaRecepcion)
+      }
     );
   }
 
@@ -172,8 +183,20 @@ export class EntradaCompraService {
   ): Observable<ApiResponse<EntradaCompra>> {
     return this.http.post<ApiResponse<EntradaCompra>>(
       `${this.basePath}/notas`,
-      dto
+      { ...dto, Documento: this.normalizarFechaDocumento(dto.Documento) }
     );
   }
 
+  private normalizarFechaDocumento(dto: EntradaCompraGuardar): EntradaCompraGuardar {
+    return {
+      ...dto,
+      FechaEmision: fechaFiltroParaApi(dto.FechaEmision),
+      FechaRecepcionLocal: fechaFiltroParaApi(dto.FechaRecepcion)
+    };
+  }
+
+  private inicioDiaLocalUtc(fecha: FechaFiltro, dias = 0): string {
+    const [year, month, day] = fechaFiltroParaApi(fecha).split('-').map(Number);
+    return new Date(year, month - 1, day + dias).toISOString();
+  }
 }

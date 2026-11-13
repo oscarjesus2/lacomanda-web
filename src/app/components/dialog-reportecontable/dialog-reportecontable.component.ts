@@ -305,12 +305,13 @@ export class DialogReportecontableComponent {
             ...this.columnasImpuestosOpcionales(c, impuestosAdicionales),
           },
         ),
+        FechaRecepcion: this.formatearFechaRecepcion(c.FechaRecepcion),
         Cuadre: this.estadoCuadre(c.DiferenciaDesglose),
       });
     });
     return datos.map(c => this.formatearFilaContable({
       'Fecha de emisión': c.FechaEmision,
-      'Fecha de recepción': c.FechaRecepcion,
+      'Fecha de recepción': this.formatearFechaRecepcion(c.FechaRecepcion),
       'Tipo de documento': this.tiposDocumento.find(tipo =>
         tipo.id === c.IdTipoDocumento)?.descripcion ?? c.TipoDoc,
       Serie: c.SerieDocm,
@@ -338,6 +339,12 @@ export class DialogReportecontableComponent {
         .filter(i => this.tieneImporte(i.Cuota))
         .map(i => i.Tasa))))
       .sort((a, b) => (a ?? Number.MAX_VALUE) - (b ?? Number.MAX_VALUE));
+  }
+
+  private formatearFechaRecepcion(valor: Date | string | null | undefined): string {
+    if (!valor) return '';
+    if (typeof valor === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(valor)) return valor;
+    return formatDate(valor, 'yyyy-MM-dd HH:mm:ss', 'en-US');
   }
 
   /**

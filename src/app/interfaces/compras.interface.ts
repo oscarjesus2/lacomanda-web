@@ -4,7 +4,7 @@ import { ReporteContableImpuesto } from './reporte-contable-impuesto.interface';
 export interface InformeContableCompra {
     IdTipoDocumento: string;
     FechaEmision: string;
-    FechaRecepcion: string;
+    FechaRecepcion: string | Date;
     EstadoDocumento: string;
   TipoDoc: string;
   TipoDocm: string;

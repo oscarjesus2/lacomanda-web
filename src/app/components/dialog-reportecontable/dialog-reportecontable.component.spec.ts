@@ -174,6 +174,19 @@ describe('DialogReportecontableComponent', () => {
     expect(filas[0]['IVA 21%']).toBe('21,00');
   });
 
+  it('mantiene la emisión como fecha fija y muestra la recepción en hora local', () => {
+    const componente = crear({} as any);
+    componente.paisISO2 = 'PE';
+    const recepcion = new Date(2026, 9, 23, 16, 35, 12);
+    const filas = (componente as any).filasCompras([{
+      FechaEmision: '2026-10-23', FechaRecepcion: recepcion.toISOString(),
+      DesgloseImpuestos: [], DiferenciaDesglose: 0, Otros: 0, ISC: 0,
+    }]);
+
+    expect(filas[0].FechaEmision).toBe('2026-10-23');
+    expect(filas[0].FechaRecepcion).toBe('2026-10-23 16:35:12');
+  });
+
   it('reemplaza el IGV genérico por una columna dinámica por tasa en Perú', () => {
     const componente = crear({} as any);
     componente.paisISO2 = 'PE';
