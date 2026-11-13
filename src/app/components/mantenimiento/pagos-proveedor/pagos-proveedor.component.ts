@@ -10,6 +10,7 @@ import {
 } from 'src/app/models/entrada-compra.models';
 import { EntradaCompraService } from 'src/app/services/entrada-compra.service';
 import { Notificar } from 'src/app/shared/notificaciones';
+import { horaLocal, instanteLocal } from 'src/app/shared/fechas/fecha-hora-local';
 
 @Component({
   selector: 'app-pagos-proveedor',
@@ -19,6 +20,7 @@ export class PagosProveedorComponent implements OnInit {
   compra: EntradaCompra | null = null;
   tiposPago: EntradaCompraOpcionEntera[] = [];
   pago: PagoProveedorGuardar = this.pagoInicial();
+  horaPago = horaLocal(new Date());
   fechaPagoProgramada: Date | null = null;
   cargando = true;
   guardando = false;
@@ -68,8 +70,17 @@ export class PagosProveedorComponent implements OnInit {
       Swal.fire('Faltan datos', 'Seleccione la forma de pago e indique un importe.', 'info');
       return;
     }
+    const instante = this.pago.FechaPago && instanteLocal(this.pago.FechaPago, this.horaPago);
+    if (!instante) {
+      Swal.fire('Fecha u hora inválida', 'Indique una fecha y hora de pago válidas.', 'info');
+      return;
+    }
     this.guardando = true;
-    this.entradaCompraService.registrarPagoProveedor(this.compra.IdEntrada, this.pago)
+    this.entradaCompraService.registrarPagoProveedor(this.compra.IdEntrada, {
+      ...this.pago,
+      FechaPago: instante,
+      DesfaseUtcMinutos: -instante.getTimezoneOffset(),
+    })
       .subscribe({
         next: respuesta => {
           this.guardando = false;
@@ -150,6 +161,7 @@ export class PagosProveedorComponent implements OnInit {
     this.fechaPagoProgramada = compra.FechaPagoProgramada
       ? new Date(compra.FechaPagoProgramada) : null;
     this.pago = this.pagoInicial();
+    this.horaPago = horaLocal(new Date());
     this.pago.IdMoneda = compra.IdMoneda;
     this.pago.MontoPagado = this.saldoPendiente;
     this.pago.IdTipoPago = this.tiposPago[0]?.Id ?? null;

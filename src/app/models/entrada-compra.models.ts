@@ -116,6 +116,7 @@ export interface PagoProveedor {
 
 export interface PagoProveedorGuardar {
   FechaPago: Date | string;
+  DesfaseUtcMinutos?: number;
   IdTipoPago: number | null;
   IdMoneda: string;
   IdBancoOrigen: number | null;

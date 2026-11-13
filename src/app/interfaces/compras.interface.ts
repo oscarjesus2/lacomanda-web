@@ -31,7 +31,7 @@ export interface InformeContableCompra {
   FechaDepositoDetraccion: string;
   NoDepositoDetraccion: string;
   Usuario: string;
-  FechaPago: string;
+  FechaPago: string | Date | null;
   Referencia: string;
   Cuenta: string;
 }

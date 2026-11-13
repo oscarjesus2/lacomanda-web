@@ -87,9 +87,16 @@
               name="fechaPagoReal"
               [matDatepicker]="fechaPagoReal"
               [(ngModel)]="pago.FechaPago"
+              (ngModelChange)="horaPago = ''"
             >
             <mat-datepicker-toggle matSuffix [for]="fechaPagoReal"></mat-datepicker-toggle>
             <mat-datepicker #fechaPagoReal></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Hora del pago</mat-label>
+            <input matInput type="time" step="1" name="horaPago" [(ngModel)]="horaPago" required>
+            <mat-hint>Indica la hora en que se realizó el pago.</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="fill">
@@ -154,7 +161,7 @@
               </thead>
               <tbody>
                 <tr *ngFor="let pagoRegistrado of compra.PagosProveedor">
-                  <td>{{ pagoRegistrado.FechaPago | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ pagoRegistrado.FechaPago | date:'dd/MM/yyyy HH:mm:ss' }}</td>
                   <td>{{ pagoRegistrado.TipoPago }}</td>
                   <td>{{ pagoRegistrado.Referencia || '—' }}</td>
                   <td>{{ pagoRegistrado.Observacion || '—' }}</td>
