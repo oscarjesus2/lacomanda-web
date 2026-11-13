@@ -23,6 +23,7 @@ import { SubAreaAlmacenService } from 'src/app/services/sub-area-almacen.service
 import { AreaAlmacen } from 'src/app/models/receta.models';
 import { SubAreaAlmacen } from 'src/app/models/almacen-maestro.models';
 import { ProveedorService } from 'src/app/services/proveedor.service';
+import { ajustarSeleccionImpuestos } from 'src/app/shared/impuestos/seleccion-impuestos';
 
 export interface ArticuloMantenimientoData {
   creacionRapida?: boolean;
@@ -70,6 +71,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
   private readonly descripcionSugerida: string;
   private readonly unidadCompraSugerida: string;
   private readonly factorConversionSugerido: number;
+  private impuestosAnteriores: string[] = [];
 
   get modoRapido(): boolean {
     return this.creacionRapida || !!this.idArticuloEditar;
@@ -187,6 +189,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
       Impuestos: this.impuestosPredeterminados(),
       IdAreaAlmacen: this.areas[0]?.IdArea ?? null
     });
+    this.impuestosAnteriores = [...this.articulo.Impuestos];
     this.usarSubAreaFija = false;
     this.tipoFormulario = 'A';
     this.cargarGrupos('A');
@@ -227,6 +230,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
       }))
     });
     this.usarSubAreaFija = !!row.IdSubAreaAlmacenDescarga;
+    this.impuestosAnteriores = [...this.articulo.Impuestos];
     this.tipoFormulario = row.EsServicio ? 'S' : row.InsumoProducto;
     this.cargarGrupos(row.InsumoProducto === 'I' ? 'I' : 'A');
     this.showForm = true;
@@ -248,6 +252,13 @@ export class ArticuloMantenimientoComponent implements OnInit {
 
     this.articulo.IdGrupoCompra = null;
     this.cargarGrupos(this.articulo.InsumoProducto === 'I' ? 'I' : 'A');
+  }
+
+  cambiarImpuestos(seleccion: string[]): void {
+    const impuestos = ajustarSeleccionImpuestos(seleccion, this.impuestosAnteriores);
+    this.articulo.Impuestos = impuestos;
+    this.articulo.IdImpuestoPais = impuestos[0] || '';
+    this.impuestosAnteriores = [...impuestos];
   }
 
   cambiarUnidadStock(): void {

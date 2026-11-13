@@ -217,7 +217,8 @@
 
           <mat-form-field appearance="fill" *ngIf="!esProductoVentaEditado">
             <mat-label>Impuestos aplicables</mat-label>
-            <mat-select name="impuestos" [(ngModel)]="articulo.Impuestos" multiple required>
+            <mat-select name="impuestos" [(ngModel)]="articulo.Impuestos" multiple required
+              (selectionChange)="cambiarImpuestos($event.value)">
               <mat-option
                 *ngFor="let impuesto of impuestos"
                 [value]="impuesto.IdImpuestoPais"
