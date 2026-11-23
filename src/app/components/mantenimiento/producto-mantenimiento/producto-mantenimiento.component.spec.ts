@@ -1,4 +1,4 @@
-import { EMPTY, of, Subject } from 'rxjs';
+import { EMPTY, of, Subject, throwError } from 'rxjs';
 import Swal from 'sweetalert2';
 import { CARACTERISTICAS_LICENCIA } from 'src/app/constants/caracteristicas-licencia';
 import { ProductoMantenimientoComponent } from './producto-mantenimiento.component';
@@ -12,6 +12,7 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
     const productoService = {
       crear: jasmine.createSpy().and.returnValue(EMPTY),
       actualizar: jasmine.createSpy().and.returnValue(EMPTY),
+      eliminar: jasmine.createSpy().and.returnValue(EMPTY),
       getAllProductos: jasmine.createSpy().and.returnValue(respuestaVacia),
       obtenerImagen: jasmine.createSpy().and.returnValue(of(new Blob())),
       guardarImagen: jasmine.createSpy().and.returnValue(of({
@@ -78,6 +79,18 @@ describe('ProductoMantenimientoComponent - catálogos por licencia', () => {
       proveedorService,
     };
   }
+
+  it('no reemplaza el mensaje centralizado cuando falla la eliminación', async () => {
+    const { componente, productoService } = crearComponente([]);
+    productoService.eliminar.and.returnValue(throwError(() => new Error('Error HTTP')));
+    const alerta = spyOn(Swal, 'fire').and.returnValue(Promise.resolve({ isConfirmed: true } as any));
+
+    componente.onDelete(42);
+    await Promise.resolve();
+
+    expect(productoService.eliminar).toHaveBeenCalledOnceWith(42);
+    expect(alerta).toHaveBeenCalledTimes(1);
+  });
 
   it('no consulta catálogos de restaurante para la licencia Comercio', () => {
     const dependencias = crearComponente([

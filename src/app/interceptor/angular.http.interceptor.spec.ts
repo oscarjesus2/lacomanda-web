@@ -2,6 +2,25 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { ApiRequestInterceptor } from './angular.http.interceptor';
 
+describe('ApiRequestInterceptor - errores de validación', () => {
+  it('presenta el mensaje de la excepción enviada por el backend', () => {
+    const notification = { showWarning: jasmine.createSpy('showWarning') };
+    const interceptor = new ApiRequestInterceptor(
+      {} as any, {} as any, {} as any, notification as any,
+      {} as any, {} as any, {} as any, {} as any,
+    );
+    const message = 'No se puede eliminar el artículo porque está asociado a otros registros.';
+    const error = new HttpErrorResponse({
+      status: 400,
+      error: { ErrorCode: 'DELETE_NOT_ALLOWED_DUE_TO_REFERENCES', Message: message },
+    });
+
+    (interceptor as any).presentError(error);
+
+    expect(notification.showWarning).toHaveBeenCalledOnceWith(message);
+  });
+});
+
 describe('ApiRequestInterceptor - acceso por suscripción', () => {
   const blockedCodes = [
     'SUBSCRIPTION_PAYMENT_REQUIRED',

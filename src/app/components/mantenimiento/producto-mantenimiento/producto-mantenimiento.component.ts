@@ -886,7 +886,9 @@ onFamiliaChange(): void {
             if (!res.Success) { Swal.fire('Error', res.Message || 'No se pudo eliminar', 'error'); return; }
             this.cargarTodo(); Notificar.exito('Producto eliminado', '');
           },
-          error: () => Swal.fire('Error', 'No se pudo eliminar', 'error')
+          error: () => {
+            // El interceptor ya presenta el motivo devuelto por el servidor.
+          }
         });
       }
     });

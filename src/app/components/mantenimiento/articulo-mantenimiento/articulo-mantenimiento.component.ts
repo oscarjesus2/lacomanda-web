@@ -406,7 +406,7 @@ export class ArticuloMantenimientoComponent implements OnInit {
   eliminar(row: Articulo): void {
     Swal.fire({
       title: '¿Eliminar artículo?',
-      text: 'Solo se eliminará si no es un producto de venta ni tiene registros asociados.',
+      text: 'Se retirará de menús, recetas y configuraciones. No podrá eliminarse si tiene movimientos o es un producto interno protegido.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Eliminar',
