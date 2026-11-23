@@ -4067,6 +4067,28 @@ mat-row:hover mat-cell {
   pointer-events: none;
 }
 
+/* Elementos reutilizables para formularios y estados vacíos. */
+.form-section-heading { align-items: center; display: flex; gap: 10px; margin-bottom: 16px; }
+.form-section-heading__icon, .form-empty-state__icon { align-items: center; background: #fff0e7; border-radius: 12px; color: #c43a12; display: inline-flex; flex: 0 0 auto; height: 40px; justify-content: center; width: 40px; }
+.form-section-heading > div { min-width: 0; }
+.form-section-heading > div > h3 { margin: 0 0 2px; }
+.form-section-heading > div > span { color: var(--color-text-muted); font-size: 12px; }
+.form-field-grid { align-items: start; }
+.mat-mdc-form-field-hint.form-field-guidance--icon { align-items: flex-start; display: flex; gap: 6px; }
+.mat-mdc-form-field-hint.form-field-guidance--icon > mat-icon { color: #b74320; flex: 0 0 auto; font-size: 18px; height: 18px; line-height: 18px; width: 18px; }
+.form-field-guidance--icon > span { min-width: 0; }
+.form-option-card { background: #fff8f2; border: 1px solid #eedbd0; border-radius: 12px; margin: 16px 0 12px; padding: 12px 14px; }
+.form-option-card .mdc-form-field { align-items: flex-start; }
+.form-option-card .mdc-label { white-space: normal; }
+.form-option-card__label { display: flex; flex-direction: column; gap: 3px; }
+.form-option-card__label strong { color: var(--color-text); font-size: 14px; }
+.form-option-card__label small { color: var(--color-text-muted); font-size: 12px; line-height: 1.4; }
+.form-empty-state { align-items: center; background: #faf6f3; border: 1px dashed #e4cfc2; border-radius: 12px; color: #75665d; display: flex; flex-direction: column; gap: 8px; padding: 28px 16px; text-align: center; }
+.form-empty-state__icon { height: 48px; width: 48px; }
+.form-empty-state strong { color: #46271d; font-size: 14px; }
+.form-empty-state > span:not(.form-empty-state__icon) { font-size: 12px; }
+.form-empty-state button { margin-top: 4px; }
+
 /* =========================
    TEXTOS DE AYUDA / HINTS
    ========================= */
@@ -5812,14 +5834,16 @@ body.teclado-en-pantalla .cdk-global-overlay-wrapper .mant-panel {
 .reservations-public-link { align-items: center; background: #fff; border: 1px dashed #d7b8a8; border-radius: 8px; display: flex; grid-column: 1 / -1; justify-content: space-between; padding-left: 11px; }
 .reservations-public-link code { color: #8c2b12; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .reservations-config-card h3 { color: #75210e; font-size: 14px; margin: 0 0 12px; text-transform: uppercase; }
-.reservations-config-fields { display: grid; gap: 8px; grid-template-columns: repeat(3, 1fr); }
+.reservations-config-fields { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+.reservations-config-fields .mat-mdc-form-field { min-width: 0; }
+.reservations-config-fields .mat-mdc-form-field-text-suffix { padding-right: 12px; white-space: nowrap; }
 .reservations-full { display: block; margin-top: 8px; width: 100%; }
 .reservations-config-heading { align-items: flex-start; display: flex; justify-content: space-between; margin-bottom: 10px; }
 .reservations-config-heading h3 { margin-bottom: 2px; }
 .reservation-schedule { align-items: center; display: grid; gap: 7px; grid-template-columns: 1.2fr 1fr 1fr auto auto; }
 .reservations-inline-empty { background: #faf6f3; border-radius: 8px; color: #817269; font-size: 12px; padding: 18px; text-align: center; }
 .reservations-admin__footer { align-items: center; border-top: 1px solid #eee4dd; display: flex; justify-content: space-between; margin-top: 12px; padding: 12px 0 0; }
-.reservations-admin__footer span { align-items: center; color: #776960; display: flex; font-size: 12px; gap: 6px; }
+.reservations-admin__footer > span { align-items: center; color: #776960; display: flex; font-size: 12px; gap: 6px; }
 .reservations-info { align-items: center; background: #fff8ec; border: 1px solid #ead7ba; border-radius: 10px; color: #695a50; display: flex; font-size: 12px; gap: 9px; margin-bottom: 12px; padding: 10px 12px; }
 .reservation-tables-grid { display: grid; gap: 9px; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); overflow: auto; }
 .reservation-table-card { background: #faf7f5; border: 1px solid #e5ddd8; border-radius: 11px; display: flex; flex-direction: column; padding: 12px; }
