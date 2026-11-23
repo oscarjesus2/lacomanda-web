@@ -38,6 +38,28 @@ export class ReservasMantenimientoComponent implements OnInit {
     });
   }
 
+  describirMinutos(valor: number | null | undefined): string {
+    if (valor == null || !Number.isInteger(valor) || valor < 0) return 'el tiempo indicado';
+    const horas = Math.floor(valor / 60);
+    const minutos = valor % 60;
+    const partes: string[] = [];
+    if (horas) partes.push(`${horas} ${horas === 1 ? 'hora' : 'horas'}`);
+    if (minutos || !horas) partes.push(`${minutos} ${minutos === 1 ? 'minuto' : 'minutos'}`);
+    return partes.join(' y ');
+  }
+
+  ejemploHorarios(intervalo: number | null | undefined): string {
+    if (intervalo == null || !Number.isInteger(intervalo) || intervalo <= 0 || intervalo >= 1440) {
+      return 'Indica cada cuántos minutos ofrecer horarios.';
+    }
+    if (780 + intervalo * 2 >= 1440) return `Un horario cada ${this.describirMinutos(intervalo)}.`;
+    const hora = (minutos: number): string => {
+      const total = minutos % 1440;
+      return `${Math.floor(total / 60).toString().padStart(2, '0')}:${(total % 60).toString().padStart(2, '0')}`;
+    };
+    return `Ejemplo: ${hora(780)} · ${hora(780 + intervalo)} · ${hora(780 + intervalo * 2)}`;
+  }
+
   agregarHorario(): void {
     this.configuracion?.Horarios.push({ DiaSemana: 1, HoraInicio: '13:00', HoraFin: '16:00' });
   }

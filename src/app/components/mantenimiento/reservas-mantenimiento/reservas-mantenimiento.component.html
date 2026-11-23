@@ -24,21 +24,31 @@
           <div class="reservations-public-link"><code>{{ publicUrl }}</code><button mat-icon-button (click)="copiarEnlace()"><mat-icon>content_copy</mat-icon></button></div>
         </div>
         <div class="reservations-config-card">
-          <h3>Reglas de disponibilidad</h3>
-          <div class="reservations-config-fields">
-            <mat-form-field appearance="fill"><mat-label>Bloquear cada mesa durante</mat-label><input matInput type="number" [(ngModel)]="configuracion.DuracionMinutos"><span matSuffix>min</span><mat-hint>Tiempo estimado que dura la reserva.</mat-hint></mat-form-field>
-            <mat-form-field appearance="fill"><mat-label>Mostrar horarios disponibles cada</mat-label><input matInput type="number" [(ngModel)]="configuracion.IntervaloMinutos"><span matSuffix>min</span><mat-hint>Ej.: 30 muestra 13:00, 13:30, 14:00…</mat-hint></mat-form-field>
-            <mat-form-field appearance="fill"><mat-label>Permitir reservar con al menos</mat-label><input matInput type="number" [(ngModel)]="configuracion.AnticipacionMinimaMinutos"><span matSuffix>min</span><mat-hint>Tiempo mínimo antes de la hora elegida.</mat-hint></mat-form-field>
-            <mat-form-field appearance="fill"><mat-label>Permitir reservar hasta dentro de</mat-label><input matInput type="number" [(ngModel)]="configuracion.DiasAntelacion"><span matSuffix>días</span><mat-hint>Máximo de días futuros visibles.</mat-hint></mat-form-field>
-            <mat-form-field appearance="fill"><mat-label>Permitir cancelar con al menos</mat-label><input matInput type="number" [(ngModel)]="configuracion.CancelacionMinimaMinutos"><span matSuffix>min</span><mat-hint>Después deberá contactar con el restaurante.</mat-hint></mat-form-field>
-            <mat-form-field appearance="fill"><mat-label>Personas permitidas por reserva</mat-label><input matInput type="number" [(ngModel)]="configuracion.MaximoPersonasPorReserva"><span matSuffix>personas</span><mat-hint>También debe existir una mesa con capacidad.</mat-hint></mat-form-field>
+          <div class="form-section-heading">
+            <span class="form-section-heading__icon"><mat-icon aria-hidden="true">tune</mat-icon></span>
+            <div><h3>Reglas de disponibilidad</h3><span>Define cómo se reciben tus reservas</span></div>
           </div>
-          <mat-slide-toggle [(ngModel)]="configuracion.ConfirmacionAutomatica">Confirmar automáticamente si existe una mesa libre</mat-slide-toggle>
+          <div class="reservations-config-fields form-field-grid">
+            <mat-form-field appearance="fill" subscriptSizing="dynamic"><mat-label>Duración de cada reserva</mat-label><input matInput type="number" [(ngModel)]="configuracion.DuracionMinutos"><span matSuffix>minutos</span><mat-hint class="form-field-guidance form-field-guidance--icon"><mat-icon aria-hidden="true">schedule</mat-icon><span>La mesa se reserva durante {{ describirMinutos(configuracion.DuracionMinutos) }}.</span></mat-hint></mat-form-field>
+            <mat-form-field appearance="fill" subscriptSizing="dynamic"><mat-label>Intervalo entre horarios</mat-label><input matInput type="number" [(ngModel)]="configuracion.IntervaloMinutos"><span matSuffix>minutos</span><mat-hint class="form-field-guidance form-field-guidance--icon"><mat-icon aria-hidden="true">update</mat-icon><span>{{ ejemploHorarios(configuracion.IntervaloMinutos) }}</span></mat-hint></mat-form-field>
+            <mat-form-field appearance="fill" subscriptSizing="dynamic"><mat-label>Antelación mínima para reservar</mat-label><input matInput type="number" [(ngModel)]="configuracion.AnticipacionMinimaMinutos"><span matSuffix>minutos</span><mat-hint class="form-field-guidance form-field-guidance--icon"><mat-icon aria-hidden="true">event_available</mat-icon><span>Reservar al menos {{ describirMinutos(configuracion.AnticipacionMinimaMinutos) }} antes.</span></mat-hint></mat-form-field>
+            <mat-form-field appearance="fill" subscriptSizing="dynamic"><mat-label>Reservas con hasta</mat-label><input matInput type="number" [(ngModel)]="configuracion.DiasAntelacion"><span matSuffix>días</span><mat-hint class="form-field-guidance form-field-guidance--icon"><mat-icon aria-hidden="true">date_range</mat-icon><span>Hasta cuántos días por adelantado se puede reservar.</span></mat-hint></mat-form-field>
+            <mat-form-field appearance="fill" subscriptSizing="dynamic"><mat-label>Antelación mínima para cancelar</mat-label><input matInput type="number" [(ngModel)]="configuracion.CancelacionMinimaMinutos"><span matSuffix>minutos</span><mat-hint class="form-field-guidance form-field-guidance--icon"><mat-icon aria-hidden="true">event_busy</mat-icon><span>Cancelar online al menos {{ describirMinutos(configuracion.CancelacionMinimaMinutos) }} antes.</span></mat-hint></mat-form-field>
+            <mat-form-field appearance="fill" subscriptSizing="dynamic"><mat-label>Máximo de personas por reserva</mat-label><input matInput type="number" [(ngModel)]="configuracion.MaximoPersonasPorReserva"><span matSuffix>personas</span><mat-hint class="form-field-guidance form-field-guidance--icon"><mat-icon aria-hidden="true">groups</mat-icon><span>Se necesita una mesa con capacidad para todo el grupo.</span></mat-hint></mat-form-field>
+          </div>
+          <div class="form-option-card">
+            <mat-slide-toggle [(ngModel)]="configuracion.ConfirmacionAutomatica">
+              <span class="form-option-card__label">
+                <strong>Confirmación automática</strong>
+                <small>{{ configuracion.ConfirmacionAutomatica ? 'Se confirman si hay una mesa libre.' : 'Las reservas quedan pendientes de confirmación.' }}</small>
+              </span>
+            </mat-slide-toggle>
+          </div>
           <mat-form-field appearance="fill" class="reservations-full"><mat-label>Mensaje para el cliente</mat-label><textarea matInput rows="2" maxlength="500" [(ngModel)]="configuracion.MensajePublico"></textarea></mat-form-field>
           <mat-form-field appearance="fill" class="reservations-full"><mat-label>Teléfono de contacto</mat-label><input matInput [(ngModel)]="configuracion.TelefonoContacto"></mat-form-field>
         </div>
         <div class="reservations-config-card">
-          <div class="reservations-config-heading"><div><h3>Horarios reservables</h3><span>Puedes añadir varios servicios el mismo día, por ejemplo comida y cena.</span></div><button mat-stroked-button (click)="agregarHorario()"><mat-icon>add</mat-icon>Añadir</button></div>
+          <div class="reservations-config-heading"><div><h3>Horarios reservables</h3><span>Puedes añadir varios servicios el mismo día, por ejemplo comida y cena.</span></div><button *ngIf="configuracion.Horarios.length" mat-stroked-button type="button" (click)="agregarHorario()"><mat-icon>add</mat-icon>Añadir</button></div>
           <div class="reservation-schedule" *ngFor="let horario of configuracion.Horarios; let i = index">
             <mat-form-field appearance="fill"><mat-label>Día</mat-label><mat-select [(ngModel)]="horario.DiaSemana"><mat-option *ngFor="let dia of dias; let d = index" [value]="d">{{ dia }}</mat-option></mat-select></mat-form-field>
             <mat-form-field appearance="fill"><mat-label>Desde</mat-label><input matInput type="time" [(ngModel)]="horario.HoraInicio"></mat-form-field>
@@ -46,7 +56,12 @@
             <button mat-icon-button matTooltip="Duplicar al día siguiente" (click)="duplicarHorario(horario)"><mat-icon>content_copy</mat-icon></button>
             <button mat-icon-button color="warn" matTooltip="Eliminar" (click)="eliminarHorario(i)"><mat-icon>delete_outline</mat-icon></button>
           </div>
-          <div class="reservations-inline-empty" *ngIf="!configuracion.Horarios.length">Aún no has definido horarios. Añade el primer servicio para poder publicar.</div>
+          <div class="form-empty-state" *ngIf="!configuracion.Horarios.length">
+            <span class="form-empty-state__icon"><mat-icon aria-hidden="true">event_available</mat-icon></span>
+            <strong>Añade tu primer horario</strong>
+            <span>Define cuándo aceptas reservas para poder publicar.</span>
+            <button mat-stroked-button type="button" (click)="agregarHorario()"><mat-icon>add</mat-icon>Añadir horario</button>
+          </div>
         </div>
       </section>
       <div class="reservations-admin__footer"><span><mat-icon>table_restaurant</mat-icon>{{ configuracion.MesasHabilitadas }} mesas habilitadas</span><button mat-raised-button color="primary" (click)="guardarConfiguracion()" [disabled]="guardando"><mat-icon>save</mat-icon>Guardar configuración</button></div>
