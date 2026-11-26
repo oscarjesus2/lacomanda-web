@@ -46,6 +46,9 @@ import { validarSolicitudVentaDirecta } from '../dialog-emitir-venta/venta-direc
 import { ReprintFormat, ReprintFormatService } from 'src/app/services/reprint-format.service';
 import { PagoCuentaOnlinePendiente } from 'src/app/models/mesa-cliente.models';
 import { MesaClienteService } from 'src/app/services/mesa-cliente.service';
+import { CuentaLocal } from 'src/app/offline/caja-offline-api.service';
+import { CajaOfflineSesionService } from 'src/app/offline/caja-offline-sesion.service';
+import { prepararDocumentoPendiente, requiereIdentidadCaja } from 'src/app/offline/documento-caja-offline';
 
 
 @Component({
@@ -121,6 +124,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   modoVentaDirecta = false;
   listaDescuentoCodigo: DescuentoCodigo[] = [];
   pagosOnlineCuenta: PagoCuentaOnlinePendiente[] = [];
+  readonly cuentaLocal?: CuentaLocal;
+  guardandoCobroLocal = false;
 
   constructor(
     public dialogRef: MatDialogRef<DialogEmitirComprobanteComponent>,
@@ -144,7 +149,9 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     private ventaDirectaService: VentaDirectaService,
     private reprintFormat: ReprintFormatService,
     private mesaClienteService: MesaClienteService,
+    private sesionLocal: CajaOfflineSesionService,
   ) {
+    this.cuentaLocal = data.cuentaLocal;
     this.dataSourcePago = new MatTableDataSource([]);
     this.nuevoRegistro.Tarjeta = new Tarjeta();
     this.lblcambio = parseFloat(data.lblcambio).toFixed(2);
@@ -155,10 +162,10 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     this.bTurnoIndenpendiente = data.bTurnoIndenpendiente;
     this.pedidoCab = data.pedidoCab;
     this.listaDescuentoCodigo = data.listaDescuentoCodigo;
-    this.idTurno = data.idTurno;
+    this.idTurno = this.cuentaLocal?.contenido.IdTurno ?? data.idTurno;
     this.modoVentaDirecta = data.modoVentaDirecta === true;
     if (this.idTipoPedido === '003') {
-      if (data.ruc.trim() != "" && data.ruc.trim() != "0") {
+      if (data.ruc?.trim() && data.ruc.trim() !== '0') {
         this.cliente.NumeroIdentificacion = data.ruc;
         this.cliente.IdCliente = data.idClienteDelivery;
         this.cliente.RazonSocial = data.clienteDelivery
@@ -197,6 +204,47 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   async ngOnInit() {
 
+    if (this.cuentaLocal) {
+      const monedas = this.sesionLocal.maestros.monedas;
+      const principal = monedas.find(m => m.IdMoneda === this.cuentaLocal.contenido.Moneda) ?? monedas.find(m => m.EsOficial);
+      this.monedaPrincipal = principal ? new Moneda(principal) : null;
+      const alternativa = monedas.find(m => m.IdMoneda !== principal?.IdMoneda);
+      this.monedaAlternativa = alternativa && Number(this.lblcambio) > 0 ? new Moneda(alternativa) : null;
+      this.config = Object.assign(new Configuracion(), { PaisISO2: this.sesionLocal.contexto.paisISO2, SimboloMoneda: principal?.Simbolo });
+      this.lblmonto = this.cuentaLocal.contenido.Total.toFixed(2);
+      this.calcularMonto();
+      if (this.correoRequerido) {
+        this.form.get('cliente.correo').setValidators([Validators.required, Validators.email, Validators.maxLength(254)]);
+        this.form.get('cliente.correo').updateValueAndValidity();
+      }
+    } else {
+      this.inicializarCuentaOnline();
+    }
+
+    await this.initializeTipoDocumento();
+    await this.initializeTipoDocCliente();
+    await this.initializeValoresCaja();
+    await this.initializeTarjetas();
+
+    this.form.get('cliente.tipoIdentidad')?.valueChanges.subscribe(() => {
+      this.updateRucValidator();
+      this.form.get('cliente')?.updateValueAndValidity();
+    });
+    this.form.get('idTipoDoc')?.valueChanges.subscribe(() => this.updateRucValidator());
+    this.form.get('cliente.ruc')?.valueChanges.subscribe(() => {
+      this.form.get('cliente.razonSocial')?.updateValueAndValidity();
+    });
+  }
+
+  get correoRequerido(): boolean {
+    return !!this.cuentaLocal && this.tipoDocumento.IdTipoDocumento !== EnumTipoDocumento.Express;
+  }
+
+  get efectivoDisponible(): boolean {
+    return !this.cuentaLocal || this.sesionLocal.maestros.tiposPago.some(p => p.IdTipoPago === TipoPagoEnum.Efectivo);
+  }
+
+  private inicializarCuentaOnline(): void {
     // Cargar configuración y monedas del país
     this.configuracionService.get().subscribe(cfg => {
       this.config = cfg;
@@ -212,24 +260,6 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     this.ValidaTotalAPagar();
     this.cargarPagosOnlineCuenta();
 
-    await this.initializeTipoDocumento();   // primero: detecta isFactSimplificadaES
-    await this.initializeTipoDocCliente(); // segundo: usa isFactSimplificadaES para saber si omitir cliente
-    await this.initializeValoresCaja();
-
-    await this.initializeTarjetas();
-
-    this.form.get('cliente.tipoIdentidad')?.valueChanges.subscribe(() => {
-      this.updateRucValidator();
-      this.form.get('cliente')?.updateValueAndValidity();
-    });
-
-    this.form.get('idTipoDoc')?.valueChanges.subscribe(() => {
-      this.updateRucValidator();
-    });
-
-    this.form.get('cliente.ruc')?.valueChanges.subscribe(() => {
-      this.form.get('cliente.razonSocial')?.updateValueAndValidity();
-    });
   }
 
   agregarRegistro() {
@@ -253,7 +283,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     const isExpress          = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.Express;
     const isFactSimplificada = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.FacturaSimplificada;
     const isBoletaManual     = this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaManual;
-    if ((isBoletaVenta || isExpress || isFactSimplificada || isBoletaManual) && tipoIdentidad === EnumTipoIdentidad.DNI) {
+    if (!this.cuentaLocal && (isBoletaVenta || isExpress || isFactSimplificada || isBoletaManual) && tipoIdentidad === EnumTipoIdentidad.DNI) {
       clienteFormGroup.patchValue({ ruc: '00000001', razonSocial: 'Cliente Varios' });
     }
 
@@ -432,6 +462,12 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   private async initializeValoresCaja(): Promise<void> {
+    if (this.cuentaLocal) {
+      this.permiteVentaCredito = this.sesionLocal.caja?.PermiteVentaCredito === true;
+      this.form.get('serie').disable();
+      this.form.get('lblcorrelativo').disable();
+      return;
+    }
     let serie: string = '';
     let correlativo: string = '';
     let cajaTipoDocumento: CajaTipoDocumento[];
@@ -488,8 +524,9 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   private async initializeTipoDocCliente(): Promise<void> {
     try {
-      const response = await this.tipoDocClienteService.getTipoDocClientes().toPromise();
-      const allTipoDocumentoCliente = response.Data ?? [];
+      const allTipoDocumentoCliente: TipoIdentidad[] = this.cuentaLocal
+        ? this.sesionLocal.maestros.identidades.filter(tipo => tipo.Activo)
+        : (await this.tipoDocClienteService.getTipoDocClientes().toPromise()).Data ?? [];
 
       // Para tipos con cliente opcional (Boleta, FS, Express): precargar la lista
       // pero NO rellenar datos del cliente (el bloque está oculto por defecto).
@@ -521,7 +558,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
       let ruc = '';
       let razonSocial = '';
-      if (esSimplificada) {
+      if (esSimplificada && !this.cuentaLocal) {
         ruc = '00000001';
         razonSocial = 'Cliente Varios';
       }
@@ -575,7 +612,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     this.mostrarDatosCliente = true;
     // Abrir vacío — sin valores por defecto
     const clienteGrp = this.form.get('cliente') as FormGroup;
-    clienteGrp.patchValue({ tipoIdentidad: null, ruc: '', razonSocial: '', direccion: '', correo: '' });
+    clienteGrp.patchValue({ tipoIdentidad: null, ruc: '', razonSocial: '', direccion: '', ...(!this.cuentaLocal && { correo: '' }) });
     this.etiquetaCliente = '';
     this.actualizarValidadoresCliente();
     this.updateRucValidator();
@@ -587,13 +624,14 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     this.mostrarDatosCliente = false;
     // Limpiar campos
     const clienteGrp = this.form.get('cliente') as FormGroup;
-    clienteGrp.patchValue({ tipoIdentidad: null, ruc: '', razonSocial: '', direccion: '', correo: '' });
+    clienteGrp.patchValue({ tipoIdentidad: null, ruc: '', razonSocial: '', direccion: '', ...(!this.cuentaLocal && { correo: '' }) });
     this.actualizarValidadoresCliente();
   }
 
   private async initializeTipoDocumento(): Promise<void> {
-    var response = await this.cajaTipoDocumentoService.GetTiposDocumentos(this.idCaja).toPromise();
-    let allTipoDocumento = response;
+    const allTipoDocumento = this.cuentaLocal
+      ? this.sesionLocal.documentos.map(doc => Object.assign(new CajaTipoDocumento(), doc))
+      : await this.cajaTipoDocumentoService.GetTiposDocumentos(this.idCaja).toPromise();
     if (this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta) {
       this.listTipoDocumento = allTipoDocumento.filter(doc => doc.IdTipoDocumento === EnumTipoDocumento.BoletaManual || doc.IdTipoDocumento === EnumTipoDocumento.BoletaVenta);
       this.tipoDocumento.IdTipoDocumento = EnumTipoDocumento.BoletaVenta;
@@ -619,6 +657,9 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     }
 
     // Para tipos con cliente opcional: ocultar bloque por defecto
+    if (this.cuentaLocal && requiereIdentidadCaja(this.sesionLocal.contexto.paisISO2, this.tipoDocumento.IdTipoDocumento, Number(this.lblmonto))) {
+      this.clienteOpcional = false;
+    }
     if (this.clienteOpcional) {
       this.clienteSolicitaDatos = false;
       this.mostrarDatosCliente = false;
@@ -631,6 +672,12 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   private async initializeTarjetas(): Promise<void> {
+    if (this.cuentaLocal) {
+      this.listTarjeta = this.tipoDocumento.IdTipoDocumento !== EnumTipoDocumento.Express &&
+        this.sesionLocal.maestros.tiposPago.some(p => p.IdTipoPago === TipoPagoEnum.Tarjeta)
+        ? this.sesionLocal.maestros.tarjetas : [];
+      return;
+    }
     try {
       if (this.idTipoPedido === '003') {
         this.listTarjeta = await this.tarjetaService.getTarjeta_SocioNegocio(this.idPedidoCobrar, this.nroCuentaCobrar).toPromise();
@@ -708,7 +755,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   salir(): void {
-    this.dialogRef.close();
+    if (!this.guardandoCobroLocal) this.dialogRef.close();
   }
 
   abrirDialogoCantidad(sTitulo: string): Promise<any> {
@@ -779,7 +826,21 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   cmdCobrarClick(): void {
     try {
+      if (this.guardandoCobroLocal) return;
       this.tipoDocumento.IdTipoDocumento = this.form.get('idTipoDoc')?.value;
+      if (this.cuentaLocal) {
+        const correo = this.form.get('cliente.correo');
+        correo.setValue((correo.value ?? '').trim());
+        if (correo.invalid) {
+          correo.markAsTouched();
+          Swal.fire(this.texts.get('validation'), 'Indica un correo válido para enviar el comprobante cuando vuelva internet.', 'warning');
+          return;
+        }
+        if (this.mostrarDatosCliente && this.form.get('cliente').invalid) {
+          this.form.get('cliente').markAllAsTouched();
+          return;
+        }
+      }
 
       // ── Calcular si el backend usará cliente genérico ────────────────
       const E = EnumTipoDocumento;
@@ -927,7 +988,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       mensaje = this.texts.get('confirmCreditSale');
     }
 
-    if (!((this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta || this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaManual) && this.storageService.getCurrentSession().boletaRapida)) {
+    if (this.cuentaLocal || !((this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaVenta || this.tipoDocumento.IdTipoDocumento === EnumTipoDocumento.BoletaManual) && this.storageService.getCurrentSession().boletaRapida)) {
       Swal.fire({
         title: mensaje,
         icon: 'question',
@@ -997,6 +1058,11 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         this.texts.get('paymentBelowTotal'),
         'warning'
       );
+      return;
+    }
+
+    if (this.cuentaLocal) {
+      await this.registrarCobroLocal(this.cuentaLocal);
       return;
     }
 
@@ -1074,6 +1140,35 @@ export class DialogEmitirComprobanteComponent implements OnInit {
       }
 
       return await this.grabarDocumento(true);
+    }
+  }
+
+  private async registrarCobroLocal(cuenta: CuentaLocal): Promise<void> {
+    if (this.guardandoCobroLocal) return;
+    this.guardandoCobroLocal = true;
+    try {
+      const sesion = this.sesionLocal;
+      if (!sesion.activa || !sesion.esCajero || cuenta.contenido.TieneAnticiposOnline) {
+        throw new Error('Esta cuenta no se puede cobrar sin conexión.');
+      }
+      const cliente = this.form.get('cliente').value;
+      const identificado = this.mostrarDatosCliente && cliente.ruc !== '00000001';
+      const correo = (cliente.correo ?? '').trim();
+      const documento = prepararDocumentoPendiente({
+        idDocumento: this.tipoDocumento.IdTipoDocumento, credito: this.ChkVentaAlCredito, correo,
+        identificacion: identificado ? (cliente.ruc ?? '') : '', tipoIdentidad: cliente.tipoIdentidad ?? '',
+        razonSocial: cliente.razonSocial ?? '', direccion: cliente.direccion ?? '',
+      }, cuenta.contenido, sesion.usuario, sesion.contexto, sesion.maestros, this.crearPagos(sesion.usuario.IdUsuario));
+      await sesion.registrarOperacion('cobros', {
+        referenciaPedido: cuenta.identificador, versionPedido: cuenta.version,
+        correoComprobante: correo || null, documento,
+      });
+      this.dialogRef.close({ estado: 'CobradoPendiente' });
+    } catch (error) {
+      const detalle = error instanceof HttpErrorResponse ? error.error?.mensaje ?? error.error?.error : undefined;
+      await Swal.fire('Cobro sin conexión', detalle || (error as Error)?.message || 'Comprueba el estado de la operación en caja.', 'warning');
+    } finally {
+      this.guardandoCobroLocal = false;
     }
   }
 
@@ -1157,36 +1252,8 @@ export class DialogEmitirComprobanteComponent implements OnInit {
     URL.revokeObjectURL(objectUrl);
   }
 
-  async grabarDocumento(
-    confirmarEmisionSinConfiguracionSunat = false,
-  ): Promise<ImpresionDTO[]> {
-    this.spinnerService.show();
+  private crearPagos(idUsuario: number): Pago[] {
     const listPago: Pago[] = [];
-
-    var UsuReg: number = this.storageService.getCurrentSession().User.IdUsuario;
-
-    const venta: Venta = ({
-      IdVenta: 0,
-      IdCliente: 0,
-      Beneficiario: '',
-      Estado: 0,
-      IdTipoDocumento: this.tipoDocumento.IdTipoDocumento,
-      NumDocumento: parseInt(this.form.get('lblcorrelativo')?.value),
-      Serie: this.form.get('serie')?.value,
-      IdPedido: this.idPedidoCobrar,
-      NroCuenta: this.nroCuentaCobrar,
-      IdCaja: this.idCaja,
-      Impuesto1: parseFloat(this.lblmonto) - this.dblTotal,
-      Total: this.dblTotal,
-      Importe: this.dblImporte,
-      Dscto: this.dblDscto,
-      UsuRegistra: UsuReg,
-      IdTurno: this.idTurno,
-      Propina: parseFloat(this.lblpropinas),
-      ByteTicket: null,
-      VentaAlCredito: this.ChkVentaAlCredito,
-    });
-
     if (this.solesValue > 0) {
 
       const pagoSoles: Pago = {
@@ -1202,7 +1269,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         IdTarjeta : null,
         Tarjeta: null,
         Autorizacion: '',
-        UsuReg: this.storageService.getCurrentUser().IdUsuario,
+        UsuReg: idUsuario,
         Estado: 1,
         IdTurno: this.idTurno
       };
@@ -1229,7 +1296,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         IdTarjeta : null,
         Tarjeta: null,
         Autorizacion: '',
-        UsuReg: this.storageService.getCurrentUser().IdUsuario,
+        UsuReg: idUsuario,
         Estado: 1,
         IdTurno: this.idTurno
       };
@@ -1250,14 +1317,44 @@ export class DialogEmitirComprobanteComponent implements OnInit {
         IdTarjeta : row.Tarjeta.IdTarjeta,
         Tarjeta: new Tarjeta({ IdTarjeta: row.Tarjeta.IdTarjeta, Descripcion: row.Tarjeta.Descripcion }),
         Autorizacion: row.Autorizacion,
-        UsuReg: this.storageService.getCurrentUser().IdUsuario,
+        UsuReg: idUsuario,
         Estado: 1,
         IdTurno: this.idTurno
       };
       listPago.push(pagoTable);
     });
+    return listPago;
+  }
 
+  async grabarDocumento(
+    confirmarEmisionSinConfiguracionSunat = false,
+  ): Promise<ImpresionDTO[]> {
+    this.spinnerService.show();
+    const listPago = this.crearPagos(this.storageService.getCurrentUser().IdUsuario);
 
+    var UsuReg: number = this.storageService.getCurrentSession().User.IdUsuario;
+
+    const venta: Venta = ({
+      IdVenta: 0,
+      IdCliente: 0,
+      Beneficiario: '',
+      Estado: 0,
+      IdTipoDocumento: this.tipoDocumento.IdTipoDocumento,
+      NumDocumento: parseInt(this.form.get('lblcorrelativo')?.value),
+      Serie: this.form.get('serie')?.value,
+      IdPedido: this.idPedidoCobrar,
+      NroCuenta: this.nroCuentaCobrar,
+      IdCaja: this.idCaja,
+      Impuesto1: parseFloat(this.lblmonto) - this.dblTotal,
+      Total: this.dblTotal,
+      Importe: this.dblImporte,
+      Dscto: this.dblDscto,
+      UsuRegistra: UsuReg,
+      IdTurno: this.idTurno,
+      Propina: parseFloat(this.lblpropinas),
+      ByteTicket: null,
+      VentaAlCredito: this.ChkVentaAlCredito,
+    });
 
     // Determinar si el backend debe usar el cliente genérico
     const E = EnumTipoDocumento;
@@ -1335,6 +1432,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
   }
 
   buscarCliente(): void {
+    if (this.cuentaLocal) return;
 
     const ruc = this.form.get('cliente.ruc').value;
 
@@ -1519,6 +1617,7 @@ export class DialogEmitirComprobanteComponent implements OnInit {
 
   onVentaCreditoChange(checked: boolean): void {
     this.ChkVentaAlCredito = checked;
+    if (this.cuentaLocal && checked && !this.mostrarDatosCliente) this.toggleClienteDatos();
     if (!checked) {
       this.calcularMonto();
       return;

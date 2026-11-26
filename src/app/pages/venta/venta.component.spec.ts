@@ -1,9 +1,108 @@
+import { fakeAsync, tick } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { CanalVentaEnum, EstadoPreparacionPedidoEnum, PedidoEstadoEnum } from 'src/app/enums/enum';
 import { PedidoDet } from 'src/app/models/pedidodet.models';
+import { Producto } from 'src/app/models/product.models';
+import { SubFamilia } from 'src/app/models/subfamilia.models';
 import { Notificar } from 'src/app/shared/notificaciones';
 
 import { VentaComponent } from './venta.component';
+
+describe('VentaComponent - incorporar productos al pedido', () => {
+  let venta: VentaComponent;
+  let cierre: Subject<{ pedidodet: PedidoDet } | undefined>;
+  let abrirDialogo: jasmine.Spy;
+  let animar: jasmine.Spy;
+  let boton: HTMLButtonElement;
+  const te = new Producto({ Tipo: 0, NombreCorto: 'Té', Precio: 5 });
+
+  beforeEach(() => {
+    venta = Object.create(VentaComponent.prototype) as VentaComponent;
+    venta.DEFAULT_ID = 0;
+    venta.listProductGrid = [];
+    venta.gridListaPedidoDetProducto = { data: [] } as any;
+    venta.sumaTotal = 0;
+    (venta as any).preciosSocioNegocio = new Map();
+    (venta as any).storageService = { getCurrentIP: () => '' };
+    cierre = new Subject();
+    abrirDialogo = jasmine.createSpy('open').and.returnValue({ afterClosed: () => cierre });
+    (venta as any).dialog = { open: abrirDialogo };
+    animar = spyOn<any>(venta, 'animarProductoAlCarrito');
+    boton = document.createElement('button');
+  });
+
+  it('suma cinco soles y confirma una incorporación por cada toque en el té', () => {
+    venta.AgregarProducto(te, boton);
+    expect(venta.sumaTotal).toBe(5);
+
+    venta.AgregarProducto(te, boton);
+    expect(venta.sumaTotal).toBe(10);
+    expect(venta.listProductGrid.length).toBe(2);
+    expect(animar.calls.allArgs()).toEqual(venta.listProductGrid.map(detalle => [detalle, boton]));
+  });
+
+  for (const producto of [
+    new Producto({ Tipo: 1, NombreCorto: 'Menú', Precio: 15 }),
+    new Producto({ Tipo: 2, NombreCorto: 'Producto con complementos', Precio: 8 }),
+  ]) {
+    it(`incorpora ${producto.NombreCorto} una sola vez con la cantidad confirmada`, () => {
+      venta.AgregarProducto(producto, boton);
+      expect(venta.listProductGrid.length).toBe(0);
+      expect(venta.sumaTotal).toBe(0);
+      expect(animar).not.toHaveBeenCalled();
+
+      const detalle: PedidoDet = abrirDialogo.calls.mostRecent().args[1].data.pedidodet;
+      detalle.Cantidad = 3;
+      cierre.next({ pedidodet: detalle });
+      cierre.complete();
+
+      expect(venta.listProductGrid).toEqual([detalle]);
+      expect(detalle.Subtotal).toBe(3 * producto.Precio);
+      expect(venta.sumaTotal).toBe(detalle.Subtotal);
+      expect(animar).toHaveBeenCalledOnceWith(detalle, boton);
+    });
+
+    it(`conserva el pedido y su importe al cancelar ${producto.NombreCorto}`, () => {
+      venta.AgregarProducto(te, boton);
+      const lineaTe = venta.listProductGrid[0];
+      animar.calls.reset();
+
+      venta.AgregarProducto(producto, boton);
+      cierre.next(undefined);
+      cierre.complete();
+
+      expect(venta.listProductGrid).toEqual([lineaTe]);
+      expect(venta.sumaTotal).toBe(5);
+      expect(animar).not.toHaveBeenCalled();
+    });
+  }
+});
+
+describe('VentaComponent - posiciones del catálogo local', () => {
+  it('reserva las 80 posiciones de la subfamilia y conserva la lista de búsqueda', async () => {
+    const venta = Object.create(VentaComponent.prototype) as VentaComponent;
+    spyOnProperty(venta, 'modoCajaLocal').and.returnValue(true);
+    (venta as any).spinnerService = { show: () => {}, hide: () => {} };
+    const desayunos = new SubFamilia({ IdSubFamilia: 7 });
+    const bebidas = new SubFamilia({ IdSubFamilia: 8 });
+    const desayuno = new Producto({ IdSubFamilia: 7, Posicion: 10, NombreCorto: 'Desayuno de cafetería', Precio: 15, Visible: true });
+    const ultimo = new Producto({ IdSubFamilia: 7, Posicion: 80, Visible: true });
+    const soloBusqueda = new Producto({ IdSubFamilia: 8, Posicion: 0, Visible: true });
+    venta.listProductoVenta = venta.listProducts = [ultimo, soloBusqueda, desayuno];
+
+    await venta.ListarProductos_x_SubFamilia(desayunos);
+
+    const tablero = venta.listProducts_x_SubFamilia;
+    expect(tablero.length).toBe(80);
+    expect(tablero[9]).toBe(desayuno);
+    expect(tablero[79]).toBe(ultimo);
+    expect(tablero.filter(p => p.Visible)).toEqual([desayuno, ultimo]);
+    expect(venta.listProductoVenta).toEqual([ultimo, soloBusqueda, desayuno]);
+
+    await venta.ListarProductos_x_SubFamilia(bebidas);
+    expect(venta.listProducts_x_SubFamilia).toEqual([]);
+  });
+});
 
 describe('VentaComponent - marcar productos entregados', () => {
   let component: VentaComponent;
@@ -923,15 +1022,12 @@ describe('VentaComponent - solicitudes sobre la cuenta', () => {
 });
 
 describe('VentaComponent - desplazamiento de la grilla', () => {
-  beforeEach(() => jasmine.clock().install());
-  afterEach(() => jasmine.clock().uninstall());
-
-  it('no falla mientras la vista de Caja todavía no ha renderizado la grilla', () => {
+  it('no falla mientras la vista de Caja todavía no ha renderizado la grilla', fakeAsync(() => {
     const component = Object.create(VentaComponent.prototype) as VentaComponent;
 
     expect(() => {
       component.scrollToBottom();
-      jasmine.clock().tick(100);
+      tick(100);
     }).not.toThrow();
-  });
+  }));
 });

@@ -6,6 +6,10 @@ import { StorageService } from 'src/app/services/storage.service';
 import { DataService } from '../app/services/data.service';
 import { HeaderService } from './services/header.service';
 import { BackendStatusService } from './services/backend-status.service';
+import { OfflineDisponibilidadService } from './offline/offline-disponibilidad.service';
+import { CajaOfflineSincronizacionService } from './offline/caja-offline-sincronizacion.service';
+import { CajaOfflineApiService } from './offline/caja-offline-api.service';
+import { CajaOfflineSesionService } from './offline/caja-offline-sesion.service';
 import { TenantTextCatalogService } from './services/localization/tenant-text-catalog.service';
 import { AgenteImpresionPedidosService } from './services/agente-impresion-pedidos.service';
 import { EstacionSessionRealtimeService } from './services/estacion-session-realtime.service';
@@ -35,6 +39,8 @@ export class AppComponent implements OnInit, OnDestroy {
   headerVisible = true;
   operationalHeaderOpen = false;
   isOperationalRoute = false;
+  esRutaPublicaActual = true;
+  isOfflineRoute = window.location.pathname === '/offline';
   mostrarActivacionNotificaciones = false;
 
   /** true cuando el backend no responde (status 0) */
@@ -74,6 +80,10 @@ export class AppComponent implements OnInit, OnDestroy {
     private dataService: DataService,
     private headerService: HeaderService,
     private backendStatusService: BackendStatusService,
+    readonly disponibilidadOffline: OfflineDisponibilidadService,
+    readonly sincronizacionCaja: CajaOfflineSincronizacionService,
+    private readonly cajaOfflineApi: CajaOfflineApiService,
+    private readonly sesionCaja: CajaOfflineSesionService,
     private textCatalog: TenantTextCatalogService,
     private agenteImpresionPedidos: AgenteImpresionPedidosService,
     private estacionSessionRealtime: EstacionSessionRealtimeService,
@@ -86,6 +96,9 @@ export class AppComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private bandeja: BandejaNotificacionesService,
   ) {
+    if (this.sesionCaja.requiereSeleccion && ['/caja', '/mozo'].includes(window.location.pathname)) {
+      this.isOfflineRoute = true;
+    }
     this.backendDown$ = this.backendStatusService.isDown$;
     this.bandeja.nuevas$.subscribe(avisos => {
       const alertas = avisos.filter(n => n.CodigoTipo === 'CESIA_STOCK');
@@ -258,6 +271,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.disponibilidadOffline.detenerVigilancia();
     this.appUpdateService.stop();
     this.agenteImpresionPedidos.detener();
     this.estacionSessionRealtime.stop();
@@ -270,27 +284,29 @@ export class AppComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {    
      this.appUpdateService.start();
-     const session = this.storageService.getCurrentSession();
-     this.textCatalog.setCulture(
-       session?.Cultura ?? session?.CulturaTenant,
-     );
-
+     this.sincronizacionCaja.iniciar();
      this.router.events.pipe(
        filter(event => event instanceof NavigationEnd)
      ).subscribe((event: NavigationEnd) => {
-       this.actualizarRealtimePorRuta(event.urlAfterRedirects);
-       this.isOperationalRoute = event.urlAfterRedirects.startsWith('/caja')
+       this.isOfflineRoute = event.urlAfterRedirects.split(/[?#]/)[0] === '/offline'
+         || this.sesionCaja.permiteRuta(event.urlAfterRedirects);
+       this.esRutaPublicaActual = this.esRutaPublica(event.urlAfterRedirects);
+       this.actualizarRealtimePorRuta();
+       this.isOperationalRoute = !this.isOfflineRoute && (event.urlAfterRedirects.startsWith('/caja')
          || event.urlAfterRedirects.startsWith('/mozo')
          || event.urlAfterRedirects.startsWith('/cocina')
-         || event.urlAfterRedirects.startsWith('/preparacion');
+         || event.urlAfterRedirects.startsWith('/preparacion'));
+       if (this.isOperationalRoute) this.disponibilidadOffline.vigilar(() => this.cajaOfflineApi.comprobarNube());
+       else this.disponibilidadOffline.detenerVigilancia();
        this.operationalHeaderOpen = false;
        const newTitle = this.getTitle(event.urlAfterRedirects);
        this.dataService.updateVariable_TituloHeader(newTitle);
      });
   }
 
-  private actualizarRealtimePorRuta(url: string): void {
-    if (this.esRutaPublica(url)) {
+  private actualizarRealtimePorRuta(): void {
+    if (this.isOfflineRoute) this.agenteImpresionPedidos.detener();
+    if (this.esRutaPublicaActual) {
       this.estacionSessionRealtime.stop();
       void this.solicitudesAutorizacion.detener();
       void this.sesionUsuario.detener();
@@ -307,7 +323,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private esRutaPublica(url: string): boolean {
-    return url.startsWith('/iniciar-sesion')
+    return this.isOfflineRoute || url.startsWith('/iniciar-sesion')
       || url.startsWith('/inicio')
       || url.startsWith('/estado-suscripcion')
       || url.startsWith('/mesa/')

@@ -1,8 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder } from '@angular/forms';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { LoginComponent } from './login.component';
+import { EstacionTipoEnum } from '../../enums/enum';
+import { RUTA_REGULARIZAR_CAJA } from '../../offline/ruta-regularizacion';
 
 describe('LoginComponent - progreso del retorno de Keycloak', () => {
   let component: LoginComponent;
@@ -67,12 +69,45 @@ describe('LoginComponent - progreso del retorno de Keycloak', () => {
       {} as any,
       {} as any,
       textCatalog as any,
+      { destinoTrasLogin: async (ruta: string) => ruta } as any,
     );
   });
 
   afterEach(() => {
     localStorage.removeItem('pendingLogin');
     history.replaceState({}, '', '/');
+  });
+
+  it('sincroniza la dirección ya depurada por Keycloak antes de abrir el puesto', async () => {
+    const pendiente = { TenantId: 'tenant-1', Sucursal: 'Lima', Cultura: 'es-PE' };
+    const limpia = '/iniciar-sesion?returnUrl=%2Fcaja&origen=pwa#ayuda';
+    const callback = limpia.replace('#ayuda', '#state=prueba&session_state=sesion&code=ficticio&ayuda');
+    localStorage.setItem('pendingLogin', JSON.stringify(pendiente));
+    history.replaceState({}, '', callback);
+    (router as any).url = callback;
+    const tokens = { token: 'token-1', refreshToken: 'refresh-1' };
+    keycloak.completeLogin.and.callFake(async () => {
+      history.replaceState({}, '', limpia);
+      return tokens;
+    });
+    const completar = spyOn<any>(component, 'completarSesion').and.resolveTo();
+
+    expect(await (component as any).tryCompleteRedirectLogin()).toBeTrue();
+
+    expect(router.navigateByUrl).toHaveBeenCalledOnceWith(limpia, { replaceUrl: true });
+    expect(router.navigateByUrl).toHaveBeenCalledBefore(completar);
+    expect(completar).toHaveBeenCalledOnceWith(tokens, pendiente);
+    expect(await (component as any).tryCompleteRedirectLogin()).toBeFalse();
+    expect(keycloak.completeLogin).toHaveBeenCalledTimes(1);
+  });
+
+  it('regresa a regularizar en la estación de caja tanto con sesión vigente como tras Keycloak', () => {
+    const login = component as any;
+    spyOn(login.route.snapshot.queryParamMap, 'get').and.returnValue(RUTA_REGULARIZAR_CAJA);
+    expect(login.destinoCajaTrasLogin('/dashboard', EstacionTipoEnum.CAJA)).toBe(RUTA_REGULARIZAR_CAJA);
+    expect(login.destinoCajaTrasLogin('/caja', EstacionTipoEnum.CAJA, RUTA_REGULARIZAR_CAJA)).toBe(RUTA_REGULARIZAR_CAJA);
+    expect(login.destinoCajaTrasLogin('/mozo', EstacionTipoEnum.MOZO, RUTA_REGULARIZAR_CAJA)).toBe('/mozo');
+    expect(login.destinoCajaTrasLogin('/caja', EstacionTipoEnum.CAJA, '/otra-ruta')).toBe('/caja');
   });
 
   it('muestra el indicador apenas detecta el callback de Keycloak', async () => {
@@ -93,7 +128,8 @@ describe('LoginComponent - progreso del retorno de Keycloak', () => {
     });
     expect(keycloak.completeLogin).toHaveBeenCalledWith('tenant-1');
     expect(indicatorHandle.close).toHaveBeenCalled();
-    expect(completed).toBeFalse();
+    expect(completed).toBeTrue();
+    expect(component.showSelector).toBeTrue();
   });
 
   it('conserva la vista de pago pendiente y no reinicia Keycloak', async () => {
@@ -145,7 +181,7 @@ describe('LoginComponent - progreso del retorno de Keycloak', () => {
 
     await (component as any).navegarTrasLogin('/dashboard');
 
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/dashboard');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/dashboard', { replaceUrl: true });
     expect(indicatorHandle.close).toHaveBeenCalled();
     expect(spinner.hide).toHaveBeenCalled();
   });
@@ -156,6 +192,60 @@ describe('LoginComponent - progreso del retorno de Keycloak', () => {
     component.ngOnDestroy();
 
     expect(indicatorHandle.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('mantiene visible el acceso online cuando el router cancela o falla al abrir el puesto', async () => {
+    router.navigateByUrl.and.resolveTo(false);
+    await (component as any).navegarTrasLogin('/caja');
+    expect(component.loginError).toBe('onlineWorkspaceUnavailable');
+    expect(component.accesoDenegado).toBeFalse();
+
+    router.navigateByUrl.and.rejectWith(new Error('No se pudo activar la ruta'));
+    await (component as any).navegarTrasLogin('/caja');
+    expect(component.loginError).toBe('onlineWorkspaceUnavailable');
+  });
+
+  it('explica la denegación aun cuando el router completa una redirección al mismo login', async () => {
+    const login = component as any;
+    (router as any).url = '/iniciar-sesion?acceso=sin-licencia';
+    spyOn(login.route.snapshot.queryParamMap, 'get').and.callFake((key: string) => key === 'acceso' ? 'sin-licencia' : null);
+    await login.navegarTrasLogin('/caja');
+    expect(component.loginError).toBe('onlineWorkspaceNotLicensed');
+    expect(component.accesoDenegado).toBeTrue();
+  });
+
+  it('reutiliza la sesión online y vuelve a leer la estación al reintentar', async () => {
+    const login = component as any;
+    const session = { Token: 'ejemplo', User: {} };
+    login.CurrentIP = 'pc-prueba';
+    login.storageService = { getCurrentSession: () => session, setCurrentSession: () => undefined };
+    login.keycloakAuth = { isTokenActive: () => true };
+    login.estacionService = { getAll: () => of({ Success: true, Data: {} }) };
+    await component.reintentarOnline();
+    expect(component.loginError).toBe('couldNotLoadStations');
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+
+    login.estacionService.getAll = () => throwError(() => new HttpErrorResponse({ status: 503 }));
+    await component.reintentarOnline();
+    expect(component.loginError).toBe('couldNotLoadStations (HTTP 503)');
+
+    login.estacionService.getAll = () => of({ Success: true, Data: [null, { IdentificadorUnico: 'PC-PRUEBA', Tipo: EstacionTipoEnum.CAJA }] });
+    await component.reintentarOnline();
+    expect(router.navigateByUrl).toHaveBeenCalledOnceWith('/caja', { replaceUrl: true });
+    expect(component.loginError).toBe('');
+  });
+
+  it('reintenta la página solicitada cuando ya se identificó la estación y falló la consulta de licencia', async () => {
+    const login = component as any;
+    login.storageService = { getCurrentSession: () => ({ Token: 'ejemplo' }) };
+    login.keycloakAuth = { isTokenActive: () => true };
+    const query = new URLSearchParams({ acceso: 'licencia-no-disponible', returnUrl: '/caja' });
+    spyOn(login.route.snapshot.queryParamMap, 'get').and.callFake((key: string) => query.get(key));
+
+    await component.reintentarOnline();
+
+    expect(router.navigateByUrl).toHaveBeenCalledOnceWith('/caja', { replaceUrl: true });
+    expect(component.isSubmitting).toBeFalse();
   });
 
   it('no considera completa una propuesta que todavía no fue guardada', () => {

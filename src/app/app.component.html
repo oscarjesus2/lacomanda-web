@@ -1,5 +1,5 @@
 <div
-  *ngIf="headerVisible || operationalHeaderOpen"
+  *ngIf="!esRutaPublicaActual && (headerVisible || operationalHeaderOpen)"
   class="header-shell"
   [class.header-shell--operational]="!headerVisible && operationalHeaderOpen">
   <app-header></app-header>
@@ -30,16 +30,24 @@
 </button>
 
 <!-- Banner global: backend inalcanzable -->
-<div *ngIf="backendDown$ | async" class="backend-offline-banner">
+<div *ngIf="!isOfflineRoute && (backendDown$ | async)" class="backend-offline-banner">
   <span class="backend-offline-banner__icon">⚠</span>
   <span class="backend-offline-banner__text">
-    {{ 'serverOffline' | tenantText }} —
-    {{ 'operationsUnavailable' | tenantText }}
+    {{ 'serverOffline' | tenantText }}
   </span>
+  <a mat-button *ngIf="isOperationalRoute && (disponibilidadOffline.ofrecerAutomaticamente$ | async)"
+     routerLink="/offline" [queryParams]="{ usarSesion: 1 }">{{ 'openOfflineRegister' | tenantText }}</a>
 </div>
 
 <section
-  *ngIf="mostrarActivacionNotificaciones"
+  *ngIf="isOperationalRoute && (sincronizacionCaja.requiereRevision$ | async)"
+  class="print-warning-banner" role="status">
+  <span class="print-warning-banner__text">{{ 'offlineBatchNeedsReview' | tenantText }}</span>
+  <a class="print-warning-banner__action" routerLink="/offline">{{ 'openOfflineRegister' | tenantText }}</a>
+</section>
+
+<section
+  *ngIf="!isOfflineRoute && mostrarActivacionNotificaciones"
   class="approval-notification-banner"
   role="status">
   <mat-icon aria-hidden="true">notifications_active</mat-icon>
@@ -74,7 +82,7 @@
 </div>
 
 <router-outlet></router-outlet>
-<app-asistente-estacion></app-asistente-estacion>
-<app-cesia-assistant></app-cesia-assistant>
+<app-asistente-estacion *ngIf="!isOfflineRoute"></app-asistente-estacion>
+<app-cesia-assistant *ngIf="!isOfflineRoute"></app-cesia-assistant>
 <app-processing-indicator></app-processing-indicator>
  

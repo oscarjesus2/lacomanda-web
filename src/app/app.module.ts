@@ -6,7 +6,6 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './auth/login/login.component';
-import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ResumenNegocioComponent } from './pages/resumen-negocio/resumen-negocio.component';
 import { HttpClientModule } from '@angular/common/http';
 import { JobBackendProvider } from './interceptor/angular.http.interceptor';
@@ -53,10 +52,6 @@ import { DialogTurnoComponent } from './components/dialog-turno/dialog-turno.com
 import { DialogCerrarTurnoComponent } from './components/dialog-cerrar-turno/dialog-cerrar-turno.component';
 import { HeaderComponent } from './shared/header/header.component';
 import { ProcessingIndicatorComponent } from './shared/processing-indicator/processing-indicator.component';
-import { VentasDiariasComponent } from './pages/dashboard/ventas-diarias/ventas-diarias.component';
-import { PopularidadPlatosComponent } from './pages/dashboard/popularidad-platos/popularidad-platos.component';
-import { CanalVentaComponent } from './pages/dashboard/canal-venta/canal-venta.component';
-import { HorasPicoComponent } from './pages/dashboard/horas-pico/horas-pico.component';
 import { MenuVentasComponent } from './pages/administracion/menu/menu-ventas/menu-ventas.component';
 import { MenuAlmacenComponent } from './pages/administracion/menu/menu-almacen/menu-almacen.component';
 import { AdministracionComponent } from './pages/administracion/administracion.component';
@@ -71,7 +66,6 @@ import { DialogAnfitrionasComponent } from './components/dialog-anfitrionas/dial
 
 
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { TransaccionesDiariasComponent } from './pages/dashboard/transacciones-diarias/transacciones-diarias.component';
 import { DialogEmitirVentaComponent } from './components/dialog-emitir-venta/dialog-emitir-venta.component';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
 import { DialogReportecontableComponent } from './components/dialog-reportecontable/dialog-reportecontable.component';
@@ -97,7 +91,6 @@ import { SelectorBancoDestinoComponent } from './components/selector-banco-desti
 import { BancoMantenimientoComponent } from './components/mantenimiento/banco-mantenimiento/banco-mantenimiento.component';
 import { DialogComprobantesFiscalesPendientesComponent } from './components/dialog-comprobantes-fiscales-pendientes/dialog-comprobantes-fiscales-pendientes.component';
 import { UsuariosMantenimientoComponent } from './components/mantenimiento/usuarios-mantenimiento/usuarios-mantenimiento.component';
-import { AnulacionesComponent } from './pages/dashboard/anulaciones/anulaciones.component';
 import { EspaciosMantenimientoComponent } from './components/mantenimiento/espacios-mantenimiento/espacios-mantenimiento.component';
 import { PosicionSelectorDialogComponent } from './components/posicion-selector-dialog/posicion-selector-dialog.component';
 import { AmbienteMantenimientoComponent } from './components/mantenimiento/ambiente-mantenimiento/ambiente-mantenimiento.component';
@@ -153,9 +146,6 @@ import { GrupoAlmacenMantenimientoComponent } from './components/mantenimiento/g
 import { TipoMovimientoMantenimientoComponent } from './components/mantenimiento/tipo-movimiento-mantenimiento/tipo-movimiento-mantenimiento.component';
 import { TipoDocumentoCompraMantenimientoComponent } from './components/mantenimiento/tipo-documento-compra-mantenimiento/tipo-documento-compra-mantenimiento.component';
 import { AsistenteEstacionComponent } from './components/asistente-estacion/asistente-estacion.component';
-import { ComparativoVentasComponent } from './pages/dashboard/comparativo-ventas/comparativo-ventas.component';
-import { EvolucionMargenComponent } from './pages/dashboard/evolucion-margen/evolucion-margen.component';
-import { MetodosPagoDashboardComponent } from './pages/dashboard/metodos-pago-dashboard/metodos-pago-dashboard.component';
 import { ControlHorarioComponent } from './components/control-horario/control-horario.component';
 import { ControlHorarioMantenimientoComponent } from './components/mantenimiento/control-horario-mantenimiento/control-horario-mantenimiento.component';
 import { ControlHorarioCorreccionComponent } from './components/mantenimiento/control-horario-correccion/control-horario-correccion.component';
@@ -197,7 +187,6 @@ export const MY_DATE_FORMATS = {
   declarations: [
     AppComponent,
     LoginComponent,
-    DashboardComponent,
     ResumenNegocioComponent,
 
     DialogMozoComponent,
@@ -213,10 +202,6 @@ export const MY_DATE_FORMATS = {
     DialogCerrarTurnoComponent,
     HeaderComponent,
     ProcessingIndicatorComponent,
-    VentasDiariasComponent,
-    PopularidadPlatosComponent,
-    CanalVentaComponent,
-    HorasPicoComponent,
     MenuVentasComponent,
     MenuAlmacenComponent,
     AdministracionComponent,
@@ -224,7 +209,6 @@ export const MY_DATE_FORMATS = {
     DialogEmitirComprobanteComponent,
     DialogMCantComponent,
     DialogAnfitrionasComponent,
-    TransaccionesDiariasComponent,
     DialogEmitirVentaComponent,
     DialogReportecontableComponent,
     QzTrayRequiredComponent,
@@ -245,7 +229,6 @@ export const MY_DATE_FORMATS = {
     BancoMantenimientoComponent,
     DialogComprobantesFiscalesPendientesComponent,
     UsuariosMantenimientoComponent,
-    AnulacionesComponent,
     EspaciosMantenimientoComponent,
     PosicionSelectorDialogComponent,
     AmbienteMantenimientoComponent,
@@ -286,7 +269,6 @@ export const MY_DATE_FORMATS = {
     DialogDeliveryComponent,
     DialogMenuComponent,
     SocioNegocioMantenimientoComponent,
-    TenantTextPipe,
     MesaClienteComponent,
     PagoCuentaLegalComponent,
     LibroReclamacionesMantenimientoComponent,
@@ -305,9 +287,6 @@ export const MY_DATE_FORMATS = {
     TipoMovimientoMantenimientoComponent,
     TipoDocumentoCompraMantenimientoComponent,
     AsistenteEstacionComponent,
-    ComparativoVentasComponent,
-    EvolucionMargenComponent,
-    MetodosPagoDashboardComponent,
     ControlHorarioComponent,
     ControlHorarioMantenimientoComponent,
     ControlHorarioCorreccionComponent,
@@ -332,6 +311,7 @@ export const MY_DATE_FORMATS = {
   ],
   imports: [
     CommonModule,
+    TenantTextPipe,
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,

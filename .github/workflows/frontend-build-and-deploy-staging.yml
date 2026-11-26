@@ -9,6 +9,9 @@ on:
       - develop
     paths:
       - 'src/**'
+      - 'offline-server/src/**'
+      - 'offline-server/windows/**'
+      - 'scripts/empaquetar-caja-windows.mjs'
       - 'dockerfiles/frontend/**'
       - 'package.json'
       - 'package-lock.json'

@@ -5,7 +5,7 @@ import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { NotificacionDetalle, NotificacionResumen, TipoNotificacion } from '../models/notificacion.models';
 import { StorageService } from './storage.service';
-import { CONSULTA_CESIA_EN_SEGUNDO_PLANO } from '../interceptor/background-request.context';
+import { ERROR_GESTIONADO_POR_CONSUMIDOR } from '../interceptor/background-request.context';
 
 @Injectable({ providedIn: 'root' })
 export class BandejaNotificacionesService {
@@ -59,7 +59,7 @@ export class BandejaNotificacionesService {
     const revisionLectura = this.revisionLectura;
     const identidad = this.identidad();
     if (!identidad) { this.detener(); return; }
-    const options = { context: new HttpContext().set(CONSULTA_CESIA_EN_SEGUNDO_PLANO, true) };
+    const options = { context: new HttpContext().set(ERROR_GESTIONADO_POR_CONSUMIDOR, true) };
     try {
       let reconciliada = true;
       try { await firstValueFrom(this.http.post(`${this.basePath}/sincronizar`, {}, options)); }

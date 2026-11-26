@@ -30,9 +30,11 @@ export class TenantTextCatalogService {
   readonly culture$: Observable<string>;
 
   constructor(private storageService: StorageService) {
+    const session = this.storageService.getCurrentSession();
     this.cultureSubject = new BehaviorSubject<string>(
       this.normalizeCulture(
-        this.storageService.getCurrentSession()?.Cultura
+        session?.Cultura
+          ?? session?.CulturaTenant
           ?? navigator.language
           ?? 'en',
       ),

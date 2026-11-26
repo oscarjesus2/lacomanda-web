@@ -4,6 +4,10 @@
 /dist
 /tmp
 /out-tsc
+/pwa-profile/
+/offline-server/.cache/
+/src/assets/caja-windows/caja-windows-x64.zip
+/src/assets/caja-windows/manifiesto.json
 /bazel-out
 
 # Node

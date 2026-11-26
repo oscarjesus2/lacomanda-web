@@ -33,7 +33,7 @@
     </span>
   </div>
 
-  <div class="delivery-view-selector" role="tablist">
+  <div *ngIf="!data.copiaLocal" class="delivery-view-selector" role="tablist">
     <button
       type="button"
       role="tab"
@@ -178,7 +178,7 @@
         <mat-icon>search</mat-icon>
         {{ 'search' | tenantText }}
       </button>
-      <button mat-flat-button color="primary" type="button" (click)="nuevo()" [disabled]="cargando">
+      <button *ngIf="!data.copiaLocal" mat-flat-button color="primary" type="button" (click)="nuevo()" [disabled]="cargando">
         <mat-icon>person_add</mat-icon>
         {{ 'newDestination' | tenantText }}
       </button>
@@ -201,8 +201,8 @@
         <div class="delivery-empty" *ngIf="!cargando && clientes.length === 0">
           <mat-icon>location_off</mat-icon>
           <strong>{{ 'noDestinationFound' | tenantText }}</strong>
-          <span>{{ 'registerWithoutLeavingSale' | tenantText }}</span>
-          <button mat-stroked-button type="button" (click)="nuevo()" [disabled]="cargando">
+          <span *ngIf="!data.copiaLocal">{{ 'registerWithoutLeavingSale' | tenantText }}</span>
+          <button *ngIf="!data.copiaLocal" mat-stroked-button type="button" (click)="nuevo()" [disabled]="cargando">
             {{ 'registerDestination' | tenantText }}
           </button>
         </div>
@@ -234,10 +234,16 @@
         <div class="delivery-placeholder" *ngIf="!formularioActivo">
           <mat-icon>touch_app</mat-icon>
           <strong>{{ 'selectDestination' | tenantText }}</strong>
-          <span>{{ 'createDestinationHint' | tenantText }}</span>
+          <span *ngIf="!data.copiaLocal">{{ 'createDestinationHint' | tenantText }}</span>
         </div>
 
-        <form [formGroup]="form" *ngIf="formularioActivo" novalidate>
+        <div class="delivery-placeholder" *ngIf="data.copiaLocal && clienteSeleccionado as cliente">
+          <strong>{{ cliente.NombresDelivery }}</strong>
+          <span>{{ cliente.DireccionDelivery }}</span>
+          <span *ngIf="tarifaLocalDisponible">{{ 'deliveryPrice' | tenantText }} · {{ cliente.PrecioDelivery | number:'1.2-2' }}</span>
+          <span *ngIf="!tarifaLocalDisponible">{{ 'offlineDeliveryPriceMissing' | tenantText }}</span>
+        </div>
+        <form [formGroup]="form" *ngIf="formularioActivo && !data.copiaLocal" novalidate>
           <div class="delivery-section-title">
             <span>
               {{
@@ -513,7 +519,7 @@
       mat-flat-button
       color="primary"
       type="button"
-      [disabled]="!formularioActivo || guardando"
+      [disabled]="!formularioActivo || guardando || (data.copiaLocal && !tarifaLocalDisponible)"
       (click)="guardarYContinuar()">
       <mat-icon>arrow_forward</mat-icon>
       {{ (guardando ? 'saving' : 'continueToOrder') | tenantText }}

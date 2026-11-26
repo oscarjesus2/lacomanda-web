@@ -8,7 +8,18 @@ import { Espacios } from 'src/app/models/espacios.models';
 import { PedidoService } from 'src/app/services/pedido.service';
 import { ConfiguracionService } from 'src/app/services/configuracion.service';
 import { MonedaService } from 'src/app/services/moneda.service';
+import { CuentaLocal } from 'src/app/offline/caja-offline-api.service';
 import Swal from 'sweetalert2';
+
+type LineaDivision = Pick<PedidoEspacioDTO, 'IdPedido' | 'NroCuenta' | 'NombreCuenta' | 'NombreCorto' |
+  'Item' | 'Cantidad' | 'Subtotal' | 'MontoDescuento' | 'Impuesto1'> & { referenciaLocal?: string };
+
+export interface DivisionCajaLocal {
+  cuentas: CuentaLocal[];
+  simbolo: string;
+  permiteDividir: boolean;
+  dividir(cuenta: CuentaLocal, items: number[]): Promise<CuentaLocal[]>;
+}
 
 @Component({
   selector: 'app-dialog-dividir-cuenta',
@@ -19,12 +30,13 @@ export class DialogDividirCuentaComponent implements OnInit {
 
   espacioSelected: Espacios;
   monedaSimbolo: string = '';
-  distinctPedidos = new MatTableDataSource<PedidoEspacioDTO>();
-  productosPedido:  PedidoEspacioDTO[]=[];
-  productosPedidoCuenta:  PedidoEspacioDTO[]=[];
-  productosNuevaCuenta:  PedidoEspacioDTO[]=[];
-  pedidoCuentaOrigen:  PedidoEspacioDTO[]=[];
-  selectedRowCuenta: PedidoEspacioDTO;
+  distinctPedidos = new MatTableDataSource<LineaDivision>();
+  productosPedido: LineaDivision[] = [];
+  productosPedidoCuenta: LineaDivision[] = [];
+  productosNuevaCuenta: LineaDivision[] = [];
+  pedidoCuentaOrigen: LineaDivision[] = [];
+  selectedRowCuenta: LineaDivision;
+  guardandoLocal = false;
   selectedRowOrigen: any;
   selectedRowDestino: any;
   nombreCuentaOrigen: string;
@@ -33,7 +45,7 @@ export class DialogDividirCuentaComponent implements OnInit {
   constructor(
     public dialogRef: MatDialogRef<DialogDividirCuentaComponent>,
     @Inject(MAT_DIALOG_DATA)
-    public data: any,
+    public data: { idPedido: number; espacioSelected: Espacios; local?: DivisionCajaLocal },
     private pedidoService: PedidoService,
     private spinnerService: NgxSpinnerService,
     private configuracionService: ConfiguracionService,
@@ -65,6 +77,7 @@ export class DialogDividirCuentaComponent implements OnInit {
  
    // Botón Agregar - Cambia a la vista de modificar cuentas
    onAddClick() {
+     if (!this.selectedRowCuenta || this.productosPedidoCuenta.length < 2 || this.data.local?.permiteDividir === false) return;
      this.mostrarPrimeraVista = false;
      this.mostrarSegundaVista = true;
 
@@ -72,7 +85,8 @@ export class DialogDividirCuentaComponent implements OnInit {
      this.productosNuevaCuenta = [];
    }
  
-   EliminarCuenta(element: PedidoEspacioDTO): void {
+   EliminarCuenta(element: LineaDivision): void {
+    if (this.data.local) return;
     const currentIndex = this.distinctPedidos.data.findIndex(p => p === element);
   
     if (currentIndex === 0) {
@@ -122,7 +136,7 @@ export class DialogDividirCuentaComponent implements OnInit {
     });
   }
   
-  private eliminarCuenta(element: PedidoEspacioDTO): void {
+  private eliminarCuenta(element: LineaDivision): void {
     this.spinnerService.show();
     const eliminarCuentaDTO: DividirCuentaDTO = {
       IdPedido: this.idPedido,
@@ -152,7 +166,8 @@ export class DialogDividirCuentaComponent implements OnInit {
    // Botón Mostrar Pedido
    onShowClick() {
     if (this.selectedRowCuenta){
-      this.dialogRef.close({ idPedido: this.selectedRowCuenta.IdPedido, nroCuenta: this.selectedRowCuenta.NroCuenta, nombreCuenta: this.selectedRowCuenta.NombreCuenta });
+      this.dialogRef.close({ idPedido: this.selectedRowCuenta.IdPedido, nroCuenta: this.selectedRowCuenta.NroCuenta,
+        nombreCuenta: this.selectedRowCuenta.NombreCuenta, referenciaLocal: this.selectedRowCuenta.referenciaLocal });
     }
     
    }
@@ -185,6 +200,22 @@ export class DialogDividirCuentaComponent implements OnInit {
  
    // Aceptar la división de cuentas
    async onAcceptClick() {
+    if (!this.pedidoCuentaOrigen.length || !this.productosNuevaCuenta.length) return;
+    if (this.data.local) {
+      if (this.guardandoLocal || !this.data.local.permiteDividir) return;
+      const cuenta = this.data.local.cuentas.find(c => c.identificador === this.selectedRowCuenta.referenciaLocal);
+      if (!cuenta) return;
+      this.guardandoLocal = true;
+      try {
+        this.cargarCuentasLocales(await this.data.local.dividir(cuenta, this.productosNuevaCuenta.map(linea => linea.Item)));
+        this.onCancelClick();
+      } catch (error) {
+        this.mostrarAdvertencia(error instanceof Error ? error.message : 'No se pudo dividir la cuenta.');
+      } finally {
+        this.guardandoLocal = false;
+      }
+      return;
+    }
     this.spinnerService.show();
     let sItems: string = "";
 
@@ -217,10 +248,10 @@ export class DialogDividirCuentaComponent implements OnInit {
     });
    }
  
-   ActualizarCuentas(pedidoEspacioDTO: PedidoEspacioDTO[]){
+   ActualizarCuentas(pedidoEspacioDTO: LineaDivision[]){
     this.distinctPedidos.data = pedidoEspacioDTO.filter((pedido, index, self) =>
       index === self.findIndex(p => (
-        p.IdPedido === pedido.IdPedido && 
+        p.IdPedido === pedido.IdPedido && p.referenciaLocal === pedido.referenciaLocal &&
         p.NroCuenta === pedido.NroCuenta && 
         p.NombreCuenta === pedido.NombreCuenta
       ))
@@ -242,14 +273,20 @@ export class DialogDividirCuentaComponent implements OnInit {
     }
   }
 
-  selectCuenta(row: PedidoEspacioDTO) {
+  selectCuenta(row: LineaDivision) {
     this.selectedRowCuenta = row; // Asigna la fila seleccionada a la propiedad
-    this.productosPedidoCuenta = this.productosPedido.filter(x => x.NroCuenta === row.NroCuenta);
+    this.productosPedidoCuenta = this.productosPedido.filter(x => x.IdPedido === row.IdPedido
+      && x.NroCuenta === row.NroCuenta && x.referenciaLocal === row.referenciaLocal);
     this.calcularTotales();
   }
 
 
   async ngOnInit() {
+    if (this.data.local) {
+      this.monedaSimbolo = this.data.local.simbolo;
+      this.cargarCuentasLocales(this.data.local.cuentas);
+      return;
+    }
     this.loadMoneda();
     this.spinnerService.show();
 
@@ -264,6 +301,19 @@ export class DialogDividirCuentaComponent implements OnInit {
     } catch (error) {
       this.spinnerService.hide();
     }
+  }
+
+  private cargarCuentasLocales(cuentas: CuentaLocal[]): void {
+    this.data.local.cuentas = cuentas;
+    const lineas = cuentas.filter(c => c.contenido.IdEspacio === this.espacioSelected.IdEspacio && c.contenido.Estado === 1)
+      .flatMap(({ identificador, contenido }) => contenido.ListaPedidoDet.filter(l => l.Estado === 1).map(l => ({
+        referenciaLocal: identificador, IdPedido: contenido.IdPedido, NroCuenta: contenido.NroCuenta,
+        NombreCuenta: (contenido as { NombreCuenta?: string }).NombreCuenta || 'Cuenta ' + contenido.NroCuenta,
+        NombreCorto: l.Producto.NombreCorto, Item: l.Item, Cantidad: l.Cantidad, Subtotal: l.Subtotal,
+        MontoDescuento: l.MontoDescuento ?? 0, Impuesto1: l.Impuesto1 ?? 0,
+      })));
+    this.ActualizarCuentas(lineas);
+    this.selectLastRow();
   }
 
   sumaTotal: number = 0;

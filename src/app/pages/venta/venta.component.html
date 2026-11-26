@@ -1,13 +1,17 @@
 <section class="venta-sin-turno" *ngIf="sinTurno" role="status">
   <mat-icon>receipt_long</mat-icon>
   <h2>{{ 'noOpenShiftForStation' | tenantText }}</h2>
-  <p *ngIf="cargandoPermisos">{{ 'checkingShiftPermissions' | tenantText }}</p>
-  <p *ngIf="!cargandoPermisos && puedeAbrirTurno">{{ 'canOpenShiftHint' | tenantText }}</p>
-  <p *ngIf="!cargandoPermisos && !puedeAbrirTurno">{{ 'requestOpenShiftHint' | tenantText }}</p>
+  <p *ngIf="modoCajaLocal">{{ 'offlineOpenShiftHint' | tenantText }}</p>
+  <ng-container *ngIf="!modoCajaLocal">
+    <p *ngIf="cargandoPermisos">{{ 'checkingShiftPermissions' | tenantText }}</p>
+    <p *ngIf="!cargandoPermisos && puedeAbrirTurno">{{ 'canOpenShiftHint' | tenantText }}</p>
+    <p *ngIf="!cargandoPermisos && !puedeAbrirTurno">{{ 'requestOpenShiftHint' | tenantText }}</p>
+  </ng-container>
   <div class="venta-sin-turno__actions">
-    <button *ngIf="puedeAbrirTurno" mat-raised-button color="primary" (click)="abrirDialogoTurno()">{{ 'openShift' | tenantText }}</button>
+    <button *ngIf="!modoCajaLocal && puedeAbrirTurno" mat-raised-button color="primary" (click)="abrirDialogoTurno()">{{ 'openShift' | tenantText }}</button>
     <button mat-stroked-button (click)="reintentarTurno()">{{ 'checkShiftAgain' | tenantText }}</button>
-    <button *ngIf="isAdmin" mat-stroked-button (click)="volverAdministracion()">{{ 'administration' | tenantText }}</button>
+    <button *ngIf="!modoCajaLocal && isAdmin" mat-stroked-button (click)="volverAdministracion()">{{ 'administration' | tenantText }}</button>
+    <button *ngIf="modoCajaLocal" mat-stroked-button (click)="volverAlServicioOnline()">{{ 'returnToOnlineService' | tenantText }}</button>
     <button mat-stroked-button (click)="salir()">{{ 'logout' | tenantText }}</button>
   </div>
 </section>
@@ -15,6 +19,7 @@
   <mat-icon>error_outline</mat-icon>
   <h2>{{ 'shiftLookupFailed' | tenantText }}</h2>
   <button mat-stroked-button (click)="reintentarTurno()">{{ 'retry' | tenantText }}</button>
+  <a mat-stroked-button routerLink="/offline" [queryParams]="modoCajaLocal ? null : { usarSesion: 1 }">{{ (modoCajaLocal ? 'manageOfflineRegister' : 'openOfflineRegister') | tenantText }}</a>
 </section>
 <div class="container" *ngIf="turnoAbierto"
      [class.compact-show-catalog]="vistaCompacta === 'catalogo'"
@@ -26,7 +31,7 @@
       <!-- Info de sesión -->
       <div class="session-info">
         <button type="button" class="session-info__item session-info__item--action" *ngIf="turnoAbierto"
-                [matMenuTriggerFor]="menuTurno" [disabled]="!puedeCerrarTurno"
+                [matMenuTriggerFor]="menuTurno"
                 [attr.aria-label]="('shift' | tenantText) + ' ' + turnoAbierto.NroTurno">
           <span class="session-info__icon-wrap"><mat-icon>receipt_long</mat-icon></span>
           <div class="session-info__text">
@@ -36,10 +41,24 @@
               <span class="session-info__badge">{{ 'openStatus' | tenantText }}</span>
             </span>
           </div>
-          <mat-icon *ngIf="puedeCerrarTurno" class="session-info__menu-icon">expand_more</mat-icon>
+          <mat-icon class="session-info__menu-icon">expand_more</mat-icon>
         </button>
         <mat-menu #menuTurno="matMenu">
-          <button mat-menu-item (click)="abrirDialogoCerrarTurno()">
+          <button mat-menu-item *ngIf="!modoCajaLocal" routerLink="/offline" [queryParams]="{ usarSesion: 1 }" [disabled]="enviandoPedido">
+            <mat-icon>cloud_off</mat-icon> {{ 'openOfflineRegister' | tenantText }}
+          </button>
+          <ng-container *ngIf="modoCajaLocal">
+            <button mat-menu-item (click)="cambiarUsuarioCajaLocal()" [disabled]="enviandoPedido">
+              <mat-icon>switch_account</mat-icon> {{ 'switchRegisterUser' | tenantText }}
+            </button>
+            <button mat-menu-item (click)="volverAlServicioOnline()" [disabled]="enviandoPedido">
+              <mat-icon>cloud_queue</mat-icon> {{ 'returnToOnlineService' | tenantText }}
+            </button>
+            <button mat-menu-item routerLink="/offline" [disabled]="enviandoPedido">
+              <mat-icon>settings</mat-icon> {{ 'manageOfflineRegister' | tenantText }}
+            </button>
+          </ng-container>
+          <button mat-menu-item *ngIf="!modoCajaLocal && puedeCerrarTurno" (click)="abrirDialogoCerrarTurno()">
             <mat-icon>lock</mat-icon> {{ 'closeShift' | tenantText }}
           </button>
         </mat-menu>
@@ -72,18 +91,18 @@
                 (click)="seleccionarCanalDelivery()" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faTruck"></fa-icon> {{ 'deliveryChannel' | tenantText }}
         </button>
-        <button *ngIf="isEntrada && !isModoMozo"
+        <button *ngIf="!modoCajaLocal && isEntrada && !isModoMozo"
                 (click)="canalVenta(canalVentaEnum.ENTRADAS)" [disabled]="isCanalVentaDisabled">
           <fa-icon [icon]="faWalking"></fa-icon> {{ 'admission' | tenantText }}
         </button>
         <button (click)="Refresh()">
           <fa-icon [icon]="faSync"></fa-icon> {{ 'refresh' | tenantText }}
         </button>
-        <button *ngIf="isModoMozo && reservasHabilitadas" type="button" class="channel-buttons__reservations" (click)="abrirAgendaReservas()">
+        <button *ngIf="!modoCajaLocal && isModoMozo && reservasHabilitadas" type="button" class="channel-buttons__reservations" (click)="abrirAgendaReservas()">
           <mat-icon>event_available</mat-icon> {{ 'reservations' | tenantText }}
         </button>
-        <app-solicitudes-autorizacion-boton *ngIf="isModoMozo" variante="canal"></app-solicitudes-autorizacion-boton>
-        <button *ngIf="isModoMozo && solicitudesQrPendientes.length > 0"
+        <app-solicitudes-autorizacion-boton *ngIf="!modoCajaLocal && isModoMozo" variante="canal"></app-solicitudes-autorizacion-boton>
+        <button *ngIf="!modoCajaLocal && isModoMozo && solicitudesQrPendientes.length > 0"
                 type="button"
                 class="channel-buttons__qr-requests"
                 (click)="abrirSolicitudesMesa()">
@@ -94,6 +113,22 @@
       </div>
     </div>
 
+    <aside *ngIf="modoCajaLocal" class="pending-charge-notice" role="status">
+      <mat-icon aria-hidden="true">{{ sesionLocal.nube ? 'cloud_done' : 'cloud_off' }}</mat-icon>
+      <ng-container *ngIf="sesionLocal.pendientes.length && !sesionLocal.ocupado; else estadoConexionCaja">
+        <span>{{ 'offlineOperationUnconfirmed' | tenantText }}</span>
+        <button type="button" mat-stroked-button routerLink="/offline">{{ 'reviewOfflineOperation' | tenantText }}</button>
+      </ng-container>
+      <ng-template #estadoConexionCaja>
+        <span>
+          <strong>{{ (sesionLocal.nube ? 'registerConnectionRestored' : 'offlineRegisterActive') | tenantText }}</strong>
+          <ng-container *ngIf="!sesionLocal.nube">{{ 'offlineSalesSyncHint' | tenantText }}</ng-container>
+        </span>
+        <button *ngIf="sesionLocal.nube" type="button" mat-stroked-button [disabled]="enviandoPedido" (click)="volverAlServicioOnline()">
+          {{ 'returnToOnlineService' | tenantText }}
+        </button>
+      </ng-template>
+    </aside>
     <nav class="compact-view-switcher" aria-label="Vista de venta">
       <button type="button"
               [class.active]="vistaCompacta === 'catalogo'"
@@ -106,10 +141,10 @@
               [class.active]="vistaCompacta === 'pedido'"
               [attr.aria-pressed]="vistaCompacta === 'pedido'"
               (click)="seleccionarVistaCompacta('pedido')">
-        <mat-icon>shopping_cart</mat-icon>
+        <mat-icon #iconoCarrito>shopping_cart</mat-icon>
         <span>{{ 'orders' | tenantText }}</span>
         <span class="compact-view-switcher__count">{{ listProductGrid.length }}</span>
-        <strong>{{ config?.SimboloMoneda || '-' }} {{ sumaTotal | number:'1.2-2' }}</strong>
+        <strong aria-live="polite" aria-atomic="true">{{ config?.SimboloMoneda || '-' }} {{ sumaTotal | number:'1.2-2' }}</strong>
       </button>
     </nav>
 
@@ -187,7 +222,7 @@
               {{ 'order' | tenantText }} ID · {{ 'account' | tenantText }}
             </span>
             <span class="table-info__value">
-              {{ idPedidoCobrar }} · {{ nroCuentaCobrar }}
+              {{ modoCajaLocal ? numeroPedido : idPedidoCobrar }} · {{ nroCuentaCobrar }}
             </span>
           </div>
         </div>
@@ -203,7 +238,7 @@
           </ng-container>
         </div>
       </div>
-      <div class="solicitudes-cuenta" *ngIf="solicitudesCuenta.length">
+      <div class="solicitudes-cuenta" *ngIf="!modoCajaLocal && solicitudesCuenta.length">
         <mat-icon inline>hourglass_top</mat-icon>
         {{ 'accountRequestsPending' | tenantText }}: {{ resumenSolicitudesCuenta }}
       </div>
@@ -266,22 +301,22 @@
               <span>{{ 'pendingPayment' | tenantText }}</span>
               <strong>{{ pedidosPendientesCobro.length }}</strong>
             </button>
-            <button *ngIf="pagosOnlineHabilitados"
+            <button *ngIf="!modoCajaLocal && pagosOnlineHabilitados"
                     type="button"
                     class="cash-center__action"
                     (click)="abrirConciliacionCobrosOnline()">
               <mat-icon>sync_alt</mat-icon>
               <span>Conciliar cobros online</span>
             </button>
-            <button *ngIf="reservasHabilitadas"
+            <button *ngIf="!modoCajaLocal && reservasHabilitadas"
                     type="button"
                     class="cash-center__action"
                     (click)="abrirAgendaReservas()">
               <mat-icon>event_available</mat-icon>
               <span>{{ 'reservations' | tenantText }}</span>
             </button>
-            <app-solicitudes-autorizacion-boton variante="panel"></app-solicitudes-autorizacion-boton>
-            <button *ngIf="solicitudesQrPendientes.length > 0"
+            <app-solicitudes-autorizacion-boton *ngIf="!modoCajaLocal" variante="panel"></app-solicitudes-autorizacion-boton>
+            <button *ngIf="!modoCajaLocal && solicitudesQrPendientes.length > 0"
                     type="button"
                     class="cash-center__action cash-center__action--attention"
                     (click)="abrirSolicitudesMesa()">
@@ -289,14 +324,14 @@
               <span>{{ 'tableRequests' | tenantText }}</span>
               <strong>{{ solicitudesQrPendientes.length }}</strong>
             </button>
-            <button *ngIf="reportesHabilitados"
+            <button *ngIf="!modoCajaLocal && reportesHabilitados"
                     type="button"
                     class="cash-center__action"
                     (click)="OpenDialogDocumentosEmitidos()">
               <fa-icon [icon]="faFileAlt"></fa-icon>
               <span>{{ 'issuedDocuments' | tenantText }}</span>
             </button>
-            <button *ngIf="reportesHabilitados"
+            <button *ngIf="!modoCajaLocal && reportesHabilitados"
                     type="button"
                     class="cash-center__action"
                     (click)="openDialogReportes()">
@@ -396,7 +431,7 @@
                     (click)="restarProductGrid(product)">
                     <mat-icon>remove</mat-icon>
                   </button>
-                  <button *ngIf="!esPedidoPendienteCobro" mat-icon-button color="primary"
+                  <button *ngIf="!esPedidoPendienteCobro && (!modoCajaLocal || product.Item <= 0 || puedeAnularCuentaLocal)" mat-icon-button color="primary"
                     [matTooltip]="'moreOptions' | tenantText"
                     [matMenuTriggerFor]="MasOpciones">
                     <mat-icon>more</mat-icon>
@@ -404,7 +439,7 @@
                 </div>
                 <mat-menu #MasOpciones="matMenu">
 
-                  <button *ngIf="!esPedidoPendienteCobro" mat-icon-button color="accent"
+                  <button *ngIf="!esPedidoPendienteCobro && (!modoCajaLocal || product.Item <= 0 || puedeAnularCuentaLocal)" mat-icon-button color="accent"
                     [matTooltip]="(solicitudPendiente(product) ? (puedeAprobarSolicitudes ? 'approve' : 'withdrawRequest') : 'delete') | tenantText"
                     (click)="deleteProductGrid(product)">
                     <mat-icon>{{ solicitudPendiente(product) ? (puedeAprobarSolicitudes ? 'task_alt' : 'undo') : 'delete' }}</mat-icon>
@@ -414,25 +449,25 @@
                     (click)="openDialoObservaciones(product)">
                     <mat-icon>event_note</mat-icon>
                   </button>
-                  <button *ngIf="product.Item > 0 && idCanalVentaSelected === canalVentaEnum.ESPACIO"
+                  <button *ngIf="!modoCajaLocal && product.Item > 0 && idCanalVentaSelected === canalVentaEnum.ESPACIO"
                     mat-icon-button color="primary"
                     [matTooltip]="'moveToAnotherTable' | tenantText"
                     (click)="iniciarTraslado(product)">
                     <mat-icon>swap_horiz</mat-icon>
                   </button>
-                  <button *ngIf="puedeMarcarProductoEntregado(product)"
+                  <button *ngIf="!modoCajaLocal && puedeMarcarProductoEntregado(product)"
                     mat-icon-button color="primary"
                     matTooltip="Marcar como entregado"
                     (click)="marcarProductoEntregado(product)">
                     <mat-icon>task_alt</mat-icon>
                   </button>
-                  <button *ngIf="product.Producto.ExclusivoParaAnfitriona && product.Item <= 0"
+                  <button *ngIf="!modoCajaLocal && product.Producto.ExclusivoParaAnfitriona && product.Item <= 0"
                     mat-icon-button color="primary"
                     [matTooltip]="'hostess' | tenantText"
                     (click)="ingresarCodigosAnfitrionas(product)">
                     <mat-icon>woman</mat-icon>
                   </button>
-                  <button *ngIf="tragoCortesiaHabilitado && product.Producto.PermitirParaTragoCortesia && product.Item <= 0"
+                  <button *ngIf="!modoCajaLocal && tragoCortesiaHabilitado && product.Producto.PermitirParaTragoCortesia && product.Item <= 0"
                     mat-icon-button color="primary"
                     [matTooltip]="'courtesyDrink' | tenantText"
                     (click)="ingresarCodigoCortesia(product)">
@@ -479,14 +514,17 @@
   <!-- ══ Botones CAJA ══════════════════════════════════════ -->
   <ng-container *ngIf="!isModoMozo">
 
-    <div class="button-row"
-         *ngIf="(descuentosHabilitados && puedeOperarPedidoPersistido)
-           || (precuentaHabilitada && puedeOperarPedidoPersistido)">
-      <button *ngIf="descuentosHabilitados && puedeOperarPedidoPersistido"
+    <div *ngIf="modoCajaLocal && cuentaLocalSeleccionada?.contenido?.TieneAnticiposOnline" class="pending-charge-notice" role="status">
+      <mat-icon aria-hidden="true">payments</mat-icon>
+      <span>{{ 'onlinePrepaymentChargeHint' | tenantText }}</span>
+    </div>
+
+    <div class="button-row" *ngIf="puedeOperarPedidoPersistido && ((descuentosHabilitados && (!modoCajaLocal || puedeDescontarCuentaLocal)) || (!modoCajaLocal && precuentaHabilitada))">
+      <button *ngIf="descuentosHabilitados && (!modoCajaLocal || puedeDescontarCuentaLocal)"
               (click)="aplicarDescuento()">
         <fa-icon [icon]="faPercentage"></fa-icon>{{textDescuento}}
       </button>
-      <button *ngIf="precuentaHabilitada && puedeOperarPedidoPersistido"
+      <button *ngIf="!modoCajaLocal && precuentaHabilitada"
               (click)="ImprimirPrecuenta()">
         <fa-icon [icon]="faReceipt"></fa-icon> {{ 'preBill' | tenantText }}
       </button>
@@ -494,7 +532,7 @@
 
     <!-- Combo / Ver Complementos: visible solo si la fila seleccionada lo requiere -->
     <div class="button-row"
-         *ngIf="selectedRow
+         *ngIf="selectedRow && (!modoCajaLocal || selectedRow.Item <= 0)
            && ((esMenuPrincipal(selectedRow.Producto) && !isComboDisabled)
              || (selectedRow.Producto?.Tipo === 2 && puedeVerComplementos))">
       <button *ngIf="esMenuPrincipal(selectedRow.Producto) && !isComboDisabled"
@@ -516,7 +554,7 @@
               (click)="OpenDialogEmitirComprobante(idTipoDocFactura)">
         <fa-icon [icon]="faFileInvoice"></fa-icon> {{ textoFactura }}
       </button>
-      <button *ngIf="comprobantesHabilitados && puedeCobrarPedido && !comprobantesAgotados"
+      <button *ngIf="expressDisponible && comprobantesHabilitados && puedeCobrarPedido && !comprobantesAgotados"
               (click)="OpenDialogEmitirComprobante(TipoDocumento.Express)">
         <fa-icon [icon]="faReceipt"></fa-icon> {{ 'express' | tenantText }}
       </button>
@@ -530,7 +568,7 @@
         <fa-icon *ngIf="!enviandoPedido" [icon]="faPaperPlane"></fa-icon>
         {{ (enviandoPedido ? 'sendingOrder' : 'sendOrder') | tenantText }}
       </button>
-      <button *ngIf="mostrarAnularPedidoCaja" (click)="AnularPedido()">
+      <button *ngIf="mostrarAnularPedidoCaja && (!modoCajaLocal || puedeAnularCuentaLocal)" (click)="AnularPedido()">
         <fa-icon [icon]="faTimes"></fa-icon>
         {{ (solicitudCuentaPendiente('AnularPedido') ? 'withdrawRequest' : 'cancelOrder') | tenantText }}
       </button>
@@ -559,13 +597,13 @@
     </div>
 
     <div class="button-row"
-         *ngIf="mostrarMenuMozo || mostrarComplementosMozo || mostrarEnviarPedidoMozo">
-      <button *ngIf="mostrarMenuMozo"
+         *ngIf="((mostrarMenuMozo || mostrarComplementosMozo) && (!modoCajaLocal || selectedRow?.Item <= 0)) || mostrarEnviarPedidoMozo">
+      <button *ngIf="mostrarMenuMozo && (!modoCajaLocal || selectedRow?.Item <= 0)"
         class="compact-order-actions__secondary"
         (click)="VerMenu()">
         <fa-icon [icon]="faConciergeBell"></fa-icon> {{ 'viewMenu' | tenantText }}
       </button>
-      <button *ngIf="mostrarComplementosMozo"
+      <button *ngIf="mostrarComplementosMozo && (!modoCajaLocal || selectedRow?.Item <= 0)"
               class="compact-order-actions__secondary"
               (click)="VerPedido()">
         <fa-icon [icon]="faEye"></fa-icon> {{ 'viewComplement' | tenantText }}
@@ -583,13 +621,13 @@
     </div>
 
     <div class="button-row"
-         *ngIf="mostrarPrecuentaMozo || mostrarAnularPedidoMozo || mostrarAccionSesionMozo">
-      <button *ngIf="mostrarPrecuentaMozo"
+         *ngIf="(!modoCajaLocal && mostrarPrecuentaMozo) || (mostrarAnularPedidoMozo && (!modoCajaLocal || puedeAnularCuentaLocal)) || mostrarAccionSesionMozo">
+      <button *ngIf="!modoCajaLocal && mostrarPrecuentaMozo"
               class="compact-order-actions__secondary"
               (click)="ImprimirPrecuenta()">
         <fa-icon [icon]="faReceipt"></fa-icon> {{ 'preBill' | tenantText }}
       </button>
-      <button *ngIf="mostrarAnularPedidoMozo"
+      <button *ngIf="mostrarAnularPedidoMozo && (!modoCajaLocal || puedeAnularCuentaLocal)"
               class="compact-order-actions__secondary"
               (click)="AnularPedido()">
         <fa-icon [icon]="faTimes"></fa-icon>
@@ -766,7 +804,9 @@
       <button *ngFor="let pedido of pedidosPendientesCobro"
               type="button"
               class="pending-charge-card"
-              [class.pending-charge-card--selected]="pedidoPendienteCobroSeleccionado?.IdPedido === pedido.IdPedido && pedidoPendienteCobroSeleccionado?.NroCuenta === pedido.NroCuenta"
+              [class.pending-charge-card--selected]="modoCajaLocal
+                ? cuentaLocalSeleccionada?.identificador === pedido.referenciaLocal
+                : pedidoPendienteCobroSeleccionado?.IdPedido === pedido.IdPedido && pedidoPendienteCobroSeleccionado?.NroCuenta === pedido.NroCuenta"
               (click)="openPedido(pedido)">
         <span class="pending-charge-card__status">{{ 'pendingPayment' | tenantText }}</span>
         <strong>{{ pedido.NroPedido }}</strong>
@@ -800,13 +840,13 @@
                   && (listProducts?.length || 0) > 0
                   && (listProducts_x_SubFamilia?.length || 0) > 0"
          class="products-grid">
-      <button *ngFor="let producto of listProducts_x_SubFamilia"
+      <button *ngFor="let producto of listProducts_x_SubFamilia" #botonProducto
         type="button"
         class="product-card"
         [style.background-color]="getProductColor(producto.Color)"
         [style.visibility]="producto.Visible ? 'visible' : 'hidden'"
         [attr.title]="producto.Visible ? producto.NombreCorto : null"
-        (click)="AgregarProducto(producto)"
+        (click)="AgregarProducto(producto, botonProducto)"
         [disabled]="isPanelProductoDisabled">
         <span class="product-card__content">
           <strong class="product-card__name">{{ producto.NombreCorto }}</strong>
@@ -845,31 +885,31 @@
                 (click)="processPedido(true)">
           {{ 'processOrder' | tenantText }}
         </button>
-        <button *ngIf="canalAdmitePedidosDirectos
+        <button *ngIf="!modoCajaLocal && canalAdmitePedidosDirectos
                         && !aplicarFiltroTrasladarAEspacio
                         && pedidoLlevarSeleccionado"
                 (click)="iniciarTrasladarAEspacio()">
           {{ 'moveToTable' | tenantText }}
         </button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO
+        <button *ngIf="!modoCajaLocal && idCanalVentaSelected == canalVentaEnum.ESPACIO
                         && mesaSeleccionada
                         && pedidoPersistido"
                 (click)="CambiarMozo()">
           {{ (solicitudCuentaPendiente('CambiarCamarero') ? 'withdrawRequest' : 'changeOrderAttendant') | tenantText }}
         </button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO
+        <button *ngIf="!modoCajaLocal && idCanalVentaSelected == canalVentaEnum.ESPACIO
                         && mesaSeleccionada
                         && pedidoPersistido"
                 (click)="CambiarEspacio()">
           {{ 'changeSpace' | tenantText }}
         </button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO
+        <button *ngIf="!modoCajaLocal && idCanalVentaSelected == canalVentaEnum.ESPACIO
                         && mesaSeleccionada
                         && pedidoPersistido"
                 (click)="UnirEspacio()">
           {{ 'mergeAccount' | tenantText }}
         </button>
-        <button *ngIf="idCanalVentaSelected == canalVentaEnum.ESPACIO
+        <button *ngIf="(!modoCajaLocal || puedeDividirCuentaLocal) && idCanalVentaSelected == canalVentaEnum.ESPACIO
                         && mesaSeleccionada
                         && pedidoPersistido"
                 (click)="dividirCuenta()">
@@ -908,3 +948,11 @@
     
   </div>
 </div>
+
+<span *ngFor="let vuelo of productosEnVuelo" class="producto-al-carrito" aria-hidden="true"
+      [style.left.px]="vuelo.x" [style.top.px]="vuelo.y"
+      [style.--desde-x]="vuelo.desdeX + 'px'" [style.--desde-y]="vuelo.desdeY + 'px'"
+      (animationend)="$event.target === $event.currentTarget && productosEnVuelo.delete(vuelo)"
+      (animationcancel)="$event.target === $event.currentTarget && productosEnVuelo.delete(vuelo)">
+  <span class="producto-al-carrito__ficha">+{{ vuelo.cantidad }} {{ vuelo.nombre }}</span>
+</span>

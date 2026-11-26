@@ -14,7 +14,9 @@ services:
     environment:
           NG_CLI_ANALYTICS: "false"
 
-    command: sh -c "npm install && npx ng serve --host 0.0.0.0 --poll 1000"
+    command: >-
+      sh -c "(command -v python3 >/dev/null || (apt-get update && apt-get install -y --no-install-recommends python3))
+      && npm install && npm run caja:paquete && npx ng serve --host 0.0.0.0 --poll 1000"
     
     stdin_open: true
     tty: true

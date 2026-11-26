@@ -47,6 +47,7 @@ import { PedidoEspacioDTO } from 'src/app/interfaces/pedidoespacioDTO.interface'
 import { DialogMCantComponent } from 'src/app/components/dialog-mcant/dialog-mcant.component';
 import { DialogComplementosComponent } from 'src/app/components/dialog-complementos/dialog-complementos.component';
 import { DialogMenuComponent } from 'src/app/components/dialog-menu/dialog-menu.component';
+import { configuracionMenuLocal } from 'src/app/offline/configuracion-menu-local';
 import { PedidoComplemento } from 'src/app/models/pedidocomplemento.models';
 import { ImpresionDTO } from 'src/app/interfaces/impresionDTO.interface';
 // import { QzTrayV224Service } from 'src/app/services/qz-tray-v224.service';
@@ -59,7 +60,7 @@ import { ContextoDocumentoImpresionPedido, QzTrayV224Service } from 'src/app/ser
 import { PedidoDeliveryDTO } from 'src/app/interfaces/pedidoDTO.interface';
 import { SocioNegocio } from 'src/app/models/socionegocio.models';
 import { Cliente } from 'src/app/models/cliente.models';
-import { DialogDividirCuentaComponent } from 'src/app/components/dialog-dividir-cuenta/dialog-dividir-cuenta.component';
+import { DialogDividirCuentaComponent, DivisionCajaLocal } from 'src/app/components/dialog-dividir-cuenta/dialog-dividir-cuenta.component';
 import { DialogReportesComponent } from 'src/app/components/dialog-reportes/dialog-reportes.component';
 import {
   EnumTipoDocumento,
@@ -106,6 +107,19 @@ import { PedidoPendienteCierre } from 'src/app/interfaces/cerrarTurno.interface'
 import { ReservasService } from 'src/app/services/reservas.service';
 import { DialogConciliarCobrosOnlineComponent } from 'src/app/components/dialog-conciliar-cobros-online/dialog-conciliar-cobros-online.component';
 import { CocinaService } from 'src/app/services/cocina.service';
+import { CajaOfflineSesionService } from 'src/app/offline/caja-offline-sesion.service';
+import { CuentaLocal } from 'src/app/offline/caja-offline-api.service';
+import { cartaVentaLocal, completarTableroProductosLocal, resumenCuentaLocal, tableroMesasLocal } from 'src/app/offline/tablero-venta-local';
+import { prepararEnvioPedidoLocal } from 'src/app/offline/pedido-caja-offline';
+
+interface ProductoEnVuelo {
+  nombre: string;
+  cantidad: number;
+  x: number;
+  y: number;
+  desdeX: number;
+  desdeY: number;
+}
 
 @Component({
   selector: 'app-venta',
@@ -117,8 +131,13 @@ import { CocinaService } from 'src/app/services/cocina.service';
 })
 
 export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
+  readonly sesionLocal = inject(CajaOfflineSesionService);
+  cuentaLocalSeleccionada?: CuentaLocal;
+  get modoCajaLocal(): boolean { return this.sesionLocal?.activa === true; }
   public vistaCompacta: 'catalogo' | 'pedido' = 'catalogo';
   public accionesCompactasAbiertas = false;
+  readonly productosEnVuelo = new Set<ProductoEnVuelo>();
+  @ViewChild('iconoCarrito', { read: ElementRef }) private iconoCarrito?: ElementRef<HTMLElement>;
 
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
   isEdited: boolean;
@@ -235,8 +254,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly entregasEnCurso = new Set<PedidoDet>();
   // public ListaPedidoDetProducto: PedidoDet[] = [];
 
-  public MostrarOcultarPanelProducto: Boolean;
-  public MostrarOcultarPanelEspacio: Boolean;
+  public MostrarOcultarPanelProducto: boolean;
+  public MostrarOcultarPanelEspacio: boolean;
   public MostrarOcultarPanelPedido: Boolean;
   public mozoSelected: Empleado | undefined;
   public clienteSelected: Cliente;
@@ -264,6 +283,11 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   productoParaTraslado: PedidoDet | null = null;
   ambienteActual: Ambiente | null = null;
   private descuentoAplicado = false;
+  private envioNubeSinAcuse = false;
+
+  private get hayBorradorSinEnviar(): boolean {
+    return (this.listProductGrid ?? []).some(item => !item.Item);
+  }
 
   get textDescuento(): string {
     return this.textCatalog.get(
@@ -315,7 +339,25 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   get hayProductosPendientesEnvio(): boolean {
     return (this.listProductGrid ?? []).some(item =>
       !item.Item
-      || !this.productoEnviadoACocina(item));
+      || (!this.modoCajaLocal && !this.productoEnviadoACocina(item)));
+  }
+
+  private get cuentaEditableLocal(): boolean {
+    return this.cuentaLocalSeleccionada?.contenido.Estado === PedidoEstadoEnum.Activo
+      && !this.listProductGrid.some(item => !item.Item);
+  }
+
+  get puedeAnularCuentaLocal(): boolean {
+    return this.cuentaEditableLocal && this.sesionLocal.permiteAnular;
+  }
+
+  get puedeDescontarCuentaLocal(): boolean {
+    return this.cuentaEditableLocal && this.sesionLocal.permiteDescuento && !this.descuentoAplicado;
+  }
+
+  get puedeDividirCuentaLocal(): boolean {
+    return this.cuentaEditableLocal && this.sesionLocal.caja?.PermiteDividirPedido !== false
+      && this.cuentaLocalSeleccionada.contenido.IdCanalVenta === CanalVentaEnum.ESPACIO;
   }
 
   /** Enviar pedido solo tiene sentido dentro de la edición y con líneas nuevas. */
@@ -439,7 +481,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Solo un pedido persistido puede anularse; no depende del historial de la pantalla. */
   get isAnularPedidoDisabled(): boolean {
-    return this.idPedidoCobrar <= 0
+    return !this.pedidoPersistido
       || this.nroCuentaCobrar <= 0
       || this.enviandoPedido;
   }
@@ -549,10 +591,15 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   get hayContextoPedidoActivo(): boolean {
     return this.procesarPedido
       || this.mesaSeleccionada
-      || Number(this.idPedidoCobrar) > 0;
+      || !!this.cuentaLocalSeleccionada || Number(this.idPedidoCobrar) > 0;
   }
 
   toggleBloquear() {
+    if (this.enviandoPedido) return;
+    if (this.hayBorradorSinEnviar || this.envioNubeSinAcuse) {
+      void this.confirmarSalidaDeVenta().then(salir => { if (salir) this.RehacerPantalla(); });
+      return;
+    }
     if (!this.hayContextoPedidoActivo) {
       this.salir(); // Llamar a la función salir si está visible el botón Bloquear
     } else {
@@ -591,7 +638,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /** Calcula visibilidad y texto de los botones Factura y Boleta */
-  calcularBotonesDocumento(docs: CajaTipoDocumento[]): void {
+  calcularBotonesDocumento(docs: Pick<CajaTipoDocumento, 'IdTipoDocumento' | 'Descripcion'>[]): void {
     const E = EnumTipoDocumento;
 
     // ── FACTURA ──────────────────────────────────────────────────
@@ -845,6 +892,11 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async ngOnInit() {
+    if (this.modoCajaLocal) {
+      this.headerService.hideHeader();
+      this.aplicarCopiaLocal();
+      return;
+    }
     this.usuarioService.getUsuarioActual().subscribe({
       next: response => {
         this.puedeAbrirTurno = response?.Data?.IdNivel === NivelUsuarioEnum.Administrador
@@ -1020,6 +1072,55 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private aplicarCopiaLocal(): void {
+    const sesion = this.sesionLocal;
+    const { maestros, usuario, caja, turno } = sesion;
+    if (!usuario || !maestros || !caja || !turno) {
+      this.isLoadingEspacios = false;
+      this.errorCargaInicial = true;
+      return;
+    }
+    this.turnoAbierto = turno;
+    if (sesion.contexto.cultura) this.textCatalog.setCulture(usuario.Cultura || sesion.contexto.cultura);
+    this.isAdmin = sesion.esResponsable;
+    this.user = usuario;
+    this.userLoged = { id: usuario.IdEmpleado, username: usuario.NombreEmpleado || usuario.NombreUsuario };
+    this.puedeAbrirTurno = this.puedeCerrarTurno = false;
+    this.cargandoPermisos = false;
+    this.puedeAplicarDescuento = this.descuentosHabilitados = sesion.permiteDescuento;
+    this.puedeAprobarSolicitudes = sesion.permiteAnular;
+    this.comprobantesHabilitados = sesion.esEquipoCaja && sesion.esCajero && sesion.estado.capacidades?.cobros === true;
+    this.calcularBotonesDocumento(sesion.documentos);
+    this.config = Object.assign(new Configuracion(), {
+      PaisISO2: sesion.contexto.paisISO2, IdMoneda: sesion.moneda?.IdMoneda, SimboloMoneda: sesion.moneda?.Simbolo,
+      TieneProductoPrecioDelivery: maestros.productos.some(p => p.EsCargoDelivery),
+    });
+    const carta = cartaVentaLocal(sesion.productos);
+    this.listProducts = this.listProductoVenta = carta.productos;
+    this.listFamilia = carta.familias;
+    this.listSubFamilia = carta.subfamilias;
+    this.listObservacion = [];
+    this.listEmpleados = sesion.usuarios.map(u => Object.assign(new Empleado(), {
+      IdEmpleado: u.IdEmpleado, Nombre: u.NombreEmpleado || u.NombreUsuario,
+    }));
+    this.listaSociosNegocio = maestros.socios.map(s => new SocioNegocio(s));
+    const tablero = tableroMesasLocal(maestros.mesas, sesion.cuentas, new Map(this.listEmpleados.map(e => [e.IdEmpleado, e.Nombre])));
+    this.listAmbiente = tablero.ambientes;
+    this.listaEspaciosTotal = tablero.espacios;
+    this.listaPedidosPendientes = sesion.cuentas.map(resumenCuentaLocal);
+    this.idCanalVentaDefectoCaja = caja.IdCanalVentaDefecto ?? 0;
+    this.listaTipoPedidos = sesion.canales.map(c => ({ IdCanalVenta: c.id, Descripcion: c.nombre, Activo: true }));
+    if (this.listaTipoPedidos.length) this.actualizarFlagsCanales();
+    else this.isEspacio = this.isParaLlevar = this.isDelivery = this.isEntrada = false;
+    this.listaPedido_x_Canal = this.mostrandoPendientesCobro ? this.pedidosPendientesCobro :
+      this.listaPedidosPendientes.filter(p => p.Estado === PedidoEstadoEnum.Activo && p.IdCanalVenta === this.idCanalVentaSelected);
+    const ambiente = this.listAmbiente.find(a => a.IdAmbiente === this.ambienteActual?.IdAmbiente) ?? this.listAmbiente[0];
+    if (ambiente) void this.MostrarEspacios_x_Ambiente(ambiente);
+    else this.listaEspacios_x_Ambiente = [];
+    this.isLoadingEspacios = false;
+    this.errorCargaInicial = false;
+  }
+
   private actualizarVisibilidadReservas(incluidasEnLicencia: boolean): void {
     this.reservasHabilitadas = false;
     if (!incluidasEnLicencia) {
@@ -1037,7 +1138,64 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   public salir(): void {
+    if (this.modoCajaLocal) {
+      void this.cambiarUsuarioCajaLocal();
+      return;
+    }
+    if (this.enviandoPedido) return;
+    if (this.hayBorradorSinEnviar || this.envioNubeSinAcuse) {
+      void this.confirmarSalidaDeVenta().then(salir => {
+        if (!salir) return;
+        this.limpiarPedido();
+        this.storageService.logout();
+      });
+      return;
+    }
     this.storageService.logout();
+  }
+
+  async confirmarSalidaDeVenta(): Promise<boolean> {
+    if (this.enviandoPedido || this.dialog?.openDialogs?.some(ref => ref.componentInstance instanceof DialogEmitirComprobanteComponent)) {
+      return false;
+    }
+    if (this.envioNubeSinAcuse) {
+      return Notificar.confirmar({
+        titulo: 'Pedido sin confirmación de la nube',
+        detalle: 'El pedido podría haberse guardado. Si dejas este borrador, revisa la cuenta en el servicio online antes de volver a introducir los productos.',
+        textoConfirmar: 'Dejar el borrador', textoCancelar: 'Seguir en el pedido',
+      });
+    }
+    if (!this.hayBorradorSinEnviar) return true;
+    return Notificar.confirmar({
+      titulo: '¿Salir con productos sin enviar?', detalle: 'Si sales, se descartarán los productos que aún no has enviado.',
+      textoConfirmar: 'Descartar y salir', textoCancelar: 'Seguir en el pedido',
+    });
+  }
+
+  async cambiarUsuarioCajaLocal(): Promise<void> {
+    if (!(await this.confirmarSalidaDeVenta())) return;
+    this.limpiarPedido();
+    this.sesionLocal.salir();
+    await this.router.navigateByUrl('/offline');
+  }
+
+  async volverAlServicioOnline(): Promise<void> {
+    if (!(await this.confirmarSalidaDeVenta())) return;
+    let destino: Awaited<ReturnType<CajaOfflineSesionService['prepararRegresoOnline']>>;
+    this.spinnerService.show();
+    try {
+      destino = await this.sesionLocal.prepararRegresoOnline();
+    } catch (error) {
+      Notificar.informacion('Revisa la caja local', error instanceof Error ? error.message : 'No se pudo volver al servicio online.', 'warning');
+      return;
+    } finally {
+      this.spinnerService.hide();
+    }
+    this.limpiarPedido();
+    this.sesionLocal.salir();
+    if (destino.requiereLogin) await this.router.navigate(['/iniciar-sesion'], { queryParams: { returnUrl: destino.returnUrl } });
+    else if (destino.ruta === this.router.url) window.location.reload();
+    else await this.router.navigateByUrl(destino.ruta);
   }
 
   public reintentarTurno(): void {
@@ -1248,6 +1406,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** El pedido ya existe en el backend y tiene una cuenta válida. */
   get pedidoPersistido(): boolean {
+    if (this.modoCajaLocal) return !!this.cuentaLocalSeleccionada;
     return Number(this.idPedidoCobrar) > 0 && Number(this.nroCuentaCobrar) > 0;
   }
 
@@ -1264,13 +1423,22 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get puedeCobrarPedido(): boolean {
+    if (this.modoCajaLocal) {
+      const pedido = this.cuentaLocalSeleccionada?.contenido;
+      return this.sesionLocal.esCajero && !!pedido && [1, 6].includes(pedido.Estado) &&
+        !pedido.TieneAnticiposOnline && this.listProductGrid.every(linea => linea.Item !== 0);
+    }
     return this.pedidoPersistido
       && (this.procesarPedido || this.esPedidoPendienteCobro);
   }
 
+  get expressDisponible(): boolean {
+    return !this.modoCajaLocal || this.sesionLocal.documentos.some(doc => doc.IdTipoDocumento === EnumTipoDocumento.Express);
+  }
+
   /** true cuando hay un pedido de llevar/delivery cargado */
   get pedidoLlevarSeleccionado(): boolean {
-    return this.idPedidoCobrar > 0 && this.idCanalVentaSelected !== this.canalVentaEnum.ESPACIO;
+    return (this.idPedidoCobrar > 0 || !!this.cuentaLocalSeleccionada) && this.idCanalVentaSelected !== this.canalVentaEnum.ESPACIO;
   }
 
   async CambiarMozo(): Promise<void> {
@@ -1397,6 +1565,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   dividirCuenta(): void {
 
+    if (this.modoCajaLocal && !this.puedeDividirCuentaLocal) return;
     if (this.espacioSelected.IdEspacio == null) {
       Swal.fire(
         this.textCatalog.get('changeSpaceTitle'),
@@ -1411,14 +1580,31 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   openDialogoDividirCuenta(espacioSelected: Espacios, idPedido: number): void {
+    const local: DivisionCajaLocal | undefined = this.modoCajaLocal ? {
+      cuentas: this.sesionLocal.cuentas,
+      simbolo: this.config?.SimboloMoneda ?? '',
+      permiteDividir: this.sesionLocal.caja?.PermiteDividirPedido !== false,
+      dividir: async (cuenta, items) => {
+        await this.sesionLocal.registrarOperacion('pedidos/modificar', {
+          accion: 'dividir', referenciaPedido: cuenta.identificador, versionPedido: cuenta.version, items,
+        });
+        return this.sesionLocal.cuentas;
+      },
+    } : undefined;
     const dialogRef = this.dialog.open(DialogDividirCuentaComponent, {
       width: '860px',
       maxWidth: '96vw',
       maxHeight: '92vh',
-      data: { idPedido, espacioSelected }
+      data: { idPedido, espacioSelected, local }
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
+      if (local) {
+        const cuenta = this.sesionLocal.cuentas.find(c => c.identificador === result?.referenciaLocal);
+        if (cuenta) this.abrirCuentaLocal(cuenta);
+        else this.RehacerPantalla();
+        return;
+      }
       if (result) {
         this.limpiarPedido();
         const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdPedidoNroCuenta(result.idPedido, result.nroCuenta));
@@ -1458,6 +1644,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   openDialogoDescuento(itemPedidoDet: PedidoDet, solicitarAprobacion = false): void {
 
+    if (this.modoCajaLocal && !this.puedeDescontarCuentaLocal) return;
+
     var idProducto = itemPedidoDet.Producto.IdProducto;
     var nombreCorto = itemPedidoDet.Producto.NombreCorto;
     var descuentoTotal = this.sumaGranTotal;
@@ -1467,12 +1655,18 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       width: '720px',
       maxWidth: '96vw',
       maxHeight: '90vh',
-      data: { idProducto, nombreCorto, descuentoTotal, descuentoMaximo }
+      data: { idProducto, nombreCorto, descuentoTotal, descuentoMaximo,
+        descuentos: this.modoCajaLocal ? this.sesionLocal.maestros.descuentos.filter(d => d.Activo) : undefined }
     });
 
 
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
+        if (this.modoCajaLocal) {
+          await this.modificarCuentaLocal({ accion: 'descuento', item: itemPedidoDet.Item,
+            idDescuento: result.retornaIdDescuento, porcentaje: result.retornaPorcentaje, nroCupon: result.retornaNroCupon });
+          return;
+        }
         const pedidoDescuentoDTO: PedidoDescuentoDTO = {
           IdPedido: this.idPedidoCobrar,
           NroCuenta: this.nroCuentaCobrar,
@@ -1519,6 +1713,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       disableClose: true,
       data: {
         SociosNegocio: this.listaSociosNegocio ?? [],
+        copiaLocal: this.modoCajaLocal ? this.sesionLocal.maestros : undefined,
         IdTurno: this.turnoAbierto?.IdTurno ?? 0
       }
     });
@@ -1628,9 +1823,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.spinnerService.show();
     this.selectedItemSubFamilia = oSubFamilia;
     this.IdSubFamila = oSubFamilia.IdSubFamilia;
-    console.log(this.listProducts);
-    this.listProducts_x_SubFamilia = this.listProducts.filter(x => x.IdSubFamilia === oSubFamilia.IdSubFamilia && x.Posicion > 0);
-    //this.GridListaPedidoDetProducto.data = this.ListaPedidoDetProducto.filter(x=> x.IdSubFamilia===subFamiliaId);
+    const productos = this.listProducts.filter(x => x.IdSubFamilia === oSubFamilia.IdSubFamilia && x.Posicion > 0);
+    this.listProducts_x_SubFamilia = this.modoCajaLocal ? completarTableroProductosLocal(productos) : productos;
     this.spinnerService.hide();
   }
 
@@ -1704,10 +1898,16 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async openPedido(
     pedido: Pick<PedidoDeliveryDTO, 'IdPedido' | 'NroCuenta'>
-      & Partial<Pick<PedidoDeliveryDTO, 'Estado' | 'IdCanalVenta' | 'IdEspacio' | 'Cliente' | 'Total'>>
+      & Partial<Pick<PedidoDeliveryDTO, 'Estado' | 'IdCanalVenta' | 'IdEspacio' | 'Cliente' | 'Total' | 'referenciaLocal'>>
       & { NroPedido?: string | number }
   ) {
     const secuencia = ++this.secuenciaSeleccionPedido;
+    if (this.modoCajaLocal) {
+      if (this.isLoadingEspacios || this.errorCargaInicial) return;
+      const cuenta = this.sesionLocal.cuentas.find(c => c.identificador === pedido.referenciaLocal);
+      if (cuenta) this.abrirCuentaLocal(cuenta);
+      return;
+    }
     const esPendienteCobro = pedido.Estado === PedidoEstadoEnum.PendienteCobro;
     const listData: ApiResponse<PedidoEspacioDTO[]> = await lastValueFrom(this.pedidoService.FindPedidoByIdPedidoNroCuenta(pedido.IdPedido, pedido.NroCuenta));
     if (secuencia !== this.secuenciaSeleccionPedido) {
@@ -1754,9 +1954,10 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     pedido: Pick<PedidoDeliveryDTO, 'IdPedido' | 'NroCuenta'>
       & Partial<Omit<PedidoDeliveryDTO, 'NroPedido'>>
       & { NroPedido?: string | number },
-    detalle: PedidoEspacioDTO
+    detalle: Pick<PedidoEspacioDTO, 'IdEspacio' | 'NroPedido' | 'Cliente' | 'IdCanalVenta' | 'Total'>
   ): void {
     this.pedidoPendienteCobroSeleccionado = {
+      referenciaLocal: pedido.referenciaLocal,
       IdPedido: pedido.IdPedido,
       NroCuenta: pedido.NroCuenta,
       IdEspacio: pedido.IdEspacio ?? detalle.IdEspacio ?? null,
@@ -1782,6 +1983,12 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async openDialogEspacio(espacio: Espacios) {
+    if (this.modoCajaLocal) {
+      if (this.isLoadingEspacios || this.errorCargaInicial) return;
+      const actual = this.listaEspaciosTotal.find(m => m.IdEspacio === espacio.IdEspacio);
+      if (!actual) return;
+      espacio = actual;
+    }
     const secuencia = ++this.secuenciaSeleccionPedido;
     this.spinnerService.show();
 
@@ -1929,12 +2136,14 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {
     if (secuencia !== this.secuenciaSeleccionPedido) return;
     if (this.aplicarFiltroCambioEspacio) {
+      if (this.modoCajaLocal) return;
       const response = await lastValueFrom(this.espaciosService.CambiarEspacio(this.espacioSelected.IdEspacio, espacio.IdEspacio));
       if (secuencia !== this.secuenciaSeleccionPedido) return;
       if (response.Data) this.RehacerPantalla();
     } else {
       this.limpiarPedido();
-      this.mozoSelected = this.getMozoByMozoId(this.storageService.getCurrentSession().User.IdEmpleado);
+      const empleado = this.modoCajaLocal ? this.sesionLocal.usuario.IdEmpleado : this.storageService.getCurrentSession().User.IdEmpleado;
+      this.mozoSelected = this.getMozoByMozoId(empleado);
       this.espacioSelected = espacio;
 
       const dialogRef = this.dialog.open(DialogMCantComponent, {
@@ -1964,6 +2173,14 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     espacio: Espacios,
     secuencia = this.secuenciaSeleccionPedido
   ) {
+    if (this.modoCajaLocal) {
+      if (this.aplicarFiltroUnirEspacio) return;
+      const cuenta = this.sesionLocal.cuentas.find(c => c.contenido.IdEspacio === espacio.IdEspacio
+        && c.contenido.Estado === PedidoEstadoEnum.Activo);
+      if (cuenta) this.abrirCuentaLocal(cuenta);
+      else await this.showWarningAndReloadEspacios(this.textCatalog.get('orderNotFoundInSpace'));
+      return;
+    }
     if (this.aplicarFiltroUnirEspacio) {
       const response = await lastValueFrom(this.espaciosService.UnirEspacio(this.espacioSelected.IdEspacio, espacio.IdEspacio, this.storageService.getCurrentSession().User.IdUsuario));
       if (secuencia !== this.secuenciaSeleccionPedido) return;
@@ -1991,6 +2208,10 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     espacio: Espacios,
     secuencia = this.secuenciaSeleccionPedido
   ) {
+    if (this.modoCajaLocal) {
+      this.openDialogoDividirCuenta(espacio, 0);
+      return;
+    }
     const listData = await lastValueFrom(this.pedidoService.FindPedidoByIdEspacio(espacio.IdEspacio));
     if (secuencia !== this.secuenciaSeleccionPedido) return;
     if (listData.Data.length > 0) {
@@ -2005,6 +2226,10 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async showWarningAndReloadEspacios(message: string) {
     Swal.fire(this.textCatalog.get('validation'), message, 'warning');
+    if (this.modoCajaLocal) {
+      await this.Refresh();
+      return;
+    }
     this.listaEspaciosTotal = (await lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos())).Data;
   }
 
@@ -2028,6 +2253,11 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async openDialogVerPedido(IdEspacio: number) {
+    if (this.modoCajaLocal) {
+      const mesa = this.listaEspaciosTotal.find(m => m.IdEspacio === IdEspacio);
+      if (mesa) await this.openDialogEspacio(mesa);
+      return;
+    }
     try {
       this.spinnerService.show();
 
@@ -2164,6 +2394,13 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async realizarEliminacion(pedidoDet: PedidoDet, motivoAnulacion: string) {
 
+    if (this.modoCajaLocal) {
+      if (this.puedeAnularCuentaLocal) {
+        await this.modificarCuentaLocal({ accion: 'anular-producto', item: pedidoDet.Item, motivo: motivoAnulacion });
+      }
+      return;
+    }
+
     var pedidoDelete: AnularProductoYComplementoDTO = {
       IdEspacio: this.espacioSelected.IdEspacio,
       NroCuenta: pedidoDet.NroCuenta,
@@ -2291,6 +2528,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private async cargarSolicitudesPedido(): Promise<void> {
+    if (this.modoCajaLocal) return;
     const idPedido = this.idPedidoCobrar;
     const nroCuenta = this.nroCuentaCobrar;
     if (!idPedido) {
@@ -2450,6 +2688,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    if (this.modoCajaLocal && !this.puedeAnularCuentaLocal) return;
     const pendiente = this.solicitudPendiente(pedidoDet);
     if (pendiente) {
       const esMia = pendiente.IdUsuarioSolicita === this.storageService.getCurrentUser()?.IdUsuario;
@@ -2465,6 +2704,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     const dialogRef = this.dialog.open(DialogMTextComponent, {
       width: '800px',
       data: {
+        maxLength: this.modoCajaLocal ? 100 : undefined,
         title: this.textCatalog.get('confirmDeleteProduct', {
           product: pedidoDet.Producto.NombreCorto
         })
@@ -2475,7 +2715,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       const motivo = (result?.value ?? '').toString().trim();
       if (!motivo) return;
 
-      if (this.puedeAprobarSolicitudes) {
+      if (this.modoCajaLocal || this.puedeAprobarSolicitudes) {
         void this.realizarEliminacion(pedidoDet, motivo);
       } else {
         void this.solicitarAnulacionProducto(pedidoDet, motivo);
@@ -2485,7 +2725,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
 
 
-  public AgregarProducto(product: Producto): void {
+  public AgregarProducto(product: Producto, botonOrigen?: HTMLButtonElement): void {
     const precioSocio = this.preciosSocioNegocio.get(product.IdProducto);
     if (precioSocio !== undefined) {
       product = new Producto({
@@ -2512,16 +2752,16 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
           product.Precio = precioIngresado;
 
           // Llamar a la lógica para agregar el producto solo si se ingresó el precio
-          this.procesarAgregarProducto(product);
+          this.procesarAgregarProducto(product, botonOrigen);
         }
       });
     } else {
       // Si SinPrecio no es igual a 1, agrega el producto directamente
-      this.procesarAgregarProducto(product);
+      this.procesarAgregarProducto(product, botonOrigen);
     }
   }
 
-  private procesarAgregarProducto(product: Producto): void {
+  private procesarAgregarProducto(product: Producto, botonOrigen?: HTMLButtonElement): void {
     // Crear el detalle del pedido con el precio y la cantidad
     const pedidoDet = new PedidoDet({
       Item: this.DEFAULT_ID,
@@ -2540,33 +2780,53 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       Ip: this.storageService.getCurrentIP()
     });
 
-    if (this.esMenuPrincipal(product)) {
-      this.AgregarProductoMenu(pedidoDet);
-    } else if (product.Tipo == 2) {
-      this.AgregarProductoComplemento(pedidoDet);
-    }
-
-    // Agregar el producto al grid de productos
-    this.listProductGrid.push(pedidoDet);
-    this.actualizarDatosGrilla();
+    const incorporar = () => {
+      this.listProductGrid.push(pedidoDet);
+      this.actualizarDatosGrilla();
+      this.animarProductoAlCarrito(pedidoDet, botonOrigen);
+    };
+    if (this.esMenuPrincipal(product)) this.AgregarProductoMenu(pedidoDet, incorporar);
+    else if (product.Tipo === 2) this.AgregarProductoComplemento(pedidoDet, incorporar);
+    else incorporar();
   }
 
-  AgregarProductoMenu(pedidodet: PedidoDet): void {
+  private animarProductoAlCarrito(detalle: PedidoDet, origen?: HTMLButtonElement): void {
+    const carrito = this.iconoCarrito?.nativeElement;
+    if (!origen?.getClientRects().length || !carrito?.getClientRects().length) return;
+    const inicio = origen.getBoundingClientRect();
+    const fin = carrito.getBoundingClientRect();
+    const x = fin.left + fin.width / 2;
+    const y = fin.top + fin.height / 2;
+    this.productosEnVuelo.add({
+      nombre: detalle.Producto.NombreCorto, cantidad: detalle.Cantidad, x, y,
+      desdeX: inicio.left + inicio.width / 2 - x,
+      desdeY: inicio.top + inicio.height / 2 - y,
+    });
+  }
+
+  AgregarProductoMenu(pedidodet: PedidoDet, incorporar?: () => void): void {
     const dialogRef = this.dialog.open(DialogMenuComponent, {
       hasBackdrop: true,
       panelClass: 'dialog-window--workspace',
-      data: { pedidodet },
+      data: {
+        pedidodet,
+        soloLectura: this.modoCajaLocal && pedidodet.Item > 0,
+        configuracion: this.modoCajaLocal
+          ? configuracionMenuLocal(pedidodet.Producto.IdProducto, this.sesionLocal.maestros.productos)
+          : undefined,
+      },
     });
 
     dialogRef.afterClosed().subscribe(item => {
       if (item?.pedidodet) {
         item.pedidodet.Subtotal =
           item.pedidodet.Cantidad * item.pedidodet.Precio;
-        this.actualizarDatosGrilla();
+        if (incorporar) incorporar();
+        else this.actualizarDatosGrilla();
         return;
       }
 
-      if (pedidodet.Item === 0) {
+      if (!incorporar && pedidodet.Item === 0) {
         const removeIndex = this.listProductGrid.indexOf(pedidodet);
         if (removeIndex >= 0) {
           this.listProductGrid.splice(removeIndex, 1);
@@ -2576,7 +2836,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  AgregarProductoComplemento(pedidodet: PedidoDet) {
+  AgregarProductoComplemento(pedidodet: PedidoDet, incorporar?: () => void) {
 
     const dialogRef = this.dialog.open(DialogComplementosComponent, {
       hasBackdrop: true,
@@ -2584,24 +2844,19 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       height: '630px',
       data: {
         pedidodet: pedidodet,
-        listProducts: this.listProducts
+        soloLectura: this.modoCajaLocal && pedidodet.Item > 0,
+        listProducts: this.modoCajaLocal ? this.sesionLocal.opciones(0) : this.listProducts
       }
     });
 
     dialogRef.afterClosed().subscribe((item) => {
-      if (item) {
-        if (item.pedidodet.Item > 0) {
-          const iCantidad = item.pedidodet.Cantidad;
-          const dPrecio = item.pedidodet.Precio;
-          const dSubtotal = iCantidad * dPrecio;
-
-          item.pedidodet.Cantidad = iCantidad;
-          item.pedidodet.Subtotal = dSubtotal;
-
-        }
-      } else {
-        if (pedidodet.Item == 0) {
-          var removeIndex = this.listProductGrid.map(function (item) { return item }).indexOf(pedidodet);
+      if (item?.pedidodet) {
+        item.pedidodet.Subtotal = item.pedidodet.Cantidad * item.pedidodet.Precio;
+        if (incorporar) incorporar();
+        else this.actualizarDatosGrilla();
+      } else if (!incorporar && pedidodet.Item === 0) {
+        const removeIndex = this.listProductGrid.indexOf(pedidodet);
+        if (removeIndex >= 0) {
           this.listProductGrid.splice(removeIndex, 1);
           this.actualizarDatosGrilla();
         }
@@ -2627,7 +2882,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async AnularPedido() {
 
-    if (!this.esPedidoPendienteCobro && this.espacioSelected.IdEspacio == null) {
+    if (this.modoCajaLocal && !this.puedeAnularCuentaLocal) return;
+
+    if (!this.modoCajaLocal && !this.esPedidoPendienteCobro && this.espacioSelected.IdEspacio == null) {
       Swal.fire(
         this.textCatalog.get('cancelOrder'),
         this.textCatalog.get('selectSpace'),
@@ -2642,7 +2899,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    if (!this.puedeAprobarSolicitudes && !this.idPedidoCobrar) {
+    if (!this.modoCajaLocal && !this.puedeAprobarSolicitudes && !this.idPedidoCobrar) {
       // Sin cuenta abierta no hay nada que pedir: solo un aprobador puede liberar el espacio.
       await Notificar.advertencia(
         this.textCatalog.get('cancelOrder'),
@@ -2654,14 +2911,14 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     const dialogRef = this.dialog.open(DialogMTextComponent, {
       width: '800px',
       data: {
-        title: this.esPedidoPendienteCobro
+        title: this.esPedidoPendienteCobro || (this.modoCajaLocal && this.idCanalVentaSelected !== CanalVentaEnum.ESPACIO)
           ? this.textCatalog.get('voidOrderTitle', { number: this.numeroPedido })
           : this.textCatalog.get('confirmVoidSpaceOrder', {
               space: `${this.espacioSelected.Descripcion} ${this.espacioSelected.Numero}`
             }),
         placeholder: this.textCatalog.get('enterVoidReason'),
         requiredMessage: this.textCatalog.get('voidReasonRequired'),
-        maxLength: 120,
+        maxLength: this.modoCajaLocal ? 100 : 120,
       }
     });
 
@@ -2669,7 +2926,9 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       const motivo = (result?.value ?? '').toString().trim();
       if (!motivo) return;
 
-      if (this.esPedidoPendienteCobro) {
+      if (this.modoCajaLocal) {
+        void this.modificarCuentaLocal({ accion: 'anular-pedido', motivo });
+      } else if (this.esPedidoPendienteCobro) {
         void this.realizarAnulacionPedidoPendiente(motivo);
       } else if (this.puedeAprobarSolicitudes) {
         void this.RealizarAnulacionPedido(this.espacioSelected, motivo);
@@ -2860,6 +3119,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
    aplicarDescuento(): void {
+    if (this.modoCajaLocal && !this.puedeDescontarCuentaLocal) return;
     if (!this.puedeOperarPedidoPersistido) {
       this.informarPedidoRequerido();
       return;
@@ -2950,6 +3210,10 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.enviandoPedido) {
       return;
     }
+    if (this.envioNubeSinAcuse) {
+      await this.avisarEnvioNubeSinAcuse();
+      return;
+    }
 
     if (this.espacioSelected.IdEspacio == null && this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) {
       Swal.fire(
@@ -3005,6 +3269,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
         listPedidoDetails.push(pedidoDetail);
       });
 
+      const usuario = this.modoCajaLocal ? this.sesionLocal.usuario : this.storageService.getCurrentSession().User;
       var pedido: PedidoCab = new PedidoCab(
         {
           IdEmpleado: (this.idCanalVentaSelected != this.canalVentaEnum.ESPACIO) ? this.idEmpleadoLlevar : this.mozoSelected?.IdEmpleado,
@@ -3012,8 +3277,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
           NroCuenta: this.nroCuentaCobrar == 0 ? this.DEFAULT_ID : this.nroCuentaCobrar,
           Total: this.getTotalByListProductGrid(),
           Importe: this.getTotalByListProductGrid(),
-          UsuReg: this.storageService.getCurrentSession().User.IdUsuario,
-          UsuMod: this.storageService.getCurrentSession().User.IdUsuario,
+          UsuReg: usuario.IdUsuario,
+          UsuMod: usuario.IdUsuario,
           IdEspacio: (this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) ? this.espacioSelected.IdEspacio : 9999,
           Espacio: (this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) ? this.espacioSelected.Espacio : '',
           NroPax: (this.idCanalVentaSelected === this.canalVentaEnum.ESPACIO) ? this.espacioSelected.NroPersonas : 0,
@@ -3049,8 +3314,34 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       );
 
-      var responseRegisterPedido: ApiResponse<ImpresionDTO[]> = await lastValueFrom(this.pedidoService.GrabarPedido(pedido));
+      if (this.modoCajaLocal) {
+        try {
+          const envio = prepararEnvioPedidoLocal(pedido, this.cuentaLocalSeleccionada, this.sesionLocal.contexto, usuario.IdEmpleado);
+          await this.sesionLocal.registrarOperacion(envio.ruta, envio.datos);
+          this.RehacerPantalla();
+        } catch (error) {
+          await Notificar.error('Enviar pedido', error instanceof Error ? error.message : 'No se pudo guardar el pedido en la caja.');
+        }
+        return;
+      }
+      let responseRegisterPedido: ApiResponse<ImpresionDTO[]>;
+      try {
+        responseRegisterPedido = await lastValueFrom(this.pedidoService.GrabarPedido(pedido));
+      } catch (error) {
+        const estado = (error as { status?: number })?.status;
+        if (estado === undefined || estado < 400 || estado === 408 || estado >= 500) {
+          // Este POST no es idempotente: perder el acuse no descarta que la nube haya guardado la comanda.
+          this.envioNubeSinAcuse = true;
+          await this.avisarEnvioNubeSinAcuse();
+        }
+        return;
+      }
 
+      if (typeof responseRegisterPedido?.Success !== 'boolean') {
+        this.envioNubeSinAcuse = true;
+        await this.avisarEnvioNubeSinAcuse();
+        return;
+      }
       if (responseRegisterPedido.Success) {
         if (pedido.ModoImpresion === ModoImpresionPedido.DirectaQz) {
           const impresiones = responseRegisterPedido.Data ?? [];
@@ -3092,6 +3383,35 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     } finally {
       this.enviandoPedido = false;
+      this.spinnerService.hide();
+    }
+  }
+
+  private avisarEnvioNubeSinAcuse() {
+    return Notificar.advertencia('Pedido sin confirmación de la nube',
+      'El pedido podría haberse guardado. Conservamos el borrador. Comprueba la cuenta en el servicio online antes de volver a introducir estos productos.');
+  }
+
+  private async modificarCuentaLocal(campos: object): Promise<void> {
+    const cuenta = this.cuentaLocalSeleccionada;
+    if (!cuenta) return;
+    this.spinnerService.show();
+    try {
+      await this.sesionLocal.registrarOperacion('pedidos/modificar', {
+        referenciaPedido: cuenta.identificador, versionPedido: cuenta.version, ...campos,
+      });
+      const actualizada = this.sesionLocal.cuentas.find(c => c.identificador === cuenta.identificador);
+      if (actualizada?.contenido.Estado === PedidoEstadoEnum.Activo && actualizada.version > cuenta.version) {
+        const estabaEnEdicion = this.procesarPedido;
+        const mostrabaProductos = this.MostrarOcultarPanelProducto;
+        this.abrirCuentaLocal(actualizada);
+        if (estabaEnEdicion) await this.processPedido(mostrabaProductos);
+      } else {
+        this.RehacerPantalla();
+      }
+    } catch (error) {
+      await Notificar.error('Modificar pedido', error instanceof Error ? error.message : 'No se pudo actualizar el pedido en la caja.');
+    } finally {
       this.spinnerService.hide();
     }
   }
@@ -3150,6 +3470,11 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async processComprobante() {
+    if (this.modoCajaLocal) {
+      this.OpenDialogEmitirComprobante(this.mostrarBoleta ? this.idTipoDocBoleta :
+        (this.mostrarFactura ? this.idTipoDocFactura : EnumTipoDocumento.Express));
+      return;
+    }
     if (this.idPedidoCobrar > 0) {
       var allSaved: Boolean = true;
       for (var i = 0; i < this.listProductGrid.length; i++) {
@@ -3190,7 +3515,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  RehacerPantalla() {
+  async RehacerPantalla() {
     try {
       this.spinnerService.show();
       this.enterFullScreen();
@@ -3200,6 +3525,18 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       this.aplicarFiltroTrasladoProducto = false;
       this.aplicarFiltroTrasladarAEspacio = false;
       this.productoParaTraslado = null;
+      if (this.modoCajaLocal) {
+        this.isLoadingEspacios = true;
+        this.secuenciaSeleccionPedido++;
+        this.limpiarPedido();
+        this.mostrandoPendientesCobro = false;
+        this.MostrarOcultarPanelEspacio = true;
+        this.MostrarOcultarPanelProducto = false;
+        this.RehacerPantallaRefresh = 'Refresh';
+        this.isCanalVentaDisabled = false;
+        await this.Refresh();
+        return;
+      }
       // Actualizar espacios (skeleton mientras recarga)
       this.isLoadingEspacios = true;
       lastValueFrom(this.espaciosService.GetAllEspaciosConPedidos()).then(data => {
@@ -3278,6 +3615,8 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private limpiarPedido(): void {
+    this.envioNubeSinAcuse = false;
+    this.cuentaLocalSeleccionada = undefined;
     this.listProductGrid = [];
     this.selectedRow = null;
     this.accionesCompactasAbiertas = false;
@@ -3301,6 +3640,46 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isPanelProductoDisabled = false;
   }
 
+
+  private abrirCuentaLocal(cuenta: CuentaLocal): void {
+    const { contenido } = cuenta;
+    const resumen = resumenCuentaLocal(cuenta);
+    this.limpiarPedido();
+    this.cuentaLocalSeleccionada = cuenta;
+    this.idPedidoCobrar = resumen.IdPedido;
+    this.nroCuentaCobrar = resumen.NroCuenta;
+    this.numeroPedido = resumen.NroPedido;
+    this.fechaApertura = resumen.FechaPedido ? new Date(resumen.FechaPedido) : null;
+    this.idCanalVentaSelected = resumen.IdCanalVenta;
+    this.mozoSelected = this.getMozoByMozoId(contenido.IdEmpleado);
+    const mesa = this.listaEspaciosTotal.find(m => m.IdEspacio === contenido.IdEspacio);
+    this.espacioSelected = new Espacios({ ...mesa, NroPersonas: contenido.NroPax });
+    this.clienteSelected = new Cliente({
+      IdCliente: contenido.IdClienteDelivery?.toString() ?? '', ItemDelivery: contenido.ItemClienteDelivery ?? 0,
+      RazonSocial: resumen.Cliente, Direccion: String(contenido.Direccion ?? ''), DireccionDelivery: String(contenido.Direccion ?? ''),
+      Referencia: contenido.Referencia, ReferenciaDelivery: contenido.Referencia, Telefono: contenido.TelefonoDelivery,
+      AnexoDelivery: contenido.AnexoDelivery,
+    });
+    this.socioNegocioSelected = this.listaSociosNegocio.find(s => s.IdSocioNegocio === contenido.IdSocioNegocio) ?? new SocioNegocio();
+    const catalogo = this.sesionLocal.maestros.productos;
+    for (const producto of catalogo) {
+      const precio = producto.PreciosSocio?.find(p => p.IdSocioNegocio === contenido.IdSocioNegocio);
+      if (precio) this.preciosSocioNegocio.set(producto.IdProducto, precio.Precio);
+    }
+    this.listProductGrid = structuredClone(contenido.ListaPedidoDet ?? []).filter(d => d.Estado === 1).map(linea => {
+      const producto = catalogo.find(p => p.IdProducto === linea.Producto.IdProducto);
+      return new PedidoDet({
+        ...linea, Producto: new Producto({ ...producto, ...linea.Producto, IdClaseCombo: producto?.IdSeccionMenu ?? 0 }),
+        MontoDescuento: linea.MontoDescuento ?? 0, Impuesto1: linea.Impuesto1 ?? 0,
+        PedidoMenu: (linea.PedidoMenu ?? []).filter(m => m.Estado !== 0),
+        PedidoComplemento: (linea.PedidoComplemento ?? []).filter(c => c.Estado !== 0),
+      });
+    });
+    this.descuentoAplicado = contenido.Dscto > 0;
+    this.actualizarDatosGrilla();
+    this.RehacerPantallaRefresh = 'RehacerPantalla';
+    if (resumen.Estado === PedidoEstadoEnum.PendienteCobro) this.activarPedidoPendienteCobro(resumen, resumen);
+  }
 
   private getPedidoDetByResponse(listData: PedidoEspacioDTO[]): PedidoDet[] {
 
@@ -3386,6 +3765,10 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Reintentar carga completa tras un error de backend en el inicio */
   reintentarCargaInicial(): void {
+    if (this.modoCajaLocal) {
+      void this.Refresh();
+      return;
+    }
     const ruta = this.isModoMozo ? '/mozo' : '/caja';
     // Navegar fuera y volver fuerza el re-init completo del componente
     this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
@@ -3396,6 +3779,12 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   async Refresh(): Promise<void> {
     try {
       this.spinnerService.show();
+      if (this.modoCajaLocal) {
+        this.isLoadingEspacios = true;
+        await this.sesionLocal.actualizar();
+        this.aplicarCopiaLocal();
+        return;
+      }
 
       // Ejecutar las solicitudes en paralelo
       const [productsData, espaciosData, pedidoResponse] = await Promise.all([
@@ -3418,6 +3807,11 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
 
     } catch (error) {
       console.error('Error al refrescar los datos', error);
+      if (this.modoCajaLocal) {
+        this.isLoadingEspacios = false;
+        this.errorCargaInicial = true;
+        Notificar.informacion('No se pudo actualizar la caja', error instanceof Error ? error.message : 'Comprueba la conexión con la caja.', 'warning');
+      }
       // Aquí podrías manejar el error y mostrar un mensaje al usuario si es necesario
     } finally {
       this.spinnerService.hide();  // Ocultar el spinner al finalizar
@@ -3473,6 +3867,11 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   OpenDialogEmitirComprobante(idTipoDoc: EnumTipoDocumento): void {
+    const cuentaLocal = this.modoCajaLocal ? this.cuentaLocalSeleccionada : undefined;
+    if (this.modoCajaLocal && (!this.puedeCobrarPedido || !this.sesionLocal.documentos.some(doc => doc.IdTipoDocumento === idTipoDoc))) {
+      Swal.fire(this.textCatalog.get('validation'), 'Comprueba que la cuenta esté guardada y el documento esté disponible en esta caja.', 'info');
+      return;
+    }
     if (!this.comprobantesHabilitados) {
       Swal.fire(
         'Funcionalidad no incluida',
@@ -3489,10 +3888,7 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       );
       return;
     }
-    // Algunos flujos válidos (por ejemplo, cobrar una entrega) abren el diálogo
-    // directamente; en todos los casos la condición indispensable es que el
-    // pedido y su cuenta ya existan en el backend.
-    if (!this.pedidoPersistido) {
+    if (!cuentaLocal && !this.pedidoPersistido) {
       Swal.fire(
         this.textCatalog.get('validation'),
         this.textCatalog.get('orderMustBeSaved'),
@@ -3501,33 +3897,40 @@ export class VentaComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-       const dialogEmitirComprobanteComponent = this.dialog.open(DialogEmitirComprobanteComponent, {
-         disableClose: true,
-         hasBackdrop: true,
-         width: '900px',
-         maxWidth: '95vw',
-         data: { lblcambio: this.turnoAbierto.TipoCambioVenta, 
-                 dblImporte: this.sumaImporte,
-                 dblDscto: this.sumaDscto,
-                 dblTotal: this.sumaTotal,
-                 dblGranTotal: this.sumaGranTotal,
-                 idPedidoCobrar: this.idPedidoCobrar,
-                 nroCuentaCobrar: this.nroCuentaCobrar, 
-                 idTipoPedido: this.idCanalVentaSelected, 
-                 idTipoDoc: idTipoDoc,
-                 pedidoCab: null,
-                 bTurnoIndenpendiente: false,
-                 idCaja:this.turnoAbierto.IdCaja,
-                 idTurno: this.turnoAbierto.IdTurno
-               }
-       });
-       
+    const dialogo = this.dialog.open(DialogEmitirComprobanteComponent, {
+      disableClose: true,
+      hasBackdrop: true,
+      width: '900px',
+      maxWidth: '95vw',
+      data: {
+        cuentaLocal,
+        lblcambio: this.turnoAbierto.TipoCambioVenta,
+        dblImporte: this.sumaImporte,
+        dblDscto: this.sumaDscto,
+        dblTotal: this.sumaTotal,
+        dblGranTotal: this.sumaGranTotal,
+        idPedidoCobrar: this.idPedidoCobrar,
+        nroCuentaCobrar: this.nroCuentaCobrar,
+        idTipoPedido: this.idCanalVentaSelected,
+        idTipoDoc,
+        pedidoCab: null,
+        bTurnoIndenpendiente: false,
+        idCaja: this.turnoAbierto.IdCaja,
+        idTurno: this.turnoAbierto.IdTurno,
+      },
+    });
 
-       dialogEmitirComprobanteComponent.afterClosed().subscribe(Resultado => {
-        this.cargarCuotaComprobantes();
-        this.RehacerPantalla();
-      })
- 
+    dialogo.afterClosed().subscribe(resultado => {
+      if (cuentaLocal) {
+        if (resultado?.estado === 'CobradoPendiente') {
+          Notificar.exito('Cobro guardado en caja', 'El comprobante queda pendiente de emisión.');
+          void this.RehacerPantalla();
+        }
+        return;
+      }
+      this.cargarCuotaComprobantes();
+      this.RehacerPantalla();
+    });
   }
 
   private cargarCuotaComprobantes(): void {

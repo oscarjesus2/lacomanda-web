@@ -12,7 +12,8 @@
     <!-- Acciones + info de mesa -->
     <div class="dc-topbar">
       <div class="dc-topbar__actions">
-        <button class="dc-btn dc-btn--primary" (click)="onAddClick()">
+        <button *ngIf="data.local?.permiteDividir !== false" class="dc-btn dc-btn--primary"
+                [disabled]="productosPedidoCuenta.length < 2" (click)="onAddClick()">
           <mat-icon>add</mat-icon> {{ 'newAccount' | tenantText }}
         </button>
         <button class="dc-btn dc-btn--secondary" (click)="onShowClick()">
@@ -51,7 +52,7 @@
             <ng-container matColumnDef="Actions">
               <th mat-header-cell *matHeaderCellDef></th>
               <td mat-cell *matCellDef="let e">
-                <button mat-icon-button color="warn" [matTooltip]="'delete' | tenantText" (click)="EliminarCuenta(e)">
+                <button *ngIf="!data.local" mat-icon-button color="warn" [matTooltip]="'delete' | tenantText" (click)="EliminarCuenta(e)">
                   <mat-icon>delete</mat-icon>
                 </button>
               </td>
@@ -139,7 +140,7 @@
 
     <div class="dc-actions">
       <button class="dc-btn dc-btn--secondary" (click)="onCancelClick()">{{ 'cancel' | tenantText }}</button>
-      <button class="dc-btn dc-btn--primary" (click)="onAcceptClick()">
+      <button class="dc-btn dc-btn--primary" [disabled]="guardandoLocal || !productosNuevaCuenta.length" (click)="onAcceptClick()">
         <mat-icon>check</mat-icon> {{ 'confirm' | tenantText }}
       </button>
     </div>

@@ -1,9 +1,10 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './auth/login/login.component';
-import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { CajaOfflineComponent } from './offline/caja-offline.component';
 import { ResumenNegocioComponent } from './pages/resumen-negocio/resumen-negocio.component';
 import { VentaComponent } from './pages/venta/venta.component';
+import { puedeSalirDeVentaGuard } from './pages/venta/salir-de-venta.guard';
 import { CocinaComponent } from './pages/cocina/cocina.component';
 import { AdminGuard } from './guards/admin.guard';
 import { RoleGuard } from './guards/role.guard';
@@ -30,6 +31,8 @@ import { PagoCuentaLegalComponent } from './pages/pago-cuenta-legal/pago-cuenta-
 // Importa más componentes según sea necesario...
 
 const routes: Routes = [ 
+  // La contingencia y la regularización deben abrir aun si ya no se pueden descargar scripts.
+  { path: 'offline', component: CajaOfflineComponent },
   { path: 'notificaciones/:id', component: NotificacionDetalleComponent, canActivate: [NotificacionGuard] },
 
   { path: 'mesa/:codigoQr', component: MesaClienteComponent },
@@ -49,7 +52,7 @@ const routes: Routes = [
 },
 {
   path: 'reportes',
-  component: DashboardComponent,
+  loadChildren: () => import('./pages/dashboard/dashboard.module').then(m => m.DashboardModule),
   canActivate: [RoleGuard, DashboardReportesGuard, LicenseGuard],
   data: {
     roles: ['admin', 'gerente'],
@@ -58,6 +61,7 @@ const routes: Routes = [
 },
 {
   path: 'caja',
+  canDeactivate: [puedeSalirDeVentaGuard],
   component: VentaComponent,
   canActivate: [RoleGuard, LicenseGuard],
   data: {
@@ -67,6 +71,7 @@ const routes: Routes = [
 },
 {
   path: 'mozo',
+  canDeactivate: [puedeSalirDeVentaGuard],
   component: VentaComponent,
   canActivate: [RoleGuard, LicenseGuard],
   data: {

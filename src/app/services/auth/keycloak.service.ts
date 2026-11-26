@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import Keycloak from 'keycloak-js';
+import type Keycloak from 'keycloak-js';
 import { environment } from 'src/environments/environment';
 
 /**
@@ -13,10 +13,9 @@ import { environment } from 'src/environments/environment';
 @Injectable({ providedIn: 'root' })
 export class KeycloakService {
 
-  private kc: Keycloak | null = null;
-
-  private create(realm: string): Keycloak {
-    return new Keycloak({
+  private async create(realm: string): Promise<Keycloak> {
+    const { default: KeycloakClient } = await import('keycloak-js');
+    return new KeycloakClient({
       url:      environment.keycloak.url,
       realm,
       clientId: environment.keycloak.clientId,
@@ -33,9 +32,9 @@ export class KeycloakService {
    * Redirige el navegador a la página de Keycloak (no retorna en la práctica).
    */
   async login(realm: string): Promise<void> {
-    this.kc = this.create(realm);
-    await this.kc.init({ pkceMethod: 'S256', checkLoginIframe: false });
-    await this.kc.login({ redirectUri: this.loginRedirectUri });
+    const kc = await this.create(realm);
+    await kc.init({ pkceMethod: 'S256', checkLoginIframe: false });
+    await kc.login({ redirectUri: this.loginRedirectUri });
   }
 
   /**
@@ -46,17 +45,17 @@ export class KeycloakService {
   async completeLogin(
     realm: string,
   ): Promise<{ token: string; refreshToken: string; idToken?: string } | null> {
-    this.kc = this.create(realm);
-    const authenticated = await this.kc.init({
+    const kc = await this.create(realm);
+    const authenticated = await kc.init({
       pkceMethod: 'S256',
       checkLoginIframe: false,
     });
 
-    if (authenticated && this.kc.token && this.kc.refreshToken) {
+    if (authenticated && kc.token && kc.refreshToken) {
       return {
-        token: this.kc.token,
-        refreshToken: this.kc.refreshToken,
-        idToken: this.kc.idToken,
+        token: kc.token,
+        refreshToken: kc.refreshToken,
+        idToken: kc.idToken,
       };
     }
     return null;
@@ -84,9 +83,9 @@ export class KeycloakService {
    * actual y la nueva, y devuelve al usuario a redirectUri.
    */
   async beginPasswordUpdate(realm: string, redirectUri?: string): Promise<void> {
-    this.kc = this.create(realm);
-    await this.kc.init({ pkceMethod: 'S256', checkLoginIframe: false });
-    await this.kc.login({
+    const kc = await this.create(realm);
+    await kc.init({ pkceMethod: 'S256', checkLoginIframe: false });
+    await kc.login({
       action: 'UPDATE_PASSWORD',
       redirectUri: redirectUri ?? window.location.href,
     });

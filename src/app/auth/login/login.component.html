@@ -12,7 +12,17 @@
 
     <!-- Card del formulario (oculta mientras se decide/redirige, para no
          mostrar el selector por un instante al cerrar sesión) -->
-    <div class="login-card" *ngIf="showSelector">
+    <div class="login-card" *ngIf="loginError">
+      <h2 class="step-title">{{ 'onlineAccessTitle' | tenantText }}</h2>
+      <p class="error-banner" role="alert">{{ loginError }}</p>
+      <button *ngIf="!accesoDenegado" type="button" class="login-button" [disabled]="isSubmitting" (click)="reintentarOnline()">
+        {{ 'retryOnlineAccess' | tenantText }}
+      </button>
+      <button mat-stroked-button type="button" [disabled]="isSubmitting" (click)="elegirSucursal()">
+        {{ 'selectYourBranch' | tenantText }}
+      </button>
+    </div>
+    <div class="login-card" *ngIf="showSelector && !loginError">
 
       <!-- ── Vista: Selección de sucursal (paso 1) ───────────────────────── -->
       <form [formGroup]="loginForm" (ngSubmit)="login()">
@@ -50,6 +60,8 @@
       </form>
 
     </div>
+
+    <a mat-stroked-button href="/offline">{{ 'openOfflineRegister' | tenantText }}</a>
 
     <!-- Versión app -->
     <p class="app-version">

@@ -8,6 +8,7 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { finalize } from 'rxjs/operators';
 
 import { Producto } from 'src/app/models/product.models';
+import { TABLERO_PRODUCTOS } from 'src/app/constants/tablero-productos';
 import { ProductoService } from 'src/app/services/product.service';
 import { PosicionSelectorDialogComponent, PosicionSelectorData } from '../../posicion-selector-dialog/posicion-selector-dialog.component';
 
@@ -111,8 +112,6 @@ export class ProductoMantenimientoComponent implements OnInit, OnDestroy {
   displayedColumns: string[] = ['nombre', 'nombreCompleto', 'precio', 'tipo', 'visible', 'activo', 'posicion', 'actions'];
 
   // grids (parametrizable)
-  readonly GRID_POS_ROWS = 10;
-  readonly GRID_POS_COLS = 8;
   readonly GRID_POSCOMP_ROWS = 6;
   readonly GRID_POSCOMP_COLS = 5;
 
@@ -900,7 +899,7 @@ onFamiliaChange(): void {
       .map(x => x.Posicion);
 
     const data: PosicionSelectorData = {
-      rows: this.GRID_POS_ROWS, cols: this.GRID_POS_COLS,
+      ...TABLERO_PRODUCTOS,
       occupied: ocupadas, initial: this.p.Posicion || null
     };
 

@@ -1,17 +1,20 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { asapScheduler, auditTime, BehaviorSubject, distinctUntilChanged } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class HeaderService {
-  private headerVisibleSubject = new BehaviorSubject<boolean>(true);
-  headerVisible$ = this.headerVisibleSubject.asObservable();
+  private readonly headerVisibleSubject = new BehaviorSubject(true);
+  // La página anterior y la nueva pueden pedir estados opuestos al salir y entrar.
+  // El shell aplica el último después del ciclo que inicializa la página.
+  readonly headerVisible$ = this.headerVisibleSubject.pipe(
+    auditTime(0, asapScheduler),
+    distinctUntilChanged(),
+  );
 
   hideHeader() {
-    setTimeout(() => {
-      this.headerVisibleSubject.next(false);
-    });
+    this.headerVisibleSubject.next(false);
   }
 
   showHeader() {

@@ -10,6 +10,7 @@ import { LicenciaTenantService } from '../services/licencia-tenant.service';
 import { StorageService } from '../services/storage.service';
 import { KeycloakAuthService } from '../services/auth/keycloak-auth.service';
 import { ExigenciaLicencia } from '../constants/caracteristicas-licencia';
+import { CajaOfflineSesionService } from '../offline/caja-offline-sesion.service';
 
 /**
  * Guard de licencia para LaComanda.
@@ -33,12 +34,16 @@ export class LicenseGuard {
     private readonly licenciaTenantService: LicenciaTenantService,
     private readonly storageService: StorageService,
     private readonly keycloakAuth: KeycloakAuthService,
+    private readonly sesionCaja: CajaOfflineSesionService,
   ) {}
 
   canActivate(
     route: ActivatedRouteSnapshot,
-    _state: RouterStateSnapshot,
+    state: RouterStateSnapshot,
   ): Observable<boolean | UrlTree> | boolean | UrlTree {
+    if (this.sesionCaja.permiteRuta(state.url)) return true;
+    if (this.sesionCaja.activa) return this.router.createUrlTree([this.sesionCaja.rutaVenta]);
+    if (this.sesionCaja.requiereSeleccion) return this.router.createUrlTree(['/offline']);
     const exigencia: ExigenciaLicencia | undefined = route.data?.['feature'];
 
     // Una ruta sin `feature` no impone licencia.
@@ -54,9 +59,16 @@ export class LicenseGuard {
       return this.router.createUrlTree(['/iniciar-sesion']);
     }
 
-    return this.licenciaTenantService
-      .tieneCaracteristica(exigencia)
-      .pipe(map(permitido => permitido || this.rutaDeRepliegue()));
+    return this.licenciaTenantService.obtenerEstado().pipe(
+      map(estado => {
+        if (estado.error) {
+          // El interceptor ya redirige una sesión vencida o una suscripción bloqueada.
+          if (!this.storageService.getCurrentToken()) return false;
+          return this.volverAlLogin('licencia-no-disponible', state.url);
+        }
+        return this.licenciaTenantService.evaluar(estado, exigencia) || this.rutaDeRepliegue(state.url);
+      }),
+    );
   }
 
   /**
@@ -65,12 +77,16 @@ export class LicenseGuard {
    * Se eligen rutas que nunca llevan `LicenseGuard`, de modo que una denegación
    * no pueda encadenar redirecciones.
    */
-  private rutaDeRepliegue(): UrlTree {
+  private rutaDeRepliegue(returnUrl: string): UrlTree {
     const token = this.storageService.getCurrentToken();
     const roles = token ? this.keycloakAuth.getRoles(token) : [];
 
     return roles.includes('admin') || roles.includes('gerente')
       ? this.router.createUrlTree(['/dashboard'])
-      : this.router.createUrlTree(['/iniciar-sesion']);
+      : this.volverAlLogin('sin-licencia', returnUrl);
+  }
+
+  private volverAlLogin(acceso: 'licencia-no-disponible' | 'sin-licencia', returnUrl: string): UrlTree {
+    return this.router.createUrlTree(['/iniciar-sesion'], { queryParams: { acceso, returnUrl } });
   }
 }

@@ -3,7 +3,12 @@
   "version": "19.0.5",
   "scripts": {
     "ng": "ng",
-    "start": "concurrently \"ng serve --proxy-config proxy.conf.json\" \"node server.js\"",
+    "caja:paquete": "node scripts/empaquetar-caja-windows.mjs",
+    "prestart": "npm run caja:paquete",
+    "prebuild": "npm run caja:paquete",
+    "prewatch": "npm run caja:paquete",
+    "start": "ng serve --proxy-config proxy.conf.json",
+    "caja:local": "node offline-server/desarrollo.mjs",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",

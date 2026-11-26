@@ -8,7 +8,7 @@ import { ApiResponse } from '../interfaces/apirResponse.interface';
 import { AlertaStockCesia, ConsultaAlertasStockCesia } from '../models/cesia-stock.models';
 import { LicenciaTenantService } from './licencia-tenant.service';
 import { StorageService } from './storage.service';
-import { CONSULTA_CESIA_EN_SEGUNDO_PLANO } from '../interceptor/background-request.context';
+import { ERROR_GESTIONADO_POR_CONSUMIDOR } from '../interceptor/background-request.context';
 
 export interface EstadoCesiaStock {
   habilitado: boolean;
@@ -58,7 +58,7 @@ export class CesiaStockService {
             }
             return this.http.get<ApiResponse<ConsultaAlertasStockCesia>>(
               `${environment.apiUrl}/cesia/alertas-stock`,
-              { context: new HttpContext().set(CONSULTA_CESIA_EN_SEGUNDO_PLANO, true) },
+              { context: new HttpContext().set(ERROR_GESTIONADO_POR_CONSUMIDOR, true) },
             ).pipe(map(r => {
               if (!r.Success || !r.Data) throw new Error('Respuesta de Cesia incompleta.');
               return r.Data;

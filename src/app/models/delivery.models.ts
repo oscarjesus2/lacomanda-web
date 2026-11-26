@@ -1,5 +1,6 @@
 import { Producto } from './product.models';
 import { SocioNegocio } from './socionegocio.models';
+import type { MaestrosCaja } from '../offline/caja-offline-api.service';
 
 export interface DeliveryCliente {
   IdCliente: number;
@@ -53,6 +54,7 @@ export interface DeliveryHistorial {
 export interface DeliveryDialogData {
   SociosNegocio: SocioNegocio[];
   IdTurno: number;
+  copiaLocal?: Pick<MaestrosCaja, 'clientes' | 'productos'>;
 }
 
 export type DeliveryModalidad = 'SOCIO_NEGOCIO' | 'TELEFONO';

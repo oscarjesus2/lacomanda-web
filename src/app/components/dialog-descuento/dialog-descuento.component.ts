@@ -2,6 +2,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
+import { of } from 'rxjs';
 import { isDuration } from 'moment';
 import { Descuento } from 'src/app/models/descuento.models';
 import { DescuentoService } from 'src/app/services/descuento.service';
@@ -79,7 +80,9 @@ export class DialogDescuentoComponent {
   }
 
   cargarDescuentos(): void {
-    this.descuentoService.getDescuentos().subscribe((response) => {
+    const origen = this.data.descuentos ? of({ Data: this.data.descuentos as Descuento[] })
+      : this.descuentoService.getDescuentos();
+    origen.subscribe((response) => {
       this.descuentos = response.Data.map(d => ({ ...d, TipoDescuento: Number(d.TipoDescuento) }));
       this.filteredDescuentos = this.descuentos;
       this.dataSource.data = this.filteredDescuentos.filter(

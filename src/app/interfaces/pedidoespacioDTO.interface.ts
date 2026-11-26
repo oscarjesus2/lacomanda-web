@@ -16,6 +16,7 @@ export interface PedidoEspacioDTO {
   AnexoDelivery: string;
   IdSocioNegocio: number | null;
   NroPedido: string;   // Número del pedido
+  NroPedidoOffline?: string | null;
   FechaApertura: Date;  // Fecha en que se registró la cabecera del pedido
   FechaEnvio: Date | null; // Fecha en que el producto fue enviado a cocina (null si aún no fue)
   IdMozo: string;         // Identificador del mozo

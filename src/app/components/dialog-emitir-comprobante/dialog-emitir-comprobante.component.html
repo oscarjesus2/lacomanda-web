@@ -3,7 +3,7 @@
     mat-icon-button
     class="close-button"
     [attr.aria-label]="'closeDialog' | tenantText"
-    (click)="salir()">
+    [disabled]="guardandoCobroLocal" (click)="salir()">
     <mat-icon>close</mat-icon>
   </button>
 
@@ -28,7 +28,8 @@
         </mat-form-field>
 
         <!-- Serie + Número en la misma fila -->
-        <div class="form-row cobranza-panel__row--compact">
+        <p *ngIf="cuentaLocal">La caja guardará el cobro. El comprobante se emitirá cuando vuelva la conexión.</p>
+        <div *ngIf="!cuentaLocal" class="form-row cobranza-panel__row--compact">
           <mat-form-field appearance="fill" class="form-field cobranza-panel__field-serie">
             <mat-label>{{ 'series' | tenantText }}</mat-label>
             <input matInput formControlName="serie" name="serie" [readonly]="!SerieEnabled">
@@ -86,7 +87,7 @@
               <mat-error *ngIf="form.get('cliente.ruc').hasError('invalidRUC')">
                 {{ 'invalidNumberForAmount' | tenantText }}
               </mat-error>
-              <button mat-icon-button matSuffix (click)="buscarCliente()">
+              <button *ngIf="!cuentaLocal" type="button" mat-icon-button matSuffix (click)="buscarCliente()">
                 <mat-icon>search</mat-icon>
               </button>
             </mat-form-field>
@@ -108,10 +109,13 @@
             <input matInput formControlName="direccion">
           </mat-form-field>
 
+        </div>
+        <div formGroupName="cliente" *ngIf="mostrarDatosCliente || correoRequerido">
           <mat-form-field appearance="fill" class="form-field form-field--grow">
             <mat-label>{{ 'email' | tenantText }}</mat-label>
-            <input matInput formControlName="correo" placeholder="pat@example.com" />
-            <mat-error *ngIf="form.get('cliente.correo').hasError('pattern')">
+            <input matInput type="email" formControlName="correo" [required]="correoRequerido" placeholder="pat@example.com" />
+            <mat-error *ngIf="form.get('cliente.correo').hasError('required')">{{ 'requiredField' | tenantText }}</mat-error>
+            <mat-error *ngIf="form.get('cliente.correo').hasError('pattern') || form.get('cliente.correo').hasError('email') || form.get('cliente.correo').hasError('maxlength')">
               {{ 'invalidEmailFormat' | tenantText }}
             </mat-error>
           </mat-form-field>
@@ -216,7 +220,7 @@
       </div>
 
       <!-- CARD: PAGOS EN EFECTIVO -->
-      <div class="cobranza-panel__payment-card">
+      <div *ngIf="efectivoDisponible" class="cobranza-panel__payment-card">
         <div class="cobranza-panel__payment-card-header">
           <span class="cobranza-panel__payment-card-title">
             {{ 'cashPayments' | tenantText }}
@@ -287,7 +291,7 @@
       </div>
 
       <!-- CARD: PAGOS CON TARJETA -->
-      <div class="mant-table-card cobranza-panel__table-card">
+      <div *ngIf="!cuentaLocal || listTarjeta.length" class="mant-table-card cobranza-panel__table-card">
         <div class="cobranza-panel__payment-card-header">
           <span class="cobranza-panel__payment-card-title">
             {{ 'cardPayments' | tenantText }}
@@ -392,7 +396,7 @@
       <div class="cobranza-panel__results-row">
         <div class="cobranza-panel__submit">
           <button mat-raised-button color="primary"
-                  [disabled]="!pagoCompleto"
+                  [disabled]="!pagoCompleto || guardandoCobroLocal"
                   (click)="cmdCobrarClick()">
             <mat-icon>{{ ChkVentaAlCredito ? 'schedule' : 'payment' }}</mat-icon>
             {{ (ChkVentaAlCredito ? 'issueCreditSale' : 'charge') | tenantText }}

@@ -1,6 +1,7 @@
 # Build (Angular) ----------
 FROM node:20-alpine AS build
 WORKDIR /app
+RUN apk add --no-cache python3
 
 # Copia package.json/lock primero para cache
 COPY package*.json ./

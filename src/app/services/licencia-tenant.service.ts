@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map, of, catchError, shareReplay } from 'rxjs';
 import { ApiResponse } from '../interfaces/apirResponse.interface';
@@ -13,6 +13,7 @@ import {
   expandirExigencia,
 } from '../constants/caracteristicas-licencia';
 import { environment } from 'src/environments/environment';
+import { ERROR_GESTIONADO_POR_CONSUMIDOR } from '../interceptor/background-request.context';
 
 /**
  * Resultado de resolver la licencia del tenant.
@@ -69,20 +70,26 @@ export class LicenciaTenantService {
   /** Estado de licencia del tenant, resuelto una sola vez y compartido. */
   obtenerEstado(): Observable<EstadoLicenciaTenant> {
     if (!this.estado$) {
-      this.estado$ = this.http
-        .get<ApiResponse<LicenciaTenant | null>>(this.basePath)
+      const consulta: Observable<EstadoLicenciaTenant> = this.http
+        .get<ApiResponse<LicenciaTenant | null>>(this.basePath, {
+          context: new HttpContext().set(ERROR_GESTIONADO_POR_CONSUMIDOR, true),
+        })
         .pipe(
-          map(respuesta => this.construirEstado(respuesta?.Data ?? null)),
-          catchError(() =>
-            of<EstadoLicenciaTenant>({
+          map(respuesta => this.construirEstado(respuesta)),
+          catchError(() => {
+            // Una consulta fallida no determina qué tiene contratado el tenant.
+            // Si se cambió de sucursal, conserva la consulta del tenant nuevo.
+            if (this.estado$ === consulta) this.estado$ = undefined;
+            return of<EstadoLicenciaTenant>({
               licencia: null,
               sinSuscripcion: false,
               error: true,
               habilitadas: new Set<string>(),
-            }),
-          ),
+            });
+          }),
           shareReplay({ bufferSize: 1, refCount: false }),
         );
+      this.estado$ = consulta;
     }
 
     return this.estado$;
@@ -154,11 +161,18 @@ export class LicenciaTenantService {
   }
 
   private construirEstado(
-    licencia: LicenciaTenant | null,
+    respuesta: ApiResponse<LicenciaTenant | null>,
   ): EstadoLicenciaTenant {
+    const licencia = respuesta?.Data;
+    if (respuesta?.Success !== true || (licencia !== null && (
+      !Array.isArray(licencia?.Caracteristicas) ||
+      licencia.Caracteristicas.some(c => typeof c?.Codigo !== 'string' || typeof c.Habilitada !== 'boolean')
+    ))) {
+      throw new Error('Respuesta de licencia incompleta.');
+    }
     return {
       licencia,
-      sinSuscripcion: licencia == null,
+      sinSuscripcion: licencia === null,
       error: false,
       habilitadas: new Set<string>(
         licencia?.Caracteristicas?.filter(c => c.Habilitada).map(

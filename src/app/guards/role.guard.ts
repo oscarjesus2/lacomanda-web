@@ -3,6 +3,7 @@ import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree } from '@a
 import { StorageService } from '../services/storage.service';
 import { KeycloakAuthService } from '../services/auth/keycloak-auth.service';
 import { EstacionTipoEnum } from '../enums/enum';
+import { CajaOfflineSesionService } from '../offline/caja-offline-sesion.service';
 
 /**
  * Guard de roles para LaComanda.
@@ -24,9 +25,13 @@ export class RoleGuard {
     private router: Router,
     private storageService: StorageService,
     private keycloakAuth: KeycloakAuthService,
+    private sesionCaja: CajaOfflineSesionService,
   ) {}
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | UrlTree {
+    if (this.sesionCaja.permiteRuta(state.url)) return true;
+    if (this.sesionCaja.activa) return this.router.createUrlTree([this.sesionCaja.rutaVenta]);
+    if (this.sesionCaja.requiereSeleccion) return this.router.createUrlTree(['/offline']);
     const token = this.storageService.getCurrentToken();
 
     if (!this.keycloakAuth.isTokenActive(token, 0)) {

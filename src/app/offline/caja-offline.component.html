@@ -1,0 +1,98 @@
+<main class="booking-page document-page">
+  <div class="booking-shell">
+    <header class="booking-hero">
+      <h1>Caja local</h1>
+      <p *ngIf="sesion.usuario">{{ sesion.caja?.Descripcion }} · {{ sesion.usuario.NombreEmpleado || sesion.usuario.NombreUsuario }}</p>
+    </header>
+    <div class="booking-card document-card" [attr.aria-busy]="sesion.ocupado">
+      <button *ngIf="sesion.nube" type="button" class="btn-primary" [disabled]="sesion.ocupado" (click)="abrirVentasOnline()">Abrir ventas</button>
+      <ng-container *ngIf="!sesion.usuario">
+        <form class="booking-form" (ngSubmit)="sesion.conectar()">
+          <label>Servidor de caja
+            <input name="direccion" type="url" required [(ngModel)]="sesion.direccion" autocomplete="url" placeholder="http://127.0.0.1:17861">
+            <small>En un móvil, introduce la dirección HTTPS de la caja de tu restaurante.</small>
+          </label>
+          <button class="btn-secondary" [disabled]="sesion.ocupado">Comprobar conexión</button>
+        </form>
+        <div *ngIf="sesion.estado" role="status">
+          <strong>{{ sesion.estado.mensaje }}</strong>
+          <p *ngIf="sesion.contexto">Sucursal {{ sesion.contexto.tenantId }} · Estación {{ sesion.contexto.idEstacion }}</p>
+          <p *ngIf="sesion.nube">La nube responde. Puedes preparar la copia para el próximo corte.</p>
+        </div>
+        <form *ngIf="sesion.estado?.disponible" class="booking-form" (ngSubmit)="entrar()">
+          <div class="booking-choice-grid">
+            <label>¿Quién va a operar?
+              <select name="operador" [(ngModel)]="sesion.idUsuario" required>
+                <option [ngValue]="undefined" disabled>Selecciona tu usuario</option>
+                <ng-container *ngFor="let u of sesion.usuarios">
+                  <option *ngIf="[1,2,3,4].includes(u.IdNivel) && u.IdEmpleado" [ngValue]="u.IdUsuario">{{ u.NombreEmpleado || u.NombreUsuario }}</option>
+                </ng-container>
+              </select>
+            </label>
+          </div>
+          <button class="btn-primary" [disabled]="sesion.ocupado || !sesion.idUsuario">{{ sesion.nube ? 'Revisar operaciones pendientes' : 'Entrar a ventas' }}</button>
+        </form>
+      </ng-container>
+
+      <nav class="form-row">
+        <a *ngIf="!sesion.usuario && !sesion.nube" routerLink="/iniciar-sesion" (click)="sesion.salir()" class="btn-secondary">Volver al servicio online</a>
+        <button *ngIf="sesion.estado && sesion.puedeGestionar" type="button" class="btn-secondary" [disabled]="sesion.ocupado" (click)="sesion.gestionar('sincronizar')">Actualizar copia desde la nube</button>
+        <button *ngIf="sesion.estado && sesion.puedeGestionar" type="button" class="btn-secondary" [disabled]="sesion.ocupado" (click)="sesion.gestionar('regularizar')">Enviar operaciones a la nube</button>
+        <ng-container *ngIf="sesion.usuario">
+          <a *ngIf="sesion.activa && !sesion.nube" class="btn-primary" [routerLink]="sesion.rutaVenta">Volver a ventas</a>
+          <button class="btn-secondary" [disabled]="sesion.ocupado" (click)="sesion.refrescar()">Actualizar estado</button>
+          <button class="btn-secondary" [disabled]="sesion.ocupado" (click)="cambiarUsuario()">Cambiar de usuario</button>
+        </ng-container>
+      </nav>
+      <p *ngIf="sesion.mensaje" role="status">{{ sesion.mensaje }}</p>
+      <p *ngIf="sesion.error" class="booking-error" role="alert">{{ sesion.error }}</p>
+      <section *ngIf="sesion.puedeActualizarServicio">
+        <h2>Hay una actualización para esta caja</h2>
+        <p>Descarga y abre el instalador en esta PC. La caja seguirá atendiendo pedidos con la versión actual hasta el próximo inicio de sesión en Windows.</p>
+        <button type="button" class="btn-secondary" [disabled]="sesion.ocupado" (click)="sesion.descargarActualizacionServicio()">Actualizar servicio de caja</button>
+      </section>
+      <section *ngIf="sesion.servicioInaccesible && sesion.instalador.esWindows">
+        <h2>Instalar caja en esta PC</h2>
+        <ng-container *ngIf="sesion.nube; else requiereInternet">
+          <ng-container *ngIf="sesion.instalador.identidad; else requiereVinculacion">
+            <p>Descarga y abre el instalador una sola vez. Usará la sucursal y la estación de esta sesión.</p>
+            <button type="button" class="btn-primary" [disabled]="sesion.ocupado" (click)="sesion.descargarInstalador()">Descargar instalador de caja</button>
+          </ng-container>
+          <ng-template #requiereVinculacion><p>Inicia sesión online desde la estación de caja vinculada para descargar su instalador.</p></ng-template>
+        </ng-container>
+        <ng-template #requiereInternet><p>La primera instalación requiere conexión con La Comanda.</p></ng-template>
+      </section>
+
+      <ng-container *ngIf="sesion.usuario">
+        <section *ngIf="sesion.pendientes.length">
+          <h2>Envíos por comprobar</h2>
+          <p>La caja puede haber recibido la operación. Compruébala con su misma referencia.</p>
+          <ng-container *ngFor="let pendiente of sesion.pendientes">
+            <button class="btn-secondary" [disabled]="sesion.ocupado" (click)="sesion.comprobarEnvio(pendiente)">
+              Comprobar {{ pendiente.ruta === 'cobros' ? 'cobro' : 'pedido' }} {{ pendiente.id.slice(0,8) }}
+            </button>
+            <button *ngIf="pendiente.sinRegistro" class="btn-secondary" [disabled]="sesion.ocupado" (click)="sesion.cerrarEnvioRevisado(pendiente)">
+              Ya revisé la cuenta y el envío {{ pendiente.id.slice(0,8) }}
+            </button>
+          </ng-container>
+        </section>
+
+        <section *ngIf="sesion.esEquipoCaja && sesion.impresiones.length">
+          <h2>Comandas pendientes de impresión</h2>
+          <article *ngFor="let trabajo of sesion.impresiones">
+            <strong>{{ trabajo.plan.numeroOffline }}</strong>
+            <div *ngFor="let e of trabajo.estados; let i=index">
+              <p>{{ trabajo.plan.trabajos[i].impresora }} · {{ e.estado === 'enviando' ? 'Comprueba si salió el papel' : e.estado }}</p>
+              <div class="form-row" *ngIf="e.estado === 'enviando'">
+                <button class="btn-secondary" [disabled]="sesion.ocupado" (click)="sesion.resolverImpresion(trabajo.plan,i,e.idIntento,'impresa')">Ya se imprimió</button>
+                <button class="btn-secondary" [disabled]="sesion.ocupado" (click)="sesion.resolverImpresion(trabajo.plan,i,e.idIntento,'reimprimir')">Volver a imprimir</button>
+              </div>
+            </div>
+            <button class="btn-secondary" [disabled]="sesion.ocupado" (click)="sesion.resolverImpresion(trabajo.plan)">Continuar impresión</button>
+          </article>
+        </section>
+      </ng-container>
+    </div>
+  </div>
+</main>
+

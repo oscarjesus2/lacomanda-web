@@ -15,7 +15,7 @@
       <div class="grid-buttons">
         <button *ngFor="let btn of listProductosComplementos"
                 mat-button
-                (click)="selectButton(btn)">
+                [disabled]="data.soloLectura" (click)="selectButton(btn)">
           {{ btn.NombreCorto }} x{{ btn.FactorComplemento }}
         </button>
       </div>
@@ -34,7 +34,7 @@
       <div class="producto-cantidad-linea">
         <div class="qty-container">
           <label>{{ 'quantity' | tenantText }}</label>
-          <input matInput [(ngModel)]="pedidodet.Cantidad" />
+          <input matInput [(ngModel)]="pedidodet.Cantidad" [readonly]="data.soloLectura" />
           <button mat-icon-button
                   color="primary"
                   (click)="openDialogCant()"
@@ -77,6 +77,7 @@
               <button mat-icon-button
                       color="primary"
                       [matTooltip]="'moreOptions' | tenantText"
+                      [disabled]="data.soloLectura"
                       [matMenuTriggerFor]="MasOpciones">
                 <mat-icon>more_horiz</mat-icon>
               </button>
@@ -121,8 +122,8 @@
 
       <!-- Botones de acción -->
       <div class="botones-accion">
-        <button class="aceptar" (click)="aceptar()">{{ 'accept' | tenantText }}</button>
-        <button class="cancelar" (click)="cancelar()">{{ 'cancel' | tenantText }}</button>
+        <button *ngIf="!data.soloLectura" class="aceptar" (click)="aceptar()">{{ 'accept' | tenantText }}</button>
+        <button class="cancelar" (click)="cancelar()">{{ (data.soloLectura ? 'close' : 'cancel') | tenantText }}</button>
       </div>
 
     </div>

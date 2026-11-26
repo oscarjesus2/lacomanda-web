@@ -1,6 +1,7 @@
 import { Producto } from "./product.models";
 
 export class PedidoComplemento {
+    Estado?: number;
     IdPedido: number;
     ItemComple: number;
     ItemRef: number;

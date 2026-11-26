@@ -30,7 +30,7 @@ import { NgxSpinnerService } from 'ngx-spinner';
 import { BackendStatusService } from '../services/backend-status.service';
 import { environment } from 'src/environments/environment';
 import { DeviceIdentifierService } from '../services/device-identifier.service';
-import { CONSULTA_CESIA_EN_SEGUNDO_PLANO } from './background-request.context';
+import { ERROR_GESTIONADO_POR_CONSUMIDOR } from './background-request.context';
 
 interface ApiErrorResponse {
   Success?: boolean;
@@ -109,7 +109,7 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       request = this.addAuthHeaders(request);
     }
 
-    return this.processResponse(next.handle(request)).pipe(
+    return this.processResponse(next.handle(request), request).pipe(
       catchError((error: HttpErrorResponse) =>
         this.handleError(
           error,
@@ -127,7 +127,8 @@ export class ApiRequestInterceptor implements HttpInterceptor {
    * reintentadas después de renovar el token.
    */
   private processResponse(
-    source: Observable<HttpEvent<any>>
+    source: Observable<HttpEvent<any>>,
+    request: HttpRequest<any>,
   ): Observable<HttpEvent<any>> {
 
     return source.pipe(
@@ -135,7 +136,7 @@ export class ApiRequestInterceptor implements HttpInterceptor {
         // No marcar el backend como disponible con HttpSentEvent.
         // Esperar una respuesta HTTP real.
         if (event instanceof HttpResponse) {
-          this.backendStatus.markUp();
+          if (this.esPeticionNube(request)) this.backendStatus.markUp();
           this.handleSubscriptionGrace(event);
         }
       }),
@@ -168,7 +169,7 @@ export class ApiRequestInterceptor implements HttpInterceptor {
 
     // Error de red, timeout, backend detenido o CORS.
     if (error.status === 0) {
-      this.backendStatus.markDown();
+      if (this.esPeticionNube(request)) this.backendStatus.markDown();
       this.spinnerService.hide();
 
       // El banner global de BackendStatusService comunica la caída.
@@ -176,7 +177,10 @@ export class ApiRequestInterceptor implements HttpInterceptor {
     }
 
     // El backend respondió, aunque haya respondido con error.
-    this.backendStatus.markUp();
+    if (this.esPeticionNube(request)) {
+      if ([502, 503, 504].includes(error.status)) this.backendStatus.markDown();
+      else this.backendStatus.markUp();
+    }
 
     if (error.status === 402 && this.isSubscriptionAccessError(error)) {
       this.handleSubscriptionAccessError(error);
@@ -224,7 +228,7 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       return throwError(() => error);
     }
 
-    if (request.context.get(CONSULTA_CESIA_EN_SEGUNDO_PLANO)) {
+    if (request.context.get(ERROR_GESTIONADO_POR_CONSUMIDOR)) {
       return throwError(() => error);
     }
 
@@ -299,7 +303,7 @@ export class ApiRequestInterceptor implements HttpInterceptor {
       switchMap(() => {
         const retryRequest = this.addAuthHeaders(request);
 
-        return this.processResponse(next.handle(retryRequest)).pipe(
+        return this.processResponse(next.handle(retryRequest), retryRequest).pipe(
           catchError((retryError: HttpErrorResponse) =>
             this.handleError(
               retryError,
@@ -494,6 +498,10 @@ export class ApiRequestInterceptor implements HttpInterceptor {
         data.includes('JwtBearerHandler')
       )
     );
+  }
+
+  private esPeticionNube(request: HttpRequest<any>): boolean {
+    return request.url.startsWith(environment.apiUrl.replace(/\/$/, '') + '/');
   }
 
   private isUnauthenticatedEndpoint(

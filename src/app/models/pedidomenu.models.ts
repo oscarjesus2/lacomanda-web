@@ -1,6 +1,7 @@
 import { Producto } from './product.models';
 
 export class PedidoMenu {
+  public Estado?: number;
   public IdPedido: number;
   public ItemRef: number;
   public ItemMenu: number;

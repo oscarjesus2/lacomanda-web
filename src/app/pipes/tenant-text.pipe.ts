@@ -8,6 +8,7 @@ import {
 
 @Pipe({
   name: 'tenantText',
+  standalone: true,
   pure: false,
 })
 export class TenantTextPipe implements PipeTransform {

@@ -630,6 +630,36 @@ export class QzTrayV224Service {
     }
   }
 
+  /** Envía una comanda local a la impresora indicada sin cambiar su destino. */
+  async imprimirComandaOffline(html: string, nombreImpresora: string): Promise<boolean> {
+    if (!html?.trim() || !nombreImpresora?.trim()) return false;
+    let yaEstabaConectado = false;
+    try {
+      yaEstabaConectado = qz.websocket.isActive();
+      await this.connect();
+      const solicitada = nombreImpresora.trim();
+      const impresora = solicitada.toUpperCase() === 'PREDETERMINADA'
+        ? String(await qz.printers.getDefault() ?? '').trim()
+        : await this.buscarImpresoraInstalada(solicitada);
+      if (!impresora) return false;
+      await qz.print(qz.configs.create(impresora), [{
+        type: 'pixel', format: 'html', flavor: 'plain', data: html,
+      }]);
+      this.registrarConfianza(true);
+      return true;
+    } catch (error) {
+      if (this.esPeticionBloqueada(error)) this.registrarConfianza(false);
+      console.error('No se pudo imprimir la comanda offline:', error);
+      return false;
+    } finally {
+      if (!yaEstabaConectado) {
+        // Un error al cerrar la conexión no debe provocar la reimpresión de
+        // una comanda que QZ ya aceptó.
+        try { await this.disconnect(); } catch { /* La siguiente conexión se recuperará. */ }
+      }
+    }
+  }
+
   async probarImpresora(
     nombreImpresora: string,
     contexto?: {

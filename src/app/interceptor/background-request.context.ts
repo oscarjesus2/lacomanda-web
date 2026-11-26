@@ -1,4 +1,4 @@
 import { HttpContextToken } from '@angular/common/http';
 
-/** Los errores de Cesia se muestran en su panel; la autenticación se sigue validando. */
-export const CONSULTA_CESIA_EN_SEGUNDO_PLANO = new HttpContextToken(() => false);
+/** El consumidor presenta el error. Se mantienen los controles de sesión y suscripción. */
+export const ERROR_GESTIONADO_POR_CONSUMIDOR = new HttpContextToken(() => false);

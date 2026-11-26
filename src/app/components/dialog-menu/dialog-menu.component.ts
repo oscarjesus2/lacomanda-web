@@ -34,6 +34,7 @@ export class DialogMenuComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: {
       pedidodet: PedidoDet;
       configuracion?: ProductoComboConfiguracion;
+      soloLectura?: boolean;
     },
     private readonly productoComboService: ProductoComboService,
     private readonly textCatalog: TenantTextCatalogService,
@@ -99,6 +100,7 @@ export class DialogMenuComponent implements OnInit {
   }
 
   get soloLectura(): boolean {
+    if (this.data.soloLectura) return true;
     return this.menuEnviado
       && !this.tieneSeccionesOpcionalesPendientes
       && !this.tieneSeleccionesNuevas;
@@ -137,6 +139,7 @@ export class DialogMenuComponent implements OnInit {
   }
 
   seccionEditable(seccion: ProductoComboSeccion): boolean {
+    if (this.data.soloLectura) return false;
     return !this.menuEnviado || seccion.EsOpcional;
   }
 

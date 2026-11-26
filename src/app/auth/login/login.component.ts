@@ -18,9 +18,11 @@ import { Configuracion } from 'src/app/models/configuracion.models';
 import { ConfiguracionInicialComponent } from 'src/app/components/configuracion-inicial/configuracion-inicial/configuracion-inicial.component';
 import { HeaderService } from 'src/app/services/header.service';
 import { EstacionTipoEnum } from 'src/app/enums/enum';
+import { RUTA_REGULARIZAR_CAJA } from 'src/app/offline/ruta-regularizacion';
+import { CajaOfflineSesionService } from 'src/app/offline/caja-offline-sesion.service';
 import { UsuarioService } from 'src/app/services/usuario.service';
 import { SesionUsuarioService } from 'src/app/services/sesion-usuario.service';
-import { TenantTextCatalogService } from 'src/app/services/localization/tenant-text-catalog.service';
+import { TenantTextCatalogService, TenantTextKey } from 'src/app/services/localization/tenant-text-catalog.service';
 import {
   ProcessingIndicatorHandle,
   ProcessingIndicatorService,
@@ -47,6 +49,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   isSubmitting = false;
   loginValid  = true;
   loginError  = '';
+  accesoDenegado = false;
+  private destruido = false;
+  private retornoPendiente?: string;
 
   /**
    * Solo se muestra el selector de sucursal cuando de verdad hace falta.
@@ -95,6 +100,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private usuarioService: UsuarioService,
     private sesionUsuario: SesionUsuarioService,
     private textCatalog: TenantTextCatalogService,
+    private readonly sesionCaja: CajaOfflineSesionService,
   ) {}
 
   @HostListener('window:beforeinstallprompt', ['$event'])
@@ -140,8 +146,9 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.textCatalog.setCulture(
         currentSession.Cultura ?? currentSession.CulturaTenant,
       );
-      const route = this.keycloakAuth.getTargetRoute(currentSession.Token);
-      this.ensureConfigThenNavigate(route);
+      this.retornoPendiente = this.returnUrlSeguro();
+      if (this.mostrarMotivoDeAcceso()) return;
+      await this.abrirPuestoOnline(currentSession);
       return;
     }
 
@@ -163,6 +170,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destruido = true;
     this.finalizarIndicadorLogin();
   }
 
@@ -289,9 +297,19 @@ export class LoginComponent implements OnInit, OnDestroy {
 
       if (!tokens) {
         this.finalizarIndicadorLogin();
-        this.loadTenants();
-        return false;
+        await this.loadTenants();
+        return true;
       }
+
+      // Keycloak ya retiró el código de la barra de direcciones con replaceState.
+      // Alinea el router para que, si luego se cancela la apertura del puesto,
+      // restaure esa misma dirección y conserve los parámetros propios de la app.
+      const { pathname, search, hash } = window.location;
+      const rutaLimpia = pathname + search + hash;
+      if (!this.destruido && this.router.url !== rutaLimpia) {
+        await this.router.navigateByUrl(rutaLimpia, { replaceUrl: true }).catch(() => false);
+      }
+      if (this.destruido) return true;
 
       this.actualizarIndicadorLogin(
         this.textCatalog.get('preparingSessionTitle'),
@@ -313,8 +331,8 @@ export class LoginComponent implements OnInit, OnDestroy {
 
       this.loginValid = false;
       this.notificationService.showError('No se pudo completar el inicio de sesión. Inténtalo de nuevo.');
-      this.loadTenants();
-      return false;
+      await this.loadTenants();
+      return true;
     }
   }
 
@@ -395,56 +413,65 @@ export class LoginComponent implements OnInit, OnDestroy {
       throw error;
     }
     this.inicializarCulturaUsuario(session, usuario);
+    this.retornoPendiente = this.returnUrlSeguro(pending.ReturnUrl);
+    await this.abrirPuestoOnline(session);
+  }
 
-    if (this.CurrentIP) {
+  private async abrirPuestoOnline(session: Session): Promise<void> {
+    this.isSubmitting = true;
+    this.loginError = '';
+    this.accesoDenegado = false;
+    const retorno = this.retornoPendiente;
+    const destinoAdministrativo = retorno && retorno !== RUTA_REGULARIZAR_CAJA ? retorno : '/dashboard';
+    let mensajeDeError: TenantTextKey = 'onlineConfigurationUnavailable';
+    try {
+      if (!this.CurrentIP) {
+        await this.ensureConfigThenNavigate(destinoAdministrativo);
+        return;
+      }
       this.actualizarIndicadorLogin(
         this.textCatalog.get('detectingStationTitle'),
         this.textCatalog.get('detectingStationMessage'),
         'computer',
       );
-      this.estacionService.getAll().subscribe({
-        next: (estResp) => {
-          const estaciones = estResp?.Data ?? [];
-          const estacion   = estaciones.find(e => e.IdentificadorUnico === this.CurrentIP);
+      mensajeDeError = 'couldNotLoadStations';
+      const respuesta = await firstValueFrom(this.estacionService.getAll());
+      if (this.destruido) return;
+      if (this.storageService.getCurrentSession() !== session) {
+        this.loginError = this.textCatalog.get('onlineWorkspaceUnavailable');
+        return;
+      }
+      if (!Array.isArray(respuesta?.Data) || respuesta.Success === false) {
+        this.loginError = this.textCatalog.get('couldNotLoadStations');
+        return;
+      }
 
-          if (!estacion) {
-            this.ensureConfigThenNavigate(
-              this.returnUrlSeguro(pending.ReturnUrl) ?? '/dashboard',
-            );
-            return;
-          }
-
-          usuario.TipoCompu = estacion.Tipo;
-          session.User      = usuario;
-          this.storageService.setCurrentSession(session);
-
-          if (estacion.Tipo === EstacionTipoEnum.CAJA) {
-            void this.navegarTrasLogin('/caja');
-          } else if (estacion.Tipo === EstacionTipoEnum.MOZO) {
-            void this.navegarTrasLogin('/mozo');
-          } else if (estacion.Tipo === EstacionTipoEnum.COCINA) {
-            void this.navegarTrasLogin('/preparacion');
-          } else {
-            this.ensureConfigThenNavigate(
-              this.returnUrlSeguro(pending.ReturnUrl) ?? '/dashboard',
-            );
-          }
-        },
-        error: (error) => {
-          this.finalizarIndicadorLogin();
-          this.storageService.removeCurrentSession();
-          if (error?.status === 402) {
-            return;
-          }
-          this.notificationService.showError(this.textCatalog.get('couldNotLoadStations'));
-          this.loadTenants();
-        }
-      });
-
-    } else {
-      this.ensureConfigThenNavigate(
-        this.returnUrlSeguro(pending.ReturnUrl) ?? '/dashboard',
-      );
+      const identificador = this.CurrentIP.trim().toLowerCase();
+      const estacion = respuesta.Data.find(e => typeof e?.IdentificadorUnico === 'string'
+        && e.IdentificadorUnico.trim().toLowerCase() === identificador);
+      if (estacion) {
+        session.User.TipoCompu = estacion.Tipo;
+        this.storageService.setCurrentSession(session);
+      }
+      switch (estacion?.Tipo) {
+        case EstacionTipoEnum.CAJA:
+          await this.navegarTrasLogin(this.destinoCajaTrasLogin('/caja', estacion.Tipo, retorno));
+          break;
+        case EstacionTipoEnum.MOZO:
+          await this.navegarTrasLogin('/mozo');
+          break;
+        case EstacionTipoEnum.COCINA:
+          await this.navegarTrasLogin('/preparacion');
+          break;
+        default:
+          mensajeDeError = 'onlineConfigurationUnavailable';
+          await this.ensureConfigThenNavigate(destinoAdministrativo);
+      }
+    } catch (error) {
+      this.mostrarFalloDelPuesto(mensajeDeError, error);
+    } finally {
+      this.isSubmitting = false;
+      this.finalizarIndicadorLogin();
     }
   }
 
@@ -518,38 +545,35 @@ export class LoginComponent implements OnInit, OnDestroy {
            cfg.IdTipoIdentidad !== null && cfg.IdTipoIdentidad !== undefined;
   }
 
-  private ensureConfigThenNavigate(targetUrl: string): void {
+  private async ensureConfigThenNavigate(targetUrl: string): Promise<void> {
     this.spinnerService.show();
     this.actualizarIndicadorLogin(
       this.textCatalog.get('loadingRestaurantTitle'),
       this.textCatalog.get('loadingRestaurantMessage'),
       'storefront',
     );
-    this.configService.get().subscribe({
-      next: (cfg) => {
-        if (this.isConfigValid(cfg)) {
-          void this.navegarTrasLogin(targetUrl);
-        } else {
-          this.finalizarIndicadorLogin();
-          const dialogRef = this.dialog.open(ConfiguracionInicialComponent, {
-            width: '920px',
-            disableClose: true,
-            data: { modoInicial: true },
-          });
-          dialogRef.afterClosed().subscribe((result) => {
-            if (result === true || result === 'saved') {
-              this.router.navigateByUrl(targetUrl);
-            } else {
-              this.logoutAndReturnToLogin();
-            }
-          });
-        }
-      },
-      error: () => {
-        this.finalizarIndicadorLogin();
-        this.logoutAndReturnToLogin();
+    const config = await firstValueFrom(this.configService.get());
+    if (this.destruido) return;
+    if (!this.isConfigValid(config)) {
+      this.finalizarIndicadorLogin();
+      const dialogRef = this.dialog.open(ConfiguracionInicialComponent, {
+        width: '920px',
+        disableClose: true,
+        data: { modoInicial: true },
+      });
+      const result = await firstValueFrom(dialogRef.afterClosed());
+      if (this.destruido) return;
+      if (result !== true && result !== 'saved') {
+        await this.elegirSucursal();
+        return;
       }
-    });
+    }
+    await this.navegarTrasLogin(targetUrl);
+  }
+
+  private destinoCajaTrasLogin(habitual: string, tipo?: EstacionTipoEnum, retorno?: string): string {
+    return tipo === EstacionTipoEnum.CAJA && this.returnUrlSeguro(retorno) === RUTA_REGULARIZAR_CAJA
+      ? RUTA_REGULARIZAR_CAJA : habitual;
   }
 
   /** Conserva el destino del aviso sin permitir redirecciones externas. */
@@ -561,10 +585,43 @@ export class LoginComponent implements OnInit, OnDestroy {
       : undefined;
   }
 
-  private logoutAndReturnToLogin(): void {
-    this.finalizarIndicadorLogin();
-    try { this.storageService.logout?.(); } catch {}
-    this.router.navigateByUrl('/iniciar-sesion');
+  private mostrarMotivoDeAcceso(): boolean {
+    const motivo = this.route.snapshot.queryParamMap.get('acceso');
+    if (motivo !== 'licencia-no-disponible' && motivo !== 'sin-licencia') return false;
+    this.accesoDenegado = motivo === 'sin-licencia';
+    this.loginError = this.textCatalog.get(this.accesoDenegado ? 'onlineWorkspaceNotLicensed' : 'onlineLicenseUnavailable');
+    return true;
+  }
+
+  async reintentarOnline(): Promise<void> {
+    if (this.isSubmitting) return;
+    const session = this.storageService.getCurrentSession();
+    if (!session || !this.keycloakAuth.isTokenActive(session.Token)) {
+      await this.elegirSucursal();
+      return;
+    }
+    const destino = this.returnUrlSeguro();
+    if (destino && this.route.snapshot.queryParamMap.get('acceso') === 'licencia-no-disponible') {
+      this.isSubmitting = true;
+      this.loginError = '';
+      try {
+        await this.navegarTrasLogin(destino);
+      } finally {
+        this.isSubmitting = false;
+      }
+      return;
+    }
+    await this.abrirPuestoOnline(session);
+  }
+
+  async elegirSucursal(): Promise<void> {
+    this.loginError = '';
+    this.loginValid = true;
+    this.isSubmitting = false;
+    this.retornoPendiente = undefined;
+    this.clearSucursal();
+    this.storageService.logout(false);
+    await this.loadTenants();
   }
 
   private iniciarIndicadorLogin(): void {
@@ -614,11 +671,29 @@ export class LoginComponent implements OnInit, OnDestroy {
       'space_dashboard',
     );
 
+    let destino = targetUrl;
     try {
-      await this.router.navigateByUrl(targetUrl);
+      destino = await this.sesionCaja.destinoTrasLogin(targetUrl);
+      if (this.destruido) return;
+      const abierto = await this.router.navigateByUrl(destino, { replaceUrl: true });
+      if (!this.destruido && (!abierto || /^\/(iniciar-sesion|inicio)(?:[?#]|$)/.test(this.router.url))) {
+        if (!this.mostrarMotivoDeAcceso()) this.loginError = this.textCatalog.get('onlineWorkspaceUnavailable');
+      }
+    } catch (error) {
+      this.mostrarFalloDelPuesto(destino === RUTA_REGULARIZAR_CAJA
+        ? 'onlineReconciliationUnavailable' : 'onlineWorkspaceUnavailable', error);
     } finally {
       this.finalizarIndicadorLogin();
     }
+  }
+
+  private mostrarFalloDelPuesto(clave: TenantTextKey, error: unknown): void {
+    if (this.destruido || this.isSubscriptionAccessError(error)) return;
+    const codigo = error instanceof HttpErrorResponse && error.status > 0
+      ? `HTTP ${error.status}`
+      : error instanceof Error ? error.message.match(/\bNG\d{4,5}\b/)?.[0] : undefined;
+    const mensaje = this.textCatalog.get(clave);
+    this.loginError = codigo ? `${mensaje} (${codigo})` : mensaje;
   }
 
   // ── PWA ───────────────────────────────────────────────────────────────────

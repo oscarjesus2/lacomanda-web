@@ -78,8 +78,8 @@ describe('CesiaAssistantComponent · chat y mensajes sin leer', () => {
       cambiarPreferenciaPush: jasmine.createSpy('cambiarPreferenciaPush'),
     };
     await TestBed.configureTestingModule({
-      imports: [CommonModule, FormsModule, MatIconModule],
-      declarations: [CesiaAssistantComponent, TenantTextPipe],
+      imports: [CommonModule, FormsModule, MatIconModule, TenantTextPipe],
+      declarations: [CesiaAssistantComponent],
       providers: [
         { provide: Router, useValue: { url: '/dashboard', events: events.asObservable() } },
         { provide: StorageService, useValue: {

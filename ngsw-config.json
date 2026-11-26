@@ -10,6 +10,7 @@
           "/favicon.ico",
           "/index.html",
           "/manifest.webmanifest",
+          "/assets/vendor/qz-tray/qz-tray.js",
           "/*.css",
           "/*.js"
         ]
@@ -22,6 +23,7 @@
       "resources": {
         "files": [
           "/assets/**",
+          "!/assets/caja-windows/**",
           "/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)"
         ]
       }

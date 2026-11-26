@@ -1,4 +1,5 @@
 export interface PedidoDeliveryDTO {
+  referenciaLocal?: string;
   IdPedido: number;       // Identificador del pedido
   NroCuenta: number;
   IdEspacio: number | null;  // Identificador del espacio original

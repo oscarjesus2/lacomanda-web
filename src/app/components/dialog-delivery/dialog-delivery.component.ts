@@ -83,6 +83,20 @@ export class DialogDeliveryComponent implements OnInit {
   }
 
   async buscar(): Promise<void> {
+    if (this.data.copiaLocal) {
+      const termino = this.termino.trim().toLocaleLowerCase();
+      this.clientes = this.data.copiaLocal.clientes
+        .filter(cliente => [cliente.NombresDelivery, cliente.DireccionDelivery, cliente.TelefonoDelivery]
+          .some(valor => valor?.toLocaleLowerCase().includes(termino)))
+        .slice(0, 30)
+        .map(cliente => ({
+          ...cliente, RazonSocial: cliente.NombresDelivery, NumeroIdentificacion: '', IdTipoIdentidad: '',
+          TelefonoDelivery: cliente.TelefonoDelivery ?? '', AnexoDelivery: cliente.AnexoDelivery ?? '',
+          ReferenciaDelivery: cliente.ReferenciaDelivery ?? '', CorreoDelivery: '',
+          PrecioDelivery: cliente.PrecioDelivery,
+        }));
+      return;
+    }
     this.cargando = true;
     try {
       const response = await lastValueFrom(
@@ -103,6 +117,7 @@ export class DialogDeliveryComponent implements OnInit {
     this.clienteSeleccionado = cliente;
     this.clienteOrigen = null;
     this.formularioActivo = true;
+    if (this.data.copiaLocal) return;
     this.form.enable();
     this.form.patchValue(cliente);
     this.form.markAsPristine();
@@ -157,6 +172,16 @@ export class DialogDeliveryComponent implements OnInit {
   }
 
   async guardarYContinuar(): Promise<void> {
+    if (this.data.copiaLocal) {
+      const cliente = this.clienteSeleccionado;
+      if (!cliente || !this.tarifaLocalDisponible) return;
+      this.dialogRef.close({
+        Accion: 'CREAR_PEDIDO', Modalidad: 'TELEFONO', NombreCliente: cliente.NombresDelivery,
+        Cliente: cliente, SocioNegocio: null, ProductoCargoDelivery: this.contexto.ProductoCargoDelivery,
+        PreciosSocioNegocio: [],
+      } satisfies DeliveryDialogResult);
+      return;
+    }
     if (!this.formularioActivo || this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -222,6 +247,13 @@ export class DialogDeliveryComponent implements OnInit {
       return;
     }
 
+    if (this.data.copiaLocal) {
+      this.contexto.ProductoCargoDelivery = this.data.copiaLocal.productos.find(p => p.EsCargoDelivery) ?? null;
+      await this.buscar();
+      this.telefonoInicializado = true;
+      return;
+    }
+
     this.cargando = true;
     try {
       const [contexto, tipos, clientes] = await Promise.all([
@@ -244,6 +276,11 @@ export class DialogDeliveryComponent implements OnInit {
     this.socioForm.get('NombreCliente')?.markAsDirty();
   }
 
+  get tarifaLocalDisponible(): boolean {
+    const precio = this.clienteSeleccionado?.PrecioDelivery;
+    return Number.isFinite(precio) && (precio === 0 || (precio > 0 && !!this.contexto.ProductoCargoDelivery));
+  }
+
   async continuarPorSocio(): Promise<void> {
     if (this.socioForm.invalid) {
       this.socioForm.markAllAsTouched();
@@ -263,9 +300,12 @@ export class DialogDeliveryComponent implements OnInit {
 
     this.guardando = true;
     try {
-      const response = await lastValueFrom(
-        this.deliveryService.obtenerPreciosSocioNegocio(idSocioNegocio)
-      );
+      const precios = this.data.copiaLocal
+        ? this.data.copiaLocal.productos.flatMap(producto => {
+            const tarifa = producto.PreciosSocio?.find(p => p.IdSocioNegocio === idSocioNegocio);
+            return tarifa ? [{ IdProducto: producto.IdProducto, Precio: tarifa.Precio }] : [];
+          })
+        : (await lastValueFrom(this.deliveryService.obtenerPreciosSocioNegocio(idSocioNegocio))).Data;
       const nombreCliente = String(
         this.socioForm.get('NombreCliente')?.value ?? ''
       ).trim().toUpperCase();
@@ -277,7 +317,7 @@ export class DialogDeliveryComponent implements OnInit {
         Cliente: null,
         SocioNegocio: socio,
         ProductoCargoDelivery: null,
-        PreciosSocioNegocio: response.Data ?? []
+        PreciosSocioNegocio: precios ?? []
       } as DeliveryDialogResult);
     } finally {
       this.guardando = false;
